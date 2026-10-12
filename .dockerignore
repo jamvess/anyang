@@ -1,0 +1,8 @@
+# Docker builds run from the repo root (apps/api/Dockerfile). Send only what the image needs.
+*
+!apps/api/pyproject.toml
+!apps/api/uv.lock
+!apps/api/app/
+!config/
+!prompts/
+**/__pycache__
