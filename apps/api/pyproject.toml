@@ -1,0 +1,45 @@
+[project]
+name = "anyang-api"
+version = "0.1.0"
+description = "อ่านยัง? backend: FastAPI service for the AI study room"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=1.13.0",
+    "fastapi[standard]>=0.143.0",
+    "google-genai>=2.29.0",
+    "pydantic-settings>=2.15.0",
+    "pyyaml>=6.0.3",
+    "sse-starlette>=3.5.0",
+    "supabase>=2.32.0",
+    "sympy>=1.14.0",
+]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "ruff>=0.17.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = ["live: calls a real AI provider; excluded by default and in CI"]
+addopts = "-m 'not live'"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]

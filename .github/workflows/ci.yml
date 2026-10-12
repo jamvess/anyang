@@ -29,7 +29,10 @@ jobs:
           version: latest
       - run: supabase start
       - uses: astral-sh/setup-uv@v5
-      - run: cd apps/api && uv sync && uv run pytest tests/integration -q
+      # TODO: drop the exit-code-5 ("no tests collected") allowance once the first RLS test exists.
+      - run: |
+          cd apps/api && uv sync
+          uv run pytest tests/integration -q || [ $? -eq 5 ]
         env:
           AI_PROVIDER: fake
 
