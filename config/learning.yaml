@@ -1,0 +1,91 @@
+# Learning model configuration — the ONLY place these numbers live.
+# Code reads this file through LearningConfig; never hard-code these values.
+#
+# Every value is tagged with where it comes from (details: specs/system/learning-model.md):
+#   [A]    research literature (cited)
+#   [B]    engineering standard / library default (cited)
+#   [calc] derived from other values or from a formula
+#   [C]    starting value to be calibrated from our own data; the comment says how and when
+#
+# Changing a value = PR that also updates learning-model.md §"ที่มาของตัวเลข".
+
+version: 1.1
+
+bkt:                                   # Bayesian Knowledge Tracing, per topic (learning-model.md §1)
+  p_init: 0.3                          # [C] prior P(L0). Fit per skill with pyBKT (EM) after Alpha.
+  p_transit: 0.15                      # [C] P(T). Fit per skill with pyBKT after Alpha.
+  p_guess: 0.2                         # [A] must stay <= 0.3 (Corbett & Anderson 1995 bound)
+  p_slip: 0.1                          # [A] must stay <= 0.1 (Corbett & Anderson 1995 bound)
+  mastery_threshold: 0.95              # [A] standard BKT mastery criterion (Slater & Baker); = 3 correct in a row from p_init with these params
+  weak_below: 0.5                      # [calc] below 0.5 "not learned" is more likely than "learned"
+  count_only_independent: true         # attempts right after a worked example do not update mastery
+
+levels:                                # display bins for the progress card (learning-model.md §4)
+  # not_started: no attempts yet
+  # weak:        mastery < bkt.weak_below
+  # developing:  otherwise, until the Done rule holds
+  # passed:      Done rule holds (done.*)
+  show: [not_started, weak, developing, passed]
+
+done:                                  # when a topic counts as passed (TM-16)
+  require_exam_skills_covered: true    # every skill with exam_freq > 0 needs >= 1 independent correct
+  require_all_skills_if_no_past_exam: true
+  min_independent_correct_per_skill: 1 # [C] check after Alpha whether 1 is enough
+  three_star_final_difficulty: 3       # ★★★ topics must end with an exam-level problem
+  tight_mode_two_star_difficulty: 2    # ★★ topics may pass at difficulty 2 in tight mode
+
+park:                                  # stop and come back later (TM-19)
+  max_problems_per_skill_per_day: 10   # [A] Beck & Gong 2013 wheel-spinning; ASSISTments daily limit 10
+  max_fail_streak_per_skill: 3         # [C] = failed after 2 different teaching angles (AM-09). Validate after Alpha: % who pass after 3rd fail.
+
+spacing:                               # spaced review of passed topics (TM-17, learning-model.md §3)
+  first_gap_days: 1                    # [A] SM-2 first interval I(1) = 1 day
+  growth_factor: 2.5                   # [A] SM-2 initial easiness factor 2.5
+  max_gap_ratio_of_days_left: 0.2      # [A] Cepeda et al. 2008: optimal gap ≈ 20% of the retention interval (short RIs).
+                                       #     If the next gap > max(min_gap_days, 0.2 × days_left), stop scheduling;
+                                       #     the topic is reviewed again in Final mode (day before the exam).
+  min_gap_days: 1
+  reset_on_wrong: true                 # wrong review → level back to developing, restart at first_gap_days
+  review_slots_at_session_start: 2     # [C] max review problems before new work; tune by session length
+
+stars:                                 # topic importance (SM-03, learning-model.md §2)
+  weight_same_instructor: 1.0          # [calc] reference weight
+  weight_other_instructor: 0.5         # [C] replace with measured topic overlap between instructors (PoC P3)
+  three_star_min_r: 0.6                # [calc] midpoint of the stable band 0.51–0.66 (sensitivity analysis); validate vs team labels in P3
+  prerequisite_of_three_star_gets: 2   # direct prerequisites only
+  no_past_exam_method: page_terciles   # open question, decide after P3
+
+readiness:                             # PM-03: Σ(signal_r × mastery) / Σ(signal_r); no extra constants
+  weight: signal_r                     # [calc] expected share of exam content
+  exclude_zero_star: true
+
+planner:                               # TM-18 (learning-model.md §5)
+  problems_per_skill: bkt_simulation   # [calc] expected attempts to reach mastery_threshold, simulated from bkt.*
+  default_minutes_per_problem: 4       # [C] prior; replaced by the user's own average from attempts (PoC P4-lite gives first value)
+  default_daily_minutes: 45            # [C] prior; replaced by exam_preps.daily_minutes or observed session length
+  default_session_minutes: 45          # [C]
+  tight_ratio: 0.8                     # [C] need/available above this → tight. Calibrate with planner estimate error after Alpha.
+  triage_ratio: 1.2                    # [C] need/available above this → triage
+  triage_days_left: 3                  # [C]
+  final_mode_days_left: 1
+  interleave_every_n_practice: 4       # [C] Rohrer & Taylor 2007 support interleaving; ratio not standardised (Could)
+
+ocr:
+  confirm_below_confidence: 0.8        # [C] choose from precision–recall on the P1 golden set
+
+checker:
+  sympy_timeout_seconds: 2             # [B] budget so the verdict arrives before the TTFT target
+  numeric_rel_tolerance: 0.01          # [C] Should: replace with significant figures from the problem
+  max_generate_retries: 2              # [B] regenerate a problem whose answer fails SymPy verification
+
+buddy:                                 # TM-05 (ai-orchestration §2.1)
+  quota_per_topic: {low: 1, med: 2, high: 3}   # [C] validate with mute rate + survey in Alpha
+  min_user_turns_between: 4            # [C]
+  encourage_fail_streak: 2             # [C]
+  halve_quota_in_modes: [triage, final]
+
+session:
+  idle_minutes_to_end: 15              # [C]
+  context_recent_turns: 8              # [C] keep context short (Liu et al. 2023 "Lost in the Middle")
+  token_budget: 6000                   # [calc] ≈ 2× the ~3,200-token prompt of 2.2.3
+  grounding_chunks: 4                  # [C] reduce to 2 when over budget; tune in P3

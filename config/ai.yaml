@@ -1,0 +1,59 @@
+# AI gateway configuration (ai-orchestration §2.10). Change models here, not in code.
+# Model IDs are filled in after the PoC spikes; keep the TODO markers until then.
+
+version: 1.1
+
+tiers:
+  small:  {primary: "vertex:TODO-gemini-small",  fallback: "anthropic:TODO-claude-haiku"}
+  mid:    {primary: "vertex:TODO-gemini-mid",    fallback: "anthropic:TODO-claude-haiku"}
+  main:   {primary: "vertex:TODO-gemini-main",   fallback: "anthropic:TODO-claude-sonnet"}
+  vision: {primary: "vertex:TODO-gemini-mid",    fallback: "mathpix"}       # Mathpix only if P1 says so
+  embed:  {primary: "TODO-after-P3-spike",       fallback: null}
+
+purposes:
+  # flow 2.3
+  classify_material:      {tier: small,  temperature: 0.0, max_tokens: 300,  timeout_s: 20, prompt: v1}
+  vision_extract:         {tier: vision, temperature: 0.0, max_tokens: 4000, timeout_s: 60, prompt: v1}
+  split_past_exam:        {tier: small,  temperature: 0.0, max_tokens: 4000, timeout_s: 60, prompt: v1}
+  extract_topics_local:   {tier: mid,    temperature: 0.2, max_tokens: 2000, timeout_s: 60, prompt: v1}
+  merge_topics:           {tier: main,   temperature: 0.2, max_tokens: 4000, timeout_s: 90, prompt: v1}
+  map_questions:          {tier: small,  temperature: 0.0, max_tokens: 2000, timeout_s: 60, prompt: v1}
+  scope_edit:             {tier: mid,    temperature: 0.3, max_tokens: 800,  timeout_s: 30, prompt: v1}
+  # flow 2.2 / 2.4
+  route_intent:           {tier: small,  temperature: 0.0, max_tokens: 100,  timeout_s: 8,  prompt: v1}
+  extract_answer:         {tier: vision, temperature: 0.0, max_tokens: 1500, timeout_s: 20, prompt: v1}
+  normalize_math:         {tier: small,  temperature: 0.0, max_tokens: 500,  timeout_s: 8,  prompt: v1}
+  check_answer:           {tier: mid,    temperature: 0.0, max_tokens: 600,  timeout_s: 15, prompt: v1}
+  generate_problem:       {tier: mid,    temperature: 0.7, max_tokens: 800,  timeout_s: 20, prompt: v1}
+  tutor_reply:            {tier: main,   temperature: 0.6, max_tokens: 700,  timeout_s: 30, prompt: v1, stream: true}
+  dispute_recheck:        {tier: main,   temperature: 0.0, max_tokens: 1000, timeout_s: 30, prompt: v1}
+  update_running_summary: {tier: small,  temperature: 0.2, max_tokens: 400,  timeout_s: 20, prompt: v1}
+  session_summary:        {tier: small,  temperature: 0.3, max_tokens: 150,  timeout_s: 15, prompt: v1}
+  # flow 2.7 / 2.8
+  persona_extract:        {tier: small,  temperature: 0.0, max_tokens: 400,  timeout_s: 15, prompt: v1}
+  persona_preview:        {tier: small,  temperature: 0.7, max_tokens: 150,  timeout_s: 15, prompt: v1}
+  latex_to_speech:        {tier: small,  temperature: 0.0, max_tokens: 300,  timeout_s: 8,  prompt: v1}
+
+gateway:
+  retries: 1                           # then fallback provider, then degrade
+  schema_retries: 1                    # retry once with the validation error appended
+  circuit_breaker:                     # [B] Resilience4j defaults
+    failure_rate_threshold: 0.5
+    minimum_calls: 10
+    sliding_window_calls: 100
+    open_seconds: 60
+
+guards:
+  max_message_chars: 2000
+  rate_limit_messages_per_minute: 20
+  max_image_mb: 10
+  max_audio_seconds: 60
+  answer_leak_check: true
+
+targets:                               # checked in PoC P4-lite and monitored in production
+  ttft_p95_seconds: 2                  # Nielsen 1 s flow limit + LLM latency; streaming shows progress
+  cost_per_session_thb: 5
+
+retention:
+  audio_days: 7
+  full_prompt_days: 30                 # dev/pilot only; metadata kept afterwards

@@ -1,0 +1,29 @@
+# env
+.env
+.env.*
+!.env.example
+*.json.key
+service-account*.json
+
+# python
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# node
+node_modules/
+.next/
+out/
+coverage/
+
+# supabase
+supabase/.branches/
+supabase/.temp/
+
+# evals data that must not be public (raw images of friends' handwriting)
+evals/**/raw/
+
+# os
+.DS_Store

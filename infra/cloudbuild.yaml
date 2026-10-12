@@ -1,0 +1,28 @@
+# Triggered on push to main (Cloud Build trigger connected to the GitHub repo).
+# Builds apps/api and deploys to Cloud Run staging. Secrets come from Secret Manager.
+substitutions:
+  _REGION: asia-southeast1
+  _SERVICE: api-staging
+  _REPO: anyang
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-t", "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/api:$COMMIT_SHA", "apps/api"]
+  - name: gcr.io/cloud-builders/docker
+    args: ["push", "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/api:$COMMIT_SHA"]
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/api:$COMMIT_SHA
+      - --region=${_REGION}
+      - --min-instances=0
+      - --concurrency=40          # SSE holds connections open; tune with the P6 measurement
+      - --timeout=600
+      - --set-secrets=SUPABASE_SERVICE_ROLE_KEY=supabase-service-role:latest,ANTHROPIC_API_KEY=anthropic-api-key:latest
+      - --set-env-vars=AI_PROVIDER=live,GOOGLE_CLOUD_LOCATION=${_REGION}
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/api:$COMMIT_SHA

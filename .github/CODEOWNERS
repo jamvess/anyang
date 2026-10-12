@@ -1,0 +1,12 @@
+# Default reviewers per area. Replace handles with real GitHub usernames.
+*                          @junior-handle @may-handle @jam-handle
+/apps/api/                 @junior-handle
+/supabase/                 @junior-handle
+/infra/                    @junior-handle
+/apps/web/                 @may-handle
+/specs/features/           @may-handle @junior-handle @jam-handle
+/prompts/                  @jam-handle
+/evals/                    @jam-handle
+/config/learning.yaml      @jam-handle @junior-handle
+/specs/system/ai-orchestration.md  @jam-handle
+/specs/system/learning-model.md    @jam-handle
