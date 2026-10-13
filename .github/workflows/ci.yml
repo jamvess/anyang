@@ -50,11 +50,18 @@ jobs:
         working-directory: apps/web
     steps:
       - uses: actions/checkout@v4
+      # No root package.json: point the action at apps/web for "packageManager".
       - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: apps/web/package.json
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
           cache-dependency-path: apps/web/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
-      - run: pnpm lint && pnpm typecheck && pnpm test --run
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      # No NEXT_PUBLIC_* in CI: env is only read when a client is created.
+      - run: pnpm build
