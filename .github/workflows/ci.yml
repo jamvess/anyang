@@ -28,11 +28,18 @@ jobs:
         with:
           version: latest
       - run: supabase start
+      # CI has no .env: hand the local stack's URL and keys to the tests.
+      - run: |
+          eval "$(supabase status -o env)"
+          {
+            echo "SUPABASE_URL=$API_URL"
+            echo "SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+          } >> "$GITHUB_ENV"
       - uses: astral-sh/setup-uv@v5
-      # TODO: drop the exit-code-5 ("no tests collected") allowance once the first RLS test exists.
       - run: |
           cd apps/api && uv sync
-          uv run pytest tests/integration -q || [ $? -eq 5 ]
+          uv run pytest tests/integration -q
         env:
           AI_PROVIDER: fake
 
