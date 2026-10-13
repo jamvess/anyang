@@ -1,0 +1,14 @@
+event: progress_card
+data: {"days_left": 5, "passed": 1, "total": 4, "readiness": 0.25, "topics": []}
+
+: keep-alive comment
+
+event: token
+data: {"speaker": "tutor", "text": "สวัสดี"}
+
+event: problem
+data: {"problem_id": "p1", "text_latex": "\\int_0^1 x\\,dx", "difficulty": 1, "purpose": "check"}
+
+event: done
+data: {}
+

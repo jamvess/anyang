@@ -38,6 +38,7 @@ Use the project skills: `/spec-feature`, `/spec-to-tests`, `/implement-feature`,
 
 - Requirement IDs come from `specs/requirements/requirements.md` (e.g. `TM-05`, `AM-04`).
 - Test names start with the requirement ID: `test_TM05_buddy_silent_when_problem_pending`, `it('TM08 renders inline LaTeX')`.
+- Tests for infrastructure with no requirement ID start with the system spec and section instead, e.g. `it('api.md SSE: parses events split across chunks')`. Feature behavior must always use a requirement ID.
 - PR titles reference the feature spec and requirement IDs.
 
 ## Architecture rules (do not break)
