@@ -5,15 +5,18 @@
 | Owner | May |
 | Branch | `chore/vercel-deploy` |
 | Checklist item | เชื่อม Vercel กับ repo (root `apps/web`) |
-| Status | paused · 2026-10-14 |
+| Status | in progress · 2026-10-14 |
 
 ## Plan
 
 - [x] 1. 🤖 เช็คว่า `apps/web` build ผ่านแบบเดียวกับที่ Vercel จะรัน (`pnpm build`, lint, typecheck) และสรุป env ที่ต้องใส่
 - [x] 2. 🙋 Junior (เจ้าของ repo `jamvess/anyang`) ติดตั้ง Vercel GitHub App ให้เข้าถึง repo นี้
 - [x] 3. 🙋 May import repo ใน Vercel: root `apps/web`, ใส่ env `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (ค่า staging จาก Junior)
-- [ ] 4. 🙋 เปิด production URL ดูว่าหน้าแรกขึ้น และเช็คว่า draft PR นี้ได้ preview URL
-- [ ] 5. 🤖 บันทึก URL และขั้นตอนลง `infra/README.md` + ติ๊ก checklist ใน `sprint-checklists.md`
+- [x] 4. 🙋 May ขออนุญาต Junior ในแชทกลุ่ม: เพิ่ม `.github/workflows/web-deploy.yml` และแก้ `infra/README.md` (Junior เป็นเจ้าของทั้งสองที่)
+- [ ] 5. 🤖 เขียน `.github/workflows/web-deploy.yml` (Vercel CLI: preview ทุก PR, production เมื่อ push `main`) + `apps/web/vercel.json` ปิด Git auto-deploy ของ Vercel
+- [ ] 6. 🙋 Jam (`jamvess`) สร้าง Vercel token และใส่ GitHub Secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
+- [ ] 7. 🙋 เช็คว่า PR #5 ได้ preview URL จาก workflow และไม่มี check ของ Vercel ที่ fail อีก
+- [ ] 8. 🤖 บันทึก URL และขั้นตอนลง `infra/README.md` + ติ๊ก checklist ใน `sprint-checklists.md`
 
 ## Definition of done
 
@@ -29,8 +32,13 @@
 - 2026-10-14 · ไม่ต้องตั้ง Node version ใน Vercel เอง · `package.json` มี `engines.node: >=24` และ `packageManager: pnpm@10.34.7` อยู่แล้ว Vercel อ่านจากตรงนี้
 - 2026-10-14 · env บน Vercel ชี้ไปที่ Supabase `anyang-staging` · `NEXT_PUBLIC_SUPABASE_URL` ต้องไม่มี `/rest/v1/` ต่อท้าย และใช้ publishable key (`sb_publishable_...`) เป็น `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - 2026-10-14 · production URL: https://anyang-amber.vercel.app (เช็คแล้วได้ 200, title "อ่านยัง?")
+- 2026-10-14 · `jamvess` = Jam (เจ้าของ repo) · ยืนยันจาก `roles.md` ที่แก้ใน PR #6
+- 2026-10-14 · deploy ผ่าน GitHub Actions + Vercel CLI แทน Git integration · Hobby block commit ของคนที่ไม่ใช่เจ้าของ account, ทางนี้ฟรีและทุกคน deploy ได้ (ใช้ token ของ Jam)
+- 2026-10-14 · เพิ่ม `apps/web/vercel.json` (`git.deploymentEnabled: false`) แทนการตั้งใน dashboard · เห็นใน code review และไม่ deploy ซ้ำกับ workflow (เปลี่ยนจาก decision แรกที่ไม่เพิ่ม `vercel.json`)
 
 ## Done today (2026-10-14)
+
+- ขั้น 4: Junior อนุญาตในแชทกลุ่มให้แก้ `.github/workflows/` และ `infra/README.md`
 
 - ขั้น 1: `pnpm build`, lint, typecheck, test ของ `apps/web` ผ่าน · env ที่ต้องใช้มีแค่ 2 ตัว
 - สร้าง draft PR #5 (ตอน start ครั้งแรกยังไม่ได้สร้าง)
@@ -39,15 +47,11 @@
 
 ## Next step
 
-ถาม May 2 ข้อแล้วทำตามคำตอบ:
-1. GitHub `jamvess` เป็นของใคร (May บอกว่า Jam แต่ชื่อจริงใน `roles.md` ชี้ว่าน่าจะเป็น Junior เวสสภู ส่วน `jnmonsicha2000` น่าจะเป็น Jam มนสิชา) คนนี้ต้องเป็นคนสร้าง Vercel token และใส่ GitHub Secrets
-2. เลือกทางแก้ Vercel: (1 แนะนำ) deploy ผ่าน GitHub Actions + Vercel CLI · (2) Vercel Pro แล้วเชิญเข้า team · (3) เปลี่ยน repo เป็น public · (4) ยอมรับไปก่อน
-
-ถ้าเลือก 1: เพิ่มขั้นในแผน → 🤖 เขียน `.github/workflows/web-deploy.yml` (preview ทุก PR, production เมื่อ push `main`) หลังได้รับอนุญาตจาก Junior (เจ้าของ `.github/`) → 🙋 เจ้าของ `jamvess` ใส่ secret `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` → ปิด Git auto-deploy ของ Vercel เพื่อไม่ให้ deploy ซ้ำ
+ขั้น 5: เขียน `web-deploy.yml` + `apps/web/vercel.json`
 
 ## Waiting on
 
-May: คำตอบ 2 ข้อข้างบน
+-
 
 ## Notes for next time
 
