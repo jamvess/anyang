@@ -24,7 +24,7 @@
 - [x] ⭐ ให้ Claude Code scaffold `apps/api` และตรวจผล
 - [x] ⭐ `npx supabase init` + `db push` `0001_init.sql` ขึ้น Supabase cloud `anyang-dev` + เปิด custom access token hook
 - [x] GitHub Actions รันครบ 3 job และเขียวบน `main`
-- [ ] สร้าง GCP project, เปิด API, Artifact Registry, Secret Manager (`setup.md` §5)
+- [ ] สร้าง GCP project, เปิด API, Artifact Registry, Secret Manager (`infra/README.md`)
 - [ ] สร้าง Supabase project `anyang-staging`
 - [ ] ให้สิทธิ์ทีม: GitHub collaborator + Supabase org (เจ้าของ repo ทำ, `setup.md` A0), GCP (Jam: Vertex AI User)
 - [ ] แก้ `.github/CODEOWNERS` เป็น username จริง

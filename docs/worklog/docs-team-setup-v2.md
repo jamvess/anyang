@@ -12,7 +12,7 @@
 - [x] 0. 🤖 เขียน `setup.md` ใหม่ (Part A ตั้งเครื่อง, Part B ทำงานคู่ขนาน) + ติ๊ก `sprint-checklists.md` ตามงานที่เสร็จจริง (commit be64b84)
 - [x] 1. 🤖 สร้าง worklog นี้
 - [x] 2. 🤖 ตัด B2–B4 ใน `setup.md` ให้เหลือลิงก์ไป `daily-workflow.md` (เก็บ B1, B5 → B3)
-- [ ] 3. 🤖 แก้ลิงก์ `setup.md §5` ที่ตาย: ย้ายคำสั่ง cloud เดิมไป `infra/README.md` แล้วแก้ `sprint-checklists.md:27` กับ `infra/README.md:5`
+- [x] 3. 🤖 แก้ลิงก์ `setup.md §5` ที่ตาย: ย้ายคำสั่ง cloud เดิมไป `infra/README.md` แล้วแก้ `sprint-checklists.md:27` กับ `infra/README.md:5`
 - [ ] 4. 🤖 commit + push + เตรียมลิงก์เปิด PR
 - [ ] 5. 🙋 เปิด PR บน GitHub: กดลิงก์ที่ Claude ให้ → **Create pull request** → Reviewers เลือก Junior → บอกในแชทกลุ่ม
 
@@ -29,7 +29,7 @@
 
 ## Next step
 
-ย้ายคำสั่ง cloud (§5 เดิม จาก `git show origin/main:docs/team/setup.md`) ไป `infra/README.md` แล้วแก้ลิงก์ที่ `sprint-checklists.md` (GCP project) และ `infra/README.md:5`
+รัน `git push` แล้วให้คนกดลิงก์ https://github.com/jamvess/anyang/compare/docs/team-setup-v2?expand=1 เพื่อเปิด PR (reviewer: Junior)
 
 ## Waiting on
 
