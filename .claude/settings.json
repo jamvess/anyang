@@ -11,7 +11,18 @@
       "Bash(git diff:*)",
       "Bash(git log:*)",
       "Bash(npx supabase db reset:*)",
-      "Bash(npx supabase status:*)"
+      "Bash(npx supabase status:*)",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(git switch:*)",
+      "Bash(git branch:*)",
+      "Bash(git show:*)",
+      "Bash(git merge origin/main:*)",
+      "Bash(git remote get-url:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm build:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr view:*)"
     ],
     "deny": [
       "Read(./.env)",

@@ -50,7 +50,7 @@ Part A ทำครั้งเดียวต่อเครื่อง ใช
 | # | เครื่องมือ | วิธีติดตั้ง | เช็ค (ใน terminal ใหม่) |
 |---|---|---|---|
 | 1 | Git for Windows | [git-scm.com/downloads/win](https://git-scm.com/downloads/win) ติดตั้งโดยกด Next ตามค่า default จะได้ Git Bash กับ Credential Manager มาด้วย | `git --version` |
-| 2 | Node.js **22** LTS | [nodejs.org](https://nodejs.org) เลือกเวอร์ชัน 22 ให้ตรงกับ CI | `node -v` → `v22.x` |
+| 2 | Node.js **24** LTS | [nodejs.org](https://nodejs.org) เลือกเวอร์ชัน 24 ให้ตรงกับ CI | `node -v` → `v24.x` |
 | 3 | pnpm | `npm install -g pnpm@10.34.7` | `pnpm -v` → `10.34.7` |
 | 4 | uv + Python 3.12 | ใน **PowerShell**: `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 \| iex"` แล้วเปิด terminal ใหม่ รัน `uv python install 3.12` | `uv --version` |
 | 5 | Claude Code | ใน **PowerShell**: `irm https://claude.ai/install.ps1 \| iex` | `claude --version` |
