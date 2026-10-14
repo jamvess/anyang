@@ -1,6 +1,8 @@
 # Checklist ราย sprint ของแต่ละคน · เทอม 1
 
-อัปเดต 12 ต.ค. 2569 · อ้างอิงแผนเทอม 1 ฉบับลด scope · ติ๊กใน PR หรือแก้ไฟล์นี้ทุกวันศุกร์ตอน demo
+อัปเดต 14 ต.ค. 2569 · อ้างอิงแผนเทอม 1 ฉบับลด scope
+
+**วิธีใช้:** ไฟล์นี้บน `main` คือสถานะจริงของทีม ติ๊กข้อของตัวเอง**ใน PR เดียวกับงานที่ทำเสร็จ** พอ merge ทุกคนจะเห็นหลัง `git pull` (`/work-done` ติ๊กให้อัตโนมัติ · ดู `daily-workflow.md`)
 
 | Sprint | วันที่ | เป้าหมาย | Demo |
 |---|---|---|---|
@@ -18,23 +20,25 @@
 
 ### S1 · 5–16 ต.ค.
 
-- [ ] ⭐ สร้าง repo, วาง starter files, ตั้ง branch protection (`setup.md` §4.1)
-- [ ] ⭐ ให้ Claude Code scaffold `apps/api` และตรวจผล (`setup.md` §4.2 Prompt 1)
-- [ ] ⭐ `npx supabase init` + รัน `0001_init.sql` บนเครื่อง + เปิด custom access token hook (Prompt 3)
-- [ ] GitHub Actions รันครบ (Prompt 4)
-- [ ] สร้าง GCP project, เปิด API, Artifact Registry, Secret Manager (`setup.md` §5)
+- [x] ⭐ สร้าง repo, วาง starter files · branch protection ข้ามไว้ (repo private แบบฟรีตั้งไม่ได้ ใช้กติกา approve ก่อน merge แทน)
+- [x] ⭐ ให้ Claude Code scaffold `apps/api` และตรวจผล
+- [x] ⭐ `npx supabase init` + `db push` `0001_init.sql` ขึ้น Supabase cloud `anyang-dev` + เปิด custom access token hook
+- [x] GitHub Actions รันครบ 3 job และเขียวบน `main`
+- [ ] สร้าง GCP project, เปิด API, Artifact Registry, Secret Manager (`infra/README.md`)
 - [ ] สร้าง Supabase project `anyang-staging`
-- [ ] ให้สิทธิ์ทีม: GitHub, GCP (Jam: Vertex AI User), Supabase
+- [ ] ให้สิทธิ์ทีม: GitHub collaborator + Supabase org (เจ้าของ repo ทำ, `setup.md` A0), GCP (Jam: Vertex AI User)
+- [ ] แก้ `.github/CODEOWNERS` เป็น username จริง
+- [ ] ตั้งเครื่องตัวเองตาม `setup.md` Part A
 - [ ] ตรวจ `specs/system/architecture.md` ให้ตรงกับที่ตั้งจริง (D2)
 - [ ] ร่วม review `specs/requirements/requirements.md` (D1)
 - [ ] รูปลายมือ 10 รูป (D8)
 
-**Done เมื่อ:** ทุกคน clone แล้วรันได้ตาม `setup.md` §6 และ CI เขียวบน `main`
+**Done เมื่อ:** ทุกคน clone แล้วรันได้ตาม `setup.md` A6 และ CI เขียวบน `main`
 
 ### S2 · 19–30 ต.ค.
 
 - [ ] Cloud Build trigger: merge → deploy `api-staging` อัตโนมัติ (P6-lite)
-- [ ] `test_SA06_tenant_isolation` รันใน CI (P6-lite)
+- [x] `test_SA06_tenant_isolation` รันใน CI (P6-lite) · เสร็จก่อนกำหนดใน S1
 - [ ] ตรวจว่าไม่มี secret ใน git history
 - [ ] ปรับ `schema.sql` ตามที่เจอระหว่าง P3 + วาด ERD (D3)
 - [ ] ช่วย Jam ทำ ingest pipeline ของ P3: อ่าน PDF (PyMuPDF), ตัด chunk, เก็บลง DB
@@ -70,8 +74,8 @@
 
 ### S1 · 5–16 ต.ค.
 
-- [ ] ⭐ ติดตั้งเครื่องมือและ Claude Code (`setup.md` §2–3, §6)
-- [ ] ⭐ ให้ Claude Code scaffold `apps/web` และตรวจผล (`setup.md` §4.2 Prompt 2)
+- [ ] ⭐ ตั้งเครื่องตัวเองตาม `setup.md` Part A (ได้คอมแล้ว 14 ต.ค.)
+- [x] ⭐ ให้ Claude Code scaffold `apps/web` และตรวจผล (+ `pnpm build` ใน CI)
 - [ ] แก้ wireframe S05 (คำแนะนำการเขียน persona), S08 (ช่องนาทีต่อวัน), S15 (progress card) (D6)
 - [ ] เชื่อม Vercel กับ repo (root `apps/web`)
 - [ ] ร่วม review `specs/requirements/requirements.md` (D1)
@@ -114,7 +118,7 @@
 
 ### S1 · 5–16 ต.ค.
 
-- [ ] ⭐ ติดตั้งเครื่องมือและ Claude Code (`setup.md` §2–3, §6)
+- [x] ⭐ ติดตั้งเครื่องมือและ Claude Code
 - [ ] ⭐ เลือกวิชาคณิต 1 วิชาสำหรับ P3 และหาชีท + ข้อสอบเก่า 2 ชุด
 - [ ] ตรวจ `specs/system/ai-orchestration.md` และ `learning-model.md` ใน repo ให้ครบ (D2)
 - [ ] ตรวจ `config/learning.yaml` ว่าทุกค่ามีป้ายที่มา
