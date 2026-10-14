@@ -26,7 +26,7 @@
 | เครื่องมือ | เวอร์ชัน | ติดตั้ง | เช็ค |
 |---|---|---|---|
 | Git | ล่าสุด | macOS: มากับ Xcode CLT · WSL: `sudo apt install git` | `git --version` |
-| Node.js | 22 LTS | [nodejs.org](https://nodejs.org) หรือ nvm | `node -v` |
+| Node.js | 24 LTS | [nodejs.org](https://nodejs.org) หรือ nvm | `node -v` |
 | pnpm | ล่าสุด | `corepack enable` | `pnpm -v` |
 | uv (Python) | ล่าสุด | `curl -LsSf https://astral.sh/uv/install.sh \| sh` แล้ว `uv python install 3.12` | `uv --version` |
 | Docker | Docker Desktop หรือ OrbStack (macOS) | จากเว็บผู้ผลิต | `docker ps` |
