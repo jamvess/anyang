@@ -14,7 +14,9 @@
 - [x] 2. 🤖 ตัด B2–B4 ใน `setup.md` ให้เหลือลิงก์ไป `daily-workflow.md` (เก็บ B1, B5 → B3)
 - [x] 3. 🤖 แก้ลิงก์ `setup.md §5` ที่ตาย: ย้ายคำสั่ง cloud เดิมไป `infra/README.md` แล้วแก้ `sprint-checklists.md:27` กับ `infra/README.md:5`
 - [ ] 4. 🤖 commit + push + เตรียมลิงก์เปิด PR
-- [ ] 5. 🙋 เปิด PR บน GitHub: กดลิงก์ที่ Claude ให้ → **Create pull request** → Reviewers เลือก Junior → บอกในแชทกลุ่ม
+- [x] 5. 🙋 เปิด PR บน GitHub: กดลิงก์ที่ Claude ให้ → **Create pull request** → Reviewers เลือก Junior → บอกในแชทกลุ่ม
+
+- [x] 6. 🤖 เพิ่ม GitHub username ใน `roles.md` และสลับชื่อจริงของ Jam กับ Junior ที่เขียนผิด (PR #6)
 
 ## Definition of done
 
@@ -26,10 +28,11 @@
 
 - 2026-10-14 · คำสั่งสร้าง cloud resource ย้ายไป `infra/README.md` · เป็นงานของ Junior คนเดียว ไม่ใช่สิ่งที่ทุกคนต้องทำตอนตั้งเครื่อง
 - 2026-10-14 · ตัด B4 (review PR) ด้วย ไม่ใช่แค่ B2–B3 · ซ้ำกับ `daily-workflow.md` หัวข้อ D ทุกบรรทัด
+- 2026-10-14 · ชื่อจริงที่ถูก: Jam = เวสสภู (`@jamvess`), Junior = มนสิชา (`@jnmonsicha2000`), May = จันทรัศม์ (`@jantarat32443`) · Jam ยืนยันเอง
 
 ## Next step
 
-ให้คนกดลิงก์ https://github.com/jamvess/anyang/compare/docs/team-setup-v2?expand=1 เพื่อเปิด PR (reviewer: Junior)
+รอ Junior (`@jnmonsicha2000`) review PR #6 แล้วรัน `/work-done`
 
 ## Waiting on
 
