@@ -34,6 +34,13 @@ If a spec is unclear, contradictory or missing a case: **stop and say so**. Prop
 
 Use the project skills: `/spec-feature`, `/spec-to-tests`, `/implement-feature`, `/poc-report`.
 
+## Work sessions
+
+- Start every session with `/work-start <name>` (Junior, May or Jam).
+- Run `/work-check` after every step.
+- End with `/work-pause` (unfinished) or `/work-done` (ready for PR).
+- Progress lives in `docs/worklog/<branch>.md` (branch name with `/` replaced by `-`), so anyone can pick up where the last session stopped. See `docs/team/daily-workflow.md`.
+
 ## Traceability
 
 - Requirement IDs come from `specs/requirements/requirements.md` (e.g. `TM-05`, `AM-04`).
