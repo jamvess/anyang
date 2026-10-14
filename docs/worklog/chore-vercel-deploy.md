@@ -5,7 +5,7 @@
 | Owner | May |
 | Branch | `chore/vercel-deploy` |
 | Checklist item | เชื่อม Vercel กับ repo (root `apps/web`) |
-| Status | in progress · 2026-10-14 |
+| Status | paused · 2026-10-14 |
 
 ## Plan
 
@@ -14,7 +14,7 @@
 - [x] 3. 🙋 May import repo ใน Vercel: root `apps/web`, ใส่ env `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (ค่า staging จาก Junior)
 - [x] 4. 🙋 May ขออนุญาต Junior ในแชทกลุ่ม: เพิ่ม `.github/workflows/web-deploy.yml` และแก้ `infra/README.md` (Junior เป็นเจ้าของทั้งสองที่)
 - [x] 5. 🤖 เขียน `.github/workflows/web-deploy.yml` (Vercel CLI: preview ทุก PR, production เมื่อ push `main`) + `apps/web/vercel.json` ปิด Git auto-deploy ของ Vercel
-- [ ] 6. 🙋 Jam (`jamvess`) สร้าง Vercel token และใส่ GitHub Secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
+- [x] 6. 🙋 Jam (`jamvess`) สร้าง Vercel token และใส่ GitHub Secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
 - [ ] 7. 🙋 เช็คว่า PR #5 ได้ preview URL จาก workflow และไม่มี check ของ Vercel ที่ fail อีก
 - [ ] 8. 🤖 บันทึก URL และขั้นตอนลง `infra/README.md` + ติ๊ก checklist ใน `sprint-checklists.md`
 
@@ -38,6 +38,8 @@
 
 ## Done today (2026-10-14)
 
+- ขั้น 7 ติด: re-run `web-deploy` (run 38538233366) · pull + build ผ่าน, upload สำเร็จ, Vercel สร้าง deployment https://anyang-1cwn5kdz7-anyang4.vercel.app (Inspect: https://vercel.com/anyang4/anyang/AMF6hYHS1AX1D4MiTjf31oF2avJy) แต่ CLI ค้างที่ `Building…` 17 นาที จึง cancel
+- ขั้น 6: Jam ใส่ secret `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` แล้ว (เห็นใน `gh secret list`)
 - ขั้น 5: เขียน `.github/workflows/web-deploy.yml` (Vercel CLI 64.0.2: pull → build → deploy --prebuilt, preview/production ตาม event) + `apps/web/vercel.json` ปิด Git deploy · actionlint ผ่าน
 - ขั้น 4: Junior อนุญาตในแชทกลุ่มให้แก้ `.github/workflows/` และ `infra/README.md`
 
@@ -48,18 +50,25 @@
 
 ## Next step
 
-ขั้น 6: Jam สร้าง Vercel token + ใส่ GitHub Secrets 3 ตัว
+ขั้น 7: หาสาเหตุที่ deployment ค้าง
+1. ให้ May หรือ Jam (account เจ้าของ Vercel team `anyang4`) เปิดลิงก์ Inspect ข้างบน แล้วบอกสถานะ (Blocked / Queued / Building / Error / Ready) และข้อความ error
+2. ถ้าเป็นเรื่อง commit author (Hobby block commit ของคนที่ไม่ใช่เจ้าของ): แก้ step Deploy ใน `web-deploy.yml` ไม่ให้ CLI ส่ง git metadata (เช่น `rm -rf .git` ก่อน `vercel deploy --prebuilt`) แล้ว push · ใส่ `timeout-minutes` ให้ job ด้วยกันค้างนาน
+3. ถ้าเป็นอย่างอื่น: แก้ตามข้อความ error
+4. เช็คว่า PR #5 ได้ปุ่ม View deployment และไม่มี check แดงของ Vercel แล้วไปขั้น 8
 
 ## Waiting on
 
--
+May หรือ Jam: เปิดลิงก์ Inspect แล้วบอกสถานะ + ข้อความ error
 
 ## Notes for next time
 
-- GitHub accounts ตามที่ May บอก: `jamvess` = Jam, `jnmonsicha2000` = Junior, `jantarat32443` = May (ยังไม่ยืนยัน เพราะขัดกับชื่อจริงใน `roles.md`)
+- GitHub accounts (ยืนยันจาก `roles.md`): `jamvess` = Jam (เจ้าของ repo), `jnmonsicha2000` = Junior, `jantarat32443` = May
 - ค่า Supabase ใน `apps/web/.env.local` ของ May เป็น project บน cloud (ไม่ใช่ localhost) ไม่ได้ใช้ใน Vercel · ใช้ `anyang-staging` ซึ่งยังไม่มีตาราง (รอ Junior รัน migration) แต่หน้าแรกยังไม่อ่าน DB
 - ปุ่ม Adjust GitHub App Permissions ใน Vercel ช่วยไม่ได้ ถ้า repo อยู่ใน account ส่วนตัวของคนอื่น
 - ใช้ `!` ใน Claude Code แล้วจะรันด้วย bash (ใช้ `rm` ไม่ใช่ `del`)
 - เช็ค branch ก่อนเขียนไฟล์เสมอ · มีครั้งหนึ่งที่ repo ถูกสลับไป `main` ระหว่าง session
 
 - Vercel Hobby + repo ส่วนตัวของคนอื่น: GitHub App ต้องติดตั้งโดยเจ้าของ repo และ Hobby อาจ block deploy จาก commit ของคนที่ไม่ใช่เจ้าของ Vercel account (ดูขั้น 2)
+- Vercel team slug คือ `anyang4` · preview URL ถูกป้องกันด้วย Vercel Authentication (curl ได้ 302 ไป SSO) เช็คสถานะจากภายนอกไม่ได้ ต้องเปิด Inspect ด้วย account ที่มีสิทธิ์
+- ดู log ของ job ได้ด้วย `gh run view --job=<id> --log` (ใช้ได้หลัง job จบแล้วเท่านั้น) · re-run ด้วย `gh run rerun <run-id>`
+- ตรวจ workflow ได้ด้วย `uvx --from actionlint-py actionlint .github/workflows/*.yml`
