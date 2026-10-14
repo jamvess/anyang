@@ -13,7 +13,7 @@
 - [x] 2. 🙋 Junior (เจ้าของ repo `jamvess/anyang`) ติดตั้ง Vercel GitHub App ให้เข้าถึง repo นี้
 - [x] 3. 🙋 May import repo ใน Vercel: root `apps/web`, ใส่ env `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (ค่า staging จาก Junior)
 - [x] 4. 🙋 May ขออนุญาต Junior ในแชทกลุ่ม: เพิ่ม `.github/workflows/web-deploy.yml` และแก้ `infra/README.md` (Junior เป็นเจ้าของทั้งสองที่)
-- [ ] 5. 🤖 เขียน `.github/workflows/web-deploy.yml` (Vercel CLI: preview ทุก PR, production เมื่อ push `main`) + `apps/web/vercel.json` ปิด Git auto-deploy ของ Vercel
+- [x] 5. 🤖 เขียน `.github/workflows/web-deploy.yml` (Vercel CLI: preview ทุก PR, production เมื่อ push `main`) + `apps/web/vercel.json` ปิด Git auto-deploy ของ Vercel
 - [ ] 6. 🙋 Jam (`jamvess`) สร้าง Vercel token และใส่ GitHub Secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
 - [ ] 7. 🙋 เช็คว่า PR #5 ได้ preview URL จาก workflow และไม่มี check ของ Vercel ที่ fail อีก
 - [ ] 8. 🤖 บันทึก URL และขั้นตอนลง `infra/README.md` + ติ๊ก checklist ใน `sprint-checklists.md`
@@ -38,6 +38,7 @@
 
 ## Done today (2026-10-14)
 
+- ขั้น 5: เขียน `.github/workflows/web-deploy.yml` (Vercel CLI 64.0.2: pull → build → deploy --prebuilt, preview/production ตาม event) + `apps/web/vercel.json` ปิด Git deploy · actionlint ผ่าน
 - ขั้น 4: Junior อนุญาตในแชทกลุ่มให้แก้ `.github/workflows/` และ `infra/README.md`
 
 - ขั้น 1: `pnpm build`, lint, typecheck, test ของ `apps/web` ผ่าน · env ที่ต้องใช้มีแค่ 2 ตัว
@@ -47,7 +48,7 @@
 
 ## Next step
 
-ขั้น 5: เขียน `web-deploy.yml` + `apps/web/vercel.json`
+ขั้น 6: Jam สร้าง Vercel token + ใส่ GitHub Secrets 3 ตัว
 
 ## Waiting on
 
