@@ -29,7 +29,7 @@
 
 ## Next step
 
-รัน `git push` แล้วให้คนกดลิงก์ https://github.com/jamvess/anyang/compare/docs/team-setup-v2?expand=1 เพื่อเปิด PR (reviewer: Junior)
+ให้คนกดลิงก์ https://github.com/jamvess/anyang/compare/docs/team-setup-v2?expand=1 เพื่อเปิด PR (reviewer: Junior)
 
 ## Waiting on
 
