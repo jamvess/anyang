@@ -9,7 +9,7 @@
 - เขียนโค้ดด้วย **Claude Code** โดยแต่ละคนใช้บัญชี Pro ของตัวเอง ส่วน **Claude chat** ใช้คุยเรื่อง design หรือถามตอนติด
 - **repo บน GitHub เป็นแหล่งความจริงแหล่งเดียว** ดูว่าใครทำอะไรเสร็จได้ที่ `docs/team/sprint-checklists.md` บน `main`
 
-Part A ทำครั้งเดียวต่อเครื่อง ใช้เวลาประมาณ 1.5–2 ชม. ส่วน Part B คือสิ่งที่ทำทุกวัน
+Part A ทำครั้งเดียวต่อเครื่อง ใช้เวลาประมาณ 1.5–2 ชม. ส่วน Part B คือกติกาการทำงานร่วมกัน (ขั้นตอนประจำวันอยู่ใน `daily-workflow.md`)
 
 ## สิ่งที่มีอยู่แล้วใน repo (ห้ามทำซ้ำ)
 
@@ -218,7 +218,7 @@ items this sprint. Do not change any files.
 
 ---
 
-# Part B · ทำงานคู่ขนานทุกวัน
+# Part B · กติกาการทำงานคู่ขนาน
 
 ## B1 · ใครแก้ไฟล์ไหน (กันโค้ดชนกัน)
 
@@ -236,75 +236,13 @@ items this sprint. Do not change any files.
 - **`specs/system/api.md` คือสัญญาระหว่าง frontend กับ backend** May สร้างหน้าจอตาม spec โดยใช้ข้อมูลปลอมไปก่อนได้ ไม่ต้องรอ endpoint จริง
 - **`anyang-dev` ใช้ร่วมกันทั้งทีม** ห้ามลบข้อมูลของคนอื่น และ test ทุกตัวต้องลบข้อมูลที่ตัวเองสร้าง
 
-## B2 · รู้ได้ยังไงว่าคนอื่นทำอะไรเสร็จแล้ว
+## B2 · ทำงานประจำวัน
 
-| อยากรู้ | ดูที่ |
-|---|---|
-| อะไร**เสร็จ**แล้ว | `docs/team/sprint-checklists.md` บน `main` ทุกคน**ติ๊กข้อของตัวเองใน PR เดียวกับงาน** พอ merge ก็ถือว่าเสร็จ |
-| ใคร**กำลังทำ**อะไร | GitHub → **Pull requests** (รวม Draft) ให้เปิด **Draft PR** ทันทีที่ push ครั้งแรก |
-| เมื่อวานมีอะไรเปลี่ยน | `git log --oneline -15` หลัง `git pull` |
-| ใครติดอะไร | แชทกลุ่ม ถ้าติดเกิน 1 วันต้องบอก |
+ดูที่ [`daily-workflow.md`](daily-workflow.md) ที่เดียว ทุกวันใช้แค่ 4 คำสั่งใน Claude Code: `/work-start <ชื่อ>` → (`/work-check` หลังทุกขั้น) → `/work-pause` หรือ `/work-done`
 
-**prompt ตอนเช้า** (หลัง `git pull`)
+ในไฟล์นั้นมีทั้งวิธีดูว่าเพื่อนทำอะไรเสร็จแล้ว, วงจรของ 1 งาน, worklog, การ review PR ของเพื่อน (หัวข้อ D) และคู่มือแบบทำเองถ้าไม่ใช้คำสั่งอัตโนมัติ
 
-```
-I am <Junior|May|Jam>. Read docs/team/sprint-checklists.md and run `git log --oneline -15`.
-In Thai, tell me: what teammates finished recently, what is left for me this sprint,
-and which of my items are waiting on someone else. Do not change any files.
-```
-
-## B3 · วงจรของ 1 งาน
-
-**1. เริ่มงาน**
-
-```bash
-cd ~/projects/anyang
-git switch main && git pull
-(cd apps/api && uv sync) && (cd apps/web && pnpm install)   # ถ้า lock file เปลี่ยน
-git switch -c feat/<area>-<short-name>                     # หรือ fix/ chore/ docs/ poc/
-claude
-```
-
-**2. ทำงานกับ Claude Code**
-- ถ้าเป็นฟีเจอร์: `/spec-feature` → คน review spec → `/spec-to-tests` → **คน review test** → `/implement-feature`
-- ถ้าเป็นงาน setup หรือ PoC: สั่งตรงๆ ได้ แต่ให้ Claude วางแผนก่อนลงมือถ้างานแตะหลายไฟล์
-
-**3. push ให้เร็ว แล้วเปิด Draft PR**
-
-```bash
-git push -u origin <branch>
-```
-
-ไปที่ GitHub → Create **draft** pull request แล้วโพสต์ในกลุ่มว่า "เริ่มทำ X แล้ว"
-
-**4. ก่อนขอ review**
-
-```bash
-git pull origin main        # ดึงงานของเพื่อนมารวม
-```
-
-- ถ้า conflict ให้สั่ง Claude Code: `Resolve the merge conflicts. Explain each conflict and which side you kept.` แล้วอ่าน diff เองทุกจุด
-- รัน test อีกรอบ
-- ติ๊กข้อที่เสร็จใน `docs/team/sprint-checklists.md` แล้ว commit รวมใน PR นี้
-
-**5. Review และ merge**
-- กด **Ready for review** แล้วเลือก reviewer ตาม `roles.md`
-- reviewer กด **Approve** บน GitHub แล้วคนเปิด PR เป็นคนกด merge
-- **ห้าม merge ถ้ายังไม่มีคน approve และ CI ยังไม่เขียว**
-- merge แล้วกด Delete branch และบอกในกลุ่ม
-
-## B4 · Review PR ของเพื่อน
-
-- GitHub → PR → **Files changed** → คอมเมนต์ทีละบรรทัด → Approve หรือ Request changes
-- ถ้าอยากลองรันบนเครื่องตัวเอง: `git fetch && git switch <branch>`
-- ให้ Claude Code ช่วยดูได้ แต่คนต้องเป็นคนตัดสิน
-
-  ```
-  Review this branch against main using CLAUDE.md rules. List only real problems,
-  with file and line. Do not change any files.
-  ```
-
-## B5 · กฎการใช้ Claude Code ของทีม
+## B3 · กฎการใช้ Claude Code ของทีม
 
 1. **1 งาน = 1 session = 1 branch** เมื่อเปลี่ยนงานให้ `/exit` แล้วเปิดใหม่
 2. **ให้วางแผนก่อนลงมือ** ถ้างานแตะหลายไฟล์
