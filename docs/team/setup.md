@@ -1,201 +1,335 @@
-# วิธีตั้งค่าโปรเจกต์ (AI-first ด้วย Claude Code)
+# วิธีตั้งค่าเครื่องและทำงานคู่ขนาน
 
-อัปเดต 12 ต.ค. 2569 · ทำตามลำดับ §1 → §6 ใช้เวลาประมาณ 2–3 ชม. ต่อคน (§4–§5 Junior ทำครั้งเดียว)
+อัปเดต 14 ต.ค. 2569 · ใช้แทนฉบับ 12 ต.ค. ซึ่งใช้ WSL กับ Docker ทีมเราไม่ได้ใช้ทั้งสองอย่างแล้ว
 
-**แนวคิด:** เราให้ Claude Code เป็นคนเขียนโค้ดส่วนใหญ่ แต่ทุกอย่างที่ Claude Code ทำต้องอ้างอิง `CLAUDE.md` และ `specs/` ของ repo ดังนั้นสิ่งแรกที่ต้องทำคือวาง starter files (โฟลเดอร์นี้) ลง repo ก่อนเริ่มเขียนโค้ด
+**ทีมเราทำงานแบบนี้**
+
+- ใช้ Windows ธรรมดา และใช้ **Git Bash** เป็น terminal หลัก ไม่ใช้ WSL และไม่ใช้ Docker
+- ตอน dev ทั้งทีมใช้ database เดียวกันคือ Supabase cloud project **`anyang-dev`**
+- เขียนโค้ดด้วย **Claude Code** โดยแต่ละคนใช้บัญชี Pro ของตัวเอง ส่วน **Claude chat** ใช้คุยเรื่อง design หรือถามตอนติด
+- **repo บน GitHub เป็นแหล่งความจริงแหล่งเดียว** ดูว่าใครทำอะไรเสร็จได้ที่ `docs/team/sprint-checklists.md` บน `main`
+
+Part A ทำครั้งเดียวต่อเครื่อง ใช้เวลาประมาณ 1.5–2 ชม. ส่วน Part B คือสิ่งที่ทำทุกวัน
+
+## สิ่งที่มีอยู่แล้วใน repo (ห้ามทำซ้ำ)
+
+| ส่วน | สถานะ |
+|---|---|
+| repo `jamvess/anyang` + specs, `CLAUDE.md`, skills | ✅ |
+| backend `apps/api` (FastAPI, `/health`, settings) | ✅ |
+| frontend `apps/web` (Next.js, `Tex`, `lib/sse.ts`) | ✅ |
+| Supabase `anyang-dev`: ทุกตาราง + RLS + custom access token hook | ✅ |
+| CI ทั้ง 3 job (`api`, `api-integration`, `web`) เขียว | ✅ |
+
+คนที่ตั้งเครื่องใหม่ทำแค่ **clone แล้วตั้งค่าเครื่องตัวเอง** ห้ามรัน `supabase init`, `supabase link`, `supabase db push`, `create-next-app` หรือ `uv init` ซ้ำ
 
 ---
 
-## 1. บัญชีที่ต้องมี
+# Part A · ตั้งค่าครั้งเดียว
 
-| บัญชี | ใครสร้าง | ใช้ทำอะไร | หมายเหตุ |
-|---|---|---|---|
-| GitHub organization + repo `anyang` | Junior | โค้ด, PR, CI | เพิ่มทุกคนเป็น member |
-| Claude (Pro, Max หรือ Team) หรือ Anthropic Console | ทุกคน | ใช้ Claude Code | แผน free ใช้ Claude Code ไม่ได้ ตกลงกันในทีมว่าใช้แบบไหน |
-| Google Cloud project `anyang` + billing / credit | Junior | Cloud Run, Vertex AI (Gemini), STT/TTS | ให้ Jam สิทธิ์ Vertex AI User |
-| Supabase: project `anyang-staging` | Junior | DB, Auth, Storage บน cloud | local ใช้ Docker ไม่ต้องมีบัญชี |
-| Vercel | May | deploy frontend | import จาก GitHub repo |
-| Anthropic Console API key | Jam | provider สำรอง (Claude) ใน gateway | แยกจาก subscription ของ Claude Code |
-| Sentry | Junior | error tracking | free tier พอ |
-| Figma | May | hi-fi (เทอม 2) | |
+## A0 · เจ้าของ repo ทำก่อน (บัญชี `jamvess`)
 
-## 2. เครื่องมือบนเครื่อง (ทุกคน)
+1. **GitHub:** repo `anyang` → Settings → Collaborators → **Add people** → ใส่ username ของ Junior และ May
+2. **Supabase:** Dashboard → Organization ที่มี `anyang-dev` → Settings → **Team** → Invite → ใส่อีเมลของทั้งสองคน เลือก role **Developer** (ถ้าเข้าไปแล้วมองไม่เห็น API keys ให้เปลี่ยนเป็น Administrator)
+3. เมื่อได้ username ครบ ให้แก้ `.github/CODEOWNERS` โดยใส่ชื่อจริงแทน `@junior-handle` `@may-handle` `@jam-handle` แล้วเปิด PR
 
-แนะนำ macOS หรือ Linux ถ้าใช้ Windows ให้ใช้ **WSL 2** แล้วทำทุกอย่างใน WSL
+> **ห้ามส่ง key ให้กันทางแชท** ให้แต่ละคนเข้า Dashboard แล้วก๊อปเอง (ดู A5) ยกเว้น database password ซึ่ง Dashboard ไม่แสดง ให้บอกกันต่อหน้า
 
-| เครื่องมือ | เวอร์ชัน | ติดตั้ง | เช็ค |
-|---|---|---|---|
-| Git | ล่าสุด | macOS: มากับ Xcode CLT · WSL: `sudo apt install git` | `git --version` |
-| Node.js | 22 LTS | [nodejs.org](https://nodejs.org) หรือ nvm | `node -v` |
-| pnpm | ล่าสุด | `corepack enable` | `pnpm -v` |
-| uv (Python) | ล่าสุด | `curl -LsSf https://astral.sh/uv/install.sh \| sh` แล้ว `uv python install 3.12` | `uv --version` |
-| Docker | Docker Desktop หรือ OrbStack (macOS) | จากเว็บผู้ผลิต | `docker ps` |
-| Supabase CLI | ล่าสุด | ใช้ผ่าน `npx supabase ...` (ต้องการ Node 20+) หรือติดตั้ง global ผ่าน Homebrew / Scoop | `npx supabase --version` |
-| Google Cloud CLI | ล่าสุด | [cloud.google.com/sdk](https://cloud.google.com/sdk/docs/install) | `gcloud --version` |
-| VS Code | ล่าสุด | + extensions: Python, Ruff, ESLint, Tailwind CSS, Claude Code | |
+## A1 · บัญชีที่คนใหม่ต้องมี
 
-## 3. ติดตั้ง Claude Code
-
-```bash
-# macOS, Linux, WSL
-curl -fsSL https://claude.ai/install.sh | bash
-
-# ตรวจ
-claude --version
-claude doctor
-```
-
-จากนั้นเข้าโฟลเดอร์ repo แล้วรัน `claude` ระบบจะเปิด browser ให้ login ด้วยบัญชี Claude (Pro/Max/Team) หรือ Console
-
-สิ่งที่ Claude Code อ่านจาก repo นี้โดยอัตโนมัติ
-
-| ไฟล์ | หน้าที่ |
+| บัญชี | ทำอะไร |
 |---|---|
-| `CLAUDE.md` (root และใน `apps/*`) | กฎของโปรเจกต์ที่ต้องทำตามทุกครั้ง |
-| `.claude/settings.json` | คำสั่งที่อนุญาตให้รันได้ไม่ต้องถาม และไฟล์ที่ห้ามอ่าน (`.env`) |
-| `.claude/skills/*/SKILL.md` | คำสั่ง `/spec-feature`, `/spec-to-tests`, `/implement-feature`, `/poc-report` |
+| GitHub | สมัคร ส่ง username ให้เจ้าของ repo แล้ว**กดรับคำเชิญ**ในอีเมล หรือที่ github.com/notifications |
+| Claude Pro | มีอยู่แล้ว ใช้ได้ทั้ง Claude Code และ chat |
+| Supabase | สมัครด้วย**อีเมลเดียวกับที่ถูกเชิญ** แล้วกดรับคำเชิญ |
 
-## 4. สร้าง repo และโครงโปรเจกต์ (Junior ทำครั้งเดียว)
+## A2 · ติดตั้งเครื่องมือ (Windows)
 
-### 4.1 วาง starter files
+ติดตั้งตามลำดับนี้ Git ต้องมาก่อน เพราะเครื่องมืออื่นต้องใช้
 
-```bash
-git clone git@github.com:<org>/anyang.git && cd anyang
-# copy ทุกอย่างจากโฟลเดอร์ anyang-starter มาไว้ที่ root ของ repo (รวม .claude, .github, .gitignore)
-git add . && git commit -m "chore: add specs, CLAUDE.md and project config" && git push
-```
+| # | เครื่องมือ | วิธีติดตั้ง | เช็ค (ใน terminal ใหม่) |
+|---|---|---|---|
+| 1 | Git for Windows | [git-scm.com/downloads/win](https://git-scm.com/downloads/win) ติดตั้งโดยกด Next ตามค่า default จะได้ Git Bash กับ Credential Manager มาด้วย | `git --version` |
+| 2 | Node.js **22** LTS | [nodejs.org](https://nodejs.org) เลือกเวอร์ชัน 22 ให้ตรงกับ CI | `node -v` → `v22.x` |
+| 3 | pnpm | `npm install -g pnpm@10.34.7` | `pnpm -v` → `10.34.7` |
+| 4 | uv + Python 3.12 | ใน **PowerShell**: `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 \| iex"` แล้วเปิด terminal ใหม่ รัน `uv python install 3.12` | `uv --version` |
+| 5 | Claude Code | ใน **PowerShell**: `irm https://claude.ai/install.ps1 \| iex` | `claude --version` |
+| 6 | VS Code | [code.visualstudio.com](https://code.visualstudio.com) + extensions: Python, Ruff, ESLint, Tailwind CSS IntelliSense, Claude Code | |
 
-ตั้ง branch protection ของ `main`: ต้องผ่าน PR, review 1 คน, CI ผ่าน
+- ติดตั้งเสร็จทุกตัวแล้ว **ปิด terminal ทั้งหมดแล้วเปิดใหม่** ถ้าเจอ `not recognized` ให้ดูตารางปัญหาท้ายไฟล์
+- **macOS:** ติดตั้ง Git ด้วย `xcode-select --install` · Node จาก nodejs.org · uv ด้วย `curl -LsSf https://astral.sh/uv/install.sh | sh` · Claude Code ด้วย `curl -fsSL https://claude.ai/install.sh | bash`
+- **ยังไม่ต้องติดตั้ง:** Supabase CLI (ใช้ผ่าน `npx supabase` และ Junior คนเดียวที่ต้องใช้), Google Cloud CLI (ใช้ใน S2), Docker (ไม่ใช้)
 
-### 4.2 ให้ Claude Code สร้างโครงโค้ด
-
-รัน `claude` ที่ root ของ repo แล้วพิมพ์ทีละข้อ ตรวจผลก่อนไปข้อถัดไป
-
-**Prompt 1 · backend**
-
-```
-Read CLAUDE.md and apps/api/CLAUDE.md. Scaffold apps/api with uv:
-- uv init --app, Python 3.12
-- dependencies: fastapi[standard], sse-starlette, pydantic-settings, pyyaml, supabase, sympy, google-genai, anthropic
-- dev dependencies: pytest, pytest-asyncio, httpx, ruff
-- create the folder layout from apps/api/CLAUDE.md with empty modules
-- app/settings.py loads env vars and config/learning.yaml + config/ai.yaml into typed settings
-- a /health endpoint and one test for it
-- a Dockerfile for Cloud Run (port from $PORT)
-Do not implement features yet. Run the tests and ruff, then show me the tree.
-```
-
-**Prompt 2 · frontend**
-
-```
-Read CLAUDE.md and apps/web/CLAUDE.md. Scaffold apps/web with pnpm create next-app
-(TypeScript, Tailwind, ESLint, App Router). Add katex, @supabase/supabase-js, @supabase/ssr,
-vitest and @testing-library/react. Create the folder layout from apps/web/CLAUDE.md,
-a Tex component with one test, lib/sse.ts (POST + ReadableStream reader) with one test,
-and scripts: dev, build, lint, typecheck, test, gen:api. Do not build screens yet.
-```
-
-**Prompt 3 · database**
-
-```
-Run `npx supabase init` (keep supabase/migrations/0001_init.sql), enable the custom access
-token hook in supabase/config.toml for public.custom_access_token_hook, then start Supabase
-and reset the database. Write apps/api/tests/integration/test_rls_isolation.py named
-test_SA06_tenant_isolation that signs up two users and proves user A cannot read or write
-user B's exam_preps, attempts and messages. Run it.
-```
-
-ส่วน hook ใน `supabase/config.toml` ต้องเป็นแบบนี้
-
-```toml
-[auth.hook.custom_access_token]
-enabled = true
-uri = "pg-functions://postgres/public/custom_access_token_hook"
-```
-
-**Prompt 4 · CI**
-
-```
-Check .github/workflows/ci.yml against the scaffolded apps and fix any command that does
-not exist yet. Open a PR "chore: scaffold apps" with the PR template filled in.
-```
-
-## 5. Cloud (Junior ทำครั้งเดียว ใน S1–S2 เป็นส่วนหนึ่งของ PoC P6-lite)
+## A3 · ตั้งค่า git (Git Bash)
 
 ```bash
-gcloud auth login
-gcloud config set project <PROJECT_ID>
-gcloud services enable run.googleapis.com cloudbuild.googleapis.com \
-  artifactregistry.googleapis.com secretmanager.googleapis.com aiplatform.googleapis.com
-gcloud artifacts repositories create anyang --repository-format=docker --location=asia-southeast1
-
-# secrets (ค่าจริงใส่ผ่าน stdin ไม่พิมพ์ลง history)
-printf '%s' "<service-role-key>" | gcloud secrets create supabase-service-role --data-file=-
-printf '%s' "<anthropic-key>"    | gcloud secrets create anthropic-api-key --data-file=-
+git config --global user.name "Firstname Lastname"
+git config --global user.email "อีเมลเดียวกับบัญชี GitHub"
+git config --global core.longpaths true
+git config --global credential.helper manager
+git config --global pull.rebase false
 ```
 
-- สร้าง Cloud Build trigger: push เข้า `main` → ใช้ `infra/cloudbuild.yaml`
-- ให้ service account ของ Cloud Build มีสิทธิ์ deploy Cloud Run และอ่าน secrets
-- Supabase cloud: `npx supabase login` → `npx supabase link --project-ref <ref>` → `npx supabase db push` แล้วเปิด Custom Access Token hook ใน Dashboard (Authentication → Hooks)
-- Vercel (May): import repo, root directory `apps/web`, ใส่ env `NEXT_PUBLIC_*`
+- `user.email` ต้องตรงกับอีเมลใน GitHub (Settings → Emails) ไม่งั้น GitHub จะไม่นับ commit เป็นของเรา ถ้าตั้งซ่อนอีเมลไว้ ให้ใช้อีเมลแบบ `...@users.noreply.github.com` ที่แสดงในหน้านั้น
+- `core.longpaths` แก้ปัญหา path ยาวเกินใน `node_modules` บน Windows
+- `pull.rebase false` ทำให้ `git pull` ไม่ถามคำถามที่ชวนงง
 
-ใช้ Gemini บนเครื่องตัวเองตอน dev: `gcloud auth application-default login` (ไม่ต้องดาวน์โหลด key file)
-
-## 6. ทุกคน: รันบนเครื่องตัวเอง
+## A4 · Clone repo
 
 ```bash
-git clone git@github.com:<org>/anyang.git && cd anyang
-cp .env.example .env                      # เติมค่าจาก `npx supabase status`
-cp .env.example apps/web/.env.local       # ใช้เฉพาะ NEXT_PUBLIC_*
-
-npx supabase start && npx supabase db reset
-cd apps/api && uv sync && uv run pytest && uv run fastapi dev app/main.py   # :8000/docs
-cd apps/web && pnpm install && pnpm test --run && pnpm dev                  # :3000
+mkdir -p ~/projects && cd ~/projects
+git clone https://github.com/jamvess/anyang.git
+cd anyang
 ```
 
-**เช็คว่าพร้อมแล้ว**
+ครั้งแรก browser จะเปิดขึ้นมาให้ login GitHub ถ้าขึ้น `Repository not found` แปลว่ายังไม่ได้รับคำเชิญจาก A1
 
-- [ ] `claude doctor` ไม่มี error
+## A5 · ไฟล์ env (ห้าม commit · ห้ามให้ Claude Code อ่าน)
+
+**1) `.env` ที่ root ใช้กับ backend**
+
+```bash
+cp .env.example .env
+code .env
+```
+
+เข้า Supabase Dashboard แล้วเลือก project **`anyang-dev`**
+
+| ตัวแปร | เอาค่ามาจาก |
+|---|---|
+| `SUPABASE_URL` | ปุ่ม **Connect** → แท็บ Framework → ดูบรรทัด `NEXT_PUBLIC_SUPABASE_URL` ในกล่อง `.env.local` (`https://xxxx.supabase.co`) |
+| `SUPABASE_ANON_KEY` | Project Settings → **API Keys** → Publishable key (`sb_publishable_...`) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Project Settings → **API Keys** → Secret key (`sb_secret_...`) ⚠️ เทียบเท่ารหัส admin |
+| `DATABASE_URL` | ปุ่ม **Connect** → แท็บ Direct → **Session pooler** · แทน `[YOUR-PASSWORD]` ด้วย database password ที่ขอจากเจ้าของ repo ต่อหน้า |
+| `NEXT_PUBLIC_SUPABASE_URL` | ใช้ค่าเดียวกับ `SUPABASE_URL` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ใช้ค่าเดียวกับ `SUPABASE_ANON_KEY` |
+
+บรรทัดอื่น (`AI_PROVIDER=fake`, GCP, Anthropic, Sentry) ปล่อยไว้ตามเดิมก่อน
+
+**2) `apps/web/.env.local` ใช้กับ frontend**
+
+```bash
+cp .env.example apps/web/.env.local
+code apps/web/.env.local
+```
+
+ลบบรรทัดอื่นทิ้งให้เหลือแค่ 3 บรรทัดนี้ **ห้ามมี service role key ในไฟล์นี้**
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+**3) ตรวจ:** รัน `git status` ถ้าไม่เห็น `.env` หรือ `.env.local` ในรายการ แปลว่าถูกต้อง
+
+## A6 · ติดตั้ง dependency และรันทั้งระบบ
+
+เปิด Git Bash 3 หน้าต่าง
+
+**หน้าต่าง 1 · backend**
+
+```bash
+cd ~/projects/anyang/apps/api
+uv sync
+uv run pytest            # ต้องผ่านทั้งหมด ไม่มี failed และไม่มี skipped
+uv run fastapi dev app/main.py
+```
+
+`pytest` จะสร้าง user ชั่วคราว (`sa06-*@example.test`) บน `anyang-dev` แล้วลบทิ้งเอง เป็นเรื่องปกติ ถ้าขึ้น `skipped` แปลว่าแอปอ่าน `.env` ไม่ได้ ให้กลับไปเช็ค A5
+
+**หน้าต่าง 2 · frontend**
+
+```bash
+cd ~/projects/anyang/apps/web
+pnpm install
+pnpm test
+pnpm dev
+```
+
+**หน้าต่าง 3 · เช็คว่าสองฝั่งต่อกันได้** (ตอนที่ backend ยังเปิดอยู่)
+
+```bash
+cd ~/projects/anyang/apps/web
+pnpm gen:api
+git status               # ต้องขึ้นว่า nothing to commit
+```
+
+**เช็คลิสต์**
+
+- [ ] `uv run pytest` ผ่านทั้งหมด
+- [ ] `pnpm test` ผ่าน
 - [ ] `http://localhost:8000/docs` เปิดได้
 - [ ] `http://localhost:3000` เปิดได้
-- [ ] `uv run pytest` และ `pnpm test --run` ผ่าน
-- [ ] เปิด PR ทดลองแล้ว CI รันครบ
+- [ ] `pnpm gen:api` แล้ว git ไม่เห็นไฟล์เปลี่ยน
+
+## A7 · Claude Code
+
+```bash
+cd ~/projects/anyang
+claude
+```
+
+- browser จะเปิดให้ login ด้วยบัญชี **Claude Pro ของตัวเอง**
+- ถ้าถามว่า trust โฟลเดอร์นี้ไหม ให้ตอบ Yes
+- Claude Code จะอ่าน `CLAUDE.md`, `.claude/settings.json` และ skills (`/spec-feature`, `/spec-to-tests`, `/implement-feature`, `/poc-report`) เอง ลองพิมพ์ `/` จะเห็นรายการ skills
+
+**ทดสอบครั้งแรก** ให้พิมพ์ข้อความนี้ (เปลี่ยนชื่อเป็นของตัวเอง)
+
+```
+I am May (frontend + UX). Read CLAUDE.md, apps/web/CLAUDE.md and docs/team/sprint-checklists.md.
+In Thai, summarize: the project rules you must follow, what is already done, and my remaining
+items this sprint. Do not change any files.
+```
+
+ถ้าคำตอบถูกต้อง แปลว่า Claude Code อ่าน repo ได้ครบ
+
+## A8 · Claude chat (claude.ai)
+
+บัญชี Pro **แชร์ Project ข้ามบัญชีไม่ได้** (ฟีเจอร์นี้มีเฉพาะแผน Team/Enterprise) ให้แต่ละคนสร้าง Project ของตัวเอง
+
+1. claude.ai → **Projects** → Create project → ตั้งชื่อ `อ่านยัง?`
+2. อัปโหลดไฟล์จาก repo เข้า Project knowledge
+
+   | ไฟล์ | ทำไม |
+   |---|---|
+   | `CLAUDE.md` | กฎของโปรเจกต์ |
+   | `specs/system/architecture.md`, `api.md`, `data-model.md`, `glossary.md` | ภาพรวมระบบ |
+   | `specs/system/ai-orchestration.md`, `learning-model.md` | AI flows และตัวเลข |
+   | `specs/requirements/requirements.md` | requirement ID |
+   | `specs/poc/README.md` | PoC ของเทอมนี้ |
+   | `docs/team/roles.md`, `sprint-checklists.md`, `setup.md` | หน้าที่ งาน และวิธีทำงาน |
+
+3. ใส่ **Custom instructions** (เปลี่ยนชื่อและบทบาทเป็นของตัวเอง)
+
+   ```
+   โปรเจกต์นี้คือ "อ่านยัง?" senior project ของ CPE KMUTT ฉันชื่อ May รับผิดชอบ Frontend + UX
+   ตอบเป็นภาษาไทย ใช้ศัพท์เทคนิคเป็นภาษาอังกฤษ ไฟล์ใน Project คือ spec ที่ทีมตกลงกันแล้ว
+   ถ้าคำแนะนำขัดกับ spec ให้บอกก่อน งานโค้ดฉันทำด้วย Claude Code ใน repo
+   ดังนั้นเมื่อแนะนำให้แก้โค้ด ให้เขียนเป็น prompt ภาษาอังกฤษสำหรับวางใน Claude Code
+   ```
+
+**กติกาการใช้ chat**
+
+- chat ใช้คิด, ออกแบบ, อธิบาย error ส่วนการแก้ไฟล์ให้ทำผ่าน Claude Code ใน repo เท่านั้น
+- **ถ้าตัดสินใจอะไรใน chat ต้องเอาไปใส่ใน repo** (spec, config หรือ PR description) เพราะ chat ของคนอื่นและ Claude Code มองไม่เห็นบทสนทนาของเรา
+- ไฟล์ใน Project จะเก่าลงเรื่อยๆ ให้ทุกวันจันทร์อัปโหลดไฟล์ที่เปลี่ยนบน `main` ใหม่ (ดูได้จาก `git log --since="1 week ago" --name-only -- specs docs CLAUDE.md`)
+- ห้ามวาง key, password หรือเนื้อหาไฟล์ `.env` ใน chat
 
 ---
 
-## 7. ทำงานประจำวันกับ Claude Code
+# Part B · ทำงานคู่ขนานทุกวัน
 
-### วงจรของ 1 งาน
+## B1 · ใครแก้ไฟล์ไหน (กันโค้ดชนกัน)
+
+| โฟลเดอร์ / ไฟล์ | เจ้าของ | คนอื่นแก้ได้ไหม |
+|---|---|---|
+| `apps/api/`, `supabase/`, `infra/`, `.github/` | Junior | ได้ผ่าน PR แต่ต้องบอกในกลุ่มก่อน |
+| `apps/web/` | May | ได้ผ่าน PR แต่ต้องบอกในกลุ่มก่อน |
+| `prompts/`, `evals/`, `config/learning.yaml`, `specs/system/ai-orchestration.md`, `learning-model.md` | Jam | ได้ผ่าน PR แต่ต้องบอกในกลุ่มก่อน |
+| **ไฟล์กลาง:** `CLAUDE.md`, `specs/requirements/requirements.md`, `specs/system/api.md`, `config/ai.yaml`, `docs/team/*` | ทุกคน | ประกาศในกลุ่มก่อนแก้ และเปิด PR เล็กๆ แยกจากงานอื่น |
+
+**กฎพิเศษ**
+
+- **Migration (`supabase/migrations/`) เป็นของ Junior คนเดียว** ห้ามแก้ไฟล์ที่ merge แล้ว ถ้าต้องเปลี่ยนให้เพิ่มไฟล์ใหม่ เช่น `0002_xxx.sql` หลัง merge Junior เป็นคนรัน `npx supabase db push` ขึ้น `anyang-dev` แล้วประกาศในกลุ่ม คนอื่น**ห้ามรัน `db push`**
+- **ใครแก้ API คนนั้นรัน `pnpm gen:api`** ใน PR เดียวกัน เพื่อให้ `apps/web/lib/api-schema.ts` ตรงกับ API เสมอ
+- **`specs/system/api.md` คือสัญญาระหว่าง frontend กับ backend** May สร้างหน้าจอตาม spec โดยใช้ข้อมูลปลอมไปก่อนได้ ไม่ต้องรอ endpoint จริง
+- **`anyang-dev` ใช้ร่วมกันทั้งทีม** ห้ามลบข้อมูลของคนอื่น และ test ทุกตัวต้องลบข้อมูลที่ตัวเองสร้าง
+
+## B2 · รู้ได้ยังไงว่าคนอื่นทำอะไรเสร็จแล้ว
+
+| อยากรู้ | ดูที่ |
+|---|---|
+| อะไร**เสร็จ**แล้ว | `docs/team/sprint-checklists.md` บน `main` ทุกคน**ติ๊กข้อของตัวเองใน PR เดียวกับงาน** พอ merge ก็ถือว่าเสร็จ |
+| ใคร**กำลังทำ**อะไร | GitHub → **Pull requests** (รวม Draft) ให้เปิด **Draft PR** ทันทีที่ push ครั้งแรก |
+| เมื่อวานมีอะไรเปลี่ยน | `git log --oneline -15` หลัง `git pull` |
+| ใครติดอะไร | แชทกลุ่ม ถ้าติดเกิน 1 วันต้องบอก |
+
+**prompt ตอนเช้า** (หลัง `git pull`)
 
 ```
-git switch -c feat/<area>-<feature>
+I am <Junior|May|Jam>. Read docs/team/sprint-checklists.md and run `git log --oneline -15`.
+In Thai, tell me: what teammates finished recently, what is left for me this sprint,
+and which of my items are waiting on someone else. Do not change any files.
+```
+
+## B3 · วงจรของ 1 งาน
+
+**1. เริ่มงาน**
+
+```bash
+cd ~/projects/anyang
+git switch main && git pull
+(cd apps/api && uv sync) && (cd apps/web && pnpm install)   # ถ้า lock file เปลี่ยน
+git switch -c feat/<area>-<short-name>                     # หรือ fix/ chore/ docs/ poc/
 claude
-> /spec-feature scope/compute-importance SM-03     # หรือแก้ spec ที่มีอยู่
-   → คน review spec
-> /spec-to-tests specs/features/scope/compute-importance.md
-   → คน review test (สำคัญที่สุด) แล้ว commit test ก่อน
-> /implement-feature specs/features/scope/compute-importance.md
-   → อ่าน diff ทุกไฟล์ก่อน commit
-git push → เปิด PR → teammate review → merge → staging อัปเดตเอง
 ```
 
-### กฎการใช้ Claude Code ของทีม
+**2. ทำงานกับ Claude Code**
+- ถ้าเป็นฟีเจอร์: `/spec-feature` → คน review spec → `/spec-to-tests` → **คน review test** → `/implement-feature`
+- ถ้าเป็นงาน setup หรือ PoC: สั่งตรงๆ ได้ แต่ให้ Claude วางแผนก่อนลงมือถ้างานแตะหลายไฟล์
 
-1. **1 งาน = 1 session = 1 branch** เริ่ม session ใหม่เมื่อเปลี่ยนงาน จะได้ไม่ปน context
-2. **ให้วางแผนก่อนลงมือ** สำหรับงานที่แตะหลายไฟล์ ให้ Claude อธิบายแผนก่อน แล้วค่อยให้แก้
-3. **อ่าน diff ทุกครั้ง** ก่อน commit ห้าม commit โค้ดที่ไม่ได้อ่าน
-4. **ห้ามให้ Claude แก้ test ที่ review แล้ว** ถ้า test ดูผิด ให้หยุดแล้วคุยกันในทีม
-5. **ห้ามใส่ secret ในแชท** หรือในไฟล์ที่ commit (settings บล็อกการอ่าน `.env` ไว้แล้ว)
-6. **เก็บตัวเลขให้ Self-Assessment:** ใน PR template กรอก % โค้ดที่ agent เขียนและจำนวนรอบ red → green
-7. **ถ้า Claude ทำผิดซ้ำเรื่องเดิม** ให้เพิ่มกฎใน `CLAUDE.md` ผ่าน PR แทนการบอกซ้ำทุกครั้ง
-8. **PoC** ใช้ `/poc-report P1` เขียน report จากผลที่วัดได้
+**3. push ให้เร็ว แล้วเปิด Draft PR**
 
-### ปัญหาที่พบบ่อย
+```bash
+git push -u origin <branch>
+```
+
+ไปที่ GitHub → Create **draft** pull request แล้วโพสต์ในกลุ่มว่า "เริ่มทำ X แล้ว"
+
+**4. ก่อนขอ review**
+
+```bash
+git pull origin main        # ดึงงานของเพื่อนมารวม
+```
+
+- ถ้า conflict ให้สั่ง Claude Code: `Resolve the merge conflicts. Explain each conflict and which side you kept.` แล้วอ่าน diff เองทุกจุด
+- รัน test อีกรอบ
+- ติ๊กข้อที่เสร็จใน `docs/team/sprint-checklists.md` แล้ว commit รวมใน PR นี้
+
+**5. Review และ merge**
+- กด **Ready for review** แล้วเลือก reviewer ตาม `roles.md`
+- reviewer กด **Approve** บน GitHub แล้วคนเปิด PR เป็นคนกด merge
+- **ห้าม merge ถ้ายังไม่มีคน approve และ CI ยังไม่เขียว**
+- merge แล้วกด Delete branch และบอกในกลุ่ม
+
+## B4 · Review PR ของเพื่อน
+
+- GitHub → PR → **Files changed** → คอมเมนต์ทีละบรรทัด → Approve หรือ Request changes
+- ถ้าอยากลองรันบนเครื่องตัวเอง: `git fetch && git switch <branch>`
+- ให้ Claude Code ช่วยดูได้ แต่คนต้องเป็นคนตัดสิน
+
+  ```
+  Review this branch against main using CLAUDE.md rules. List only real problems,
+  with file and line. Do not change any files.
+  ```
+
+## B5 · กฎการใช้ Claude Code ของทีม
+
+1. **1 งาน = 1 session = 1 branch** เมื่อเปลี่ยนงานให้ `/exit` แล้วเปิดใหม่
+2. **ให้วางแผนก่อนลงมือ** ถ้างานแตะหลายไฟล์
+3. **อ่าน diff ทุกครั้งก่อน commit** ห้าม commit โค้ดที่ตัวเองยังไม่ได้อ่าน
+4. **ห้ามให้ Claude แก้ test ที่ review แล้ว** ถ้า test ดูผิด ให้หยุดแล้วคุยในทีม
+5. **ห้ามให้ Claude อ่าน `.env`** ถ้ามันขออนุญาตให้กด No (settings บล็อกไว้แล้ว)
+6. **ใช้ AI coding tool ตัวเดียว** คือ Claude Code ห้ามติดตั้งตัวอื่นที่แก้ repo พร้อมกัน
+7. **กรอกตัวเลขใน PR template** (% โค้ดที่ agent เขียน, จำนวนรอบ red → green) ทีมต้องใช้ตัวเลขนี้ใน Self-Assessment
+8. **ถ้า Claude ทำผิดเรื่องเดิมซ้ำ** ให้เพิ่มกฎใน `CLAUDE.md` ผ่าน PR แทนการบอกซ้ำทุกครั้ง
+9. **ถ้าเจอ usage limit ของ Pro** ให้สลับไปทำงานที่ไม่ใช้ AI ก่อน เช่น review PR, label ข้อมูล, wireframe
+
+---
+
+## ปัญหาที่พบบ่อย
 
 | อาการ | แก้ |
 |---|---|
-| `claude` not found หลังติดตั้ง | เปิด terminal ใหม่ หรือดู `claude doctor` |
-| `supabase start` ค้าง | เปิด Docker ก่อน, ครั้งแรกต้องโหลด image นาน |
-| JWT ไม่มี `tenant_id` | ยังไม่ได้เปิด custom access token hook (§4.2 หรือ Dashboard) |
-| RLS ทำให้ query ได้ 0 แถว | backend ไม่ได้ส่ง JWT ของ user ต่อให้ Supabase |
-| Gemini ตอบ 403 บนเครื่อง | รัน `gcloud auth application-default login` และขอสิทธิ์ Vertex AI User จาก Junior |
+| `uv` / `claude` / `pnpm` not recognized | ปิด terminal และ VS Code ทั้งหมดแล้วเปิดใหม่ ถ้ายังไม่หาย ให้เช็คว่า `%USERPROFILE%\.local\bin` อยู่ใน PATH |
+| clone ขึ้น `Password authentication is not supported` | `git config --global credential.helper manager` แล้ว clone ใหม่ (browser จะเปิดให้ login) |
+| clone ขึ้น `Repository not found` | ยังไม่ได้รับคำเชิญ collaborator |
+| `uv run pytest` ขึ้น `skipped` | แอปอ่านค่า Supabase ใน `.env` ไม่ได้ ให้เช็คว่าไฟล์อยู่ที่ root และกรอกครบ |
+| test ขึ้น `connection refused` หรือ timeout | Supabase free plan จะ **pause project ที่ไม่มีคนใช้ 7 วัน** ให้เข้า Dashboard แล้วกด Restore |
+| JWT ไม่มี `tenant_id` | custom access token hook ถูกปิด ให้ไปเปิดที่ Dashboard → Authentication → Hooks |
+| RLS ทำให้ query ได้ 0 แถว | backend ไม่ได้ส่ง JWT ของ user ไปกับ request ให้ Supabase |
+| `Filename too long` | `git config --global core.longpaths true` |
+| `Port 3000/8000 is already in use` | มี dev server ค้างอยู่ในหน้าต่างอื่น ให้กด `Ctrl+C` ในหน้าต่างนั้น |
+| `pnpm install` ขึ้น lockfile error ใน CI | อย่าใช้ `npm install` ใน `apps/web` ให้ใช้ `pnpm` เท่านั้น |
+| Gemini ตอบ 403 (ตั้งแต่ S2) | รัน `gcloud auth application-default login` แล้วขอสิทธิ์ Vertex AI User จาก Junior |
