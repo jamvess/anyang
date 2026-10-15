@@ -22,11 +22,12 @@
 
 ## Decisions
 
+- 2026-10-15 · ขั้น 1 ผ่าน: git 2.56, Node 24.21, pnpm 10.34.7, uv 0.13, Python 3.12, Claude Code 2.1.300 · git config ครบ 5 ค่า · `.env` และ `apps/web/.env.local` มีอยู่และถูก ignore
 - 2026-10-15 · ข้าม A0, A1, A4, A7 · ทำแล้ว (May clone repo, ใช้ Claude Code, deploy PR #5 ได้)
 
 ## Next step
 
-ขั้น 1: เช็คเวอร์ชันเครื่องมือและ git config
+ขั้น 2: รัน `uv run pytest` และ `pnpm test` แล้วเปิด backend + frontend
 
 ## Waiting on
 
