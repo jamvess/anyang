@@ -23,11 +23,12 @@
 ## Decisions
 
 - 2026-10-15 · ขั้น 1 ผ่าน: git 2.56, Node 24.21, pnpm 10.34.7, uv 0.13, Python 3.12, Claude Code 2.1.300 · git config ครบ 5 ค่า · `.env` และ `apps/web/.env.local` มีอยู่และถูก ignore
+- 2026-10-15 · ขั้น 2 ผ่าน: `uv run pytest` 6 passed ไม่มี skipped · `pnpm test` 2 passed · `/docs` และ `localhost:3000` ตอบ 200 · `pnpm gen:api` ไม่มีไฟล์เปลี่ยน
 - 2026-10-15 · ข้าม A0, A1, A4, A7 · ทำแล้ว (May clone repo, ใช้ Claude Code, deploy PR #5 ได้)
 
 ## Next step
 
-ขั้น 2: รัน `uv run pytest` และ `pnpm test` แล้วเปิด backend + frontend
+ขั้น 4: May สร้าง Claude chat Project `อ่านยัง?` ตาม setup.md A8
 
 ## Waiting on
 
