@@ -6,8 +6,9 @@
 
 ## สรุปใน 1 ตาราง
 
-| | Junior (เวสสภู) | May (จันทรัศม์) | Jam (มนสิชา) |
+| | Junior (มนสิชา) | May (จันทรัศม์) | Jam (เวสสภู) |
 |---|---|---|---|
+| GitHub | `@jnmonsicha2000` | `@jantarat32443` | `@jamvess` (เจ้าของ repo) |
 | บทบาท | Backend + DevOps | Frontend + UX | AI + การวัดผล |
 | เป็นเจ้าของโฟลเดอร์ | `apps/api/`, `supabase/`, `infra/`, `.github/` | `apps/web/`, wireframe/Figma | `prompts/`, `evals/`, `config/learning.yaml`, `specs/system/ai-orchestration.md`, `learning-model.md` |
 | PoC | P6-lite, backend ของ P4-lite, SymPy service ให้ P2 | หน้าแชทของ P4-lite | P1, P3, P2 |
