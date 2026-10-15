@@ -10,7 +10,7 @@
 ## Plan
 
 - [x] 1. 🤖 สร้าง branch, worklog และ Draft PR
-- [ ] 2. 🤖 เขียน `evals/topics/README.md`: เกณฑ์เลือกวิชา, โครงโฟลเดอร์, กติกาไฟล์ลิขสิทธิ์ (ไฟล์จริงอยู่ใน `raw/` ซึ่ง gitignored + Drive ทีม) และ template `sources.md`
+- [x] 2. 🤖 เขียน `evals/topics/README.md`: เกณฑ์เลือกวิชา, โครงโฟลเดอร์, กติกาไฟล์ลิขสิทธิ์ (ไฟล์จริงอยู่ใน `raw/` ซึ่ง gitignored + Drive ทีม) และ template `sources.md`
 - [ ] 3. 🙋 เลือกวิชาตามเกณฑ์ แล้วบอกชื่อวิชา + เหตุผลสั้นๆ
 - [ ] 4. 🙋 หาไฟล์ชีท + ข้อสอบเก่า 2 ชุด → อัปโหลดเข้า Drive ทีม และวางไว้ที่ `evals/topics/<subject>/raw/`
 - [ ] 5. 🤖 ตรวจไฟล์ (จำนวนหน้า, เป็น text หรือสแกน, มีเลขข้อชัดไหม) แล้วกรอก `evals/topics/<subject>/sources.md`
@@ -26,10 +26,11 @@
 ## Decisions
 
 - 2026-10-15 · ไฟล์ชีทและข้อสอบจริงไม่ขึ้น git (ลิขสิทธิ์ของอาจารย์ + repo อาจเปิด public) · เก็บใน Drive ทีม และ `evals/**/raw/` ซึ่ง gitignored อยู่แล้ว
+- 2026-10-15 · ใช้ A, B แทนชื่ออาจารย์ใน `sources.md` · P3 ต้องรู้แค่ว่าคนเดียวกันหรือคนละคน ไม่ต้องเปิดเผยชื่อ
 
 ## Next step
 
-เขียน `evals/topics/README.md` ตามขั้นที่ 2
+Jam เลือกวิชาตามเกณฑ์ใน `evals/topics/README.md` แล้วบอกรหัส/ชื่อวิชา + เหตุผล (ขั้นที่ 3)
 
 ## Waiting on
 
