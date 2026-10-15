@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>อ่านยัง? — Wireframe · เว็บบนคอม</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDEFF1;--white:#fff;--soft:#FAFBFC;
+  --ink:#14171C;--ink60:#5A6270;--ink35:#9AA2AE;
+  --line:#D9DEE4;--line2:#EAEEF1;
+  --ac:#3D4EE0;--acs:#E8EAFD;
+  --ok:#0E7C5A;--oks:#DDF2EB;
+  --wn:#A65E06;--wns:#FBEEDA;
+  --bd:#B3261E;--bds:#FBE9E6;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"IBM Plex Sans Thai",system-ui,sans-serif;line-height:1.65;
+  -webkit-font-smoothing:antialiased}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.stage{max-width:1100px;margin:0 auto;padding:34px 28px 70px}
+@media(max-width:780px){.stage{padding:20px 14px 50px}}
+.kicker{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink35);margin:0 0 16px}
+.win{border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  background:var(--white);box-shadow:0 2px 10px rgba(20,23,28,.06)}
+.chrome{display:flex;align-items:center;gap:12px;padding:9px 14px;
+  border-bottom:1px solid var(--line2);background:#F4F6F8}
+.dots{display:flex;gap:6px}
+.dots i{width:9px;height:9px;border-radius:50%;background:#D5DAE0;display:block}
+.url{flex:1;background:var(--white);border:1px solid var(--line);border-radius:6px;
+  padding:4px 11px;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink35)}
+.clock{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink35)}
+.vp{min-height:600px;display:flex;flex-direction:column}
+.vp.fade{animation:fi .22s ease}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.topbar{display:flex;justify-content:space-between;align-items:center;
+  padding:13px 26px;border-bottom:1px solid var(--line2);flex:0 0 auto}
+.brand{font-weight:600;font-size:15px}
+.app{display:grid;grid-template-columns:196px 1fr;flex:1;min-height:0}
+.side{border-right:1px solid var(--line2);padding:16px 13px;background:var(--soft)}
+.side .nav{font-size:13px;padding:7px 9px;border-radius:7px;color:var(--ink60);margin-bottom:2px}
+.side .nav.on{background:var(--white);color:var(--ink);font-weight:500;box-shadow:0 0 0 1px var(--line)}
+.main{padding:26px 34px;min-width:0}
+.center{max-width:540px;margin:0 auto}
+.wide{max-width:760px;margin:0 auto}
+
+/* ---- ห้องติว · UI น้อยที่สุด ---- */
+.room{flex:1;display:flex;flex-direction:column;min-height:0;padding:0 34px 20px}
+.roomtop{display:flex;justify-content:space-between;align-items:center;
+  max-width:640px;margin:0 auto;width:100%;padding:14px 0 18px;
+  font-size:12px;color:var(--ink35)}
+.roomtop b{font-weight:500;color:var(--ink60)}
+.feed{flex:1;max-width:640px;margin:0 auto;width:100%}
+.m{display:flex;gap:12px;margin-bottom:3px}
+.m .av{width:30px;height:30px;border-radius:50%;flex:0 0 30px;font-size:11.5px;
+  display:flex;align-items:center;justify-content:center;background:var(--acs);color:var(--ac)}
+.m .av.b{background:var(--line2);color:var(--ink60)}
+.m .av.u{background:var(--ink);color:var(--white)}
+.m.cont{margin-top:0}
+.m.cont .av{visibility:hidden;height:0;min-height:0}
+.m .body{min-width:0;padding-top:1px}
+.who{font-size:13px;font-weight:600;line-height:1.5;margin:0 0 1px}
+.who span{font-weight:400;font-size:10.5px;color:var(--ink35);margin-left:8px;
+  font-family:"IBM Plex Mono",monospace}
+.m p{margin:0 0 3px;font-size:14px;line-height:1.7}
+.gap{height:13px}
+.eq{font-family:"IBM Plex Mono",monospace;font-size:13.5px;
+  background:var(--line2);padding:1px 6px;border-radius:4px}
+.shot{border:1px solid var(--line);border-radius:10px;padding:14px;margin:4px 0 6px;
+  display:inline-block;font-size:12.5px;color:var(--ink35);background:var(--soft)}
+.read{border:1px solid var(--line);border-radius:10px;padding:12px 15px;margin:5px 0 6px}
+.composer{max-width:640px;margin:14px auto 0;width:100%;display:flex;gap:8px;align-items:center;
+  border:1px solid var(--line);border-radius:26px;padding:6px 8px 6px 18px;background:var(--white)}
+.composer .ph{flex:1;font-size:13.5px;color:var(--ink35)}
+.iconb{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:14px;border:1px solid var(--line);background:var(--white);flex:0 0 34px}
+.iconb.pri{background:var(--ink);color:#fff;border-color:var(--ink)}
+.voicebar{max-width:640px;margin:14px auto 0;width:100%;display:flex;gap:14px;align-items:center;
+  border:1px solid var(--ac);background:var(--acs);border-radius:26px;padding:11px 20px;
+  color:var(--ac);font-size:13.5px}
+.wave{display:flex;gap:3px;align-items:center;height:20px}
+.wave i{width:3px;border-radius:2px;background:var(--ac);display:block}
+
+/* ---- atoms ---- */
+.h{font-size:20px;font-weight:600;margin:0 0 6px;line-height:1.3}
+.h2{font-size:16px;font-weight:600;margin:0 0 6px}
+.sub{font-size:13.5px;color:var(--ink60);margin:0 0 18px}
+.lb{font-size:12px;color:var(--ink60);margin:0 0 5px;display:block}
+.fld{border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13.5px;
+  color:var(--ink35);margin-bottom:12px;background:var(--white)}
+.fld.v{color:var(--ink)}
+.fld.sel:after{content:"⌄";float:right;color:var(--ink35)}
+.fld.sm{padding:7px 10px;font-size:12.5px;margin-bottom:0}
+.btn{border:1px solid var(--line);border-radius:8px;padding:10px 18px;text-align:center;
+  font-size:13.5px;font-weight:500;background:var(--white);display:inline-block}
+.btn.blk{display:block;margin-bottom:10px}
+.btn.pri{background:var(--ink);color:var(--white);border-color:var(--ink)}
+.btn.ac{background:var(--ac);color:var(--white);border-color:var(--ac)}
+.btn.sm{padding:7px 12px;font-size:12.5px}
+.go{font-size:12px;color:var(--ink35);margin-top:10px}
+.row{display:flex;gap:10px;align-items:center}
+.row.e>*{flex:1}
+.card{border:1px solid var(--line);border-radius:10px;padding:13px 15px;margin-bottom:10px}
+.card.act{border-color:var(--ac);background:var(--acs)}
+.card.ok{border-color:var(--ok);background:var(--oks)}
+.card.mut{opacity:.45}
+.dash{border:1px dashed var(--line);border-radius:10px;padding:24px 14px;text-align:center;
+  font-size:13px;color:var(--ink60);margin-bottom:14px}
+.dash.hot{border-color:var(--ac);background:var(--acs);color:var(--ac)}
+.t12{font-size:12px}.t13{font-size:13px}.t14{font-size:14px}
+.mu{color:var(--ink60)}.mu2{color:var(--ink35)}
+.b5{font-weight:500}.b6{font-weight:600}
+.mb0{margin-bottom:0}.mb6{margin-bottom:6px}.mb10{margin-bottom:10px}
+.mb16{margin-bottom:16px}.mt10{margin-top:10px}.mt16{margin-top:16px}.mt24{margin-top:24px}
+.hr{height:1px;background:var(--line2);margin:16px 0}
+.sp{display:flex;justify-content:space-between;align-items:center}
+.chip{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:10px;
+  padding:3px 8px;border-radius:20px;background:var(--line2);color:var(--ink60);vertical-align:1px}
+.chip.a{background:var(--acs);color:var(--ac)}.chip.o{background:var(--oks);color:var(--ok)}
+.chip.w{background:var(--wns);color:var(--wn)}.chip.d{background:var(--bds);color:var(--bd)}
+.bar{height:6px;border-radius:3px;background:var(--line2);overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;background:var(--ac)}
+.pick{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 14px}
+.pk{border:1px solid var(--line);color:var(--ink60);border-radius:18px;
+  padding:6px 13px;font-size:12.5px}
+.pk.on{background:var(--ac);color:var(--white);border-color:var(--ac)}
+.list{margin:0;padding:0;list-style:none}
+.list li{font-size:13px;padding:9px 0;border-bottom:1px solid var(--line2);display:flex;gap:10px}
+.list li:last-child{border-bottom:0}
+.ck{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ok);flex:0 0 14px}
+.ck.q{color:var(--wn)}.ck.n{color:var(--ink35)}
+.st{font-size:12px;letter-spacing:1.5px}
+.st.on{color:var(--wn)}.st.off{color:var(--line)}
+.tag{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink35);margin-bottom:9px;display:block}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.steps{display:flex;gap:8px;align-items:center;font-family:"IBM Plex Mono",monospace;
+  font-size:11px;color:var(--ink35);margin-bottom:20px}
+.steps b{color:var(--ink)}
+
+.popwrap{position:relative;flex:1;display:flex;flex-direction:column}
+.dim{opacity:.28;flex:1;display:flex;flex-direction:column;pointer-events:none}
+.pop{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:410px;
+  background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;
+  box-shadow:0 14px 44px rgba(20,23,28,.20)}
+.pop .chrome{padding:7px 12px}
+.pop .url{font-size:10.5px}
+.popb{padding:26px 30px 22px}
+.popsvc{font-size:12.5px;color:var(--ink60);margin:0 0 18px}
+.acc{display:flex;gap:13px;align-items:center;padding:12px 10px;border-bottom:1px solid var(--line2);border-radius:6px}
+.acc.hov{background:var(--soft);box-shadow:0 0 0 1px var(--line)}
+.acc .pav{width:32px;height:32px;border-radius:50%;flex:0 0 32px;display:flex;align-items:center;
+  justify-content:center;font-size:13px;background:var(--ink);color:#fff}
+.acc .pav.o{background:var(--line2);color:var(--ink60)}
+.acc .nm{font-size:13.5px;font-weight:500;line-height:1.35}
+.acc .em{font-size:12px;color:var(--ink60)}
+.popfoot{font-size:11.5px;color:var(--ink35);line-height:1.6;margin:18px 0 0}
+.desc{min-height:112px;font-size:13px;line-height:1.75;margin-bottom:12px}
+.guide{list-style:none;margin:0 0 12px;padding:0}
+.guide li{font-size:12.5px;color:var(--ink35);padding:2px 0 2px 20px;position:relative}
+.guide li:before{content:"○";position:absolute;left:0;font-family:"IBM Plex Mono",monospace;font-size:11px}
+.guide li.y{color:var(--ink60)}
+.guide li.y:before{content:"✓";color:var(--ok)}
+.guide.tip li{color:var(--ink60)}
+.guide.tip li:before{content:"·";font-size:14px;line-height:1.3}
+.nope{border:1px solid var(--wns);background:var(--wns);color:var(--wn);border-radius:9px;padding:9px 13px;font-size:12.5px;margin-top:8px}
+.prev{background:var(--soft);border:1px solid var(--line2);border-radius:9px;padding:11px 13px}
+.bar2{display:flex;align-items:center;gap:16px;margin-top:18px;flex-wrap:wrap}
+.sid{font-size:12px;background:var(--ink);color:var(--white);padding:4px 9px;border-radius:5px}
+.sname{flex:1;min-width:200px;font-size:16px;font-weight:500;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.sname .ch{margin:0;font-size:10.5px}
+.bar2 .nav-b{padding:9px 16px}
+.below{display:grid;grid-template-columns:1fr 280px;gap:44px;margin-top:28px}
+@media(max-width:780px){.below{grid-template-columns:1fr;gap:20px}}
+.ch{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ac);margin:0 0 10px}
+.narr h2{font-size:25px;font-weight:600;margin:0 0 14px;line-height:1.25;letter-spacing:-.015em}
+.narr p{font-size:15.5px;margin:0 0 13px;color:var(--ink60);max-width:58ch}
+.narr p b{color:var(--ink);font-weight:500}
+.ctrl{display:flex;flex-direction:column;gap:10px}
+.nav-b{border:1px solid var(--line);background:var(--white);border-radius:8px;
+  padding:11px 18px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;color:var(--ink)}
+.nav-b:hover:not(:disabled){border-color:var(--ink35)}
+.nav-b:disabled{opacity:.35;cursor:default}
+.nav-b.pri{background:var(--ink);color:var(--white);border-color:var(--ink)}
+.count{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink35);text-align:center}
+.track{display:flex;gap:3px;margin-top:26px;flex-wrap:wrap}
+.tick{height:4px;flex:1;min-width:6px;border-radius:2px;background:var(--line);cursor:pointer}
+.tick.on{background:var(--ink)}
+.tick.seen{background:var(--ink35)}
+.hint{font-size:12px;color:var(--ink35);margin-top:12px}
+</style>
+</head>
+<body>
+<div class="stage">
+  <p class="kicker">อ่านยัง? · wireframe · เว็บบนคอม · 27 หน้าจอ</p>
+  <div class="win">
+    <div class="chrome">
+      <div class="dots"><i></i><i></i><i></i></div>
+      <div class="url" id="url">anyang.app</div>
+      <span class="clock" id="clock">20:14</span>
+    </div>
+    <div class="vp" id="vp"></div>
+  </div>
+  <div class="bar2">
+    <span class="sid mono" id="sid"></span>
+    <div class="sname"><span class="ch" id="ch"></span><span id="title"></span></div>
+    <span class="count" id="count"></span>
+    <button class="nav-b" id="prev">‹</button>
+    <button class="nav-b pri" id="next">ถัดไป ›</button>
+  </div>
+  <div class="track" id="track"></div>
+  <p class="hint">กดปุ่ม หรือใช้ลูกศรซ้ายขวาบนคีย์บอร์ด · แตะแถบด้านล่างเพื่อกระโดดไปฉากใดก็ได้</p>
+</div>
+
+<script>
+const SIDE = (a) => `
+<div class="side">
+  <p class="brand" style="margin:2px 0 18px">อ่านยัง?</p>
+  <p class="tag mono">การเตรียมสอบ</p>
+  <div class="nav ${a==='fx'?'on':''}">${a==='fx'?'Factorization':'ยังไม่มี'}</div>
+  <div class="nav">+ สร้างใหม่</div>
+</div>`;
+
+const TOP = (r) => `<div class="topbar"><span class="brand">อ่านยัง?</span><span class="t13 mu2">${r||'ปาล ⌄'}</span></div>`;
+
+const ROOMTOP = `<div class="roomtop"><span><b>Factorization</b> · สอบใน 5 วัน</span><span>ออกจากห้องติว</span></div>`;
+
+const COMPOSER = `<div class="composer">
+  <span class="ph">พิมพ์ตอบ...</span>
+  <span class="iconb">🎤</span><span class="iconb">📷</span><span class="iconb pri">↑</span></div>`;
+
+const VOICEBAR = `<div class="voicebar">
+  <span>●</span>
+  <span class="wave"><i style="height:7px"></i><i style="height:14px"></i><i style="height:20px"></i><i style="height:11px"></i><i style="height:17px"></i><i style="height:8px"></i><i style="height:15px"></i><i style="height:19px"></i><i style="height:9px"></i><i style="height:13px"></i></span>
+  <span style="flex:1">กำลังฟัง... พูดได้เลย</span>
+  <span class="iconb" style="border-color:var(--ac)">■</span></div>`;
+
+const LABELS = ["Landing", "สมัครสมาชิก", "สมัคร · เลือกบัญชี Google", "เลือกติวเตอร์ + เพื่อนติว", "ปรับเอง · เล่าเป็นคำพูด", "ตั้งค่าตัวเอง", "หน้าหลัก · ยังว่าง", "ข้อมูลการสอบ", "อัพโหลดไฟล์ + เขียนกำกับ", "ยืนยันประเภทไฟล์", "กำลังประมวลผล", "ขอบเขต + ดาว", "แก้ขอบเขต · คุยแก้", "แก้ขอบเขต · สรุปและยืนยัน", "ห้องติว · เปิดห้อง", "ห้องติว · ตอบถูก", "ห้องติว · เพื่อนติวถามแทรก", "ห้องติว · ตอบด้วยเสียง", "ห้องติว · ตอบไม่ตรงคำถาม", "ห้องติว · ถามนอกขอบเขต", "ห้องติว · ยืนยันสิ่งที่อ่านจากลายมือ", "ห้องติว · ตอบผิด สอนทันที", "ห้องติว · โจทย์ซ้ำเพื่อวัด", "ห้องติว · ขอดูความคืบหน้า", "ห้องติว · ซ่อมจุดอ่อน", "ห้องติว · จบการติว", "หน้าหลัก · มีการเตรียมสอบแล้ว"];
+
+const steps = [
+
+/* ===== บทที่ 1 ===== */
+{
+ch:"บทที่ 1 · เริ่มต้นใช้งาน", clock:"20:14", url:"anyang.app",
+title:"ปาลเจออ่านยังตอนสี่ทุ่ม",
+story:`<p>ปาลอยู่ ม.5 อีก 5 วันสอบเรื่องแยกตัวประกอบ อ่านชีทเองมาสองวันแล้วรู้สึกว่าอ่านไปก็ไม่รู้ว่าตัวเองเข้าใจจริงหรือเปล่า</p>
+<p>เพื่อนส่งลิงก์มาให้ เธอเปิดบนโน้ตบุ๊ก หน้าแรกไม่ได้พยายามขายอะไรมาก บอกแค่ว่าทำอะไรได้ แล้วมีปุ่มเดียวที่เด่น</p>`,
+screen:`
+<div class="topbar"><span class="brand">อ่านยัง?</span>
+<span><span class="chip mono">TH / EN</span> &nbsp; <span class="btn sm">เข้าสู่ระบบ</span> <span class="btn sm pri">สร้างบัญชี</span></span></div>
+<div class="main" style="display:flex;align-items:center;justify-content:center">
+  <div style="text-align:center;max-width:520px">
+    <p class="h" style="font-size:34px;line-height:1.25;margin-bottom:14px">ติวสอบคนเดียว<br>แต่ไม่ต้องเหงา</p>
+    <p class="sub" style="font-size:15px">อัพโหลดชีทของตัวเอง แล้วติวกับติวเตอร์ AI ที่รู้ว่าคุณยังอ่อนตรงไหน</p>
+    <span class="btn pri">เริ่มใช้ฟรี</span>
+    <p class="go">กด “เริ่มใช้ฟรี” เพื่อไปหน้าสมัคร</p>
+    <div class="row mt24" style="justify-content:center"><span class="chip mono">ติวจากชีทของคุณเอง</span><span class="chip mono">อ่านลายมือคณิตได้</span><span class="chip mono">รู้ว่าคุณอ่อนตรงไหน</span></div>
+  </div>
+</div>`
+},
+
+{
+ch:"บทที่ 1 · เริ่มต้นใช้งาน", clock:"20:15", url:"anyang.app/signup",
+title:"สมัครด้วย Google จบใน 10 วินาที",
+story:`<p>ปาลไม่อยากคิดรหัสใหม่ กด <b>ดำเนินการต่อด้วย Google</b> ไปเลย</p>
+<p>หน้านี้ไม่ถามอะไรเพิ่ม ถามมากตอนนี้คนจะปิดหนี</p>`,
+screen:`
+<div class="topbar"><span class="brand">อ่านยัง?</span><span class="t13 mu2">มีบัญชีแล้ว? เข้าสู่ระบบ</span></div>
+<div class="main" style="display:flex;align-items:center;justify-content:center">
+  <div style="width:380px">
+    <p class="h" style="text-align:center">สร้างบัญชี</p>
+    <p class="sub" style="text-align:center">ใช้เวลาไม่ถึงนาที</p>
+    <div class="btn blk ac">ดำเนินการต่อด้วย Google</div>
+    <p class="t12 mu2 mb10" style="text-align:center">หรือ</p>
+    <span class="lb">ชื่อ-นามสกุล</span><div class="fld">ปาลิดา ศรีสุข</div>
+    <span class="lb">อีเมล</span><div class="fld">name@email.com</div>
+    <span class="lb">รหัสผ่าน</span><div class="fld">••••••••</div>
+    <div class="btn blk">สร้างบัญชี</div>
+    <p class="go" style="text-align:center">กดปุ่ม Google หรือกรอกฟอร์มแล้วกด “สร้างบัญชี”</p>
+  </div>
+</div>`
+},
+
+{
+ch:"บทที่ 1 · เริ่มต้นใช้งาน", clock:"20:15", url:"anyang.app/signup",
+title:"เลือกบัญชี Google",
+story:``,
+screen:`
+<div class="popwrap">
+  <div class="dim">
+    <div class="topbar"><span class="brand">อ่านยัง?</span><span class="t13 mu2">มีบัญชีแล้ว? เข้าสู่ระบบ</span></div>
+    <div class="main" style="display:flex;align-items:center;justify-content:center">
+      <div style="width:380px">
+        <p class="h" style="text-align:center">สร้างบัญชี</p>
+        <p class="sub" style="text-align:center">ใช้เวลาไม่ถึงนาที</p>
+        <div class="btn blk ac">ดำเนินการต่อด้วย Google</div>
+        <span class="lb">ชื่อ-นามสกุล</span><div class="fld">ปาลิดา ศรีสุข</div>
+        <span class="lb">อีเมล</span><div class="fld">name@email.com</div>
+      </div>
+    </div>
+  </div>
+  <div class="pop">
+    <div class="chrome"><div class="dots"><i></i><i></i><i></i></div>
+      <div class="url">accounts.google.com/o/oauth2/auth?client_id=anyang...</div></div>
+    <div class="popb">
+      <p class="popsvc">ลงชื่อเข้าใช้ด้วย Google</p>
+      <p class="h" style="font-size:22px;margin-bottom:4px">เลือกบัญชี</p>
+      <p class="sub" style="margin-bottom:16px">เพื่อไปยัง <b style="color:var(--ac);font-weight:500">อ่านยัง?</b></p>
+      <div class="acc hov">
+        <div class="pav">ป</div>
+        <div><p class="nm mb0">ปาลิดา ศรีสุข</p><p class="em mb0">palida.s@gmail.com</p></div>
+      </div>
+      <div class="acc">
+        <div class="pav o">ป</div>
+        <div><p class="nm mb0">Palida S.</p><p class="em mb0">palida.s@school.ac.th</p></div>
+      </div>
+      <div class="acc" style="border-bottom:0">
+        <div class="pav o">+</div>
+        <div><p class="nm mb0">ใช้บัญชีอื่น</p></div>
+      </div>
+      <p class="popfoot">หากต้องการดำเนินการต่อ Google จะแชร์ชื่อ อีเมล และรูปโปรไฟล์ของคุณกับอ่านยัง? ก่อนใช้แอปนี้ คุณสามารถอ่านนโยบายความเป็นส่วนตัวและข้อกำหนดในการให้บริการของอ่านยัง?</p>
+    </div>
+  </div>
+</div>
+<p class="go" style="text-align:center;margin:0 0 16px">กดที่บัญชี “ปาลิดา ศรีสุข” เพื่อสมัครและไปต่อ</p>`
+},
+
+{
+ch:"บทที่ 1 · เริ่มต้นใช้งาน", clock:"20:16", url:"anyang.app/setup/crew",
+title:"ยังไม่ทันทำอะไร ก็ได้เลือกคนที่จะติวด้วยก่อน",
+story:`<p>หน้าแรกหลังสมัครไม่ใช่การถามข้อมูล แต่เป็นการให้เลือกว่าจะติวกับใคร</p>
+<p>ที่วางไว้ตรงนี้เพราะมันสนุกและใช้เวลาไม่ถึงนาที คนที่เพิ่งสมัครเสร็จยังไม่ได้ลงทุนอะไรเลย การให้เลือกตัวละครก่อนทำให้รู้สึกว่าเป็นของตัวเองตั้งแต่นาทีแรก</p>
+<p>ทุกใบมีตัวอย่างประโยคจริงให้ดู จะได้รู้ว่าเลือกไปแล้วจะเจออะไร</p>`,
+screen:`
+${TOP('ปาลิดา')}
+<div class="main">
+  <div class="wide">
+    <div class="steps"><b>1 เลือกคนที่จะติวด้วย</b><span>›</span><span>2 ตั้งค่าตัวเอง</span></div>
+    <p class="h">จะติวกับใครดี</p>
+    <p class="sub">เปลี่ยนได้ทุกเมื่อ · ติวเตอร์คือคนสอน ส่วนเพื่อนติวคือคนนั่งติวเป็นเพื่อน</p>
+    <p class="tag mono">ติวเตอร์ · เลือก 1</p>
+    <div class="grid3 mb16">
+      <div class="card"><p class="b5 t14 mb6">พี่กร · ใจเย็น</p><p class="t12 mu2 mb0">“ไม่ต้องรีบ ค่อยๆ ดูไปทีละบรรทัดนะ”</p></div>
+      <div class="card act"><div class="sp mb6"><span class="b5 t14">พี่ตาล · กระชับ</span><span class="chip a mono">เลือกอยู่</span></div><p class="t12 mu2 mb0">“เอาที่ออกสอบก่อน ที่เหลือไว้ทีหลัง”</p></div>
+      <div class="card"><p class="b5 t14 mb6">พี่โจ๊ก · ตลก</p><p class="t12 mu2 mb0">“ข้อนี้พี่ก็เคยพลาด ไม่ต้องอาย”</p></div>
+    </div>
+    <p class="tag mono">เพื่อนติว · จะมีหรือไม่มีก็ได้</p>
+    <div class="grid3 mb16">
+      <div class="card act"><div class="sp mb6"><span class="b5 t14">มีน · ขี้สงสัย</span><span class="chip a mono">เลือกอยู่</span></div><p class="t12 mu2 mb0">“เดี๋ยวๆ ตรงนี้ทำไมเครื่องหมายเปลี่ยนอะ”</p></div>
+      <div class="card"><p class="b5 t14 mb6">ต้าร์ · ชอบแข่ง</p><p class="t12 mu2 mb0">“อ่ะเดี๋ยวกูตอบเอง ช้าไป”</p></div>
+      <div class="card"><p class="b5 t14 mb6">ไม่เอาเพื่อน</p><p class="t12 mu2 mb0">ติวเงียบๆ คนเดียว</p></div>
+    </div>
+    <div class="row"><span class="btn">ปรับเอง</span><span class="btn pri">ใช้สองคนนี้</span></div>
+    <p class="go">กด “ใช้สองคนนี้” เพื่อไปต่อ หรือกด “ปรับเอง” ถ้าอยากแต่งเอง</p>
+  </div>
+</div>`
+},
+
+{
+ch:"บทที่ 1 · เริ่มต้นใช้งาน", clock:"20:17", url:"anyang.app/setup/crew/custom",
+title:"ปาลอยากแต่งเอง",
+story:`<p>เธอกด <b>ปรับเอง</b> เพราะอยากให้เพื่อนติวเรียกเธอว่าเธอ ไม่ใช่คุณ</p>
+<p>ช่องที่มีผลจริงต่อการเรียนคือ <b>ระดับความรู้ของเพื่อนติว</b> ถ้าตั้งให้อ่อนกว่าเรา เราจะได้อธิบายให้เขาฟัง ซึ่งช่วยให้เข้าใจขึ้นจริง ถ้าตั้งให้เก่งกว่านิดหน่อย เราจะได้ดูวิธีคิดของคนที่ทำได้</p>
+<p>ใต้ช่องมีคำแนะนำว่าควรเล่าเรื่องอะไรบ้าง พอเขียนเสร็จ ระบบแปลงเป็นค่าที่ตั้งไว้ แล้วโชว์ประโยคตัวอย่างให้ดูว่าจะพูดประมาณไหน ไม่ถูกใจก็พิมพ์ปรับต่อได้</p>
+<p>ส่วนที่ขอแล้วทำให้ไม่ได้ ระบบบอกตรงๆ ใต้ตัวอย่าง เช่น ปรับความเร็วเสียง หรือให้พูดหยาบ</p>`,
+screen:`
+${TOP('ปาลิดา')}
+<div class="main">
+  <div class="wide">
+    <div class="steps"><b>1 เลือกคนที่จะติวด้วย</b><span>›</span><span>2 ตั้งค่าตัวเอง</span></div>
+    <p class="h">เล่าให้ฟังหน่อย อยากได้แบบไหน</p>
+    <p class="sub">เขียนเหมือนเล่าให้เพื่อนฟัง สั้นๆ ก็ได้ · อะไรที่ไม่ได้บอก AI เลือกให้เอง</p>
+    <div class="grid2" style="gap:22px">
+      <div>
+        <p class="tag mono">ติวเตอร์</p>
+        <div class="fld v desc">อยากได้พี่ผู้หญิงชื่อพี่ตาล พูดสั้นๆ ตรงประเด็น ไม่ต้องอธิบายยาว เรียกเราว่าน้องก็ได้ ถ้าเราตอบผิดก็บอกตรงๆ เลยไม่ต้องอ้อม เสียงพูดเร็วนิดนึง</div>
+        <p class="t12 mu mb6">ลองเล่าเรื่องพวกนี้</p>
+        <ul class="guide tip">
+          <li>ชื่อ และให้เรียกเราว่าอะไร</li>
+          <li>เสียงผู้ชายหรือผู้หญิง</li>
+          <li>พูดเป็นกันเอง หรือสุภาพ</li>
+          <li>สอนทีละขั้น ยกตัวอย่างก่อน หรือกระชับ</li>
+          <li>เวลาเราผิด อยากให้พูดตรงแค่ไหน</li>
+          <li>ตลกบ้างไหม ใช้อีโมจิไหม</li>
+        </ul>
+        <div class="prev">
+          <p class="t12 mu2 mb6">พี่ตาลจะพูดประมาณนี้</p>
+          <p class="t13 mb0">“ผิดนะน้อง เครื่องหมายหลุด เดี๋ยวทำให้ดู”</p>
+        </div>
+        <div class="nope">ทำให้ไม่ได้: ปรับความเร็วเสียง · ส่วนอื่นใช้ตามที่เล่าได้หมด</div>
+      </div>
+      <div>
+        <p class="tag mono">เพื่อนติว</p>
+        <div class="fld v desc">เพื่อนชื่อมีน เป็นผู้หญิง รุ่นเดียวกัน เก่งพอๆ กับเรา ชอบถามเวลาไม่เข้าใจ คุยกันเองแบบเพื่อน หยาบได้นิดหน่อย ไม่ต้องพูดบ่อยมาก</div>
+        <p class="t12 mu mb6">ลองเล่าเรื่องพวกนี้</p>
+        <ul class="guide tip">
+          <li>ชื่อ และให้เรียกเราว่าอะไร</li>
+          <li>เก่งกว่า พอๆ กัน หรืออ่อนกว่าเรา</li>
+          <li>ขี้สงสัย ขี้เล่น หรือขยัน</li>
+          <li>พูดบ่อยแค่ไหน</li>
+          <li>เสียงผู้ชายหรือผู้หญิง</li>
+        </ul>
+        <div class="prev">
+          <p class="t12 mu2 mb6">มีนจะพูดประมาณนี้</p>
+          <p class="t13 mb0">“เดี๋ยวดิ ตรงนี้ทำไมเป็นลบอะ”</p>
+        </div>
+        <div class="nope">ทำให้ไม่ได้: พูดหยาบ · มีนจะพูดแบบเพื่อนสนิทแทน</div>
+      </div>
+    </div>
+    <div class="row mt16"><span class="btn">ย้อนกลับ</span><span class="btn pri">บันทึกแล้วไปต่อ</span></div>
+    <p class="go">กด “บันทึกแล้วไปต่อ” เพื่อไปหน้าสุดท้ายของการตั้งค่า</p>
+  </div>
+</div>`
+},
+
+{
+ch:"บทที่ 1 · เริ่มต้นใช้งาน", clock:"20:18", url:"anyang.app/setup/profile",
+title:"สามคำถามสุดท้าย",
+story:`<p>ชื่อเล่น ระดับการศึกษา ภาษา จบ ไม่มีช่องให้พิมพ์ยาวๆ เลยนอกจากชื่อเล่น</p>
+<p>ภาษา <b>ไทย + ศัพท์อังกฤษ</b> ถูกเลือกไว้ให้แล้ว เพราะเป็นแบบที่คนไทยใช้จริงที่สุด อธิบายเป็นไทยแต่คำว่า factor ก็ยังเรียกว่า factor</p>`,
+screen:`
+${TOP('ปาลิดา')}
+<div class="main" style="display:flex;align-items:center;justify-content:center">
+  <div style="width:460px">
+    <div class="steps"><span>1 เลือกคนที่จะติวด้วย</span><span>›</span><b>2 ตั้งค่าตัวเอง</b></div>
+    <p class="h">เหลืออีก 3 คำถาม</p>
+    <p class="sub">แล้วเริ่มได้เลย</p>
+    <span class="lb">อยากให้เรียกว่าอะไร</span><div class="fld v">ปาล</div>
+    <span class="lb">ระดับการศึกษา</span>
+    <div class="pick"><span class="pk">ม.ต้น</span><span class="pk on">ม.ปลาย</span><span class="pk">มหาวิทยาลัย</span><span class="pk">อื่นๆ</span></div>
+    <span class="lb">ภาษาที่ใช้อธิบาย</span>
+    <div class="pick"><span class="pk on">ไทย + ศัพท์อังกฤษ</span><span class="pk">ไทยล้วน</span><span class="pk">English</span></div>
+    <span class="btn pri">เริ่มใช้งาน</span>
+    <p class="go">กด “เริ่มใช้งาน” เพื่อเข้าหน้าหลัก · เปลี่ยนทั้งหมดได้ทีหลังในตั้งค่า</p>
+  </div>
+</div>`
+},
+
+/* ===== บทที่ 2 ===== */
+{
+ch:"บทที่ 2 · สร้างการเตรียมสอบ", clock:"20:19", url:"anyang.app/home",
+title:"หน้าแรกว่างเปล่า และนั่นคือความตั้งใจ",
+story:`<p>ไม่มีคอร์สสำเร็จรูป ไม่มีเนื้อหาแถมมาให้ เพราะระบบยังไม่รู้ว่าปาลจะสอบอะไร</p>
+<p>มีนโผล่มาทักหนึ่งครั้งเพราะเพิ่งถูกเลือกมาเมื่อกี้ แล้วก็เงียบ มีปุ่มเดียวให้กด</p>`,
+screen:`
+${TOP()}
+<div class="app">${SIDE('')}
+  <div class="main" style="display:flex;align-items:center;justify-content:center">
+    <div style="width:430px;text-align:center">
+      <div class="m" style="text-align:left;margin-bottom:18px">
+        <div class="av b">ม</div>
+        <div class="body"><p class="who">มีน<span>20:19</span></p><p>ว่าไง เอาวิชาไหนก่อนดี</p></div>
+      </div>
+      <div class="dash" style="padding:36px 16px">
+        <p class="b5 t14 mb6">ยังไม่มีการเตรียมสอบ</p>
+        <p class="t12 mu mb0">สร้างอันแรก แล้วอัพโหลดชีทที่จะใช้สอบ</p>
+      </div>
+      <span class="btn pri">+ สร้างการเตรียมสอบใหม่</span>
+      <p class="go">กดปุ่มนี้เพื่อเริ่ม</p>
+    </div>
+  </div>
+</div>`
+},
+
+{
+ch:"บทที่ 2 · สร้างการเตรียมสอบ", clock:"20:20", url:"anyang.app/new",
+title:"บอกว่าจะสอบอะไร และสอบเมื่อไหร่",
+story:`<p>ปาลพิมพ์ชื่อการสอบว่า Factorization แล้วเลือกวันสอบ ระบบขึ้นป้ายแดงทันทีว่า <b>เหลือ 5 วัน</b></p>
+<p>วันสอบไม่ได้ใส่ไว้เฉยๆ มันคือสิ่งที่ AI ใช้ตัดสินใจว่าจะติวอะไรก่อน เหลือ 5 วันกับเหลือ 2 สัปดาห์ ลำดับการติวไม่เหมือนกัน</p>
+<p>ช่องเวลาต่อวันไม่บังคับ ปาลเลือก 1 ชม. ถ้าไม่เลือก ระบบเริ่มที่วันละ 45 นาที แล้วปรับเองจากที่ติวจริง</p>`,
+screen:`
+${TOP()}
+<div class="main">
+  <div class="center">
+    <div class="steps"><b>1 ข้อมูลการสอบ</b><span>›</span><span>2 ไฟล์</span><span>›</span><span>3 ตรวจไฟล์</span></div>
+    <p class="h">จะสอบอะไร</p>
+    <p class="sub">บอกแค่ชื่อกับวันสอบ ที่เหลือ AI ดูจากไฟล์เอง</p>
+    <span class="lb">ชื่อการสอบ</span><div class="fld v">Factorization</div>
+    <div class="grid2">
+      <div><span class="lb">วันสอบ</span><div class="fld v">2 ก.ย. 2569</div></div>
+      <div><span class="lb">เหลือเวลา</span><div class="fld"><span class="chip d mono">5 วัน</span></div></div>
+    </div>
+    <span class="lb">ติวได้วันละประมาณ <span class="mu2">· ไม่บังคับ</span></span>
+    <div class="pick" style="margin-bottom:6px"><span class="pk">30 นาที</span><span class="pk">45 นาที</span><span class="pk on">60 นาที</span><span class="pk">90 นาที</span></div>
+    <p class="t12 mu2 mb16">ไม่ใส่ก็ได้ ระบบจะดูจากที่ติวจริงแล้วปรับให้เอง</p>
+    <div class="row"><span class="btn">ยกเลิก</span><span class="btn pri">ถัดไป</span></div>
+    <p class="go">กด “ถัดไป” เพื่อไปหน้าอัพโหลดไฟล์</p>
+  </div>
+</div>`
+},
+
+{
+ch:"บทที่ 2 · สร้างการเตรียมสอบ", clock:"20:23", url:"anyang.app/new",
+title:"ใส่ไฟล์พร้อมเขียนกำกับไปในตัว",
+story:`<p>ปาลลากชีทบทที่ 3 เข้าไป แล้วถ่ายรูปโน้ตที่จดในคาบใส่เพิ่ม สุดท้ายนึกได้ว่ามีข้อสอบเก่าของรุ่นพี่</p>
+<p>แต่ละไฟล์มีช่องเขียนกำกับติดอยู่ในตัว ปาลพิมพ์ใส่ไปเลยว่าโน้ตวันนั้นจดไม่ทัน และข้อสอบของรุ่นพี่เป็นคนละอาจารย์</p>
+<p>ข้อดีของการให้เขียนตรงนี้คือ<b>เขียนตอนที่ยังจำได้</b> ถ้าไปถามทีหลังคนจะลืมไปแล้วว่าไฟล์ไหนคืออะไร แล้วทั้งหมดถูกส่งเข้าไปให้ AI อ่านพร้อมกันทีเดียว</p>`,
+screen:`
+${TOP()}
+<div class="main">
+  <div class="wide">
+    <div class="steps"><span>1 ข้อมูลการสอบ</span><span>›</span><b>2 ไฟล์</b><span>›</span><span>3 ตรวจไฟล์</span></div>
+    <p class="h">ใส่สิ่งที่จะใช้สอบ</p>
+    <p class="sub">เขียนกำกับไว้ได้เลยถ้ามีอะไรอยากบอก AI · ไม่เขียนก็ได้</p>
+    <div class="dash hot" style="padding:16px">ลากไฟล์มาวางเพิ่ม</div>
+    <div class="card">
+      <div class="sp mb6"><span class="b5 t14">ch3-factorization.pdf</span><span class="chip mono">14 หน้า</span></div>
+      <div class="fld sm" style="margin-bottom:0">เขียนกำกับ (ไม่บังคับ)</div>
+    </div>
+    <div class="card">
+      <div class="sp mb6"><span class="b5 t14">โน้ตในคาบ.jpg</span><span class="chip mono">3 รูป</span></div>
+      <div class="fld sm v" style="margin-bottom:0">วันนั้นจดไม่ทัน ท้ายๆ อาจอ่านไม่ออก</div>
+    </div>
+    <div class="card">
+      <div class="sp mb6"><span class="b5 t14">midterm-2566.pdf</span><span class="chip mono">12 ข้อ</span></div>
+      <div class="fld sm" style="margin-bottom:0">เขียนกำกับ (ไม่บังคับ)</div>
+    </div>
+    <div class="card mb16">
+      <div class="sp mb6"><span class="b5 t14">midterm-2567.pdf</span><span class="chip mono">11 ข้อ</span></div>
+      <div class="fld sm v" style="margin-bottom:0">ของรุ่นพี่ คนละอาจารย์กับที่จะสอบ</div>
+    </div>
+    <div class="row"><span class="btn">ย้อนกลับ</span><span class="btn pri">ส่งทั้งหมดให้ AI อ่าน</span></div>
+    <p class="go">กด “ส่งทั้งหมดให้ AI อ่าน” เมื่อใส่ครบแล้ว · เพิ่มไฟล์ทีหลังได้ตลอด</p>
+  </div>
+</div>`
+},
+
+{
+ch:"บทที่ 2 · สร้างการเตรียมสอบ", clock:"20:24", url:"anyang.app/new",
+title:"AI เดาประเภทไฟล์ให้ ปาลแค่ยืนยัน",
+story:`<p>AI อ่านคร่าวๆ แล้วเดาว่าไฟล์ไหนเป็นชีท ไฟล์ไหนเป็นข้อสอบเก่า ปาลแค่ดูว่าถูกไหม</p>
+<p>ไฟล์แรกเดาผิดเป็นแบบฝึกหัด ปาลกดแก้เป็นชีทเรียน ใช้เวลาสองวินาที</p>
+<p>ที่ยังต้องมีหน้านี้เพราะประเภทไฟล์มีผลต่อการถ่วงน้ำหนักหัวข้อ ถ้าเข้าใจผิดว่าชีทเป็นข้อสอบเก่า ดาวจะเพี้ยนทั้งชุด</p>`,
+screen:`
+${TOP()}
+<div class="main">
+  <div class="wide">
+    <div class="steps"><span>1 ข้อมูลการสอบ</span><span>›</span><span>2 ไฟล์</span><span>›</span><b>3 ตรวจไฟล์</b></div>
+    <p class="h">AI เดาไว้แบบนี้ ถูกไหม</p>
+    <p class="sub">ถ้าถูกหมดกดข้ามได้เลย</p>
+    <div class="card">
+      <div class="sp mb10"><span class="b5 t14">ch3-factorization.pdf</span><span class="chip w mono">ไม่ค่อยมั่นใจ</span></div>
+      <div class="pick mb0"><span class="pk on">ชีทเรียน</span><span class="pk">ข้อสอบเก่า</span><span class="pk">แบบฝึกหัด</span></div>
+    </div>
+    <div class="card">
+      <div class="sp mb10"><span class="b5 t14">โน้ตในคาบ.jpg</span><span class="chip o mono">มั่นใจ</span></div>
+      <div class="pick mb0"><span class="pk on">โน้ตเขียนมือ</span><span class="pk">ชีทเรียน</span><span class="pk">อื่นๆ</span></div>
+    </div>
+    <div class="card">
+      <div class="sp mb10"><span class="b5 t14">midterm-2566.pdf</span><span class="chip o mono">มั่นใจ</span></div>
+      <div class="pick mb0"><span class="pk on">ข้อสอบเก่า</span><span class="pk">ชีทเรียน</span><span class="pk">แบบฝึกหัด</span></div>
+    </div>
+    <div class="card mb16">
+      <div class="sp mb10"><span class="b5 t14">midterm-2567.pdf</span><span class="chip o mono">มั่นใจ</span></div>
+      <div class="pick mb0"><span class="pk on">ข้อสอบเก่า</span><span class="pk">ชีทเรียน</span><span class="pk">แบบฝึกหัด</span></div>
+    </div>
+    <div class="row"><span class="btn">ถูกหมดแล้ว ข้ามเลย</span><span class="btn pri">ยืนยันแล้วเริ่มประมวลผล</span></div>
+    <p class="go">กดปุ่มใดปุ่มหนึ่งเพื่อให้ระบบเริ่มอ่านไฟล์</p>
+  </div>
+</div>`
+},
+
+{
+ch:"บทที่ 2 · สร้างการเตรียมสอบ", clock:"20:25", url:"anyang.app/new",
+title:"ระบบอ่านไฟล์ และบอกว่ากำลังทำอะไรอยู่",
+story:`<p>ไม่ใช่วงกลมหมุนเปล่าๆ แต่ไล่บอกทีละขั้นว่าอ่านไฟล์กี่ไฟล์แล้ว กำลังหาหัวข้อ กำลังเทียบกับข้อสอบเก่า</p>
+<p>หน้านี้ไม่มีปุ่ม เพราะเป็นหน้าเดียวในทั้งเรื่องที่ระบบไปต่อเอง แต่ต้องบอกให้ชัดว่ารออยู่ ไม่ใช่ค้าง</p>`,
+screen:`
+${TOP()}
+<div class="main" style="display:flex;align-items:center;justify-content:center">
+  <div style="width:440px">
+    <p class="h">กำลังอ่านไฟล์ของคุณ</p>
+    <p class="sub">ใช้เวลาประมาณ 1 นาที ไม่ต้องปิดหน้านี้</p>
+    <ul class="list mb16">
+      <li><span class="ck">✓</span><span>อ่านไฟล์ 4 ไฟล์</span></li>
+      <li><span class="ck">✓</span><span>อ่านสิ่งที่คุณเขียนกำกับไว้</span></li>
+      <li><span class="ck n">◐</span><span>หาหัวข้อและลำดับการเรียน</span></li>
+      <li><span class="ck n">○</span><span class="mu2">เทียบกับข้อสอบเก่า 2 ชุด</span></li>
+    </ul>
+    <div class="bar"><i style="width:64%"></i></div>
+    <p class="go">หน้านี้ไปต่อเอง ไม่ต้องกดอะไร</p>
+    <div class="m mt24"><div class="av b">ม</div>
+      <div class="body"><p class="who">มีน<span>20:25</span></p><p>ไฟล์เยอะเนอะ เดี๋ยวรอด้วยกัน</p></div></div>
+  </div>
+</div>`
+},
+
+{
+ch:"บทที่ 2 · สร้างการเตรียมสอบ", clock:"20:26", url:"anyang.app/exam/factorization/scope",
+title:"นี่คือหน้าที่ปาลรู้สึกว่ามันเข้าใจจริง",
+story:`<p>AI แตกชีททั้งบทเป็น 8 หัวข้อ เรียงลำดับให้ และให้ดาวตามว่าหัวข้อไหนออกสอบบ่อย</p>
+<p>เรื่องกำลังสามถูกตัดออกไว้ให้แล้ว เพราะในชีทเจอแค่เชิงอรรถเดียวและไม่เคยออกในข้อสอบเก่า</p>
+<p>ปาลกดดูหัวข้อหนึ่งแล้วมันเด้งข้อความจากชีทหน้า 5 ขึ้นมาให้ดู <b>เธอเลยเชื่อ</b></p>`,
+screen:`
+${TOP()}
+<div class="app">${SIDE('fx')}
+<div class="main">
+  <div class="sp mb16"><div><p class="h mb0">ตรวจขอบเขตก่อนเริ่ม</p>
+    <p class="t13 mu mb0">Factorization · สอบใน 5 วัน · AI เรียงลำดับให้แล้ว</p></div></div>
+  <div class="card"><div class="sp"><span class="b5 t14">1 · คูณพหุนาม <span class="mu2 t12">น.2–3</span></span><span class="st on">★★<span class="off">★</span></span></div></div>
+  <div class="card"><div class="sp"><span class="b5 t14">2 · ดึงตัวประกอบร่วม <span class="mu2 t12">ออกทุกชุด</span></span><span class="st on">★★★</span></div></div>
+  <div class="card"><div class="sp"><span class="b5 t14">3 · ผลต่างกำลังสอง <span class="mu2 t12">น.5–6 · ออกทุกชุด</span></span><span class="st on">★★★</span></div></div>
+  <div class="card"><div class="sp"><span class="b5 t14">5 · แยก x²+bx+c <span class="mu2 t12">ออกทุกชุด</span></span><span class="st on">★★★</span></div></div>
+  <div class="card"><div class="sp"><span class="b5 t14">7 · การจัดกลุ่ม <span class="mu2 t12">น.14 หน้าเดียว · เจอแค่ในชุดของอีกอาจารย์</span></span><span class="st on">★<span class="off">★★</span></span></div></div>
+  <div class="card mut mb16"><div class="sp"><span class="b5 t14">9 · กำลังสาม <span class="mu2 t12">เจอแค่เชิงอรรถ ไม่เคยออก</span></span><span class="chip mono">ไม่เอา</span></div></div>
+  <div class="row"><span class="btn">ขอแก้ก่อน</span><span class="btn pri">ยืนยันขอบเขตนี้</span></div>
+  <p class="go">กด “ยืนยันขอบเขตนี้” ถ้าโอเคแล้ว หรือ “ขอแก้ก่อน” ถ้าอยากปรับ</p>
+</div></div>`
+},
+
+{
+ch:"บทที่ 2 · สร้างการเตรียมสอบ", clock:"20:27", url:"anyang.app/exam/factorization/scope/edit",
+title:"แก้ด้วยการพูดคุย ไม่ต้องหาปุ่ม",
+story:`<p>อาจารย์เน้นเรื่องการจัดกลุ่มมากในคาบล่าสุด แต่ AI ให้แค่ดาวเดียวเพราะดูจากข้อสอบเก่าอย่างเดียว</p>
+<p>ปาลบอกไปตรงๆ ครั้งแรกเธอพิมพ์ แต่ครั้งที่สองขี้เกียจพิมพ์แล้ว เลยกดไมค์พูดเอา</p>
+<p>รายการด้านซ้าย<b>ขยับให้เห็นทันที</b>ทุกครั้งที่ตกลงกัน ไม่ต้องรอจนจบแล้วค่อยไปดูว่าเปลี่ยนอะไรไปบ้าง</p>`,
+screen:`
+${TOP()}
+<div class="app">${SIDE('fx')}
+<div class="main" style="display:grid;grid-template-columns:1fr 320px;gap:26px;padding-right:0">
+  <div>
+    <p class="tag mono">ขอบเขต · อัปเดตสด</p>
+    <div class="card"><div class="sp"><span class="t13">2 · ดึงตัวประกอบร่วม</span><span class="st on">★★★</span></div></div>
+    <div class="card"><div class="sp"><span class="t13">3 · ผลต่างกำลังสอง</span><span class="st on">★★★</span></div></div>
+    <div class="card"><div class="sp"><span class="t13">5 · แยก x²+bx+c</span><span class="st on">★★★</span></div></div>
+    <div class="card ok"><div class="sp mb6"><span class="t13 b5">7 · การจัดกลุ่ม</span><span class="st on">★★★</span></div>
+      <p class="t12 mb0" style="color:var(--ok)">★ → ★★★ เมื่อสักครู่</p></div>
+    <div class="card mut"><div class="sp"><span class="t13">9 · กำลังสาม</span><span class="chip mono">ไม่เอา</span></div></div>
+  </div>
+  <div style="border-left:1px solid var(--line2);padding:0 26px 0 24px;display:flex;flex-direction:column">
+    <div style="flex:1">
+      <div class="m"><div class="av">ต</div><div class="body">
+        <p class="who">พี่ตาล<span>20:27</span></p>
+        <p>อยากแก้อะไรบอกมาได้เลย</p></div></div>
+      <div class="gap"></div>
+      <div class="m"><div class="av u">ป</div><div class="body">
+        <p class="who">ปาล<span>20:27</span></p>
+        <p>การจัดกลุ่มออกเยอะกว่านั้นนะ อาจารย์เน้นมากเลย</p></div></div>
+      <div class="gap"></div>
+      <div class="m"><div class="av">ต</div><div class="body">
+        <p class="who">พี่ตาล<span>20:27</span></p>
+        <p>อ๋อ งั้นดันขึ้นให้เป็นสามดาวละกัน</p>
+        <p>ที่ให้ดาวเดียวตอนแรกเพราะในชีทมีแค่หน้าเดียว แล้วในข้อสอบเก่าก็เจอแค่ชุดของรุ่นพี่ ซึ่งเธอบอกไว้ว่าคนละอาจารย์ เลยให้น้ำหนักน้อย</p></div></div>
+      <div class="gap"></div>
+      <div class="m"><div class="av">ต</div><div class="body cont">
+        <p>แล้วกำลังสองสมบูรณ์ล่ะ ตอนนี้สองดาว อาจารย์พูดถึงบ่อยมั้ย</p></div></div>
+    </div>
+    ${VOICEBAR}
+  </div>
+</div></div>`
+},
+
+{
+ch:"บทที่ 2 · สร้างการเตรียมสอบ", clock:"20:29", url:"anyang.app/exam/factorization/scope/confirm",
+title:"สรุปว่าเปลี่ยนอะไรไป แล้วค่อยยืนยัน",
+story:`<p>คุยเสร็จแล้วไม่ได้เด้งเข้าห้องติวเลย แต่สรุปให้ดูก่อนว่าเมื่อกี้ตกลงอะไรกันไปบ้าง</p>
+<p>ที่ต้องมีหน้านี้เพราะบทสนทนาเลื่อนหายไปเร็ว คนคุยไปสิบข้อความแล้วจำไม่ได้ว่าเปลี่ยนอะไรไปแล้วบ้าง และการกดยืนยันทำให้ขอบเขตเป็นสิ่งที่ปาล<b>ตั้งใจเลือก</b> ไม่ใช่สิ่งที่บังเอิญเกิดขึ้นระหว่างคุย</p>`,
+screen:`
+${TOP()}
+<div class="app">${SIDE('fx')}
+<div class="main">
+  <div class="wide">
+    <p class="h">สรุปสิ่งที่แก้ไป</p>
+    <p class="sub">ตรวจอีกรอบก่อนเริ่มติว · กดย้อนไปแก้เพิ่มได้</p>
+    <div class="card ok">
+      <div class="sp mb6"><span class="b5 t14">7 · การจัดกลุ่ม</span><span class="t13" style="color:var(--ok)">★ → ★★★</span></div>
+      <p class="t12 mb0" style="color:var(--ok)">เพราะคุณบอกว่าอาจารย์เน้นมาก</p>
+    </div>
+    <div class="card ok mb16">
+      <div class="sp mb6"><span class="b5 t14">4 · กำลังสองสมบูรณ์</span><span class="t13" style="color:var(--ok)">★★ → ★</span></div>
+      <p class="t12 mb0" style="color:var(--ok)">เพราะคุณบอกว่าอาจารย์แทบไม่พูดถึง</p>
+    </div>
+    <p class="tag mono">ขอบเขตสุดท้าย · 8 หัวข้อ</p>
+    <ul class="list mb16">
+      <li><span class="ck n mono">1</span><span style="flex:1">คูณพหุนาม</span><span class="st on">★★<span class="off">★</span></span></li>
+      <li><span class="ck n mono">2</span><span style="flex:1">ดึงตัวประกอบร่วม</span><span class="st on">★★★</span></li>
+      <li><span class="ck n mono">3</span><span style="flex:1">ผลต่างกำลังสอง</span><span class="st on">★★★</span></li>
+      <li><span class="ck n mono">4</span><span style="flex:1">กำลังสองสมบูรณ์</span><span class="st on">★<span class="off">★★</span></span></li>
+      <li><span class="ck n mono">5</span><span style="flex:1">แยก x²+bx+c</span><span class="st on">★★★</span></li>
+      <li><span class="ck n mono">7</span><span style="flex:1">การจัดกลุ่ม</span><span class="st on">★★★</span></li>
+    </ul>
+    <div class="row"><span class="btn">ย้อนไปแก้อีก</span><span class="btn pri">ยืนยัน แล้วเริ่มติว</span></div>
+    <p class="go">กด “ยืนยัน แล้วเริ่มติว” เพื่อเข้าห้องติวทันที</p>
+  </div>
+</div></div>`
+},
+
+/* ===== บทที่ 3 ===== */
+{
+ch:"บทที่ 3 · เริ่มติว", clock:"20:30", url:"anyang.app/room/factorization",
+title:"เข้าห้องติวเลย ไม่มีหน้าคั่น",
+story:`<p>เลือกติวเตอร์ไปตั้งแต่ตอนสมัครแล้ว ไม่ต้องเลือกซ้ำ กดยืนยันขอบเขตปุ๊บเข้าห้องติวปั๊บ</p>
+<p>สังเกตว่าหน้านี้แทบไม่เหลือ UI เลย ไม่มีแถบข้าง ไม่มีการ์ด ไม่มีปุ่มตัวเลือก มีแค่บทสนทนากับช่องพิมพ์ที่มีไมค์กับกล้องอยู่ข้างใน</p>
+<p>พี่ตาลเลือกเองว่าจะเริ่มตรงไหนและบอกเหตุผลสั้นๆ แล้วยิงโจทย์มาทันทีโดยยังไม่สอนอะไรเลย เพื่อดูว่าต้องเริ่มจากศูนย์หรือข้ามได้</p>`,
+screen:`
+<div class="room">${ROOMTOP}
+<div class="feed">
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>20:30</span></p>
+    <p>เอาละ เหลือ 5 วันเนอะ</p>
+    <p>เริ่มที่ผลต่างกำลังสองก่อนละกัน ข้อสอบเก่าออกทุกชุดเลย แล้วก็ง่ายสุดในกลุ่มนี้ด้วย</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av b">ม</div><div class="body">
+    <p class="who">มีน<span>20:30</span></p>
+    <p>เอาดิ เราก็ยังไม่ค่อยได้</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>20:31</span></p>
+    <p>ก่อนสอนลองข้อนี้ก่อน อยากรู้ว่าต้องเริ่มตรงไหน</p>
+    <p><span class="eq">x² − 49</span></p>
+    <p>ไม่รู้ก็บอกมาตรงๆ ได้นะ ไม่ต้องเดา</p></div></div>
+</div>
+${COMPOSER}
+</div>`
+},
+
+{
+ch:"บทที่ 3 · เริ่มติว", clock:"20:31", url:"anyang.app/room/factorization",
+title:"ตอบถูก เลยไม่ต้องสอนตั้งแต่ต้น",
+story:`<p>ปาลพิมพ์ตอบเอง ไม่มีปุ่มให้กด เพราะการกดเลือกจากสามตัวเลือกไม่ได้พิสูจน์ว่าทำเป็น แค่พิสูจน์ว่าเดาถูก</p>
+<p>พอตอบถูก พี่ตาลก็ไม่ปูพื้นซ้ำ ข้ามไปเน้นเงื่อนไขที่คนพลาดบ่อยแทน</p>
+<p>นี่คือสิ่งที่การอ่านชีทเองทำไม่ได้ ชีทไม่รู้ว่าเรารู้อะไรอยู่แล้ว</p>`,
+screen:`
+<div class="room">${ROOMTOP}
+<div class="feed">
+  <div class="m"><div class="av u">ป</div><div class="body">
+    <p class="who">ปาล<span>20:31</span></p>
+    <p>(x-7)(x+7)</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>20:31</span></p>
+    <p>ถูก งั้นไม่ต้องปูพื้นแล้ว</p>
+    <p>ข้ามไปจุดที่คนพลาดบ่อยเลยดีกว่า</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>20:32</span></p>
+    <p>วิธีนี้ใช้ได้ต่อเมื่อครบสามอย่าง มีสองพจน์ / เป็นกำลังสองสมบูรณ์ทั้งคู่ / คั่นด้วยลบ</p>
+    <p><span class="eq">a² − b² = (a−b)(a+b)</span></p>
+    <p>ขาดข้อใดข้อหนึ่งก็ใช้ไม่ได้แล้วนะ</p></div></div>
+</div>
+${COMPOSER}
+</div>`
+},
+
+{
+ch:"บทที่ 3 · เริ่มติว", clock:"20:33", url:"anyang.app/room/factorization",
+title:"มีนถามแทนในสิ่งที่ปาลไม่ทันคิด",
+story:`<p>มีนถามคำถามที่ปาลไม่ได้เอะใจเลย และนั่นคือกับดักที่ข้อสอบปี 2566 ใช้จริง</p>
+<p>สังเกตว่าพี่ตาลไม่ได้ขึ้นป้ายกำกับว่าข้อสอบปีไหนหลอกตรงไหน แต่<b>พูดออกมาเหมือนติวกับคนจริง</b> เพราะป้ายทำให้รู้สึกเหมือนอ่านเอกสาร ไม่ใช่คุยกับคน</p>
+<p>ปาลได้เรียนเรื่องนี้โดยไม่ต้องผิดเอง นี่คือเหตุผลที่มีเพื่อนติว ไม่ใช่แค่ให้ห้องดูไม่เหงา</p>`,
+screen:`
+<div class="room">${ROOMTOP}
+<div class="feed">
+  <div class="m"><div class="av b">ม</div><div class="body">
+    <p class="who">มีน<span>20:33</span></p>
+    <p>เดี๋ยวดิ แล้ว <span class="eq">x² + 49</span> ล่ะ แยกแบบเดียวกันได้ป่ะ</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>20:33</span></p>
+    <p>ไม่ได้ แยกไม่ได้เลยในจำนวนจริง</p>
+    <p>มีแต่ผลต่าง ไม่มีผลบวก จำไว้เลยข้อนี้</p>
+    <p>เอาจริงข้อสอบปี 66 ข้อ 4 หลอกตรงนี้เป๊ะ คนตอบผิดกันเยอะมาก</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av b">ม</div><div class="body">
+    <p class="who">มีน<span>20:34</span></p>
+    <p>โห ดีที่ถาม</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>20:34</span></p>
+    <p>ลองอีกข้อ <span class="eq">4x² − 25</span></p></div></div>
+</div>
+${COMPOSER}
+</div>`
+},
+
+{
+ch:"บทที่ 3 · เริ่มติว", clock:"20:35", url:"anyang.app/room/factorization",
+title:"ขี้เกียจพิมพ์แล้ว ก็พูดเอา",
+story:`<p>ปาลกดไมค์แล้วพูดคำตอบออกไปเลย ไม่ต้องพิมพ์วงเล็บกับเลขยกกำลังให้เมื่อย</p>
+<p>ตรงนี้คือจุดที่ทำให้รู้สึกเหมือนนั่งติวอยู่กับคนจริงมากที่สุด เพราะเวลาติวกับเพื่อน ไม่มีใครพิมพ์ตอบกัน</p>
+<p>สามทางที่ตอบได้คือ พิมพ์ พูด หรือถ่ายรูป ไม่มีปุ่มตัวเลือกให้กดเลยตลอดทั้งห้องติว</p>`,
+screen:`
+<div class="room">${ROOMTOP}
+<div class="feed">
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>20:34</span></p>
+    <p>ลองอีกข้อ <span class="eq">4x² − 25</span></p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av u">ป</div><div class="body">
+    <p class="who">ปาล<span>20:35</span> <span class="chip mono" style="margin-left:2px">🎤 พูด</span></p>
+    <p>สองเอ็กซ์ลบห้า คูณ สองเอ็กซ์บวกห้า</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>20:35</span></p>
+    <p>ใช่เลย รู้ได้ไงว่าเป็นสองเอ็กซ์</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av u">ป</div><div class="body">
+    <p class="who">ปาล<span>20:35</span></p>
+    <p>เพราะ 4x² คือ (2x)²</p></div></div>
+</div>
+${VOICEBAR}
+</div>`
+},
+
+/* ===== บทที่ 4 ===== */
+{
+ch:"บทที่ 4 · จังหวะที่ไม่ราบรื่น", clock:"20:41", url:"anyang.app/room/factorization",
+title:"ปาลตอบมาคำเดียวว่า งง",
+story:`<p>เข้าเรื่องใหม่แล้วปาลตามไม่ทัน เธอพิมพ์มาแค่คำเดียว</p>
+<p>ถ้าเป็นระบบที่ออกแบบไม่ดี มันจะอธิบายซ้ำทั้งก้อนเดิม ซึ่งไม่ช่วยอะไรเลย</p>
+<p>พี่ตาลตบกลับเข้าเรื่องด้วยการ<b>ถามให้แคบลง</b> ไม่ใช่ดุ ไม่ใช่อธิบายใหม่ทั้งหมด แค่ถามว่าติดตรงไหน แบบที่คนจริงจะถาม</p>`,
+screen:`
+<div class="room">${ROOMTOP}
+<div class="feed">
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>20:40</span></p>
+    <p>ทีนี้มาเรื่อง <span class="eq">x² + bx + c</span> หลักคือหาสองจำนวนที่คูณกันได้ c แล้วบวกกันได้ b</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av u">ป</div><div class="body">
+    <p class="who">ปาล<span>20:41</span></p>
+    <p>งง</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>20:41</span></p>
+    <p>งงตรงไหนอะ</p>
+    <p>ตรงที่ว่าทำไมต้องหาสองจำนวน หรือตรงที่ว่าจะหามันยังไง</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av u">ป</div><div class="body">
+    <p class="who">ปาล<span>20:41</span></p>
+    <p>อย่างหลัง หาไม่เป็นอะ</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>20:41</span></p>
+    <p>โอเค งั้นทำให้ดูข้อนึงเลย</p></div></div>
+</div>
+${COMPOSER}
+</div>`
+},
+
+{
+ch:"บทที่ 4 · จังหวะที่ไม่ราบรื่น", clock:"20:44", url:"anyang.app/room/factorization",
+title:"ปาลถามเรื่องนอกขอบเขต",
+story:`<p>ปาลนึกขึ้นได้ว่าเคยเห็นสูตรกำลังสาม เลยถามขึ้นมากลางคัน</p>
+<p>พี่ตาลไม่ปฏิเสธ ไม่ขึ้นป้ายว่านอกขอบเขต แต่ตอบสั้นๆ ให้หายข้องใจแล้วดึงกลับเข้าเรื่องเอง แบบที่ติวเตอร์คนจริงจะทำ</p>
+<p>และเสนอด้วยว่าถ้าอยากได้จริงก็เพิ่มเข้าขอบเขตได้ แต่ไม่ยัดเยียด</p>`,
+screen:`
+<div class="room">${ROOMTOP}
+<div class="feed">
+  <div class="m"><div class="av u">ป</div><div class="body">
+    <p class="who">ปาล<span>20:44</span></p>
+    <p>เดี๋ยวพี่ แล้วพวก a³ − b³ นี่มีสูตรมั้ย เห็นในเน็ต</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>20:44</span></p>
+    <p>มี <span class="eq">(a−b)(a²+ab+b²)</span></p>
+    <p>แต่อันนี้ไม่อยู่ในที่เราตกลงกันไว้นะ ในชีทมีแค่เชิงอรรถ แล้วข้อสอบเก่าสองชุดก็ไม่เคยออก</p>
+    <p>ถ้าอยากเก็บด้วยเดี๋ยวใส่เพิ่มให้ แต่เหลือ 5 วันเอง เอาที่ออกแน่ๆ ให้แน่นก่อนดีกว่ามั้ย</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av u">ป</div><div class="body">
+    <p class="who">ปาล<span>20:45</span></p>
+    <p>โอเคๆ ไว้ก่อน</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>20:45</span></p>
+    <p>กลับมาข้อเมื่อกี้ ลองทำเอง <span class="eq">x² − 5x + 6</span></p>
+    <p>ข้อนี้แสดงวิธีด้วย เขียนใส่กระดาษแล้วถ่ายมา</p></div></div>
+</div>
+${COMPOSER}
+</div>`
+},
+
+{
+ch:"บทที่ 4 · จังหวะที่ไม่ราบรื่น", clock:"20:47", url:"anyang.app/room/factorization",
+title:"ถามก่อนว่าอ่านลายมือถูกไหม",
+story:`<p>ปาลเขียนใส่กระดาษแล้วลากรูปมาวางในแชท</p>
+<p>พี่ตาลไม่ตรวจทันที แต่ทวนสิ่งที่อ่านได้กลับมาก่อน เหมือนคนจริงที่จะพูดว่า “เดี๋ยวขอดูก่อนนะ ที่เขียนมาคืออันนี้ใช่มั้ย”</p>
+<p>ขั้นนี้ห้ามข้าม ถ้าอ่านลายมือผิดแล้วบอกว่าตอบผิดทั้งที่เขียนถูก ผู้ใช้จะเลิกใช้ทันทีโดยไม่บอกเรา</p>`,
+screen:`
+<div class="room">${ROOMTOP}
+<div class="feed">
+  <div class="m"><div class="av u">ป</div><div class="body">
+    <p class="who">ปาล<span>20:47</span></p>
+    <div class="shot">📷 วิธีทำ.jpg</div></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>20:47</span></p>
+    <p>เดี๋ยวขอเช็คก่อนว่าอ่านถูกมั้ย ที่เขียนมาคือ</p>
+    <div class="read">
+      <p class="t13 mb6"><span class="mono mu2">1</span> &nbsp; <span class="eq">x² − 5x + 6</span></p>
+      <p class="t13 mb6"><span class="mono mu2">2</span> &nbsp; <span class="eq">= (x − 2)(x + 3)</span></p>
+      <p class="t13 mb0"><span class="mono mu2">3</span> &nbsp; <span class="eq">= x² + x − 6</span></p>
+    </div>
+    <p>ใช่มั้ย ถ้าอ่านผิดบอกได้เลยนะ</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av u">ป</div><div class="body">
+    <p class="who">ปาล<span>20:48</span></p>
+    <p>ใช่ๆ</p></div></div>
+</div>
+${COMPOSER}
+</div>`
+},
+
+{
+ch:"บทที่ 4 · จังหวะที่ไม่ราบรื่น", clock:"20:48", url:"anyang.app/room/factorization",
+title:"ผิด แล้วเฉลยเลย ไม่มีใบ้",
+story:`<p>ปาลทำผิดเรื่องเครื่องหมาย พี่ตาลไม่ถามว่างงตรงไหน ไม่ให้ใบ้แล้วให้ลองใหม่ แต่<b>บอกวิธีแก้ทันที</b></p>
+<p>เหตุผลคือคนที่เหลือ 5 วันสอบไม่ได้มาเล่นเกมทายคำตอบ เขามาเอาความเข้าใจ</p>
+<p>และชี้บรรทัดแรกที่ผิดด้วย ไม่ใช่บอกแค่ว่าผิด</p>`,
+screen:`
+<div class="room">${ROOMTOP}
+<div class="feed">
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>20:48</span></p>
+    <p>โอเค บรรทัดสองยังไม่ถูกนะ เครื่องหมายหลุด</p>
+    <p>เดี๋ยวทำให้ดูเลย</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body cont">
+    <p>โจทย์คือ <span class="eq">x² − 5x + 6</span> ใช่มั้ย</p>
+    <p>ต้องหาสองตัวที่คูณกันได้ +6 แล้วบวกกันได้ −5</p>
+    <p>+6 จะเกิดได้สองแบบ บวกคูณบวก หรือลบคูณลบ แต่บวกกันต้องได้ −5 ซึ่งติดลบ แปลว่าต้องลบทั้งคู่</p>
+    <p>ก็คือ −2 กับ −3 ตอบ <span class="eq">(x−2)(x−3)</span></p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body cont">
+    <p>จำง่ายๆ ตัวหลังบวกแต่ตัวกลางลบ เมื่อไหร่ก็ตาม สองตัวนั้นลบทั้งคู่</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av b">ม</div><div class="body">
+    <p class="who">มีน<span>20:49</span></p>
+    <p>อ๋อออ เราก็เพิ่งเก็ต</p></div></div>
+</div>
+${COMPOSER}
+</div>`
+},
+
+{
+ch:"บทที่ 4 · จังหวะที่ไม่ราบรื่น", clock:"20:50", url:"anyang.app/room/factorization",
+title:"ไม่ถามว่าเข้าใจไหม แต่ยิงโจทย์วัดเลย",
+story:`<p>คำถามว่า “เข้าใจไหม” ไม่มีประโยชน์ เพราะคนส่วนใหญ่ตอบว่าเข้าใจแม้ยังไม่เข้าใจ</p>
+<p>พี่ตาลเลยยิงโจทย์แบบเดียวกันมาอีกข้อแทน ปาลตอบถูก และระบบบันทึกเงียบๆ ว่าเธอเคยพลาดประเภทเครื่องหมายไปหนึ่งครั้ง</p>`,
+screen:`
+<div class="room">${ROOMTOP}
+<div class="feed">
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>20:50</span></p>
+    <p>ลองอีกข้อเลย แบบเดียวกัน</p>
+    <p><span class="eq">x² − 7x + 12</span></p>
+    <p>ข้อนี้เอาแค่คำตอบพอ ไม่ต้องแสดงวิธี</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av u">ป</div><div class="body">
+    <p class="who">ปาล<span>20:51</span></p>
+    <p>(x-3)(x-4)</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>20:51</span></p>
+    <p>ถูกแล้ว คราวนี้เครื่องหมายไม่หลุด</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av b">ม</div><div class="body">
+    <p class="who">มีน<span>20:51</span></p>
+    <p>เก่งอะ</p></div></div>
+</div>
+${COMPOSER}
+</div>`
+},
+
+/* ===== บทที่ 5 ===== */
+{
+ch:"บทที่ 5 · ปิดท้าย", clock:"21:06", url:"anyang.app/room/factorization",
+title:"ปาลอยากรู้ว่าตัวเองถึงไหนแล้ว",
+story:`<p>ติวมาครึ่งชั่วโมง ปาลถามขึ้นมาเอง ไม่ได้กดเข้าหน้าไหน</p>
+<p>ความคืบหน้าไม่มีหน้าดาชบอร์ดให้เปิด มันอยู่ในหัวของพี่ตาลตลอดเวลาอยู่แล้ว และตอบออกมาเป็นคำพูด ไม่ใช่ตาราง</p>
+<p>แล้วถามต่อว่าจะซ่อมหรือไปเรื่องใหม่ <b>โดยไม่มีปุ่มให้กด</b> ปาลตอบเองด้วยคำพูดของเธอ</p>`,
+screen:`
+<div class="room">${ROOMTOP}
+<div class="feed">
+  <div class="m"><div class="av u">ป</div><div class="body">
+    <p class="who">ปาล<span>21:06</span></p>
+    <p>ตอนนี้เราเป็นไงบ้าง เหลืออะไรอีก</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>21:06</span></p>
+    <p>ทำไปสามเรื่องละ</p>
+    <p>ดึงตัวประกอบร่วมกับผลต่างกำลังสองนี่แม่นแล้ว ไม่ต้องห่วง</p>
+    <p>ส่วน x²+bx+c ยังไม่นิ่ง เมื่อกี้พลาดเครื่องหมายไปทีนึง</p>
+    <p>เหลืออีกสี่เรื่องที่ยังไม่แตะเลย</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body cont">
+    <p>อยากเก็บเรื่องเครื่องหมายให้แน่นก่อน หรือจะลุยเรื่องใหม่ต่อเลย</p></div></div>
+</div>
+${COMPOSER}
+</div>`
+},
+
+{
+ch:"บทที่ 5 · ปิดท้าย", clock:"21:07", url:"anyang.app/room/factorization",
+title:"ซ่อมจุดอ่อนด้วยมุมอธิบายที่ต่างออกไป",
+story:`<p>ปาลตอบเองด้วยคำพูดของเธอ ไม่ได้เลือกจากตัวเลือกไหน</p>
+<p>พี่ตาลไม่อธิบายซ้ำแบบเดิม แต่เปลี่ยนมุมมาใช้พื้นที่สี่เหลี่ยมแทนการคิดด้วยตัวเลขล้วน</p>
+<p>ถ้าอธิบายแบบเดิมซ้ำ คนที่ไม่เข้าใจรอบแรกก็จะไม่เข้าใจรอบสองอยู่ดี</p>`,
+screen:`
+<div class="room">${ROOMTOP}
+<div class="feed">
+  <div class="m"><div class="av u">ป</div><div class="body">
+    <p class="who">ปาล<span>21:07</span></p>
+    <p>เอาเครื่องหมายก่อนดีกว่า กลัวพลาดอีก</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>21:07</span></p>
+    <p>ดี งั้นลองมองอีกมุมนะ คราวก่อนพี่อธิบายด้วยตัวเลข คราวนี้ลองมองเป็นรูป</p>
+    <p>คิดว่ามันคือสี่เหลี่ยมที่มีพื้นที่ <span class="eq">x² − 5x + 6</span> แล้วสองวงเล็บคือด้านสองด้าน</p>
+    <div class="shot" style="padding:34px 60px">ภาพพื้นที่สี่เหลี่ยม</div></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body cont">
+    <p>เอาเร็วๆ สามข้อ ดูแค่เครื่องหมายพอ ไม่ต้องหาคำตอบเต็ม</p>
+    <p><span class="eq">x² − 9x + 20</span> สองตัวนั้นบวกหรือลบ</p></div></div>
+</div>
+${COMPOSER}
+</div>`
+},
+
+{
+ch:"บทที่ 5 · ปิดท้าย", clock:"21:18", url:"anyang.app/room/factorization",
+title:"เสนอให้พอ แต่ไม่บังคับ",
+story:`<p>สี่สิบห้านาทีแล้ว พี่ตาลสรุปสั้นๆ ในบทสนทนา ไม่มีหน้าสรุปสวยๆ ให้อ่าน เพราะคนกำลังจะไปนอน ไม่ได้อยากอ่านรายงาน</p>
+<p>และเป็นแค่คำเสนอ ไม่ใช่คำสั่ง ถ้าปาลยังมีแรงก็บอกว่าไปต่อได้</p>`,
+screen:`
+<div class="room">${ROOMTOP}
+<div class="feed">
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>21:18</span></p>
+    <p>โอเค เครื่องหมายผ่านแล้ว สามข้อรวดไม่พลาดเลย</p>
+    <p>วันนี้เก็บไปสามเรื่อง ทำถูก 8 จาก 11 ข้อ</p>
+    <p>เหลืออีกสี่วัน ถือว่ายังตามแผนอยู่นะ</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body cont">
+    <p>จะลุยต่ออีกเรื่อง หรือพอแค่นี้ก่อนดี</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av b">ม</div><div class="body">
+    <p class="who">มีน<span>21:18</span></p>
+    <p>กูง่วงแล้วอะ พรุ่งนี้ต่อป่ะ</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av u">ป</div><div class="body">
+    <p class="who">ปาล<span>21:19</span></p>
+    <p>พอแล้วเหมือนกัน พรุ่งนี้เจอกัน</p></div></div>
+</div>
+${COMPOSER}
+</div>`
+},
+
+{
+ch:"บทที่ 5 · ปิดท้าย", clock:"21:20", url:"anyang.app/home",
+title:"กลับมาหน้าเดิม แต่ไม่เหมือนเดิมแล้ว",
+story:`<p>หน้าหลักที่เคยว่างเปล่าเมื่อชั่วโมงก่อน ตอนนี้มีการ์ด Factorization ความพร้อม 34%</p>
+<p>พรุ่งนี้ปาลกดเข้ามาแล้วติวต่อได้เลย ระบบจำได้ว่าเธอค้างอยู่ตรงไหนและอ่อนเรื่องอะไร</p>
+<p>และถ้าสอบเสร็จแล้ว การ์ดนี้จะไม่ถูกลบ แต่ย้ายไปที่เก็บไว้ รอวันที่เธอต้องสอบไฟนอล</p>`,
+screen:`
+${TOP()}
+<div class="app">${SIDE('fx')}
+<div class="main">
+  <p class="h">กำลังติว</p>
+  <p class="sub">เรียงตามวันสอบใกล้สุด</p>
+  <div class="grid2 mb16">
+    <div class="card ok">
+      <div class="sp mb6"><span class="b5 t14">Factorization</span><span class="chip d mono">สอบใน 4 วัน</span></div>
+      <div class="bar"><i style="width:34%"></i></div>
+      <div class="sp"><span class="t12 mu">ความพร้อม 34%</span><span class="t12 mu2">1 หัวข้อยังไม่นิ่ง</span></div>
+      <p class="t12 mu2 mt10 mb0">ติวล่าสุด เมื่อสักครู่ · 45 นาที</p>
+      <div class="mt10"><span class="btn sm pri">ติวต่อ</span></div>
+    </div>
+    <div class="card" style="display:flex;align-items:center;justify-content:center;border-style:dashed">
+      <span class="t13 mu">+ สร้างการเตรียมสอบใหม่</span></div>
+  </div>
+  <p class="go">กด “ติวต่อ” บนการ์ดเพื่อกลับเข้าห้องติวได้ทุกเมื่อ</p>
+  <div class="m mt24" style="max-width:420px"><div class="av b">ม</div>
+    <div class="body"><p class="who">มีน<span>21:20</span></p><p>พรุ่งนี้เจอกันน้า ฝันดี</p></div></div>
+</div></div>`
+}
+
+];
+
+const vp=document.getElementById('vp'),chEl=document.getElementById('ch'),
+titleEl=document.getElementById('title'),sidEl=document.getElementById('sid'),
+countEl=document.getElementById('count'),clockEl=document.getElementById('clock'),
+urlEl=document.getElementById('url'),trackEl=document.getElementById('track'),
+prevBtn=document.getElementById('prev'),nextBtn=document.getElementById('next');
+
+let i=0,maxSeen=0;
+steps.forEach((s,n)=>{const t=document.createElement('div');t.className='tick';
+  t.title='S'+String(n+1).padStart(2,'0')+' · '+LABELS[n];t.addEventListener('click',()=>go(n));trackEl.appendChild(t);});
+const ticks=Array.from(trackEl.children);
+
+function go(n){
+  i=Math.max(0,Math.min(steps.length-1,n));
+  maxSeen=Math.max(maxSeen,i);
+  const s=steps[i];
+  vp.innerHTML=s.screen;
+  vp.classList.remove('fade');void vp.offsetWidth;vp.classList.add('fade');
+  chEl.textContent=s.ch;titleEl.textContent=LABELS[i];sidEl.textContent='S'+String(i+1).padStart(2,'0');
+  clockEl.textContent=s.clock;urlEl.textContent=s.url;
+  countEl.textContent=(i+1)+' / '+steps.length;
+  prevBtn.disabled=i===0;
+  nextBtn.textContent=i===steps.length-1?'หน้าสุดท้าย':'ถัดไป ›';
+  nextBtn.disabled=i===steps.length-1;
+  ticks.forEach((t,n)=>{t.className='tick'+(n===i?' on':(n<=maxSeen?' seen':''));});
+}
+prevBtn.addEventListener('click',()=>go(i-1));
+nextBtn.addEventListener('click',()=>go(i+1));
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();go(i+1);}
+  if(e.key==='ArrowLeft'){e.preventDefault();go(i-1);}
+});
+go(0);
+</script>
+</body>
+</html>
