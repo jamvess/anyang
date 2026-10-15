@@ -474,7 +474,8 @@ ${TOP()}
 ch:"บทที่ 2 · สร้างการเตรียมสอบ", clock:"20:20", url:"anyang.app/new",
 title:"บอกว่าจะสอบอะไร และสอบเมื่อไหร่",
 story:`<p>ปาลพิมพ์ชื่อการสอบว่า Factorization แล้วเลือกวันสอบ ระบบขึ้นป้ายแดงทันทีว่า <b>เหลือ 5 วัน</b></p>
-<p>วันสอบไม่ได้ใส่ไว้เฉยๆ มันคือสิ่งที่ AI ใช้ตัดสินใจว่าจะติวอะไรก่อน เหลือ 5 วันกับเหลือ 2 สัปดาห์ ลำดับการติวไม่เหมือนกัน</p>`,
+<p>วันสอบไม่ได้ใส่ไว้เฉยๆ มันคือสิ่งที่ AI ใช้ตัดสินใจว่าจะติวอะไรก่อน เหลือ 5 วันกับเหลือ 2 สัปดาห์ ลำดับการติวไม่เหมือนกัน</p>
+<p>ช่องเวลาต่อวันไม่บังคับ ปาลเลือก 1 ชม. ถ้าไม่เลือก ระบบเริ่มที่วันละ 45 นาที แล้วปรับเองจากที่ติวจริง</p>`,
 screen:`
 ${TOP()}
 <div class="main">
@@ -487,8 +488,9 @@ ${TOP()}
       <div><span class="lb">วันสอบ</span><div class="fld v">2 ก.ย. 2569</div></div>
       <div><span class="lb">เหลือเวลา</span><div class="fld"><span class="chip d mono">5 วัน</span></div></div>
     </div>
-    <span class="lb">ติวได้วันละประมาณ</span>
-    <div class="pick"><span class="pk">30 นาที</span><span class="pk on">1 ชม.</span><span class="pk">2 ชม.+</span></div>
+    <span class="lb">ติวได้วันละประมาณ <span class="mu2">· ไม่บังคับ</span></span>
+    <div class="pick" style="margin-bottom:6px"><span class="pk">30 นาที</span><span class="pk">45 นาที</span><span class="pk on">60 นาที</span><span class="pk">90 นาที</span></div>
+    <p class="t12 mu2 mb16">ไม่ใส่ก็ได้ ระบบจะดูจากที่ติวจริงแล้วปรับให้เอง</p>
     <div class="row"><span class="btn">ยกเลิก</span><span class="btn pri">ถัดไป</span></div>
     <p class="go">กด “ถัดไป” เพื่อไปหน้าอัพโหลดไฟล์</p>
   </div>
