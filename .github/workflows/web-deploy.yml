@@ -34,6 +34,8 @@ jobs:
     # Secrets are not available to PRs from forks.
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    # A blocked deployment makes `vercel deploy` wait forever (default limit is 6 h).
+    timeout-minutes: 15
     environment:
       name: ${{ github.event_name == 'push' && 'production' || 'preview' }}
       url: ${{ steps.deploy.outputs.url }}
@@ -55,7 +57,11 @@ jobs:
           npx --yes "$VERCEL_CLI" build $prod --token="$VERCEL_TOKEN"
       - name: Deploy
         id: deploy
+        # Hide .git so the CLI sends no commit author: Hobby blocks deployments
+        # whose author is not the Vercel account owner. Restored for post-job cleanup.
         run: |
+          mv .git "$RUNNER_TEMP/git"
+          trap 'mv "$RUNNER_TEMP/git" .git' EXIT
           prod=$([ "$TARGET" = production ] && echo --prod || true)
           url=$(npx --yes "$VERCEL_CLI" deploy --prebuilt $prod --token="$VERCEL_TOKEN")
           echo "url=$url" >> "$GITHUB_OUTPUT"

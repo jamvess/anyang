@@ -5,7 +5,7 @@
 | Owner | May |
 | Branch | `chore/vercel-deploy` |
 | Checklist item | เชื่อม Vercel กับ repo (root `apps/web`) |
-| Status | paused · 2026-10-14 |
+| Status | in progress · 2026-10-15 |
 
 ## Plan
 
@@ -34,9 +34,15 @@
 - 2026-10-14 · production URL: https://anyang-amber.vercel.app (เช็คแล้วได้ 200, title "อ่านยัง?")
 - 2026-10-14 · `jamvess` = Jam (เจ้าของ repo) · ยืนยันจาก `roles.md` ที่แก้ใน PR #6
 - 2026-10-14 · deploy ผ่าน GitHub Actions + Vercel CLI แทน Git integration · Hobby block commit ของคนที่ไม่ใช่เจ้าของ account, ทางนี้ฟรีและทุกคน deploy ได้ (ใช้ token ของ Jam)
+- 2026-10-15 · step Deploy ย้าย `.git` ออกชั่วคราว (`mv` ไป `$RUNNER_TEMP` แล้ว `trap` คืน) · Jam ยืนยันว่า deployment ขึ้น **Blocked** เพราะ CLI ส่ง commit author ไปด้วย ซ่อน `.git` แล้ว CLI ไม่มี git metadata จะส่ง · ใช้ `mv` แทน `rm -rf` เพราะ post-job cleanup ของ `actions/checkout` ยังใช้ `.git`
+- 2026-10-15 · ใส่ `timeout-minutes: 15` ให้ job `deploy` · deployment ที่ถูก block ทำให้ CLI รอจนครบ 6 ชม.
 - 2026-10-14 · เพิ่ม `apps/web/vercel.json` (`git.deploymentEnabled: false`) แทนการตั้งใน dashboard · เห็นใน code review และไม่ deploy ซ้ำกับ workflow (เปลี่ยนจาก decision แรกที่ไม่เพิ่ม `vercel.json`)
 
-## Done today (2026-10-14)
+## Done today (2026-10-15)
+
+- ขั้น 7: run 38542548369 ค้าง `Building…` 6 ชม. จน GitHub ตัด · ลิงก์ Inspect เปิดด้วย account ของ May ได้ 404 (ไม่ได้อยู่ใน team `anyang4`) · Jam เปิดแล้วเห็น **Blocked** · แก้ `web-deploy.yml` ให้ซ่อน `.git` ตอน deploy + `timeout-minutes: 15`
+
+## Done 2026-10-14
 
 - ขั้น 7 ติด: re-run `web-deploy` (run 38538233366) · pull + build ผ่าน, upload สำเร็จ, Vercel สร้าง deployment https://anyang-1cwn5kdz7-anyang4.vercel.app (Inspect: https://vercel.com/anyang4/anyang/AMF6hYHS1AX1D4MiTjf31oF2avJy) แต่ CLI ค้างที่ `Building…` 17 นาที จึง cancel
 - ขั้น 6: Jam ใส่ secret `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` แล้ว (เห็นใน `gh secret list`)
@@ -50,15 +56,11 @@
 
 ## Next step
 
-ขั้น 7: หาสาเหตุที่ deployment ค้าง
-1. ให้ May หรือ Jam (account เจ้าของ Vercel team `anyang4`) เปิดลิงก์ Inspect ข้างบน แล้วบอกสถานะ (Blocked / Queued / Building / Error / Ready) และข้อความ error
-2. ถ้าเป็นเรื่อง commit author (Hobby block commit ของคนที่ไม่ใช่เจ้าของ): แก้ step Deploy ใน `web-deploy.yml` ไม่ให้ CLI ส่ง git metadata (เช่น `rm -rf .git` ก่อน `vercel deploy --prebuilt`) แล้ว push · ใส่ `timeout-minutes` ให้ job ด้วยกันค้างนาน
-3. ถ้าเป็นอย่างอื่น: แก้ตามข้อความ error
-4. เช็คว่า PR #5 ได้ปุ่ม View deployment และไม่มี check แดงของ Vercel แล้วไปขั้น 8
+ขั้น 7: commit + push การแก้ `web-deploy.yml` แล้วดูว่า job `deploy` ของ PR #5 เขียวภายใน 15 นาที และ PR #5 มีปุ่ม View deployment · ถ้ายัง Blocked ให้ Jam เปิด Inspect ของ deployment ใหม่ดูข้อความ
 
 ## Waiting on
 
-May หรือ Jam: เปิดลิงก์ Inspect แล้วบอกสถานะ + ข้อความ error
+May: รัน actionlint และตอบ ok เพื่อ commit + push
 
 ## Notes for next time
 
@@ -69,6 +71,7 @@ May หรือ Jam: เปิดลิงก์ Inspect แล้วบอก�
 - เช็ค branch ก่อนเขียนไฟล์เสมอ · มีครั้งหนึ่งที่ repo ถูกสลับไป `main` ระหว่าง session
 
 - Vercel Hobby + repo ส่วนตัวของคนอื่น: GitHub App ต้องติดตั้งโดยเจ้าของ repo และ Hobby อาจ block deploy จาก commit ของคนที่ไม่ใช่เจ้าของ Vercel account (ดูขั้น 2)
+- ลิงก์ Inspect ของ team `anyang4` เปิดได้เฉพาะ account ของ Jam (Hobby มีสมาชิกคนเดียว) · account ของ May ได้ 404
 - Vercel team slug คือ `anyang4` · preview URL ถูกป้องกันด้วย Vercel Authentication (curl ได้ 302 ไป SSO) เช็คสถานะจากภายนอกไม่ได้ ต้องเปิด Inspect ด้วย account ที่มีสิทธิ์
 - ดู log ของ job ได้ด้วย `gh run view --job=<id> --log` (ใช้ได้หลัง job จบแล้วเท่านั้น) · re-run ด้วย `gh run rerun <run-id>`
 - ตรวจ workflow ได้ด้วย `uvx --from actionlint-py actionlint .github/workflows/*.yml`
