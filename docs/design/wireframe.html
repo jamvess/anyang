@@ -168,6 +168,9 @@ body{margin:0;background:var(--paper);color:var(--ink);
 .guide li:before{content:"○";position:absolute;left:0;font-family:"IBM Plex Mono",monospace;font-size:11px}
 .guide li.y{color:var(--ink60)}
 .guide li.y:before{content:"✓";color:var(--ok)}
+.guide.tip li{color:var(--ink60)}
+.guide.tip li:before{content:"·";font-size:14px;line-height:1.3}
+.nope{border:1px solid var(--wns);background:var(--wns);color:var(--wn);border-radius:9px;padding:9px 13px;font-size:12.5px;margin-top:8px}
 .prev{background:var(--soft);border:1px solid var(--line2);border-radius:9px;padding:11px 13px}
 .bar2{display:flex;align-items:center;gap:16px;margin-top:18px;flex-wrap:wrap}
 .sid{font-size:12px;background:var(--ink);color:var(--white);padding:4px 9px;border-radius:5px}
@@ -366,7 +369,8 @@ ch:"บทที่ 1 · เริ่มต้นใช้งาน", clock:"20:
 title:"ปาลอยากแต่งเอง",
 story:`<p>เธอกด <b>ปรับเอง</b> เพราะอยากให้เพื่อนติวเรียกเธอว่าเธอ ไม่ใช่คุณ</p>
 <p>ช่องที่มีผลจริงต่อการเรียนคือ <b>ระดับความรู้ของเพื่อนติว</b> ถ้าตั้งให้อ่อนกว่าเรา เราจะได้อธิบายให้เขาฟัง ซึ่งช่วยให้เข้าใจขึ้นจริง ถ้าตั้งให้เก่งกว่านิดหน่อย เราจะได้ดูวิธีคิดของคนที่ทำได้</p>
-<p>เสียงเลือกได้และกดฟังตัวอย่างก่อนได้ 3 วินาที</p>`,
+<p>ใต้ช่องมีคำแนะนำว่าควรเล่าเรื่องอะไรบ้าง พอเขียนเสร็จ ระบบแปลงเป็นค่าที่ตั้งไว้ แล้วโชว์ประโยคตัวอย่างให้ดูว่าจะพูดประมาณไหน ไม่ถูกใจก็พิมพ์ปรับต่อได้</p>
+<p>ส่วนที่ขอแล้วทำให้ไม่ได้ ระบบบอกตรงๆ ใต้ตัวอย่าง เช่น ปรับความเร็วเสียง หรือให้พูดหยาบ</p>`,
 screen:`
 ${TOP('ปาลิดา')}
 <div class="main">
@@ -379,34 +383,36 @@ ${TOP('ปาลิดา')}
         <p class="tag mono">ติวเตอร์</p>
         <div class="fld v desc">อยากได้พี่ผู้หญิงชื่อพี่ตาล พูดสั้นๆ ตรงประเด็น ไม่ต้องอธิบายยาว เรียกเราว่าน้องก็ได้ ถ้าเราตอบผิดก็บอกตรงๆ เลยไม่ต้องอ้อม เสียงพูดเร็วนิดนึง</div>
         <p class="t12 mu mb6">ลองเล่าเรื่องพวกนี้</p>
-        <ul class="guide">
-          <li class="y">ชื่อที่อยากเรียก</li>
-          <li class="y">ผู้ชายหรือผู้หญิง เสียงเป็นยังไง</li>
-          <li class="y">สอนละเอียด หรือกระชับ</li>
-          <li class="y">เวลาเราผิด อยากให้พูดแบบไหน</li>
-          <li class="y">เรียกเราว่าอะไร</li>
+        <ul class="guide tip">
+          <li>ชื่อ และให้เรียกเราว่าอะไร</li>
+          <li>เสียงผู้ชายหรือผู้หญิง</li>
+          <li>พูดเป็นกันเอง หรือสุภาพ</li>
+          <li>สอนทีละขั้น ยกตัวอย่างก่อน หรือกระชับ</li>
+          <li>เวลาเราผิด อยากให้พูดตรงแค่ไหน</li>
+          <li>ตลกบ้างไหม ใช้อีโมจิไหม</li>
         </ul>
         <div class="prev">
           <p class="t12 mu2 mb6">พี่ตาลจะพูดประมาณนี้</p>
-          <p class="t13 mb6">“ผิดนะน้อง เครื่องหมายหลุด เดี๋ยวทำให้ดู”</p>
-          <span class="btn sm">▶ ฟังเสียง</span>
+          <p class="t13 mb0">“ผิดนะน้อง เครื่องหมายหลุด เดี๋ยวทำให้ดู”</p>
         </div>
+        <div class="nope">ทำให้ไม่ได้: ปรับความเร็วเสียง · ส่วนอื่นใช้ตามที่เล่าได้หมด</div>
       </div>
       <div>
         <p class="tag mono">เพื่อนติว</p>
         <div class="fld v desc">เพื่อนชื่อมีน เป็นผู้หญิง รุ่นเดียวกัน เก่งพอๆ กับเรา ชอบถามเวลาไม่เข้าใจ คุยกันเองแบบเพื่อน หยาบได้นิดหน่อย ไม่ต้องพูดบ่อยมาก</div>
         <p class="t12 mu mb6">ลองเล่าเรื่องพวกนี้</p>
-        <ul class="guide">
-          <li class="y">ชื่อที่อยากเรียก</li>
-          <li class="y">เก่งกว่า พอๆ กัน หรืออ่อนกว่าเรา</li>
-          <li class="y">นิสัยและวิธีพูด</li>
-          <li class="y">พูดบ่อยแค่ไหน</li>
-          <li>มีอะไรที่ไม่อยากให้ทำไหม</li>
+        <ul class="guide tip">
+          <li>ชื่อ และให้เรียกเราว่าอะไร</li>
+          <li>เก่งกว่า พอๆ กัน หรืออ่อนกว่าเรา</li>
+          <li>ขี้สงสัย ขี้เล่น หรือขยัน</li>
+          <li>พูดบ่อยแค่ไหน</li>
+          <li>เสียงผู้ชายหรือผู้หญิง</li>
         </ul>
         <div class="prev">
           <p class="t12 mu2 mb6">มีนจะพูดประมาณนี้</p>
-          <p class="t13 mb0">“เดี๋ยวดิ ตรงนี้ทำไมเป็นลบวะ”</p>
+          <p class="t13 mb0">“เดี๋ยวดิ ตรงนี้ทำไมเป็นลบอะ”</p>
         </div>
+        <div class="nope">ทำให้ไม่ได้: พูดหยาบ · มีนจะพูดแบบเพื่อนสนิทแทน</div>
       </div>
     </div>
     <div class="row mt16"><span class="btn">ย้อนกลับ</span><span class="btn pri">บันทึกแล้วไปต่อ</span></div>

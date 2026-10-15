@@ -11,7 +11,7 @@
 
 - [x] 1. 🙋 May บอกว่า wireframe อยู่ที่ไหน → `Downloads/end-to-end.html` (ไม่มี Figma)
 - [x] 2. 🤖 copy เข้า repo เป็น `docs/design/wireframe.html` (ยังไม่แก้) + เขียน brief `docs/design/wireframe-s1-changes.md`
-- [ ] 3. 🤖 แก้ S05 ใน HTML → 🙋 May เปิดดูแล้ว ok
+- [x] 3. 🤖 แก้ S05 ใน HTML → 🙋 May เปิดดูแล้ว ok
 - [ ] 4. 🤖 แก้ S08 → 🙋 May เปิดดูแล้ว ok
 - [ ] 5. 🤖 แก้ S15 → 🙋 May เปิดดูแล้ว ok
 - [ ] 6. 🙋 May ส่งข้อเสนอ `skill_level` ของ buddy ให้ Jam ในแชทกลุ่ม
@@ -30,11 +30,11 @@
 
 ## Next step
 
-ขั้น 3: แก้ S05 ใน `docs/design/wireframe.html` ตาม brief
+ขั้น 4: แก้ S08 ใน `docs/design/wireframe.html` ตาม brief
 
 ## Waiting on
 
-May: ok ขั้น 2
+May: เปิดดู S05 แล้ว ok
 
 ## Notes for next time
 
