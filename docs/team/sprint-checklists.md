@@ -77,7 +77,7 @@
 - [ ] ⭐ ตั้งเครื่องตัวเองตาม `setup.md` Part A (ได้คอมแล้ว 14 ต.ค.)
 - [x] ⭐ ให้ Claude Code scaffold `apps/web` และตรวจผล (+ `pnpm build` ใน CI)
 - [ ] แก้ wireframe S05 (คำแนะนำการเขียน persona), S08 (ช่องนาทีต่อวัน), S15 (progress card) (D6)
-- [ ] เชื่อม Vercel กับ repo (root `apps/web`)
+- [x] เชื่อม Vercel กับ repo (root `apps/web`)
 - [ ] ร่วม review `specs/requirements/requirements.md` (D1)
 - [ ] รูปลายมือ 10 รูป (D8)
 

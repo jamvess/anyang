@@ -15,8 +15,8 @@
 - [x] 4. 🙋 May ขออนุญาต Junior ในแชทกลุ่ม: เพิ่ม `.github/workflows/web-deploy.yml` และแก้ `infra/README.md` (Junior เป็นเจ้าของทั้งสองที่)
 - [x] 5. 🤖 เขียน `.github/workflows/web-deploy.yml` (Vercel CLI: preview ทุก PR, production เมื่อ push `main`) + `apps/web/vercel.json` ปิด Git auto-deploy ของ Vercel
 - [x] 6. 🙋 Jam (`jamvess`) สร้าง Vercel token และใส่ GitHub Secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`
-- [ ] 7. 🙋 เช็คว่า PR #5 ได้ preview URL จาก workflow และไม่มี check ของ Vercel ที่ fail อีก
-- [ ] 8. 🤖 บันทึก URL และขั้นตอนลง `infra/README.md` + ติ๊ก checklist ใน `sprint-checklists.md`
+- [x] 7. 🙋 เช็คว่า PR #5 ได้ preview URL จาก workflow และไม่มี check ของ Vercel ที่ fail อีก
+- [x] 8. 🤖 บันทึก URL และขั้นตอนลง `infra/README.md` + ติ๊ก checklist ใน `sprint-checklists.md`
 
 ## Definition of done
 
@@ -40,6 +40,9 @@
 
 ## Done today (2026-10-15)
 
+- ขั้น 8: เพิ่มหัวข้อ "Frontend · Vercel" ใน `infra/README.md` (URL, วิธีทำงาน, ตั้งค่าครั้งเดียว, ข้อควรรู้) + ติ๊ก "เชื่อม Vercel กับ repo" ใน `sprint-checklists.md`
+- ขั้น 7: run 38677768121 เขียว 1m08s · `✓ Ready in 6s` · preview https://anyang-fshojwlvv-anyang4.vercel.app · Jam กด View deployment ใน PR #5 แล้วเห็นหน้าเว็บ
+
 - ขั้น 7: run 38542548369 ค้าง `Building…` 6 ชม. จน GitHub ตัด · ลิงก์ Inspect เปิดด้วย account ของ May ได้ 404 (ไม่ได้อยู่ใน team `anyang4`) · Jam เปิดแล้วเห็น **Blocked** · แก้ `web-deploy.yml` ให้ซ่อน `.git` ตอน deploy + `timeout-minutes: 15`
 
 ## Done 2026-10-14
@@ -56,11 +59,11 @@
 
 ## Next step
 
-ขั้น 7: commit + push การแก้ `web-deploy.yml` แล้วดูว่า job `deploy` ของ PR #5 เขียวภายใน 15 นาที และ PR #5 มีปุ่ม View deployment · ถ้ายัง Blocked ให้ Jam เปิด Inspect ของ deployment ใหม่ดูข้อความ
+ครบทุกขั้นแล้ว · รัน `/work-done` เพื่อเปลี่ยน PR #5 จาก draft เป็น ready for review
 
 ## Waiting on
 
-May: รัน actionlint และตอบ ok เพื่อ commit + push
+ไม่มี
 
 ## Notes for next time
 
