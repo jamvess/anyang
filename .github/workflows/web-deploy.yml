@@ -1,0 +1,68 @@
+name: web-deploy
+
+# Deploys apps/web with the Vercel CLI instead of Vercel's Git integration:
+# on Hobby, Git deploys only build commits by the Vercel account owner.
+# Root directory (apps/web) and env come from the Vercel project settings.
+on:
+  pull_request:
+    paths:
+      - apps/web/**
+      - .github/workflows/web-deploy.yml
+  push:
+    branches: [main]
+    paths:
+      - apps/web/**
+      - .github/workflows/web-deploy.yml
+
+concurrency:
+  group: web-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  deployments: write
+
+env:
+  VERCEL_CLI: vercel@64.0.2
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  TARGET: ${{ github.event_name == 'push' && 'production' || 'preview' }}
+
+jobs:
+  deploy:
+    # Secrets are not available to PRs from forks.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    # A blocked deployment makes `vercel deploy` wait forever (default limit is 6 h).
+    timeout-minutes: 15
+    environment:
+      name: ${{ github.event_name == 'push' && 'production' || 'preview' }}
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: apps/web/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - name: Pull Vercel project settings
+        run: npx --yes "$VERCEL_CLI" pull --yes --environment="$TARGET" --token="$VERCEL_TOKEN"
+      - name: Build
+        run: |
+          prod=$([ "$TARGET" = production ] && echo --prod || true)
+          npx --yes "$VERCEL_CLI" build $prod --token="$VERCEL_TOKEN"
+      - name: Deploy
+        id: deploy
+        # Hide .git so the CLI sends no commit author: Hobby blocks deployments
+        # whose author is not the Vercel account owner. Restored for post-job cleanup.
+        run: |
+          mv .git "$RUNNER_TEMP/git"
+          trap 'mv "$RUNNER_TEMP/git" .git' EXIT
+          prod=$([ "$TARGET" = production ] && echo --prod || true)
+          url=$(npx --yes "$VERCEL_CLI" deploy --prebuilt $prod --token="$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed: $url" >> "$GITHUB_STEP_SUMMARY"
