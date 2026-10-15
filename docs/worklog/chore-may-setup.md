@@ -28,7 +28,7 @@
 
 ## Next step
 
-ขั้น 4: May สร้าง Claude chat Project `อ่านยัง?` ตาม setup.md A8
+ครบทุกขั้นแล้ว · รัน `/work-done`
 
 ## Waiting on
 
