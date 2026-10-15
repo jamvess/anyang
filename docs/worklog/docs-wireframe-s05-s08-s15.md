@@ -9,13 +9,13 @@
 
 ## Plan
 
-- [ ] 1. 🙋 May บอกว่า wireframe อยู่ที่ไหน (ลิงก์ Figma หรือไฟล์) และส่งรูปหน้าจอปัจจุบันของ S05, S08, S15
-- [ ] 2. 🤖 เขียน brief การแก้ทีละหน้าใน `docs/design/wireframe-s1-changes.md`: ต้องเพิ่ม/เปลี่ยนอะไร, ข้อความภาษาไทยที่ใช้, อ้างอิง spec (UM-05, UM-07, CM-01, TM-11, TM-15, `ai-orchestration.md` 2.2.2, 2.5.2, 2.7, `api.md` `progress_card`)
-- [ ] 3. 🙋 May review brief (เลือกข้อความ, ตัดสินใจเรื่อง layout)
-- [ ] 4. 🙋 May แก้ S05 ใน Figma: เพิ่มคำแนะนำวิธีเขียน persona ใต้ช่อง free text
-- [ ] 5. 🙋 May แก้ S08 ใน Figma: เพิ่มช่อง optional "วันละประมาณกี่นาที"
-- [ ] 6. 🙋 May แก้ S15 ใน Figma: ข้อความเปิดห้องเป็น progress card + สรุป 2–3 ประโยค + โจทย์ข้อแรก
-- [ ] 7. 🤖 ใส่ลิงก์ Figma + รูป 3 หน้าที่แก้แล้วใน brief และติ๊ก checklist
+- [x] 1. 🙋 May บอกว่า wireframe อยู่ที่ไหน → `Downloads/end-to-end.html` (ไม่มี Figma)
+- [x] 2. 🤖 copy เข้า repo เป็น `docs/design/wireframe.html` (ยังไม่แก้) + เขียน brief `docs/design/wireframe-s1-changes.md`
+- [ ] 3. 🤖 แก้ S05 ใน HTML → 🙋 May เปิดดูแล้ว ok
+- [ ] 4. 🤖 แก้ S08 → 🙋 May เปิดดูแล้ว ok
+- [ ] 5. 🤖 แก้ S15 → 🙋 May เปิดดูแล้ว ok
+- [ ] 6. 🙋 May ส่งข้อเสนอ `skill_level` ของ buddy ให้ Jam ในแชทกลุ่ม
+- [ ] 7. 🤖 ติ๊ก checklist
 
 ## Definition of done
 
@@ -24,13 +24,17 @@
 
 ## Decisions
 
+- 2026-10-15 · เก็บ wireframe ใน repo ที่ `docs/design/wireframe.html` และให้ Claude แก้ HTML · ไม่มี Figma, ทีมเปิดดูจาก repo ได้
+- 2026-10-15 · S08 นาทีต่อวัน: 30 / 45 / 60 / 90 นาที ไม่เลือกไว้ก่อน + "ไม่บังคับ" · ตรงกับ `daily_minutes` nullable ค่าเริ่มต้น 45
+- 2026-10-15 · S05 เก็บ "ระดับความรู้ของเพื่อนติว" ไว้ และเสนอ Jam เพิ่ม param `skill_level` ใน `ai-orchestration.md` §2.7 · May เห็นว่ามีผลต่อการเรียนจริง
+
 ## Next step
 
-ขั้น 1: ถาม May ว่า wireframe อยู่ที่ไหน
+ขั้น 3: แก้ S05 ใน `docs/design/wireframe.html` ตาม brief
 
 ## Waiting on
 
-May: ลิงก์ wireframe + รูป 3 หน้า
+May: ok ขั้น 2
 
 ## Notes for next time
 
