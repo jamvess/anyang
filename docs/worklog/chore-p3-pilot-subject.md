@@ -14,7 +14,7 @@
 - [x] 3. 🙋 เลือกวิชาตามเกณฑ์ แล้วบอกชื่อวิชา + เหตุผลสั้นๆ → `mth10101` (Calculus)
 - [x] 4. 🙋 หาไฟล์ชีท + ข้อสอบเก่า 2 ชุด → อัปโหลดเข้า Drive ทีม และวางไว้ที่ `evals/topics/<subject>/raw/`
 - [x] 5. 🤖 ตรวจไฟล์ (จำนวนหน้า, เป็น text หรือสแกน, มีเลขข้อชัดไหม, ทุกข้อของข้อสอบเก่ามีบทใน lecture ไหม) แล้วกรอก `evals/topics/<subject>/sources.md`
-- [ ] 6. 🤖 ติ๊ก checklist และร่างข้อความบอก May ว่าไฟล์พร้อม label แล้ว
+- [x] 6. 🤖 ติ๊ก checklist และร่างข้อความบอก May ว่าไฟล์พร้อม label แล้ว
 
 ## Definition of done
 
@@ -39,7 +39,7 @@
 
 ## Next step
 
-ขั้นที่ 6: ติ๊ก checklist ⭐ ของ Jam ใน `docs/team/sprint-checklists.md` และร่างข้อความบอก May ว่าไฟล์พร้อม label แล้ว
+ครบทุกขั้นแล้ว · Jam ส่งข้อความหา May แล้วรัน `/work-done`
 
 ## Waiting on
 
