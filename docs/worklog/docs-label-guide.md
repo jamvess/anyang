@@ -14,8 +14,8 @@
 - [x] 3. 🤖 คู่มือ label หัวข้อ P3 ใน `evals/topics/README.md` + รูปแบบ `labels.json` ให้ตรงกับ output ของ A5/A6/A7 (ai-orchestration §2.3.4) + ตัวอย่างจาก MTH10101
 - [x] 4. 🤖 คู่มือ label ลายมือ P1 ใน `evals/README.md`: กติกาการพิมพ์ LaTeX รายบรรทัด (สิ่งที่อ่านไม่ออก, ขีดฆ่า, ลูกศร)
 - [x] 5. 🤖 คู่มือ label golden set คำตอบ P2 ใน `evals/README.md`: verdict 5 ค่า, error_type 6 ค่าพร้อมนิยามและตัวอย่างแคลคูลัส, กติกา first_wrong_line, answer_format
-- [ ] 6. 🙋 Jam อ่านคู่มือทั้งหมดแล้วลอง label ตัวอย่าง 2 ข้อ (ใช้ข้อสอบ MTH10101) ดูว่าตัดสินได้โดยไม่ต้องถามไหม
-- [ ] 7. 🤖 ติ๊ก checklist และร่างข้อความถึง May
+- [-] 6. 🙋 Jam อ่านคู่มือทั้งหมดแล้วลอง label ตัวอย่าง 2 ข้อ (ใช้ข้อสอบ MTH10101) ดูว่าตัดสินได้โดยไม่ต้องถามไหม
+- [x] 7. 🤖 ติ๊ก checklist และร่างข้อความถึง May
 
 ## Definition of done
 
@@ -39,10 +39,11 @@
 - 2026-10-16 · เพิ่ม `writer` (รหัส w01, w02, ...) และ `unclear_lines` ใน `handwriting/labels.jsonl` · ใช้ `writer` แยกผลตามคนเขียน · บรรทัดที่คนอ่านไม่ออกไม่นำมาให้คะแนน AI
 - 2026-10-16 · error_type ตัดสินจากบรรทัดแรกที่ผิดบรรทัดเดียว และถามตามลำดับ no_answer → sign → prerequisite → wrong_method → concept → calculation · ถ้าไม่มีลำดับ คน label 2 คนจะเลือกต่างกันในเคสที่เข้าได้หลายแบบ
 - 2026-10-16 · error_type ใน JSON ใช้ snake_case (`wrong_method`, `no_answer`) · spec เขียนว่า "wrong method", "no answer" ซึ่งเป็นชื่อเรียก ไม่ใช่ identifier
+- 2026-10-16 · ข้ามขั้น 6 (Jam ลอง label เอง) ตามที่ Jam สั่ง · คู่มือยังไม่ได้ทดสอบกับคนจริง ให้ May จดจุดที่ต้องเดาระหว่าง label แล้วแก้คู่มือใน PR ถัดไป
 
 ## Next step
 
-ขั้นที่ 6 (🙋): Jam อ่านคู่มือทั้ง 3 ส่วนแล้วลอง label 2 ข้อ: (1) หัวข้อของ `midterm-2561-1:ก4` ตามคู่มือใน `evals/topics/README.md` (2) คำตอบที่แต่งเองหรือของเพื่อน 1 ข้อตามคู่มือ golden set
+ครบทุกขั้นแล้ว · Jam ส่งข้อความหา May และ Junior แล้วรัน `/work-done`
 
 ## Waiting on
 
