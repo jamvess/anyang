@@ -11,7 +11,7 @@
 
 - [x] 1. 🤖 สร้าง branch, worklog และ Draft PR
 - [x] 2. 🙋 ตัดสินใจ 3 เรื่อง: ขนาดของหัวข้อ, map ข้อสอบรายข้อย่อยหรือข้อใหญ่, ดาวใน label ให้คนตัดสินเองหรือคำนวณจากสูตร
-- [ ] 3. 🤖 คู่มือ label หัวข้อ P3 ใน `evals/topics/README.md` + รูปแบบ `labels.json` ให้ตรงกับ output ของ A5/A6/A7 (ai-orchestration §2.3.4) + ตัวอย่างจาก MTH10101
+- [x] 3. 🤖 คู่มือ label หัวข้อ P3 ใน `evals/topics/README.md` + รูปแบบ `labels.json` ให้ตรงกับ output ของ A5/A6/A7 (ai-orchestration §2.3.4) + ตัวอย่างจาก MTH10101
 - [ ] 4. 🤖 คู่มือ label ลายมือ P1 ใน `evals/README.md`: กติกาการพิมพ์ LaTeX รายบรรทัด (สิ่งที่อ่านไม่ออก, ขีดฆ่า, ลูกศร)
 - [ ] 5. 🤖 คู่มือ label golden set คำตอบ P2 ใน `evals/README.md`: verdict 5 ค่า, error_type 6 ค่าพร้อมนิยามและตัวอย่างแคลคูลัส, กติกา first_wrong_line, answer_format
 - [ ] 6. 🙋 Jam อ่านคู่มือทั้งหมดแล้วลอง label ตัวอย่าง 2 ข้อ (ใช้ข้อสอบ MTH10101) ดูว่าตัดสินได้โดยไม่ต้องถามไหม
@@ -31,9 +31,15 @@
 - 2026-10-16 · **คนตัดสินดาวเอง** ("ถ้าเป็นรุ่นพี่จะบอกน้องว่าสำคัญแค่ไหน") แล้ว script คำนวณดาวจากสูตรมาเทียบ · ใช้ทดสอบ `three_star_min_r` ตามที่ P3 ต้องได้ "ค่า stars.* ที่ยืนยันแล้ว"
 - 2026-10-16 · branch นี้ merge `chore/p3-pilot-subject` (PR #7) เข้ามา เพราะต้องแก้ `evals/topics/README.md` และ `sources.md` ที่ยังไม่ขึ้น main · ต้อง merge PR #7 ก่อน PR นี้
 
+- 2026-10-16 · May label, Junior ตรวจ, Jam ไม่แก้ไฟล์ label · ตามกฎ "คน label ไม่ใช่คนทำ PoC"
+- 2026-10-16 · ห้ามใช้ AI ช่วย label หัวข้อหรือ map ข้อสอบ · ถ้าใช้ label จะเหมือน output ของ AI แล้ว P3 วัดอะไรไม่ได้
+- 2026-10-16 · ตัวอย่างใน `labels.json` ใช้เรื่องอินทิเกรต (ไม่อยู่ในกลางภาค MTH10101) · ถ้าใช้ตัวอย่างจากวิชาจริง จะชี้นำคน label
+- 2026-10-16 · label ของข้อสอบ held-out ห้าม commit · แค่ map หัวข้อก็บอกได้แล้วว่าหัวข้อไหนออกสอบ
+- 2026-10-16 · ไม่ label `common_mistakes` · คนเดาเองได้ไม่แม่น
+
 ## Next step
 
-ขั้นที่ 3: เขียนคู่มือ label หัวข้อใน `evals/topics/README.md` ตาม Decisions
+ขั้นที่ 4: เขียนคู่มือ label ลายมือ P1 ใน `evals/README.md` (กติกาพิมพ์ LaTeX รายบรรทัด)
 
 ## Waiting on
 

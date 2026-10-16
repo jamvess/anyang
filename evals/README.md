@@ -31,10 +31,7 @@ evals/
 
 **topics/<subject>/labels.json**
 
-```json
-{"topics": [{"name": "การแยกตัวประกอบพหุนาม", "stars": 3, "skills": ["ดึงตัวร่วม", "ผลต่างกำลังสอง"]}],
- "question_map": {"midterm-2567:Q3": "การแยกตัวประกอบพหุนาม"}}
-```
+รูปแบบและคู่มือการ label อยู่ใน [`topics/README.md`](topics/README.md#คู่มือ-label--labelsjson)
 
 ## กฎ
 
