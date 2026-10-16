@@ -119,7 +119,7 @@
 ### S1 · 5–16 ต.ค.
 
 - [x] ⭐ ติดตั้งเครื่องมือและ Claude Code
-- [ ] ⭐ เลือกวิชาคณิต 1 วิชาสำหรับ P3 และหาชีท + ข้อสอบเก่า 2 ชุด
+- [x] ⭐ เลือกวิชาคณิต 1 วิชาสำหรับ P3 และหาชีท + ข้อสอบเก่า 2 ชุด · MTH10101, ดู `evals/topics/mth10101/sources.md`
 - [ ] ตรวจ `specs/system/ai-orchestration.md` และ `learning-model.md` ใน repo ให้ครบ (D2)
 - [ ] ตรวจ `config/learning.yaml` ว่าทุกค่ามีป้ายที่มา
 - [ ] เขียนคู่มือ label golden set (verdict, error type, บรรทัดแรกที่ผิด) ใน `evals/README.md`
