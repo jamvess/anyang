@@ -20,7 +20,7 @@
 
 ### S1 · 5–16 ต.ค.
 
-- [x] ⭐ สร้าง repo, วาง starter files · branch protection ข้ามไว้ (repo private แบบฟรีตั้งไม่ได้ ใช้กติกา approve ก่อน merge แทน)
+- [x] ⭐ สร้าง repo, วาง starter files · branch protection ตั้งแล้ว 15 ต.ค. (repo เป็น public, Jam ตั้ง ruleset 25137368: PR + 1 approval + CI 3 job)
 - [x] ⭐ ให้ Claude Code scaffold `apps/api` และตรวจผล
 - [x] ⭐ `npx supabase init` + `db push` `0001_init.sql` ขึ้น Supabase cloud `anyang-dev` + เปิด custom access token hook
 - [x] GitHub Actions รันครบ 3 job และเขียวบน `main`
@@ -39,7 +39,7 @@
 
 - [ ] Cloud Build trigger: merge → deploy `api-staging` อัตโนมัติ (P6-lite)
 - [x] `test_SA06_tenant_isolation` รันใน CI (P6-lite) · เสร็จก่อนกำหนดใน S1
-- [ ] ตรวจว่าไม่มี secret ใน git history
+- [x] ตรวจว่าไม่มี secret ใน git history · เสร็จก่อนกำหนดใน S1 (15 ต.ค.)
 - [ ] ปรับ `schema.sql` ตามที่เจอระหว่าง P3 + วาด ERD (D3)
 - [ ] ช่วย Jam ทำ ingest pipeline ของ P3: อ่าน PDF (PyMuPDF), ตัด chunk, เก็บลง DB
 - [ ] เขียน report P6-lite ด้วย `/poc-report P6-lite`
