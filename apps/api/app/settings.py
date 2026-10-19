@@ -147,6 +147,9 @@ class PurposeConfig(_Strict):
     timeout_s: float = Field(gt=0)
     prompt: str
     stream: bool = False
+    # Gemini 3 thinking level. Thinking tokens count inside max_tokens, so transcription
+    # purposes use "low" (PoC P3: one exam page used ~4,000 tokens by default, 396 on low).
+    thinking: Literal["low", "medium", "high"] | None = None
 
 
 class CircuitBreakerConfig(_Strict):
@@ -227,6 +230,8 @@ class EnvSettings(BaseSettings):
 
     # --- AI providers ---
     ai_provider: Literal["fake", "live"] = "fake"
+    ai_model_override: str = ""
+    gemini_api_key: SecretStr = SecretStr("")
     google_cloud_project: str = ""
     google_cloud_location: str = ""
     google_application_credentials: str = ""
