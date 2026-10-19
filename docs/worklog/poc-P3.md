@@ -5,7 +5,7 @@
 | Owner | Jam |
 | Branch | `poc/P3` |
 | Checklist item | P3: ingest → A5 → A6 → A7 → `compute_importance` · เทียบกับ label · ลอง embedding 2–3 ตัวกับคำถาม 20 ข้อ |
-| Status | paused · 2026-10-19 |
+| Status | in progress · 2026-10-19 |
 
 ## Done today (2026-10-19)
 
@@ -77,4 +77,4 @@
 - โควตาของ `gemini-3.5-flash` free tier: 5 ครั้งต่อนาที + 20 ครั้งต่อวันต่อ model (ใน error ชื่อ `gemini-3.6-flash`) · `gemini-3.5-flash-lite` มีโควตาแยก · `gemini-3.8-flash` ช้ามาก (35 วินาทีกับข้อความทดสอบสั้นๆ)
 - dry run แบบไม่ใช้โควตา: script `dry_run.py` อยู่ใน scratchpad ของ session 2026-10-19 (ไม่ได้ commit) · ใช้ FakeProvider + label มาปลอมเป็นคำตอบของ A5/A6/A7
 - python ใน Git Bash heredoc ที่มีภาษาไทยบางทีขึ้น `SyntaxError: Non-UTF-8` · ให้ใช้ Edit tool แทน
-- งานที่ต้องจัดการ: แก้ §2.3.7 ของ `ai-orchestration.md` ให้ตรงกับ prompt (A6 `sources`/`excluded_by_note`, A4 `points`, A7 null + `note`, `vision_extract_pages`) ก่อน `/work-done` · ก่อนทำ P1 ต้องแก้เรื่อง AI-07 (รูปลายมือห้ามส่งผ่าน free tier)
+- 2026-10-19 (session 3) แก้ §2.3.3 + §2.3.7 + §3.1 ของ `ai-orchestration.md` ให้ตรงกับ prompt และ model แล้ว (A2b, schema แบบ object, เช็คคุณภาพข้อความ, ข้อจำกัดของ PyMuPDF) · ก่อนทำ P1 ต้องแก้เรื่อง AI-07 (รูปลายมือห้ามส่งผ่าน free tier)
