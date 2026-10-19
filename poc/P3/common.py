@@ -19,6 +19,7 @@ sys.path.insert(0, str(REPO / "apps" / "api"))
 from pydantic import BaseModel  # noqa: E402
 
 from app.ai.gateway import AIProviderError, CallRecord, Gateway  # noqa: E402
+from app.ai.providers.base import ProviderRequest, ProviderResponse  # noqa: E402
 from app.ai.providers.gemini import GeminiProvider  # noqa: E402
 from app.settings import get_settings  # noqa: E402
 
@@ -50,6 +51,24 @@ def read_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+class SaveRaw:
+    """Wraps a provider and writes every model answer to out/raw/<tag>-<n>.txt, so an answer
+    that fails the schema can be read afterwards (the gateway only records the status)."""
+
+    def __init__(self, provider: GeminiProvider) -> None:
+        self._provider = provider
+        self._count: dict[str, int] = {}
+
+    async def generate(self, request: ProviderRequest) -> ProviderResponse:
+        response = await self._provider.generate(request)
+        tag = _tag.get().replace(":", "_") or request.purpose
+        self._count[tag] = self._count.get(tag, 0) + 1
+        path = OUT / "raw" / f"{tag}-{self._count[tag]}.txt"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(response.text, encoding="utf-8")
+        return response
+
+
 class Run:
     """A live gateway whose call records are appended to out/calls.jsonl with a tag."""
 
@@ -57,10 +76,16 @@ class Run:
         settings = get_settings()
         env = settings.env
         self.model = env.ai_model_override
+        # Free tier: a 503 counts against the 20-per-day quota, so the gateway's immediate
+        # retry is turned off here and Run.call waits BACKOFF_SECONDS instead. PoC only;
+        # config/ai.yaml keeps retries: 1.
+        config = settings.ai.model_copy(
+            update={"gateway": settings.ai.gateway.model_copy(update={"retries": 0})}
+        )
         self.gateway = Gateway.live(
-            settings.ai,
+            config,
             env.prompts_dir,
-            {"gemini": GeminiProvider(env.gemini_api_key.get_secret_value())},
+            {"gemini": SaveRaw(GeminiProvider(env.gemini_api_key.get_secret_value()))},
             env.ai_model_override,
         )
         self.records: list[tuple[str, CallRecord]] = []
