@@ -9,7 +9,7 @@
 
 ## Plan
 
-- [ ] 1. 🙋 สร้าง project `anyang-staging` ใน Supabase Dashboard (org เดียวกับ `anyang-dev`, region Southeast Asia (Singapore) ให้ตรงกับ Cloud Run `asia-southeast1`) · เก็บ database password ไว้ใน password manager · บอก Project ref ให้ Claude
+- [ ] 1. 🙋 **Jam** สร้าง project `anyang-staging` ใน Supabase Dashboard (org เดียวกับ `anyang-dev`, region Southeast Asia (Singapore) ให้ตรงกับ Cloud Run `asia-southeast1`) · เก็บ database password ไว้ใน password manager แล้วบอก Junior ต่อหน้า (ไม่ส่งในแชท) · ส่ง Project ref ให้ Junior
 - [ ] 2. 🙋 + 🤖 `npx supabase login` (Junior login ใน browser) → `npx supabase link --project-ref <ref>` (Junior พิมพ์ password เอง) → Claude รัน `npx supabase db push --dry-run` ให้ดูก่อน → Junior ตอบ ok → `npx supabase db push`
 - [ ] 3. 🤖 ตรวจ: `npx supabase migration list` ต้องเห็น `0001` ทั้งฝั่ง Local และ Remote · จากนั้น `npx supabase unlink` กัน `db push` ครั้งหน้าไปลง staging โดยไม่ตั้งใจ
 - [ ] 4. 🙋 ตรวจ RLS ใน Dashboard (Table Editor ทุกตารางต้องไม่มีป้าย "RLS disabled") + เปิด Custom Access Token hook (`public.custom_access_token_hook`)
@@ -27,15 +27,16 @@
 ## Decisions
 
 - 2026-10-19 · region Singapore · ให้อยู่ใกล้ Cloud Run `asia-southeast1` ที่จะใช้ทำ `api-staging`
+- 2026-10-19 · Jam เป็นคนสร้าง project (ขั้น 1) · Jam เป็นเจ้าของ org ใน Supabase · ขั้นที่เหลือ Junior ทำต่อ
 - 2026-10-19 · `unlink` หลัง push เสร็จ · เครื่องนี้ไม่ได้ link กับ project ไหนอยู่ก่อน ถ้าปล่อย link ไว้ `db push` ครั้งหน้าจะลง staging
 
 ## Next step
 
-ขั้น 1: Junior สร้าง project `anyang-staging` ใน Dashboard แล้วบอก Project ref
+พอ Jam ส่ง Project ref และบอก database password แล้ว ให้เริ่มขั้น 2: Junior รัน `! npx supabase login` แล้ว `! npx supabase link --project-ref <ref>`
 
 ## Waiting on
 
-ไม่มี
+- 🙋 Jam: สร้าง `anyang-staging` (ขั้น 1) แล้วส่ง Project ref + บอก database password ต่อหน้า
 
 ## Notes for next time
 
