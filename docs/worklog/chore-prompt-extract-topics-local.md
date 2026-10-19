@@ -1,0 +1,41 @@
+# ร่าง prompt `extract_topics_local/v1` (A5) + ตรวจ `extract_answer/v1`
+
+| | |
+|---|---|
+| Owner | Jam |
+| Branch | `chore/prompt-extract-topics-local` |
+| Checklist item | ร่าง prompt `extract_answer/v1` (มีร่างแล้ว) และ `extract_topics_local/v1` |
+| Status | in progress · 2026-10-19 |
+
+## Plan
+
+- [ ] 1. 🤖 เขียน `prompts/extract_topics_local/v1.md` (A5 · ai-orchestration §2.3.4, §2.3.7): frontmatter ตรงกับ `config/ai.yaml`, ครอบเนื้อหาไฟล์ด้วย `<document>`, กำหนดขนาดหัวข้อให้ตรงกับคู่มือ label P3 (`evals/topics/README.md`), output `{name, pages, prereq_hint}`
+- [ ] 2. 🤖 ตรวจ `prompts/extract_answer/v1.md` เทียบกับคู่มือ label ลายมือ (`evals/README.md`) แล้วเขียนรายการจุดที่ไม่ตรงกัน · ถ้าต้องแก้ ให้ Jam ตัดสินใจก่อน
+- [ ] 3. 🤖 Smoke test: ดึงข้อความรายหน้าจาก `sheet-03.pdf` (ใช้ PyMuPDF ชั่วคราว ไม่เพิ่ม dependency) แล้วเติมลงใน prompt เป็นไฟล์ใน scratchpad พร้อมให้ก๊อปไปวาง
+- [ ] 4. 🙋 Jam: วาง prompt ที่เติมแล้วลงใน Google AI Studio (Gemini) แล้วส่ง output กลับมาให้ Claude ตรวจ schema กับขนาดหัวข้อ
+- [ ] 5. 🤖 ปรับ v1 ตามผล smoke test (ยังเป็น v1 เพราะยังไม่เคยรัน eval จริง) แล้วติ๊ก checklist
+
+## Definition of done
+
+- มี `prompts/extract_topics_local/v1.md` และ frontmatter ตรงกับ `config/ai.yaml` (purpose, `prompt: v1`)
+- เนื้อหาไฟล์ของผู้ใช้อยู่ใน `<document>` และ prompt บอกว่าเป็นข้อมูล ไม่ใช่คำสั่ง (prompts/README กฎข้อ 3)
+- output ตรงกับ A5 `[{name, pages, prereq_hint}]` และใช้เลขหน้า PDF แบบเดียวกับ `labels.json`
+- ตรวจ `extract_answer/v1` แล้ว และ Jam ตัดสินใจเรื่องจุดที่ไม่ตรงกันแล้ว
+- smoke test กับไฟล์จริง 1 ไฟล์ได้ JSON ที่ถูก schema
+- ติ๊ก checklist ข้อนี้
+
+## Decisions
+
+- 2026-10-19 · ไม่เพิ่ม PyMuPDF ใน `apps/api/pyproject.toml` (ของ Junior) · smoke test ใช้ `uv run --with pymupdf` ชั่วคราว · การ ingest จริงเป็นงานของ Junior ใน S2
+
+## Next step
+
+ขั้น 1: เขียน `prompts/extract_topics_local/v1.md`
+
+## Waiting on
+
+ไม่มี
+
+## Notes for next time
+
+- งานที่พักไว้: `chore/handwriting-photos` (PR #11) รอรูปถึง พ. 21 ต.ค.
