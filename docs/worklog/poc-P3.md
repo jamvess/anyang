@@ -5,7 +5,13 @@
 | Owner | Jam |
 | Branch | `poc/P3` |
 | Checklist item | P3: ingest → A5 → A6 → A7 → `compute_importance` · เทียบกับ label · ลอง embedding 2–3 ตัวกับคำถาม 20 ข้อ |
-| Status | in progress · 2026-10-19 |
+| Status | paused · 2026-10-19 |
+
+## Done today (2026-10-19)
+
+- Junior OK ให้ Jam เขียน gateway lite · ได้ `ai.call()` + fake/Gemini provider + thinking level + รับ input เป็น list ของรูป · test ของ api เขียว 78 ตัว (รวม model ของ output flow 2.3 ทั้งหมด)
+- prompt v1: vision_extract, vision_extract_pages, split_past_exam, merge_topics, map_questions · โค้ด PoC ครบ: `poc/P3/{common,ingest,run,stars,score}.py` + README · test ของ PoC 12 ตัว · ทดสอบครบวงจรด้วย fake provider ผ่าน
+- รันจริงยังไม่สำเร็จ: thinking token ทำให้คำตอบถูกตัด (แก้แล้วด้วย thinking low) → bug ของตัวเว้นช่วง (แก้แล้ว) → โควตา free tier 20 ครั้งต่อวันหมด · ผลแรกที่ไม่ใช้ AI: สูตรดาวกับ map ข้อสอบของ May ได้ ★★★ ตรง 83%
 
 รอบนี้ทำแค่ **P3a** (หัวข้อ + ดาว เทียบกับ label) ส่วน **P3b** (embedding กับคำถาม 20 ข้อ) แยกเป็น branch ใหม่ทีหลัง · spec: `specs/poc/README.md` P3, `specs/system/ai-orchestration.md` §2.3, §2.9–2.11 · label: `evals/topics/mth10101/labels.json` (May, 27 หัวข้อ, map ข้อสอบ 43 ข้อย่อย)
 
@@ -17,7 +23,7 @@
 - [x] 4. 🤖 Prompt v1 + Pydantic model ของ A2 `vision_extract`, A4 `split_past_exam`, A6 `merge_topics`, A7 `map_questions`
 - [x] 5. 🤖 `poc/P3/ingest.py`: ชีทอ่านด้วย PyMuPDF + เช็คคุณภาพข้อความ (% ตัวอักษรไทย) · ข้อสอบสแกนส่งรูปรายหน้าให้ A2 แล้วตัดรายข้อด้วย A4 · เก็บผลเป็นไฟล์ใน `poc/P3/out/` (ไม่ลง DB)
 - [x] 6. 🤖 `poc/P3/run.py`: A5 ทีละชีท → A6 → A7 → ดาว (สูตร §2.3.5 อ่านค่าจาก `config/learning.yaml` → `stars`) · จับเวลาและต้นทุนต่อไฟล์
-- [ ] 7. 🤖 `poc/P3/score.py`: เทียบกับ `labels.json` → % หัวข้อตรง, % ★★★ ตรง, เวลาต่อไฟล์, ต้นทุนต่อไฟล์ · 🙋 Jam ตัดสินวิธีจับคู่หัวข้อก่อนเขียน
+- [x] 7. 🤖 `poc/P3/score.py`: เทียบกับ `labels.json` → % หัวข้อตรง, % ★★★ ตรง, เวลาต่อไฟล์, ต้นทุนต่อไฟล์ · 🙋 Jam ตัดสินวิธีจับคู่หัวข้อก่อนเขียน
 - [ ] 8. 🤖 รันจริง ดูผลกับ Jam แล้วร่าง `/poc-report P3` (ส่วน P3a)
 
 ## Definition of done
@@ -57,7 +63,7 @@
 
 ## Next step
 
-หลัง 15:00 น. ของ 2026-10-20: `cd apps/api && uv run python ../../poc/P3/ingest.py` (ใช้ประมาณ 4 call) แล้วตรวจ `poc/P3/out/questions/*.json` เทียบเลขข้อกับ `question_map` ใน labels.json · ระหว่างรอ เขียน `run.py` (ขั้น 6) และ `score.py` (ขั้น 7) ไปก่อนได้ เพราะยังไม่ต้องเรียก AI
+ขั้น 8 หลัง 15:00 น. ของ 2026-10-20 (โควตารีเซ็ต): `cd apps/api && uv run python ../../poc/P3/ingest.py` (4 call) → ตรวจ `poc/P3/out/questions/*.json` ว่าเลขข้อตรงกับ `question_map` ใน `evals/topics/mth10101/labels.json` (43 ข้อย่อย) → `uv run python ../../poc/P3/run.py` (7 call) → `uv run python ../../poc/P3/score.py` → สรุปตัวเลขให้ Jam · ถ้าเหลือโควตา (ใช้ไม่เกิน 20 ครั้งต่อวัน รวม retry) ให้รัน 3.8-flash เทียบ (เปลี่ยน `AI_MODEL_OVERRIDE` แล้วรัน `run.py` + `score.py` · ingest ใช้ร่วมกันได้)
 
 ## Waiting on
 
@@ -67,3 +73,8 @@
 
 - งานที่ค้าง: `chore/handwriting-photos` (PR #11) รอรูป · `chore/prompt-extract-topics-local` (PR #13) รอ Junior review
 - PyMuPDF ทำ ∞ หาย และสมการ Equation Editor กระจายออกมาบรรทัดละตัว (ดู PR #13)
+- `poc/P3/out/` gitignored (มี log รอบที่ล้ม: `calls-run1-failed.jsonl` = thinking ชนเพดาน + 429 รายนาที, `calls-run2-queue-timeout.jsonl` = bug ตัวเว้นช่วง) · ใช้ใน report P3 ได้
+- โควตาของ `gemini-3.5-flash` free tier: 5 ครั้งต่อนาที + 20 ครั้งต่อวันต่อ model (ใน error ชื่อ `gemini-3.6-flash`) · `gemini-3.5-flash-lite` มีโควตาแยก · `gemini-3.8-flash` ช้ามาก (35 วินาทีกับข้อความทดสอบสั้นๆ)
+- dry run แบบไม่ใช้โควตา: script `dry_run.py` อยู่ใน scratchpad ของ session 2026-10-19 (ไม่ได้ commit) · ใช้ FakeProvider + label มาปลอมเป็นคำตอบของ A5/A6/A7
+- python ใน Git Bash heredoc ที่มีภาษาไทยบางทีขึ้น `SyntaxError: Non-UTF-8` · ให้ใช้ Edit tool แทน
+- งานที่ต้องจัดการ: แก้ §2.3.7 ของ `ai-orchestration.md` ให้ตรงกับ prompt (A6 `sources`/`excluded_by_note`, A4 `points`, A7 null + `note`, `vision_extract_pages`) ก่อน `/work-done` · ก่อนทำ P1 ต้องแก้เรื่อง AI-07 (รูปลายมือห้ามส่งผ่าน free tier)
