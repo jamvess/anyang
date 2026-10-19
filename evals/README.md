@@ -9,8 +9,8 @@ evals/
 │  └─ labels.jsonl
 ├─ answers/            # P2
 │  └─ labels.jsonl
-├─ topics/             # P3
-│  └─ <subject>/labels.json
+├─ topics/             # P3 · ดูเกณฑ์เลือกวิชาและกติกาไฟล์ใน topics/README.md
+│  └─ <subject>/       # raw/ (gitignored), sources.md, labels.json
 └─ run_eval.py         # uv run python evals/run_eval.py --purpose extract_answer --prompt v1
 ```
 
