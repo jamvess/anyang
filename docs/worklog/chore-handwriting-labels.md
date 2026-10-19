@@ -1,0 +1,45 @@
+# พิมพ์เฉลย LaTeX รายบรรทัดของรูปลายมือ 30 รูป (P1)
+
+| | |
+|---|---|
+| Owner | May |
+| Branch | `chore/handwriting-labels` |
+| Checklist item | พิมพ์เฉลย LaTeX รายบรรทัดของรูปลายมือทุกรูป ลง `evals/handwriting/labels.jsonl` (ให้ P1) |
+| Status | in progress · 2026-10-19 |
+
+## Plan
+
+คู่มือ: `evals/README.md` หัวข้อ "คู่มือ label ลายมือ · P1" (กติกา 7 ข้อ + ตารางรูปแบบ LaTeX)
+
+**กฎสำคัญ:** ห้ามใช้ AI อ่านรูป (ทั้ง Claude, Gemini, ChatGPT) เพราะ P1 วัดว่า AI อ่านลายมือแม่นแค่ไหน · Claude ไม่เปิดดูรูปเลย ช่วยได้แค่ทำไฟล์ให้กรอก ตรวจ syntax และแปลง JSONL · ห้ามเปิดเฉลยใบลอกใน Drive (ใช้ตรวจ label ทีหลัง)
+
+- [ ] 1. 🙋 May โหลดโฟลเดอร์ `raw/` จาก Drive ทีม `evals/handwriting/raw/` มาไว้ที่ `evals/handwriting/raw/` ในเครื่อง (30 ไฟล์ `hw_001`–`hw_030`)
+- [ ] 2. 🤖 สร้างไฟล์ร่าง `evals/handwriting/labels-draft.md` (1 หัวข้อต่อรูป · พิมพ์ 1 บรรทัดต่อ 1 บรรทัดในรูป) + script ทำหน้า preview (รูปคู่กับ LaTeX ที่ render แล้ว) ไว้ใน `raw/` ซึ่งไม่ขึ้น git
+- [ ] 3. 🙋 May พิมพ์ LaTeX ทีละรูป แล้วเปิด preview เทียบกับรูป · พักเมื่อไหร่บอก "พัก" Claude ตรวจและ commit ให้
+- [ ] 4. 🤖 ตรวจทุกบรรทัด: KaTeX render ได้ · SymPy parse ได้ (ยกเว้นบรรทัดใน `unclear_lines`) · ไม่มี `$` · ไม่มีรูปที่ว่าง · บอกจุดที่ผิดรูปแบบให้ May แก้เอง
+- [ ] 5. 🤖 แปลงร่างเป็น `labels.jsonl` (ไม่แก้เนื้อหา · `labeled_by: "May"`) แล้วลบร่าง
+
+## Definition of done
+
+- `evals/handwriting/labels.jsonl` ครบ 30 แถว ทุกแถวมี `lines` ไม่ว่าง และ `labeled_by: "May"`
+- ทุกบรรทัด KaTeX render ได้ และ SymPy parse ได้ (ยกเว้นใน `unclear_lines`)
+- Junior review PR (คน label ไม่ใช่คนทำ PoC) · แจ้ง Jam ว่าพร้อมรัน P1
+
+## Decisions
+
+- 2026-10-19 · ใช้ type `chore` · เป็นงาน label ข้อมูล
+- 2026-10-19 · ใช้ไฟล์ร่าง Markdown แทนการพิมพ์ JSON ตรง · ไม่ต้องพิมพ์ `\` ซ้อน และเหมือนตอนทำ label P3
+- 2026-10-19 · ตรวจ SymPy ด้วย `uv run --with antlr4-python3-runtime==4.11` ชั่วคราว · ไม่เพิ่ม dependency ใน `apps/api`
+
+## Next step
+
+May ทำขั้น 1: โหลด `raw/` จาก Drive
+
+## Waiting on
+
+ไม่มี
+
+## Notes for next time
+
+- `evals/` เป็นโฟลเดอร์ของ Jam แต่ `labels.jsonl` เป็นงานของ May ตามคู่มือ
+- รูปทั้ง 30 รูปเขียนบน tablet (ดู `evals/handwriting/README.md` "สิ่งที่ได้จริง")
