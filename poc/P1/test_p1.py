@@ -102,3 +102,54 @@ def test_AM01_poc_alignment_keeps_order():
     # "c" then "a" can only match one of the two label lines in order.
     result = align(["c", "a"], ["a", "c"], eq)
     assert result.correct == 1
+
+
+# --- score.py: numbers of the P1 report -----------------------------------------------------
+
+from score import ConfidencePoint, choose_threshold, pr_at, score_image  # noqa: E402
+
+
+def line(latex: str, confidence: float) -> dict:
+    return {"latex": latex, "confidence": confidence}
+
+
+def test_AM01_poc_score_image_counts_correct_lines_and_flags_wrong_predictions():
+    result = score_image([line("x+1", 0.9), line("x-9", 0.4)], ["x+1", "x-2"], unclear=[])
+    assert (result.correct, result.label_lines) == (1, 2)
+    assert result.points == [ConfidencePoint(0.9, wrong=False), ConfidencePoint(0.4, wrong=True)]
+
+
+def test_AM01_poc_score_image_drops_unclear_label_lines():
+    # unclear_lines are 1-based (evals/README.md); they are not scored
+    result = score_image([line("x+1", 0.9)], ["x+1", r"\?"], unclear=[2])
+    assert (result.correct, result.label_lines) == (1, 1)
+
+
+def test_AM02_poc_pr_at_threshold():
+    points = [
+        ConfidencePoint(0.3, wrong=True),
+        ConfidencePoint(0.6, wrong=True),
+        ConfidencePoint(0.7, wrong=False),
+        ConfidencePoint(0.95, wrong=False),
+    ]
+    at = pr_at(points, 0.65)  # flags confidence < 0.65
+    assert at["recall_wrong"] == 1.0
+    assert at["precision_wrong"] == 1.0
+    assert at["flag_rate"] == 0.5
+    at = pr_at(points, 0.5)
+    assert at["recall_wrong"] == 0.5
+
+
+def test_AM02_poc_choose_lowest_threshold_reaching_target_recall():
+    points = [ConfidencePoint(0.3, True), ConfidencePoint(0.6, True), ConfidencePoint(0.8, False)]
+    # 0.65 already flags both wrong lines; higher thresholds only add confirmations
+    assert choose_threshold(points, thresholds=[0.5, 0.65, 0.8, 0.9], target=0.95) == 0.65
+
+
+def test_AM02_poc_choose_threshold_none_when_target_unreachable():
+    points = [ConfidencePoint(0.99, True), ConfidencePoint(0.5, False)]
+    assert choose_threshold(points, thresholds=[0.5, 0.9], target=0.95) is None
+
+
+def test_AM02_poc_no_wrong_lines_means_recall_is_undefined():
+    assert pr_at([ConfidencePoint(0.9, False)], 0.5)["recall_wrong"] is None

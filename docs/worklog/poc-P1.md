@@ -36,7 +36,7 @@ spec: `specs/poc/README.md` P1 · data: `evals/handwriting/` (30 รูป, `lab
 
 ## Next step
 
-ขั้น 5: `poc/P1/score.py` · อ่าน `labels.jsonl` (เฉพาะแถวที่ `lines` ไม่ว่าง) + `out/<model>/hw_NNN.json` → `align()` ต่อรูป → line accuracy ต่อ model (รวม และแยกตาม medium/writer) · precision–recall ของ confidence (บรรทัดที่ AI อ่านผิด = `predicted_wrong`; threshold 0.5–0.95) · latency/token ต่อรูป · เขียน `results/<model>/score.json` · test ก่อน (ส่วนที่คิด PR curve) · dry run ด้วยเฉลยปลอม
+ขั้น 5: test ของ score เขียนแล้ว (6 test ต่อท้าย `poc/P1/test_p1.py`, ยัง red) รอ Jam review · หลัง review เขียน `poc/P1/score.py` · อ่าน `labels.jsonl` (เฉพาะแถวที่ `lines` ไม่ว่าง) + `out/<model>/hw_NNN.json` → `align()` ต่อรูป → line accuracy ต่อ model (รวม และแยกตาม medium/writer) · precision–recall ของ confidence (บรรทัดที่ AI อ่านผิด = `predicted_wrong`; threshold 0.5–0.95) · latency/token ต่อรูป · เขียน `results/<model>/score.json` · test ก่อน (ส่วนที่คิด PR curve) · dry run ด้วยเฉลยปลอม
 
 ## Waiting on
 
