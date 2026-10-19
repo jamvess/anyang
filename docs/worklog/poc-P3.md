@@ -73,6 +73,8 @@
 
 ## Next step
 
+⚠️ **ก่อนรัน A7:** พบ bug ใน `poc/P1` (ดู Decisions ใน `docs/worklog/poc-P1.md` บน branch `poc/P1`) ว่า Gemini เขียน `rac` ลงใน JSON โดยไม่ escape ทำให้ LaTeX ใน `out/pages/midterm-*.json` และ `out/questions/*.json` พังเป็นตัวอักษรควบคุม (form feed 88/92 และ 23/30 จุด) · ต้องแก้ gateway และซ่อมไฟล์ cache ก่อน (แผนอยู่ใน worklog ของ P1) · A5 ใช้ข้อความจาก PyMuPDF จึงไม่โดน
+
 หลัง 14:00 น. ของ 2026-10-20 (เช็คโควตาด้วย request เดียวก่อน): `cd apps/api && uv run python ../../poc/P3/run.py --a5-prompt v1` (ใช้ cache A5 v1 · เหลือ A6 + A7 ×2 = 3 call) → `uv run python ../../poc/P3/score.py --a5-prompt v1` → ถ้า A6 ไม่ผ่าน schema ให้ดู `out/raw/run_merge-*.txt` · จากนั้นถ้าโควตาเหลือ: `run.py --a5-prompt v2` (A5 ×4 + A6 + A7 ×2 = 7 call) → `score.py --a5-prompt v2` → สรุปเทียบ v1/v2 ให้ Jam
 
 ## Waiting on
