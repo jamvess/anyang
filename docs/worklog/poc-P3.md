@@ -64,11 +64,11 @@
 
 ## Next step
 
-ขั้น 8 หลัง 15:00 น. ของ 2026-10-20 (โควตารีเซ็ต): `cd apps/api && uv run python ../../poc/P3/ingest.py` (4 call) → ตรวจ `poc/P3/out/questions/*.json` ว่าเลขข้อตรงกับ `question_map` ใน `evals/topics/mth10101/labels.json` (43 ข้อย่อย) → `uv run python ../../poc/P3/run.py` (7 call) → `uv run python ../../poc/P3/score.py` → สรุปตัวเลขให้ Jam · ถ้าเหลือโควตา (ใช้ไม่เกิน 20 ครั้งต่อวัน รวม retry) ให้รัน 3.8-flash เทียบ (เปลี่ยน `AI_MODEL_OVERRIDE` แล้วรัน `run.py` + `score.py` · ingest ใช้ร่วมกันได้)
+ขั้น 8 หลัง 14:00 น. ของ 2026-10-19 (โควตารีเซ็ตตอนเที่ยงคืนเวลาแปซิฟิก = 14:00 น. เวลาไทย · ถ้าเริ่มก่อนจะโดน 429 · ให้เช็คด้วย request เดียวก่อน): `cd apps/api && uv run python ../../poc/P3/ingest.py` (4 call) → ตรวจ `poc/P3/out/questions/*.json` ว่าเลขข้อตรงกับ `question_map` ใน `evals/topics/mth10101/labels.json` (43 ข้อย่อย) → `uv run python ../../poc/P3/run.py` (7 call) → `uv run python ../../poc/P3/score.py` → สรุปตัวเลขให้ Jam · ถ้าเหลือโควตา (ใช้ไม่เกิน 20 ครั้งต่อวัน รวม retry) ให้รัน 3.8-flash เทียบ (เปลี่ยน `AI_MODEL_OVERRIDE` แล้วรัน `run.py` + `score.py` · ingest ใช้ร่วมกันได้)
 
 ## Waiting on
 
-โควตา free tier ของ gemini-3.5-flash รีเซ็ต 2026-10-20 ≈ 15:00 น.
+โควตา free tier ของ gemini-3.5-flash รีเซ็ต 2026-10-19 ≈ 14:00 น.
 
 ## Notes for next time
 
