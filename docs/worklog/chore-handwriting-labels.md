@@ -17,7 +17,7 @@
 - [x] 2. 🤖 สร้างไฟล์ร่าง `evals/handwriting/labels-draft.md` (1 หัวข้อต่อรูป · พิมพ์ 1 บรรทัดต่อ 1 บรรทัดในรูป) + script ทำหน้า preview (รูปคู่กับ LaTeX ที่ render แล้ว) ไว้ใน `raw/` ซึ่งไม่ขึ้น git · 2026-10-19 `raw/preview.py` → `raw/preview.html` (KaTeX จาก CDN, render ไม่ได้ขึ้นสีแดง)
 - [x] 3. 🙋 ~~May พิมพ์ LaTeX ทีละรูป~~ → Claude เติมจากใบลอกแล้ว (ดู Decisions) · May เปิด preview เทียบกับรูปอีกรอบ · 2026-10-19 May เช็คครบ 30 รูป ok · ไม่มี unclear_lines · พักเมื่อไหร่บอก "พัก" Claude ตรวจและ commit ให้
 - [x] 4. 🤖 ตรวจทุกบรรทัด: KaTeX render ได้ · SymPy parse ได้ (ยกเว้นบรรทัดใน `unclear_lines`) · ไม่มี `$` · ไม่มีรูปที่ว่าง · บอกจุดที่ผิดรูปแบบให้ May แก้เอง · 2026-10-19 125 บรรทัด: KaTeX error 0, SymPy parse fail 0 (ตัด `=` ต้นบรรทัด และแยกที่ `,` ก่อน parse)
-- [ ] 5. 🤖 แปลงร่างเป็น `labels.jsonl` (ไม่แก้เนื้อหา · `labeled_by: "May"`) แล้วลบร่าง
+- [x] 5. 🤖 แปลงร่างเป็น `labels.jsonl` (ไม่แก้เนื้อหา · `labeled_by: "May"`) แล้วลบร่าง · 2026-10-19 30 แถว 125 บรรทัด roundtrip ตรง · `make_labels.py --check` ผ่าน · ร่างสุดท้ายอยู่ใน git history
 
 ## Definition of done
 
@@ -35,7 +35,7 @@
 
 ## Next step
 
-Claude ทำขั้น 5: แปลงร่างเป็น labels.jsonl
+ทุกขั้นเสร็จแล้ว · May พิมพ์ `/work-done` แล้วแจ้ง Jam ว่าพร้อมรัน P1
 
 ## Waiting on
 
