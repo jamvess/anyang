@@ -1,0 +1,30 @@
+{"id": "hw_001", "image": "raw/hw_001.jpg", "writer": "w01", "problem": "\\text{แยกตัวประกอบ } x^{3}-x", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_002", "image": "raw/hw_002.jpg", "writer": "w01", "problem": "\\lim_{x \\to 2} \\frac{x^{2}-4}{x^{2}-3x+2}", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_003", "image": "raw/hw_003.jpg", "writer": "w01", "problem": "\\lim_{x \\to \\infty} \\frac{3x^{2}-x}{2x^{2}+5}", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_004", "image": "raw/hw_004.jpg", "writer": "w01", "problem": "\\text{หา } \\frac{dy}{dx} \\text{ จาก } x^{2}+y^{2}=4xy", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_005", "image": "raw/hw_005.jpg", "writer": "w01", "problem": "\\text{แก้สมการ } e^{2x}-3e^{x}+2=0", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_006", "image": "raw/hw_006.jpg", "writer": "w01", "problem": "\\text{แยกตัวประกอบ } x^{4}-16", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_007", "image": "raw/hw_007.jpg", "writer": "w02", "problem": "\\frac{d}{dx}\\left(x^{2}\\sin(x)\\right)", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_008", "image": "raw/hw_008.jpg", "writer": "w02", "problem": "\\text{หาจุดวิกฤตของ } f(x)=x^{3}-3x^{2}-9x+1", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_009", "image": "raw/hw_009.jpg", "writer": "w02", "problem": "\\text{แยกตัวประกอบ } 2x^{2}+x-6", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_010", "image": "raw/hw_010.jpg", "writer": "w02", "problem": "\\frac{d}{dx}\\left(e^{x^{2}}\\ln(x)\\right)", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_011", "image": "raw/hw_011.jpg", "writer": "w02", "problem": "\\lim_{x \\to 1} \\frac{x^{2}+1}{x+1}", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_012", "image": "raw/hw_012.jpg", "writer": "w02", "problem": "\\text{หาค่า } x \\text{ ที่ } f(x)=x^{4}-6x^{2} \\text{ อาจมีจุดเปลี่ยนเว้า}", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_013", "image": "raw/hw_013.png", "writer": "w03", "problem": "\\frac{d}{dx}\\left(\\frac{x^{2}+1}{x-1}\\right)", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_014", "image": "raw/hw_014.png", "writer": "w03", "problem": "\\frac{d}{dx}\\left(\\sin^{3}(2x)\\right)", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_015", "image": "raw/hw_015.png", "writer": "w03", "problem": "\\text{แยกตัวประกอบ } x^{3}-2x^{2}-4x+8", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_016", "image": "raw/hw_016.png", "writer": "w03", "problem": "\\lim_{x \\to 0} \\frac{\\sin(3x)}{x}", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_017", "image": "raw/hw_017.png", "writer": "w03", "problem": "f(x)=x^{4}-3x^{2}+2x \\text{ หา } f''(x)", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_018", "image": "raw/hw_018.png", "writer": "w03", "problem": "\\text{หาจุดวิกฤตของ } f(x)=x^{3}-3x^{2}-9x+1", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_019", "image": "raw/hw_019.png", "writer": "w04", "problem": "f(x)=x^{4}-3x^{2}+2x \\text{ หา } f''(x)", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_020", "image": "raw/hw_020.png", "writer": "w04", "problem": "\\lim_{x \\to 1} \\frac{x^{2}+1}{x+1}", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_021", "image": "raw/hw_021.png", "writer": "w04", "problem": "\\text{แยกตัวประกอบ } x^{3}-x", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_022", "image": "raw/hw_022.png", "writer": "w04", "problem": "\\frac{d}{dx}\\left(x^{2}\\sin(x)\\right)", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_023", "image": "raw/hw_023.png", "writer": "w04", "problem": "\\text{แก้สมการ } e^{2x}-3e^{x}+2=0", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_024", "image": "raw/hw_024.png", "writer": "w04", "problem": "\\lim_{x \\to 2} \\frac{x^{2}-4}{x^{2}-3x+2}", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_025", "image": "raw/hw_025.png", "writer": "w05", "problem": "\\text{แยกตัวประกอบ } x^{3}-2x^{2}-4x+8", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_026", "image": "raw/hw_026.png", "writer": "w05", "problem": "\\lim_{x \\to 0} \\frac{\\sin(3x)}{x}", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_027", "image": "raw/hw_027.png", "writer": "w05", "problem": "\\text{แยกตัวประกอบ } 2x^{2}+x-6", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_028", "image": "raw/hw_028.png", "writer": "w05", "problem": "\\frac{d}{dx}\\left(\\frac{x^{2}+1}{x-1}\\right)", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_029", "image": "raw/hw_029.png", "writer": "w05", "problem": "\\frac{d}{dx}\\left(\\sin^{3}(2x)\\right)", "lines": [], "unclear_lines": [], "labeled_by": null}
+{"id": "hw_030", "image": "raw/hw_030.png", "writer": "w05", "problem": "\\text{หาค่า } x \\text{ ที่ } f(x)=x^{4}-6x^{2} \\text{ อาจมีจุดเปลี่ยนเว้า}", "lines": [], "unclear_lines": [], "labeled_by": null}
