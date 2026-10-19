@@ -81,11 +81,12 @@ body{margin:0;background:var(--paper);color:var(--ink);
 .iconb{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;
   justify-content:center;font-size:14px;border:1px solid var(--line);background:var(--white);flex:0 0 34px}
 .iconb.pri{background:var(--ink);color:#fff;border-color:var(--ink)}
-.voicebar{max-width:640px;margin:14px auto 0;width:100%;display:flex;gap:14px;align-items:center;
-  border:1px solid var(--ac);background:var(--acs);border-radius:26px;padding:11px 20px;
-  color:var(--ac);font-size:13.5px}
-.wave{display:flex;gap:3px;align-items:center;height:20px}
-.wave i{width:3px;border-radius:2px;background:var(--ac);display:block}
+.composer .draft{flex:1;font-size:13.5px;color:var(--ink)}
+.vnote{max-width:640px;margin:6px auto 0;width:100%;font-size:11.5px;color:var(--ac);padding-left:18px}
+.spk{font-size:11px;margin-left:6px;opacity:.6}
+.area{border-collapse:collapse;margin:6px 0 8px;font-family:"IBM Plex Mono",monospace;font-size:13px}
+.area td{border:1px solid var(--line);padding:6px 14px;text-align:center}
+.area td.hd{border:0;color:var(--ink35)}
 
 /* ---- atoms ---- */
 .h{font-size:20px;font-weight:600;margin:0 0 6px;line-height:1.3}
@@ -237,11 +238,10 @@ const COMPOSER = `<div class="composer">
   <span class="ph">พิมพ์ตอบ...</span>
   <span class="iconb">🎤</span><span class="iconb">📷</span><span class="iconb pri">↑</span></div>`;
 
-const VOICEBAR = `<div class="voicebar">
-  <span>●</span>
-  <span class="wave"><i style="height:7px"></i><i style="height:14px"></i><i style="height:20px"></i><i style="height:11px"></i><i style="height:17px"></i><i style="height:8px"></i><i style="height:15px"></i><i style="height:19px"></i><i style="height:9px"></i><i style="height:13px"></i></span>
-  <span style="flex:1">กำลังฟัง... พูดได้เลย</span>
-  <span class="iconb" style="border-color:var(--ac)">■</span></div>`;
+const VOICEDRAFT = (t) => `<div class="composer">
+  <span class="draft">${t}</span>
+  <span class="iconb">🎤</span><span class="iconb">📷</span><span class="iconb pri">↑</span></div>
+<p class="vnote">🎤 ข้อความจากเสียง · แก้ได้ก่อนกดส่ง ระบบไม่ส่งเอง</p>`;
 
 const LABELS = ["Landing", "สมัครสมาชิก", "สมัคร · เลือกบัญชี Google", "เลือกติวเตอร์ + เพื่อนติว", "ปรับเอง · เล่าเป็นคำพูด", "ตั้งค่าตัวเอง", "หน้าหลัก · ยังว่าง", "ข้อมูลการสอบ", "อัพโหลดไฟล์ + เขียนกำกับ", "ยืนยันประเภทไฟล์", "กำลังประมวลผล", "ขอบเขต + ดาว", "แก้ขอบเขต · คุยแก้", "แก้ขอบเขต · สรุปและยืนยัน", "ห้องติว · เปิดห้อง", "ห้องติว · ตอบถูก", "ห้องติว · เพื่อนติวถามแทรก", "ห้องติว · ตอบด้วยเสียง", "ห้องติว · ตอบไม่ตรงคำถาม", "ห้องติว · ถามนอกขอบเขต", "ห้องติว · ยืนยันสิ่งที่อ่านจากลายมือ", "ห้องติว · ตอบผิด สอนทันที", "ห้องติว · โจทย์ซ้ำเพื่อวัด", "ห้องติว · ขอดูความคืบหน้า", "ห้องติว · ซ่อมจุดอ่อน", "ห้องติว · จบการติว", "หน้าหลัก · มีการเตรียมสอบแล้ว"];
 
@@ -355,7 +355,7 @@ ${TOP('ปาลิดา')}
     <p class="tag mono">เพื่อนติว · จะมีหรือไม่มีก็ได้</p>
     <div class="grid3 mb16">
       <div class="card act"><div class="sp mb6"><span class="b5 t14">มีน · ขี้สงสัย</span><span class="chip a mono">เลือกอยู่</span></div><p class="t12 mu2 mb0">“เดี๋ยวๆ ตรงนี้ทำไมเครื่องหมายเปลี่ยนอะ”</p></div>
-      <div class="card"><p class="b5 t14 mb6">ต้าร์ · ชอบแข่ง</p><p class="t12 mu2 mb0">“อ่ะเดี๋ยวกูตอบเอง ช้าไป”</p></div>
+      <div class="card"><p class="b5 t14 mb6">ต้าร์ · ขี้เล่น</p><p class="t12 mu2 mb0">“อ่ะ ข้อนี้ขอลองก่อนนะ”</p></div>
       <div class="card"><p class="b5 t14 mb6">ไม่เอาเพื่อน</p><p class="t12 mu2 mb0">ติวเงียบๆ คนเดียว</p></div>
     </div>
     <div class="row"><span class="btn">ปรับเอง</span><span class="btn pri">ใช้สองคนนี้</span></div>
@@ -368,9 +368,9 @@ ${TOP('ปาลิดา')}
 ch:"บทที่ 1 · เริ่มต้นใช้งาน", clock:"20:17", url:"anyang.app/setup/crew/custom",
 title:"ปาลอยากแต่งเอง",
 story:`<p>เธอกด <b>ปรับเอง</b> เพราะอยากให้เพื่อนติวเรียกเธอว่าเธอ ไม่ใช่คุณ</p>
-<p>ช่องที่มีผลจริงต่อการเรียนคือ <b>ระดับความรู้ของเพื่อนติว</b> ถ้าตั้งให้อ่อนกว่าเรา เราจะได้อธิบายให้เขาฟัง ซึ่งช่วยให้เข้าใจขึ้นจริง ถ้าตั้งให้เก่งกว่านิดหน่อย เราจะได้ดูวิธีคิดของคนที่ทำได้</p>
 <p>ใต้ช่องมีคำแนะนำว่าควรเล่าเรื่องอะไรบ้าง พอเขียนเสร็จ ระบบแปลงเป็นค่าที่ตั้งไว้ แล้วโชว์ประโยคตัวอย่างให้ดูว่าจะพูดประมาณไหน ไม่ถูกใจก็พิมพ์ปรับต่อได้</p>
-<p>ส่วนที่ขอแล้วทำให้ไม่ได้ ระบบบอกตรงๆ ใต้ตัวอย่าง เช่น ปรับความเร็วเสียง หรือให้พูดหยาบ</p>`,
+<p>ส่วนที่ขอแล้วทำให้ไม่ได้ ระบบบอกตรงๆ ใต้ตัวอย่าง เช่น ปรับความเร็วเสียง หรือให้พูดหยาบ</p>
+<p>การอ่านออกเสียงอัตโนมัติปิดไว้ก่อน ปาลกดฟังทีละข้อความในห้องติวได้ ถ้าอยากให้อ่านทุกข้อความค่อยมาเปิดตรงนี้</p>`,
 screen:`
 ${TOP('ปาลิดา')}
 <div class="main">
@@ -396,14 +396,14 @@ ${TOP('ปาลิดา')}
           <p class="t13 mb0">“ผิดนะน้อง เครื่องหมายหลุด เดี๋ยวทำให้ดู”</p>
         </div>
         <div class="nope">ทำให้ไม่ได้: ปรับความเร็วเสียง · ส่วนอื่นใช้ตามที่เล่าได้หมด</div>
+        <div class="sp mt10"><span class="t12 mu">🔊 อ่านออกเสียงอัตโนมัติ</span><span class="chip mono">ปิด</span></div>
       </div>
       <div>
         <p class="tag mono">เพื่อนติว</p>
-        <div class="fld v desc">เพื่อนชื่อมีน เป็นผู้หญิง รุ่นเดียวกัน เก่งพอๆ กับเรา ชอบถามเวลาไม่เข้าใจ คุยกันเองแบบเพื่อน หยาบได้นิดหน่อย ไม่ต้องพูดบ่อยมาก</div>
+        <div class="fld v desc">เพื่อนชื่อมีน เป็นผู้หญิง รุ่นเดียวกัน ชอบถามเวลาไม่เข้าใจ คุยกันเองแบบเพื่อน หยาบได้นิดหน่อย ไม่ต้องพูดบ่อยมาก</div>
         <p class="t12 mu mb6">ลองเล่าเรื่องพวกนี้</p>
         <ul class="guide tip">
           <li>ชื่อ และให้เรียกเราว่าอะไร</li>
-          <li>เก่งกว่า พอๆ กัน หรืออ่อนกว่าเรา</li>
           <li>ขี้สงสัย ขี้เล่น หรือขยัน</li>
           <li>พูดบ่อยแค่ไหน</li>
           <li>เสียงผู้ชายหรือผู้หญิง</li>
@@ -449,16 +449,12 @@ ${TOP('ปาลิดา')}
 ch:"บทที่ 2 · สร้างการเตรียมสอบ", clock:"20:19", url:"anyang.app/home",
 title:"หน้าแรกว่างเปล่า และนั่นคือความตั้งใจ",
 story:`<p>ไม่มีคอร์สสำเร็จรูป ไม่มีเนื้อหาแถมมาให้ เพราะระบบยังไม่รู้ว่าปาลจะสอบอะไร</p>
-<p>มีนโผล่มาทักหนึ่งครั้งเพราะเพิ่งถูกเลือกมาเมื่อกี้ แล้วก็เงียบ มีปุ่มเดียวให้กด</p>`,
+<p>มีปุ่มเดียวให้กด</p>`,
 screen:`
 ${TOP()}
 <div class="app">${SIDE('')}
   <div class="main" style="display:flex;align-items:center;justify-content:center">
     <div style="width:430px;text-align:center">
-      <div class="m" style="text-align:left;margin-bottom:18px">
-        <div class="av b">ม</div>
-        <div class="body"><p class="who">มีน<span>20:19</span></p><p>ว่าไง เอาวิชาไหนก่อนดี</p></div>
-      </div>
       <div class="dash" style="padding:36px 16px">
         <p class="b5 t14 mb6">ยังไม่มีการเตรียมสอบ</p>
         <p class="t12 mu mb0">สร้างอันแรก แล้วอัพโหลดชีทที่จะใช้สอบ</p>
@@ -475,7 +471,7 @@ ch:"บทที่ 2 · สร้างการเตรียมสอบ", c
 title:"บอกว่าจะสอบอะไร และสอบเมื่อไหร่",
 story:`<p>ปาลพิมพ์ชื่อการสอบว่า Factorization แล้วเลือกวันสอบ ระบบขึ้นป้ายแดงทันทีว่า <b>เหลือ 5 วัน</b></p>
 <p>วันสอบไม่ได้ใส่ไว้เฉยๆ มันคือสิ่งที่ AI ใช้ตัดสินใจว่าจะติวอะไรก่อน เหลือ 5 วันกับเหลือ 2 สัปดาห์ ลำดับการติวไม่เหมือนกัน</p>
-<p>ช่องเวลาต่อวันไม่บังคับ ปาลเลือก 1 ชม. ถ้าไม่เลือก ระบบเริ่มที่วันละ 45 นาที แล้วปรับเองจากที่ติวจริง</p>`,
+<p>ช่องเวลาต่อวันไม่บังคับ ปาลเลือก 45 นาที ถ้าไม่เลือก ระบบเริ่มที่วันละ 45 นาที แล้วปรับเองจากที่ติวจริง</p>`,
 screen:`
 ${TOP()}
 <div class="main">
@@ -489,7 +485,7 @@ ${TOP()}
       <div><span class="lb">เหลือเวลา</span><div class="fld"><span class="chip d mono">5 วัน</span></div></div>
     </div>
     <span class="lb">ติวได้วันละประมาณ <span class="mu2">· ไม่บังคับ</span></span>
-    <div class="pick" style="margin-bottom:6px"><span class="pk">30 นาที</span><span class="pk">45 นาที</span><span class="pk on">60 นาที</span><span class="pk">90 นาที</span></div>
+    <div class="pick" style="margin-bottom:6px"><span class="pk">30 นาที</span><span class="pk on">45 นาที</span><span class="pk">60 นาที</span><span class="pk">90 นาที</span></div>
     <p class="t12 mu2 mb16">ไม่ใส่ก็ได้ ระบบจะดูจากที่ติวจริงแล้วปรับให้เอง</p>
     <div class="row"><span class="btn">ยกเลิก</span><span class="btn pri">ถัดไป</span></div>
     <p class="go">กด “ถัดไป” เพื่อไปหน้าอัพโหลดไฟล์</p>
@@ -571,7 +567,7 @@ ${TOP()}
 {
 ch:"บทที่ 2 · สร้างการเตรียมสอบ", clock:"20:25", url:"anyang.app/new",
 title:"ระบบอ่านไฟล์ และบอกว่ากำลังทำอะไรอยู่",
-story:`<p>ไม่ใช่วงกลมหมุนเปล่าๆ แต่ไล่บอกทีละขั้นว่าอ่านไฟล์กี่ไฟล์แล้ว กำลังหาหัวข้อ กำลังเทียบกับข้อสอบเก่า</p>
+story:`<p>ไม่ใช่วงกลมหมุนเปล่าๆ แต่ไล่บอกทีละไฟล์ว่าอ่านเสร็จหรือยัง แล้วบอกทีละขั้นว่ากำลังหาหัวข้อ กำลังเทียบกับข้อสอบเก่า</p>
 <p>หน้านี้ไม่มีปุ่ม เพราะเป็นหน้าเดียวในทั้งเรื่องที่ระบบไปต่อเอง แต่ต้องบอกให้ชัดว่ารออยู่ ไม่ใช่ค้าง</p>`,
 screen:`
 ${TOP()}
@@ -580,15 +576,16 @@ ${TOP()}
     <p class="h">กำลังอ่านไฟล์ของคุณ</p>
     <p class="sub">ใช้เวลาประมาณ 1 นาที ไม่ต้องปิดหน้านี้</p>
     <ul class="list mb16">
-      <li><span class="ck">✓</span><span>อ่านไฟล์ 4 ไฟล์</span></li>
+      <li><span class="ck">✓</span><span style="flex:1">ch3-factorization.pdf</span><span class="t12 mu2">14 หน้า</span></li>
+      <li><span class="ck">✓</span><span style="flex:1">โน้ตในคาบ.jpg</span><span class="t12 mu2">3 รูป</span></li>
+      <li><span class="ck">✓</span><span style="flex:1">midterm-2566.pdf</span><span class="t12 mu2">12 ข้อ</span></li>
+      <li><span class="ck n">◐</span><span style="flex:1">midterm-2567.pdf</span><span class="t12 mu2">กำลังแยกรายข้อ</span></li>
       <li><span class="ck">✓</span><span>อ่านสิ่งที่คุณเขียนกำกับไว้</span></li>
-      <li><span class="ck n">◐</span><span>หาหัวข้อและลำดับการเรียน</span></li>
+      <li><span class="ck n">○</span><span class="mu2">หาหัวข้อและลำดับการเรียน</span></li>
       <li><span class="ck n">○</span><span class="mu2">เทียบกับข้อสอบเก่า 2 ชุด</span></li>
     </ul>
-    <div class="bar"><i style="width:64%"></i></div>
+    <div class="bar"><i style="width:48%"></i></div>
     <p class="go">หน้านี้ไปต่อเอง ไม่ต้องกดอะไร</p>
-    <div class="m mt24"><div class="av b">ม</div>
-      <div class="body"><p class="who">มีน<span>20:25</span></p><p>ไฟล์เยอะเนอะ เดี๋ยวรอด้วยกัน</p></div></div>
   </div>
 </div>`
 },
@@ -596,21 +593,21 @@ ${TOP()}
 {
 ch:"บทที่ 2 · สร้างการเตรียมสอบ", clock:"20:26", url:"anyang.app/exam/factorization/scope",
 title:"นี่คือหน้าที่ปาลรู้สึกว่ามันเข้าใจจริง",
-story:`<p>AI แตกชีททั้งบทเป็น 8 หัวข้อ เรียงลำดับให้ และให้ดาวตามว่าหัวข้อไหนออกสอบบ่อย</p>
-<p>เรื่องกำลังสามถูกตัดออกไว้ให้แล้ว เพราะในชีทเจอแค่เชิงอรรถเดียวและไม่เคยออกในข้อสอบเก่า</p>
-<p>ปาลกดดูหัวข้อหนึ่งแล้วมันเด้งข้อความจากชีทหน้า 5 ขึ้นมาให้ดู <b>เธอเลยเชื่อ</b></p>`,
+story:`<p>AI แตกชีททั้งบทเป็น 9 หัวข้อ เรียงลำดับให้ และให้ดาวตามว่าหัวข้อไหนออกสอบบ่อย</p>
+<p>เรื่องกำลังสามได้ดาวเดียว เพราะในชีทเจอแค่เชิงอรรถและไม่เคยออกในข้อสอบเก่า แต่ AI ไม่ตัดออกให้เอง คนที่ตัดสินว่าจะไม่เรียนคือปาล</p>
+<p>ทุกหัวข้อบอกว่ามาจากไฟล์ไหนหน้าไหน ปาลกดดูหัวข้อหนึ่งแล้วมันเด้งข้อความจากชีทหน้า 5 ขึ้นมาให้ดู <b>เธอเลยเชื่อ</b></p>`,
 screen:`
 ${TOP()}
 <div class="app">${SIDE('fx')}
 <div class="main">
   <div class="sp mb16"><div><p class="h mb0">ตรวจขอบเขตก่อนเริ่ม</p>
     <p class="t13 mu mb0">Factorization · สอบใน 5 วัน · AI เรียงลำดับให้แล้ว</p></div></div>
-  <div class="card"><div class="sp"><span class="b5 t14">1 · คูณพหุนาม <span class="mu2 t12">น.2–3</span></span><span class="st on">★★<span class="off">★</span></span></div></div>
-  <div class="card"><div class="sp"><span class="b5 t14">2 · ดึงตัวประกอบร่วม <span class="mu2 t12">ออกทุกชุด</span></span><span class="st on">★★★</span></div></div>
-  <div class="card"><div class="sp"><span class="b5 t14">3 · ผลต่างกำลังสอง <span class="mu2 t12">น.5–6 · ออกทุกชุด</span></span><span class="st on">★★★</span></div></div>
-  <div class="card"><div class="sp"><span class="b5 t14">5 · แยก x²+bx+c <span class="mu2 t12">ออกทุกชุด</span></span><span class="st on">★★★</span></div></div>
-  <div class="card"><div class="sp"><span class="b5 t14">7 · การจัดกลุ่ม <span class="mu2 t12">น.14 หน้าเดียว · เจอแค่ในชุดของอีกอาจารย์</span></span><span class="st on">★<span class="off">★★</span></span></div></div>
-  <div class="card mut mb16"><div class="sp"><span class="b5 t14">9 · กำลังสาม <span class="mu2 t12">เจอแค่เชิงอรรถ ไม่เคยออก</span></span><span class="chip mono">ไม่เอา</span></div></div>
+  <div class="card"><div class="sp"><span class="b5 t14">1 · คูณพหุนาม <span class="mu2 t12">ch3 น.2–3 · พื้นฐานของหัวข้อสามดาว</span></span><span class="st on">★★<span class="off">★</span></span></div></div>
+  <div class="card"><div class="sp"><span class="b5 t14">2 · ดึงตัวประกอบร่วม <span class="mu2 t12">ch3 น.4 · ออกทุกชุด</span></span><span class="st on">★★★</span></div></div>
+  <div class="card"><div class="sp"><span class="b5 t14">3 · ผลต่างกำลังสอง <span class="mu2 t12">ch3 น.5–6 · ออกทุกชุด</span></span><span class="st on">★★★</span></div></div>
+  <div class="card"><div class="sp"><span class="b5 t14">5 · แยก x²+bx+c <span class="mu2 t12">ch3 น.8–10 · ออกทุกชุด</span></span><span class="st on">★★★</span></div></div>
+  <div class="card"><div class="sp"><span class="b5 t14">7 · การจัดกลุ่ม <span class="mu2 t12">ch3 น.14 · เจอแค่ในชุดของอีกอาจารย์</span></span><span class="st on">★★<span class="off">★</span></span></div></div>
+  <div class="card mb16"><div class="sp"><span class="b5 t14">9 · กำลังสาม <span class="mu2 t12">ch3 น.14 เชิงอรรถ · ไม่เคยออก</span></span><span class="st on">★<span class="off">★★</span></span></div></div>
   <div class="row"><span class="btn">ขอแก้ก่อน</span><span class="btn pri">ยืนยันขอบเขตนี้</span></div>
   <p class="go">กด “ยืนยันขอบเขตนี้” ถ้าโอเคแล้ว หรือ “ขอแก้ก่อน” ถ้าอยากปรับ</p>
 </div></div>`
@@ -619,8 +616,8 @@ ${TOP()}
 {
 ch:"บทที่ 2 · สร้างการเตรียมสอบ", clock:"20:27", url:"anyang.app/exam/factorization/scope/edit",
 title:"แก้ด้วยการพูดคุย ไม่ต้องหาปุ่ม",
-story:`<p>อาจารย์เน้นเรื่องการจัดกลุ่มมากในคาบล่าสุด แต่ AI ให้แค่ดาวเดียวเพราะดูจากข้อสอบเก่าอย่างเดียว</p>
-<p>ปาลบอกไปตรงๆ ครั้งแรกเธอพิมพ์ แต่ครั้งที่สองขี้เกียจพิมพ์แล้ว เลยกดไมค์พูดเอา</p>
+story:`<p>อาจารย์เน้นเรื่องการจัดกลุ่มมากในคาบล่าสุด แต่ AI ให้แค่สองดาวเพราะดูจากข้อสอบเก่าอย่างเดียว</p>
+<p>ปาลบอกไปตรงๆ ครั้งแรกเธอพิมพ์ แต่ครั้งที่สองขี้เกียจพิมพ์แล้ว เลยกดไมค์พูดเอา คำที่พูดขึ้นในช่องพิมพ์ก่อน ยังไม่ส่งจนกว่าปาลจะกด ครั้งนี้เธอบอกไปด้วยว่าเรื่องกำลังสามไม่ต้องเรียน</p>
 <p>รายการด้านซ้าย<b>ขยับให้เห็นทันที</b>ทุกครั้งที่ตกลงกัน ไม่ต้องรอจนจบแล้วค่อยไปดูว่าเปลี่ยนอะไรไปบ้าง</p>`,
 screen:`
 ${TOP()}
@@ -632,8 +629,8 @@ ${TOP()}
     <div class="card"><div class="sp"><span class="t13">3 · ผลต่างกำลังสอง</span><span class="st on">★★★</span></div></div>
     <div class="card"><div class="sp"><span class="t13">5 · แยก x²+bx+c</span><span class="st on">★★★</span></div></div>
     <div class="card ok"><div class="sp mb6"><span class="t13 b5">7 · การจัดกลุ่ม</span><span class="st on">★★★</span></div>
-      <p class="t12 mb0" style="color:var(--ok)">★ → ★★★ เมื่อสักครู่</p></div>
-    <div class="card mut"><div class="sp"><span class="t13">9 · กำลังสาม</span><span class="chip mono">ไม่เอา</span></div></div>
+      <p class="t12 mb0" style="color:var(--ok)">★★ → ★★★ เมื่อสักครู่</p></div>
+    <div class="card"><div class="sp"><span class="t13">9 · กำลังสาม</span><span class="st on">★<span class="off">★★</span></span></div></div>
   </div>
   <div style="border-left:1px solid var(--line2);padding:0 26px 0 24px;display:flex;flex-direction:column">
     <div style="flex:1">
@@ -648,12 +645,12 @@ ${TOP()}
       <div class="m"><div class="av">ต</div><div class="body">
         <p class="who">พี่ตาล<span>20:27</span></p>
         <p>อ๋อ งั้นดันขึ้นให้เป็นสามดาวละกัน</p>
-        <p>ที่ให้ดาวเดียวตอนแรกเพราะในชีทมีแค่หน้าเดียว แล้วในข้อสอบเก่าก็เจอแค่ชุดของรุ่นพี่ ซึ่งเธอบอกไว้ว่าคนละอาจารย์ เลยให้น้ำหนักน้อย</p></div></div>
+        <p>ที่ให้สองดาวตอนแรกเพราะในชีทมีแค่หน้าเดียว แล้วในข้อสอบเก่าก็เจอแค่ชุดของรุ่นพี่ ซึ่งเธอบอกไว้ว่าคนละอาจารย์ เลยให้น้ำหนักน้อย</p></div></div>
       <div class="gap"></div>
       <div class="m"><div class="av">ต</div><div class="body cont">
         <p>แล้วกำลังสองสมบูรณ์ล่ะ ตอนนี้สองดาว อาจารย์พูดถึงบ่อยมั้ย</p></div></div>
     </div>
-    ${VOICEBAR}
+    ${VOICEDRAFT('อันนั้นอาจารย์แทบไม่พูดถึงเลย แล้วก็กำลังสามไม่ต้องเรียนนะ')}
   </div>
 </div></div>`
 },
@@ -671,12 +668,16 @@ ${TOP()}
     <p class="h">สรุปสิ่งที่แก้ไป</p>
     <p class="sub">ตรวจอีกรอบก่อนเริ่มติว · กดย้อนไปแก้เพิ่มได้</p>
     <div class="card ok">
-      <div class="sp mb6"><span class="b5 t14">7 · การจัดกลุ่ม</span><span class="t13" style="color:var(--ok)">★ → ★★★</span></div>
+      <div class="sp mb6"><span class="b5 t14">7 · การจัดกลุ่ม</span><span class="t13" style="color:var(--ok)">★★ → ★★★</span></div>
       <p class="t12 mb0" style="color:var(--ok)">เพราะคุณบอกว่าอาจารย์เน้นมาก</p>
     </div>
-    <div class="card ok mb16">
+    <div class="card ok">
       <div class="sp mb6"><span class="b5 t14">4 · กำลังสองสมบูรณ์</span><span class="t13" style="color:var(--ok)">★★ → ★</span></div>
       <p class="t12 mb0" style="color:var(--ok)">เพราะคุณบอกว่าอาจารย์แทบไม่พูดถึง</p>
+    </div>
+    <div class="card ok mb16">
+      <div class="sp mb6"><span class="b5 t14">9 · กำลังสาม</span><span class="t13" style="color:var(--ok)">★ → ไม่เอา</span></div>
+      <p class="t12 mb0" style="color:var(--ok)">เพราะคุณบอกว่าไม่ต้องเรียน</p>
     </div>
     <p class="tag mono">ขอบเขตสุดท้าย · 8 หัวข้อ</p>
     <ul class="list mb16">
@@ -700,7 +701,8 @@ title:"เข้าห้องติวเลย ไม่มีหน้าค
 story:`<p>เลือกติวเตอร์ไปตั้งแต่ตอนสมัครแล้ว ไม่ต้องเลือกซ้ำ กดยืนยันขอบเขตปุ๊บเข้าห้องติวปั๊บ</p>
 <p>สิ่งแรกที่เห็นคือ<b>การ์ดความคืบหน้า</b> สอบในกี่วัน ผ่านกี่หัวข้อ พร้อมแค่ไหน และแต่ละหัวข้ออยู่ระดับไหน ตัวเลขทุกตัวมาจากระบบโดยตรง AI ไม่ได้แต่งขึ้นเอง วันแรกเลยยังเป็นศูนย์ทั้งหมด</p>
 <p>ไม่มีแถบข้าง ไม่มีปุ่มตัวเลือก นอกจากการ์ดใบนี้ก็มีแค่บทสนทนากับช่องพิมพ์ที่มีไมค์กับกล้องอยู่ข้างใน</p>
-<p>พี่ตาลสรุปสั้นๆ ว่าวันนี้เริ่มที่ไหนเพราะอะไร แล้วยิงโจทย์มาทันทีโดยยังไม่สอนอะไรเลย เพื่อดูว่าต้องเริ่มจากศูนย์หรือข้ามได้</p>`,
+<p>หัวข้อในการ์ดเรียงตามลำดับที่ตกลงกันไว้ พี่ตาลบอกว่าเวลาเหลือน้อย เลยขอเน้นหัวข้อสามดาวก่อน และจะเริ่มตามลำดับ แต่ปาลขอเริ่มเรื่องผลต่างกำลังสองเอง ระบบยอมตามทันที เพราะคนเรียนขอเปลี่ยนได้เสมอ</p>
+<p>จากนั้นพี่ตาลยิงโจทย์มาทันทีโดยยังไม่สอนอะไรเลย เพื่อดูว่าต้องเริ่มจากศูนย์หรือข้ามได้</p>`,
 screen:`
 <div class="room">${ROOMTOP}
 <div class="feed">
@@ -712,22 +714,27 @@ screen:`
     </div>
     <p class="t12 mu2 mb6">ความพร้อม = สัดส่วนของเนื้อหาข้อสอบที่คาดว่าทำได้ ไม่ใช่คะแนนสอบ</p>
     <ul class="list mb0">
-      <li><span class="ck n mono">3</span><span style="flex:1">ผลต่างกำลังสอง</span><span class="st on">★★★</span><span class="chip mono">ยังไม่เริ่ม</span></li>
+      <li><span class="ck n mono">1</span><span style="flex:1">คูณพหุนาม</span><span class="st on">★★<span class="off">★</span></span><span class="chip mono">ยังไม่เริ่ม</span></li>
       <li><span class="ck n mono">2</span><span style="flex:1">ดึงตัวประกอบร่วม</span><span class="st on">★★★</span><span class="chip mono">ยังไม่เริ่ม</span></li>
+      <li><span class="ck n mono">3</span><span style="flex:1">ผลต่างกำลังสอง</span><span class="st on">★★★</span><span class="chip mono">ยังไม่เริ่ม</span></li>
+      <li><span class="ck n mono">4</span><span style="flex:1">กำลังสองสมบูรณ์</span><span class="st on">★<span class="off">★★</span></span><span class="chip mono">ยังไม่เริ่ม</span></li>
       <li><span class="ck n mono">5</span><span style="flex:1">แยก x²+bx+c</span><span class="st on">★★★</span><span class="chip mono">ยังไม่เริ่ม</span></li>
       <li><span class="ck n mono">7</span><span style="flex:1">การจัดกลุ่ม</span><span class="st on">★★★</span><span class="chip mono">ยังไม่เริ่ม</span></li>
-      <li><span class="ck n mono">1</span><span style="flex:1">คูณพหุนาม</span><span class="st on">★★<span class="off">★</span></span><span class="chip mono">ยังไม่เริ่ม</span></li>
-      <li><span class="ck n mono">4</span><span style="flex:1">กำลังสองสมบูรณ์</span><span class="st on">★<span class="off">★★</span></span><span class="chip mono">ยังไม่เริ่ม</span></li>
       <li><span class="ck n mono">·</span><span class="mu" style="flex:1">อีก 2 หัวข้อ</span><span class="chip mono">ยังไม่เริ่ม</span></li>
     </ul>
   </div>
   <div class="m"><div class="av">ต</div><div class="body">
     <p class="who">พี่ตาล<span>20:30</span></p>
     <p>เหลือ 5 วัน ยังไม่ได้เริ่มสักเรื่องเลยเนอะ</p>
-    <p>วันนี้เริ่มที่ผลต่างกำลังสองก่อน สามดาว ข้อสอบเก่าออกทุกชุด แล้วก็ง่ายสุดในกลุ่มนี้ด้วย</p></div></div>
+    <p>เวลาน้อย ขอเน้นสามดาวก่อนนะ ที่เหลือถ้ามีเวลาค่อยเก็บ วันนี้เริ่มที่ดึงตัวประกอบร่วมตามลำดับ</p></div></div>
   <div class="gap"></div>
-  <div class="m"><div class="av">ต</div><div class="body cont">
-    <p>ก่อนสอนลองข้อนี้ก่อน อยากรู้ว่าต้องเริ่มตรงไหน</p>
+  <div class="m"><div class="av u">ป</div><div class="body">
+    <p class="who">ปาล<span>20:30</span></p>
+    <p>ขอเริ่มผลต่างกำลังสองก่อนได้มั้ย เพื่อนบอกว่าออกเยอะ</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>20:30</span></p>
+    <p>ได้ งั้นเริ่มผลต่างกำลังสอง ก่อนสอนลองข้อนี้ก่อน อยากรู้ว่าต้องเริ่มตรงไหน</p>
     <p><span class="eq">x² − 49</span></p>
     <p>ไม่รู้ก็บอกมาตรงๆ ได้นะ ไม่ต้องเดา</p></div></div>
 </div>
@@ -740,7 +747,8 @@ ch:"บทที่ 3 · เริ่มติว", clock:"20:31", url:"anyang.a
 title:"ตอบถูก เลยไม่ต้องสอนตั้งแต่ต้น",
 story:`<p>ปาลพิมพ์ตอบเอง ไม่มีปุ่มให้กด เพราะการกดเลือกจากสามตัวเลือกไม่ได้พิสูจน์ว่าทำเป็น แค่พิสูจน์ว่าเดาถูก</p>
 <p>พอตอบถูก พี่ตาลก็ไม่ปูพื้นซ้ำ ข้ามไปเน้นเงื่อนไขที่คนพลาดบ่อยแทน</p>
-<p>นี่คือสิ่งที่การอ่านชีทเองทำไม่ได้ ชีทไม่รู้ว่าเรารู้อะไรอยู่แล้ว</p>`,
+<p>นี่คือสิ่งที่การอ่านชีทเองทำไม่ได้ ชีทไม่รู้ว่าเรารู้อะไรอยู่แล้ว</p>
+<p>ข้อความของพี่ตาลมีปุ่ม 🔊 เล็กๆ ปาลกดฟังทีละข้อความได้ ระบบไม่อ่านเองเพราะตั้งค่าไว้ว่าปิด</p>`,
 screen:`
 <div class="room">${ROOMTOP}
 <div class="feed">
@@ -749,12 +757,12 @@ screen:`
     <p>(x-7)(x+7)</p></div></div>
   <div class="gap"></div>
   <div class="m"><div class="av">ต</div><div class="body">
-    <p class="who">พี่ตาล<span>20:31</span></p>
+    <p class="who">พี่ตาล<span>20:31</span><span class="spk">🔊</span></p>
     <p>ถูก งั้นไม่ต้องปูพื้นแล้ว</p>
     <p>ข้ามไปจุดที่คนพลาดบ่อยเลยดีกว่า</p></div></div>
   <div class="gap"></div>
   <div class="m"><div class="av">ต</div><div class="body">
-    <p class="who">พี่ตาล<span>20:32</span></p>
+    <p class="who">พี่ตาล<span>20:32</span><span class="spk">🔊</span></p>
     <p>วิธีนี้ใช้ได้ต่อเมื่อครบสามอย่าง มีสองพจน์ / เป็นกำลังสองสมบูรณ์ทั้งคู่ / คั่นด้วยลบ</p>
     <p><span class="eq">a² − b² = (a−b)(a+b)</span></p>
     <p>ขาดข้อใดข้อหนึ่งก็ใช้ไม่ได้แล้วนะ</p></div></div>
@@ -797,7 +805,8 @@ ${COMPOSER}
 {
 ch:"บทที่ 3 · เริ่มติว", clock:"20:35", url:"anyang.app/room/factorization",
 title:"ขี้เกียจพิมพ์แล้ว ก็พูดเอา",
-story:`<p>ปาลกดไมค์แล้วพูดคำตอบออกไปเลย ไม่ต้องพิมพ์วงเล็บกับเลขยกกำลังให้เมื่อย</p>
+story:`<p>ปาลกดไมค์ค้างแล้วพูดคำตอบ ไม่ต้องพิมพ์วงเล็บกับเลขยกกำลังให้เมื่อย คำที่พูดขึ้นในช่องพิมพ์ก่อน ปาลดูแล้วถูกค่อยกดส่ง</p>
+<p>ที่ไม่ส่งเองเพราะคณิตที่พูดออกมา ระบบฟังพลาดได้ง่าย ถ้าตรวจว่าผิดเพราะฟังผิด ปาลจะไม่เชื่อระบบอีก ให้แก้ก่อนส่งคุ้มกว่า</p>
 <p>ตรงนี้คือจุดที่ทำให้รู้สึกเหมือนนั่งติวอยู่กับคนจริงมากที่สุด เพราะเวลาติวกับเพื่อน ไม่มีใครพิมพ์ตอบกัน</p>
 <p>สามทางที่ตอบได้คือ พิมพ์ พูด หรือถ่ายรูป ไม่มีปุ่มตัวเลือกให้กดเลยตลอดทั้งห้องติว</p>`,
 screen:`
@@ -806,20 +815,8 @@ screen:`
   <div class="m"><div class="av">ต</div><div class="body">
     <p class="who">พี่ตาล<span>20:34</span></p>
     <p>ลองอีกข้อ <span class="eq">4x² − 25</span></p></div></div>
-  <div class="gap"></div>
-  <div class="m"><div class="av u">ป</div><div class="body">
-    <p class="who">ปาล<span>20:35</span> <span class="chip mono" style="margin-left:2px">🎤 พูด</span></p>
-    <p>สองเอ็กซ์ลบห้า คูณ สองเอ็กซ์บวกห้า</p></div></div>
-  <div class="gap"></div>
-  <div class="m"><div class="av">ต</div><div class="body">
-    <p class="who">พี่ตาล<span>20:35</span></p>
-    <p>ใช่เลย รู้ได้ไงว่าเป็นสองเอ็กซ์</p></div></div>
-  <div class="gap"></div>
-  <div class="m"><div class="av u">ป</div><div class="body">
-    <p class="who">ปาล<span>20:35</span></p>
-    <p>เพราะ 4x² คือ (2x)²</p></div></div>
 </div>
-${VOICEBAR}
+${VOICEDRAFT('สองเอ็กซ์ลบห้า คูณ สองเอ็กซ์บวกห้า')}
 </div>`
 },
 
@@ -827,15 +824,23 @@ ${VOICEBAR}
 {
 ch:"บทที่ 4 · จังหวะที่ไม่ราบรื่น", clock:"20:41", url:"anyang.app/room/factorization",
 title:"ปาลตอบมาคำเดียวว่า งง",
-story:`<p>เข้าเรื่องใหม่แล้วปาลตามไม่ทัน เธอพิมพ์มาแค่คำเดียว</p>
+story:`<p>เข้าเรื่องใหม่ พี่ตาลให้ลองโจทย์ก่อนเหมือนทุกครั้ง แต่ปาลบอกว่ายังไม่เคยเรียน พี่ตาลเลยข้ามไปอธิบายเลย แล้วปาลก็ตามไม่ทัน เธอพิมพ์มาแค่คำเดียว</p>
 <p>ถ้าเป็นระบบที่ออกแบบไม่ดี มันจะอธิบายซ้ำทั้งก้อนเดิม ซึ่งไม่ช่วยอะไรเลย</p>
-<p>พี่ตาลตบกลับเข้าเรื่องด้วยการ<b>ถามให้แคบลง</b> ไม่ใช่ดุ ไม่ใช่อธิบายใหม่ทั้งหมด แค่ถามว่าติดตรงไหน แบบที่คนจริงจะถาม</p>`,
+<p>พี่ตาลตบกลับเข้าเรื่องด้วยการ<b>ถามให้แคบลง</b> ไม่ใช่ดุ ไม่ใช่อธิบายใหม่ทั้งหมด แค่ให้เลือกว่าติดอยู่ตรงไหน</p>`,
 screen:`
 <div class="room">${ROOMTOP}
 <div class="feed">
   <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>20:39</span></p>
+    <p>ทีนี้มาเรื่อง <span class="eq">x² + bx + c</span> ลองข้อนี้ก่อน <span class="eq">x² + 7x + 10</span></p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av u">ป</div><div class="body">
+    <p class="who">ปาล<span>20:39</span></p>
+    <p>เรื่องนี้ยังไม่เคยเรียนเลยอะ</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body">
     <p class="who">พี่ตาล<span>20:40</span></p>
-    <p>ทีนี้มาเรื่อง <span class="eq">x² + bx + c</span> หลักคือหาสองจำนวนที่คูณกันได้ c แล้วบวกกันได้ b</p></div></div>
+    <p>โอเค งั้นเล่าก่อน หลักคือหาสองจำนวนที่คูณกันได้ c แล้วบวกกันได้ b</p></div></div>
   <div class="gap"></div>
   <div class="m"><div class="av u">ป</div><div class="body">
     <p class="who">ปาล<span>20:41</span></p>
@@ -843,8 +848,7 @@ screen:`
   <div class="gap"></div>
   <div class="m"><div class="av">ต</div><div class="body">
     <p class="who">พี่ตาล<span>20:41</span></p>
-    <p>งงตรงไหนอะ</p>
-    <p>ตรงที่ว่าทำไมต้องหาสองจำนวน หรือตรงที่ว่าจะหามันยังไง</p></div></div>
+    <p>ติดที่ว่าทำไมต้องหาสองจำนวน หรือติดที่ว่าจะหามันยังไง</p></div></div>
   <div class="gap"></div>
   <div class="m"><div class="av u">ป</div><div class="body">
     <p class="who">ปาล<span>20:41</span></p>
@@ -894,8 +898,8 @@ ${COMPOSER}
 ch:"บทที่ 4 · จังหวะที่ไม่ราบรื่น", clock:"20:47", url:"anyang.app/room/factorization",
 title:"ถามก่อนว่าอ่านลายมือถูกไหม",
 story:`<p>ปาลเขียนใส่กระดาษแล้วลากรูปมาวางในแชท</p>
-<p>พี่ตาลไม่ตรวจทันที แต่ทวนสิ่งที่อ่านได้กลับมาก่อน เหมือนคนจริงที่จะพูดว่า “เดี๋ยวขอดูก่อนนะ ที่เขียนมาคืออันนี้ใช่มั้ย”</p>
-<p>ขั้นนี้ห้ามข้าม ถ้าอ่านลายมือผิดแล้วบอกว่าตอบผิดทั้งที่เขียนถูก ผู้ใช้จะเลิกใช้ทันทีโดยไม่บอกเรา</p>`,
+<p>ปกติถ้าระบบอ่านลายมือชัดทุกบรรทัด จะตรวจเลยไม่ต้องถาม แต่รูปนี้บรรทัดสองเขียนเร็ว ระบบไม่มั่นใจ พี่ตาลเลยทวนสิ่งที่อ่านได้กลับมาก่อน เหมือนคนจริงที่จะพูดว่า “เดี๋ยวขอดูก่อนนะ ที่เขียนมาคืออันนี้ใช่มั้ย”</p>
+<p>เมื่อไม่มั่นใจ ขั้นนี้ต้องมี เพราะถ้าอ่านลายมือผิดแล้วบอกว่าตอบผิดทั้งที่เขียนถูก ผู้ใช้จะเลิกใช้ทันทีโดยไม่บอกเรา</p>`,
 screen:`
 <div class="room">${ROOMTOP}
 <div class="feed">
@@ -905,10 +909,10 @@ screen:`
   <div class="gap"></div>
   <div class="m"><div class="av">ต</div><div class="body">
     <p class="who">พี่ตาล<span>20:47</span></p>
-    <p>เดี๋ยวขอเช็คก่อนว่าอ่านถูกมั้ย ที่เขียนมาคือ</p>
+    <p>บรรทัดสองอ่านยากนิดนึง ขอเช็คก่อนว่าอ่านถูกมั้ย ที่เขียนมาคือ</p>
     <div class="read">
       <p class="t13 mb6"><span class="mono mu2">1</span> &nbsp; <span class="eq">x² − 5x + 6</span></p>
-      <p class="t13 mb6"><span class="mono mu2">2</span> &nbsp; <span class="eq">= (x − 2)(x + 3)</span></p>
+      <p class="t13 mb6"><span class="mono mu2">2</span> &nbsp; <span class="eq">= (x − 2)(x + 3)</span> <span class="chip w mono">อ่านไม่ชัด</span></p>
       <p class="t13 mb0"><span class="mono mu2">3</span> &nbsp; <span class="eq">= x² + x − 6</span></p>
     </div>
     <p>ใช่มั้ย ถ้าอ่านผิดบอกได้เลยนะ</p></div></div>
@@ -926,7 +930,8 @@ ch:"บทที่ 4 · จังหวะที่ไม่ราบรื่�
 title:"ผิด แล้วเฉลยเลย ไม่มีใบ้",
 story:`<p>ปาลทำผิดเรื่องเครื่องหมาย พี่ตาลไม่ถามว่างงตรงไหน ไม่ให้ใบ้แล้วให้ลองใหม่ แต่<b>บอกวิธีแก้ทันที</b></p>
 <p>เหตุผลคือคนที่เหลือ 5 วันสอบไม่ได้มาเล่นเกมทายคำตอบ เขามาเอาความเข้าใจ</p>
-<p>และชี้บรรทัดแรกที่ผิดด้วย ไม่ใช่บอกแค่ว่าผิด</p>`,
+<p>และชี้บรรทัดแรกที่ผิดด้วย ไม่ใช่บอกแค่ว่าผิด</p>
+<p>ถ้าปาลคิดว่าระบบตรวจผิด แค่พิมพ์ว่า “ข้อนี้ถูกนะ” ระบบจะตรวจซ้ำอย่างละเอียด ถ้าผิดจริงพี่ตาลขอโทษและแก้ผลให้</p>`,
 screen:`
 <div class="room">${ROOMTOP}
 <div class="feed">
@@ -943,10 +948,6 @@ screen:`
   <div class="gap"></div>
   <div class="m"><div class="av">ต</div><div class="body cont">
     <p>จำง่ายๆ ตัวหลังบวกแต่ตัวกลางลบ เมื่อไหร่ก็ตาม สองตัวนั้นลบทั้งคู่</p></div></div>
-  <div class="gap"></div>
-  <div class="m"><div class="av b">ม</div><div class="body">
-    <p class="who">มีน<span>20:49</span></p>
-    <p>อ๋อออ เราก็เพิ่งเก็ต</p></div></div>
 </div>
 ${COMPOSER}
 </div>`
@@ -973,10 +974,6 @@ screen:`
   <div class="m"><div class="av">ต</div><div class="body">
     <p class="who">พี่ตาล<span>20:51</span></p>
     <p>ถูกแล้ว คราวนี้เครื่องหมายไม่หลุด</p></div></div>
-  <div class="gap"></div>
-  <div class="m"><div class="av b">ม</div><div class="body">
-    <p class="who">มีน<span>20:51</span></p>
-    <p>เก่งอะ</p></div></div>
 </div>
 ${COMPOSER}
 </div>`
@@ -987,8 +984,8 @@ ${COMPOSER}
 ch:"บทที่ 5 · ปิดท้าย", clock:"21:06", url:"anyang.app/room/factorization",
 title:"ปาลอยากรู้ว่าตัวเองถึงไหนแล้ว",
 story:`<p>ติวมาครึ่งชั่วโมง ปาลถามขึ้นมาเอง ไม่ได้กดเข้าหน้าไหน</p>
-<p>ความคืบหน้าไม่มีหน้าดาชบอร์ดให้เปิด มันอยู่ในหัวของพี่ตาลตลอดเวลาอยู่แล้ว และตอบออกมาเป็นคำพูด ไม่ใช่ตาราง</p>
-<p>แล้วถามต่อว่าจะซ่อมหรือไปเรื่องใหม่ <b>โดยไม่มีปุ่มให้กด</b> ปาลตอบเองด้วยคำพูดของเธอ</p>`,
+<p>ไม่มีหน้าดาชบอร์ดแยกให้เปิด พี่ตาลส่ง<b>การ์ดความคืบหน้าใบเดียวกับตอนเปิดห้อง</b>มาในแชท ตัวเลขอัปเดตแล้วและมาจากระบบโดยตรง แล้วสรุปสั้นๆ เป็นคำพูด</p>
+<p>แล้วบอกว่าจะทำอะไรต่อพร้อมเหตุผล ถ้าปาลอยากไปเรื่องอื่นก็แค่พิมพ์บอก <b>ไม่มีปุ่มให้กด</b></p>`,
 screen:`
 <div class="room">${ROOMTOP}
 <div class="feed">
@@ -996,15 +993,29 @@ screen:`
     <p class="who">ปาล<span>21:06</span></p>
     <p>ตอนนี้เราเป็นไงบ้าง เหลืออะไรอีก</p></div></div>
   <div class="gap"></div>
+  <div class="card mt10 mb16">
+    <div class="sp mb6"><span class="tag mono mb0">ความคืบหน้า · Factorization</span><span class="t12 mu">สอบใน 5 วัน</span></div>
+    <div class="row mb6" style="gap:28px">
+      <div><p class="t12 mu mb0">ผ่านแล้ว</p><p class="b5 t14 mb0">2 / 8 หัวข้อ</p></div>
+      <div><p class="t12 mu mb0">ความพร้อม</p><p class="b5 t14 mb0">28%</p></div>
+    </div>
+    <ul class="list mb0">
+      <li><span class="ck n mono">1</span><span style="flex:1">คูณพหุนาม</span><span class="st on">★★<span class="off">★</span></span><span class="chip mono">ยังไม่เริ่ม</span></li>
+      <li><span class="ck n mono">2</span><span style="flex:1">ดึงตัวประกอบร่วม</span><span class="st on">★★★</span><span class="chip o mono">ผ่าน</span></li>
+      <li><span class="ck n mono">3</span><span style="flex:1">ผลต่างกำลังสอง</span><span class="st on">★★★</span><span class="chip o mono">ผ่าน</span></li>
+      <li><span class="ck n mono">4</span><span style="flex:1">กำลังสองสมบูรณ์</span><span class="st on">★<span class="off">★★</span></span><span class="chip mono">ยังไม่เริ่ม</span></li>
+      <li><span class="ck n mono">5</span><span style="flex:1">แยก x²+bx+c</span><span class="st on">★★★</span><span class="chip a mono">กำลังดี</span></li>
+      <li><span class="ck n mono">7</span><span style="flex:1">การจัดกลุ่ม</span><span class="st on">★★★</span><span class="chip mono">ยังไม่เริ่ม</span></li>
+      <li><span class="ck n mono">·</span><span class="mu" style="flex:1">อีก 2 หัวข้อ</span><span class="chip mono">ยังไม่เริ่ม</span></li>
+    </ul>
+  </div>
   <div class="m"><div class="av">ต</div><div class="body">
     <p class="who">พี่ตาล<span>21:06</span></p>
-    <p>ทำไปสามเรื่องละ</p>
-    <p>ดึงตัวประกอบร่วมกับผลต่างกำลังสองนี่แม่นแล้ว ไม่ต้องห่วง</p>
-    <p>ส่วน x²+bx+c ยังไม่นิ่ง เมื่อกี้พลาดเครื่องหมายไปทีนึง</p>
-    <p>เหลืออีกสี่เรื่องที่ยังไม่แตะเลย</p></div></div>
+    <p>ผ่านไปสองเรื่องแล้ว ดึงตัวประกอบร่วมกับผลต่างกำลังสอง</p>
+    <p>ส่วน x²+bx+c ยังไม่นิ่ง เมื่อกี้พลาดเครื่องหมายไปทีนึง</p></div></div>
   <div class="gap"></div>
   <div class="m"><div class="av">ต</div><div class="body cont">
-    <p>อยากเก็บเรื่องเครื่องหมายให้แน่นก่อน หรือจะลุยเรื่องใหม่ต่อเลย</p></div></div>
+    <p>ขอเก็บเรื่องเครื่องหมายให้แน่นก่อนนะ เพราะเพิ่งพลาด แล้วค่อยไปการจัดกลุ่ม</p></div></div>
 </div>
 ${COMPOSER}
 </div>`
@@ -1013,25 +1024,30 @@ ${COMPOSER}
 {
 ch:"บทที่ 5 · ปิดท้าย", clock:"21:07", url:"anyang.app/room/factorization",
 title:"ซ่อมจุดอ่อนด้วยมุมอธิบายที่ต่างออกไป",
-story:`<p>ปาลตอบเองด้วยคำพูดของเธอ ไม่ได้เลือกจากตัวเลือกไหน</p>
-<p>พี่ตาลไม่อธิบายซ้ำแบบเดิม แต่เปลี่ยนมุมมาใช้พื้นที่สี่เหลี่ยมแทนการคิดด้วยตัวเลขล้วน</p>
+story:`<p>ปาลตอบรับแผนด้วยคำพูดของเธอ ถ้าอยากไปเรื่องอื่นก็แค่บอก</p>
+<p>พี่ตาลไม่อธิบายซ้ำแบบเดิม แต่เปลี่ยนมุมมาใช้ตารางพื้นที่สี่เหลี่ยมแทนการคิดด้วยตัวเลขล้วน</p>
 <p>ถ้าอธิบายแบบเดิมซ้ำ คนที่ไม่เข้าใจรอบแรกก็จะไม่เข้าใจรอบสองอยู่ดี</p>`,
 screen:`
 <div class="room">${ROOMTOP}
 <div class="feed">
   <div class="m"><div class="av u">ป</div><div class="body">
     <p class="who">ปาล<span>21:07</span></p>
-    <p>เอาเครื่องหมายก่อนดีกว่า กลัวพลาดอีก</p></div></div>
+    <p>ได้ๆ กลัวพลาดอีกเหมือนกัน</p></div></div>
   <div class="gap"></div>
   <div class="m"><div class="av">ต</div><div class="body">
     <p class="who">พี่ตาล<span>21:07</span></p>
-    <p>ดี งั้นลองมองอีกมุมนะ คราวก่อนพี่อธิบายด้วยตัวเลข คราวนี้ลองมองเป็นรูป</p>
+    <p>งั้นลองมองอีกมุมนะ คราวก่อนพี่อธิบายด้วยตัวเลข คราวนี้ลองมองเป็นตาราง</p>
     <p>คิดว่ามันคือสี่เหลี่ยมที่มีพื้นที่ <span class="eq">x² − 5x + 6</span> แล้วสองวงเล็บคือด้านสองด้าน</p>
-    <div class="shot" style="padding:34px 60px">ภาพพื้นที่สี่เหลี่ยม</div></div></div>
+    <table class="area">
+      <tr><td class="hd"></td><td class="hd">x</td><td class="hd">−2</td></tr>
+      <tr><td class="hd">x</td><td>x²</td><td>−2x</td></tr>
+      <tr><td class="hd">−3</td><td>−3x</td><td>+6</td></tr>
+    </table>
+    <p>สองช่องกลางรวมกันต้องได้ −5x ช่องมุมต้องได้ +6 มีแต่ −2 กับ −3 ที่ลงทั้งสองช่อง</p></div></div>
   <div class="gap"></div>
   <div class="m"><div class="av">ต</div><div class="body cont">
-    <p>เอาเร็วๆ สามข้อ ดูแค่เครื่องหมายพอ ไม่ต้องหาคำตอบเต็ม</p>
-    <p><span class="eq">x² − 9x + 20</span> สองตัวนั้นบวกหรือลบ</p></div></div>
+    <p>เอาเร็วๆ สามข้อ แยกให้หมด เน้นดูเครื่องหมาย</p>
+    <p><span class="eq">x² − 9x + 20</span></p></div></div>
 </div>
 ${COMPOSER}
 </div>`
@@ -1047,20 +1063,23 @@ screen:`
 <div class="feed">
   <div class="m"><div class="av">ต</div><div class="body">
     <p class="who">พี่ตาล<span>21:18</span></p>
-    <p>โอเค เครื่องหมายผ่านแล้ว สามข้อรวดไม่พลาดเลย</p>
-    <p>วันนี้เก็บไปสามเรื่อง ทำถูก 8 จาก 11 ข้อ</p>
-    <p>เหลืออีกสี่วัน ถือว่ายังตามแผนอยู่นะ</p></div></div>
+    <p>โอเค เครื่องหมายผ่านแล้ว สามข้อรวดไม่พลาดเลย</p></div></div>
   <div class="gap"></div>
   <div class="m"><div class="av">ต</div><div class="body cont">
     <p>จะลุยต่ออีกเรื่อง หรือพอแค่นี้ก่อนดี</p></div></div>
   <div class="gap"></div>
   <div class="m"><div class="av b">ม</div><div class="body">
     <p class="who">มีน<span>21:18</span></p>
-    <p>กูง่วงแล้วอะ พรุ่งนี้ต่อป่ะ</p></div></div>
+    <p>ง่วงแล้วอะ พรุ่งนี้ต่อป่ะ</p></div></div>
   <div class="gap"></div>
   <div class="m"><div class="av u">ป</div><div class="body">
     <p class="who">ปาล<span>21:19</span></p>
     <p>พอแล้วเหมือนกัน พรุ่งนี้เจอกัน</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>21:19</span></p>
+    <p>วันนี้เก็บไปสามเรื่อง ทำถูก 8 จาก 11 ข้อ</p>
+    <p>เหลืออีกสี่วัน ยังตามแผนอยู่นะ</p></div></div>
 </div>
 ${COMPOSER}
 </div>`
@@ -1082,7 +1101,7 @@ ${TOP()}
     <div class="card ok">
       <div class="sp mb6"><span class="b5 t14">Factorization</span><span class="chip d mono">สอบใน 4 วัน</span></div>
       <div class="bar"><i style="width:34%"></i></div>
-      <div class="sp"><span class="t12 mu">ความพร้อม 34%</span><span class="t12 mu2">1 หัวข้อยังไม่นิ่ง</span></div>
+      <div class="sp"><span class="t12 mu">ความพร้อม 34%</span><span class="t12 mu2">ผ่าน 3 / 8 หัวข้อ</span></div>
       <p class="t12 mu2 mt10 mb0">ติวล่าสุด เมื่อสักครู่ · 45 นาที</p>
       <div class="mt10"><span class="btn sm pri">ติวต่อ</span></div>
     </div>
@@ -1090,8 +1109,6 @@ ${TOP()}
       <span class="t13 mu">+ สร้างการเตรียมสอบใหม่</span></div>
   </div>
   <p class="go">กด “ติวต่อ” บนการ์ดเพื่อกลับเข้าห้องติวได้ทุกเมื่อ</p>
-  <div class="m mt24" style="max-width:420px"><div class="av b">ม</div>
-    <div class="body"><p class="who">มีน<span>21:20</span></p><p>พรุ่งนี้เจอกันน้า ฝันดี</p></div></div>
 </div></div>`
 }
 
