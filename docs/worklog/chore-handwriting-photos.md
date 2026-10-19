@@ -12,7 +12,7 @@
 - [x] 1. 🤖 `evals/handwriting/README.md`: วิธีถ่ายรูป, การตั้งชื่อไฟล์, เป้าความหลากหลายของชุดรูป, ที่เก็บใน Drive, ขั้นตอนขอความยินยอม
 - [x] 2. 🤖 `evals/handwriting/problems.md`: โจทย์ ~15 ข้อจาก MTH10101 (limit, อนุพันธ์, chain rule, implicit, แยกตัวประกอบ, สมการ) ครอบคลุม `answer_format` ทั้ง 3 แบบ เพื่อให้ P2 นำไปใช้ต่อได้
 - [x] 3. 🤖 `evals/handwriting/consent.md`: ข้อความขอความยินยอมสำหรับทำ Google Form + template ตารางรหัสคนเขียน (เก็บใน Drive เท่านั้น)
-- [ ] 4. 🤖 `evals/handwriting/make_labels.py` (stdlib อย่างเดียว): อ่าน `photos.csv` + `raw/` แล้วสร้าง `labels.jsonl` แบบโครง (`lines` ว่างไว้ให้ May) เช็คไฟล์ที่ขาดหรือซ้ำ และสรุปความหลากหลายของชุดรูป
+- [x] 4. 🤖 `evals/handwriting/make_labels.py` (stdlib อย่างเดียว): อ่าน `photos.csv` + `raw/` แล้วสร้าง `labels.jsonl` แบบโครง (`lines` ว่างไว้ให้ May) เช็คไฟล์ที่ขาดหรือซ้ำ และสรุปความหลากหลายของชุดรูป
 - [ ] 5. 🙋 Jam: สร้างโฟลเดอร์ใน Drive + Google Form ขอความยินยอม แล้วส่งโจทย์และวิธีถ่ายรูปให้ Junior, May และเพื่อน
 - [ ] 6. 🙋 Jam: เก็บรูปให้ได้ ≥ 30 รูป เปลี่ยนชื่อเป็น `hw_001.jpg` … กรอกตารางรหัสใน Drive และ `photos.csv` แล้วก๊อปรูปลง `evals/handwriting/raw/`
 - [ ] 7. 🤖 รัน `make_labels.py` แล้ว commit `labels.jsonl` แบบโครง เช็คว่าครบตามเป้า ติ๊ก checklist และเขียนข้อความส่งงานให้ May
@@ -33,10 +33,11 @@
 - 2026-10-19 · โจทย์ 17 ข้อ แบ่ง 3 หมวด (ก factored 4 ข้อ, ข expression 10 ข้อ, ค equation 3 ข้อ) · ให้คนเขียนทำอย่างน้อยหมวดละ 1 ข้อ · ถ้าคนเขียน ≥ 5 คน ทุก answer_format จะมี ≥ 5 รูปได้โดยไม่ต้องคุมรายคน
 - 2026-10-19 · ถ้ารูปที่มีบรรทัดผิดยังไม่ถึง 8 รูป Jam เขียนคำตอบผิดเพิ่มเองโดยไม่จด error type ที่ตั้งใจไว้ · เพื่อให้ May label error type แบบไม่รู้คำตอบล่วงหน้า
 - 2026-10-19 · consent บอกชัดว่าส่งรูปให้ Gemini, Claude, Mathpix ผ่าน API · เก็บถึง 31 พ.ค. 2570 · ถอนได้ (ลบใน 7 วัน) · ขออนุญาตแยกถ้าจะใส่รูปในรายงาน · ไม่รับรูปจากคนอายุต่ำกว่า 18 ปี (PDPA)
+- 2026-10-19 · `make_labels.py` ใช้ stdlib อย่างเดียว รันผ่าน `uv run --project apps/api` · test อยู่ข้างๆ กัน (`evals/handwriting/test_make_labels.py`) แต่ CI ยังไม่รัน เพราะ CI รันแค่ `apps/api/tests`
 
 ## Next step
 
-ขั้น 4: เขียน `evals/handwriting/make_labels.py` (stdlib) อ่าน `photos.csv` + ตารางใน `problems.md` แล้วเพิ่มบรรทัดที่ยังไม่มีลง `labels.jsonl` พร้อมสรุปเป้าชุดรูป
+ขั้น 5 (🙋 Jam): สร้างโฟลเดอร์ Drive `evals/handwriting/{inbox,raw}` + Google Form จาก `consent.md` แล้วส่งโจทย์ `problems.md` ให้ Junior, May และเพื่อน
 
 ## Waiting on
 

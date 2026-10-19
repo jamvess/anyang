@@ -10,7 +10,7 @@ handwriting/
 ├─ problems.md      # โจทย์ที่ให้คนเขียนทำ (P01, P02, ...)
 ├─ consent.md       # ข้อความขอความยินยอม + template ตารางรหัสคนเขียน
 ├─ photos.csv       # รูปไหนใครเขียน ทำโจทย์ข้อไหน (ใช้แค่รหัส ไม่มีชื่อจริง)
-├─ make_labels.py   # สร้าง labels.jsonl แบบโครงจาก photos.csv
+├─ make_labels.py   # สร้าง labels.jsonl แบบโครงจาก photos.csv (test: test_make_labels.py)
 ├─ labels.jsonl     # เฉลย LaTeX รายบรรทัด (May พิมพ์)
 └─ raw/             # รูปจริง · gitignored · ต้นฉบับอยู่ใน Drive ทีม
 ```
@@ -48,7 +48,7 @@ handwriting/
 2. ให้รหัสคนเขียนตามลำดับที่ตอบ Form (`w01`, `w02`, ...) แล้วจดลงตารางรหัสใน Drive
 3. ส่ง `problems.md` และหัวข้อ "วิธีถ่ายรูป" ด้านบนให้คนเขียน
 4. รับรูปเข้า `inbox/` แล้วเปลี่ยนชื่อเป็น `hw_NNN.jpg` เรียงต่อจากเลขล่าสุด ย้ายไป `raw/` และเพิ่ม 1 บรรทัดใน `photos.csv`
-5. รัน `make_labels.py` เพื่อเพิ่มรูปใหม่ลงใน `labels.jsonl` (ไม่ทับบรรทัดที่ label ไปแล้ว)
+5. รัน `uv run --project apps/api python evals/handwriting/make_labels.py` จาก root ของ repo เพื่อเพิ่มรูปใหม่ลงใน `labels.jsonl` (ไม่ทับบรรทัดที่ label ไปแล้ว) · ใส่ `--check` ถ้าอยากเช็คอย่างเดียวโดยไม่เขียนไฟล์
 
 ### `photos.csv`
 
