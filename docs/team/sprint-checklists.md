@@ -79,7 +79,8 @@
 - [x] แก้ wireframe S05 (คำแนะนำการเขียน persona), S08 (ช่องนาทีต่อวัน), S15 (progress card) (D6)
 - [x] เชื่อม Vercel กับ repo (root `apps/web`)
 - [x] ร่วม review `specs/requirements/requirements.md` (D1)
-- [ ] รูปลายมือ 10 รูป (D8)
+- [x] รูปลายมือ 10 รูป (D8)
+  - ส่ง 6 รูปให้ Jam แล้ว 19 ต.ค. ตามแผนใหม่ (คนละ 6 ใบ · ดู PR #11)
 
 **Done เมื่อ:** wireframe 3 หน้าแก้เสร็จ และ `pnpm dev` ขึ้นหน้าแรกได้
 
