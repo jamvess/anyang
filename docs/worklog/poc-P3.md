@@ -15,8 +15,8 @@
 - [x] 2. 🙋 Jam: สร้าง Gemini API key ใน AI Studio แล้วใส่ใน `.env` ที่ root ของ repo (Claude ห้ามอ่านไฟล์นี้)
 - [x] 3. 🤖 Gateway lite · test ก่อน: `ai.call(purpose, input, schema)` โหลด prompt ตาม `config/ai.yaml`, error ถ้ามี placeholder ที่ไม่ได้เติม, เลือก provider fake/gemini ตาม `AI_PROVIDER`, ตรวจ schema ด้วย Pydantic แล้ว retry 1 ครั้ง, เขียน log การเรียกลงไฟล์ (ยังไม่เขียน `ai_calls` ลง DB) → 🙋 Jam review test → implement
 - [x] 4. 🤖 Prompt v1 + Pydantic model ของ A2 `vision_extract`, A4 `split_past_exam`, A6 `merge_topics`, A7 `map_questions`
-- [ ] 5. 🤖 `poc/P3/ingest.py`: ชีทอ่านด้วย PyMuPDF + เช็คคุณภาพข้อความ (% ตัวอักษรไทย) · ข้อสอบสแกนส่งรูปรายหน้าให้ A2 แล้วตัดรายข้อด้วย A4 · เก็บผลเป็นไฟล์ใน `poc/P3/out/` (ไม่ลง DB)
-- [ ] 6. 🤖 `poc/P3/run.py`: A5 ทีละชีท → A6 → A7 → ดาว (สูตร §2.3.5 อ่านค่าจาก `config/learning.yaml` → `stars`) · จับเวลาและต้นทุนต่อไฟล์
+- [x] 5. 🤖 `poc/P3/ingest.py`: ชีทอ่านด้วย PyMuPDF + เช็คคุณภาพข้อความ (% ตัวอักษรไทย) · ข้อสอบสแกนส่งรูปรายหน้าให้ A2 แล้วตัดรายข้อด้วย A4 · เก็บผลเป็นไฟล์ใน `poc/P3/out/` (ไม่ลง DB)
+- [x] 6. 🤖 `poc/P3/run.py`: A5 ทีละชีท → A6 → A7 → ดาว (สูตร §2.3.5 อ่านค่าจาก `config/learning.yaml` → `stars`) · จับเวลาและต้นทุนต่อไฟล์
 - [ ] 7. 🤖 `poc/P3/score.py`: เทียบกับ `labels.json` → % หัวข้อตรง, % ★★★ ตรง, เวลาต่อไฟล์, ต้นทุนต่อไฟล์ · 🙋 Jam ตัดสินวิธีจับคู่หัวข้อก่อนเขียน
 - [ ] 8. 🤖 รันจริง ดูผลกับ Jam แล้วร่าง `/poc-report P3` (ส่วน P3a)
 
@@ -51,6 +51,8 @@
 - 2026-10-19 · ขั้น 5 โค้ดเสร็จ: gateway รับ `list[Image]`, `VisionExtractPagesResult`, purpose `vision_extract_pages` ใน `ai.yaml`, `ingest.py` ส่งทุกหน้าใน call เดียว · test 78 ตัวเขียว · แก้ test `test_AI01_list_of_images_is_sent_as_attachments_in_order` 1 จุด (ใช้ schema `NotesOnly` แทน `BaseModel` เปล่า เพราะ Pydantic ไม่ให้ parse ด้วย BaseModel) โดย Jam อนุมัติแล้ว · assert เหมือนเดิม
 - 2026-10-19 · (Jam เลือก) จับคู่หัวข้อด้วยหน้าที่ทับกัน: IoU ของเซตหน้า (ไฟล์, หน้า) ≥ 0.5 จับคู่แบบ 1:1 เลือกคู่ที่ IoU สูงสุดก่อน · คู่ที่จับไม่ได้ให้ Junior ดูด้วยตา · ดาว ★★★ วัด 2 แบบ: (ก) สูตรดาวกับ map ข้อสอบของ May (ข) สูตรดาวกับ map ของ A7
 - 2026-10-19 · สูตรดาวเขียนเป็นโค้ด PoC ใช้แล้วทิ้งใน `poc/P3/stars.py` ไม่ใส่ใน `apps/api/app/domain/` · เพราะ `compute_importance` ตัวจริงเป็นงาน P8-lite (S4) ที่ทีมจะทำร่วมกัน · test ใน `poc/P3/test_p3.py` (12 case) อ้าง AC ของ `compute-importance.md` · รอ Jam review
+- 2026-10-19 · โค้ดขั้น 5–7 เสร็จ: `stars.py`, `score.py`, `run.py`, `README.md` · test ของ PoC 12 ตัวเขียว · ทดสอบครบวงจรด้วย fake provider ผ่าน (`run.py` → `score.py`) · ขั้น 5–6 ติ๊กแล้วสำหรับส่วนโค้ด ส่วนรันจริงอยู่ในขั้น 8
+- 2026-10-19 · **ผลแรก (ไม่ใช้ AI):** สูตรดาวกับ map ข้อสอบของ May ได้ ★★★ ตรง 10/12 = 83% (precision 83%, ดาวตรงทุกระดับ 74%) · ผ่านเป้า 80% · ไม่ตรง: t24, t25 (L'Hôpital, May ให้ 3 สูตรให้ 2 เพราะออกแค่ 1 ใน 2 ชุด) และ t02, t09 (May ให้ 2 สูตรให้ 3) · **มีข้อสอบแค่ 2 ชุด ค่า r จึงเป็นได้แค่ 0, 0.5, 1** ทุกเกณฑ์ในช่วง (0.5, 1] ให้ผลเท่ากัน P3 จึงยืนยันได้แค่ว่า `three_star_min_r` ต้องมากกว่า 0.5 แต่ปรับค่า 0.6 ให้ละเอียดกว่านี้ไม่ได้
 
 ## Next step
 

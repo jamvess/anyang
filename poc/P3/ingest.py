@@ -111,7 +111,8 @@ async def ingest_file(run: Run, path: Path, force: bool) -> dict:
         "thai_share_text_layer": round(share, 3),
         "method": method,
         "questions": len(questions) if questions is not None else None,
-        "seconds": round(time.perf_counter() - started, 1),
+        "seconds": round(time.perf_counter() - started, 1),  # includes free-tier waiting
+        "ai_seconds": round(run.ai_seconds(f"ingest:{path.stem}:"), 1),
         "tokens_in": tokens_in,
         "tokens_out": tokens_out,
     }

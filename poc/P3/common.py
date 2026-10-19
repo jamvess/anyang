@@ -94,6 +94,10 @@ class Run:
                     await asyncio.sleep(wait)
         raise AssertionError("unreachable")
 
+    def ai_seconds(self, tag_prefix: str) -> float:
+        """Model time only (CallRecord.latency_ms), without free-tier waiting."""
+        return sum(r.latency_ms for tag, r in self.records if tag.startswith(tag_prefix)) / 1000
+
     def tokens(self, tag_prefix: str) -> tuple[int, int]:
         rows = [r for tag, r in self.records if tag.startswith(tag_prefix)]
         return sum(r.tokens_in for r in rows), sum(r.tokens_out for r in rows)
