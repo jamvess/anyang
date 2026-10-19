@@ -12,6 +12,7 @@
 - Junior OK ให้ Jam เขียน gateway lite · ได้ `ai.call()` + fake/Gemini provider + thinking level + รับ input เป็น list ของรูป · test ของ api เขียว 78 ตัว (รวม model ของ output flow 2.3 ทั้งหมด)
 - prompt v1: vision_extract, vision_extract_pages, split_past_exam, merge_topics, map_questions · โค้ด PoC ครบ: `poc/P3/{common,ingest,run,stars,score}.py` + README · test ของ PoC 12 ตัว · ทดสอบครบวงจรด้วย fake provider ผ่าน
 - รันจริงยังไม่สำเร็จ: thinking token ทำให้คำตอบถูกตัด (แก้แล้วด้วย thinking low) → bug ของตัวเว้นช่วง (แก้แล้ว) → โควตา free tier 20 ครั้งต่อวันหมด · ผลแรกที่ไม่ใช้ AI: สูตรดาวกับ map ข้อสอบของ May ได้ ★★★ ตรง 83%
+- (session 4, 14:00) รันจริง: ingest ผ่าน (ตัดข้อตรง 43/43) · A5 ครบ 4 ชีท · A6 ไม่ผ่าน schema แล้วโควตาวันหมด · ผล A5 เทียบ label 56% (AI แบ่งหัวข้อหยาบกว่า) · เพิ่ม `SaveRaw` + ปิด retry ของ gateway ใน PoC · ร่าง `extract_topics_local/v2` + `--a5-prompt`
 - (session 3) merge `main` (PR #13, #14, #17, #18) เข้ามาแล้ว ไม่มี conflict · แก้ `ai-orchestration.md` §2.3.3, §2.3.7, §3.1 ให้ตรงกับ prompt/model และสิ่งที่เจอใน ingest แล้ว
 
 รอบนี้ทำแค่ **P3a** (หัวข้อ + ดาว เทียบกับ label) ส่วน **P3b** (embedding กับคำถาม 20 ข้อ) แยกเป็น branch ใหม่ทีหลัง · spec: `specs/poc/README.md` P3, `specs/system/ai-orchestration.md` §2.3, §2.9–2.11 · label: `evals/topics/mth10101/labels.json` (May, 27 หัวข้อ, map ข้อสอบ 43 ข้อย่อย)
