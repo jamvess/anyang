@@ -9,7 +9,7 @@
 
 ## Plan
 
-- [ ] 1. 🤖 แทน `@junior-handle` `@may-handle` `@jam-handle` ใน `.github/CODEOWNERS` ด้วย `@jnmonsicha2000` `@jantarat32443` `@jamvess` (จากตาราง GitHub ใน `roles.md`) · เพิ่มบรรทัด `/.github/ @jnmonsicha2000` ให้ตรงกับ `roles.md` · ลบ comment "Replace handles…"
+- [x] 1. 🤖 แทน `@junior-handle` `@may-handle` `@jam-handle` ใน `.github/CODEOWNERS` ด้วย `@jnmonsicha2000` `@jantarat32443` `@jamvess` (จากตาราง GitHub ใน `roles.md`) · เพิ่มบรรทัด `/.github/ @jnmonsicha2000` ให้ตรงกับ `roles.md` · ลบ comment "Replace handles…"
 - [ ] 2. 🤖 อัปเดต docs: `setup.md` ขั้น A0 ข้อ 3 (บอกว่าแก้แล้ว) · ติ๊ก checklist ข้อนี้ใน `sprint-checklists.md`
 - [ ] 3. 🙋 หลัง merge: เปิด PR ใดก็ได้ แล้วดูช่อง Reviewers ด้านขวาว่า GitHub ขอ review จากคนที่ถูกต้องเอง · บอกในแชทกลุ่มว่า CODEOWNERS ใช้งานได้แล้ว
 
@@ -25,7 +25,7 @@
 
 ## Next step
 
-ขั้น 1: แก้ `.github/CODEOWNERS`
+ขั้น 2: แก้ `docs/team/setup.md` ขั้น A0 ข้อ 3 ให้บอกว่าแก้ CODEOWNERS แล้ว + ติ๊ก checklist ข้อนี้ใน `sprint-checklists.md`
 
 ## Waiting on
 
