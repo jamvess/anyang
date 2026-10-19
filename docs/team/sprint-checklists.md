@@ -78,7 +78,7 @@
 - [x] ⭐ ให้ Claude Code scaffold `apps/web` และตรวจผล (+ `pnpm build` ใน CI)
 - [x] แก้ wireframe S05 (คำแนะนำการเขียน persona), S08 (ช่องนาทีต่อวัน), S15 (progress card) (D6)
 - [x] เชื่อม Vercel กับ repo (root `apps/web`)
-- [ ] ร่วม review `specs/requirements/requirements.md` (D1)
+- [x] ร่วม review `specs/requirements/requirements.md` (D1)
 - [ ] รูปลายมือ 10 รูป (D8)
 
 **Done เมื่อ:** wireframe 3 หน้าแก้เสร็จ และ `pnpm dev` ขึ้นหน้าแรกได้
