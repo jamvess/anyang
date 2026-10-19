@@ -49,6 +49,8 @@
 - 2026-10-19 · (Jam เลือก) ลดจำนวน call โดยเพิ่ม purpose ใหม่ `vision_extract_pages` อ่านทุกหน้าของไฟล์ใน call เดียว (ข้อสอบ 1 ฉบับ = 1 call) · ingest เหลือ 4 call แทน 28 · ไม่ได้แก้ `vision_extract` v1 ที่ยังใช้กับรูปหน้าเดียว · gateway รับ input เป็น `list[Image]` ได้ · ต่างจาก spec §2.3.7 ที่กำหนด A2 ให้อ่านทีละหน้า จะบันทึกเป็นผลของ PoC (คุณภาพและเวลาเทียบกับแบบทีละหน้าเท่าที่วัดได้)
 - 2026-10-19 · test ใหม่: `test_AI01_list_of_images_*` (2 ตัว ต่อท้าย test_ai_gateway.py) + `test_vision_extract_pages_model.py` (6 case) · รอ Jam review
 - 2026-10-19 · ขั้น 5 โค้ดเสร็จ: gateway รับ `list[Image]`, `VisionExtractPagesResult`, purpose `vision_extract_pages` ใน `ai.yaml`, `ingest.py` ส่งทุกหน้าใน call เดียว · test 78 ตัวเขียว · แก้ test `test_AI01_list_of_images_is_sent_as_attachments_in_order` 1 จุด (ใช้ schema `NotesOnly` แทน `BaseModel` เปล่า เพราะ Pydantic ไม่ให้ parse ด้วย BaseModel) โดย Jam อนุมัติแล้ว · assert เหมือนเดิม
+- 2026-10-19 · (Jam เลือก) จับคู่หัวข้อด้วยหน้าที่ทับกัน: IoU ของเซตหน้า (ไฟล์, หน้า) ≥ 0.5 จับคู่แบบ 1:1 เลือกคู่ที่ IoU สูงสุดก่อน · คู่ที่จับไม่ได้ให้ Junior ดูด้วยตา · ดาว ★★★ วัด 2 แบบ: (ก) สูตรดาวกับ map ข้อสอบของ May (ข) สูตรดาวกับ map ของ A7
+- 2026-10-19 · สูตรดาวเขียนเป็นโค้ด PoC ใช้แล้วทิ้งใน `poc/P3/stars.py` ไม่ใส่ใน `apps/api/app/domain/` · เพราะ `compute_importance` ตัวจริงเป็นงาน P8-lite (S4) ที่ทีมจะทำร่วมกัน · test ใน `poc/P3/test_p3.py` (12 case) อ้าง AC ของ `compute-importance.md` · รอ Jam review
 
 ## Next step
 
