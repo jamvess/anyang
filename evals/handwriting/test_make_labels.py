@@ -21,9 +21,7 @@ def base(tmp_path: Path) -> Path:
 
 
 def add_photos(base: Path, rows: list[str]) -> None:
-    (base / "photos.csv").write_text(
-        "id,writer,problem,tool\n" + "\n".join(rows) + "\n"
-    )
+    (base / "photos.csv").write_text("id,writer,problem,tool\n" + "\n".join(rows) + "\n")
     for row in rows:
         (base / "raw" / f"{row.split(',')[0]}.jpg").write_bytes(b"")
 
@@ -89,9 +87,7 @@ def test_handwriting_readme_check_writes_nothing(base: Path):
         ("hw_001,w01,P08,marker", "tool must be"),
     ],
 )
-def test_handwriting_readme_rejects_bad_rows(
-    base: Path, capsys, row: str, message: str
-):
+def test_handwriting_readme_rejects_bad_rows(base: Path, capsys, row: str, message: str):
     add_photos(base, [row])
     assert main([], base) == 1
     assert message in capsys.readouterr().err
@@ -107,3 +103,35 @@ def test_handwriting_readme_rejects_missing_image_and_duplicate(base: Path, caps
     err = capsys.readouterr().err
     assert "duplicate id" in err
     assert "no image raw/hw_002.jpg" in err
+
+
+# --- S2 photos: written on tablets (README "ใครเขียนอะไร") --------------------------------
+
+
+def test_handwriting_readme_accepts_stylus_and_medium(base: Path):
+    rows = ["hw_001,w01,P08,stylus,tablet_screenshot", "hw_002,w02,P05,pen,paper"]
+    (base / "photos.csv").write_text("id,writer,problem,tool,medium\n" + "\n".join(rows) + "\n")
+    for n in ("hw_001", "hw_002"):
+        (base / "raw" / f"{n}.png").write_bytes(b"")
+
+    assert main([], base) == 0
+    assert [e["image"] for e in read_labels(base)] == ["raw/hw_001.png", "raw/hw_002.png"]
+
+
+def test_handwriting_readme_rejects_unknown_medium(base: Path, capsys):
+    (base / "photos.csv").write_text("id,writer,problem,tool,medium\nhw_001,w01,P08,stylus,fax\n")
+    (base / "raw" / "hw_001.png").write_bytes(b"")
+
+    assert main([], base) == 1
+    assert "medium must be one of" in capsys.readouterr().err
+
+
+def test_handwriting_readme_summary_counts_medium(base: Path, capsys):
+    rows = ["hw_001,w01,P08,stylus,tablet_screenshot", "hw_002,w01,P05,stylus,screen_photo"]
+    (base / "photos.csv").write_text("id,writer,problem,tool,medium\n" + "\n".join(rows) + "\n")
+    for n in ("hw_001", "hw_002"):
+        (base / "raw" / f"{n}.png").write_bytes(b"")
+
+    main(["--check"], base)
+    out = capsys.readouterr().out
+    assert "tablet_screenshot 1" in out and "screen_photo 1" in out and "paper 0" in out
