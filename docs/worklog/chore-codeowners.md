@@ -10,7 +10,7 @@
 ## Plan
 
 - [x] 1. 🤖 แทน `@junior-handle` `@may-handle` `@jam-handle` ใน `.github/CODEOWNERS` ด้วย `@jnmonsicha2000` `@jantarat32443` `@jamvess` (จากตาราง GitHub ใน `roles.md`) · เพิ่มบรรทัด `/.github/ @jnmonsicha2000` ให้ตรงกับ `roles.md` · ลบ comment "Replace handles…"
-- [ ] 2. 🤖 อัปเดต docs: `setup.md` ขั้น A0 ข้อ 3 (บอกว่าแก้แล้ว) · ติ๊ก checklist ข้อนี้ใน `sprint-checklists.md`
+- [x] 2. 🤖 อัปเดต docs: `setup.md` ขั้น A0 ข้อ 3 (บอกว่าแก้แล้ว) · ติ๊ก checklist ข้อนี้ใน `sprint-checklists.md`
 - [ ] 3. 🙋 หลัง merge: เปิด PR ใดก็ได้ แล้วดูช่อง Reviewers ด้านขวาว่า GitHub ขอ review จากคนที่ถูกต้องเอง · บอกในแชทกลุ่มว่า CODEOWNERS ใช้งานได้แล้ว
 
 ## Definition of done
@@ -25,7 +25,7 @@
 
 ## Next step
 
-ขั้น 2: แก้ `docs/team/setup.md` ขั้น A0 ข้อ 3 ให้บอกว่าแก้ CODEOWNERS แล้ว + ติ๊ก checklist ข้อนี้ใน `sprint-checklists.md`
+ขั้น 3 (🙋 หลัง merge): เปิด PR ใดก็ได้ ดูช่อง Reviewers ว่า GitHub ขอ review ถูกคน แล้วบอกในแชทกลุ่ม
 
 ## Waiting on
 
@@ -33,4 +33,5 @@
 
 ## Notes for next time
 
-- อ่าน ruleset ของ `main` ผ่าน API ไม่ได้ (สิทธิ์ write ได้ `[]`) · ถ้าอยากรู้ว่าเปิด "Require review from Code Owners" ไหม ต้องถาม Jam (admin)
+- 2026-10-19 · เช็ค ruleset แล้ว: ruleset 25137368 ที่ checklist อ้างถึงไม่มีอยู่แล้ว (404) · ruleset ที่มีคือ `main` id 25374094 (สร้าง 19 ต.ค. 12:38) มี `require_code_owner_review: false` · **ไม่ได้บังคับ code-owner review** CODEOWNERS แค่ขอ reviewer ให้อัตโนมัติ · บรรทัดที่มีเจ้าของคนเดียว (เช่น `/.github/`) จึงไม่ทำให้ PR ติด ไม่ต้องเพิ่มคนที่สอง
+- 2026-10-19 · ⚠️ ruleset 25374094 มี `enforcement: disabled` และ API บอกว่า `main` เป็น `protected: false` · ตอนนี้ไม่มีกฎ PR + 1 approval + CI 3 job บังคับบน `main` เลย ไม่ตรงกับ checklist S1 ข้อแรก · Jam (admin) ต้องเปิดเป็น Active ที่ Settings → Rules → Rulesets → `main` · ไม่ได้แก้ใน PR นี้
