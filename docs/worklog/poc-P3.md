@@ -33,10 +33,12 @@
 - 2026-10-19 · ใช้ Gemini API key จาก AI Studio ไม่ใช้ Vertex · เพราะยังไม่มี GCP project · เปลี่ยนเป็น Vertex ได้ทีหลังที่ provider
 - 2026-10-19 · แยก P3a (หัวข้อ + ดาว) กับ P3b (embedding) · เพราะ P3b ต้องมีคำถาม 20 ข้อพร้อมเฉลยหน้า ซึ่งคนที่ไม่ใช่ Jam ต้องเป็นคนเขียน
 - 2026-10-19 · merge `chore/prompt-extract-topics-local` (PR #13) เข้ามา เพื่อใช้ prompt A5 · ถ้า PR #13 ถูกแก้ระหว่าง review ต้อง merge ซ้ำ
+- 2026-10-19 · prompt v1 ของ A2, A4, A6, A7 เขียนเสร็จ (ยังไม่มี Pydantic model ซึ่งจะทำพร้อม gateway หลังได้ OK จาก Junior) · ทุกตัว output เป็น object ที่มี `notes` แบบเดียวกับ A5 · ส่วนที่เพิ่มจาก §2.3.7: A6 มี `sources` (ช่วงหน้าของแต่ละหัวข้อ เพราะขั้น 5d ต้องใช้สร้าง `topic_chunks` และ SM-04 ต้องแสดงเลขหน้า แต่ schema ใน spec ไม่มีช่องนี้) + `excluded_by_note` · A4 มี `points` · A7 คืน `topic_id: null` ได้พร้อม `note` (ตรงกับ `unmapped` ใน label) · `q_no` ของ A4 ใช้รูปแบบเดียวกับ label (`ก1.2`)
+- 2026-10-19 · A6 สร้าง skills และ common_mistakes จากชื่อหัวข้ออย่างเดียว ไม่ได้อ่านเนื้อหาชีท (ตาม spec ที่ส่งแค่ผลของ A5) · เสี่ยงว่า skill จะกว้างเกินไป · P3a ไม่ได้วัด skill โดยตรง แต่ A7 ต้องเลือก skill_id · บันทึกเป็นข้อจำกัดไว้ใน report
 
 ## Next step
 
-ขั้น 1: Jam ส่งข้อความขอ Junior ในกลุ่ม (ข้อความร่างไว้ในแชทของ session 2026-10-19) แล้วรอคำตอบ
+ขั้น 1: รอ Junior ตอบเรื่อง gateway lite (ส่งข้อความไปแล้ว 2026-10-19) · ขั้น 4: prompt เสร็จแล้ว เหลือ Pydantic model ซึ่งทำพร้อมขั้น 3
 
 ## Waiting on
 
