@@ -13,7 +13,7 @@
 - [x] 2. 🤖 `evals/handwriting/problems.md`: โจทย์ ~15 ข้อจาก MTH10101 (limit, อนุพันธ์, chain rule, implicit, แยกตัวประกอบ, สมการ) ครอบคลุม `answer_format` ทั้ง 3 แบบ เพื่อให้ P2 นำไปใช้ต่อได้
 - [x] 3. 🤖 `evals/handwriting/consent.md`: ข้อความขอความยินยอมสำหรับทำ Google Form + template ตารางรหัสคนเขียน (เก็บใน Drive เท่านั้น)
 - [x] 4. 🤖 `evals/handwriting/make_labels.py` (stdlib อย่างเดียว): อ่าน `photos.csv` + `raw/` แล้วสร้าง `labels.jsonl` แบบโครง (`lines` ว่างไว้ให้ May) เช็คไฟล์ที่ขาดหรือซ้ำ และสรุปความหลากหลายของชุดรูป
-- [ ] 5. 🙋 Jam: สร้างโฟลเดอร์ใน Drive + Google Form ขอความยินยอม แล้วส่งโจทย์และวิธีถ่ายรูปให้ Junior, May และเพื่อน
+- [ ] 5. 🙋 Jam: อัปโหลดใบลอก + เฉลยขึ้น Drive, สร้างโฟลเดอร์ `inbox`/`raw` + Google Form แล้วส่งใบลอกให้เพื่อน 5 คน (คนละ 4 รูป) และส่ง `problems.md` ให้ Junior, May (คนละ 10 รูป)
 - [ ] 6. 🙋 Jam: เก็บรูปให้ได้ ≥ 30 รูป เปลี่ยนชื่อเป็น `hw_001.jpg` … กรอกตารางรหัสใน Drive และ `photos.csv` แล้วก๊อปรูปลง `evals/handwriting/raw/`
 - [ ] 7. 🤖 รัน `make_labels.py` แล้ว commit `labels.jsonl` แบบโครง เช็คว่าครบตามเป้า ติ๊ก checklist และเขียนข้อความส่งงานให้ May
 
@@ -34,10 +34,12 @@
 - 2026-10-19 · ถ้ารูปที่มีบรรทัดผิดยังไม่ถึง 8 รูป Jam เขียนคำตอบผิดเพิ่มเองโดยไม่จด error type ที่ตั้งใจไว้ · เพื่อให้ May label error type แบบไม่รู้คำตอบล่วงหน้า
 - 2026-10-19 · consent บอกชัดว่าส่งรูปให้ Gemini, Claude, Mathpix ผ่าน API · เก็บถึง 31 พ.ค. 2570 · ถอนได้ (ลบใน 7 วัน) · ขออนุญาตแยกถ้าจะใส่รูปในรายงาน · ไม่รับรูปจากคนอายุต่ำกว่า 18 ปี (PDPA)
 - 2026-10-19 · `make_labels.py` ใช้ stdlib อย่างเดียว รันผ่าน `uv run --project apps/api` · test อยู่ข้างๆ กัน (`evals/handwriting/test_make_labels.py`) แต่ CI ยังไม่รัน เพราะ CI รันแค่ `apps/api/tests`
+- 2026-10-19 · เพื่อนนอกทีมทำโจทย์เลขไม่เป็น จึงเปลี่ยนให้**ลอก**วิธีทำจากใบลอกแทน (5 คน × 4 รูป) ส่วน Junior กับ May ทำโจทย์เอง (2 × 10) · ใบลอกตั้งใจให้มีบรรทัดผิด 8 ใบ (ครอบคลุม error type 5 แบบ) และมีการขีดฆ่า 3 ใบ · ข้อดีคือรูปที่ผิดมาจากลายมือหลายคน · ใบลอกและเฉลยเก็บใน Drive เท่านั้น เพื่อให้ May label แบบไม่รู้คำตอบล่วงหน้า · ทุกบรรทัดตรวจด้วย SymPy แล้ว
+- 2026-10-19 · ลบตาราง "คำตอบผิดที่พบบ่อย" ออกจาก `problems.md` · เพราะเฉลยของใบลอกไม่ควรอยู่ใน repo
 
 ## Next step
 
-ขั้น 5 (🙋 Jam): สร้างโฟลเดอร์ Drive `evals/handwriting/{inbox,raw}` + Google Form จาก `consent.md` แล้วส่งโจทย์ `problems.md` ให้ Junior, May และเพื่อน
+ขั้น 5 (🙋 Jam): อัปโหลด `copy_sheets.html`, `copy_sheets_key.md`, `build_sheets.py` จาก scratchpad ขึ้น Drive `evals/handwriting/` แล้วทำตามคำแนะนำ A–C ในแชท (Drive folders, Google Form, ส่งข้อความ)
 
 ## Waiting on
 
