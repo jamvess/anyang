@@ -5,7 +5,14 @@
 | Owner | Jam |
 | Branch | `poc/P1` (ต่อจาก `poc/P3` เพื่อใช้ gateway · merge PR #15 ก่อน) |
 | Checklist item | P1: รันรูปทั้งหมดกับ Gemini, Claude, Mathpix · ให้คะแนนด้วย SymPy · วาด precision–recall ของ confidence |
-| Status | in progress · 2026-10-19 |
+| Status | paused · 2026-10-19 |
+
+## Done today (2026-10-19)
+
+- แผน + ตัดสินใจขั้น 1 (ฟรีทั้งหมด: Gemini 3.5-flash กับ 3.5-flash-lite · ขอ consent เพิ่มเรื่อง free tier ซึ่งทั้ง 5 คน OK แล้ว · จับคู่บรรทัดด้วย LCS)
+- `poc/P1/lines.py` (ตัดสินบรรทัดด้วย SymPy antlr) · `run.py` · `score.py` · README · test 30 ตัวเขียว
+- อ่านรูปจริงด้วย `gemini-3.5-flash-lite` แล้ว 18/30 รูป (hw_001–hw_018 · เฉลี่ยประมาณ 3.5 วินาทีต่อรูป · ได้ 503 1 ครั้ง)
+- เจอ bug ร้ายแรงเรื่อง JSON escape ของ LaTeX (ดู Decisions) · ยังไม่ได้แก้ รอ Jam ตอบ
 
 spec: `specs/poc/README.md` P1 · data: `evals/handwriting/` (30 รูป, `labels.jsonl` รอ May พิมพ์ `lines` ภายใน 22 ต.ค.) · prompt: `prompts/extract_answer/v1.md`
 
@@ -33,16 +40,23 @@ spec: `specs/poc/README.md` P1 · data: `evals/handwriting/` (30 รูป, `lab
 - 2026-10-19 · (Jam: ยังไม่ใช้แบบเสียเงิน) (ก) AI-07 บังคับใช้ตั้งแต่ Beta ช่วง PoC จึงยังไม่ผิด แต่ consent เดิมไม่ได้บอกว่า free tier อาจเอาข้อมูลไป train · ส่งข้อความ LINE ขอ OK เพิ่มจากทั้ง 5 คน · ใครไม่ OK ให้ตัดรูปของคนนั้นออก (ข) ใช้ `gemini-3.5-flash` (รุ่นกลางตาม spec) เทียบกับ `gemini-3.5-flash-lite` ซึ่งเป็น free tier ทั้งคู่และโควตาแยกกัน · ไม่ได้รัน Claude/Mathpix เพราะต้องเสียเงิน ต้องเขียนเป็นข้อจำกัดใน report · 30 รูปต่อรุ่นเกินโควตา 20 ครั้งต่อวัน และชนกับ P3 ที่ใช้ 3.5-flash จึงต้องรันกระจาย 2–3 วัน (ค) จับคู่บรรทัดแบบ sequence alignment (LCS): บรรทัดที่ตรงกันนับว่าถูก · บรรทัดที่เกินหรือขาดนับว่าผิด
 - 2026-10-19 · `poc/P1/lines.py` เขียว 24/24 ในรอบแรก · SymPy `simplify` คิดอนุพันธ์/ลิมิตให้เอง (`d/dx(x²) - 2x` → 0) จึงแทน Derivative/Limit/Integral ด้วยสัญลักษณ์ทึบก่อน simplify (ตัวเดียวกันได้สัญลักษณ์เดียวกัน) · คำตอบหลายส่วนจับคู่แบบไม่สนลำดับ · timeout ใช้ `checker.sympy_timeout_seconds` จาก config (PoC ใช้ thread ไม่ได้ kill · ตัวจริงต้องใช้ subprocess) · ข้อจำกัด: `x(x²-1)` กับ `x³-x` นับว่าตรง (เท่ากันทางพีชคณิต)
 - 2026-10-19 · `poc/P1/run.py`: เรียก `extract_answer` ทีละรูปผ่าน `Run` ของ P3 (เว้นช่วง free tier, เก็บคำตอบดิบ, log) · `--model`, `--limit`, `--exclude-writer` · cache ต่อรูปใน `poc/P1/out/<model>/` (gitignored) · ดูชนิดไฟล์จาก byte แรก (ไฟล์ของ Junior เป็น JPEG) · dry run ด้วย fake provider ผ่าน · แก้ `poc/P3/common.py` ให้ `Run` รับ `out` และ `model` (บน branch นี้ · ถ้าแก้ `common.py` บน `poc/P3` อีก ต้องระวัง conflict)
+- 2026-10-19 · ทั้ง 5 คนตอบ OK เรื่อง free tier แล้ว (Jam ยืนยัน) · ไม่ต้อง `--exclude-writer`
 - 2026-10-19 · `poc/P1/score.py` เขียว (test ของ P1 รวม 30 ตัว) · line accuracy รวม/แยกตาม medium และ writer · PR curve ที่ threshold 0.50–0.95 · เลือก threshold ต่ำสุดที่ recall ≥ 95% · latency/token ต่อรูป · ให้คะแนนเฉพาะแถวที่ `labeled_by` มีค่า · dry run ด้วยเฉลยปลอมได้ตัวเลขตามที่ควร · README ของ P1 เขียนแล้ว
+
+- 2026-10-19 · **BUG (ยังไม่แก้): LaTeX หายเพราะ JSON escape** · Gemini เขียน `\frac` ลงใน JSON โดยไม่ escape backslash · `\f` `\b` `\t` `\r` `\n` เป็นรหัสพิเศษของ JSON จึงถูก parse เป็นตัวอักษรควบคุมแบบเงียบๆ (`\frac` → form feed + `rac`) · กระทบ P1 13/18 รูป และ P3: `out/pages/midterm-*.json` (form feed 88/92 จุด), `out/questions/*.json` (23/30 จุด) ซึ่งเป็น input ของ A7 · ข้อเสนอที่รอ Jam ตอบ: (1) แก้ใน gateway หลัง `json.loads` ก่อน validate: form feed/backspace → `\f`/`\b` เสมอ · tab/CR ที่ตามด้วยตัวอักษร → `\t`/`\r` · newline ที่ตามด้วย neq/nabla/not/nu/ni/ne → `\n` · newline ปกติไม่แตะ · test ก่อน (2) ซ่อมไฟล์ cache ของ P1/P3 ด้วยกฎเดียวกันแบบ offline (ไม่เสียโควตา)
+- 2026-10-19 · **ผลเบื้องต้น (ไม่เป็นทางการ เทียบกับข้อความในใบลอก ไม่ใช่เฉลยของ May · และยังติด bug escape):** 3.5-flash-lite ถูก 65/75 บรรทัด (87%) · อ่านผิด 10 บรรทัด แต่ 9 บรรทัดมาจาก hw_004 (bug escape) กับ hw_009 · ไม่มี threshold ที่จับได้ ≥ 95% เพราะบรรทัดที่ผิดมี confidence 0.95–0.98 · หลังแก้ bug ต้องคิดใหม่
+- 2026-10-19 · **รอ Jam ตัดสิน: AI อ่าน `x` เป็น `X`** (hw_009 ลายมือ Junior · ได้ 0/4 บรรทัด) · ข้อเสนอ: (1) นับว่าผิดตามจริง แล้วรายงานเป็นข้อค้นพบ (แนะนำ) (2) ให้คะแนนแบบไม่สนตัวพิมพ์ใหญ่/เล็กของตัวแปร (3) ทำ `extract_answer/v2` ให้ใช้ตัวพิมพ์เล็กถ้าไม่ชัด · hw_009 บรรทัดสุดท้ายในรูปไม่มีวงเล็บปิด AI อ่านตามจริงและเขียนไว้ใน notes ถูกต้องตามคู่มือ · hw_018 AI อ่าน `x=-1` เป็น `x=1` และ confidence ลดเหลือ 0.85 (อ่านผิดจริง)
 
 ## Next step
 
-ขั้น 6–7: เมื่อ (1) ทั้ง 5 คนตอบ OK เรื่อง free tier และ (2) May ส่ง `labels.jsonl` ที่ label แล้ว (merge เข้า main หรือ branch ของ May) → ดึงไฟล์มาใน branch นี้ → รันตาม `poc/P1/README.md` (3.5-flash-lite ได้ 18 รูปต่อวัน, 3.5-flash แบ่งโควตากับ P3) → `score.py` → `/poc-report P1` · ระหว่างรอรัน `run.py` ล่วงหน้าได้เลย (การอ่านรูปไม่ต้องใช้เฉลย) ถ้าทุกคน OK แล้ว
+ถาม Jam 2 เรื่องที่ค้างใน Decisions (bug escape: ok ตามที่เสนอไหม · x/X: เลือก 1/2/3) → ถ้า ok: เขียน test ของการซ่อม escape ใน `apps/api/tests/unit/test_ai_gateway.py` (ต่อท้าย) → ให้ Jam review → แก้ `_parse` ใน `apps/api/app/ai/gateway.py` → script ซ่อม cache ของ `poc/P1/out/` และ `poc/P3/out/{pages,questions}/` → รัน preview ของ P1 ใหม่ · ⚠️ แก้ gateway บน branch นี้แล้ว ต้อง merge กลับไป `poc/P3` ด้วย (หรือแก้บน `poc/P3` แล้ว merge มาที่นี่) เพราะ P3 ต้องใช้ก่อนรัน A7 พรุ่งนี้ 14:00 น. · อ่านรูปที่เหลือ hw_019–hw_030 ด้วย 3.5-flash-lite หลังโควตารีเซ็ต (20 ต.ค. 14:00 น.)
 
 ## Waiting on
 
-May (`labels.jsonl` ภายใน 22 ต.ค.) · ทั้ง 5 คนตอบ OK เรื่อง free tier (Jam ส่งข้อความแล้วหรือยัง ให้ถามก่อนรันจริง)
+Jam ตอบ 2 เรื่องใน Decisions · May (`labels.jsonl` ภายใน 22 ต.ค.)
 
 ## Notes for next time
+
+- preview script (เทียบกับใบลอก) อยู่ใน scratchpad ของ session 2026-10-19: อ่าน `S` จาก `evals/handwriting/raw/copy-sheets/build_sheets.py` และ map hw → version จาก `copy_sheets_key.md` (ทั้งสองไฟล์ gitignored อยู่ในเครื่อง Jam) · ห้ามใช้เป็นผลทางการ และห้ามให้ May เห็น
 
 - SymPy service ตัวจริง (`apps/api/app/math/`) เป็นงาน S3 ของ Junior · `poc/P1/lines.py` เป็นโค้ด PoC ใช้แล้วทิ้ง แต่สิ่งที่เจอ (antlr vs lark, กรณีพิเศษ) ควรส่งต่อให้ Junior
