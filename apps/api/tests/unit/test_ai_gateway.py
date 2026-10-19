@@ -375,6 +375,10 @@ def test_AI04_listener_errors_do_not_break_the_call():
 # --- AI-01 several images in one input (PoC P3: a whole scanned exam in one call) -----------
 
 
+class NotesOnly(BaseModel):
+    notes: str
+
+
 async def test_AI01_list_of_images_is_sent_as_attachments_in_order(tmp_path: Path):
     write_prompt(tmp_path, "demo", "Read {{file_name}}", inputs="images, file_name")
     fake = FakeProvider({"demo": ['{"notes": ""}']})
@@ -383,7 +387,7 @@ async def test_AI01_list_of_images_is_sent_as_attachments_in_order(tmp_path: Pat
     pages = [Image(data=bytes([n]), mime_type="image/png") for n in range(3)]
 
     await make_gateway(fake, tmp_path, purposes=purposes).call(
-        "demo", {"images": pages, "file_name": "exam.pdf"}, BaseModel
+        "demo", {"images": pages, "file_name": "exam.pdf"}, NotesOnly
     )
 
     assert fake.requests[0].images == pages

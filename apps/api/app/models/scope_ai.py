@@ -65,6 +65,25 @@ class VisionExtractResult(BaseModel):
     notes: str = ""
 
 
+class PageText(BaseModel):
+    page: int = Field(ge=1)
+    text: str
+
+
+class VisionExtractPagesResult(BaseModel):
+    """vision_extract_pages: every page of a scanned file in one call (PoC P3)."""
+
+    pages: list[PageText]
+    notes: str = ""
+
+    @model_validator(mode="after")
+    def _pages_numbered_1_to_n(self) -> Self:
+        numbers = [p.page for p in self.pages]
+        if numbers != list(range(1, len(numbers) + 1)):
+            raise ValueError(f"pages must be numbered 1..n in order, got {numbers}")
+        return self
+
+
 # --- A4 split_past_exam ------------------------------------------------------------------
 
 

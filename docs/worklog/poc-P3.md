@@ -48,14 +48,15 @@
 - 2026-10-19 · รอบ 2 พังเพราะ bug ของ PoC: ตัวเว้นช่วงอยู่ใน timeout ของ gateway หน้าที่รอคิวจึง timeout ทั้งหมด (แก้แล้ว: เว้นช่วงก่อนเรียก gateway และเรียกทีละ call) · รอบ 3 เจอว่า free tier ของ `gemini-3.5-flash` ให้แค่ **20 request ต่อวัน** (`GenerateRequestsPerDayPerProjectPerModel-FreeTier`) และวันนี้ใช้หมดแล้ว (รีเซ็ตเที่ยงคืนเวลาแปซิฟิก ≈ 14:00–15:00 น. เวลาไทย)
 - 2026-10-19 · (Jam เลือก) ลดจำนวน call โดยเพิ่ม purpose ใหม่ `vision_extract_pages` อ่านทุกหน้าของไฟล์ใน call เดียว (ข้อสอบ 1 ฉบับ = 1 call) · ingest เหลือ 4 call แทน 28 · ไม่ได้แก้ `vision_extract` v1 ที่ยังใช้กับรูปหน้าเดียว · gateway รับ input เป็น `list[Image]` ได้ · ต่างจาก spec §2.3.7 ที่กำหนด A2 ให้อ่านทีละหน้า จะบันทึกเป็นผลของ PoC (คุณภาพและเวลาเทียบกับแบบทีละหน้าเท่าที่วัดได้)
 - 2026-10-19 · test ใหม่: `test_AI01_list_of_images_*` (2 ตัว ต่อท้าย test_ai_gateway.py) + `test_vision_extract_pages_model.py` (6 case) · รอ Jam review
+- 2026-10-19 · ขั้น 5 โค้ดเสร็จ: gateway รับ `list[Image]`, `VisionExtractPagesResult`, purpose `vision_extract_pages` ใน `ai.yaml`, `ingest.py` ส่งทุกหน้าใน call เดียว · test 78 ตัวเขียว · แก้ test `test_AI01_list_of_images_is_sent_as_attachments_in_order` 1 จุด (ใช้ schema `NotesOnly` แทน `BaseModel` เปล่า เพราะ Pydantic ไม่ให้ parse ด้วย BaseModel) โดย Jam อนุมัติแล้ว · assert เหมือนเดิม
 
 ## Next step
 
-หลัง Jam review test: gateway รับ `list[Image]` · model `VisionExtractPagesResult` (หน้าต้องเรียง 1..n) · เพิ่ม purpose `vision_extract_pages` ใน `config/ai.yaml` (tier vision, max_tokens 16000, timeout_s 180, thinking low) · แก้ `ingest.py` ให้ส่งทุกหน้าใน call เดียว · **รันจริงหลัง 15:00 น. วันที่ 2026-10-20** (โควตารายวันรีเซ็ต)
+หลัง 15:00 น. ของ 2026-10-20: `cd apps/api && uv run python ../../poc/P3/ingest.py` (ใช้ประมาณ 4 call) แล้วตรวจ `poc/P3/out/questions/*.json` เทียบเลขข้อกับ `question_map` ใน labels.json · ระหว่างรอ เขียน `run.py` (ขั้น 6) และ `score.py` (ขั้น 7) ไปก่อนได้ เพราะยังไม่ต้องเรียก AI
 
 ## Waiting on
 
-Jam review test (ขั้น 5) · โควตา free tier รีเซ็ต 2026-10-20 ≈ 15:00 น.
+โควตา free tier ของ gemini-3.5-flash รีเซ็ต 2026-10-20 ≈ 15:00 น.
 
 ## Notes for next time
 

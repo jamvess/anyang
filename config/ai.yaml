@@ -15,6 +15,7 @@ purposes:
   # flow 2.3
   classify_material:      {tier: small,  temperature: 0.0, max_tokens: 300,  timeout_s: 20, prompt: v1}
   vision_extract:         {tier: vision, temperature: 0.0, max_tokens: 4000, timeout_s: 60, prompt: v1, thinking: low}
+  vision_extract_pages:   {tier: vision, temperature: 0.0, max_tokens: 16000, timeout_s: 180, prompt: v1, thinking: low}  # PoC P3: whole scanned file in one call
   split_past_exam:        {tier: small,  temperature: 0.0, max_tokens: 4000, timeout_s: 60, prompt: v1, thinking: low}
   extract_topics_local:   {tier: mid,    temperature: 0.2, max_tokens: 2000, timeout_s: 60, prompt: v1, thinking: low}
   merge_topics:           {tier: main,   temperature: 0.2, max_tokens: 4000, timeout_s: 90, prompt: v1, thinking: medium}

@@ -2,7 +2,8 @@
 
 Sheets: text per page with PyMuPDF. Every file gets a text-quality check, because the scanned
 exams carry an English-only OCR layer that looks like text but is junk (sources.md).
-Files that fail the check are rendered page by page and read by A2 vision_extract.
+Files that fail the check are rendered page by page and read by vision_extract_pages (all
+pages in one call; see vision_pages for why this differs from A2 in the spec).
 Past exams are then split into sub-questions by A4 split_past_exam.
 
     cd apps/api && uv run python ../../poc/P3/ingest.py [--force]
@@ -21,7 +22,7 @@ import pymupdf
 from common import OUT, RAW, Run, read_json, write_json
 
 from app.ai.gateway import Image
-from app.models.scope_ai import SplitPastExamResult, VisionExtractResult
+from app.models.scope_ai import SplitPastExamResult, VisionExtractPagesResult
 
 # A page of Thai course text has far more Thai than Latin letters; the junk OCR layer of the
 # scanned exams has none. Measured per file on MTH10101 and reported in out/ingest.json; the
@@ -43,21 +44,23 @@ def kind_of(path: Path) -> str:
     return "past_exam" if path.stem.startswith("midterm") else "lecture"
 
 
-async def vision_pages(run: Run, path: Path) -> list[dict]:
+async def vision_pages(run: Run, path: Path) -> tuple[list[dict], str]:
+    """All pages in one vision_extract_pages call: the free tier allows only 20 requests per
+    day per model, so one call per page (vision_extract, as in the spec) does not fit."""
     doc = pymupdf.open(path)
-
-    async def read(page_no: int) -> dict:
-        pixmap = doc[page_no - 1].get_pixmap(dpi=RENDER_DPI)
-        image = Image(data=pixmap.tobytes("png"), mime_type="image/png")
-        result = await run.call(
-            f"ingest:{path.stem}:p{page_no}",
-            "vision_extract",
-            {"image": image, "file_name": path.name, "page_no": str(page_no)},
-            VisionExtractResult,
-        )
-        return {"page": page_no, "text": result.text, "notes": result.notes}
-
-    return list(await asyncio.gather(*(read(n) for n in range(1, len(doc) + 1))))
+    images = [
+        Image(data=page.get_pixmap(dpi=RENDER_DPI).tobytes("png"), mime_type="image/png")
+        for page in doc
+    ]
+    result = await run.call(
+        f"ingest:{path.stem}:vision",
+        "vision_extract_pages",
+        {"images": images, "file_name": path.name, "page_count": str(len(images))},
+        VisionExtractPagesResult,
+    )
+    if len(result.pages) != len(images):
+        raise ValueError(f"{path.name}: {len(images)} pages sent, {len(result.pages)} returned")
+    return [{"page": p.page, "text": p.text} for p in result.pages], result.notes
 
 
 def pages_text(pages: list[dict]) -> str:
@@ -73,12 +76,13 @@ async def ingest_file(run: Run, path: Path, force: bool) -> dict:
     method = "text_layer" if share >= MIN_THAI_SHARE else "vision"
 
     if pages_path.exists() and not force:
-        pages = read_json(pages_path)["pages"]
+        cached = read_json(pages_path)
+        pages, notes = cached["pages"], cached["notes"]
     elif method == "text_layer":
-        pages = [{"page": i, "text": t.strip(), "notes": ""} for i, t in enumerate(layer, 1)]
+        pages, notes = [{"page": i, "text": t.strip()} for i, t in enumerate(layer, 1)], ""
     else:
-        pages = await vision_pages(run, path)
-    write_json(pages_path, {"file": path.name, "method": method, "pages": pages})
+        pages, notes = await vision_pages(run, path)
+    write_json(pages_path, {"file": path.name, "method": method, "notes": notes, "pages": pages})
 
     kind = kind_of(path)
     questions = None

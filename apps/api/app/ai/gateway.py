@@ -36,7 +36,7 @@ __all__ = [
 
 log = logging.getLogger(__name__)
 
-InputValue = str | Image
+InputValue = str | Image | list[Image]
 
 _PLACEHOLDER = re.compile(r"\{\{(\w+)\}\}")
 _CODE_FENCE = re.compile(r"^```(?:json)?\s*(.*?)\s*```$", re.DOTALL)
@@ -102,10 +102,20 @@ def _render(prompt: _Prompt, values: dict[str, InputValue]) -> tuple[str, list[I
     if unknown := given - declared:
         raise AIInputError(f"inputs not declared in the prompt: {sorted(unknown)}")
 
-    images = [v for name in prompt.inputs if isinstance(v := values[name], Image)]
-    texts = {name: v for name, v in values.items() if not isinstance(v, Image)}
-    if wrong := [name for name, v in texts.items() if not isinstance(v, str)]:
-        raise AIInputError(f"inputs must be str or Image: {wrong}")
+    images: list[Image] = []
+    texts: dict[str, str] = {}
+    for name in prompt.inputs:  # declared order, so attachments keep the prompt's order
+        value = values[name]
+        if isinstance(value, Image):
+            images.append(value)
+        elif isinstance(value, list):
+            if not all(isinstance(item, Image) for item in value):
+                raise AIInputError(f"input {name!r} is a list, so it must contain only images")
+            images.extend(value)
+        elif isinstance(value, str):
+            texts[name] = value
+        else:
+            raise AIInputError(f"input {name!r} must be str, Image or list[Image]")
     if unfilled := set(_PLACEHOLDER.findall(prompt.body)) - set(texts):
         raise AIInputError(f"placeholders without an input: {sorted(unfilled)}")
 
