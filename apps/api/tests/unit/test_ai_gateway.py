@@ -184,6 +184,35 @@ async def test_AI02_model_and_parameters_come_from_config():
     assert request.max_tokens == purpose.max_tokens
 
 
+@pytest.mark.parametrize("level", ["low", "medium", "high", None])
+async def test_AI02_thinking_level_comes_from_config(level):
+    # Gemini 3 counts thinking tokens inside max_tokens; transcription purposes set "low".
+    fake = FakeProvider({"extract_topics_local": [VALID_TOPICS]})
+    config = get_settings().ai
+    purposes = config.purposes | {
+        "extract_topics_local": config.purposes["extract_topics_local"].model_copy(
+            update={"thinking": level}
+        )
+    }
+
+    await make_gateway(fake, purposes=purposes).call(
+        "extract_topics_local", TOPICS_INPUT, TopicsResult
+    )
+
+    assert fake.requests[0].thinking == level
+
+
+def test_AI02_thinking_level_must_be_known():
+    from pydantic import ValidationError
+
+    from app.settings import PurposeConfig
+
+    with pytest.raises(ValidationError):
+        PurposeConfig(
+            tier="mid", temperature=0, max_tokens=10, timeout_s=1, prompt="v1", thinking="max"
+        )
+
+
 async def test_AI02_model_override_replaces_the_tier_model():
     fake = FakeProvider({"extract_topics_local": [VALID_TOPICS]})
     gateway = Gateway(

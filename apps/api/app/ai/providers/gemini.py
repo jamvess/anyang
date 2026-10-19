@@ -27,6 +27,11 @@ class GeminiProvider:
                 temperature=request.temperature,
                 max_output_tokens=request.max_tokens,
                 response_mime_type="application/json",
+                thinking_config=(
+                    types.ThinkingConfig(thinking_level=request.thinking)
+                    if request.thinking
+                    else None
+                ),
             ),
         )
         usage = response.usage_metadata

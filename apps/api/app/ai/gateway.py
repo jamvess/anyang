@@ -184,6 +184,7 @@ class Gateway:
                     temperature=settings.temperature,
                     max_tokens=settings.max_tokens,
                     images=images,
+                    thinking=settings.thinking,
                 )
                 response = await self._generate(provider, request, settings.timeout_s)
                 tokens_in += response.tokens_in

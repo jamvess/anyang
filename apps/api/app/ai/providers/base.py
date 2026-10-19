@@ -19,6 +19,7 @@ class ProviderRequest:
     temperature: float
     max_tokens: int
     images: list[Image] = field(default_factory=list)
+    thinking: str | None = None
 
 
 @dataclass(frozen=True)

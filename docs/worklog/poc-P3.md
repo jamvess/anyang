@@ -42,14 +42,17 @@
 - 2026-10-19 · Gemini 3 นับ thinking token รวมใน `max_output_tokens` · `max_tokens` ใน `ai.yaml` จึงอาจทำให้คำตอบถูกตัดกลางทาง ให้ดูตอนรันจริง
 - 2026-10-19 · ใช้ `gemini-3.5-flash` ระหว่าง PoC (Jam เลือก) · เพราะ `gemini-3.8-flash` ตอบข้อความทดสอบสั้นๆ ใช้เวลา 35 วินาที และเคย 504 DEADLINE_EXCEEDED 2 ครั้ง ส่วน 3.5-flash ใช้ 1.7 วินาที (free tier, 2026-10-19) · ตอนรันจริงให้รัน 3.8 เทียบ 1 รอบ แล้วใส่ทั้งความแม่นและความเร็วลงใน report · key ของ AI Studio ไม่ได้ขึ้นต้นด้วย `AIza` แต่ใช้ได้ปกติ
 - 2026-10-19 · model ของ A2, A4, A5, A6, A7 + extract_answer อยู่ใน `apps/api/app/models/scope_ai.py` · test 37 case เขียว (รวมทั้งหมด 65) · red → green 1 รอบ · model ตรวจกฎของ prompt ด้วย (ช่วงหน้า, เลขข้อ, กราฟ prerequisite ห้ามวน, skill ต้องเป็นของหัวข้อตัวเอง) ถ้า AI ตอบผิดกฎ จะถูกส่งกลับไปแก้ผ่าน schema retry
+- 2026-10-19 · ingest รอบแรก: เช็คคุณภาพข้อความได้ผลชัด (ตัวอักษรไทยในข้อสอบสแกน 0%, ในชีท 48–85%, เกณฑ์ `MIN_THAI_SHARE = 0.3`) · แต่ midterm-2559-1 หน้า 12 ได้ schema error เพราะ thinking token ใช้จนชนเพดาน `max_tokens: 4000` (ทั้ง 2 รอบได้ ~3,993 token) · ทดลองตั้ง thinking low กับหน้าเดียวกัน: 396 token, 4.9 วินาที, JSON ถูก · และ free tier ให้แค่ 5 ครั้งต่อนาที (`gemini-3.5-flash` ถูกส่งไปที่ `gemini-3.6-flash`) ทำให้ 10 จาก 23 call โดน 429
+- 2026-10-19 · (Jam เลือกตามคำแนะนำ) A: เพิ่ม `thinking: low|medium|high` ที่ระดับ purpose ใน `config/ai.yaml` + `PurposeConfig` · ตั้ง low ให้ vision_extract, split_past_exam, extract_topics_local, map_questions และ medium ให้ merge_topics · B: ~~เปิด billing~~ → Jam ยังไม่อยากจ่ายเงินช่วง develop จึงใช้ free tier ต่อ · `poc/P3/common.py` ห่อ provider ด้วย `Spaced` ให้ทุก request ห่างกัน 13 วินาที (ครอบคลุม retry ของ gateway ด้วย) · ใน report เวลาต่อไฟล์จะนับแค่ `latency_ms` ไม่นับเวลารอโควตา และต้องเขียนไว้ว่าวัดบน free tier · ⚠️ ก่อนทำ P1 ต้องแก้เรื่อง AI-07: ห้ามส่งรูปลายมือเพื่อนผ่าน free tier ให้เปิด billing ช่วงนั้น หรือขอ consent ใหม่ที่บอกเรื่องนี้
+- 2026-10-19 · test ใหม่ `test_AI02_thinking_level_*` (5 case) เพิ่มต่อท้าย ไม่ได้แก้ test เดิม · รอ Jam review
 
 ## Next step
 
-ขั้น 5: เขียน `poc/P3/ingest.py` · ชีท (`evals/topics/mth10101/raw/sheet-0*.pdf`) อ่านด้วย PyMuPDF + เช็ค % ตัวอักษรไทย · ข้อสอบ (`midterm-*.pdf`) render เป็นรูปทีละหน้าแล้วส่ง A2 `vision_extract` → รวมเป็น `[p.N]` → A4 `split_past_exam` · ผลเก็บใน `poc/P3/out/` · เรียก AI ผ่าน `Gateway.live` + `app.models.scope_ai` · ต้องเพิ่ม `pymupdf` ใน `apps/api/pyproject.toml` (Junior OK แล้วในข้อความเดิม)
+หลัง Jam review test thinking: เพิ่ม `thinking` ใน `PurposeConfig` (`app/settings.py`), `ProviderRequest`, gateway และ Gemini provider (`ThinkingConfig(thinking_level=...)`) + ใส่ค่าใน `config/ai.yaml` · จากนั้นรัน `ingest.py` ใหม่ (ไม่ต้องใส่ `--force` เพราะรอบแรกหยุดตั้งแต่ไฟล์แรก ยังไม่มีไฟล์ไหนถูกเขียนลง `out/pages/`)
 
 ## Waiting on
 
-ไม่มี
+Jam review test thinking
 
 ## Notes for next time
 
