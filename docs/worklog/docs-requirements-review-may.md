@@ -14,7 +14,7 @@
 - [x] 1. 🤖 เทียบ `requirements.md` v1.1 กับ wireframe ที่แก้แล้ว (PR #14), feature spec หน้าแชท (PR #16), `ai-orchestration.md`, `api.md` · ดูคอลัมน์ Screen, Status, หมายเหตุ, ข้อที่ขัดกันเอง, และ requirement ที่ UI ต้องมีแต่ยังไม่มี ID
 - [x] 2. 🙋 May ตัดสินทีละเรื่อง (Claude ถามเป็นตัวเลือก): แก้ใน requirements.md / ส่งเป็นคำถามให้เพื่อน / ปล่อย · 2026-10-19 ตัดสินครบ 6 เรื่อง
 - [x] 3. 🤖 แก้ `requirements.md` ตามที่ May ตัดสิน (เปลี่ยนเลขเวอร์ชันเป็น v1.2 + บรรทัดสรุปการเปลี่ยนแปลง) · ข้อที่ต้องถามเพื่อนไปอยู่ใน PR description · 2026-10-19 แก้แล้ว
-- [ ] 4. 🙋 May ส่งข้อความแชทกลุ่มให้ Junior + Jam review (Claude ร่างให้)
+- [x] 4. 🙋 May ส่งข้อความแชทกลุ่มให้ Junior + Jam review (Claude ร่างให้) · 2026-10-19 ส่งแล้ว
 
 ## Definition of done
 
@@ -30,7 +30,7 @@
 
 ## Next step
 
-May ทำขั้น 4: ส่งข้อความแชทกลุ่มขอ Junior + Jam review (หลัง commit)
+ทุกขั้นเสร็จแล้ว · May พิมพ์ `/work-done` (reviewer: Junior + Jam เพราะไฟล์ร่วม)
 
 ## Waiting on
 
