@@ -26,11 +26,12 @@
 
 | role | แสดงเป็น |
 |---|---|
-| `tutor` | bubble ซ้าย, avatar อักษรแรกของชื่อ tutor, สีหลัก (accent) |
-| `buddy` | bubble ซ้าย, avatar อักษรแรกของชื่อ buddy, สีเทา ต่างจาก tutor ชัดเจน |
+| `tutor` | bubble ซ้าย, avatar อักษรย่อของชื่อ tutor, สีหลัก (accent) |
+| `buddy` | bubble ซ้าย, avatar อักษรย่อของชื่อ buddy, สีเทา ต่างจาก tutor ชัดเจน |
 | `user` | bubble ของ user, avatar สีเข้ม |
 | `card`, `system` | ยังไม่แสดงใน S2 (progress card อยู่นอกขอบเขต) |
 
+- **อักษรย่อใน avatar** (May เลือกแล้ว ให้ตรง wireframe): ตัดคำนำหน้า `พี่`, `น้อง`, `ครู` และช่องว่างที่ตามมาออกก่อน แล้วข้ามสระหน้า `เ แ โ ใ ไ` เอาตัวอักษรตัวแรกที่เหลือ เช่น พี่ตาล → ต, พี่โจ๊ก → จ, มีน → ม, ครู แอน → อ, Tar → T · avatar ของ user ใช้กฎเดียวกันกับชื่อเล่น (`user_name` จาก `/me/profile`)
 - หัว bubble: ชื่อผู้พูด + เวลา `HH:mm` (เวลาท้องถิ่น Asia/Bangkok)
 - ข้อความติดกันจากผู้พูดคนเดียวกัน: ไม่แสดงชื่อและ avatar ซ้ำ (เหมือน wireframe)
 - ชื่อ tutor และ buddy มาจากข้อมูลห้อง (`tutor_name`, `buddy_name`) ไม่ hard-code
@@ -45,7 +46,7 @@
 - ปุ่มส่งกดได้เมื่อความยาวข้อความไม่เกิน `max_message_chars` และ (มีข้อความที่ไม่ใช่ช่องว่างล้วน หรือมีรูปแนบ)
 - ความยาวเกิน `guards.max_message_chars`: ปุ่มส่งกดไม่ได้ และขึ้นข้อความ "ข้อความยาวเกิน {max} ตัวอักษร"
 - Enter = ส่ง · Shift+Enter = ขึ้นบรรทัดใหม่ (May เลือกแล้ว)
-- แนบรูป: รับเฉพาะ `image/*` ขนาดไม่เกิน `max_image_mb` (1 MB = 1,048,576 bytes) · เกินแล้วไม่แนบ และขึ้นข้อความ "รูปใหญ่เกิน {max} MB"
+- แนบรูป: รับเฉพาะ `image/*` ขนาดไม่เกิน `max_image_mb` (1 MB = 1,048,576 bytes) · ไม่ใช่รูป: ไม่แนบ และขึ้นข้อความ "แนบได้เฉพาะรูป" · ใหญ่เกิน: ไม่แนบ และขึ้นข้อความ "รูปใหญ่เกิน {max} MB"
 - เมื่อแนบรูปแล้ว: แสดงชื่อไฟล์ + ปุ่ม "เอารูปออก" · ยังพิมพ์ข้อความกำกับรูปได้ เช่น "ไม่แน่ใจบรรทัด 3" (May เลือกแล้ว · ต้องแก้ api.md ดูข้อ 11)
 - กดส่ง: เรียก `onSend({ text, image })` (`text` เป็นข้อความที่ตัดช่องว่างหัวท้ายแล้ว หรือ `null` ถ้าว่าง · `image` เป็น `File` หรือ `null`) แล้วล้างช่องพิมพ์และรูปที่แนบ
 - ข้อความ user ที่มีทั้งรูปและข้อความ แสดงกล่องรูปแล้วตามด้วยข้อความในข้อความเดียวกัน
@@ -60,7 +61,7 @@
 
 | | Type / schema | ตัวอย่าง |
 |---|---|---|
-| Input (room) | `RoomData { prep_name: string, days_left: number, tutor_name: string, buddy_name: string \| null, limits: { max_message_chars: number, max_image_mb: number }, messages: ChatMessage[] }` | `{prep_name:"Factorization", days_left:5, tutor_name:"พี่ตาล", buddy_name:"มีน", limits:{max_message_chars:2000, max_image_mb:10}, messages:[…]}` |
+| Input (room) | `RoomData { prep_name: string, days_left: number, user_name: string, tutor_name: string, buddy_name: string \| null, limits: { max_message_chars: number, max_image_mb: number }, messages: ChatMessage[] }` | `{prep_name:"Factorization", days_left:5, user_name:"ปาล", tutor_name:"พี่ตาล", buddy_name:"มีน", limits:{max_message_chars:2000, max_image_mb:10}, messages:[…]}` |
 | Input (message) | `ChatMessage { id, role: "user"\|"tutor"\|"buddy"\|"card"\|"system", content: string \| null, input_mode: "text"\|"voice"\|"image" \| null, attachment_path: string \| null, created_at: string (ISO) }` · field ตรงกับตาราง `messages` | `{id:"m1", role:"tutor", content:"ลองข้อนี้ $x^2-49$", input_mode:null, created_at:"2026-09-28T13:30:00Z"}` |
 | Output (Composer) | `onSend(payload: { text: string \| null, image: File \| null })` (อย่างน้อยหนึ่งค่าไม่เป็น null) | `{text:"(x-7)(x+7)", image:null}` |
 
@@ -72,6 +73,7 @@
 
 - **AC-1 (TM-04)** Given fixture ที่มีข้อความ tutor, buddy, user When render ห้อง Then เห็นทั้ง 3 bubble ตามลำดับ `created_at` และแต่ละแบบมี role ต่างกันใน DOM (`data-role="tutor" | "buddy" | "user"`)
 - **AC-2 (TM-05)** Given ข้อความจาก buddy When render Then หัว bubble แสดงชื่อ `buddy_name` และ avatar ของ buddy ไม่เหมือนของ tutor
+- **AC-2b (TM-04)** อักษรย่อใน avatar: พี่ตาล → ต · พี่โจ๊ก → จ · มีน → ม · ครู แอน → อ · Tar → T
 - **AC-3 (TM-04)** Given tutor ส่ง 2 ข้อความติดกัน When render Then ชื่อ "พี่ตาล" ปรากฏแค่ครั้งเดียวสำหรับสองข้อความนั้น
 - **AC-4 (TM-04)** Given ข้อความ role `card` หรือ `system` When render Then ไม่มี bubble ของข้อความนั้น
 - **AC-5 (TM-04)** Given `days_left = 5` และ `prep_name = "Factorization"` When render Then แถบบนแสดง "Factorization" และ "สอบใน 5 วัน" และมีลิงก์ "ออกจากห้องติว" ไป `/`
@@ -95,7 +97,7 @@
 - **AC-16 (TM-06)** Given แนบรูปแล้วและช่องพิมพ์ว่าง When กดส่ง Then `onSend` ถูกเรียกด้วย `{text:null, image:File}` และรูปที่แนบหายไป
 - **AC-16b (TM-06)** Given แนบรูปแล้วและพิมพ์ "ไม่แน่ใจบรรทัด 3" When กดส่ง Then `onSend` ถูกเรียกด้วย `{text:"ไม่แน่ใจบรรทัด 3", image:File}`
 - **AC-17 (TM-06)** Given แนบรูปแล้ว When กด "เอารูปออก" Then รูปหายไป และถ้าช่องพิมพ์ว่าง ปุ่มส่งกดไม่ได้
-- **AC-18 (TM-06)** Given เลือกไฟล์ที่ไม่ใช่รูป (เช่น `application/pdf`) Then ไม่แนบ
+- **AC-18 (TM-06)** Given เลือกไฟล์ที่ไม่ใช่รูป (เช่น `application/pdf`) Then ไม่แนบ และเห็นข้อความ "แนบได้เฉพาะรูป"
 - **AC-boundary-image (TM-06)** ขนาด 10 MB − 1 byte และ 10 MB พอดี (10,485,760 bytes) → แนบได้ · 10 MB + 1 byte → ไม่แนบและเห็น "รูปใหญ่เกิน 10 MB"
 - **AC-19 (TM-06)** Given หน้า room (S2) When ส่งข้อความ "ใช่ๆ" Then มี bubble ของ user ข้อความ "ใช่ๆ" ต่อท้ายรายการ
 
