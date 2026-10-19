@@ -13,7 +13,7 @@
 
 - [x] 1. 🙋 Jam: ขอ Junior ในกลุ่มว่า Jam จะเขียน gateway lite ใน `apps/api/app/ai/` เอง (เป็นงาน S3 ของ Junior) และให้ Junior เป็นคน review
 - [ ] 2. 🙋 Jam: สร้าง Gemini API key ใน AI Studio แล้วใส่ใน `.env` ที่ root ของ repo (Claude ห้ามอ่านไฟล์นี้)
-- [ ] 3. 🤖 Gateway lite · test ก่อน: `ai.call(purpose, input, schema)` โหลด prompt ตาม `config/ai.yaml`, error ถ้ามี placeholder ที่ไม่ได้เติม, เลือก provider fake/gemini ตาม `AI_PROVIDER`, ตรวจ schema ด้วย Pydantic แล้ว retry 1 ครั้ง, เขียน log การเรียกลงไฟล์ (ยังไม่เขียน `ai_calls` ลง DB) → 🙋 Jam review test → implement
+- [x] 3. 🤖 Gateway lite · test ก่อน: `ai.call(purpose, input, schema)` โหลด prompt ตาม `config/ai.yaml`, error ถ้ามี placeholder ที่ไม่ได้เติม, เลือก provider fake/gemini ตาม `AI_PROVIDER`, ตรวจ schema ด้วย Pydantic แล้ว retry 1 ครั้ง, เขียน log การเรียกลงไฟล์ (ยังไม่เขียน `ai_calls` ลง DB) → 🙋 Jam review test → implement
 - [ ] 4. 🤖 Prompt v1 + Pydantic model ของ A2 `vision_extract`, A4 `split_past_exam`, A6 `merge_topics`, A7 `map_questions`
 - [ ] 5. 🤖 `poc/P3/ingest.py`: ชีทอ่านด้วย PyMuPDF + เช็คคุณภาพข้อความ (% ตัวอักษรไทย) · ข้อสอบสแกนส่งรูปรายหน้าให้ A2 แล้วตัดรายข้อด้วย A4 · เก็บผลเป็นไฟล์ใน `poc/P3/out/` (ไม่ลง DB)
 - [ ] 6. 🤖 `poc/P3/run.py`: A5 ทีละชีท → A6 → A7 → ดาว (สูตร §2.3.5 อ่านค่าจาก `config/learning.yaml` → `stars`) · จับเวลาและต้นทุนต่อไฟล์
@@ -38,14 +38,16 @@
 - 2026-10-19 · Junior OK ให้ Jam เขียน gateway lite ใน `apps/api/app/ai/` และ Junior เป็นคน review
 - 2026-10-19 · gateway lite ไม่มี feature spec แยก · test อ้าง AI-01–AI-05 + ai-orchestration §2.10 + `prompts/README.md` · ฉบับเต็ม (fallback, circuit breaker, ai_calls) Junior จะเขียน spec ใน S3
 - 2026-10-19 · ใช้ `AI_MODEL_OVERRIDE` (env) แทนการใส่ model id ลง `config/ai.yaml` ระหว่าง PoC · เพราะการเลือก model เป็นผลของ PoC ที่จะอัปเดต config ผ่าน PR ทีหลัง · ถ้าเป็น live mode แล้ว model id ยังเป็น `TODO-...` gateway จะ error
+- 2026-10-19 · gateway lite เขียว (22 test ใหม่ + 6 test เดิม) · ไฟล์: `app/ai/gateway.py`, `app/ai/providers/{base,fake,gemini}.py` · env ใหม่ `GEMINI_API_KEY`, `AI_MODEL_OVERRIDE` (เพิ่มใน `.env.example`, `settings.py`, `setup.md` A5) · script ของ PoC สร้าง `Gateway.live` เอง จึงไม่ต้องเปลี่ยน `AI_PROVIDER` ใน `.env` · red → green 1 รอบ
+- 2026-10-19 · Gemini 3 นับ thinking token รวมใน `max_output_tokens` · `max_tokens` ใน `ai.yaml` จึงอาจทำให้คำตอบถูกตัดกลางทาง ให้ดูตอนรันจริง
 
 ## Next step
 
-ขั้น 3: test ของ gateway เขียนแล้ว (`apps/api/tests/unit/test_ai_gateway.py`, 22 test, ยัง red) รอ Jam review · หลัง review ให้ implement `app/ai/gateway.py`, `app/ai/providers/{base,fake,gemini}.py` จนเขียว · ขั้น 4 เหลือ Pydantic model
+ขั้น 4 ที่เหลือ: Pydantic model ของ output ทั้ง 5 purpose (A2, A4, A5, A6, A7) ใน `apps/api/app/models/scope_ai.py` + test ว่า JSON ตัวอย่างใน prompt แต่ละไฟล์ parse ได้
 
 ## Waiting on
 
-Jam review test ของ gateway · Jam ใส่ `GEMINI_API_KEY` ใน `.env` (ขั้น 2)
+Jam ใส่ `GEMINI_API_KEY` และ `AI_MODEL_OVERRIDE` ใน `.env` (ขั้น 2)
 
 ## Notes for next time
 

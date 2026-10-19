@@ -227,6 +227,8 @@ class EnvSettings(BaseSettings):
 
     # --- AI providers ---
     ai_provider: Literal["fake", "live"] = "fake"
+    ai_model_override: str = ""
+    gemini_api_key: SecretStr = SecretStr("")
     google_cloud_project: str = ""
     google_cloud_location: str = ""
     google_application_credentials: str = ""
