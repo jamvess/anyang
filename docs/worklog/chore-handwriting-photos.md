@@ -21,7 +21,7 @@
 - [x] 4. 🤖 `evals/handwriting/make_labels.py` (stdlib อย่างเดียว): อ่าน `photos.csv` + `raw/` แล้วสร้าง `labels.jsonl` แบบโครง (`lines` ว่างไว้ให้ May) เช็คไฟล์ที่ขาดหรือซ้ำ และสรุปความหลากหลายของชุดรูป
 - [x] 5. 🙋 Jam: อัปโหลดใบลอก + เฉลยขึ้น Drive, สร้างโฟลเดอร์ `inbox`/`raw` + Google Form แล้วส่งใบลอกให้คนเขียน 5 คน (Jam, Junior, May, เพื่อน 2 คน) คนละ 6 รูป
 - [x] 6. 🙋 Jam: เก็บรูปให้ได้ ≥ 30 รูป เปลี่ยนชื่อเป็น `hw_001.jpg` … กรอกตารางรหัสใน Drive และ `photos.csv` แล้วก๊อปรูปลง `evals/handwriting/raw/`
-- [ ] 7. 🤖 รัน `make_labels.py` แล้ว commit `labels.jsonl` แบบโครง เช็คว่าครบตามเป้า ติ๊ก checklist และเขียนข้อความส่งงานให้ May
+- [x] 7. 🤖 รัน `make_labels.py` แล้ว commit `labels.jsonl` แบบโครง เช็คว่าครบตามเป้า ติ๊ก checklist และเขียนข้อความส่งงานให้ May
 
 ## Definition of done
 
@@ -48,10 +48,11 @@
 - 2026-10-19 · `crop_screenshots.py`: crop ภาพแคปหน้าจอให้เหลือแค่ลายมือในกรอบหน้ากระดาษของแต่ละเครื่อง (`PAGE_AREA` วัดจากภาพจริง) + ขอบ 40 px · ลองหาหน้ากระดาษอัตโนมัติก่อนแล้วแต่พังกับภาพของ May (ครึ่งล่างของหน้าจอเป็นสีขาว) จึงใช้กรอบตายตัว · ตรวจผลทั้ง 18 รูปด้วยตาแล้ว · ภาพของ Jam กับ Junior ไม่ crop
 - 2026-10-19 · ไฟล์ `raw/hw_001`–`hw_030` (เรียงตามรหัสคนเขียน แล้วตามลำดับในใบลอก) · `photos.csv` ครบ 30 แถว · กรอก `hw_id` + รหัสลงในเฉลยในเครื่องแล้ว (`raw/copy-sheets/copy_sheets_key.md`) · ต้นฉบับยังอยู่ใน `raw/inbox/`
 - 2026-10-19 · `make_labels.py`: `tool` รับ `stylus` · คอลัมน์ `medium` ไม่บังคับ (ถ้าไม่ใส่ = `paper`) · สรุปนับตาม medium · test 12 ตัวเขียว (เพิ่มใหม่ 3 ตัวที่ Jam review แล้ว) · `--check` กับข้อมูลจริง: ผ่านทุกเป้า ยกเว้น tools และ medium ที่ขึ้น TODO ตามความจริง (ไม่มีรูปกระดาษ)
+- 2026-10-19 · `labels.jsonl` แบบโครง 30 แถว (`lines` ว่าง, `labeled_by: null`) · ติ๊ก checklist ข้อ D8 พร้อมหมายเหตุว่าเป็นรูปจาก tablet · ข้อ "รูปลายมือ 10 รูป (D8)" ของ Junior กับ May ไม่ได้ติ๊กให้ (เป็นของเขา และส่งมาคนละ 6 รูปตามแผนใหม่)
 
 ## Next step
 
-ขั้น 7: `cd apps/api && uv run python ../../evals/handwriting/make_labels.py` (จะเพิ่ม 30 แถวลง `labels.jsonl`) แล้ว commit · ติ๊ก checklist · ร่างข้อความส่งงานให้ May (ไฟล์รูปอยู่ใน Drive `raw/` · คู่มือคือ "คู่มือ label ลายมือ · P1" ใน `evals/README.md` · ห้ามเปิดเฉลยของใบลอก)
+ทุกขั้นเสร็จแล้ว · พิมพ์ `/work-done`
 
 ## Waiting on
 
