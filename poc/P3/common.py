@@ -72,16 +72,26 @@ class SaveRaw:
 class Run:
     """A live gateway whose call records are appended to out/calls.jsonl with a tag."""
 
-    def __init__(self) -> None:
+    def __init__(self, prompt_versions: dict[str, str] | None = None) -> None:
+        """``prompt_versions`` overrides the prompt of a purpose for this run only, e.g.
+        {"extract_topics_local": "v2"}, so a new version is compared before config changes."""
         settings = get_settings()
         env = settings.env
         self.model = env.ai_model_override
         # Free tier: a 503 counts against the 20-per-day quota, so the gateway's immediate
         # retry is turned off here and Run.call waits BACKOFF_SECONDS instead. PoC only;
         # config/ai.yaml keeps retries: 1.
+        purposes = {
+            name: p.model_copy(update={"prompt": (prompt_versions or {}).get(name, p.prompt)})
+            for name, p in settings.ai.purposes.items()
+        }
         config = settings.ai.model_copy(
-            update={"gateway": settings.ai.gateway.model_copy(update={"retries": 0})}
+            update={
+                "gateway": settings.ai.gateway.model_copy(update={"retries": 0}),
+                "purposes": purposes,
+            }
         )
+        self.prompts = {name: p.prompt for name, p in purposes.items()}
         self.gateway = Gateway.live(
             config,
             env.prompts_dir,

@@ -66,9 +66,13 @@
 - 2026-10-19 · (Jam เลือกตามคำแนะนำ) รัน v1 ให้ครบก่อนเพื่อได้ baseline แล้วค่อยทำ `extract_topics_local/v2` (แยกหัวข้อย่อยที่มีตัวอย่างของตัวเอง + ไม่นับหน้าแบบฝึกหัดท้ายบท) แล้วรันเทียบวันถัดไป · ตามกฎใน prompts/README ที่ต้องเทียบ eval กับ version เดิม (v1 มีผล eval แล้ว จึงห้ามแก้ v1 อีก)
 - 2026-10-19 · PoC: `common.py` ห่อ provider ด้วย `SaveRaw` (เก็บคำตอบดิบทุกครั้งลง `out/raw/<tag>-<n>.txt`) และตั้ง gateway `retries: 0` เฉพาะใน PoC (ไม่ได้แก้ `ai.yaml`) ให้ `Run.call` รอแล้วค่อยลองใหม่เอง
 
+- 2026-10-19 · ร่าง `prompts/extract_topics_local/v2.md`: 1 หัวข้อ = 1 section ที่มีหัวข้อของตัวเองพร้อมคำอธิบายหรือตัวอย่าง (ตามโครงสร้างของไฟล์) · ชื่อบทหรือ part ไม่นับเป็นหัวข้อ · ห้ามรวม section ที่มีหัวข้อต่างกัน · ไม่นับหน้าแบบฝึกหัดท้าย section/บท/ไฟล์และหน้าเฉลยเข้าไปในช่วงหน้า (ยกเว้นไฟล์ที่เป็นแบบฝึกหัดทั้งไฟล์) · ไม่ใส่ตัวเลขหรือตัวอย่างจาก label ของ MTH10101 · v2 ถูกปรับโดยดูผลของชุดที่ใช้วัดผล ตัวเลขของ v2 จึงดีเกินจริงไปบ้าง ต้องเขียนเป็นข้อจำกัดใน report (ควรทดสอบกับวิชาอื่น)
+- 2026-10-19 · PoC: `run.py --a5-prompt v2` / `score.py --a5-prompt v2` override prompt เฉพาะรอบนั้น (ไม่แก้ `ai.yaml`) · cache A5 แยกตาม version (`out/a5/<model>/<version>/` · ย้ายของ v1 ไปไว้ใน `v1/` แล้ว) · ผลอยู่ใน `results/<model>-a5<version>/` · dry run ด้วย fake provider ผ่าน
+- 2026-10-19 · ข้อสังเกตเรื่องการให้คะแนน: label ของ May มีแค่หน้าใน sheet-01/02 (ไม่มีหน้าใน sheet-03/04) แต่ A6 อาจรวมหน้าแบบฝึกหัดจาก sheet-03/04 เข้าไปใน `sources` ทำให้ IoU ลดลง ถึงหัวข้อจะตรงก็ตาม · หลังได้ผลของ v1 ให้ดูว่ากระทบมากแค่ไหน แล้วให้ Jam ตัดสินว่าจะคิด IoU เฉพาะไฟล์ที่ label มีหรือไม่
+
 ## Next step
 
-ขั้น 8 ต่อ หลัง 14:00 น. ของ 2026-10-20 (โควตารายวันรีเซ็ต · เช็คด้วย request เดียวก่อน): `cd apps/api && uv run python ../../poc/P3/run.py` (ingest และ A5 ใช้ของที่เก็บไว้ใน `out/` · เหลือ A6 + A7 ×2 = 3 call) → ถ้า A6 ไม่ผ่าน schema ให้เปิด `poc/P3/out/raw/run_merge-*.txt` ดูว่าผิดกฎข้อไหน แล้วแก้ prompt `merge_topics` หรือ model → `uv run python ../../poc/P3/score.py` → สรุปตัวเลข v1 ให้ Jam · ต่อจากนั้นร่าง `prompts/extract_topics_local/v2.md`
+หลัง 14:00 น. ของ 2026-10-20 (เช็คโควตาด้วย request เดียวก่อน): `cd apps/api && uv run python ../../poc/P3/run.py --a5-prompt v1` (ใช้ cache A5 v1 · เหลือ A6 + A7 ×2 = 3 call) → `uv run python ../../poc/P3/score.py --a5-prompt v1` → ถ้า A6 ไม่ผ่าน schema ให้ดู `out/raw/run_merge-*.txt` · จากนั้นถ้าโควตาเหลือ: `run.py --a5-prompt v2` (A5 ×4 + A6 + A7 ×2 = 7 call) → `score.py --a5-prompt v2` → สรุปเทียบ v1/v2 ให้ Jam
 
 ## Waiting on
 
@@ -81,5 +85,5 @@
 - `poc/P3/out/` gitignored (มี log รอบที่ล้ม: `calls-run1-failed.jsonl` = thinking ชนเพดาน + 429 รายนาที, `calls-run2-queue-timeout.jsonl` = bug ตัวเว้นช่วง) · ใช้ใน report P3 ได้
 - โควตาของ `gemini-3.5-flash` free tier: 5 ครั้งต่อนาที + 20 ครั้งต่อวันต่อ model (ใน error ชื่อ `gemini-3.6-flash`) · `gemini-3.5-flash-lite` มีโควตาแยก · `gemini-3.8-flash` ช้ามาก (35 วินาทีกับข้อความทดสอบสั้นๆ)
 - dry run แบบไม่ใช้โควตา: script `dry_run.py` อยู่ใน scratchpad ของ session 2026-10-19 (ไม่ได้ commit) · ใช้ FakeProvider + label มาปลอมเป็นคำตอบของ A5/A6/A7
-- python ใน Git Bash heredoc ที่มีภาษาไทยบางทีขึ้น `SyntaxError: Non-UTF-8` · ให้ใช้ Edit tool แทน
+- python ใน Git Bash heredoc ที่มีภาษาไทยบางทีขึ้น `SyntaxError: Non-UTF-8` · สาเหตุคือ `python` ของเครื่องเป็น 3.9 ซึ่งอ่านบรรทัดยาวที่มีภาษาไทยไม่ได้ · ให้ใช้ Edit tool หรือ `uv run --project apps/api python` (3.12) แทน
 - 2026-10-19 (session 3) แก้ §2.3.3 + §2.3.7 + §3.1 ของ `ai-orchestration.md` ให้ตรงกับ prompt และ model แล้ว (A2b, schema แบบ object, เช็คคุณภาพข้อความ, ข้อจำกัดของ PyMuPDF) · ก่อนทำ P1 ต้องแก้เรื่อง AI-07 (รูปลายมือห้ามส่งผ่าน free tier)

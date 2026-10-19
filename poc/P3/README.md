@@ -21,6 +21,7 @@ uv run python ../../poc/P3/ingest.py && uv run python ../../poc/P3/run.py && uv 
 - ผลสรุปอยู่ที่ `results/<model>/` (commit ได้ มีแค่ชื่อหัวข้อ ช่วงหน้า ดาว และเวลา)
 - free tier: เรียกได้ 5 ครั้งต่อนาที และ **20 ครั้งต่อวันต่อ model** · `common.py` เว้นช่วง 13 วินาทีระหว่าง call · เวลาต่อไฟล์นับเฉพาะเวลาที่ AI ทำงานจริง (`latency_ms`) ไม่นับเวลารอโควตา
 - ถ้าจะเทียบ model อื่น ให้เปลี่ยน `AI_MODEL_OVERRIDE` แล้วรัน `run.py` + `score.py` ใหม่ (ผลจะแยกโฟลเดอร์ตาม model)
+- ถ้าจะเทียบ prompt A5 version อื่นโดยไม่แก้ `config/ai.yaml`: `uv run python ../../poc/P3/run.py --a5-prompt v2` แล้ว `uv run python ../../poc/P3/score.py --a5-prompt v2` · ผลอยู่ใน `results/<model>-a5<version>/`
 
 ## Test
 

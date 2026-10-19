@@ -30,7 +30,7 @@ def pages_text(pages: list[dict]) -> str:
 
 
 async def extract_local(run: Run, stem: str, model: str, force: bool) -> dict:
-    cache = OUT / "a5" / model / f"{stem}.json"
+    cache = OUT / "a5" / model / run.prompts["extract_topics_local"] / f"{stem}.json"
     if cache.exists() and not force:
         return read_json(cache)
     pages = read_json(OUT / "pages" / f"{stem}.json")["pages"]
@@ -55,9 +55,13 @@ async def extract_local(run: Run, stem: str, model: str, force: bool) -> dict:
     return data
 
 
-async def main(force: bool) -> None:
+def results_name(model: str, a5_prompt: str) -> str:
+    return f"{model}-a5{a5_prompt}"
+
+
+async def main(force: bool, a5_prompt: str) -> None:
     settings = get_settings()
-    run = Run()
+    run = Run({"extract_topics_local": a5_prompt})
     model = run.model.partition(":")[2]
     ingest = read_json(OUT / "ingest.json")
     sheets = [f["file"].removesuffix(".pdf") for f in ingest["files"] if f["kind"] == "lecture"]
@@ -112,7 +116,7 @@ async def main(force: bool) -> None:
         settings.learning.stars,
     )
 
-    folder = RESULTS / model
+    folder = RESULTS / results_name(model, a5_prompt)
     write_json(
         folder / "topics.json",
         [
@@ -178,4 +182,10 @@ async def main(force: bool) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--force", action="store_true", help="redo A5 even if cached")
-    asyncio.run(main(parser.parse_args().force))
+    parser.add_argument(
+        "--a5-prompt",
+        default=get_settings().ai.purposes["extract_topics_local"].prompt,
+        help="prompt version of extract_topics_local for this run (default: config/ai.yaml)",
+    )
+    args = parser.parse_args()
+    asyncio.run(main(args.force, args.a5_prompt))

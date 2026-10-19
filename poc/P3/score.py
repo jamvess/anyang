@@ -195,7 +195,12 @@ def main(model: str) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="", help="results folder; default: AI_MODEL_OVERRIDE")
+    parser.add_argument("--model", default="", help="default: AI_MODEL_OVERRIDE")
+    parser.add_argument(
+        "--a5-prompt",
+        default=get_settings().ai.purposes["extract_topics_local"].prompt,
+        help="prompt version of extract_topics_local that run.py used",
+    )
     args = parser.parse_args()
     model = args.model or get_settings().env.ai_model_override.partition(":")[2]
-    main(model)
+    main(f"{model}-a5{args.a5_prompt}")
