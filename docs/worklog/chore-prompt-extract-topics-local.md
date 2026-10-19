@@ -9,7 +9,7 @@
 
 ## Plan
 
-- [ ] 1. 🤖 เขียน `prompts/extract_topics_local/v1.md` (A5 · ai-orchestration §2.3.4, §2.3.7): frontmatter ตรงกับ `config/ai.yaml`, ครอบเนื้อหาไฟล์ด้วย `<document>`, กำหนดขนาดหัวข้อให้ตรงกับคู่มือ label P3 (`evals/topics/README.md`), output `{name, pages, prereq_hint}`
+- [x] 1. 🤖 เขียน `prompts/extract_topics_local/v1.md` (A5 · ai-orchestration §2.3.4, §2.3.7): frontmatter ตรงกับ `config/ai.yaml`, ครอบเนื้อหาไฟล์ด้วย `<document>`, กำหนดขนาดหัวข้อให้ตรงกับคู่มือ label P3 (`evals/topics/README.md`), output `{name, pages, prereq_hint}`
 - [ ] 2. 🤖 ตรวจ `prompts/extract_answer/v1.md` เทียบกับคู่มือ label ลายมือ (`evals/README.md`) แล้วเขียนรายการจุดที่ไม่ตรงกัน · ถ้าต้องแก้ ให้ Jam ตัดสินใจก่อน
 - [ ] 3. 🤖 Smoke test: ดึงข้อความรายหน้าจาก `sheet-03.pdf` (ใช้ PyMuPDF ชั่วคราว ไม่เพิ่ม dependency) แล้วเติมลงใน prompt เป็นไฟล์ใน scratchpad พร้อมให้ก๊อปไปวาง
 - [ ] 4. 🙋 Jam: วาง prompt ที่เติมแล้วลงใน Google AI Studio (Gemini) แล้วส่ง output กลับมาให้ Claude ตรวจ schema กับขนาดหัวข้อ
@@ -27,10 +27,13 @@
 ## Decisions
 
 - 2026-10-19 · ไม่เพิ่ม PyMuPDF ใน `apps/api/pyproject.toml` (ของ Junior) · smoke test ใช้ `uv run --with pymupdf` ชั่วคราว · การ ingest จริงเป็นงานของ Junior ใน S2
+- 2026-10-19 · output ของ A5 เป็น object `{"topics": [...], "notes": ""}` ไม่ใช่ array เปล่าแบบที่เขียนใน §2.3.7 · เพื่อให้รูปแบบเหมือน `extract_answer` และมีช่องให้บอกเหตุผลเมื่อไฟล์อ่านไม่ได้ · ตัว list ข้างในยังเป็น `{name, pages, prereq_hint}` ตาม spec · Jam อนุมัติให้แก้ §2.3.7 ใน PR นี้
+- 2026-10-19 · ขนาดหัวข้อ, กติกาเลขหน้า (`"start-end"` ตามป้าย `[p.N]`) และสิ่งที่ข้าม ใช้นิยามเดียวกับคู่มือ label P3 · เพื่อให้เทียบกับ `labels.json` ได้ตรงๆ · `prereq_hint` จำกัดไว้ไม่เกิน 3 รายการ
+- 2026-10-19 · `prereq_hint` ใส่หัวข้อที่อยู่ในไฟล์อื่นได้ (ใช้ชื่อมาตรฐาน + ศัพท์อังกฤษ) · เพราะ `sheet-02` ต้องใช้ลิมิตและอนุพันธ์จาก `sheet-01` ถ้าห้ามใส่ prerequisite ข้ามไฟล์จะหายหมด · A6 จะจับคู่กับหัวข้อจริงหรือทิ้งไป
 
 ## Next step
 
-ขั้น 1: เขียน `prompts/extract_topics_local/v1.md`
+ขั้น 2: อ่าน `prompts/extract_answer/v1.md` เทียบกับ "คู่มือ label ลายมือ · P1" ใน `evals/README.md` แล้วสรุปจุดที่ไม่ตรงกันให้ Jam ตัดสินใจ
 
 ## Waiting on
 

@@ -176,10 +176,12 @@ LLM ไม่แตะ database โดยตรง แต่คืน JSON ใ�
 | A2 | `vision_extract` | vision | `{text, latex_blocks}` | เฉพาะหน้าสแกนหรือรูป |
 | A3 | `embed` | embed | vector | 1 ครั้ง/chunk |
 | A4 | `split_past_exam` | small | `[{q_no, text, page}]` | 1 ครั้ง/ข้อสอบเก่า |
-| A5 | `extract_topics_local` | mid | `[{name, pages, prereq_hint}]` | 1 ครั้ง/ไฟล์ชีท |
+| A5 | `extract_topics_local` | mid | `{topics: [{name, pages, prereq_hint}], notes}` | 1 ครั้ง/ไฟล์ชีท |
 | A6 | `merge_topics` | **main** | `[{id, name, order, prereqs, skills: [{name, common_mistakes}]}]` | 1 ครั้ง/การเตรียมสอบ |
 | A7 | `map_questions` | small | `[{q_id, topic_id, skill_id, trap}]` | batch |
 | A8 | `scope_edit` | mid | `{reply, actions[]}` | ทุกข้อความที่ user แก้ |
+
+A5: `pages` เป็นช่วง `"start-end"` ตามป้าย `[p.N]` (เลขหน้า PDF) · `prereq_hint` อาจเป็นหัวข้อที่อยู่ในไฟล์อื่น ให้ A6 จับคู่กับหัวข้อจริงหรือทิ้งไป · `notes` ใช้บอกเหตุผลเมื่อไฟล์ไม่มีเนื้อหาที่อ่านได้ (เช่นไฟล์สแกนที่มีข้อความขยะ)
 
 ทุก call ผ่าน AI Gateway (2.9–2.11), ตรวจ schema ด้วย Pydantic และ log ลง `ai_calls`
 
