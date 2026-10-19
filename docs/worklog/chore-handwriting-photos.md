@@ -5,7 +5,13 @@
 | Owner | Jam |
 | Branch | `chore/handwriting-photos` |
 | Checklist item | รวบรวมรูปลายมือจากทุกคนให้ได้ ≥ 30 รูป + ขอความยินยอมเพื่อน (D8) |
-| Status | in progress · 2026-10-19 |
+| Status | paused · 2026-10-19 |
+
+## Done today (2026-10-19)
+
+- เขียนคู่มือเก็บรูป (`README.md`), โจทย์ 17 ข้อที่ตรวจเฉลยด้วย SymPy แล้ว (`problems.md`), ข้อความ consent (`consent.md`)
+- เขียน `make_labels.py` + test 9 ตัว (ผ่านหมด)
+- เปลี่ยนแผนเป็นให้คนเขียน 5 คนลอกจากใบลอกคนละ 6 ใบ (รวม 30 ใบ มีใบที่ผิด 8 ใบ และใบที่ขีดฆ่า 3 ใบ) · อัปโหลดใบลอกขึ้น Drive แล้ว สร้าง Google Form แล้ว และส่งให้ทุกคนแล้ว
 
 ## Plan
 
@@ -50,3 +56,7 @@
 
 - กติกาการ label ลายมือ (LaTeX รายบรรทัด, `writer` เป็นรหัส) อยู่ใน `evals/README.md` ของ PR #10 (`docs/label-guide`)
 - โจทย์ต้องไม่มาจากข้อสอบกลางภาค 2562/1 เพราะเป็นชุด held-out ของ P3
+- ใบลอก (`copy_sheets.html`) และ script ที่ใช้สร้าง (`build_sheets.py`) อยู่ใน Drive `evals/handwriting/` · เฉลย `copy_sheets_key.md` อยู่ใน Drive ส่วนตัวของ Jam · ถ้าจะแก้ใบลอก ให้แก้ `build_sheets.py` แล้วรัน `python -I build_sheets.py <โฟลเดอร์ output>` · ห้าม commit ไฟล์ทั้ง 3 ไฟล์นี้
+- การแบ่งใบลอก: Jam (P01✗ P05✗ P07 P12 P16 P03) · Junior (P08✗ P15✗ P02 P11✂ P14 P17) · เพื่อน 1 (P09✗ P10✗ P04 P06 P13 P15) · เพื่อน 2 ดินสอ (P13✗ P14✗ P01 P08 P16 P05) · May ดินสอ (P04✂ P06✂ P02 P09 P10 P17) · ✗ = ตั้งใจให้ผิด ✂ = มีบรรทัดที่ต้องขีดฆ่า · เวลากรอก `photos.csv` คอลัมน์ `tool` ให้ดูจากตารางนี้
+- คำสั่ง test: `uv run --project apps/api pytest evals/handwriting` · lint: `uv run --project apps/api ruff check evals/handwriting`
+- console ของ Windows ใช้ cp874 ถ้า `print` ตัวอักษรอย่าง `·` ใน script จะ crash ด้วย `UnicodeEncodeError` · ข้อความที่ script พิมพ์ออกมาจึงใช้แค่ ASCII
