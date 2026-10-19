@@ -97,7 +97,7 @@
 
 - [ ] หน้าแชท P4-lite: อ่าน SSE ผ่าน `lib/sse.ts`, แสดงข้อความที่ไหลออกมา, render KaTeX, ส่งรูป
 - [ ] Generate type จาก `/openapi.json` (`pnpm gen:api`)
-- [ ] Use case UC สมัคร และ UC upload → scope (D7)
+- [x] Use case UC สมัคร และ UC upload → scope (D7)
 - [ ] เขียน report P4-lite ร่วมกับ Junior
 
 **Done เมื่อ:** คุยกับ AI บน staging แล้วเห็นตัวอักษรไหลออกมาและสมการ render ถูก
