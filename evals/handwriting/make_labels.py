@@ -20,7 +20,10 @@ from pathlib import Path
 
 HERE = Path(__file__).parent
 IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png")
-TOOLS = ("pen", "pencil")
+TOOLS = ("pen", "pencil", "stylus")
+# Optional column: how the image was made (S2 photos were tablet screenshots, not paper).
+MEDIA = ("paper", "tablet_screenshot", "screen_photo")
+DEFAULT_MEDIUM = "paper"
 ANSWER_FORMATS = ("expression", "factored", "equation")
 
 # Dataset targets from the table "เป้าของชุดรูป" in README.md. Keep the two in sync.
@@ -29,9 +32,7 @@ MIN_WRITERS = 5
 MAX_IMAGES_PER_WRITER = 10
 MIN_IMAGES_PER_FORMAT = 5
 
-ROW = re.compile(
-    r"^\|\s*(P\d{2})\s*\|[^|]*\|\s*(\w+)\s*\|\s*`([^`]+)`\s*\|\s*`([^`]+)`\s*\|$"
-)
+ROW = re.compile(r"^\|\s*(P\d{2})\s*\|[^|]*\|\s*(\w+)\s*\|\s*`([^`]+)`\s*\|\s*`([^`]+)`\s*\|$")
 PHOTO_ID = re.compile(r"^hw_\d{3}$")
 WRITER = re.compile(r"^w\d{2}$")
 
@@ -76,11 +77,11 @@ def validate(
         if not WRITER.match(row.get("writer", "")):
             errors.append(f"{where}: writer must be a code like w01, never a real name")
         if row.get("problem") not in problems:
-            errors.append(
-                f"{where}: problem {row.get('problem')!r} is not in problems.md"
-            )
+            errors.append(f"{where}: problem {row.get('problem')!r} is not in problems.md")
         if row.get("tool") not in TOOLS:
             errors.append(f"{where}: tool must be one of {', '.join(TOOLS)}")
+        if (row.get("medium") or DEFAULT_MEDIUM) not in MEDIA:
+            errors.append(f"{where}: medium must be one of {', '.join(MEDIA)}")
         if PHOTO_ID.match(pid) and find_image(raw_dir, pid) is None:
             errors.append(f"{where}: no image raw/{pid}.jpg (or .jpeg/.png)")
     return errors
@@ -123,6 +124,7 @@ def summarize(photos: list[dict[str, str]], problems: dict[str, Problem]) -> lis
     per_writer = Counter(row["writer"] for row in photos)
     per_format = Counter(problems[row["problem"]].answer_format for row in photos)
     per_tool = Counter(row["tool"] for row in photos)
+    per_medium = Counter(row.get("medium") or DEFAULT_MEDIUM for row in photos)
 
     def mark(ok: bool) -> str:
         return "OK  " if ok else "TODO"
@@ -146,8 +148,13 @@ def summarize(photos: list[dict[str, str]], problems: dict[str, Problem]) -> lis
             f" (target >= {MIN_IMAGES_PER_FORMAT})"
         )
     report.append(
-        f"{mark(all(per_tool[t] for t in TOOLS))} tools: "
+        # README target: both pen and pencil on paper (pencil is fainter, harder to read)
+        f"{mark(per_tool['pen'] > 0 and per_tool['pencil'] > 0)} tools: "
         + ", ".join(f"{t} {per_tool[t]}" for t in TOOLS)
+    )
+    report.append(
+        f"{mark(per_medium['paper'] > 0)} medium: "
+        + ", ".join(f"{m} {per_medium[m]}" for m in MEDIA)
     )
     report.append("     wrong lines (>= 8) and crossed-out lines (>= 3): check by eye")
     return report
@@ -155,9 +162,7 @@ def summarize(photos: list[dict[str, str]], problems: dict[str, Problem]) -> lis
 
 def main(argv: list[str] | None = None, base: Path = HERE) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument(
-        "--check", action="store_true", help="validate only, write nothing"
-    )
+    parser.add_argument("--check", action="store_true", help="validate only, write nothing")
     args = parser.parse_args(argv)
 
     problems = load_problems(base / "problems.md")
