@@ -13,8 +13,8 @@
 
 **กฎสำคัญ:** ห้ามใช้ AI อ่านรูป (ทั้ง Claude, Gemini, ChatGPT) เพราะ P1 วัดว่า AI อ่านลายมือแม่นแค่ไหน · Claude ไม่เปิดดูรูปเลย ช่วยได้แค่ทำไฟล์ให้กรอก ตรวจ syntax และแปลง JSONL · ห้ามเปิดเฉลยใบลอกใน Drive (ใช้ตรวจ label ทีหลัง)
 
-- [ ] 1. 🙋 May โหลดโฟลเดอร์ `raw/` จาก Drive ทีม `evals/handwriting/raw/` มาไว้ที่ `evals/handwriting/raw/` ในเครื่อง (30 ไฟล์ `hw_001`–`hw_030`)
-- [ ] 2. 🤖 สร้างไฟล์ร่าง `evals/handwriting/labels-draft.md` (1 หัวข้อต่อรูป · พิมพ์ 1 บรรทัดต่อ 1 บรรทัดในรูป) + script ทำหน้า preview (รูปคู่กับ LaTeX ที่ render แล้ว) ไว้ใน `raw/` ซึ่งไม่ขึ้น git
+- [x] 1. 🙋 May โหลดโฟลเดอร์ `raw/` จาก Drive ทีม `evals/handwriting/raw/` มาไว้ที่ `evals/handwriting/raw/` ในเครื่อง (30 ไฟล์ `hw_001`–`hw_030`) · 2026-10-19 ครบ 30 (001–012 .jpg, 013–030 .png) path ใน labels.jsonl ตรงทุกแถว
+- [x] 2. 🤖 สร้างไฟล์ร่าง `evals/handwriting/labels-draft.md` (1 หัวข้อต่อรูป · พิมพ์ 1 บรรทัดต่อ 1 บรรทัดในรูป) + script ทำหน้า preview (รูปคู่กับ LaTeX ที่ render แล้ว) ไว้ใน `raw/` ซึ่งไม่ขึ้น git · 2026-10-19 `raw/preview.py` → `raw/preview.html` (KaTeX จาก CDN, render ไม่ได้ขึ้นสีแดง)
 - [ ] 3. 🙋 May พิมพ์ LaTeX ทีละรูป แล้วเปิด preview เทียบกับรูป · พักเมื่อไหร่บอก "พัก" Claude ตรวจและ commit ให้
 - [ ] 4. 🤖 ตรวจทุกบรรทัด: KaTeX render ได้ · SymPy parse ได้ (ยกเว้นบรรทัดใน `unclear_lines`) · ไม่มี `$` · ไม่มีรูปที่ว่าง · บอกจุดที่ผิดรูปแบบให้ May แก้เอง
 - [ ] 5. 🤖 แปลงร่างเป็น `labels.jsonl` (ไม่แก้เนื้อหา · `labeled_by: "May"`) แล้วลบร่าง
@@ -33,7 +33,7 @@
 
 ## Next step
 
-May ทำขั้น 1: โหลด `raw/` จาก Drive
+May ทำขั้น 3: พิมพ์ LaTeX ใน `evals/handwriting/labels-draft.md` เริ่มที่ hw_001
 
 ## Waiting on
 
