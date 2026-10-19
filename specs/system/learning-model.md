@@ -62,6 +62,7 @@ r_t = Σ w_e·[หัวข้อ t ออกในข้อสอบชุด e
 | w ของข้อสอบอาจารย์เดียวกัน | 1.0 | [calc] | ค่าอ้างอิง |
 | w ของข้อสอบคนละอาจารย์ | 0.5 | [C] | PoC P3: วัดว่าหัวข้อในข้อสอบของอาจารย์ 2 คนซ้อนทับกันกี่ % แล้วใช้สัดส่วนนั้น |
 | three_star_min_r | 0.6 | [calc] | ค่ากลางของช่วงที่ให้ผลเหมือนกันทุกกรณีที่พบบ่อย (ตารางล่าง) · ตรวจกับ label ของทีมใน P3 (≥ 80% ตรงกัน) |
+| prerequisite_of_three_star_gets | 2 | [calc] | = ★★ ตามสูตรดาว (ai-orchestration §2.3.5) · นับเฉพาะ prerequisite โดยตรง |
 
 **Sensitivity analysis**
 
@@ -102,6 +103,7 @@ gap_k = round(first_gap_days × growth_factor^(k−1))        // 1, 3 (2.5→3),
 | growth_factor | 2.5 | [A] SM-2 initial easiness factor |
 | max_gap_ratio_of_days_left | 0.2 | [A] Cepeda et al. 2008 |
 | review_slots_at_session_start | 2 | [C] ปรับตามความยาว session จริง |
+| min_gap_days | 1 | [calc] = first_gap_days (หน่วยที่เล็กที่สุดที่ planner นัดได้) |
 
 ## 4. ระดับและเงื่อนไข "ผ่าน" (Done)
 
@@ -111,6 +113,12 @@ gap_k = round(first_gap_days × growth_factor^(k−1))        // 1, 3 (2.5→3),
 | อ่อน | mastery < 0.5 |
 | กำลังดี | อื่นๆ ที่ยังไม่ผ่าน |
 | ผ่าน | (1) ทุก skill ที่ `exam_freq > 0` มี independent correct ≥ 1 (ถ้าไม่มีข้อสอบเก่า นับทุก skill) และ (2) mastery ≥ 0.95 และ (3) หัวข้อ ★★★ ต้องจบด้วยโจทย์ difficulty 3 |
+
+| ค่า | ค่า | ป้าย | ที่มา / วิธี calibrate |
+|---|---|---|---|
+| min_independent_correct_per_skill | 1 | [C] | หลัง Alpha: ดูว่าคนที่ผ่าน skill ด้วยการตอบถูกเอง 1 ข้อ ตอบข้อทวน (spaced review) ของ skill นั้นถูกกี่ % ถ้าต่ำให้เพิ่มเป็น 2 |
+| three_star_final_difficulty | 3 | [calc] | = ระดับสูงสุดของความยาก 1–3 (ระดับข้อสอบ) |
+| tight_mode_two_star_difficulty | 2 | [calc] | = ระดับกลางของความยาก 1–3 |
 
 เหตุผลที่ต้องมี skill coverage นอกจาก mastery: BKT ของเราวัดระดับหัวข้อ หัวข้อกว้างอย่างการแยกตัวประกอบมีโจทย์หลายแบบ ถ้าดูแค่ mastery ผู้เรียนอาจผ่านทั้งที่เคยเจอโจทย์แบบเดียว
 
@@ -137,8 +145,10 @@ ratio     = need ÷ available
 |---|---|---|---|
 | minutes_per_problem | 4 | [C] | ใช้ค่าเฉลี่ยของผู้ใช้เองจาก `attempts` ค่าแรกจาก PoC P4-lite |
 | daily_minutes | 45 | [C] | ใช้ค่าที่ผู้ใช้กรอกใน S08 หรือเวลา session จริง |
+| session_minutes | 45 | [C] | = daily_minutes (1 session ต่อวัน) · หลัง Alpha ใช้ความยาว session จริงของผู้ใช้แทน |
 | tight_ratio / triage_ratio | 0.8 / 1.2 | [C] | หลัง Alpha เทียบเวลาที่ประมาณกับเวลาจริง ตั้งขอบตามความคลาดเคลื่อนที่วัดได้ |
-| triage_days_left | 3 | [C] | |
+| triage_days_left | 3 | [C] | หลัง Alpha: ดูว่าคนที่เข้า triage ตอนเหลือ ≤ 3 วัน ยังทำหัวข้อ ★★★ จบครบไหม แล้วเลื่อนจุดตัด |
+| final_mode_days_left | 1 | [calc] | = วันก่อนสอบ (นิยามของ Final mode) |
 | interleave_every_n_practice | 4 | [C] | Rohrer & Taylor (2007) รองรับการคละโจทย์ แต่ยังไม่มีอัตราส่วนมาตรฐาน (Could) |
 
 ## 7. Park และ wheel-spinning
@@ -154,7 +164,10 @@ ratio     = need ÷ available
 |---|---|---|---|
 | OCR confirm_below_confidence | 0.8 | [C] | PoC P1: precision–recall บน golden set เลือกจุดที่จับบรรทัดอ่านผิดได้ ≥ 95% |
 | Checker targets | verdict ≥ 95%, error type ≥ 80%, บรรทัดผิด ≥ 85% | requirement | ~20 คำตอบต่อ session → ผิดประมาณ 1 ครั้ง/session ซึ่งรับได้เพราะมี dispute flow |
-| SymPy timeout | 2 วินาที | [B] | งบเวลาเพื่อให้ verdict มาก่อนเป้า TTFT |
+| SymPy timeout | 2 วินาที | [calc] | งบเวลาเพื่อให้ verdict มาก่อนเป้า TTFT p95 < 2 วินาที (เดิมติดป้าย [B] แต่ไม่ใช่มาตรฐานหรือค่า default ของ library) |
+| numeric_rel_tolerance | 0.01 | [C] | Should: แทนด้วยจำนวนเลขนัยสำคัญที่โจทย์กำหนด · P2 วัดว่ามีคำตอบทศนิยมที่ตัดสินผิดเพราะค่านี้กี่ข้อ |
+| max_generate_retries | 2 | [C] | P2/S3: วัด % ของโจทย์ที่สร้างแล้วเฉลยผ่าน SymPy ในรอบที่ 1, 2, 3 แล้วเลือกจำนวนรอบที่ครอบคลุม ≥ 95% (เดิมติดป้าย [B] โดยไม่มีอ้างอิง) |
+| idle_minutes_to_end | 15 | [C] | หลัง Alpha: ดูการกระจายของช่วงเว้นระหว่างข้อความของผู้ใช้ใน session แล้วใช้ค่า p95 |
 | TTFT p95 | < 2 วินาที | [A]+[B] | Nielsen: ภายใน 1 วินาทีความคิดไม่ขาดตอน · LLM มี latency พื้นฐาน จึงใช้ 2 วินาทีกับ streaming |
 | context_recent_turns, grounding_chunks | 8, 4 | [C] | Liu et al. (2023): LLM ใช้ข้อมูลกลาง context ยาวได้แย่ลง จึงส่งเฉพาะที่เกี่ยวข้อง · ปรับใน P3 |
 | token_budget | 6,000 | [calc] | ~2 เท่าของ prompt ~3,200 tokens (ai-orchestration 2.2.3) |
