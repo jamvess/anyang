@@ -19,7 +19,6 @@ sys.path.insert(0, str(REPO / "apps" / "api"))
 from pydantic import BaseModel  # noqa: E402
 
 from app.ai.gateway import AIProviderError, CallRecord, Gateway  # noqa: E402
-from app.ai.providers.base import ProviderRequest, ProviderResponse  # noqa: E402
 from app.ai.providers.gemini import GeminiProvider  # noqa: E402
 from app.settings import get_settings  # noqa: E402
 
@@ -30,9 +29,9 @@ OUT = Path(__file__).parent / "out"  # gitignored: contains text of the course f
 RESULTS = Path(__file__).parent / "results"  # committed: metrics and topic lists only
 
 # The PoC runs on the Gemini free tier (Jam's choice during development): 5 requests per
-# minute per model. Every request to the provider, including the gateway's own retries, is
-# spaced by MIN_SECONDS_BETWEEN_REQUESTS; a 429 that still happens waits BACKOFF_SECONDS.
-# CallRecord.latency_ms measures the model only, so the waiting is not counted as AI time.
+# minute per model. Gateway calls run one at a time and start MIN_SECONDS_BETWEEN_REQUESTS
+# apart. The wait happens before ai.call, so it is outside the gateway's timeout and outside
+# CallRecord.latency_ms (AI time only). A 429 from a gateway-internal retry waits BACKOFF_SECONDS.
 FREE_TIER_REQUESTS_PER_MINUTE = 5
 MIN_SECONDS_BETWEEN_REQUESTS = 60 / FREE_TIER_REQUESTS_PER_MINUTE + 1
 BACKOFF_SECONDS = (30, 60, 90)
@@ -51,24 +50,6 @@ def read_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-class Spaced:
-    """Wraps a provider so requests start at least ``seconds`` apart, one at a time."""
-
-    def __init__(self, provider: GeminiProvider, seconds: float) -> None:
-        self._provider = provider
-        self._seconds = seconds
-        self._lock = asyncio.Lock()
-        self._last = 0.0
-
-    async def generate(self, request: ProviderRequest) -> ProviderResponse:
-        async with self._lock:
-            wait = self._last + self._seconds - time.monotonic()
-            if wait > 0:
-                await asyncio.sleep(wait)
-            self._last = time.monotonic()
-        return await self._provider.generate(request)
-
-
 class Run:
     """A live gateway whose call records are appended to out/calls.jsonl with a tag."""
 
@@ -79,16 +60,13 @@ class Run:
         self.gateway = Gateway.live(
             settings.ai,
             env.prompts_dir,
-            {
-                "gemini": Spaced(
-                    GeminiProvider(env.gemini_api_key.get_secret_value()),
-                    MIN_SECONDS_BETWEEN_REQUESTS,
-                )
-            },
+            {"gemini": GeminiProvider(env.gemini_api_key.get_secret_value())},
             env.ai_model_override,
         )
         self.records: list[tuple[str, CallRecord]] = []
         self.gateway.add_listener(self._log)
+        self._one_at_a_time = asyncio.Lock()
+        self._last_start = 0.0
 
     def _log(self, record: CallRecord) -> None:
         self.records.append((_tag.get(), record))
@@ -100,15 +78,20 @@ class Run:
     async def call[T: BaseModel](
         self, tag: str, purpose: str, values: dict[str, Any], schema: type[T]
     ) -> T:
-        for wait in (*BACKOFF_SECONDS, None):
-            _tag.set(tag)
-            try:
-                return await self.gateway.call(purpose, values, schema)
-            except AIProviderError as error:
-                if wait is None or ("429" not in str(error) and "503" not in str(error)):
-                    raise
-                print(f"  {tag}: {str(error)[:120]} -> waiting {wait}s", flush=True)
-                await asyncio.sleep(wait)
+        async with self._one_at_a_time:
+            for wait in (*BACKOFF_SECONDS, None):
+                gap = self._last_start + MIN_SECONDS_BETWEEN_REQUESTS - time.monotonic()
+                if gap > 0:
+                    await asyncio.sleep(gap)
+                self._last_start = time.monotonic()
+                _tag.set(tag)
+                try:
+                    return await self.gateway.call(purpose, values, schema)
+                except AIProviderError as error:
+                    if wait is None or ("429" not in str(error) and "503" not in str(error)):
+                        raise
+                    print(f"  {tag}: {str(error)[:120]} -> waiting {wait}s", flush=True)
+                    await asyncio.sleep(wait)
         raise AssertionError("unreachable")
 
     def tokens(self, tag_prefix: str) -> tuple[int, int]:

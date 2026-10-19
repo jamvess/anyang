@@ -370,3 +370,32 @@ def test_AI04_listener_errors_do_not_break_the_call():
 
     result = asyncio.run(gateway.call("extract_topics_local", TOPICS_INPUT, TopicsResult))
     assert len(result.topics) == 1
+
+
+# --- AI-01 several images in one input (PoC P3: a whole scanned exam in one call) -----------
+
+
+async def test_AI01_list_of_images_is_sent_as_attachments_in_order(tmp_path: Path):
+    write_prompt(tmp_path, "demo", "Read {{file_name}}", inputs="images, file_name")
+    fake = FakeProvider({"demo": ['{"notes": ""}']})
+    config = get_settings().ai
+    purposes = config.purposes | {"demo": config.purposes["route_intent"]}
+    pages = [Image(data=bytes([n]), mime_type="image/png") for n in range(3)]
+
+    await make_gateway(fake, tmp_path, purposes=purposes).call(
+        "demo", {"images": pages, "file_name": "exam.pdf"}, BaseModel
+    )
+
+    assert fake.requests[0].images == pages
+    assert fake.requests[0].prompt == "Read exam.pdf"
+
+
+async def test_AI01_list_input_must_contain_only_images(tmp_path: Path):
+    write_prompt(tmp_path, "demo", "Read {{file_name}}", inputs="images, file_name")
+    config = get_settings().ai
+    purposes = config.purposes | {"demo": config.purposes["route_intent"]}
+
+    with pytest.raises(AIInputError, match="images"):
+        await make_gateway(FakeProvider({}), tmp_path, purposes=purposes).call(
+            "demo", {"images": ["not an image"], "file_name": "exam.pdf"}, BaseModel
+        )

@@ -45,14 +45,17 @@
 - 2026-10-19 · ingest รอบแรก: เช็คคุณภาพข้อความได้ผลชัด (ตัวอักษรไทยในข้อสอบสแกน 0%, ในชีท 48–85%, เกณฑ์ `MIN_THAI_SHARE = 0.3`) · แต่ midterm-2559-1 หน้า 12 ได้ schema error เพราะ thinking token ใช้จนชนเพดาน `max_tokens: 4000` (ทั้ง 2 รอบได้ ~3,993 token) · ทดลองตั้ง thinking low กับหน้าเดียวกัน: 396 token, 4.9 วินาที, JSON ถูก · และ free tier ให้แค่ 5 ครั้งต่อนาที (`gemini-3.5-flash` ถูกส่งไปที่ `gemini-3.6-flash`) ทำให้ 10 จาก 23 call โดน 429
 - 2026-10-19 · (Jam เลือกตามคำแนะนำ) A: เพิ่ม `thinking: low|medium|high` ที่ระดับ purpose ใน `config/ai.yaml` + `PurposeConfig` · ตั้ง low ให้ vision_extract, split_past_exam, extract_topics_local, map_questions และ medium ให้ merge_topics · B: ~~เปิด billing~~ → Jam ยังไม่อยากจ่ายเงินช่วง develop จึงใช้ free tier ต่อ · `poc/P3/common.py` ห่อ provider ด้วย `Spaced` ให้ทุก request ห่างกัน 13 วินาที (ครอบคลุม retry ของ gateway ด้วย) · ใน report เวลาต่อไฟล์จะนับแค่ `latency_ms` ไม่นับเวลารอโควตา และต้องเขียนไว้ว่าวัดบน free tier · ⚠️ ก่อนทำ P1 ต้องแก้เรื่อง AI-07: ห้ามส่งรูปลายมือเพื่อนผ่าน free tier ให้เปิด billing ช่วงนั้น หรือขอ consent ใหม่ที่บอกเรื่องนี้
 - 2026-10-19 · test ใหม่ `test_AI02_thinking_level_*` (5 case) เพิ่มต่อท้าย ไม่ได้แก้ test เดิม · รอ Jam review
+- 2026-10-19 · รอบ 2 พังเพราะ bug ของ PoC: ตัวเว้นช่วงอยู่ใน timeout ของ gateway หน้าที่รอคิวจึง timeout ทั้งหมด (แก้แล้ว: เว้นช่วงก่อนเรียก gateway และเรียกทีละ call) · รอบ 3 เจอว่า free tier ของ `gemini-3.5-flash` ให้แค่ **20 request ต่อวัน** (`GenerateRequestsPerDayPerProjectPerModel-FreeTier`) และวันนี้ใช้หมดแล้ว (รีเซ็ตเที่ยงคืนเวลาแปซิฟิก ≈ 14:00–15:00 น. เวลาไทย)
+- 2026-10-19 · (Jam เลือก) ลดจำนวน call โดยเพิ่ม purpose ใหม่ `vision_extract_pages` อ่านทุกหน้าของไฟล์ใน call เดียว (ข้อสอบ 1 ฉบับ = 1 call) · ingest เหลือ 4 call แทน 28 · ไม่ได้แก้ `vision_extract` v1 ที่ยังใช้กับรูปหน้าเดียว · gateway รับ input เป็น `list[Image]` ได้ · ต่างจาก spec §2.3.7 ที่กำหนด A2 ให้อ่านทีละหน้า จะบันทึกเป็นผลของ PoC (คุณภาพและเวลาเทียบกับแบบทีละหน้าเท่าที่วัดได้)
+- 2026-10-19 · test ใหม่: `test_AI01_list_of_images_*` (2 ตัว ต่อท้าย test_ai_gateway.py) + `test_vision_extract_pages_model.py` (6 case) · รอ Jam review
 
 ## Next step
 
-หลัง Jam review test thinking: เพิ่ม `thinking` ใน `PurposeConfig` (`app/settings.py`), `ProviderRequest`, gateway และ Gemini provider (`ThinkingConfig(thinking_level=...)`) + ใส่ค่าใน `config/ai.yaml` · จากนั้นรัน `ingest.py` ใหม่ (ไม่ต้องใส่ `--force` เพราะรอบแรกหยุดตั้งแต่ไฟล์แรก ยังไม่มีไฟล์ไหนถูกเขียนลง `out/pages/`)
+หลัง Jam review test: gateway รับ `list[Image]` · model `VisionExtractPagesResult` (หน้าต้องเรียง 1..n) · เพิ่ม purpose `vision_extract_pages` ใน `config/ai.yaml` (tier vision, max_tokens 16000, timeout_s 180, thinking low) · แก้ `ingest.py` ให้ส่งทุกหน้าใน call เดียว · **รันจริงหลัง 15:00 น. วันที่ 2026-10-20** (โควตารายวันรีเซ็ต)
 
 ## Waiting on
 
-Jam review test thinking
+Jam review test (ขั้น 5) · โควตา free tier รีเซ็ต 2026-10-20 ≈ 15:00 น.
 
 ## Notes for next time
 
