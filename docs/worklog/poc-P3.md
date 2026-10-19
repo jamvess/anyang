@@ -14,7 +14,7 @@
 - [x] 1. 🙋 Jam: ขอ Junior ในกลุ่มว่า Jam จะเขียน gateway lite ใน `apps/api/app/ai/` เอง (เป็นงาน S3 ของ Junior) และให้ Junior เป็นคน review
 - [x] 2. 🙋 Jam: สร้าง Gemini API key ใน AI Studio แล้วใส่ใน `.env` ที่ root ของ repo (Claude ห้ามอ่านไฟล์นี้)
 - [x] 3. 🤖 Gateway lite · test ก่อน: `ai.call(purpose, input, schema)` โหลด prompt ตาม `config/ai.yaml`, error ถ้ามี placeholder ที่ไม่ได้เติม, เลือก provider fake/gemini ตาม `AI_PROVIDER`, ตรวจ schema ด้วย Pydantic แล้ว retry 1 ครั้ง, เขียน log การเรียกลงไฟล์ (ยังไม่เขียน `ai_calls` ลง DB) → 🙋 Jam review test → implement
-- [ ] 4. 🤖 Prompt v1 + Pydantic model ของ A2 `vision_extract`, A4 `split_past_exam`, A6 `merge_topics`, A7 `map_questions`
+- [x] 4. 🤖 Prompt v1 + Pydantic model ของ A2 `vision_extract`, A4 `split_past_exam`, A6 `merge_topics`, A7 `map_questions`
 - [ ] 5. 🤖 `poc/P3/ingest.py`: ชีทอ่านด้วย PyMuPDF + เช็คคุณภาพข้อความ (% ตัวอักษรไทย) · ข้อสอบสแกนส่งรูปรายหน้าให้ A2 แล้วตัดรายข้อด้วย A4 · เก็บผลเป็นไฟล์ใน `poc/P3/out/` (ไม่ลง DB)
 - [ ] 6. 🤖 `poc/P3/run.py`: A5 ทีละชีท → A6 → A7 → ดาว (สูตร §2.3.5 อ่านค่าจาก `config/learning.yaml` → `stars`) · จับเวลาและต้นทุนต่อไฟล์
 - [ ] 7. 🤖 `poc/P3/score.py`: เทียบกับ `labels.json` → % หัวข้อตรง, % ★★★ ตรง, เวลาต่อไฟล์, ต้นทุนต่อไฟล์ · 🙋 Jam ตัดสินวิธีจับคู่หัวข้อก่อนเขียน
@@ -41,14 +41,15 @@
 - 2026-10-19 · gateway lite เขียว (22 test ใหม่ + 6 test เดิม) · ไฟล์: `app/ai/gateway.py`, `app/ai/providers/{base,fake,gemini}.py` · env ใหม่ `GEMINI_API_KEY`, `AI_MODEL_OVERRIDE` (เพิ่มใน `.env.example`, `settings.py`, `setup.md` A5) · script ของ PoC สร้าง `Gateway.live` เอง จึงไม่ต้องเปลี่ยน `AI_PROVIDER` ใน `.env` · red → green 1 รอบ
 - 2026-10-19 · Gemini 3 นับ thinking token รวมใน `max_output_tokens` · `max_tokens` ใน `ai.yaml` จึงอาจทำให้คำตอบถูกตัดกลางทาง ให้ดูตอนรันจริง
 - 2026-10-19 · ใช้ `gemini-3.5-flash` ระหว่าง PoC (Jam เลือก) · เพราะ `gemini-3.8-flash` ตอบข้อความทดสอบสั้นๆ ใช้เวลา 35 วินาที และเคย 504 DEADLINE_EXCEEDED 2 ครั้ง ส่วน 3.5-flash ใช้ 1.7 วินาที (free tier, 2026-10-19) · ตอนรันจริงให้รัน 3.8 เทียบ 1 รอบ แล้วใส่ทั้งความแม่นและความเร็วลงใน report · key ของ AI Studio ไม่ได้ขึ้นต้นด้วย `AIza` แต่ใช้ได้ปกติ
+- 2026-10-19 · model ของ A2, A4, A5, A6, A7 + extract_answer อยู่ใน `apps/api/app/models/scope_ai.py` · test 37 case เขียว (รวมทั้งหมด 65) · red → green 1 รอบ · model ตรวจกฎของ prompt ด้วย (ช่วงหน้า, เลขข้อ, กราฟ prerequisite ห้ามวน, skill ต้องเป็นของหัวข้อตัวเอง) ถ้า AI ตอบผิดกฎ จะถูกส่งกลับไปแก้ผ่าน schema retry
 
 ## Next step
 
-ขั้น 4 ที่เหลือ: test ของ model เขียนแล้ว (`apps/api/tests/unit/test_scope_ai_models.py`, 37 case, ยัง red) รอ Jam review · หลัง review ให้เขียน `apps/api/app/models/scope_ai.py` จนเขียว
+ขั้น 5: เขียน `poc/P3/ingest.py` · ชีท (`evals/topics/mth10101/raw/sheet-0*.pdf`) อ่านด้วย PyMuPDF + เช็ค % ตัวอักษรไทย · ข้อสอบ (`midterm-*.pdf`) render เป็นรูปทีละหน้าแล้วส่ง A2 `vision_extract` → รวมเป็น `[p.N]` → A4 `split_past_exam` · ผลเก็บใน `poc/P3/out/` · เรียก AI ผ่าน `Gateway.live` + `app.models.scope_ai` · ต้องเพิ่ม `pymupdf` ใน `apps/api/pyproject.toml` (Junior OK แล้วในข้อความเดิม)
 
 ## Waiting on
 
-Jam review test ของ model
+ไม่มี
 
 ## Notes for next time
 
