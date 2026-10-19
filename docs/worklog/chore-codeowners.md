@@ -35,3 +35,4 @@
 
 - 2026-10-19 · เช็ค ruleset แล้ว: ruleset 25137368 ที่ checklist อ้างถึงไม่มีอยู่แล้ว (404) · ruleset ที่มีคือ `main` id 25374094 (สร้าง 19 ต.ค. 12:38) มี `require_code_owner_review: false` · **ไม่ได้บังคับ code-owner review** CODEOWNERS แค่ขอ reviewer ให้อัตโนมัติ · บรรทัดที่มีเจ้าของคนเดียว (เช่น `/.github/`) จึงไม่ทำให้ PR ติด ไม่ต้องเพิ่มคนที่สอง
 - 2026-10-19 · ⚠️ ruleset 25374094 มี `enforcement: disabled` และ API บอกว่า `main` เป็น `protected: false` · ตอนนี้ไม่มีกฎ PR + 1 approval + CI 3 job บังคับบน `main` เลย ไม่ตรงกับ checklist S1 ข้อแรก · Jam (admin) ต้องเปิดเป็น Active ที่ Settings → Rules → Rulesets → `main` · ไม่ได้แก้ใน PR นี้
+- 2026-10-19 · Jam ขอให้ข้ามเรื่องเปิด ruleset ไปก่อน · ระหว่างนี้ทุกคนต้องทำตามกติกาเอง: ไม่ push ตรงเข้า `main` · รอ approve 1 คน + CI เขียวก่อน merge
