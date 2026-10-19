@@ -5,15 +5,15 @@
 | Owner | May |
 | Branch | `docs/wireframe-s05-s08-s15` |
 | Checklist item | แก้ wireframe S05 (คำแนะนำการเขียน persona), S08 (ช่องนาทีต่อวัน), S15 (progress card) (D6) |
-| Status | paused · 2026-10-15 |
+| Status | in progress · 2026-10-19 |
 
 ## Plan
 
 - [x] 1. 🙋 May บอกว่า wireframe อยู่ที่ไหน → `Downloads/end-to-end.html` (ไม่มี Figma)
 - [x] 2. 🤖 copy เข้า repo เป็น `docs/design/wireframe.html` (ยังไม่แก้) + เขียน brief `docs/design/wireframe-s1-changes.md`
 - [x] 3. 🤖 แก้ S05 ใน HTML → 🙋 May เปิดดูแล้ว ok
-- [ ] 4. 🤖 แก้ S08 (แก้แล้ว commit `39defa6`) → 🙋 May เปิดดูแล้ว ok (ยังไม่ได้ตอบ)
-- [ ] 5. 🤖 แก้ S15 → 🙋 May เปิดดูแล้ว ok
+- [x] 4. 🤖 แก้ S08 (commit `39defa6`) → 🙋 May เปิดดูแล้ว ok (2026-10-19)
+- [ ] 5. 🤖 แก้ S15 (แก้แล้ว 2026-10-19) → 🙋 May เปิดดูแล้ว ok (ยังไม่ได้ตอบ)
 - [ ] 6. 🙋 May ส่งข้อเสนอ `skill_level` ของ buddy ให้ Jam ในแชทกลุ่ม
 - [ ] 7. 🤖 ติ๊ก checklist
 
