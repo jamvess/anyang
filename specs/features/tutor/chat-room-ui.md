@@ -150,7 +150,7 @@
 
 ยังเปิดอยู่ (ให้ reviewer ตอบ)
 
-1. **Requirement ID ของ AC เรื่อง layout และ bubble:** `requirements.md` ไม่มีข้อที่พูดถึงหน้าตา bubble โดยตรง spec นี้ใช้ TM-04 (การติวเป็นบทสนทนา) กับ tutor/user และ TM-05 กับ buddy ใช้แบบนี้ได้ไหม
+1. ~~Requirement ID ของ AC เรื่อง layout และ bubble~~ · ตอบแล้ว: requirements v1.2 เพิ่ม **TM-20** (bubble) และ **TM-21** (ขีดจำกัด input) · ตอนทำ P4-lite ให้เปลี่ยนชื่อ test จาก TM04/TM05 เป็น TM20 และ test ขีดจำกัดเป็น TM21 (May ตัดสิน 2026-10-19 · ต้องให้ May review ชื่อใหม่)
 2. **เครื่องหมาย `$` ที่ไม่ใช่สมการ** (เช่น ราคา "$5") จะถูกอ่านเป็นสมการ · คณิตระดับนี้แทบไม่เจอ จึงยังไม่จัดการใน S2
 
 ## 11. Spec changes needed

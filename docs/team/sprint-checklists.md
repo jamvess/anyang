@@ -27,7 +27,7 @@
 - [ ] สร้าง GCP project, เปิด API, Artifact Registry, Secret Manager (`infra/README.md`)
 - [ ] สร้าง Supabase project `anyang-staging`
 - [ ] ให้สิทธิ์ทีม: GitHub collaborator + Supabase org (เจ้าของ repo ทำ, `setup.md` A0), GCP (Jam: Vertex AI User)
-- [ ] แก้ `.github/CODEOWNERS` เป็น username จริง
+- [x] แก้ `.github/CODEOWNERS` เป็น username จริง · + เพิ่ม `/.github/` ให้ Junior ตาม `roles.md` (19 ต.ค.)
 - [ ] ตั้งเครื่องตัวเองตาม `setup.md` Part A
 - [ ] ตรวจ `specs/system/architecture.md` ให้ตรงกับที่ตั้งจริง (D2)
 - [ ] ร่วม review `specs/requirements/requirements.md` (D1)
@@ -78,8 +78,9 @@
 - [x] ⭐ ให้ Claude Code scaffold `apps/web` และตรวจผล (+ `pnpm build` ใน CI)
 - [x] แก้ wireframe S05 (คำแนะนำการเขียน persona), S08 (ช่องนาทีต่อวัน), S15 (progress card) (D6)
 - [x] เชื่อม Vercel กับ repo (root `apps/web`)
-- [ ] ร่วม review `specs/requirements/requirements.md` (D1)
-- [ ] รูปลายมือ 10 รูป (D8)
+- [x] ร่วม review `specs/requirements/requirements.md` (D1)
+- [x] รูปลายมือ 10 รูป (D8)
+  - ส่ง 6 รูปให้ Jam แล้ว 19 ต.ค. ตามแผนใหม่ (คนละ 6 ใบ · ดู PR #11)
 
 **Done เมื่อ:** wireframe 3 หน้าแก้เสร็จ และ `pnpm dev` ขึ้นหน้าแรกได้
 
