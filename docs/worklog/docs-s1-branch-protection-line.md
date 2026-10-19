@@ -10,8 +10,8 @@
 ## Plan
 
 - [x] 1. 🙋 เลือกข้อความ · เลือกข้อ 1 (ยังติ๊กไว้ แก้แค่ส่วนที่ผิด)
-- [ ] 2. 🤖 สร้าง branch + worklog + draft PR
-- [ ] 3. 🤖 แก้บรรทัด S1 ข้อแรกใน `docs/team/sprint-checklists.md` บรรทัดเดียว · ไม่แตะไฟล์อื่น (ไม่แก้ `setup.md`)
+- [x] 2. 🤖 สร้าง branch + worklog + draft PR
+- [x] 3. 🤖 แก้บรรทัด S1 ข้อแรกใน `docs/team/sprint-checklists.md` บรรทัดเดียว · ไม่แตะไฟล์อื่น (ไม่แก้ `setup.md`)
 - [ ] 4. 🙋 เปิดไฟล์ดูว่าข้อความถูก แล้วตอบ ok
 - [ ] 5. 🤖 `/work-done` · PR description ลิงก์ #17 · ขอ review จาก Jam
 
@@ -29,7 +29,7 @@
 
 ## Next step
 
-ขั้น 3: แก้บรรทัด 23 ใน `docs/team/sprint-checklists.md`
+ขั้น 4: Junior เปิด `docs/team/sprint-checklists.md` บรรทัด 23 เช็คข้อความ แล้วตอบ ok → commit แล้วรัน `/work-done`
 
 ## Waiting on
 
