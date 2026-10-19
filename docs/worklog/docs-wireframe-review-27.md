@@ -11,9 +11,9 @@
 
 "design ใหม่" = `specs/system/ai-orchestration.md` (โดยเฉพาะ §3.5), `specs/requirements/requirements.md` (สถานะ changed / deferred), `specs/system/api.md`, `specs/system/learning-model.md`
 
-- [ ] 1. 🤖 อ่าน spec แล้วทำรายการ "สิ่งที่ design ใหม่กำหนด" ที่กระทบหน้าจอ + ทำรายการ 27 หน้าจาก `docs/design/wireframe.html`
-- [ ] 2. 🤖 ไล่ตรวจทีละหน้า (S01–S27) เขียนผลลง `docs/design/wireframe-s2-review.md`: หน้า · สิ่งที่ขัด · อ้างอิง spec · ข้อเสนอ (แก้ wireframe / แก้ spec / ปล่อยไว้) · รวม 3 เรื่องที่จดไว้จาก S1 (S04, S13–S14, S24) และข้อเสนอ `skill_level` ของ S05
-- [ ] 3. 🙋 May ตัดสินทีละข้อในไฟล์ review (พิมพ์ในช่อง "ตัดสิน": `แก้ wf` / `แก้ spec` / `ปล่อย` + เหตุผลสั้นๆ)
+- [x] 1. 🤖 อ่าน spec แล้วทำรายการ "สิ่งที่ design ใหม่กำหนด" ที่กระทบหน้าจอ + ทำรายการ 27 หน้าจาก `docs/design/wireframe.html`
+- [x] 2. 🤖 ไล่ตรวจทีละหน้า (S01–S27) เขียนผลลง `docs/design/wireframe-s2-review.md`: หน้า · สิ่งที่ขัด · อ้างอิง spec · ข้อเสนอ (แก้ wireframe / แก้ spec / ปล่อยไว้) · รวม 3 เรื่องที่จดไว้จาก S1 (S04, S13–S14, S24) และข้อเสนอ `skill_level` ของ S05
+- [x] 3. 🙋 May ตัดสินทีละข้อในไฟล์ review (พิมพ์ในช่อง "ตัดสิน": `แก้ wf` / `แก้ spec` / `ปล่อย` + เหตุผลสั้นๆ) · 2026-10-19 May ตอบผ่านคำถามในแชท Claude กรอกลงตาราง: แก้ wf 25 ข้อ, แก้ spec 1 ข้อ (R05)
 - [ ] 4. 🤖 แก้ `wireframe.html` ตามที่ตัดสิน `แก้ wf` · ทีละหน้า · ไม่แตะหน้าอื่น
 - [ ] 5. 🙋 May เปิด `docs/design/wireframe.html` ใน browser (ดับเบิลคลิกไฟล์ใน File Explorer หรือคลิกขวาในแถบ Explorer ของ VS Code → Reveal in File Explorer แล้วดับเบิลคลิก) ใช้ลูกศรซ้ายขวาไปหน้าที่แก้ ดูว่าถูกต้อง
 - [ ] 6. 🤖 ข้อที่ตัดสิน `แก้ spec` → รวมเป็นข้อเสนอใน PR description + ข้อความแชทกลุ่มถึงเจ้าของ spec (spec เป็นไฟล์ร่วม ไม่แก้เองโดยไม่ถาม)
@@ -27,10 +27,12 @@
 ## Decisions
 
 - 2026-10-19 · ใช้ type `docs` · แก้แค่ wireframe และเอกสาร design
+- 2026-10-19 · May ตัดสิน 6 ข้อที่ต้องเลือก: R02 ตัด `skill_level` ออกจาก S05 (ตาม spec ปัจจุบัน) · R03 ลบข้อความมีนนอกห้องติว · R05 เก็บ "แบบฝึกหัด" แล้วขอ Junior เพิ่ม kind `exercise` · R11 ให้ปาลขอเริ่มผลต่างกำลังสองเอง (user override) จะได้ไม่ต้องแก้ S16–S18 · R20 ใช้ตารางแทนรูป · R24 เพิ่มหมายเหตุเรื่องแย้งผลตรวจใน S22 · ที่เหลือแก้ตามข้อเสนอ
+- 2026-10-19 · ถามคำตัดสินผ่านตัวเลือกในแชทแทนให้ May แก้ตาราง Markdown เอง · May บอกว่าวิธีกรอกตารางเข้าใจยาก
 
 ## Next step
 
-Claude ทำขั้น 1: อ่าน spec + ทำรายการ 27 หน้า
+Claude ทำขั้น 4: แก้ `wireframe.html` ตามช่อง "ตัดสิน" ใน `wireframe-s2-review.md` ทีละหน้า (เริ่ม S04)
 
 ## Waiting on
 
