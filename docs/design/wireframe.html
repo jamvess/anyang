@@ -698,22 +698,35 @@ ${TOP()}
 ch:"บทที่ 3 · เริ่มติว", clock:"20:30", url:"anyang.app/room/factorization",
 title:"เข้าห้องติวเลย ไม่มีหน้าคั่น",
 story:`<p>เลือกติวเตอร์ไปตั้งแต่ตอนสมัครแล้ว ไม่ต้องเลือกซ้ำ กดยืนยันขอบเขตปุ๊บเข้าห้องติวปั๊บ</p>
-<p>สังเกตว่าหน้านี้แทบไม่เหลือ UI เลย ไม่มีแถบข้าง ไม่มีการ์ด ไม่มีปุ่มตัวเลือก มีแค่บทสนทนากับช่องพิมพ์ที่มีไมค์กับกล้องอยู่ข้างใน</p>
-<p>พี่ตาลเลือกเองว่าจะเริ่มตรงไหนและบอกเหตุผลสั้นๆ แล้วยิงโจทย์มาทันทีโดยยังไม่สอนอะไรเลย เพื่อดูว่าต้องเริ่มจากศูนย์หรือข้ามได้</p>`,
+<p>สิ่งแรกที่เห็นคือ<b>การ์ดความคืบหน้า</b> สอบในกี่วัน ผ่านกี่หัวข้อ พร้อมแค่ไหน และแต่ละหัวข้ออยู่ระดับไหน ตัวเลขทุกตัวมาจากระบบโดยตรง AI ไม่ได้แต่งขึ้นเอง วันแรกเลยยังเป็นศูนย์ทั้งหมด</p>
+<p>ไม่มีแถบข้าง ไม่มีปุ่มตัวเลือก นอกจากการ์ดใบนี้ก็มีแค่บทสนทนากับช่องพิมพ์ที่มีไมค์กับกล้องอยู่ข้างใน</p>
+<p>พี่ตาลสรุปสั้นๆ ว่าวันนี้เริ่มที่ไหนเพราะอะไร แล้วยิงโจทย์มาทันทีโดยยังไม่สอนอะไรเลย เพื่อดูว่าต้องเริ่มจากศูนย์หรือข้ามได้</p>`,
 screen:`
 <div class="room">${ROOMTOP}
 <div class="feed">
+  <div class="card mb16">
+    <div class="sp mb6"><span class="tag mono mb0">ความคืบหน้า · Factorization</span><span class="t12 mu">สอบใน 5 วัน</span></div>
+    <div class="row mb6" style="gap:28px">
+      <div><p class="t12 mu mb0">ผ่านแล้ว</p><p class="b5 t14 mb0">0 / 8 หัวข้อ</p></div>
+      <div><p class="t12 mu mb0">ความพร้อม</p><p class="b5 t14 mb0">0%</p></div>
+    </div>
+    <p class="t12 mu2 mb6">ความพร้อม = สัดส่วนของเนื้อหาข้อสอบที่คาดว่าทำได้ ไม่ใช่คะแนนสอบ</p>
+    <ul class="list mb0">
+      <li><span class="ck n mono">3</span><span style="flex:1">ผลต่างกำลังสอง</span><span class="st on">★★★</span><span class="chip mono">ยังไม่เริ่ม</span></li>
+      <li><span class="ck n mono">2</span><span style="flex:1">ดึงตัวประกอบร่วม</span><span class="st on">★★★</span><span class="chip mono">ยังไม่เริ่ม</span></li>
+      <li><span class="ck n mono">5</span><span style="flex:1">แยก x²+bx+c</span><span class="st on">★★★</span><span class="chip mono">ยังไม่เริ่ม</span></li>
+      <li><span class="ck n mono">7</span><span style="flex:1">การจัดกลุ่ม</span><span class="st on">★★★</span><span class="chip mono">ยังไม่เริ่ม</span></li>
+      <li><span class="ck n mono">1</span><span style="flex:1">คูณพหุนาม</span><span class="st on">★★<span class="off">★</span></span><span class="chip mono">ยังไม่เริ่ม</span></li>
+      <li><span class="ck n mono">4</span><span style="flex:1">กำลังสองสมบูรณ์</span><span class="st on">★<span class="off">★★</span></span><span class="chip mono">ยังไม่เริ่ม</span></li>
+      <li><span class="ck n mono">·</span><span class="mu" style="flex:1">อีก 2 หัวข้อ</span><span class="chip mono">ยังไม่เริ่ม</span></li>
+    </ul>
+  </div>
   <div class="m"><div class="av">ต</div><div class="body">
     <p class="who">พี่ตาล<span>20:30</span></p>
-    <p>เอาละ เหลือ 5 วันเนอะ</p>
-    <p>เริ่มที่ผลต่างกำลังสองก่อนละกัน ข้อสอบเก่าออกทุกชุดเลย แล้วก็ง่ายสุดในกลุ่มนี้ด้วย</p></div></div>
+    <p>เหลือ 5 วัน ยังไม่ได้เริ่มสักเรื่องเลยเนอะ</p>
+    <p>วันนี้เริ่มที่ผลต่างกำลังสองก่อน สามดาว ข้อสอบเก่าออกทุกชุด แล้วก็ง่ายสุดในกลุ่มนี้ด้วย</p></div></div>
   <div class="gap"></div>
-  <div class="m"><div class="av b">ม</div><div class="body">
-    <p class="who">มีน<span>20:30</span></p>
-    <p>เอาดิ เราก็ยังไม่ค่อยได้</p></div></div>
-  <div class="gap"></div>
-  <div class="m"><div class="av">ต</div><div class="body">
-    <p class="who">พี่ตาล<span>20:31</span></p>
+  <div class="m"><div class="av">ต</div><div class="body cont">
     <p>ก่อนสอนลองข้อนี้ก่อน อยากรู้ว่าต้องเริ่มตรงไหน</p>
     <p><span class="eq">x² − 49</span></p>
     <p>ไม่รู้ก็บอกมาตรงๆ ได้นะ ไม่ต้องเดา</p></div></div>
