@@ -7,11 +7,15 @@ on:
   pull_request:
     paths:
       - apps/web/**
+      # apps/web reads guards (message/image limits) from here at build time.
+      - config/ai.yaml
       - .github/workflows/web-deploy.yml
   push:
     branches: [main]
     paths:
       - apps/web/**
+      # apps/web reads guards (message/image limits) from here at build time.
+      - config/ai.yaml
       - .github/workflows/web-deploy.yml
 
 concurrency:

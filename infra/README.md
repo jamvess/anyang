@@ -36,7 +36,7 @@ printf '%s' "<anthropic-key>"    | gcloud secrets create anthropic-api-key --dat
 
 **ทำงานยังไง**
 
-- เปิด/อัปเดต PR ที่แก้ `apps/web/**` → job `deploy` สร้าง preview แล้วแนบปุ่ม **View deployment** ใน PR
+- เปิด/อัปเดต PR ที่แก้ `apps/web/**` หรือ `config/ai.yaml` (หน้าเว็บอ่าน `guards` จากไฟล์นี้ตอน build) → job `deploy` สร้าง preview แล้วแนบปุ่ม **View deployment** ใน PR
 - push เข้า `main` → deploy production
 - workflow ใช้ Vercel CLI (`pull` → `build` → `deploy --prebuilt`) แทน Git integration ของ Vercel เพราะ Hobby ยอม Git deploy เฉพาะ commit ของเจ้าของ account · `apps/web/vercel.json` ปิด Git deploy ไว้กันซ้ำ
 - step Deploy ซ่อน `.git` ชั่วคราว ไม่งั้น CLI ส่ง commit author ไปด้วยแล้ว deployment ขึ้น **Blocked** · job มี `timeout-minutes: 15`

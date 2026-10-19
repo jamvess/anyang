@@ -9,8 +9,8 @@
 
 ## Plan
 
-- [ ] 1. 🤖 เพิ่ม `config/ai.yaml` ใน `paths` ของ `pull_request` และ `push` ใน `.github/workflows/web-deploy.yml` + อัปเดตหัวข้อ "ทำงานยังไง" ใน `infra/README.md`
-- [ ] 2. 🤖 ตรวจว่า YAML ของ workflow ถูกต้อง (parse ด้วย Python + `actionlint` ถ้ามีบนเครื่อง)
+- [x] 1. 🤖 เพิ่ม `config/ai.yaml` ใน `paths` ของ `pull_request` และ `push` ใน `.github/workflows/web-deploy.yml` + อัปเดตหัวข้อ "ทำงานยังไง" ใน `infra/README.md`
+- [x] 2. 🤖 ตรวจว่า YAML ของ workflow ถูกต้อง (parse ด้วย Python + `actionlint` ถ้ามีบนเครื่อง)
 - [ ] 3. 🙋 เปิด PR แล้วดูว่า job `deploy` ของ `web-deploy` รันและเขียว (เปิด PR → แท็บ **Checks** → `web-deploy / deploy` ต้องเป็น ✓ และมีปุ่ม **View deployment**)
 
 ## Definition of done
@@ -23,10 +23,11 @@
 
 - 2026-10-19 · เพิ่มแค่ `config/ai.yaml` ไม่ใช่ `config/**` · หน้าเว็บใช้แค่ `guards` ใน `ai.yaml` ส่วนตัวเลขของ learning model ต้องมาจาก API (กฎ UI ใน `roles.md`) จึงไม่ควรทำให้เว็บ deploy ใหม่เมื่อ `learning.yaml` เปลี่ยน
 - 2026-10-19 · ไม่ต้องแก้ `ci.yml` · job `web` รันกับทุก PR อยู่แล้ว (ไม่มี `paths` filter)
+- 2026-10-19 · ตรวจ YAML ด้วย PyYAML (parse ได้, `paths` ครบทั้ง 2 event) · ไม่มี `actionlint` บนเครื่อง ใช้ผลรันจริงบน GitHub แทน
 
 ## Next step
 
-Claude ทำขั้น 1: แก้ `paths` ใน `web-deploy.yml` และ `infra/README.md`
+🙋 Junior: commit + push แล้วเปิด PR #19 แท็บ **Checks** ดูว่า `web-deploy / deploy` เป็น ✓ และมีปุ่ม **View deployment**
 
 ## Waiting on
 
