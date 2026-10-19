@@ -11,7 +11,7 @@
 
 - [x] 1. 🤖 เขียน `prompts/extract_topics_local/v1.md` (A5 · ai-orchestration §2.3.4, §2.3.7): frontmatter ตรงกับ `config/ai.yaml`, ครอบเนื้อหาไฟล์ด้วย `<document>`, กำหนดขนาดหัวข้อให้ตรงกับคู่มือ label P3 (`evals/topics/README.md`), output `{name, pages, prereq_hint}`
 - [x] 2. 🤖 ตรวจ `prompts/extract_answer/v1.md` เทียบกับคู่มือ label ลายมือ (`evals/README.md`) แล้วเขียนรายการจุดที่ไม่ตรงกัน · ถ้าต้องแก้ ให้ Jam ตัดสินใจก่อน
-- [ ] 3. 🤖 Smoke test: ดึงข้อความรายหน้าจาก `sheet-03.pdf` (ใช้ PyMuPDF ชั่วคราว ไม่เพิ่ม dependency) แล้วเติมลงใน prompt เป็นไฟล์ใน scratchpad พร้อมให้ก๊อปไปวาง
+- [x] 3. 🤖 Smoke test: ดึงข้อความรายหน้าจาก `sheet-03.pdf` (ใช้ PyMuPDF ชั่วคราว ไม่เพิ่ม dependency) แล้วเติมลงใน prompt เป็นไฟล์ใน scratchpad พร้อมให้ก๊อปไปวาง
 - [ ] 4. 🙋 Jam: วาง prompt ที่เติมแล้วลงใน Google AI Studio (Gemini) แล้วส่ง output กลับมาให้ Claude ตรวจ schema กับขนาดหัวข้อ
 - [ ] 5. 🤖 ปรับ v1 ตามผล smoke test (ยังเป็น v1 เพราะยังไม่เคยรัน eval จริง) แล้วติ๊ก checklist
 
@@ -34,7 +34,7 @@
 
 ## Next step
 
-ขั้น 3: smoke test · ดึงข้อความรายหน้าจาก `evals/topics/mth10101/raw/sheet-03.pdf` ด้วย `uv run --with pymupdf` แล้วเติม placeholder ใน `prompts/extract_topics_local/v1.md` เป็นไฟล์ใน scratchpad
+ขั้น 4 (🙋 Jam): วาง `a5_sheet-03.txt` และ `a5_sheet-02.txt` จาก scratchpad ลงใน Google AI Studio (Gemini, temperature 0.2, JSON mode) แล้วส่ง output กลับมาให้ Claude ตรวจ
 
 ## Waiting on
 
@@ -43,3 +43,4 @@
 ## Notes for next time
 
 - งานที่พักไว้: `chore/handwriting-photos` (PR #11) รอรูปถึง พ. 21 ต.ค.
+- PyMuPDF อ่านสมการจาก Equation Editor ของ Word ออกมาเป็นตัวอักษรกระจายทีละบรรทัด (เช่น `lim` / `x` / `→` คนละบรรทัด) · ข้อความภาษาไทยอ่านได้ แต่สระอำแตกเป็น `น ามา` · คำสั่ง render: `uv run --no-project --with pymupdf python -I <scratchpad>/render_a5.py <pdf> prompts/extract_topics_local/v1.md <out.txt> <kind>`
