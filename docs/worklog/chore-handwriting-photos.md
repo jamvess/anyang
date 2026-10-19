@@ -54,6 +54,8 @@
 
 ## Notes for next time
 
+- 2026-10-19 (session 2) · ไฟล์ PDF ของ P3 ถูกย้ายมาอยู่ใน `evals/handwriting/raw/` ผิดที่ จึงย้ายกลับไป `evals/topics/mth10101/raw/` แล้ว · สร้าง `evals/handwriting/raw/inbox/{jam,junior,may,friend1,friend2}/` ไว้รอรูป · ระหว่างรอรูปไปทำงานอื่นก่อน
+
 - กติกาการ label ลายมือ (LaTeX รายบรรทัด, `writer` เป็นรหัส) อยู่ใน `evals/README.md` ของ PR #10 (`docs/label-guide`)
 - โจทย์ต้องไม่มาจากข้อสอบกลางภาค 2562/1 เพราะเป็นชุด held-out ของ P3
 - ใบลอก (`copy_sheets.html`) และ script ที่ใช้สร้าง (`build_sheets.py`) อยู่ใน Drive `evals/handwriting/` · เฉลย `copy_sheets_key.md` อยู่ใน Drive ส่วนตัวของ Jam · ถ้าจะแก้ใบลอก ให้แก้ `build_sheets.py` แล้วรัน `python -I build_sheets.py <โฟลเดอร์ output>` · ห้าม commit ไฟล์ทั้ง 3 ไฟล์นี้
