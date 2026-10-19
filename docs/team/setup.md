@@ -31,7 +31,7 @@ Part A ทำครั้งเดียวต่อเครื่อง ใช
 
 1. **GitHub:** repo `anyang` → Settings → Collaborators → **Add people** → ใส่ username ของ Junior และ May
 2. **Supabase:** Dashboard → Organization ที่มี `anyang-dev` → Settings → **Team** → Invite → ใส่อีเมลของทั้งสองคน เลือก role **Developer** (ถ้าเข้าไปแล้วมองไม่เห็น API keys ให้เปลี่ยนเป็น Administrator)
-3. เมื่อได้ username ครบ ให้แก้ `.github/CODEOWNERS` โดยใส่ username จากตาราง GitHub ใน `roles.md` แทน `@junior-handle` `@may-handle` `@jam-handle` แล้วเปิด PR
+3. ~~แก้ `.github/CODEOWNERS` เป็น username จริง~~ ทำแล้ว 19 ต.ค. (PR #21) · ถ้ามีคนเข้าทีมใหม่ ให้เพิ่ม username ในตาราง GitHub ของ `roles.md` และใน `.github/CODEOWNERS` ใน PR เดียวกัน
 
 > **ห้ามส่ง key ให้กันทางแชท** ให้แต่ละคนเข้า Dashboard แล้วก๊อปเอง (ดู A5) ยกเว้น database password ซึ่ง Dashboard ไม่แสดง ให้บอกกันต่อหน้า
 
