@@ -55,29 +55,37 @@ class SaveRaw:
     """Wraps a provider and writes every model answer to out/raw/<tag>-<n>.txt, so an answer
     that fails the schema can be read afterwards (the gateway only records the status)."""
 
-    def __init__(self, provider: GeminiProvider) -> None:
+    def __init__(self, provider: GeminiProvider, out: Path) -> None:
         self._provider = provider
+        self._out = out
         self._count: dict[str, int] = {}
 
     async def generate(self, request: ProviderRequest) -> ProviderResponse:
         response = await self._provider.generate(request)
         tag = _tag.get().replace(":", "_") or request.purpose
         self._count[tag] = self._count.get(tag, 0) + 1
-        path = OUT / "raw" / f"{tag}-{self._count[tag]}.txt"
+        path = self._out / "raw" / f"{tag}-{self._count[tag]}.txt"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(response.text, encoding="utf-8")
         return response
 
 
 class Run:
-    """A live gateway whose call records are appended to out/calls.jsonl with a tag."""
+    """A live gateway whose call records are appended to <out>/calls.jsonl with a tag.
+    Also used by poc/P1 (its own ``out`` folder and ``model``)."""
 
-    def __init__(self, prompt_versions: dict[str, str] | None = None) -> None:
+    def __init__(
+        self,
+        prompt_versions: dict[str, str] | None = None,
+        out: Path = OUT,
+        model: str | None = None,
+    ) -> None:
         """``prompt_versions`` overrides the prompt of a purpose for this run only, e.g.
         {"extract_topics_local": "v2"}, so a new version is compared before config changes."""
         settings = get_settings()
         env = settings.env
-        self.model = env.ai_model_override
+        self.model = model or env.ai_model_override
+        self.out = out
         # Free tier: a 503 counts against the 20-per-day quota, so the gateway's immediate
         # retry is turned off here and Run.call waits BACKOFF_SECONDS instead. PoC only;
         # config/ai.yaml keeps retries: 1.
@@ -95,8 +103,8 @@ class Run:
         self.gateway = Gateway.live(
             config,
             env.prompts_dir,
-            {"gemini": SaveRaw(GeminiProvider(env.gemini_api_key.get_secret_value()))},
-            env.ai_model_override,
+            {"gemini": SaveRaw(GeminiProvider(env.gemini_api_key.get_secret_value()), out)},
+            self.model,
         )
         self.records: list[tuple[str, CallRecord]] = []
         self.gateway.add_listener(self._log)
@@ -105,8 +113,8 @@ class Run:
 
     def _log(self, record: CallRecord) -> None:
         self.records.append((_tag.get(), record))
-        OUT.mkdir(parents=True, exist_ok=True)
-        with (OUT / "calls.jsonl").open("a", encoding="utf-8") as f:
+        self.out.mkdir(parents=True, exist_ok=True)
+        with (self.out / "calls.jsonl").open("a", encoding="utf-8") as f:
             line = {"tag": _tag.get(), "at": time.strftime("%Y-%m-%dT%H:%M:%S"), **asdict(record)}
             f.write(json.dumps(line, ensure_ascii=False) + "\n")
 
