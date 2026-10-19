@@ -44,11 +44,11 @@
 
 ## Next step
 
-ขั้น 4 ที่เหลือ: Pydantic model ของ output ทั้ง 5 purpose (A2, A4, A5, A6, A7) ใน `apps/api/app/models/scope_ai.py` + test ว่า JSON ตัวอย่างใน prompt แต่ละไฟล์ parse ได้
+ขั้น 4 ที่เหลือ: test ของ model เขียนแล้ว (`apps/api/tests/unit/test_scope_ai_models.py`, 37 case, ยัง red) รอ Jam review · หลัง review ให้เขียน `apps/api/app/models/scope_ai.py` จนเขียว
 
 ## Waiting on
 
-Jam แก้ `.env` เป็น `AI_MODEL_OVERRIDE=gemini:gemini-3.5-flash`
+Jam review test ของ model
 
 ## Notes for next time
 
