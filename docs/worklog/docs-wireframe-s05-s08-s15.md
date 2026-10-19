@@ -14,8 +14,8 @@
 - [x] 3. 🤖 แก้ S05 ใน HTML → 🙋 May เปิดดูแล้ว ok
 - [x] 4. 🤖 แก้ S08 (commit `39defa6`) → 🙋 May เปิดดูแล้ว ok (2026-10-19)
 - [x] 5. 🤖 แก้ S15 → 🙋 May เปิดดูแล้ว ok (2026-10-19)
-- [ ] 6. 🙋 May ส่งข้อเสนอ `skill_level` ของ buddy ให้ Jam ในแชทกลุ่ม
-- [ ] 7. 🤖 ติ๊ก checklist
+- [x] 6. 🙋 May ส่งข้อเสนอ `skill_level` ของ buddy ให้ Jam ในแชทกลุ่ม (2026-10-19)
+- [x] 7. 🤖 ติ๊ก checklist
 
 ## Definition of done
 
@@ -42,13 +42,15 @@
 - May ok S08 แล้ว
 - S15: เพิ่ม progress card ก่อนข้อความแรก (สอบใน 5 วัน, ผ่าน 0 / 8 หัวข้อ, ความพร้อม 0% + คำอธิบายว่าไม่ใช่คะแนนสอบ, รายหัวข้อเรียงตามดาว ระดับ "ยังไม่เริ่ม" ทั้งหมด) → พี่ตาลสรุป 2 ประโยค + เหตุผล → โจทย์ `x² − 49` · แก้ story ให้ตรง · May ok แล้ว
 
+- ส่งข้อเสนอ `skill_level` ให้ Jam ในแชทกลุ่มแล้ว · ติ๊ก checklist D6
+
 ## Next step
 
-ขั้น 6: May ส่งข้อเสนอ `skill_level` ให้ Jam ในแชทกลุ่ม (ข้อความอยู่ใน `docs/design/wireframe-s1-changes.md` หัวข้อ "ข้อเสนอแก้ spec")
+ครบทุกขั้นแล้ว · รัน `/work-done` เพื่อเปลี่ยน PR #9 จาก draft เป็น ready for review
 
 ## Waiting on
 
-May: ส่งข้อความหา Jam แล้วบอกว่าส่งแล้ว
+Jam: ตอบเรื่อง `skill_level` (ไม่บล็อก PR นี้ · ถ้าไม่เอา ค่อยตัดออกจาก S05 ใน PR ใหม่)
 
 ## Notes for next time
 
