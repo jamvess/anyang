@@ -10,13 +10,15 @@ const BYTES_PER_MB = 1024 * 1024;
 type Props = {
   limits: InputLimits;
   onSend: (payload: SendPayload) => void;
+  /** While the reply streams the draft stays editable but cannot be sent. */
+  disabled?: boolean;
 };
 
 /**
  * Text + photo input of the tutor room. No answer choice buttons (TM-06).
  * Limits come from the API with the room data, never hard-coded.
  */
-export function Composer({ limits, onSend }: Props) {
+export function Composer({ limits, onSend, disabled = false }: Props) {
   const [text, setText] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
@@ -24,7 +26,7 @@ export function Composer({ limits, onSend }: Props) {
 
   // Count characters, not UTF-16 units, like the backend.
   const tooLong = Array.from(text).length > limits.max_message_chars;
-  const canSend = !tooLong && (text.trim() !== "" || image !== null);
+  const canSend = !disabled && !tooLong && (text.trim() !== "" || image !== null);
 
   function send() {
     if (!canSend) return;

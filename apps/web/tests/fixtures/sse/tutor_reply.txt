@@ -1,0 +1,24 @@
+event: token
+data: {"speaker": "tutor", "text": "ถูกแล้ว "}
+
+event: token
+data: {"speaker": "tutor", "text": "$(x-7)"}
+
+event: token
+data: {"speaker": "tutor", "text": "(x+7)$ เพราะ 49 คือ $7^2$"}
+
+event: token
+data: {"speaker": "buddy", "text": "เดี๋ยวนะพี่ แล้ว $x^2 + 49$ ล่ะ แยกแบบนี้ได้ป่ะ"}
+
+event: token
+data: {"speaker": "tutor", "text": "แยกไม่ได้ ผลต่างกำลังสองต้องเป็นลบเท่านั้น "}
+
+event: token
+data: {"speaker": "tutor", "text": "$$a^2 - b^2"}
+
+event: token
+data: {"speaker": "tutor", "text": " = (a-b)(a+b)$$"}
+
+event: done
+data: {}
+
