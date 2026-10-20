@@ -1,0 +1,40 @@
+# หน้าแชท P4-lite · stream ข้อความจาก SSE
+
+| | |
+|---|---|
+| Owner | May |
+| Branch | `feat/chat-streaming` |
+| Checklist item | หน้าแชท P4-lite: อ่าน SSE ผ่าน `lib/sse.ts`, แสดงข้อความที่ไหลออกมา, render KaTeX, ส่งรูป |
+| Status | in progress · 2026-10-20 |
+
+## Plan
+
+- [ ] 1. 🤖 `/spec-feature` ร่าง `specs/features/tutor/chat-streaming.md` (TM-20, TM-08, TM-06, TM-21): ChatRoom ส่งข้อความผ่าน transport ที่ inject ได้, event `token` ต่อท้าย bubble ของ `speaker` ทีละส่วน, จัดการ `done` / `error`, ส่งรูป · ใช้ fake transport ที่เล่น `tests/fixtures/sse/*.txt` จนกว่า endpoint ของ Junior จะมา
+- [ ] 2. 🙋 May review spec และตอบ open questions (Claude ถามเป็นตัวเลือก) · บอก Junior ในกลุ่มเรื่อง api.md ที่ต้องแก้
+- [ ] 3. 🤖 `/spec-to-tests` เขียน test ที่ fail จาก AC + เปลี่ยนชื่อ test เดิม TM04/TM05 → TM20/TM21 ตามที่ `chat-room-ui.md` §10 ข้อ 1 ตกลงไว้
+- [ ] 4. 🙋 May review test (ชื่อใหม่ + test ใหม่)
+- [ ] 5. 🤖 `/implement-feature` จน test ผ่าน + lint + typecheck
+- [ ] 6. 🙋 May ลองในเบราว์เซอร์: `cd apps/web` → `pnpm dev` → เปิด `http://localhost:3000/preps/demo/room` → พิมพ์ข้อความแล้วกด Enter → ดูว่าตัวอักษรไหลออกมาทีละส่วนและสมการ render ถูก
+
+## Definition of done
+
+- Spec `chat-streaming.md` approved by May และส่ง Junior review ใน PR
+- Test จาก AC ผ่านทั้งหมด (`pnpm test`), `pnpm lint` และ `pnpm typecheck` ผ่าน
+- หน้า room เห็นข้อความ tutor ไหลออกมาจาก fake stream และ KaTeX render ถูก
+- ยังไม่รวม: ต่อ staging จริง + วัด TTFT (ต้องรอ endpoint `POST /sessions/{id}/messages` ของ Junior · ทำใน branch ถัดไป)
+
+## Decisions
+
+- 2026-10-20 · ทำกับ fake stream ก่อน · backend ยังมีแค่ `/health` และ `gen:api` ยังไม่มี type ห้องติวให้ใช้
+
+## Next step
+
+รัน `/spec-feature` สำหรับ TM-20, TM-08, TM-06, TM-21 โดยอ่าน `specs/features/tutor/chat-room-ui.md` และ api.md "SSE events" ก่อน
+
+## Waiting on
+
+- Junior: api.md ยังเขียน `{text}` หรือ `{image_path}` อย่างใดอย่างหนึ่ง และยังไม่มี `limits` ในข้อมูลห้อง (`chat-room-ui.md` §11) · ต้องตกลงก่อนต่อ API จริง
+
+## Notes for next time
+
+- `pnpm gen:api` มีอยู่แล้ว รอ router D5 ของ Junior แล้วค่อยรันใหม่
