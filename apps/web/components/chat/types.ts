@@ -2,6 +2,8 @@
 // Message fields mirror the `messages` table. In S2 they come from a fixture,
 // in S3 from GET /sessions/{id}/messages.
 
+import type { SSEEvent } from "@/lib/sse";
+
 export type MessageRole = "user" | "tutor" | "buddy" | "card" | "system";
 
 export type ChatMessage = {
@@ -30,3 +32,9 @@ export type RoomData = {
 };
 
 export type SendPayload = { text: string | null; image: File | null };
+
+/**
+ * Sends one message and yields the SSE events of the reply
+ * (spec: specs/features/tutor/chat-streaming.md §2).
+ */
+export type SendMessage = (payload: SendPayload, signal: AbortSignal) => AsyncIterable<SSEEvent>;
