@@ -37,6 +37,10 @@ purposes:
   persona_preview:        {tier: small,  temperature: 0.7, max_tokens: 150,  timeout_s: 15, prompt: v1}
   latex_to_speech:        {tier: small,  temperature: 0.0, max_tokens: 300,  timeout_s: 8,  prompt: v1}
 
+embedding:                             # A3 embed (ai-orchestration §2.3.3), tier `embed` · no prompt
+  timeout_s: 60                        # [C] one batch request · PoC P3b: set from measured latency
+  batch_size: 50                       # [C] texts per request · PoC P3b: 93 chunks -> 2 requests
+
 gateway:
   retries: 1                           # then fallback provider, then degrade
   retry_backoff_seconds: 1             # [C] wait before a retry when the provider gives no retry delay · after Alpha: pick from ai_calls (success rate of retries by wait)

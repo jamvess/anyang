@@ -186,10 +186,16 @@ class RetentionConfig(_Strict):
     full_prompt_days: int = Field(ge=0)
 
 
+class EmbeddingConfig(_Strict):
+    timeout_s: float = Field(gt=0)
+    batch_size: int = Field(ge=1)
+
+
 class AIConfig(_Strict):
     version: float
     tiers: dict[str, TierConfig]
     purposes: dict[str, PurposeConfig]
+    embedding: EmbeddingConfig
     gateway: GatewayConfig
     guards: GuardsConfig
     targets: TargetsConfig

@@ -236,6 +236,12 @@ class Gateway:
                 )
             )
 
+    async def embed(
+        self, texts: list[str], role: Literal["query", "document"]
+    ) -> list[list[float]]:
+        """A3 ``embed``: one vector per text, in order, from the model of tier ``embed``."""
+        raise NotImplementedError  # PoC P3b step 4 scaffold
+
     def _route(self, tier: str) -> tuple[str, Provider, str]:
         model = self._model_override or self._config.tiers[tier].primary
         if self._single is not None:

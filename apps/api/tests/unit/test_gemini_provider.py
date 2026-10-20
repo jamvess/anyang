@@ -5,8 +5,8 @@ is replaced by a stub that raises the SDK's own error."""
 import pytest
 from google.genai import errors
 
-from app.ai.providers.base import ProviderRateLimited, ProviderRequest
-from app.ai.providers.gemini import GeminiProvider, retry_after_seconds
+from app.ai.providers.base import EmbedRequest, ProviderRateLimited, ProviderRequest
+from app.ai.providers.gemini import GeminiProvider, embed_contents, retry_after_seconds
 
 
 def quota_error(retry_delay: str | None) -> dict:
@@ -73,3 +73,54 @@ async def test_ai_orchestration_2_10_gemini_other_client_errors_are_not_rate_lim
 
     with pytest.raises(errors.ClientError):
         await provider.generate(REQUEST)
+
+
+# --- A3 embed (PoC P3b) ----------------------------------------------------------------------
+# gemini-embedding-001 takes task_type; gemini-embedding-2 takes a prefix in the text instead
+# (https://ai.google.dev/gemini-api/docs/embeddings).
+
+
+@pytest.mark.parametrize(
+    ("role", "task_type"), [("query", "RETRIEVAL_QUERY"), ("document", "RETRIEVAL_DOCUMENT")]
+)
+def test_AI01_gemini_embedding_001_uses_task_type(role: str, task_type: str):
+    assert embed_contents("gemini-embedding-001", ["ลิมิต"], role) == (["ลิมิต"], task_type)
+
+
+def test_AI01_gemini_embedding_2_uses_text_prefixes():
+    assert embed_contents("gemini-embedding-2", ["ลิมิต"], "query") == (
+        ["task: search result | query: ลิมิต"],
+        None,
+    )
+    assert embed_contents("gemini-embedding-2", ["ลิมิต"], "document") == (
+        ["title: none | text: ลิมิต"],
+        None,
+    )
+
+
+class RecordingModels:
+    def __init__(self) -> None:
+        self.calls: list[dict] = []
+
+    async def embed_content(self, **kwargs):
+        self.calls.append(kwargs)
+        embeddings = [
+            type("E", (), {"values": [float(i), 0.5]})() for i in range(len(kwargs["contents"]))
+        ]
+        return type("R", (), {"embeddings": embeddings, "metadata": None})()
+
+
+async def test_AI01_gemini_embed_returns_one_vector_per_text_in_order():
+    provider = GeminiProvider(api_key="test-key")
+    models = RecordingModels()
+    provider._client = type("C", (), {"aio": type("A", (), {"models": models})()})()
+
+    response = await provider.embed(
+        EmbedRequest(model="gemini-embedding-001", texts=["a", "b"], role="query")
+    )
+
+    assert response.vectors == [[0.0, 0.5], [1.0, 0.5]]
+    call = models.calls[0]
+    assert call["model"] == "gemini-embedding-001"
+    assert call["contents"] == ["a", "b"]
+    assert call["config"].task_type == "RETRIEVAL_QUERY"

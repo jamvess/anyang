@@ -5,7 +5,13 @@ the Google SDK (AI-01). Vertex AI can replace it later by building the client wi
 from google import genai
 from google.genai import errors, types
 
-from app.ai.providers.base import ProviderRateLimited, ProviderRequest, ProviderResponse
+from app.ai.providers.base import (
+    EmbedRequest,
+    EmbedResponse,
+    ProviderRateLimited,
+    ProviderRequest,
+    ProviderResponse,
+)
 
 
 def retry_after_seconds(error_json: dict) -> float | None:
@@ -19,6 +25,14 @@ def retry_after_seconds(error_json: dict) -> float | None:
             except ValueError:
                 return None
     return None
+
+
+def embed_contents(model: str, texts: list[str], role: str) -> tuple[list[str], str | None]:
+    """What to send for each text, and the ``task_type`` if the model takes one.
+
+    ``gemini-embedding-001`` takes ``task_type``; ``gemini-embedding-2`` takes a text prefix.
+    """
+    raise NotImplementedError  # PoC P3b step 4 scaffold
 
 
 class GeminiProvider:
@@ -61,3 +75,6 @@ class GeminiProvider:
         return ProviderResponse(
             text=response.text or "", tokens_in=tokens_in, tokens_out=tokens_out
         )
+
+    async def embed(self, request: EmbedRequest) -> EmbedResponse:
+        raise NotImplementedError  # PoC P3b step 4 scaffold

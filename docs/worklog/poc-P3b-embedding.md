@@ -30,10 +30,11 @@ spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผล�
 - 2026-10-20 · ขั้น 1a: test ของตัวตัด chunk (`poc/P3/test_chunking.py` 7 ตัว fail ตามที่ควร) + โครง `chunking.py` · ตั้งชื่อ `chunking` ไม่ใช่ `chunk` เพราะชนกับ module `chunk` ของ Python 3.12 · ประมาณ token จากจำนวนตัวอักษร ÷ 3 (PoC เท่านั้น ไม่เรียก tokenizer) · เทมเพลตคำถามเป็น markdown table (`evals/topics/mth10101/retrieval_questions.md`) ให้คนเขียนกรอกง่าย · Claude แปลงเป็น jsonl ตอนรัน
 - 2026-10-20 · ขั้น 1 เสร็จ: `chunking.py` ผ่าน test 7 ตัว · ตัดชีทจริงได้ 93 chunk (sheet-01 71, sheet-02 17, sheet-03 2, sheet-04 3) เก็บที่ `poc/P3/out/chunks.json` (gitignored) · **median 334 tokens · 58/93 chunk ต่ำกว่า 400** เพราะกฎ "ไม่คร่อมเกิน 2 หน้า" ตันก่อน: หน้าของชีทสั้น (median ~190 tokens ต่อหน้า เพราะ PyMuPDF กระจายสมการทีละบรรทัด) · ข้อมูลสำหรับเลือกขนาด chunk: อาจลองเทียบ 1 หน้า vs 2 หน้าใน spike
 - 2026-10-20 · (Jam เลือกตามคำแนะนำ) เทียบ 3 model: `gemini-embedding-2`, `gemini-embedding-001` (Gemini API, key เดิม) และ `BAAI/bge-m3` (open-source รันในเครื่อง เป็นเส้นฐาน) · ไม่เอา multilingual-e5-large เพราะ input สูงสุด 512 tokens · เรียกผ่าน provider layer: เพิ่ม `Gateway.embed()` + `GeminiProvider.embed()` พร้อม test (route ตาม tier `embed`) · bge-m3 เป็น provider เฉพาะ PoC ใน `poc/P3/` · ติดตั้ง sentence-transformers ชั่วคราวผ่าน `uv run --with` · Jam บอก Junior ในกลุ่ม
+- 2026-10-20 · ขั้น 4a test ก่อน: gateway `embed()` 6 ตัว (ต่อท้าย `test_ai_gateway.py`) · Gemini embed 4 ตัว (`test_gemini_provider.py`) · PoC `test_embed.py` 4 ตัว · fail 14 ตัวตามที่ควร · โครง: `EmbedRequest`/`EmbedResponse`/`EmbedProvider` ใน `providers/base.py` · `EmbeddingConfig` ใน `settings.py` · `config/ai.yaml` เพิ่ม section `embedding` (timeout_s 60, batch_size 50 · ป้าย [C]) เพราะ embed ไม่มี prompt จึงใช้ purpose เดิมไม่ได้
 
 ## Next step
 
-ขั้น 4: test ก่อน · gateway `embed()` (tier embed, แบ่ง batch, retry, record) · `GeminiProvider.embed()` (query/document ของ 2 รุ่น) · PoC: อ่านตารางคำถามจาก markdown, จัดอันดับ chunk ด้วย cosine, recall@4 → Jam review
+Jam review test ขั้น 4a → ok แล้ว implement `Gateway.embed`, `embed_contents`, `GeminiProvider.embed`, `poc/P3/embed.py` + provider bge-m3 เฉพาะ PoC
 
 ## Waiting on
 
