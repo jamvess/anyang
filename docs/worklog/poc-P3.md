@@ -32,6 +32,8 @@
 - [x] 5. 🤖 `poc/P3/ingest.py`: ชีทอ่านด้วย PyMuPDF + เช็คคุณภาพข้อความ (% ตัวอักษรไทย) · ข้อสอบสแกนส่งรูปรายหน้าให้ A2 แล้วตัดรายข้อด้วย A4 · เก็บผลเป็นไฟล์ใน `poc/P3/out/` (ไม่ลง DB)
 - [x] 6. 🤖 `poc/P3/run.py`: A5 ทีละชีท → A6 → A7 → ดาว (สูตร §2.3.5 อ่านค่าจาก `config/learning.yaml` → `stars`) · จับเวลาและต้นทุนต่อไฟล์
 - [x] 7. 🤖 `poc/P3/score.py`: เทียบกับ `labels.json` → % หัวข้อตรง, % ★★★ ตรง, เวลาต่อไฟล์, ต้นทุนต่อไฟล์ · 🙋 Jam ตัดสินวิธีจับคู่หัวข้อก่อนเขียน
+- [ ] 8a. 🤖 แก้ตาม review ของ Junior ใน PR #15 · test ก่อน: retry backoff (ใช้ `retryDelay` ของ provider ถ้ามี ไม่งั้นรอตาม config · เกินเพดานไม่ retry) + ซ่อม LaTeX แบบ opt-in (`LatexStr`, `MathTextStr`) → 🙋 Jam review test
+- [ ] 8b. 🤖 แก้โค้ด + 2 key ใน `config/ai.yaml` + `ai-orchestration.md` §2.9 → merge `poc/P3` เข้า `poc/P1` → ตอบ Junior ใน PR #15
 - [ ] 8. 🤖 รันจริง ดูผลกับ Jam แล้วร่าง `/poc-report P3` (ส่วน P3a)
 
 ## Definition of done
@@ -78,10 +80,12 @@
 - 2026-10-19 · ข้อสังเกตเรื่องการให้คะแนน: label ของ May มีแค่หน้าใน sheet-01/02 (ไม่มีหน้าใน sheet-03/04) แต่ A6 อาจรวมหน้าแบบฝึกหัดจาก sheet-03/04 เข้าไปใน `sources` ทำให้ IoU ลดลง ถึงหัวข้อจะตรงก็ตาม · หลังได้ผลของ v1 ให้ดูว่ากระทบมากแค่ไหน แล้วให้ Jam ตัดสินว่าจะคิด IoU เฉพาะไฟล์ที่ label มีหรือไม่
 - 2026-10-20 · (Jam เลือกตามคำแนะนำ) แก้ bug escape บน branch นี้ แล้ว merge `poc/P3` เข้า `poc/P1` (รายละเอียดอยู่ใน `docs/worklog/poc-P1.md`) · test 5 ตัวต่อท้าย `test_ai_gateway.py`: 3 ตัว fail ตามที่ควร (form feed/backspace, tab/CR, newline + ชื่อคำสั่ง) · 2 ตัวผ่านแล้วตั้งแต่ตอนนี้ เพราะเป็นตัวกันไม่ให้การซ่อมไปทำของเดิมพัง (newline ปกติ, LaTeX ที่ escape ถูกแล้ว) · newline ซ่อมเฉพาะเมื่อตามด้วยชื่อคำสั่งเต็มคำ (`neq` `nabla` `notin` ...) เพื่อไม่ให้ `\nother` ใน notes กลายเป็น `\not`+`her`
 - 2026-10-20 · **ตรวจผลกระทบของ bug escape ใหม่: P3 ไม่โดน** · `out/pages/midterm-*.json` และ `out/questions/*.json` ไม่มีตัวอักษรควบคุมเลย (`\frac` 88 จุดถูกต้องทั้งหมด) · ตัวเลข 88/92 และ 23/30 ที่เขียนไว้วันที่ 19 นับผิด · ใน P1 โดนแค่ hw_004 (form feed 9 จุด) · ลองใช้กฎซ่อมกับ cache แบบไม่เขียนทับ พบว่ากฎ newline ไปโดนข้อความชีทของ PyMuPDF 296 จุด (`\ne\n` `\nu =`) · (Jam เลือกตามคำแนะนำ) ตัด `\ne` `\ni` `\nu` `\not` ออกจากกฎ เพราะถ้าซ่อมผิด `e^{x}` จะกลายเป็น `≠` แบบเงียบๆ · เพิ่ม test 1 ตัว · หลังแก้ กฎตรงแค่ hw_004 ใน cache ทั้งหมด
+- 2026-10-20 · **Junior review PR #15: ขอแก้ 2 จุด** (1) retry ไม่มี backoff ทั้งที่ §2.10 เขียนว่า backoff (2) `repair_unescaped_latex` ซ่อมทุก string ของทุก purpose เช่น newline ก่อน `mid-term` ในข้อความไทยกลายเป็น `\n` ตัวอักษร และ tab ก่อนตัวอังกฤษถูกแก้ · Junior พูดถูก (test เดิมเช็คแค่ newline ก่อน `other` และ tab ก่อนภาษาไทย) · ไม่ block: JSON mode กับ stream (Junior ทำใน S3), schema retry เมื่อชน max_tokens, license PyMuPDF (AGPL) ให้ทีมคุย
+- 2026-10-20 · (Jam เลือกตามคำแนะนำ) (1) backoff: ใช้ `retryDelay` จาก provider ถ้ามี ไม่งั้นรอ `gateway.retry_backoff_seconds` · ถ้าต้องรอเกิน `gateway.max_retry_wait_seconds` ไม่ retry (ห้องติวมีเป้า TTFT 2 วินาที · PoC รอเองใน `Run`) · เพิ่ม 2 key ใน `config/ai.yaml` (ไฟล์กลาง · แจ้งกลุ่ม) (2) LaTeX: เลิกซ่อมทุก string ใน `_parse` · ใช้ `LatexStr` กับ field ที่เป็น LaTeX ล้วน (`AnswerLine.latex`, `latex_blocks`) และ `MathTextStr` ซ่อมเฉพาะใน `$...$` กับข้อความไทยปนสูตร (`text` ของ A2/A2b/A4) · Jam อนุญาตแก้ test escape 6 ตัวที่ review แล้วให้ model ใน test ใช้ `LatexStr` (สิ่งที่ตรวจเหมือนเดิม)
 
 ## Next step
 
-gateway ซ่อม escape แล้ว และ merge เข้า `poc/P1` แล้ว (20 ต.ค.) · cache ของ P3 ไม่ต้องซ่อม (ดู Decisions 20 ต.ค.) · ขั้นถัดไปคือรัน A6 + A7 ตามคำสั่งด้านล่าง · ถ้า Junior ขอแก้ gateway ใน PR #15 ให้แก้บน branch นี้ แล้ว merge `poc/P3` เข้า `poc/P1` อีกครั้ง
+ขั้น 8a: เขียน test ใน `apps/api/tests/unit/test_ai_gateway.py` (backoff, LaTeX opt-in) และ test ของ `GeminiProvider` ที่แปลง 429 เป็น error rate limit · ต้อง fail ก่อน · แล้วให้ Jam review
 
 หลัง 14:00 น. ของ 2026-10-20 (เช็คโควตาด้วย request เดียวก่อน): `cd apps/api && uv run python ../../poc/P3/run.py --a5-prompt v1` (ใช้ cache A5 v1 · เหลือ A6 + A7 ×2 = 3 call) → `uv run python ../../poc/P3/score.py --a5-prompt v1` → ถ้า A6 ไม่ผ่าน schema ให้ดู `out/raw/run_merge-*.txt` · จากนั้นถ้าโควตาเหลือ: `run.py --a5-prompt v2` (A5 ×4 + A6 + A7 ×2 = 7 call) → `score.py --a5-prompt v2` → สรุปเทียบ v1/v2 ให้ Jam
 
