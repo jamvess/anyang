@@ -12,7 +12,7 @@
 - [x] 1. 🤖 เขียน test ที่ยัง fail จาก api.md v1.2 (`apps/api/tests/unit/test_room_api_contract.py`): 4 path อยู่ใน OpenAPI, field ของ `Room` / `Message` / `Limits` ตรง spec, response และ SSE event ผ่าน model, `X-Stub: true`, body ของ `POST /sessions/{id}/messages` แบบเดิม (`{text}` หรือ `{image_path}` อย่างใดอย่างหนึ่ง), 422 / 404 อยู่ในรูป `{"error": {code, message}}`
 - [x] 2. 🙋 Junior review test (อ่านไฟล์ test ที่ Claude สรุปให้ ตอบ ok หรือบอกข้อที่อยากแก้) · หลัง ok ห้ามแก้ test
 - [x] 3. 🤖 `app/models/room.py` (Pydantic) + `app/routers/room.py` (stub จาก fixture ใน `app/stubs/`) + error handler กลางใน `app/main.py` · `uv run pytest` เขียว + `ruff check` / `ruff format --check` ผ่าน
-- [ ] 4. 🙋 Junior เปิด `/docs` ดูด้วยตา: รัน `! cd apps/api && uv run fastapi dev app/main.py` → เปิด http://localhost:8000/docs → ต้องเห็นกลุ่ม **room** มี 4 endpoint → กด `GET /sessions/{id}` → Schemas ด้านล่างต้องมี `Room`, `Message`, `Limits` → Ctrl+C ปิด server
+- [x] 4. 🙋 Junior เปิด `/docs` ดูด้วยตา: รัน `! cd apps/api && uv run fastapi dev app/main.py` → เปิด http://localhost:8000/docs → ต้องเห็นกลุ่ม **room** มี 4 endpoint → กด `GET /sessions/{id}` → Schemas ด้านล่างต้องมี `Room`, `Message`, `Limits` → Ctrl+C ปิด server
 - [ ] 5. 🤖 อัปเดต checklist (sub-bullet ใต้ข้อ D5: ห้องติว 4 endpoint เสร็จ) · PR ready · ขอ review จาก May (รูปร่างที่ `pnpm gen:api` จะได้)
 
 ## Definition of done
@@ -39,7 +39,7 @@
 
 ## Next step
 
-ขั้น 4 (🙋): Junior รัน `! cd apps/api && uv run fastapi dev app/main.py` แล้วเปิด http://localhost:8000/docs ดูกลุ่ม room 4 endpoint + schema `Room`, `Message`, `Limits` และ event models · ตอบ ok แล้วไปขั้น 5
+ขั้น 5: พิมพ์ `/work-done` (ทำ sub-bullet ใต้ D5 ใน checklist, PR description, ready, ขอ review จาก May) · CI ของ PR #38 ผ่านครบ 3 job แล้ว (20 ต.ค.)
 
 หลัง PR นี้ merge: เปิด PR เล็กแยก (`docs/api-progress-card-topics`) แก้ api.md (ไฟล์ร่วม · บอกแชทกลุ่ม) กำหนด type ของ `progress_card.topics[]`: `stars` int 1–3, `level` จาก `config/learning.yaml` → `levels.show`, `review_due` bool, `origin` `"doc" | "user"` · ตอนนี้แค่เดาไว้ใน `app/stubs/` · ต้องถามด้วยว่าหัวข้อ 0 ดาวแสดงใน card ไหม (`topics.importance` ใน DB เป็น 0–3 และ `readiness.exclude_zero_star`)
 
