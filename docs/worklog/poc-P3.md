@@ -85,10 +85,11 @@
 - 2026-10-20 · (Jam เลือกตามคำแนะนำ) (1) backoff: ใช้ `retryDelay` จาก provider ถ้ามี ไม่งั้นรอ `gateway.retry_backoff_seconds` · ถ้าต้องรอเกิน `gateway.max_retry_wait_seconds` ไม่ retry (ห้องติวมีเป้า TTFT 2 วินาที · PoC รอเองใน `Run`) · เพิ่ม 2 key ใน `config/ai.yaml` (ไฟล์กลาง · แจ้งกลุ่ม) (2) LaTeX: เลิกซ่อมทุก string ใน `_parse` · ใช้ `LatexStr` กับ field ที่เป็น LaTeX ล้วน (`AnswerLine.latex`, `latex_blocks`) และ `MathTextStr` ซ่อมเฉพาะใน `$...$` กับข้อความไทยปนสูตร (`text` ของ A2/A2b/A4) · Jam อนุญาตแก้ test escape 6 ตัวที่ review แล้วให้ model ใน test ใช้ `LatexStr` (สิ่งที่ตรวจเหมือนเดิม)
 - 2026-10-20 · ขั้น 8b แก้แล้ว: `app/ai/latex.py` (LatexStr, MathTextStr ซ่อมใน `$...$` และ `$$...$$`) · `_parse` กลับไปใช้ `model_validate_json` ตรงๆ · backoff ใน `_generate` · `gemini.py` แปลง 429 เป็น `ProviderRateLimited` พร้อม `retryDelay` · test 98 ผ่าน · ลองกับ cache จริง: P3 248 ข้อความไม่เปลี่ยน · P1 ไฟล์ hw_004 เดิม (.bak) ซ่อมได้ ไฟล์ที่ซ่อมแล้วไม่เปลี่ยน
 - 2026-10-20 · merge `poc/P3` เข้า `poc/P1` แล้ว (test P1 ผ่าน) · ตอบ Junior ใน PR #15 และขอ review อีกรอบแล้ว · license PyMuPDF รับว่าจะยกไปคุยในกลุ่ม
+- 2026-10-20 · **รัน A6 ไม่ได้:** `gemini-3.5-flash` ได้ 503 UNAVAILABLE ("high demand") ทั้ง 2 รอบ (14:05 และ 14:30 · รอบละ 4 ครั้ง รอ 30/60/90 วินาที) · ไม่ใช่ bug ของเรา · ไม่แน่ใจว่า 503 นับเข้าโควตาไหม · (Jam ตัดสิน) ลอง `gemini-3.8-flash` ทั้งชุด: A5 ของ sheet-01 timeout 120 วินาทีตั้งแต่ call แรก → ข้อมูลสำหรับ report: 3.8-flash ช้าเกินสำหรับ A5 กับชีทใหญ่ · (Jam เลือก) เลื่อนไปรันพรุ่งนี้เช้าด้วย 3.5-flash (cache A5 เดิม)
 
 ## Next step
 
-ขั้น 8: หลัง 14:00 น. (เช็คโควตาด้วย request เดียวก่อน) รัน A6 + A7 ตามคำสั่งด้านล่าง · ดู log ว่ามี MAX_TOKENS ไหม (Junior ถาม)
+ขั้น 8: เช้า 21 ต.ค. (ช่วงคนใช้น้อย) รัน `cd apps/api && uv run python ../../poc/P3/run.py --a5-prompt v1` ด้วย gemini-3.5-flash (ใช้ cache A5 · A6 + A7 ×2 = 3 call) → `score.py --a5-prompt v1` · ถ้ายังได้ 503 ทั้งเช้า ให้ถาม Jam ว่าจะเปลี่ยน A6 เป็น tier อื่นไหม · ดู log ว่ามี MAX_TOKENS ไหม (Junior ถาม)
 
 หลัง 14:00 น. ของ 2026-10-20 (เช็คโควตาด้วย request เดียวก่อน): `cd apps/api && uv run python ../../poc/P3/run.py --a5-prompt v1` (ใช้ cache A5 v1 · เหลือ A6 + A7 ×2 = 3 call) → `uv run python ../../poc/P3/score.py --a5-prompt v1` → ถ้า A6 ไม่ผ่าน schema ให้ดู `out/raw/run_merge-*.txt` · จากนั้นถ้าโควตาเหลือ: `run.py --a5-prompt v2` (A5 ×4 + A6 + A7 ×2 = 7 call) → `score.py --a5-prompt v2` → สรุปเทียบ v1/v2 ให้ Jam
 
