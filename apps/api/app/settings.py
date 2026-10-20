@@ -171,7 +171,7 @@ class GatewayConfig(_Strict):
 class GuardsConfig(_Strict):
     max_message_chars: int = Field(ge=1)
     rate_limit_messages_per_minute: int = Field(ge=1)
-    max_image_mb: float = Field(gt=0)
+    max_image_mb: int = Field(gt=0)  # api.md Room.limits sends it as an integer
     max_audio_seconds: float = Field(gt=0)
     answer_leak_check: bool
 
