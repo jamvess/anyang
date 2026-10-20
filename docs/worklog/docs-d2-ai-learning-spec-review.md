@@ -10,7 +10,7 @@
 ## Plan
 
 - [x] 1. 🤖 ตรวจแบบไล่เทียบอัตโนมัติ: (ก) key ของ `config/learning.yaml` ที่ spec อ้าง มีจริงไหม และ key ที่ไม่มี spec อ้างเลย (ข) AI purpose ใน §3.1 ตรงกับ `config/ai.yaml` และโฟลเดอร์ใน `prompts/` ไหม (ค) requirement ID ที่ spec อ้าง มีใน `requirements.md` ไหม และ requirement AI-/TM-/AM- ที่ยังไม่มี spec ส่วนไหนรองรับ (ง) ตาราง §3.2 ตรงกับ `data-model.md` และ `supabase/migrations/0001_init.sql` ไหม (จ) SSE events §3.3 ตรงกับ `api.md` ไหม (ฉ) ตัวเลขใน spec ที่ไม่ได้มาจาก `learning.yaml` (magic number)
-- [ ] 2. 🤖 อ่านทั้งสองไฟล์ทีละ section หา: ข้อความที่ขัดกันเอง, ลำดับเลข section ที่สลับ (2.3 มาก่อน 2.2, 2.1 อยู่หลัง 2.5), ข้อความที่อ้างภาพใน .docx (9 จุด) ซึ่งไม่มีใน repo, สิ่งที่ PoC P1/P3 เจอแล้วแต่ spec ยังไม่เขียน
+- [x] 2. 🤖 อ่านทั้งสองไฟล์ทีละ section หา: ข้อความที่ขัดกันเอง, ลำดับเลข section ที่สลับ (2.3 มาก่อน 2.2, 2.1 อยู่หลัง 2.5), ข้อความที่อ้างภาพใน .docx (9 จุด) ซึ่งไม่มีใน repo, สิ่งที่ PoC P1/P3 เจอแล้วแต่ spec ยังไม่เขียน
 - [ ] 3. 🤖 รวบรวมเป็นตาราง findings ใน PR description: จุด · ปัญหา · ข้อเสนอ · ไฟล์ของใคร
 - [ ] 4. 🙋 Jam ตัดสินทีละข้อ: แก้เลย / ไม่แก้ / เลื่อนไปทำหลังผล PoC (ข้อ S4 "อัปเดต threshold ตามผล P1 P2 P3") · ตอบเป็นเลขข้อ เช่น "1 แก้, 2 เลื่อน"
 - [ ] 5. 🤖 แก้ตามที่ Jam ตัดสินใน `ai-orchestration.md` และ `learning-model.md` (ไฟล์ของ Jam) · ถ้าต้องแก้ไฟล์ของคนอื่นหรือไฟล์กลาง (`requirements.md`, `api.md`, `config/ai.yaml`, `data-model.md`) จะถามก่อนทุกครั้ง
@@ -39,11 +39,24 @@
 - F4 · migration มีตาราง `profiles` แต่ §3.2 ไม่มี
 - F5 · มี 9 จุดที่เขียนว่า "ดูภาพในไฟล์ AI Orchestration Design .docx" แต่ไม่มีภาพใน repo
 - F6 · spec อ้าง requirement ID น้อย: AI-01..AI-08 อ้างแค่ AI-05 ทั้งที่ §2.9–2.11 ทำตาม AI-01..04, 06..08 · TM-, AM-, SM-, PM- ที่ active และไม่ถูกอ้างเลยมี 27 ข้อ · ทำให้ไล่ trace จาก requirement ไป spec ไม่ได้
-- F7 · requirement ที่ status = changed และ spec อ้างถึง: TM-05, TM-07, TM-11, AM-02, SA-02 · ต้องเทียบข้อความว่า spec ตามทันไหม (ทำในขั้น 2)
+- F7 · requirement ที่ status = changed และ spec อ้างถึง: TM-05, TM-07, TM-11, AM-02, SA-02 · **ขั้น 2: ตรงกันหมดแล้ว** (2.1.3–2.1.7, 2.2.5, 2.2.2, 3.4) ไม่ต้องแก้
+
+ขั้น 2 (อ่านทีละ section · ตรวจตัวอย่างตัวเลขด้วย script แล้ว: BKT 0.30→0.71→0.93→0.986, ผิดทันที 0.19 · ตาราง spaced review ทั้ง 4 แถว ถูกหมด):
+
+- ~~ลำดับ section สลับ~~ ไม่ใช่ปัญหา: §1.1 บรรทัด 22 บอกว่าตั้งใจเรียงตามการไหลของข้อมูล และใช้รหัส flow ตามที่อาจารย์กำหนด
+- F8 · §2.2.4 ตาราง intent: `off_topic` / `emotion` อ้าง "(2.1.8)" แต่ข้อยกเว้นนอกเรื่องอยู่ที่ §2.1.7
+- F9 · §3.1 T1 `route_intent` เขียนว่า "intent (8 ประเภท)" แต่ §2.2.4 มี 9 (answer, question_on_topic, question_off_scope, command, dispute, teach_back, off_topic, emotion, distress)
+- F10 · §2.10 ตาราง tier ขาด `vision_extract_pages` (vision), `persona_preview` และ `latex_to_speech` (small) ซึ่งมีใน §3.1 และ `ai.yaml`
+- F11 · ขนาด golden set ของ checker: §2.4.8 เขียน "ประมาณ 100 คำตอบ" แต่ `specs/poc/README.md` P2 และ checklist S3 เขียน 50
+- F12 · §3.6 แถว P1 เขียน "50 รูป, เทียบ Gemini / Claude / Mathpix" แต่ทำจริง 30 รูป และใช้แค่ Gemini free tier 2 รุ่น (Jam ตัดสิน 19 ต.ค.)
+- F13 · spaced review (`learning-model.md` §3, ai-orch §2.5.5): `round()` ของ Python ปัดครึ่งไปเลขคู่ (`round(2.5) = 2`) แต่ตัวอย่างใน spec ใช้ปัดครึ่งขึ้น (2.5→3) · และไม่ได้บอกว่า `days_left` นับ ณ วันไหน (ตัวอย่างถูกเมื่อนับ ณ วันที่ตั้งรอบถัดไป ถ้านับ ณ วันที่ผ่าน แถว 30 วันจะได้ 1, 4, 10)
+- F14 · ชื่อ column: §2.2.6 `tutor_sessions.scope_version` แต่ migration ใช้ `scope_version_id` · §2.5.7 มี `topic_progress.parked_at` แต่ตาราง §2.2.6 ไม่มี (migration มี)
+- F15 · §2.3.3 เกณฑ์ไฟล์สแกน "ตัวอักษรไทย < 30%" จาก PoC P3 ยังไม่มี key ใน config · อยู่ในส่วนที่ PR #15 แก้
+- F16 · ตัวเลขที่ไม่มี key ใน config: running summary "ทุก 8 turns" (§2.2.7, §2.6 · ใช้ค่าเดียวกับ `context_recent_turns` หรือแยก?) และ "Park กลับมาเมื่อผ่านไปอย่างน้อย 1 session" (§2.5.3)
 
 ## Next step
 
-ขั้น 2: อ่าน `ai-orchestration.md` (ฉบับ `poc/P3`) และ `learning-model.md` ทีละ section · เริ่มจาก F7 (เทียบ TM-05, TM-07, TM-11, AM-02, SA-02 กับ spec) แล้วหาข้อขัดกันเอง, ลำดับ section, สิ่งที่ PoC เจอแต่ spec ยังไม่เขียน
+ขั้น 3: เขียน PR description ของ PR #31 เป็นตาราง findings (F1–F16 ยกเว้นข้อที่ไม่ต้องแก้) พร้อมข้อเสนอและเจ้าของไฟล์ แล้วให้ Jam ตัดสินทีละข้อ
 
 ## Waiting on
 
