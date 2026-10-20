@@ -24,6 +24,7 @@ type SendMessage = (payload: SendPayload, signal: AbortSignal) => AsyncIterable<
 ```
 
 - ChatRoom รับ `sendMessage` เป็น prop · `SSEEvent` คือ type เดิมใน `lib/sse.ts`
+- `sendMessage` ไม่บังคับ ถ้าไม่ส่งมา ใช้ transport ที่ตอบ `done` ทันที (พฤติกรรมเท่ากับ S2: มีแค่ bubble user ไม่มีคำตอบ) เพื่อให้ test ของ S2 ที่ review แล้วผ่านโดยไม่ต้องแก้
 - **Fake transport** (`lib/fakeTransport.ts`): อ่าน SSE text (รูปแบบเดียวกับ `tests/fixtures/sse/*.txt`) ผ่าน `parseSSE` แล้วปล่อยทีละ chunk โดยมีหน่วงเวลาระหว่าง chunk เพื่อให้เห็นการไหลบนหน้าจอ ค่าหน่วงเป็น parameter ของ fake transport (test ใช้ 0) ไม่ใช่ค่าของ learning model
 - หน้า room ใช้ fake transport ที่เล่น fixture `tests/fixtures/sse/tutor_reply.txt` ทุกครั้งที่ส่ง ไม่ว่าจะพิมพ์อะไร (ข้อความไม่สัมพันธ์กับคำถาม ยอมรับได้ใน PoC)
 
@@ -125,7 +126,7 @@ type SendMessage = (payload: SendPayload, signal: AbortSignal) => AsyncIterable<
 
 **หน้า room**
 
-- **AC-21 (TM-20)** Given หน้า room (ใช้ fake transport หน่วง 0) When ส่ง "ใช่ๆ" Then มี bubble user "ใช่ๆ" ตามด้วย bubble tutor ที่มีข้อความจาก `tutor_reply.txt` (แทน AC-19 ของ `chat-room-ui.md` ที่ไม่มีคำตอบ)
+- **AC-21 (TM-20)** Given หน้า room (ใช้ fake transport ที่หน่วงตามค่า demo · test รอได้สูงสุด 5 วินาที) When ส่ง "ใช่ๆ" Then มี bubble user "ใช่ๆ" ตามด้วย bubble tutor ที่มีข้อความจาก `tutor_reply.txt` (แทน AC-19 ของ `chat-room-ui.md` ที่ไม่มีคำตอบ)
 
 **เปลี่ยนชื่อ test เดิม** (ตาม `chat-room-ui.md` §10 ข้อ 1 · ไม่แก้เนื้อ test)
 

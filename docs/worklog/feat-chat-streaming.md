@@ -1,4 +1,4 @@
-# หน้าแชท P4-lite · stream ข้อความจาก SSE
+﻿# หน้าแชท P4-lite · stream ข้อความจาก SSE
 
 | | |
 |---|---|
@@ -11,8 +11,8 @@
 
 - [x] 1. 🤖 `/spec-feature` ร่าง `specs/features/tutor/chat-streaming.md` (TM-20, TM-08, TM-06, TM-21): ChatRoom ส่งข้อความผ่าน transport ที่ inject ได้, event `token` ต่อท้าย bubble ของ `speaker` ทีละส่วน, จัดการ `done` / `error`, ส่งรูป · ใช้ fake transport ที่เล่น `tests/fixtures/sse/*.txt` จนกว่า endpoint ของ Junior จะมา
 - [x] 2. 🙋 May review spec และตอบ open questions (Claude ถามเป็นตัวเลือก) · บอก Junior ในกลุ่มเรื่อง api.md ที่ต้องแก้
-- [ ] 3. 🤖 `/spec-to-tests` เขียน test ที่ fail จาก AC + เปลี่ยนชื่อ test เดิม TM04/TM05 → TM20/TM21 ตามที่ `chat-room-ui.md` §10 ข้อ 1 ตกลงไว้
-- [ ] 4. 🙋 May review test (ชื่อใหม่ + test ใหม่)
+- [x] 3. 🤖 `/spec-to-tests` เขียน test ที่ fail จาก AC + เปลี่ยนชื่อ test เดิม TM04/TM05 → TM20/TM21 ตามที่ `chat-room-ui.md` §10 ข้อ 1 ตกลงไว้
+- [x] 4. 🙋 May review test (ชื่อใหม่ + test ใหม่)
 - [ ] 5. 🤖 `/implement-feature` จน test ผ่าน + lint + typecheck
 - [ ] 6. 🙋 May ลองในเบราว์เซอร์: `cd apps/web` → `pnpm dev` → เปิด `http://localhost:3000/preps/demo/room` → พิมพ์ข้อความแล้วกด Enter → ดูว่าตัวอักษรไหลออกมาทีละส่วนและสมการ render ถูก
 
@@ -30,11 +30,13 @@
 - 2026-10-20 · ก่อน token แรกแสดง bubble tutor จุดสามจุด · ช่วง TTFT ยาวได้ถึง 2 วินาที (May)
 - 2026-10-20 · ผิดพลาดแสดง "ส่งไม่สำเร็จ ลองส่งอีกทีนะ" ข้อความเดียวเหนือ composer ไม่แสดง message จาก server · ยังไม่มีรายการ error.code (May)
 - 2026-10-20 · `$` ที่ยังไม่ปิดระหว่าง stream ซ่อนไว้ แสดงทั้งหมดเมื่อจบ · ไม่ให้เห็น LaTeX ดิบกระพริบ แต่ไม่ทำให้ข้อความหาย (May)
+- 2026-10-20 · `sendMessage` ของ ChatRoom ไม่บังคับ ค่าเริ่มต้นตอบ `done` ทันที · test S2 ที่ review แล้ว render ChatRoom โดยไม่มี transport ต้องผ่านโดยไม่แก้ (เพิ่มใน spec §2)
+- 2026-10-20 · test AC-21 รอได้ 5 วินาทีแทนหน่วง 0 · หน้า page รับ prop ไม่ได้ จึงตั้งค่าหน่วงให้ test เป็น 0 ไม่ได้ (แก้ AC-21 ใน spec)
 - 2026-10-20 · เลื่อนจอตาม stream ทำในงานนี้ เฉพาะเมื่ออยู่ใกล้ล่างสุด · stream ยาวจะล้นจอตอน demo (May)
 
 ## Next step
 
-รัน `/spec-to-tests specs/features/tutor/chat-streaming.md` (spec approved by May 2026-10-20)
+May review test ใน `apps/web/tests/chat/ChatRoomStream.test.tsx`, `tests/fakeTransport.test.ts`, test ใหม่ท้าย `tests/chat/RoomPage.test.tsx` และชื่อที่เปลี่ยนใน `MessageList` / `Composer` / `RoomPage` · ถ้า ok ให้รัน `/implement-feature specs/features/tutor/chat-streaming.md`
 
 ## Waiting on
 
