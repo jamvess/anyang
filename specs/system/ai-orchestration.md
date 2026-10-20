@@ -719,6 +719,7 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 **Output**
 
 - Schema validation (Pydantic) ทุก structured call ไม่ผ่านให้ retry 1 ครั้งพร้อม error message ถ้ายังไม่ผ่านให้ degrade
+- **ซ่อม backslash ของ LaTeX ก่อน validate:** model มักลืม escape `\` ใน JSON ทำให้ `\frac` `\beta` `\theta` `\right` `\neq` ถูก parse เป็นตัวอักษรควบคุม (form feed + `rac`) และยังผ่าน schema แบบเงียบๆ (เจอใน PoC P1) · gateway จึงเปลี่ยนกลับเป็น `\` ใน string ทุกตัวหลัง parse JSON: form feed/backspace ทุกครั้ง · tab/CR ที่มีตัวอักษรตามหลัง · newline เฉพาะเมื่อตามด้วยชื่อคำสั่งเต็มคำ (`neq` `nabla` `notin` ...) · newline และ tab ทั่วไปไม่แตะ · คำสั่งที่ไม่ใช่ escape ของ JSON (เช่น `\lim`) ทำให้ parse ไม่ผ่าน จึงเข้า retry ตามข้อบน
 - **Answer-leak check:** ถ้า tutor reply มี `reference_answer` ของโจทย์ที่ยังค้างอยู่ (ตรวจด้วย string match และ SymPy) ให้ generate ใหม่ เป็นการบังคับกฎ "ไม่เฉลยก่อนตอบ" แบบ deterministic
 - กฎของ buddy บังคับด้วย code (2.1)
 

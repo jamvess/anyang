@@ -74,7 +74,7 @@
 
 ## Next step
 
-🙋 Jam review test escape (ท้าย `apps/api/tests/unit/test_ai_gateway.py`) → แก้ `_parse` ใน `gateway.py` + ประโยคใน `ai-orchestration.md` §Output → ซ่อม cache `out/{pages,questions}/` → แล้วค่อยรัน A7 ตามด้านล่าง
+gateway ซ่อม escape แล้ว (`repair_unescaped_latex` ใน `gateway.py` · Jam review test แล้ว 20 ต.ค.) → เขียน script ซ่อม cache `out/{pages,questions}/` แบบ offline ด้วยฟังก์ชันนี้ แล้ว merge `poc/P3` เข้า `poc/P1` → จากนั้นรัน A7 ตามด้านล่าง
 
 ⚠️ **ก่อนรัน A7:** พบ bug ใน `poc/P1` (ดู Decisions ใน `docs/worklog/poc-P1.md` บน branch `poc/P1`) ว่า Gemini เขียน `rac` ลงใน JSON โดยไม่ escape ทำให้ LaTeX ใน `out/pages/midterm-*.json` และ `out/questions/*.json` พังเป็นตัวอักษรควบคุม (form feed 88/92 และ 23/30 จุด) · ต้องแก้ gateway และซ่อมไฟล์ cache ก่อน (แผนอยู่ใน worklog ของ P1) · A5 ใช้ข้อความจาก PyMuPDF จึงไม่โดน
 
