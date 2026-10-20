@@ -5,7 +5,7 @@
 | Owner | Junior |
 | Branch | `docs/erd-d3` |
 | Checklist item | ปรับ `schema.sql` ตามที่เจอระหว่าง P3 + วาด ERD (D3) |
-| Status | in progress · 2026-10-19 |
+| Status | ready for `/work-done` · 2026-10-20 |
 
 ## Plan
 
@@ -13,7 +13,7 @@
 - [x] 2. 🤖 วาด ERD ใหม่ แยกเป็น 3 รูปตามกลุ่ม (Tenancy + User · Content + Scope · Tutoring + Progress + Logs) ใส่ PK/FK และ column สำคัญ · ไม่ลากเส้น `tenant_id` ไปหา `tenants` ทุกตาราง แต่เขียนเป็นกฎไว้แทน
 - [x] 3. 🙋 Junior เปิดไฟล์บน GitHub (branch `docs/erd-d3` → `specs/system/data-model.md`) แล้วดูว่า diagram ทั้ง 3 รูปแสดงผลได้และอ่านรู้เรื่อง
 - [x] 4. 🤖 อ่าน `poc/P3` แล้วจดสิ่งที่อาจต้องแก้ใน schema ลงหัวข้อ "สิ่งที่ยังรอผล PoC" (ยังไม่เขียน migration จนกว่า P3 จะมีผล)
-- [ ] 5. 🤖 `/work-check` แล้ว `/work-done`
+- [x] 5. 🤖 `/work-check` แล้ว `/work-done`
 
 ## Definition of done
 
@@ -23,6 +23,7 @@
 
 ## Decisions
 
+- 2026-10-20 · ขั้น 5: merge `origin/main` เข้า branch (ไม่มี conflict) · `/work-check` ผ่าน เปลี่ยนแค่ไฟล์ `.md` จึงไม่มี test ให้รัน
 - 2026-10-20 · ขั้น 3: Junior เปิดดูบน GitHub แล้ว diagram ทั้ง 3 รูปแสดงผลได้
 - 2026-10-20 · ขั้น 4: จดสิ่งที่อาจต้องแก้ใน schema จาก P3a ได้ 5 ข้อ (ช่วงหน้าของหัวข้อ, คะแนนข้อสอบ, เหตุผลที่ map ไม่ได้, การตัดหัวข้อตาม note, คุณภาพข้อความ) · ยังไม่เขียน migration เพราะ P3a รันไม่ครบและ P3b ยังไม่เริ่ม
 - 2026-10-20 · ใน ERD ไม่ลากเส้น `tenant_id` (รูป 1 ลากให้ดู 2 เส้นเป็นตัวอย่าง) · ถ้าลากครบ 26 เส้น รูปจะอ่านไม่ออก จึงเขียนเป็นกฎไว้ในหัวข้อ "วิธีอ่าน" แทน
@@ -62,7 +63,7 @@ FK ที่ขาด:
 
 ## Next step
 
-ขั้น 5: `/work-check` แล้ว `/work-done` · ข้อใน checklist ยังไม่ติ๊ก จนกว่าจะแก้ schema ตามผล P3 (ดูตาราง 5 ข้อใน `data-model.md` › "สิ่งที่อาจต้องแก้ใน schema จาก P3a")
+พิมพ์ `/work-done` เพื่อเปลี่ยน PR #30 จาก draft เป็น ready for review · ไม่ติ๊กข้อ D3 ใน checklist จนกว่าจะแก้ schema ตามผล P3 (ดูตาราง 5 ข้อใน `data-model.md` › "สิ่งที่อาจต้องแก้ใน schema จาก P3a")
 
 ## Waiting on
 
