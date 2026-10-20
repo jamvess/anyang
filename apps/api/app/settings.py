@@ -162,6 +162,8 @@ class CircuitBreakerConfig(_Strict):
 
 class GatewayConfig(_Strict):
     retries: int = Field(ge=0)
+    retry_backoff_seconds: float = Field(ge=0)
+    max_retry_wait_seconds: float = Field(ge=0)
     schema_retries: int = Field(ge=0)
     circuit_breaker: CircuitBreakerConfig
 

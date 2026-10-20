@@ -29,5 +29,14 @@ class ProviderResponse:
     tokens_out: int
 
 
+class ProviderRateLimited(Exception):
+    """The provider refused the request for now (HTTP 429). ``retry_after`` is the wait in
+    seconds the provider asked for, or ``None`` when it did not say."""
+
+    def __init__(self, message: str, retry_after: float | None = None) -> None:
+        super().__init__(message)
+        self.retry_after = retry_after
+
+
 class Provider(Protocol):
     async def generate(self, request: ProviderRequest) -> ProviderResponse: ...

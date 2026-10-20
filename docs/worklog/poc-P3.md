@@ -85,7 +85,7 @@
 
 ## Next step
 
-ขั้น 8a: เขียน test ใน `apps/api/tests/unit/test_ai_gateway.py` (backoff, LaTeX opt-in) และ test ของ `GeminiProvider` ที่แปลง 429 เป็น error rate limit · ต้อง fail ก่อน · แล้วให้ Jam review
+ขั้น 8a รอ Jam review test (12 ตัว fail ตามที่ควร) · หลัง ok: commit test (red) → ขั้น 8b แก้ `app/ai/latex.py` (LatexStr, MathTextStr), ใช้ใน `app/models/scope_ai.py`, ลบ repair ทั้งก้อนใน `_parse`, backoff ใน `_generate`, `retry_after_seconds` + แปลง 429 ใน `gemini.py`
 
 หลัง 14:00 น. ของ 2026-10-20 (เช็คโควตาด้วย request เดียวก่อน): `cd apps/api && uv run python ../../poc/P3/run.py --a5-prompt v1` (ใช้ cache A5 v1 · เหลือ A6 + A7 ×2 = 3 call) → `uv run python ../../poc/P3/score.py --a5-prompt v1` → ถ้า A6 ไม่ผ่าน schema ให้ดู `out/raw/run_merge-*.txt` · จากนั้นถ้าโควตาเหลือ: `run.py --a5-prompt v2` (A5 ×4 + A6 + A7 ×2 = 7 call) → `score.py --a5-prompt v2` → สรุปเทียบ v1/v2 ให้ Jam
 

@@ -40,6 +40,8 @@ log = logging.getLogger(__name__)
 
 InputValue = str | Image | list[Image]
 
+_sleep = asyncio.sleep  # module attribute so tests can replace it
+
 _PLACEHOLDER = re.compile(r"\{\{(\w+)\}\}")
 _CODE_FENCE = re.compile(r"^```(?:json)?\s*(.*?)\s*```$", re.DOTALL)
 _PREVIOUS_ANSWER_CHARS = 2000

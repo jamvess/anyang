@@ -8,6 +8,11 @@ from google.genai import types
 from app.ai.providers.base import ProviderRequest, ProviderResponse
 
 
+def retry_after_seconds(error_json: dict) -> float | None:
+    """The wait a Gemini 429 asks for (``RetryInfo.retryDelay``), or ``None``."""
+    return None  # step 8a scaffold; implemented in step 8b
+
+
 class GeminiProvider:
     def __init__(self, api_key: str) -> None:
         if not api_key:
