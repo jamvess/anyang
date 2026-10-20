@@ -96,6 +96,7 @@
 ### S3 · 2–13 พ.ย.
 
 - [ ] หน้าแชท P4-lite: อ่าน SSE ผ่าน `lib/sse.ts`, แสดงข้อความที่ไหลออกมา, render KaTeX, ส่งรูป
+  - 20 ต.ค. stream จาก fake transport เสร็จ (PR #32 · `chat-streaming.md`) · เหลือ HTTP transport + upload รูปจริง เมื่อ `POST /sessions/{id}/messages` ของ Junior มา
 - [ ] Generate type จาก `/openapi.json` (`pnpm gen:api`)
 - [x] Use case UC สมัคร และ UC upload → scope (D7)
 - [ ] เขียน report P4-lite ร่วมกับ Junior
@@ -121,12 +122,12 @@
 
 - [x] ⭐ ติดตั้งเครื่องมือและ Claude Code
 - [x] ⭐ เลือกวิชาคณิต 1 วิชาสำหรับ P3 และหาชีท + ข้อสอบเก่า 2 ชุด · MTH10101, ดู `evals/topics/mth10101/sources.md`
-- [ ] ตรวจ `specs/system/ai-orchestration.md` และ `learning-model.md` ใน repo ให้ครบ (D2)
+- [x] ตรวจ `specs/system/ai-orchestration.md` และ `learning-model.md` ใน repo ให้ครบ (D2) · findings F1–F17 ใน PR #31 (F7 ไม่ต้องแก้) · แก้ 13 · เลื่อน 4 (F5 ภาพ → S4, F12 แถว P1 → หลัง report P1, F15 key ไฟล์สแกน → ingest S3, TM-10 → feature spec ห้องติว S3) · เพิ่ม §3.7 requirement → section
 - [x] ตรวจ `config/learning.yaml` ว่าทุกค่ามีป้ายที่มา · ติดป้ายครบทุกค่า + เพิ่มแถวใน `learning-model.md` (ค่าไม่เปลี่ยน)
 - [x] เขียนคู่มือ label golden set (verdict, error type, บรรทัดแรกที่ผิด) ใน `evals/README.md` · + คู่มือลายมือ P1 และคู่มือหัวข้อ P3 ใน `evals/topics/README.md`
 - [x] ร่าง prompt `extract_answer/v1` (มีร่างแล้ว) และ `extract_topics_local/v1` · smoke test กับ sheet-02, sheet-03 ใน AI Studio ผ่าน
 - [x] รวบรวมรูปลายมือจากทุกคนให้ได้ ≥ 30 รูป + ขอความยินยอมเพื่อน (D8) · 30 รูปจาก 5 คน ยินยอมครบ · ทุกรูปเขียนบน tablet ยังไม่มีรูปกระดาษ (ดู `evals/handwriting/README.md`)
-- [ ] เตรียมรายการงานวิจัยเรื่อง learning path และ progress tracking สำหรับคุยกับทีม (`learning-model.md` §10)
+- [x] เตรียมรายการงานวิจัยเรื่อง learning path และ progress tracking สำหรับคุยกับทีม (`learning-model.md` §10) · 23 รายการใน 7 ด้านที่ MVP ใช้ (`docs/research/learning-path.md`) · agenda 3 เรื่องรอคุย (`docs/research/agenda-learning-model.md`): BKT ระดับ skill, BKT vs logistic, ความพร้อม %
 
 **Done เมื่อ:** มีรูป ≥ 30 รูปและไฟล์วิชา pilot ครบ
 
