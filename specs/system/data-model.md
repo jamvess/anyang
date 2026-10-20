@@ -354,3 +354,17 @@ Golden sets ของการวัดผล AI ไม่อยู่ใน DB 
 
 - มิติของ `chunks.embedding` (ตอนนี้ `vector(768)`) เปลี่ยนตาม embedding model ที่เลือกใน P3 ด้วย migration ใหม่
 - index แบบ HNSW ใช้ cosine distance ยืนยันอีกครั้งหลังเลือก model
+
+### สิ่งที่อาจต้องแก้ใน schema จาก P3a (จดไว้ 2026-10-20 · ยังไม่เขียน migration)
+
+อ่านจาก branch `poc/P3` (`apps/api/app/models/scope_ai.py`, `poc/P3/`, `docs/worklog/poc-P3.md`) · P3a ยังรันไม่ครบ (A6 ยังไม่ผ่าน schema) และ P3b (embedding) ยังไม่เริ่ม · ทุกข้อด้านล่างเป็นแค่ข้อเสนอ รอผลจริงก่อน
+
+| # | ที่มาใน P3 | schema ตอนนี้ | ข้อเสนอ |
+|---|---|---|---|
+| 1 | A6 `merge_topics` คืน `sources` (ช่วงหน้าของแต่ละหัวข้อ) เพราะขั้น 5d ต้องใช้สร้าง `topic_chunks` และ SM-04 ต้องแสดงเลขหน้า | `topics` ไม่มีที่เก็บช่วงหน้า | เพิ่มตาราง `topic_sources (topic_id, material_id, page_from, page_to)` หรือ `topics.sources jsonb` · ต้องเลือกหลังรู้ว่าจะ query ช่วงหน้าไหม |
+| 2 | A4 `split_past_exam` คืน `points` (คะแนนของข้อ) | `past_exam_questions` ไม่มี column คะแนน | ถ้าสูตรดาวหรือ planner จะใช้คะแนน ให้เพิ่ม `points numeric` · ถ้าไม่ใช้ ไม่ต้องเพิ่ม |
+| 3 | A7 `map_questions` คืน `topic_id: null` พร้อม `note` (ข้อที่ map ไม่ได้ ตรงกับ `unmapped` ใน label) | `topic_id` เป็น null ได้แล้ว แต่ไม่มีที่เก็บเหตุผล | อาจเพิ่ม `map_note text` ให้หน้า scope แสดงว่าทำไมข้อนี้ไม่มีหัวข้อ |
+| 4 | A6 คืน `excluded_by_note` (หัวข้อที่ตัดออกเพราะ note ของผู้ใช้) | มี `topics.status = 'excluded'` แต่ไม่รู้ว่าใครตัด | น่าจะพอด้วย `status = 'excluded'` + บันทึกใน `scope_changes` (`actor = 'ai'`) · ไม่ต้องเพิ่ม column ถ้าตกลงแบบนี้ |
+| 5 | ingest ใช้ `vision_extract_pages` อ่านทั้งไฟล์ใน call เดียว และวัด % ตัวอักษรไทยเพื่อเลือกระหว่าง text layer กับ vision | `material_pages.extract_method` มี `vision` อยู่แล้ว · ไม่มีที่เก็บค่าคุณภาพข้อความ | ไม่ต้องแก้ ถ้าไม่ต้องการ debug ย้อนหลัง · ถ้าต้องการ ให้เพิ่ม `material_pages.text_quality numeric` |
+
+ไม่กระทบ schema: `thinking` อยู่ใน `config/ai.yaml` · ค่า `stars.*` อยู่ใน `config/learning.yaml` · `q_no` แบบ `ก1.2` เก็บใน `text` ได้อยู่แล้ว
