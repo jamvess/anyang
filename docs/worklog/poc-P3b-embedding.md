@@ -27,10 +27,11 @@ spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผล�
 ## Decisions
 
 - 2026-10-20 · แยกจาก P3a (PR #37) เป็น branch ใหม่ ตามที่ตัดสินไว้ 19 ต.ค. · คำถามต้องเขียนโดยคนที่ไม่ใช่ Jam
+- 2026-10-20 · ขั้น 1a: test ของตัวตัด chunk (`poc/P3/test_chunking.py` 7 ตัว fail ตามที่ควร) + โครง `chunking.py` · ตั้งชื่อ `chunking` ไม่ใช่ `chunk` เพราะชนกับ module `chunk` ของ Python 3.12 · ประมาณ token จากจำนวนตัวอักษร ÷ 3 (PoC เท่านั้น ไม่เรียก tokenizer) · เทมเพลตคำถามเป็น markdown table (`evals/topics/mth10101/retrieval_questions.md`) ให้คนเขียนกรอกง่าย · Claude แปลงเป็น jsonl ตอนรัน
 
 ## Next step
 
-ขั้น 1: ตัด chunk จาก `poc/P3/out/pages/sheet-*.json` และทำเทมเพลตคำถาม
+Jam review test ของ chunking + เทมเพลตคำถาม → ถ้า ok: implement `chunking.py` แล้วตัด chunk จริงจาก `poc/P3/out/pages/sheet-*.json` · Jam ส่งเทมเพลตให้ May/Junior
 
 ## Waiting on
 
