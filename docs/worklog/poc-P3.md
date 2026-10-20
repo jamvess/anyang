@@ -33,7 +33,7 @@
 - [x] 6. 🤖 `poc/P3/run.py`: A5 ทีละชีท → A6 → A7 → ดาว (สูตร §2.3.5 อ่านค่าจาก `config/learning.yaml` → `stars`) · จับเวลาและต้นทุนต่อไฟล์
 - [x] 7. 🤖 `poc/P3/score.py`: เทียบกับ `labels.json` → % หัวข้อตรง, % ★★★ ตรง, เวลาต่อไฟล์, ต้นทุนต่อไฟล์ · 🙋 Jam ตัดสินวิธีจับคู่หัวข้อก่อนเขียน
 - [x] 8a. 🤖 แก้ตาม review ของ Junior ใน PR #15 · test ก่อน: retry backoff (ใช้ `retryDelay` ของ provider ถ้ามี ไม่งั้นรอตาม config · เกินเพดานไม่ retry) + ซ่อม LaTeX แบบ opt-in (`LatexStr`, `MathTextStr`) → 🙋 Jam review test
-- [ ] 8b. 🤖 แก้โค้ด + 2 key ใน `config/ai.yaml` + `ai-orchestration.md` §2.9 → merge `poc/P3` เข้า `poc/P1` → ตอบ Junior ใน PR #15
+- [x] 8b. 🤖 แก้โค้ด + 2 key ใน `config/ai.yaml` + `ai-orchestration.md` §2.9 → merge `poc/P3` เข้า `poc/P1` → ตอบ Junior ใน PR #15
 - [ ] 8. 🤖 รันจริง ดูผลกับ Jam แล้วร่าง `/poc-report P3` (ส่วน P3a)
 
 ## Definition of done
@@ -83,16 +83,17 @@
 - 2026-10-20 · **Junior review PR #15: ขอแก้ 2 จุด** (1) retry ไม่มี backoff ทั้งที่ §2.10 เขียนว่า backoff (2) `repair_unescaped_latex` ซ่อมทุก string ของทุก purpose เช่น newline ก่อน `mid-term` ในข้อความไทยกลายเป็น `\n` ตัวอักษร และ tab ก่อนตัวอังกฤษถูกแก้ · Junior พูดถูก (test เดิมเช็คแค่ newline ก่อน `other` และ tab ก่อนภาษาไทย) · ไม่ block: JSON mode กับ stream (Junior ทำใน S3), schema retry เมื่อชน max_tokens, license PyMuPDF (AGPL) ให้ทีมคุย
 - 2026-10-20 · (Jam เลือกตามคำแนะนำ) (1) backoff: ใช้ `retryDelay` จาก provider ถ้ามี ไม่งั้นรอ `gateway.retry_backoff_seconds` · ถ้าต้องรอเกิน `gateway.max_retry_wait_seconds` ไม่ retry (ห้องติวมีเป้า TTFT 2 วินาที · PoC รอเองใน `Run`) · เพิ่ม 2 key ใน `config/ai.yaml` (ไฟล์กลาง · แจ้งกลุ่ม) (2) LaTeX: เลิกซ่อมทุก string ใน `_parse` · ใช้ `LatexStr` กับ field ที่เป็น LaTeX ล้วน (`AnswerLine.latex`, `latex_blocks`) และ `MathTextStr` ซ่อมเฉพาะใน `$...$` กับข้อความไทยปนสูตร (`text` ของ A2/A2b/A4) · Jam อนุญาตแก้ test escape 6 ตัวที่ review แล้วให้ model ใน test ใช้ `LatexStr` (สิ่งที่ตรวจเหมือนเดิม)
 - 2026-10-20 · ขั้น 8b แก้แล้ว: `app/ai/latex.py` (LatexStr, MathTextStr ซ่อมใน `$...$` และ `$$...$$`) · `_parse` กลับไปใช้ `model_validate_json` ตรงๆ · backoff ใน `_generate` · `gemini.py` แปลง 429 เป็น `ProviderRateLimited` พร้อม `retryDelay` · test 98 ผ่าน · ลองกับ cache จริง: P3 248 ข้อความไม่เปลี่ยน · P1 ไฟล์ hw_004 เดิม (.bak) ซ่อมได้ ไฟล์ที่ซ่อมแล้วไม่เปลี่ยน
+- 2026-10-20 · merge `poc/P3` เข้า `poc/P1` แล้ว (test P1 ผ่าน) · ตอบ Junior ใน PR #15 และขอ review อีกรอบแล้ว · license PyMuPDF รับว่าจะยกไปคุยในกลุ่ม
 
 ## Next step
 
-ขั้น 8b ที่เหลือ: merge `poc/P3` เข้า `poc/P1` → ตอบ Junior ใน PR #15 (Jam ok ข้อความก่อนโพสต์) · จากนั้นขั้น 8 รัน A6 + A7 หลัง 14:00 น. ตามคำสั่งด้านล่าง
+ขั้น 8: หลัง 14:00 น. (เช็คโควตาด้วย request เดียวก่อน) รัน A6 + A7 ตามคำสั่งด้านล่าง · ดู log ว่ามี MAX_TOKENS ไหม (Junior ถาม)
 
 หลัง 14:00 น. ของ 2026-10-20 (เช็คโควตาด้วย request เดียวก่อน): `cd apps/api && uv run python ../../poc/P3/run.py --a5-prompt v1` (ใช้ cache A5 v1 · เหลือ A6 + A7 ×2 = 3 call) → `uv run python ../../poc/P3/score.py --a5-prompt v1` → ถ้า A6 ไม่ผ่าน schema ให้ดู `out/raw/run_merge-*.txt` · จากนั้นถ้าโควตาเหลือ: `run.py --a5-prompt v2` (A5 ×4 + A6 + A7 ×2 = 7 call) → `score.py --a5-prompt v2` → สรุปเทียบ v1/v2 ให้ Jam
 
 ## Waiting on
 
-โควตา free tier ของ gemini-3.5-flash รีเซ็ต 2026-10-20 ≈ 14:00 น. · Junior review การแก้ gateway (PR #15)
+โควตา free tier ของ gemini-3.5-flash รีเซ็ต 2026-10-20 ≈ 14:00 น. · Junior review รอบสองใน PR #15 (แก้ 2 จุดแล้ว)
 
 ## Notes for next time
 
