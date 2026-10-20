@@ -41,6 +41,7 @@
 - [x] `test_SA06_tenant_isolation` รันใน CI (P6-lite) · เสร็จก่อนกำหนดใน S1
 - [x] ตรวจว่าไม่มี secret ใน git history · เสร็จก่อนกำหนดใน S1 (15 ต.ค.)
 - [ ] ปรับ `schema.sql` ตามที่เจอระหว่าง P3 + วาด ERD (D3)
+  - 20 ต.ค. วาด ERD ใหม่แล้ว 3 รูป ครบ 28 ตาราง และ FK ทั้ง 45 ตัว (PR #30) · เหลือแก้ schema ตามผล P3 (จดไว้ 5 ข้อใน `data-model.md`)
 - [ ] ช่วย Jam ทำ ingest pipeline ของ P3: อ่าน PDF (PyMuPDF), ตัด chunk, เก็บลง DB
 - [ ] เขียน report P6-lite ด้วย `/poc-report P6-lite`
 
