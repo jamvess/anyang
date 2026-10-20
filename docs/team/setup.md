@@ -106,6 +106,13 @@ code .env
 
 บรรทัดอื่น (`AI_PROVIDER=fake`, GCP, Anthropic, Sentry) ปล่อยไว้ตามเดิมก่อน
 
+**เฉพาะคนที่รัน PoC กับ Gemini จริง** (ตอนนี้คือ Jam ใน P3) ให้ใส่ 2 ค่านี้ ส่วนคนอื่นปล่อยว่างไว้ได้ · ไม่ต้องเปลี่ยน `AI_PROVIDER` เพราะ script ของ PoC สร้าง gateway แบบ live เอง · ส่วน test ใช้ fake provider เสมอ
+
+| ตัวแปร | ค่า |
+|---|---|
+| `GEMINI_API_KEY` | https://aistudio.google.com/apikey → **Create API key** → Copy · ⚠️ ถ้าเป็น free tier Google อาจเอาข้อมูลไปใช้ train ได้ จึงห้ามส่งข้อมูลของ user จริงหรือรูปลายมือของเพื่อนถ้ายังไม่ได้เปิด billing (AI-07) |
+| `AI_MODEL_OVERRIDE` | model ที่จะใช้แทน `TODO-...` ใน `config/ai.yaml` เช่น `gemini:gemini-3.8-flash` |
+
 **2) `apps/web/.env.local` ใช้กับ frontend**
 
 ```bash
