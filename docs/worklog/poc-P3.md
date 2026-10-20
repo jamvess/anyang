@@ -5,12 +5,13 @@
 | Owner | Jam |
 | Branch | `poc/P3` |
 | Checklist item | P3: ingest → A5 → A6 → A7 → `compute_importance` · เทียบกับ label · ลอง embedding 2–3 ตัวกับคำถาม 20 ข้อ |
-| Status | paused · 2026-10-20 |
+| Status | in progress · 2026-10-20 |
 
 ## Done today (2026-10-20)
 
 - แก้ gateway ให้ซ่อม LaTeX ที่ model ลืม escape (`repair_unescaped_latex` · test 6 ตัว · bullet ใหม่ใน `ai-orchestration.md` §Output) · merge เข้า `poc/P1` แล้ว
 - ตรวจ cache ของ P3 แล้วไม่มีจุดเสีย จึงรัน A7 ได้เลยโดยไม่ต้องซ่อม
+- ขอ Junior review ล่วงหน้าเฉพาะส่วน `apps/api/` + `config/ai.yaml` (เพิ่ม reviewer + comment ใน PR #15 · PR ยังเป็น draft เพราะ PoC ยังไม่เสร็จ)
 
 ## Done (2026-10-19)
 
