@@ -272,6 +272,7 @@ so I can paste it on GitHub.
 | ไฟล์กลาง (`CLAUDE.md`, `requirements.md`, `api.md`) | ทั้ง 2 คนที่เหลือ |
 
 **6. Merge** เมื่อเพื่อน **Approve** แล้ว **และ** CI ขึ้นติ๊กเขียวครบทุกตัว
+- ตั้งแต่ 20 ต.ค. GitHub บังคับข้อนี้แล้ว (ruleset `main`): ปุ่ม Merge จะกดไม่ได้จนกว่าจะมี approve 1 คนและ `api`, `api-integration`, `web` ผ่าน · ไม่มีใคร bypass ได้ ถ้ารีบให้ทักเพื่อนในกลุ่ม
 - กด **Merge pull request** แล้วกด **Delete branch**
 - บอกในกลุ่มว่า "merge ___ แล้ว"
 - กลับไปทำ **A ข้อ 2** เพื่อดึง main ล่าสุด
