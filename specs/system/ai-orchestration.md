@@ -721,7 +721,7 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 **Output**
 
 - Schema validation (Pydantic) ทุก structured call ไม่ผ่านให้ retry 1 ครั้งพร้อม error message ถ้ายังไม่ผ่านให้ degrade
-- **ซ่อม backslash ของ LaTeX ก่อน validate:** model มักลืม escape `\` ใน JSON ทำให้ `\frac` `\beta` `\theta` `\right` `\neq` ถูก parse เป็นตัวอักษรควบคุม (form feed + `rac`) และยังผ่าน schema แบบเงียบๆ (เจอใน PoC P1) · gateway จึงเปลี่ยนกลับเป็น `\` ใน string ทุกตัวหลัง parse JSON: form feed/backspace ทุกครั้ง · tab/CR ที่มีตัวอักษรตามหลัง · newline เฉพาะเมื่อตามด้วยชื่อคำสั่งเต็มคำ (`neq` `nabla` `notin` ...) · ไม่ซ่อม `\ne` `\ni` `\nu` `\not` เพราะชนกับบรรทัดที่ขึ้นต้นด้วย `e^{x}` `i)` `u =` หรือคำว่า not (ข้อความ PyMuPDF ของชีท MTH10101 ชน 296 จุด) · newline และ tab ทั่วไปไม่แตะ · คำสั่งที่ไม่ใช่ escape ของ JSON (เช่น `\lim`) ทำให้ parse ไม่ผ่าน จึงเข้า retry ตามข้อบน
+- **ซ่อม backslash ของ LaTeX เฉพาะ field ที่เป็นสูตร:** model มักลืม escape `\` ใน JSON ทำให้ `\frac` `\beta` `\theta` `\right` `\neq` ถูก parse เป็นตัวอักษรควบคุม (form feed + `rac`) และยังผ่าน schema แบบเงียบๆ (เจอใน PoC P1) · ซ่อมด้วย type ของ field ใน output model (`app/ai/latex.py`) ไม่ซ่อมทุก string เพราะข้อความธรรมดามี newline และ tab จริง (review ของ PR #15: newline ก่อน `mid-term` ถูกแก้ผิด): `LatexStr` = ทั้ง string เป็น LaTeX (`AnswerLine.latex`, `latex_blocks`) · `MathTextStr` = ข้อความปนสูตร ซ่อมเฉพาะใน `$...$` และ `$$...$$` (`text` ของ A2, A2b, A4) · กฎการซ่อม: form feed/backspace ทุกครั้ง · tab/CR ที่มีตัวอักษรตามหลัง · newline เฉพาะเมื่อตามด้วยชื่อคำสั่งเต็มคำ (`neq` `nabla` `notin` ...) · ไม่ซ่อม `\ne` `\ni` `\nu` `\not` เพราะชนกับบรรทัดที่ขึ้นต้นด้วย `e^{x}` `i)` `u =` หรือคำว่า not (ข้อความ PyMuPDF ของชีท MTH10101 ชน 296 จุด) · newline และ tab ทั่วไปไม่แตะ · คำสั่งที่ไม่ใช่ escape ของ JSON (เช่น `\lim`) ทำให้ parse ไม่ผ่าน จึงเข้า retry ตามข้อบน
 - **Answer-leak check:** ถ้า tutor reply มี `reference_answer` ของโจทย์ที่ยังค้างอยู่ (ตรวจด้วย string match และ SymPy) ให้ generate ใหม่ เป็นการบังคับกฎ "ไม่เฉลยก่อนตอบ" แบบ deterministic
 - กฎของ buddy บังคับด้วย code (2.1)
 
@@ -743,7 +743,7 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 | embed | ingest, คำถามอิสระ | เลือกจาก spike ใน PoC P3 (3.6) | — |
 
 - **Config อยู่ใน YAML ใน repo** (purpose → tier, model, temperature, max_tokens, timeout, fallback, prompt_version) เปลี่ยน model ได้โดยไม่แก้ code
-- **Fallback chain:** retry 1 ครั้ง (backoff) → provider สำรองใน tier เดียวกัน → degrade (checker: ใช้ผล SymPy อย่างเดียวไม่มี error_type, tutor: ข้อความ template "ระบบช้า ลองส่งอีกทีนะ", STT: ให้พิมพ์แทน)
+- **Fallback chain:** retry 1 ครั้ง (backoff: รอตามที่ provider ขอ เช่น `retryDelay` ของ Gemini 429 ถ้าไม่บอกรอ `gateway.retry_backoff_seconds` · ถ้าต้องรอเกิน `gateway.max_retry_wait_seconds` ไม่ retry เพราะรอนานกลาง turn แย่กว่าล้มทันที) → provider สำรองใน tier เดียวกัน → degrade (checker: ใช้ผล SymPy อย่างเดียวไม่มี error_type, tutor: ข้อความ template "ระบบช้า ลองส่งอีกทีนะ", STT: ให้พิมพ์แทน)
 - **Circuit breaker:** ใช้ค่า default ของ Resilience4j คือ error ≥ 50% จากอย่างน้อย 10 calls ให้ route ไป fallback 60 วินาที แล้วลองกลับ
 - **ควบคุมต้นทุน:** quota token ต่อ user/วัน และต่อ tenant (ผูกกับ plan), prompt caching, ข้าม router เมื่อส่งรูป, cache TTS, embed เฉพาะตอน ingest
 - **เป้าหมาย:** ต้นทุน ≤ 5 บาทต่อ session 45 นาที และ TTFT p95 < 2 วินาที (ตัวเลขประมาณการ วัดจริงใน PoC)
