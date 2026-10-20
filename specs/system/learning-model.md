@@ -189,14 +189,15 @@ ratio     = need ÷ available
 
 ## 10. หัวข้อที่จะลงรายละเอียดต่อ (งานวิจัยรองรับ learning path และ progress tracking)
 
-รายการตั้งต้นสำหรับคุยกับทีมและอาจารย์ ยังไม่ได้สรุป
+รายการงานวิจัยที่ตรวจแล้ว (20 ต.ค. 2569) อยู่ใน [`docs/research/learning-path.md`](../../docs/research/learning-path.md) · ครอบคลุม 7 ด้านที่ MVP ใช้จริง: knowledge tracing, mastery learning, progress/readiness, learning path, ฝึกด้วยโจทย์ + feedback, spaced review และการพิสูจน์ผล · interleaving และการแบ่งเวลาเมื่อเวลาไม่พอ ไม่อยู่ใน MVP
 
-- การเรียงลำดับหัวข้อตาม prerequisite (learning path) และกรอบทฤษฎีที่รองรับ
-- Mastery learning: เกณฑ์ผ่านก่อนไปหัวข้อถัดไป
-- เปรียบเทียบโมเดล tracking: BKT, Performance Factors Analysis, Deep Knowledge Tracing ว่าตัวไหนเหมาะกับข้อมูลน้อยแบบโปรเจกต์เรา
-- Retrieval practice และ immediate feedback ที่รองรับการ "ให้โจทย์ก่อน สอนทันทีเมื่อผิด"
-- Spacing และ interleaving ในบริบทเตรียมสอบระยะสั้น
-- วิธีประเมินผล (evaluation) ว่าระบบช่วยให้ผู้เรียนดีขึ้นจริงในช่วง pilot
+ประเด็นที่งานวิจัยท้าทาย design ปัจจุบัน และรอคุยกับทีมและอาจารย์ (ยังไม่ได้เปลี่ยนสูตรหรือค่าใน config)
+
+- BKT ระดับหัวข้อ หรือระดับ skill (§1, §4)
+- BKT หรือ logistic model หลังมีข้อมูลจาก Alpha (§1)
+- เกณฑ์ mastery 0.95 หรือสูงกว่า (§1, §4)
+- ความพร้อม % ทำให้ผู้เรียนมั่นใจเกินไหม และ validate กับคะแนนสอบจริงยังไง (§5)
+- mastery ควรลดลงตามเวลาไหม (§3, §5)
 
 ## References
 
