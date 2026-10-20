@@ -50,6 +50,7 @@ class DoneConfig(_Strict):
 class ParkConfig(_Strict):
     max_problems_per_skill_per_day: int = Field(ge=1)
     max_fail_streak_per_skill: int = Field(ge=1)
+    return_after_sessions: int = Field(ge=1)
 
 
 class SpacingConfig(_Strict):

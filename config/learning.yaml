@@ -37,6 +37,7 @@ done:                                  # when a topic counts as passed (TM-16)
 park:                                  # stop and come back later (TM-19)
   max_problems_per_skill_per_day: 10   # [A] Beck & Gong 2013 wheel-spinning; ASSISTments daily limit 10
   max_fail_streak_per_skill: 3         # [C] = failed after 2 different teaching angles (AM-09). Validate after Alpha: % who pass after 3rd fail.
+  return_after_sessions: 1             # [C] parked topic re-enters the queue after >= N sessions (ai-orchestration §2.5.3). After Alpha: pass rate when back after 1 vs 2+ sessions.
 
 spacing:                               # spaced review of passed topics (TM-17, learning-model.md §3)
   first_gap_days: 1                    # [A] SM-2 first interval I(1) = 1 day

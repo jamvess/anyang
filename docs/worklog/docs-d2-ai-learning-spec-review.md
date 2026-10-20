@@ -27,6 +27,8 @@
 
 - 2026-10-20 · เลือกทำข้อนี้ระหว่างรอโควตา free tier (P1/P3 รันได้หลัง 14:00 น.) · งานนี้ไม่ต้องใช้โควตา
 - 2026-10-20 · (Jam เลือกตามคำแนะนำ) findings: แก้ F1 F2 F3 F4 F6 F8 F9 F10 F11 F13 F14 F16 ใน PR นี้ · เลื่อน F5 (mermaid ใน S4, ยังไม่ใส่ path ของ .docx), F12 (ตอนได้ report P1), F15 (ตอนทำ ingest จริง) · ขั้น 5 แบ่งเป็น 5a แก้ข้อเล็ก และ 5b ร่างตาราง requirement → section (F6)
+- 2026-10-20 · ขั้น 5a แก้ F1 F2 F3 F4 F8 F9 F10 F11 F13 F14 F16 แล้ว · F16 เพิ่ม key `park.return_after_sessions` ทำให้ต้องเพิ่ม field ใน `ParkConfig` (`apps/api/app/settings.py` ของ Junior · `extra=forbid` ไม่อย่างนั้นแอป start ไม่ขึ้น) · (Jam เลือกตามคำแนะนำ) เพิ่มใน PR นี้ให้ Junior review
+- 2026-10-20 · **F17 (เจอระหว่างแก้):** quota buddy ใน Triage/Final "หารครึ่ง" ไม่ได้บอกวิธีปัด · (Jam เลือกตามคำแนะนำ) ปัดขึ้น ได้ 1/1/2 เพื่อให้คนที่ตั้งความถี่ต่ำยังได้ยิน buddy
 
 ## Findings (ร่าง · รวมเป็นตารางใน PR ตอนขั้น 3)
 
@@ -57,11 +59,11 @@
 
 ## Next step
 
-ขั้น 4 🙋: รอ Jam ตัดสิน F1–F16 ตามตารางใน PR #31 (ข้อเสนอของ Claude: แก้ทุกข้อ ยกเว้น F5, F12, F15 เลื่อน) · F5 ต้องการ path ของไฟล์ .docx ใน Drive
+ขั้น 5b: ร่าง §3.7 ใน ai-orchestration.md เป็นตาราง requirement → section (F6) ครอบคลุม AI-, TM-, AM-, SM-, PM- ที่ active · อ่าน requirements.md ทีละข้อแล้วหา section ที่รองรับ · ข้อที่ไม่มี section รองรับให้เขียนว่า "ไม่อยู่ใน AI flow" หรือ "ยังไม่มี spec" แล้วให้ Jam ตรวจ
 
 ## Waiting on
 
-Jam ตัดสิน findings ใน PR #31
+Junior review `settings.py` + `learning.yaml` ใน PR #31 (ตอน ready for review)
 
 ## Notes for next time
 
