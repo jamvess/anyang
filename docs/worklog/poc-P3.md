@@ -5,7 +5,7 @@
 | Owner | Jam |
 | Branch | `poc/P3` |
 | Checklist item | P3: ingest → A5 → A6 → A7 → `compute_importance` · เทียบกับ label · ลอง embedding 2–3 ตัวกับคำถาม 20 ข้อ |
-| Status | paused · 2026-10-19 |
+| Status | in progress · 2026-10-20 |
 
 ## Done today (2026-10-19)
 
@@ -70,8 +70,11 @@
 - 2026-10-19 · ร่าง `prompts/extract_topics_local/v2.md`: 1 หัวข้อ = 1 section ที่มีหัวข้อของตัวเองพร้อมคำอธิบายหรือตัวอย่าง (ตามโครงสร้างของไฟล์) · ชื่อบทหรือ part ไม่นับเป็นหัวข้อ · ห้ามรวม section ที่มีหัวข้อต่างกัน · ไม่นับหน้าแบบฝึกหัดท้าย section/บท/ไฟล์และหน้าเฉลยเข้าไปในช่วงหน้า (ยกเว้นไฟล์ที่เป็นแบบฝึกหัดทั้งไฟล์) · ไม่ใส่ตัวเลขหรือตัวอย่างจาก label ของ MTH10101 · v2 ถูกปรับโดยดูผลของชุดที่ใช้วัดผล ตัวเลขของ v2 จึงดีเกินจริงไปบ้าง ต้องเขียนเป็นข้อจำกัดใน report (ควรทดสอบกับวิชาอื่น)
 - 2026-10-19 · PoC: `run.py --a5-prompt v2` / `score.py --a5-prompt v2` override prompt เฉพาะรอบนั้น (ไม่แก้ `ai.yaml`) · cache A5 แยกตาม version (`out/a5/<model>/<version>/` · ย้ายของ v1 ไปไว้ใน `v1/` แล้ว) · ผลอยู่ใน `results/<model>-a5<version>/` · dry run ด้วย fake provider ผ่าน
 - 2026-10-19 · ข้อสังเกตเรื่องการให้คะแนน: label ของ May มีแค่หน้าใน sheet-01/02 (ไม่มีหน้าใน sheet-03/04) แต่ A6 อาจรวมหน้าแบบฝึกหัดจาก sheet-03/04 เข้าไปใน `sources` ทำให้ IoU ลดลง ถึงหัวข้อจะตรงก็ตาม · หลังได้ผลของ v1 ให้ดูว่ากระทบมากแค่ไหน แล้วให้ Jam ตัดสินว่าจะคิด IoU เฉพาะไฟล์ที่ label มีหรือไม่
+- 2026-10-20 · (Jam เลือกตามคำแนะนำ) แก้ bug escape บน branch นี้ แล้ว merge `poc/P3` เข้า `poc/P1` (รายละเอียดอยู่ใน `docs/worklog/poc-P1.md`) · test 5 ตัวต่อท้าย `test_ai_gateway.py`: 3 ตัว fail ตามที่ควร (form feed/backspace, tab/CR, newline + ชื่อคำสั่ง) · 2 ตัวผ่านแล้วตั้งแต่ตอนนี้ เพราะเป็นตัวกันไม่ให้การซ่อมไปทำของเดิมพัง (newline ปกติ, LaTeX ที่ escape ถูกแล้ว) · newline ซ่อมเฉพาะเมื่อตามด้วยชื่อคำสั่งเต็มคำ (`neq` `nabla` `notin` ...) เพื่อไม่ให้ `\nother` ใน notes กลายเป็น `\not`+`her`
 
 ## Next step
+
+🙋 Jam review test escape (ท้าย `apps/api/tests/unit/test_ai_gateway.py`) → แก้ `_parse` ใน `gateway.py` + ประโยคใน `ai-orchestration.md` §Output → ซ่อม cache `out/{pages,questions}/` → แล้วค่อยรัน A7 ตามด้านล่าง
 
 ⚠️ **ก่อนรัน A7:** พบ bug ใน `poc/P1` (ดู Decisions ใน `docs/worklog/poc-P1.md` บน branch `poc/P1`) ว่า Gemini เขียน `rac` ลงใน JSON โดยไม่ escape ทำให้ LaTeX ใน `out/pages/midterm-*.json` และ `out/questions/*.json` พังเป็นตัวอักษรควบคุม (form feed 88/92 และ 23/30 จุด) · ต้องแก้ gateway และซ่อมไฟล์ cache ก่อน (แผนอยู่ใน worklog ของ P1) · A5 ใช้ข้อความจาก PyMuPDF จึงไม่โดน
 
