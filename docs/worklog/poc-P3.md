@@ -86,6 +86,7 @@
 - 2026-10-20 · ขั้น 8b แก้แล้ว: `app/ai/latex.py` (LatexStr, MathTextStr ซ่อมใน `$...$` และ `$$...$$`) · `_parse` กลับไปใช้ `model_validate_json` ตรงๆ · backoff ใน `_generate` · `gemini.py` แปลง 429 เป็น `ProviderRateLimited` พร้อม `retryDelay` · test 98 ผ่าน · ลองกับ cache จริง: P3 248 ข้อความไม่เปลี่ยน · P1 ไฟล์ hw_004 เดิม (.bak) ซ่อมได้ ไฟล์ที่ซ่อมแล้วไม่เปลี่ยน
 - 2026-10-20 · merge `poc/P3` เข้า `poc/P1` แล้ว (test P1 ผ่าน) · ตอบ Junior ใน PR #15 และขอ review อีกรอบแล้ว · license PyMuPDF รับว่าจะยกไปคุยในกลุ่ม
 - 2026-10-20 · **รัน A6 ไม่ได้:** `gemini-3.5-flash` ได้ 503 UNAVAILABLE ("high demand") ทั้ง 2 รอบ (14:05 และ 14:30 · รอบละ 4 ครั้ง รอ 30/60/90 วินาที) · ไม่ใช่ bug ของเรา · ไม่แน่ใจว่า 503 นับเข้าโควตาไหม · (Jam ตัดสิน) ลอง `gemini-3.8-flash` ทั้งชุด: A5 ของ sheet-01 timeout 120 วินาทีตั้งแต่ call แรก → ข้อมูลสำหรับ report: 3.8-flash ช้าเกินสำหรับ A5 กับชีทใหญ่ · (Jam เลือก) เลื่อนไปรันพรุ่งนี้เช้าด้วย 3.5-flash (cache A5 เดิม)
+- 2026-10-20 · Junior approve และ merge PR #15 ตอน 14:33 (gateway + โค้ด P3 เข้า main แล้ว · ไม่มี comment) · งานที่เหลือของ P3 (รัน A6 + A7, score, report) ย้ายไป draft PR ใหม่ · Jam ถาม Junior ในกลุ่มว่าตั้งใจ merge ก่อนไหม
 
 ## Next step
 
