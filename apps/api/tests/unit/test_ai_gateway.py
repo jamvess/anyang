@@ -403,3 +403,64 @@ async def test_AI01_list_input_must_contain_only_images(tmp_path: Path):
         await make_gateway(FakeProvider({}), tmp_path, purposes=purposes).call(
             "demo", {"images": ["not an image"], "file_name": "exam.pdf"}, BaseModel
         )
+
+
+# --- AI-05 LaTeX backslashes the model forgot to escape in JSON (found in PoC P1) -----------
+# A model writes "\frac" inside a JSON string. JSON reads "\f" as a form feed, so the LaTeX
+# silently becomes form feed + "rac" and still passes the schema. The gateway puts it back.
+
+
+async def call_extract_answer(raw: str) -> tuple[AnswerResult, FakeProvider]:
+    fake = FakeProvider({"extract_answer": [raw]})
+    photo = Image(data=b"\xff\xd8 jpeg bytes", mime_type="image/jpeg")
+    result = await make_gateway(fake).call(
+        "extract_answer", {"image": photo, "problem_text": "x"}, AnswerResult
+    )
+    return result, fake
+
+
+def answer_json(*latex: str, notes: str = "") -> str:
+    """The model's raw text, with each backslash exactly as the model wrote it."""
+    lines = ", ".join(f'{{"latex": "{line}", "confidence": 0.9}}' for line in latex)
+    return f'{{"lines": [{lines}], "notes": "{notes}"}}'
+
+
+async def test_AI05_form_feed_and_backspace_become_latex_commands():
+    result, fake = await call_extract_answer(answer_json(r"\frac{1}{x}", r"\beta+\bar{x}"))
+
+    assert [line.latex for line in result.lines] == [r"\frac{1}{x}", r"\beta+\bar{x}"]
+    assert len(fake.requests) == 1  # repaired before validation, no schema retry spent
+
+
+async def test_AI05_tab_or_carriage_return_before_a_letter_becomes_latex_command():
+    # "\l" is not a JSON escape, so the model escaped \left correctly but not \right.
+    result, _ = await call_extract_answer(answer_json(r"\theta\times\tan(x)", r"\\left(x\right)"))
+
+    assert [line.latex for line in result.lines] == [r"\theta\times\tan(x)", r"\left(x\right)"]
+
+
+async def test_AI05_newline_before_a_latex_command_name_becomes_latex_command():
+    result, _ = await call_extract_answer(answer_json(r"x\neq 0", r"\nabla f", r"x\notin A"))
+
+    assert [line.latex for line in result.lines] == [r"x\neq 0", r"\nabla f", r"x\notin A"]
+
+
+async def test_AI05_ordinary_newline_and_tab_are_kept():
+    notes = r"line one\nline two\nother\tค่า"
+    result, _ = await call_extract_answer(answer_json("x", notes=notes))
+
+    assert result.notes == "line one\nline two\nother\tค่า"
+
+
+async def test_AI05_newline_before_a_short_name_that_is_also_math_text_is_kept():
+    # PyMuPDF text of the MTH10101 sheets has many lines like these (one symbol per line).
+    notes = r"x\ne^{x}\nu = x^{2}\ni) ข้อแรก\nnot clear"
+    result, _ = await call_extract_answer(answer_json("x", notes=notes))
+
+    assert result.notes == "x\ne^{x}\nu = x^{2}\ni) ข้อแรก\nnot clear"
+
+
+async def test_AI05_correctly_escaped_latex_is_not_changed():
+    result, _ = await call_extract_answer(answer_json(r"\\frac{1}{x}", r"a\\\\b"))
+
+    assert [line.latex for line in result.lines] == [r"\frac{1}{x}", r"a\\b"]
