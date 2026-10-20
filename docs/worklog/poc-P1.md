@@ -33,7 +33,7 @@ spec: `specs/poc/README.md` P1 · data: `evals/handwriting/` (30 รูป, `lab
 - [x] 6. 🙋 รอ May ส่ง `labels.jsonl` ที่พิมพ์แล้ว (ภายใน 22 ต.ค.) · merge แล้วใน PR #26 (20 ต.ค.)
 - [x] 7. 🤖 แก้ bug escape ใน gateway บน `poc/P3`: test ก่อน → 🙋 Jam review test → แก้ `_parse` + เพิ่มประโยคใน `ai-orchestration.md` §Output → merge `poc/P3` เข้า `poc/P1`
 - [x] 8. 🤖 ซ่อม cache แบบ offline: `poc/P1/out/` และ `poc/P3/out/{pages,questions}/` ด้วยฟังก์ชันเดียวกับ gateway
-- [ ] 9. 🤖 อ่านรูปที่เหลือ hw_019–hw_030 (หลัง 14:00 น.) → รันให้คะแนนกับ label ของ May → สรุปผล → `/poc-report P1` · เสนอ provider + ค่า `ocr.confirm_below_confidence`
+- [x] 9. 🤖 อ่านรูปที่เหลือ hw_019–hw_030 (หลัง 14:00 น.) → รันให้คะแนนกับ label ของ May → สรุปผล → `/poc-report P1` · เสนอ provider + ค่า `ocr.confirm_below_confidence`
 
 ## Definition of done
 
@@ -60,15 +60,18 @@ spec: `specs/poc/README.md` P1 · data: `evals/handwriting/` (30 รูป, `lab
 - 2026-10-20 · gateway ซ่อม escape แล้ว (`repair_unescaped_latex` · commit บน `poc/P3` แล้ว merge เข้ามา) · **ผลกระทบจริงน้อยกว่าที่เขียนไว้วันที่ 19:** P1 โดนแค่ hw_004 (form feed 9 จุด ใน 5 บรรทัด) ไม่ใช่ 13/18 · P3 ไม่โดนเลย · ซ่อม hw_004 แล้วด้วยฟังก์ชันเดียวกับ gateway (script ใช้ครั้งเดียว ไม่ได้ commit · สำรองไว้ที่ `out/gemini-3.5-flash-lite/hw_004.json.bak`) · scan ซ้ำแล้ว 0/18 · (Jam เลือกตามคำแนะนำ) กฎ newline ไม่ซ่อม `\ne` `\ni` `\nu` `\not` เพราะชนกับข้อความคณิตปกติ (รายละเอียดอยู่ใน `ai-orchestration.md` §Output)
 - 2026-10-20 · **ผลเบื้องต้นกับ label ของ May (18/30 รูป · 3.5-flash-lite · หลังซ่อม hw_004):** line accuracy 70/75 = 93.3% (ผ่านเป้า 80%) · อ่านผิด 5 บรรทัด: hw_009 4 บรรทัด (`x` เป็น `X` · confidence 0.95–0.98) และ hw_018 1 บรรทัด (`x=-1` เป็น `x=1` · 0.85) · ยังไม่มี threshold ไหนจับได้ ≥ 95% (ที่ 0.90 จับได้ 1/5) เพราะ confidence ของ hw_009 สูง · latency เฉลี่ย 3.4 วินาที (p95 5.6) · token ต่อรูป 1,609 in / 182 out · `results/` ยังไม่ commit เพราะยังไม่ครบ 30 รูป
 - 2026-10-20 · **label hw_009 บรรทัด 4 ไม่ตรงกับรูป:** ในรูปเขียน `=(2x-3)(x+2` (ไม่มีวงเล็บปิด) แต่ label เป็น `=(2x-3)(x+2)` ซึ่งขัดกับกฎข้อ 1 ใน `evals/README.md` (พิมพ์ตามที่เขียน) · ตัว `x` ในรูปนี้ก็ดูคล้าย `X` ด้วย · (Jam เลือกตามคำแนะนำ) ส่งให้ May แก้เอง เพราะคนทำ PoC ไม่ควรแก้ label เอง · ตัวเลขไม่เปลี่ยนเพราะบรรทัดนี้ผิดจาก X อยู่แล้ว · ใน report ให้เขียนว่า x ในรูปนี้กำกวม
+- 2026-10-20 · PR #15 (gateway) merge แล้วโดย Junior · PR #27 base เป็น `main` และ diff เหลือแค่ไฟล์ P1 + `poc/P3/common.py` · merge `main` เข้ามาแล้ว: conflict ที่ `docs/worklog/poc-P3.md` (Jam ok) เก็บฉบับของ `main` ไว้ เพราะถ้าลบ PR นี้จะลบ worklog ของ P3 ที่ยังทำต่อใน PR #37
+- 2026-10-20 · **ผลครบ 30 รูป (3.5-flash-lite · 14:45 น.):** line accuracy 119/125 = **95.2%** (ผ่านเป้า 80%) · latency เฉลี่ย 3.0 วินาที (p95 5.5) · token ต่อรูป 1,674 in / 178 out · hw_019–030 อ่านครบไม่มี error · **ไม่มี threshold ไหนจับบรรทัดอ่านผิดได้ ≥ 95%** (0.90 จับได้ 1/6, 0.95 จับได้ 2/6) เพราะ confidence ของบรรทัดที่ผิดอยู่ที่ 0.85–0.98 · อ่านผิด 6 บรรทัด: hw_009 4 บรรทัด (`x` เป็น `X` · ลายมือกำกวม) · hw_018 อ่าน `x=-1` เป็น `x=1` (0.85) · **hw_019 AI แก้คำตอบที่ผิดของนักเรียนให้ถูกเอง:** ในรูปเขียน `f''(x)=16x^{2}-6` (ใบลอกตั้งใจให้ผิด เพราะที่ถูกคือ 12x²) แต่ AI อ่านเป็น `12x^{2}-6` ด้วย confidence 0.9 (Claude เปิดรูปดูแล้ว ยืนยันว่าเขียน 16) · อันตรายต่อ P2 เพราะคำตอบผิดจะถูกตรวจว่าถูก
+
+- 2026-10-20 · (Jam เลือกตามคำแนะนำ) (1) confidence ที่ model ให้ตัวเองแยกบรรทัดผิดไม่ได้ → report เสนอให้ MVP แสดง "อ่านได้แบบนี้ ถูกไหม" ทุกครั้ง (กลับเป็น AM-02 แบบเดิม · ต้องคุยทีมเพราะ `requirements.md` เป็นไฟล์กลาง) และลองวิธีอื่นใน S3 เช่นอ่าน 2 รอบแล้วเทียบ (2) ไม่รัน 3.5-flash เทียบ เขียนเป็นข้อจำกัด (flash-lite ผ่านเป้าแล้ว · 3.5-flash ขึ้น 503 และโควตาต้องเก็บให้ P3) (3) hw_019 เขียนเป็นข้อค้นพบสำคัญ · ทำ `extract_answer/v2` ใน S3 ตอน P2 · ไม่แก้ prompt ระหว่าง PoC
 
 ## Next step
 
-ขั้น 9 (ต้องเป็นหลัง 14:00 น. ของวันที่โควตารีเซ็ต · `run.py` จะข้ามรูปที่อ่านแล้วให้เอง):
-`cd apps/api && uv run python ../../poc/P1/run.py --model gemini:gemini-3.5-flash-lite` (อ่าน hw_019–hw_030) → ถ้าต้องการรุ่นกลางด้วย `run.py --model gemini:gemini-3.5-flash --limit 8` (โควตา 20 ครั้งต่อวัน ใช้ร่วมกับ P3) → `uv run --with "antlr4-python3-runtime==4.11.*" python ../../poc/P1/score.py --model gemini:gemini-3.5-flash-lite` → ถ้า May แก้ label hw_009 แล้ว ให้ `git merge origin/main` ก่อนให้คะแนน → commit `poc/P1/results/` → `/poc-report P1`
+`/poc-report P1` จากผลใน `poc/P1/results/gemini-3.5-flash-lite/score.json` และ Decisions ด้านบน · แล้ว `/work-done`
 
 ## Waiting on
 
-โควตา free tier รีเซ็ต 20 ต.ค. ≈ 14:00 น. · May แก้ label hw_009 บรรทัด 4 · Junior review การแก้ gateway (PR #15)
+May แก้ label hw_009 บรรทัด 4 (ไม่เปลี่ยนตัวเลข)
 
 ## Notes for next time
 

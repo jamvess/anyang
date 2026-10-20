@@ -1,0 +1,243 @@
+{
+  "model": "gemini:gemini-3.5-flash-lite",
+  "images_scored": 30,
+  "images_missing": [],
+  "label_lines": 125,
+  "line_accuracy": 0.952,
+  "line_accuracy_pass": true,
+  "by_group": {
+    "medium:screen_photo": 1.0,
+    "medium:tablet_screenshot": 0.941,
+    "writer:w01": 1.0,
+    "writer:w02": 0.846,
+    "writer:w03": 0.96,
+    "writer:w04": 0.957,
+    "writer:w05": 1.0
+  },
+  "predicted_lines": 125,
+  "misread_lines": 6,
+  "pr_curve": [
+    {
+      "threshold": 0.5,
+      "recall_wrong": 0.0,
+      "precision_wrong": null,
+      "flag_rate": 0.0
+    },
+    {
+      "threshold": 0.55,
+      "recall_wrong": 0.0,
+      "precision_wrong": null,
+      "flag_rate": 0.0
+    },
+    {
+      "threshold": 0.6,
+      "recall_wrong": 0.0,
+      "precision_wrong": null,
+      "flag_rate": 0.0
+    },
+    {
+      "threshold": 0.65,
+      "recall_wrong": 0.0,
+      "precision_wrong": null,
+      "flag_rate": 0.0
+    },
+    {
+      "threshold": 0.7,
+      "recall_wrong": 0.0,
+      "precision_wrong": null,
+      "flag_rate": 0.0
+    },
+    {
+      "threshold": 0.75,
+      "recall_wrong": 0.0,
+      "precision_wrong": null,
+      "flag_rate": 0.0
+    },
+    {
+      "threshold": 0.8,
+      "recall_wrong": 0.0,
+      "precision_wrong": null,
+      "flag_rate": 0.0
+    },
+    {
+      "threshold": 0.85,
+      "recall_wrong": 0.0,
+      "precision_wrong": null,
+      "flag_rate": 0.0
+    },
+    {
+      "threshold": 0.9,
+      "recall_wrong": 0.167,
+      "precision_wrong": 1.0,
+      "flag_rate": 0.008
+    },
+    {
+      "threshold": 0.95,
+      "recall_wrong": 0.333,
+      "precision_wrong": 0.333,
+      "flag_rate": 0.048
+    }
+  ],
+  "chosen_threshold": null,
+  "threshold_pass": false,
+  "latency_ms": {
+    "mean": 3005,
+    "p95": 5529
+  },
+  "tokens_per_image": {
+    "in": 1674,
+    "out": 178
+  },
+  "images": [
+    {
+      "id": "hw_001",
+      "correct": 2,
+      "lines": 2
+    },
+    {
+      "id": "hw_002",
+      "correct": 4,
+      "lines": 4
+    },
+    {
+      "id": "hw_003",
+      "correct": 4,
+      "lines": 4
+    },
+    {
+      "id": "hw_004",
+      "correct": 6,
+      "lines": 6
+    },
+    {
+      "id": "hw_005",
+      "correct": 5,
+      "lines": 5
+    },
+    {
+      "id": "hw_006",
+      "correct": 3,
+      "lines": 3
+    },
+    {
+      "id": "hw_007",
+      "correct": 3,
+      "lines": 3
+    },
+    {
+      "id": "hw_008",
+      "correct": 6,
+      "lines": 6
+    },
+    {
+      "id": "hw_009",
+      "correct": 0,
+      "lines": 4
+    },
+    {
+      "id": "hw_010",
+      "correct": 3,
+      "lines": 3
+    },
+    {
+      "id": "hw_011",
+      "correct": 4,
+      "lines": 4
+    },
+    {
+      "id": "hw_012",
+      "correct": 6,
+      "lines": 6
+    },
+    {
+      "id": "hw_013",
+      "correct": 4,
+      "lines": 4
+    },
+    {
+      "id": "hw_014",
+      "correct": 3,
+      "lines": 3
+    },
+    {
+      "id": "hw_015",
+      "correct": 5,
+      "lines": 5
+    },
+    {
+      "id": "hw_016",
+      "correct": 4,
+      "lines": 4
+    },
+    {
+      "id": "hw_017",
+      "correct": 3,
+      "lines": 3
+    },
+    {
+      "id": "hw_018",
+      "correct": 5,
+      "lines": 6
+    },
+    {
+      "id": "hw_019",
+      "correct": 2,
+      "lines": 3
+    },
+    {
+      "id": "hw_020",
+      "correct": 4,
+      "lines": 4
+    },
+    {
+      "id": "hw_021",
+      "correct": 3,
+      "lines": 3
+    },
+    {
+      "id": "hw_022",
+      "correct": 3,
+      "lines": 3
+    },
+    {
+      "id": "hw_023",
+      "correct": 5,
+      "lines": 5
+    },
+    {
+      "id": "hw_024",
+      "correct": 5,
+      "lines": 5
+    },
+    {
+      "id": "hw_025",
+      "correct": 5,
+      "lines": 5
+    },
+    {
+      "id": "hw_026",
+      "correct": 4,
+      "lines": 4
+    },
+    {
+      "id": "hw_027",
+      "correct": 4,
+      "lines": 4
+    },
+    {
+      "id": "hw_028",
+      "correct": 4,
+      "lines": 4
+    },
+    {
+      "id": "hw_029",
+      "correct": 4,
+      "lines": 4
+    },
+    {
+      "id": "hw_030",
+      "correct": 6,
+      "lines": 6
+    }
+  ]
+}
