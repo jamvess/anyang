@@ -452,6 +452,14 @@ async def test_AI05_ordinary_newline_and_tab_are_kept():
     assert result.notes == "line one\nline two\nother\tค่า"
 
 
+async def test_AI05_newline_before_a_short_name_that_is_also_math_text_is_kept():
+    # PyMuPDF text of the MTH10101 sheets has many lines like these (one symbol per line).
+    notes = r"x\ne^{x}\nu = x^{2}\ni) ข้อแรก\nnot clear"
+    result, _ = await call_extract_answer(answer_json("x", notes=notes))
+
+    assert result.notes == "x\ne^{x}\nu = x^{2}\ni) ข้อแรก\nnot clear"
+
+
 async def test_AI05_correctly_escaped_latex_is_not_changed():
     result, _ = await call_extract_answer(answer_json(r"\\frac{1}{x}", r"a\\\\b"))
 

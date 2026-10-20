@@ -45,9 +45,10 @@ _CODE_FENCE = re.compile(r"^```(?:json)?\s*(.*?)\s*```$", re.DOTALL)
 _PREVIOUS_ANSWER_CHARS = 2000
 # A LaTeX backslash the model forgot to escape that JSON read as a control character:
 # form feed and backspace always, tab and CR before a letter, newline before a command name.
+# \ne \ni \nu \not are left out: a line starting with e^{x}, i), u = or "not" looks the same.
 _LOST_BACKSLASH = re.compile(
     r"[\f\b]|[\t\r](?=[A-Za-z])"
-    r"|\n(?=(?:abla|e|eg|eq|exists|geq|i|leq|mid|ot|otin|u)(?![A-Za-z]))"
+    r"|\n(?=(?:abla|eg|eq|exists|geq|leq|mid|otin)(?![A-Za-z]))"
 )
 _ESCAPES = {"\f": r"\f", "\b": r"\b", "\t": r"\t", "\r": r"\r", "\n": r"\n"}
 
