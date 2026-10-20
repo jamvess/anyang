@@ -78,7 +78,7 @@ Screen ID (S01–S27) อ้างอิงถึง wireframe
 | TM-17 | topic ที่ผ่านแล้วต้องถูกนำกลับมาทวนตามรอบ spaced review ที่คำนวณจากจำนวนวันที่เหลือก่อนสอบ ถ้าทวนผิดให้ลดระดับ | Must | S15 | new | |
 | TM-18 | planner ต้องเลือก mode (normal, tight, triage, final) จากเวลาที่ต้องใช้เทียบกับเวลาที่เหลือ และบอก user เมื่อ mode เปลี่ยน | Must | S15 | new | |
 | TM-19 | ระบบต้อง Park skill ที่ทำเกินเพดานโจทย์ต่อวันโดยยังไม่ผ่าน และพาไปทวน prerequisite หรือกลับมาวันหลัง | Must | — | new | |
-| TM-20 | ห้องติวต้องแสดงข้อความของ AI Tutor, AI Buddy และ user แยกกันชัดเจน แต่ละข้อความมีชื่อผู้พูดและเวลา และ render สมการตาม TM-08 | Must | S15–S26 | new | spec: `specs/features/tutor/chat-room-ui.md` (ตอนนี้ test ใช้ TM04/TM05 เปลี่ยนชื่อใน P4-lite) |
+| TM-20 | ห้องติวต้องแสดงข้อความของ AI Tutor, AI Buddy และ user แยกกันชัดเจน แต่ละข้อความมีชื่อผู้พูดและเวลา และ render สมการตาม TM-08 | Must | S15–S26 | new | spec: `specs/features/tutor/chat-room-ui.md`, `specs/features/tutor/chat-streaming.md` |
 | TM-21 | ระบบต้องบอก user เมื่อข้อความยาวเกิน แนบไฟล์ที่ไม่ใช่รูป หรือรูปใหญ่เกิน โดยขีดจำกัดมาจาก config (`config/ai.yaml` → `guards`) ไม่ hard-code | Should | S15–S26 | new | API ส่งค่าขีดจำกัดมากับข้อมูลห้อง (ข้อเสนอใน PR #16) |
 
 ## AM · Answer checking
