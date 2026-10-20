@@ -318,7 +318,7 @@ A5: `pages` เป็นช่วง `"start-end"` ตามป้าย `[p.N]`
 |---|---|
 | `answer` | ส่งเข้า answer checker (2.4) |
 | `question_on_topic` | ตอบจาก grounding แล้วกลับมาที่โจทย์ที่ค้างอยู่ |
-| `question_off_scope` | vector search ไม่พบในเอกสาร บอกว่านอกชีท ตอบสั้น แล้วดึงกลับ |
+| `question_off_scope` | vector search ไม่พบในเอกสาร บอกว่านอกชีท ตอบสั้น ถามว่าอยากเพิ่มเป็นหัวข้อไหม แล้วดึงกลับ (SM-10) · ถ้าตกลง บันทึกเป็น `add_topic` ใน draft ใหม่ของ scope (2.3.6) มีผลตั้งแต่ session ถัดไป เพราะ scope ไม่เปลี่ยนกลาง session (2.2.2) |
 | `command` | เปลี่ยนเรื่อง, พอแค่นี้, ขอยากขึ้น, ดูความคืบหน้า, mute buddy: planner ปรับตาม |
 | `dispute` | user แย้งผลตรวจ (2.4.7) |
 | `teach_back` | user อธิบายให้ buddy ฟัง (2.1) tutor ให้ feedback สั้นๆ ไม่นับเข้า mastery |
@@ -718,6 +718,7 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 - RLS ตาม `tenant_id` (3.4)
 - Prompt ไม่มีข้อมูลของ user อื่น สถิติ common mistakes ใช้แบบ aggregate เท่านั้น
 - ส่งเฉพาะชื่อเล่นให้ LLM ไม่ส่งอีเมลหรือข้อมูลส่วนตัวอื่น
+- ตั้งแต่ Beta ทุก tier ต้องใช้ provider ที่ไม่นำข้อมูลไป train (Vertex AI แบบเสียเงิน) · free tier ใช้ได้เฉพาะ PoC กับข้อมูลที่เจ้าของให้ consent แล้ว (AI-07)
 
 ## 2.10 Model routing, cost และ fallback
 
@@ -882,7 +883,7 @@ Target user ของ v1 คือนักเรียนรายคน แต
 | SM-07 | 2.3.6 (`scope_patch`) | |
 | SM-08 | 2.3.2 (ขั้น 7), 2.3.8 (API 10–11) | |
 | SM-09 | 2.3.2 (ขั้น 7), 2.2.2 | |
-| SM-10 | 1.4, 2.2.4 (`question_off_scope`) | ⚠️ ยังไม่มี "เสนอให้เพิ่มเข้า scope" |
+| SM-10 | 1.4, 2.2.4 (`question_off_scope`) | |
 | SM-11 | 1.4 | |
 | SM-12 | 2.3.4, 2.3.6 | |
 | TM-01 | 2.5 | |
@@ -894,7 +895,7 @@ Target user ของ v1 คือนักเรียนรายคน แต
 | TM-07 | 2.2.5, 2.8 | |
 | TM-08 | นอก AI flow | KaTeX ฝั่งหน้าเว็บ · 2.2.8 การ์ดโจทย์ |
 | TM-09 | 2.8 | |
-| TM-10 | — | ⚠️ ยังไม่มี spec: ตอบไม่ตรงคำถามแล้วถามกลับให้แคบลง |
+| TM-10 | — | ⚠️ ยังไม่มี spec: ตอบไม่ตรงคำถามแล้วถามกลับให้แคบลง · ออกแบบใน feature spec ห้องติว (S3) |
 | TM-11 | 2.2.2 | |
 | TM-12 | 2.2.9 | |
 | TM-13 | 1.3 (P8), 2.6 | |
@@ -930,5 +931,5 @@ Target user ของ v1 คือนักเรียนรายคน แต
 | AI-04 | 2.11 (`ai_calls`) | |
 | AI-05 | 2.9 (Output) | |
 | AI-06 | 2.6 | |
-| AI-07 | 2.10 | ⚠️ primary เป็น Vertex AI แต่ยังไม่มีกฎห้ามใช้ free tier ตั้งแต่ Beta เขียนไว้ตรงๆ |
+| AI-07 | 2.9 (Data), 2.10 | |
 | AI-08 | 2.3.3 (Embed) | |

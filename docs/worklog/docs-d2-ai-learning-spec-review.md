@@ -13,7 +13,7 @@
 - [x] 2. 🤖 อ่านทั้งสองไฟล์ทีละ section หา: ข้อความที่ขัดกันเอง, ลำดับเลข section ที่สลับ (2.3 มาก่อน 2.2, 2.1 อยู่หลัง 2.5), ข้อความที่อ้างภาพใน .docx (9 จุด) ซึ่งไม่มีใน repo, สิ่งที่ PoC P1/P3 เจอแล้วแต่ spec ยังไม่เขียน
 - [x] 3. 🤖 รวบรวมเป็นตาราง findings ใน PR description: จุด · ปัญหา · ข้อเสนอ · ไฟล์ของใคร
 - [x] 4. 🙋 Jam ตัดสินทีละข้อ: แก้เลย / ไม่แก้ / เลื่อนไปทำหลังผล PoC (ข้อ S4 "อัปเดต threshold ตามผล P1 P2 P3") · ตอบเป็นเลขข้อ เช่น "1 แก้, 2 เลื่อน"
-- [ ] 5. 🤖 แก้ตามที่ Jam ตัดสินใน `ai-orchestration.md` และ `learning-model.md` (ไฟล์ของ Jam) · ถ้าต้องแก้ไฟล์ของคนอื่นหรือไฟล์กลาง (`requirements.md`, `api.md`, `config/ai.yaml`, `data-model.md`) จะถามก่อนทุกครั้ง
+- [x] 5. 🤖 แก้ตามที่ Jam ตัดสินใน `ai-orchestration.md` และ `learning-model.md` (ไฟล์ของ Jam) · ถ้าต้องแก้ไฟล์ของคนอื่นหรือไฟล์กลาง (`requirements.md`, `api.md`, `config/ai.yaml`, `data-model.md`) จะถามก่อนทุกครั้ง
 - [ ] 6. 🤖 ติ๊ก checklist ใน `docs/team/sprint-checklists.md` แล้ว `/work-done`
 
 ## Definition of done
@@ -30,6 +30,7 @@
 - 2026-10-20 · ขั้น 5a แก้ F1 F2 F3 F4 F8 F9 F10 F11 F13 F14 F16 แล้ว · F16 เพิ่ม key `park.return_after_sessions` ทำให้ต้องเพิ่ม field ใน `ParkConfig` (`apps/api/app/settings.py` ของ Junior · `extra=forbid` ไม่อย่างนั้นแอป start ไม่ขึ้น) · (Jam เลือกตามคำแนะนำ) เพิ่มใน PR นี้ให้ Junior review
 - 2026-10-20 · **F17 (เจอระหว่างแก้):** quota buddy ใน Triage/Final "หารครึ่ง" ไม่ได้บอกวิธีปัด · (Jam เลือกตามคำแนะนำ) ปัดขึ้น ได้ 1/1/2 เพื่อให้คนที่ตั้งความถี่ต่ำยังได้ยิน buddy
 - 2026-10-20 · ขั้น 5b ร่าง §3.7 Requirement → section ครบ 58 ข้อ (SM/TM/AM/PM/AI ที่ยังใช้อยู่ · ตรวจด้วย script แล้ว) · เจอ 3 ข้อที่ spec ยังไม่ครอบคลุม: SM-10 (เสนอให้เพิ่มเข้า scope), TM-10 (ถามกลับให้แคบลง), AI-07 (กฎห้าม free tier ตั้งแต่ Beta) · รอ Jam ตัดสินว่าจะเขียน spec เพิ่มใน PR นี้ไหม
+- 2026-10-20 · (Jam เลือกตามคำแนะนำ) ช่องว่างใน §3.7: SM-10 เติมใน §2.2.4 (ถามว่าอยากเพิ่มเป็นหัวข้อไหม · `add_topic` ใน draft ใหม่ มีผล session ถัดไป) · AI-07 เติมใน §2.9 Data · TM-10 เลื่อนไป feature spec ห้องติว (S3) เพราะต้องออกแบบ intent ใหม่
 
 ## Findings (ร่าง · รวมเป็นตารางใน PR ตอนขั้น 3)
 
@@ -60,7 +61,7 @@
 
 ## Next step
 
-Jam ตรวจ §3.7 แล้วตัดสิน 3 ช่องว่าง (SM-10, TM-10, AI-07) → ถ้าเพิ่ม spec ทำตามที่ตัดสิน → ขั้น 6 ติ๊ก checklist + `/work-done`
+ขั้น 6: ติ๊ก checklist ข้อ D2 ของ Jam ใน `docs/team/sprint-checklists.md` (S1) → `/work-done` (PR #31 ready for review, reviewer Junior เพราะแก้ `settings.py` + `learning.yaml`)
 
 ## Waiting on
 
