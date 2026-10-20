@@ -11,8 +11,8 @@
 
 - [x] 1. 🤖 ตรวจแบบไล่เทียบอัตโนมัติ: (ก) key ของ `config/learning.yaml` ที่ spec อ้าง มีจริงไหม และ key ที่ไม่มี spec อ้างเลย (ข) AI purpose ใน §3.1 ตรงกับ `config/ai.yaml` และโฟลเดอร์ใน `prompts/` ไหม (ค) requirement ID ที่ spec อ้าง มีใน `requirements.md` ไหม และ requirement AI-/TM-/AM- ที่ยังไม่มี spec ส่วนไหนรองรับ (ง) ตาราง §3.2 ตรงกับ `data-model.md` และ `supabase/migrations/0001_init.sql` ไหม (จ) SSE events §3.3 ตรงกับ `api.md` ไหม (ฉ) ตัวเลขใน spec ที่ไม่ได้มาจาก `learning.yaml` (magic number)
 - [x] 2. 🤖 อ่านทั้งสองไฟล์ทีละ section หา: ข้อความที่ขัดกันเอง, ลำดับเลข section ที่สลับ (2.3 มาก่อน 2.2, 2.1 อยู่หลัง 2.5), ข้อความที่อ้างภาพใน .docx (9 จุด) ซึ่งไม่มีใน repo, สิ่งที่ PoC P1/P3 เจอแล้วแต่ spec ยังไม่เขียน
-- [ ] 3. 🤖 รวบรวมเป็นตาราง findings ใน PR description: จุด · ปัญหา · ข้อเสนอ · ไฟล์ของใคร
-- [ ] 4. 🙋 Jam ตัดสินทีละข้อ: แก้เลย / ไม่แก้ / เลื่อนไปทำหลังผล PoC (ข้อ S4 "อัปเดต threshold ตามผล P1 P2 P3") · ตอบเป็นเลขข้อ เช่น "1 แก้, 2 เลื่อน"
+- [x] 3. 🤖 รวบรวมเป็นตาราง findings ใน PR description: จุด · ปัญหา · ข้อเสนอ · ไฟล์ของใคร
+- [x] 4. 🙋 Jam ตัดสินทีละข้อ: แก้เลย / ไม่แก้ / เลื่อนไปทำหลังผล PoC (ข้อ S4 "อัปเดต threshold ตามผล P1 P2 P3") · ตอบเป็นเลขข้อ เช่น "1 แก้, 2 เลื่อน"
 - [ ] 5. 🤖 แก้ตามที่ Jam ตัดสินใน `ai-orchestration.md` และ `learning-model.md` (ไฟล์ของ Jam) · ถ้าต้องแก้ไฟล์ของคนอื่นหรือไฟล์กลาง (`requirements.md`, `api.md`, `config/ai.yaml`, `data-model.md`) จะถามก่อนทุกครั้ง
 - [ ] 6. 🤖 ติ๊ก checklist ใน `docs/team/sprint-checklists.md` แล้ว `/work-done`
 
@@ -26,6 +26,7 @@
 ## Decisions
 
 - 2026-10-20 · เลือกทำข้อนี้ระหว่างรอโควตา free tier (P1/P3 รันได้หลัง 14:00 น.) · งานนี้ไม่ต้องใช้โควตา
+- 2026-10-20 · (Jam เลือกตามคำแนะนำ) findings: แก้ F1 F2 F3 F4 F6 F8 F9 F10 F11 F13 F14 F16 ใน PR นี้ · เลื่อน F5 (mermaid ใน S4, ยังไม่ใส่ path ของ .docx), F12 (ตอนได้ report P1), F15 (ตอนทำ ingest จริง) · ขั้น 5 แบ่งเป็น 5a แก้ข้อเล็ก และ 5b ร่างตาราง requirement → section (F6)
 
 ## Findings (ร่าง · รวมเป็นตารางใน PR ตอนขั้น 3)
 
@@ -56,11 +57,11 @@
 
 ## Next step
 
-ขั้น 3: เขียน PR description ของ PR #31 เป็นตาราง findings (F1–F16 ยกเว้นข้อที่ไม่ต้องแก้) พร้อมข้อเสนอและเจ้าของไฟล์ แล้วให้ Jam ตัดสินทีละข้อ
+ขั้น 4 🙋: รอ Jam ตัดสิน F1–F16 ตามตารางใน PR #31 (ข้อเสนอของ Claude: แก้ทุกข้อ ยกเว้น F5, F12, F15 เลื่อน) · F5 ต้องการ path ของไฟล์ .docx ใน Drive
 
 ## Waiting on
 
-ไม่มี
+Jam ตัดสิน findings ใน PR #31
 
 ## Notes for next time
 
