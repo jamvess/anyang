@@ -5,7 +5,7 @@
 | Owner | Jam |
 | Branch | `poc/P3` |
 | Checklist item | P3: ingest → A5 → A6 → A7 → `compute_importance` · เทียบกับ label · ลอง embedding 2–3 ตัวกับคำถาม 20 ข้อ |
-| Status | in progress · 2026-10-20 |
+| Status | paused · 2026-10-20 |
 
 ## Done today (2026-10-20)
 
@@ -81,7 +81,7 @@
 
 ## Next step
 
-merge `poc/P3` เข้า `poc/P1` (gateway ที่ซ่อม escape แล้ว) · cache ของ P3 ไม่ต้องซ่อม (ดู Decisions 20 ต.ค.) จึงรัน A7 ได้ตามด้านล่าง
+gateway ซ่อม escape แล้ว และ merge เข้า `poc/P1` แล้ว (20 ต.ค.) · cache ของ P3 ไม่ต้องซ่อม (ดู Decisions 20 ต.ค.) · ขั้นถัดไปคือรัน A6 + A7 ตามคำสั่งด้านล่าง · ถ้า Junior ขอแก้ gateway ใน PR #15 ให้แก้บน branch นี้ แล้ว merge `poc/P3` เข้า `poc/P1` อีกครั้ง
 
 หลัง 14:00 น. ของ 2026-10-20 (เช็คโควตาด้วย request เดียวก่อน): `cd apps/api && uv run python ../../poc/P3/run.py --a5-prompt v1` (ใช้ cache A5 v1 · เหลือ A6 + A7 ×2 = 3 call) → `uv run python ../../poc/P3/score.py --a5-prompt v1` → ถ้า A6 ไม่ผ่าน schema ให้ดู `out/raw/run_merge-*.txt` · จากนั้นถ้าโควตาเหลือ: `run.py --a5-prompt v2` (A5 ×4 + A6 + A7 ×2 = 7 call) → `score.py --a5-prompt v2` → สรุปเทียบ v1/v2 ให้ Jam
 
@@ -91,7 +91,8 @@ merge `poc/P3` เข้า `poc/P1` (gateway ที่ซ่อม escape แ�
 
 ## Notes for next time
 
-- งานที่ค้าง: `chore/handwriting-photos` (PR #11) รอรูป · `chore/prompt-extract-topics-local` (PR #13) รอ Junior review
+- งานที่ค้าง: `chore/prompt-extract-topics-local` (PR #13) รอ Junior review · `chore/handwriting-photos` merge แล้ว
+- บน branch นี้ `poc/P1/` จะโผล่เป็น untracked (คือ `out/` กับ `results/` ของ P1 ซึ่ง gitignore อยู่แค่บน `poc/P1`) · ห้าม commit บน branch นี้
 - PyMuPDF ทำ ∞ หาย และสมการ Equation Editor กระจายออกมาบรรทัดละตัว (ดู PR #13)
 - `poc/P3/out/` gitignored (มี log รอบที่ล้ม: `calls-run1-failed.jsonl` = thinking ชนเพดาน + 429 รายนาที, `calls-run2-queue-timeout.jsonl` = bug ตัวเว้นช่วง) · ใช้ใน report P3 ได้
 - โควตาของ `gemini-3.5-flash` free tier: 5 ครั้งต่อนาที + 20 ครั้งต่อวันต่อ model (ใน error ชื่อ `gemini-3.6-flash`) · `gemini-3.5-flash-lite` มีโควตาแยก · `gemini-3.8-flash` ช้ามาก (35 วินาทีกับข้อความทดสอบสั้นๆ)
