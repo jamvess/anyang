@@ -865,3 +865,70 @@ Target user ของ v1 คือนักเรียนรายคน แต
 | Fallback ทำงาน | สลับอัตโนมัติ, log ครบ | P7 |
 | STT ภาษาไทยปนคณิต | word error rate ≤ 15% เมื่อใช้ phrase hints | P5 Voice |
 | BKT params, ratio ของ planner, quota buddy | ตามเอกสารนี้ | ปรับตอน Alpha/Beta |
+
+## 3.7 Requirement → section
+
+ใช้ไล่ว่า requirement แต่ละข้อใน `specs/requirements/requirements.md` ถูกออกแบบไว้ที่ไหน (กลุ่ม SM, TM, AM, PM, AI ที่ยังใช้อยู่) · "นอก AI flow" = เป็นงานหน้าเว็บหรือ API ล้วน ดู spec อื่น · ⚠️ = spec ยังไม่ครอบคลุมทั้งข้อ
+
+ไม่อยู่ในตาราง: SM-05, PM-07 (deferred) · AM-10 (obsolete)
+
+| Req | Section | หมายเหตุ |
+|---|---|---|
+| SM-01 | 1.4, 2.3.4 | |
+| SM-02 | 2.3.4 (5b), 2.3.7 A6 `prereqs` | |
+| SM-03 | 2.3.5, learning-model §2 | |
+| SM-04 | 2.3.7 A6 `sources`, 2.3.8 (API 8) | |
+| SM-06 | 2.3.6, 2.8 | พูดผ่าน STT ลงช่องพิมพ์เหมือนห้องติว |
+| SM-07 | 2.3.6 (`scope_patch`) | |
+| SM-08 | 2.3.2 (ขั้น 7), 2.3.8 (API 10–11) | |
+| SM-09 | 2.3.2 (ขั้น 7), 2.2.2 | |
+| SM-10 | 1.4, 2.2.4 (`question_off_scope`) | ⚠️ ยังไม่มี "เสนอให้เพิ่มเข้า scope" |
+| SM-11 | 1.4 | |
+| SM-12 | 2.3.4, 2.3.6 | |
+| TM-01 | 2.5 | |
+| TM-02 | 2.5.1 (`reason_code`), 2.5.6 | |
+| TM-03 | 2.2.4 (Probe) | |
+| TM-04 | 2.2.4 | |
+| TM-05 | 2.1 | |
+| TM-06 | 2.2.5 | ไม่มีปุ่ม choice เป็นงาน UI |
+| TM-07 | 2.2.5, 2.8 | |
+| TM-08 | นอก AI flow | KaTeX ฝั่งหน้าเว็บ · 2.2.8 การ์ดโจทย์ |
+| TM-09 | 2.8 | |
+| TM-10 | — | ⚠️ ยังไม่มี spec: ตอบไม่ตรงคำถามแล้วถามกลับให้แคบลง |
+| TM-11 | 2.2.2 | |
+| TM-12 | 2.2.9 | |
+| TM-13 | 1.3 (P8), 2.6 | |
+| TM-14 | 2.2.4 | ให้โจทย์ทีละข้อ ไม่มี flow ที่สร้าง mock exam |
+| TM-15 | 2.2.2 | |
+| TM-16 | 2.2.4 (Done), learning-model §4 | |
+| TM-17 | 2.5.5, learning-model §3 | |
+| TM-18 | 2.5.2, learning-model §6 | |
+| TM-19 | 2.2.4 (Park), 2.5.3, learning-model §7 | |
+| TM-20 | นอก AI flow | `specs/features/tutor/chat-room-ui.md` · 2.1.6 แยก speaker |
+| TM-21 | 2.9 (Limits) | ค่าจาก `config/ai.yaml` → `guards` |
+| AM-01 | 2.2.5 (`extract_answer`), 3.6 (P1) | |
+| AM-02 | 2.2.5 | |
+| AM-03 | 2.11 (quality signals) | |
+| AM-04 | 2.4.3 | |
+| AM-05 | 2.4.3 (first wrong line) | |
+| AM-06 | 1.5, 2.4.4 | |
+| AM-07 | 2.2.4 (Teach) | |
+| AM-08 | 2.2.4 (Verify) | |
+| AM-09 | 1.4, 2.2.4 | |
+| AM-11 | 2.2.4 (ที่มาของโจทย์), 2.4.6 | |
+| AM-12 | 2.4.7 | |
+| AM-13 | 2.9 (Output) | |
+| PM-01 | 2.2.6 (`attempts`) | |
+| PM-02 | 2.2.6, learning-model §1 | |
+| PM-03 | 2.2.2, learning-model §5 | |
+| PM-04 | นอก AI flow | หน้า home · ข้อมูลจาก `GET /exam-preps/{id}/progress` (2.2.8) |
+| PM-05 | 2.2.9 | |
+| PM-06 | 2.2.6 (`topic_progress` แยกตาม `exam_prep_id`) | |
+| AI-01 | 1.3 (P7), 2.6–2.11 | |
+| AI-02 | 2.10 | |
+| AI-03 | 1.3 (P7) | |
+| AI-04 | 2.11 (`ai_calls`) | |
+| AI-05 | 2.9 (Output) | |
+| AI-06 | 2.6 | |
+| AI-07 | 2.10 | ⚠️ primary เป็น Vertex AI แต่ยังไม่มีกฎห้ามใช้ free tier ตั้งแต่ Beta เขียนไว้ตรงๆ |
+| AI-08 | 2.3.3 (Embed) | |
