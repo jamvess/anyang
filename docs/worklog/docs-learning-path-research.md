@@ -14,7 +14,7 @@
 - [x] 3. 🤖 เขียนเป็นเอกสาร `docs/research/learning-path.md` (ภาษาไทย) และลิงก์จาก `learning-model.md` §10 · งานวิจัยที่ใช้อ้างค่าใน config อยู่แล้ว (Corbett & Anderson, Cepeda, Beck & Gong ฯลฯ) ไม่ต้องค้นซ้ำ แค่อ้างถึง
 - [x] 4. 🙋 Jam อ่านแล้วเลือก: ชิ้นไหนจะเอาไปคุยกับทีมและอาจารย์ · ข้อเสนอเปลี่ยน design ข้อไหนที่จะเสนอ · ตอบเป็นเลขข้อ
 - [x] 5. 🤖 ทำ agenda 1 หน้าสำหรับคุยกับทีม/อาจารย์: คำถามที่ต้องตัดสิน + งานวิจัยที่รองรับแต่ละข้อ
-- [ ] 6. 🤖 ติ๊ก checklist แล้ว `/work-done`
+- [x] 6. 🤖 ติ๊ก checklist แล้ว `/work-done`
 
 ## Definition of done
 
@@ -70,7 +70,7 @@
 
 ## Next step
 
-ขั้น 6: ติ๊ก checklist ข้อ "เตรียมรายการงานวิจัยเรื่อง learning path และ progress tracking" (S1 Jam) → `/work-done` · reviewer Junior (แตะ learning-model.md ซึ่งเป็นของ Jam · ไม่ได้แตะไฟล์ของคนอื่น)
+`/work-done`: PR #33 ready for review · reviewer Junior · หลังประชุมกรอกตาราง "บันทึกผลการคุย" ใน agenda (PR ใหม่)
 
 ## Waiting on
 
