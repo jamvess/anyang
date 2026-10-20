@@ -4,10 +4,23 @@ import { Tex } from "@/components/math/Tex";
 const MATH = /\$\$([\s\S]+?)\$\$|\$([^$\n]+?)\$/g;
 
 /**
+ * While a message is still streaming, drop everything from a `$` that has no
+ * closing pair yet, so raw LaTeX never flashes on screen
+ * (chat-streaming.md §2). Once the stream ends the full text is shown.
+ */
+function withoutUnclosedMath(content: string): string {
+  let end = 0;
+  for (const match of content.matchAll(MATH)) end = match.index + match[0].length;
+  const open = content.indexOf("$", end);
+  return open === -1 ? content : content.slice(0, open);
+}
+
+/**
  * Message text with math rendered by KaTeX. Everything else stays plain text:
  * React escapes it, so HTML in the content is never interpreted.
  */
-export function MessageText({ content }: { content: string }) {
+export function MessageText({ content: full, streaming = false }: { content: string; streaming?: boolean }) {
+  const content = streaming ? withoutUnclosedMath(full) : full;
   const parts: React.ReactNode[] = [];
   let last = 0;
   for (const match of content.matchAll(MATH)) {

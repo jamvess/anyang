@@ -42,9 +42,25 @@ type Props = {
   tutorName: string;
   buddyName: string | null;
   userName?: string;
+  /** Id of the bubble still receiving tokens: its unclosed math stays hidden. */
+  streamingId?: string | null;
+  /** Show the tutor's "•••" bubble at the end while waiting for the reply. */
+  typing?: boolean;
 };
 
-export function MessageList({ messages, tutorName, buddyName, userName }: Props) {
+function Avatar({ role, name }: { role: Speaker; name: string }) {
+  return (
+    <span
+      data-avatar={role}
+      aria-hidden
+      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs ${AVATAR_STYLE[role]}`}
+    >
+      {avatarInitial(name)}
+    </span>
+  );
+}
+
+export function MessageList({ messages, tutorName, buddyName, userName, streamingId = null, typing = false }: Props) {
   const names: Record<Speaker, string> = {
     tutor: tutorName,
     buddy: buddyName ?? "",
@@ -62,17 +78,7 @@ export function MessageList({ messages, tutorName, buddyName, userName }: Props)
         const continued = i > 0 && visible[i - 1].role === role;
         return (
           <li key={m.id} data-role={role} className={`flex gap-3 ${continued ? "mt-1" : "mt-4"}`}>
-            {continued ? (
-              <span className="w-8 shrink-0" aria-hidden />
-            ) : (
-              <span
-                data-avatar={role}
-                aria-hidden
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs ${AVATAR_STYLE[role]}`}
-              >
-                {avatarInitial(names[role])}
-              </span>
-            )}
+            {continued ? <span className="w-8 shrink-0" aria-hidden /> : <Avatar role={role} name={names[role]} />}
             <div className="min-w-0 text-sm leading-7">
               {!continued && (
                 <p className="text-[13px] font-semibold">
@@ -87,11 +93,23 @@ export function MessageList({ messages, tutorName, buddyName, userName }: Props)
                   📷 {fileName(m.attachment_path)}
                 </p>
               )}
-              {m.content && <MessageText content={m.content} />}
+              {m.content && <MessageText content={m.content} streaming={m.id === streamingId} />}
             </div>
           </li>
         );
       })}
+      {typing && (
+        // Not a message: no data-role, it disappears with the first token.
+        <li className="mt-4 flex gap-3">
+          <Avatar role="tutor" name={tutorName} />
+          <div className="min-w-0 text-sm leading-7">
+            <p className="text-[13px] font-semibold">{tutorName}</p>
+            <span role="status" aria-label={roomStrings.typing} className="tracking-widest text-zinc-400">
+              •••
+            </span>
+          </div>
+        </li>
+      )}
     </ol>
   );
 }

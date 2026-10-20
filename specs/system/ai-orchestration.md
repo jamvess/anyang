@@ -905,7 +905,7 @@ Target user ของ v1 คือนักเรียนรายคน แต
 | TM-17 | 2.5.5, learning-model §3 | |
 | TM-18 | 2.5.2, learning-model §6 | |
 | TM-19 | 2.2.4 (Park), 2.5.3, learning-model §7 | |
-| TM-20 | นอก AI flow | `specs/features/tutor/chat-room-ui.md` · 2.1.6 แยก speaker |
+| TM-20 | นอก AI flow | `specs/features/tutor/chat-room-ui.md`, `specs/features/tutor/chat-streaming.md` · 2.1.6 แยก speaker |
 | TM-21 | 2.9 (Limits) | ค่าจาก `config/ai.yaml` → `guards` |
 | AM-01 | 2.2.5 (`extract_answer`), 3.6 (P1) | |
 | AM-02 | 2.2.5 | |

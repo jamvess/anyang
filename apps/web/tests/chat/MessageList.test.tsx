@@ -19,7 +19,7 @@ function msg(partial: Partial<ChatMessage> & Pick<ChatMessage, "id" | "role">): 
 afterEach(cleanup);
 
 describe("MessageList", () => {
-  it("TM04 shows tutor, buddy and user bubbles in created_at order", () => {
+  it("TM20 shows tutor, buddy and user bubbles in created_at order", () => {
     const shuffled = [...messages].reverse();
     const { container } = render(
       <MessageList messages={shuffled} tutorName={room.tutor_name} buddyName={room.buddy_name} />,
@@ -34,7 +34,7 @@ describe("MessageList", () => {
     expect(roles).toEqual(expected);
   });
 
-  it("TM05 buddy bubble shows the buddy name and an avatar different from the tutor", () => {
+  it("TM20 buddy bubble shows the buddy name and an avatar different from the tutor", () => {
     const { container } = render(
       <MessageList
         messages={[
@@ -65,11 +65,11 @@ describe("MessageList", () => {
     ["มีน", "ม"],
     ["ครู แอน", "อ"],
     ["Tar", "T"],
-  ])("TM04 avatar initial of %s is %s", (name, initial) => {
+  ])("TM20 avatar initial of %s is %s", (name, initial) => {
     expect(avatarInitial(name)).toBe(initial);
   });
 
-  it("TM04 shows the speaker name once for consecutive messages from the same speaker", () => {
+  it("TM20 shows the speaker name once for consecutive messages from the same speaker", () => {
     const { getAllByText, container } = render(
       <MessageList
         messages={[
@@ -85,7 +85,7 @@ describe("MessageList", () => {
     expect(getAllByText("พี่ตาล")).toHaveLength(1);
   });
 
-  it.each(["card", "system"] as const)("TM04 does not render a bubble for role %s", (role) => {
+  it.each(["card", "system"] as const)("TM20 does not render a bubble for role %s", (role) => {
     const { container } = render(
       <MessageList
         messages={[msg({ id: "x", role, content: "ไม่ควรเห็น" })]}

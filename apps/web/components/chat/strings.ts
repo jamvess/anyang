@@ -12,4 +12,6 @@ export const roomStrings = {
   tooLong: (max: number) => `ข้อความยาวเกิน ${max} ตัวอักษร`,
   notImage: "แนบได้เฉพาะรูป",
   imageTooBig: (max: number) => `รูปใหญ่เกิน ${max} MB`,
+  typing: "กำลังพิมพ์",
+  sendFailed: "ส่งไม่สำเร็จ ลองส่งอีกทีนะ",
 } as const;
