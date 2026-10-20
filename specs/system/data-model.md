@@ -12,38 +12,325 @@ SQL จริงอยู่ที่ `supabase/migrations/0001_init.sql` (ท�
 - ค่า threshold ไม่อยู่ใน DB ทั้งหมดอยู่ใน `config/learning.yaml`
 - Storage path: `{tenant_id}/{exam_prep_id}/{material_id}` และตั้ง storage policy ให้อ่านได้เฉพาะ prefix ของ tenant ตัวเอง
 
-## ERD (ตารางหลัก)
+## ERD
+
+ครบทุกตาราง (27 ตารางใน `public`) และทุก foreign key ใน `0001_init.sql` แบ่งเป็น 3 รูปตามกลุ่ม
+
+วิธีอ่าน:
+
+- `users` ในรูปคือ `auth.users` ของ Supabase (ไม่ได้อยู่ใน `public`)
+- **ไม่ได้ลากเส้น `tenant_id`** · ทุกตารางยกเว้น `tenants` มี `tenant_id → tenants(id) on delete cascade` (26 ตาราง) รูป 1 ลากให้ดูแค่ `org_units` กับ `memberships` และรูป 2–3 ไม่ได้ใส่ `tenant_id` ใน column
+- ข้อความบนเส้นคือชื่อ FK column ฝั่งลูก
+- `||` = มี 1 แถวเสมอ · `|o` = มี 0 หรือ 1 แถว (FK เป็น null ได้) · `o{` = 0 แถวขึ้นไป · `o|` ฝั่งลูก = ไม่เกิน 1 แถว
+- ตารางที่มี column แค่ `id` เป็นตารางจากรูปอื่น ใส่ไว้ให้เห็นว่าเส้นเชื่อมไปไหน
+- แสดงเฉพาะ PK, FK และ column สำคัญ ส่วน column ทั้งหมดดูใน SQL
+
+### รูป 1 · Tenancy + User
 
 ```mermaid
 erDiagram
-  tenants ||--o{ memberships : has
-  tenants ||--o{ org_units : has
-  memberships }o--|| users : "auth.users"
-  users ||--|| profiles : has
-  users ||--o{ tutor_profiles : has
-  users ||--o{ buddy_profiles : has
-  users ||--o{ exam_preps : owns
-  exam_preps ||--o{ materials : has
-  materials ||--o{ material_pages : has
-  materials ||--o{ chunks : has
-  materials ||--o{ past_exam_questions : "split into"
-  materials ||--o{ ingestion_jobs : tracked_by
-  exam_preps ||--o{ topics : has
-  topics ||--o{ topic_skills : has
-  topics ||--o{ topic_chunks : grounded_by
-  chunks ||--o{ topic_chunks : ""
-  exam_preps ||--o{ scope_versions : has
-  exam_preps ||--o{ scope_changes : logs
-  exam_preps ||--o{ tutor_sessions : has
-  tutor_sessions ||--o{ messages : has
-  tutor_sessions ||--o{ problems : has
-  problems ||--o{ attempts : answered_by
-  topics ||--o{ topic_progress : tracked_by
-  tutor_sessions ||--o{ planner_decisions : logs
-  tutor_sessions ||--o{ buddy_events : logs
-  attempts ||--o{ checker_disagreements : logs
-  tenants ||--o{ ai_calls : billed
+  tenants ||--o{ org_units : "tenant_id"
+  tenants ||--o{ memberships : "tenant_id"
+  org_units |o--o{ org_units : "parent_id"
+  org_units |o--o{ memberships : "org_unit_id"
+  users ||--o{ memberships : "user_id"
+  users ||--o| profiles : "user_id"
+  users ||--o{ tutor_profiles : "user_id"
+  users ||--o{ buddy_profiles : "user_id"
+
+  tenants {
+    uuid id PK
+    text type "personal | organization"
+    text plan
+    int quota_tokens_day
+    text status "active | suspended"
+  }
+  org_units {
+    uuid id PK
+    uuid tenant_id FK
+    uuid parent_id FK "null = root"
+    text name
+  }
+  memberships {
+    uuid user_id PK, FK
+    uuid tenant_id PK, FK
+    uuid org_unit_id FK
+    text role "owner | student | teacher | admin"
+  }
+  users {
+    uuid id PK "auth.users"
+  }
+  profiles {
+    uuid user_id PK, FK
+    text nickname
+    text education_level
+    text explain_language
+  }
+  tutor_profiles {
+    uuid id PK
+    uuid user_id FK
+    jsonb params "enum-only persona"
+    int version
+  }
+  buddy_profiles {
+    uuid id PK
+    uuid user_id FK
+    bool enabled
+    jsonb params
+    int version
+  }
 ```
+
+### รูป 2 · Content + Scope
+
+```mermaid
+erDiagram
+  users ||--o{ exam_preps : "user_id"
+  exam_preps ||--o{ materials : "exam_prep_id"
+  exam_preps ||--o{ topics : "exam_prep_id"
+  exam_preps ||--o{ scope_versions : "exam_prep_id"
+  exam_preps ||--o{ scope_changes : "exam_prep_id"
+  scope_versions |o--o{ exam_preps : "active_scope_version_id"
+  materials ||--o{ material_pages : "material_id"
+  materials ||--o{ chunks : "material_id"
+  materials ||--o{ ingestion_jobs : "material_id"
+  materials ||--o{ past_exam_questions : "material_id"
+  topics ||--o{ topic_skills : "topic_id"
+  topics ||--o{ topic_chunks : "topic_id"
+  chunks ||--o{ topic_chunks : "chunk_id"
+  topics |o--o{ past_exam_questions : "topic_id"
+  topic_skills |o--o{ past_exam_questions : "skill_id"
+  topics |o--o{ scope_changes : "topic_id"
+
+  users {
+    uuid id PK "auth.users"
+  }
+  exam_preps {
+    uuid id PK
+    uuid user_id FK
+    uuid active_scope_version_id FK
+    text title
+    date exam_date
+    int daily_minutes
+    text status "active | archived"
+  }
+  materials {
+    uuid id PK
+    uuid exam_prep_id FK
+    text storage_path
+    text kind "sheet | slides | past_exam | notes | other"
+    numeric relevance_weight
+    text status
+  }
+  material_pages {
+    uuid id PK
+    uuid material_id FK "unique with page_no"
+    int page_no
+    text extract_method
+  }
+  chunks {
+    uuid id PK
+    uuid material_id FK
+    int page_from
+    int page_to
+    text text
+    vector embedding "768 dims, wait P3"
+  }
+  ingestion_jobs {
+    uuid id PK
+    uuid material_id FK
+    text stage
+    numeric progress
+    text status
+  }
+  topics {
+    uuid id PK
+    uuid exam_prep_id FK
+    text name
+    int order_index
+    uuid_array prereq_ids "no FK, array of topics.id"
+    smallint importance "0-3 stars"
+    text importance_source "computed | user"
+    numeric signal_r
+    text status "draft | confirmed | excluded"
+  }
+  topic_skills {
+    uuid id PK
+    uuid topic_id FK
+    text name
+    int exam_freq
+    jsonb common_mistakes
+  }
+  past_exam_questions {
+    uuid id PK
+    uuid material_id FK
+    uuid topic_id FK
+    uuid skill_id FK
+    text q_no
+    text reference_answer
+  }
+  topic_chunks {
+    uuid topic_id PK, FK
+    uuid chunk_id PK, FK
+    numeric score
+  }
+  scope_changes {
+    uuid id PK
+    uuid exam_prep_id FK
+    uuid topic_id FK
+    text op
+    jsonb before
+    jsonb after
+    text actor "user | ai | system"
+  }
+  scope_versions {
+    uuid id PK
+    uuid exam_prep_id FK "unique with version"
+    int version
+    text status "draft | confirmed"
+    jsonb snapshot
+  }
+```
+
+### รูป 3 · Tutoring + Progress + Logs
+
+```mermaid
+erDiagram
+  users ||--o{ tutor_sessions : "user_id"
+  exam_preps ||--o{ tutor_sessions : "exam_prep_id"
+  scope_versions ||--o{ tutor_sessions : "scope_version_id"
+  topics |o--o{ tutor_sessions : "current_topic_id"
+  tutor_sessions ||--o{ messages : "session_id"
+  tutor_sessions ||--o{ problems : "session_id"
+  topics ||--o{ problems : "topic_id"
+  topic_skills |o--o{ problems : "skill_id"
+  problems ||--o{ attempts : "problem_id"
+  users ||--o{ attempts : "user_id"
+  topics ||--o{ attempts : "topic_id"
+  topic_skills |o--o{ attempts : "skill_id"
+  attempts ||--o{ checker_disagreements : "attempt_id"
+  users ||--o{ topic_progress : "user_id"
+  exam_preps ||--o{ topic_progress : "exam_prep_id"
+  topics ||--o{ topic_progress : "topic_id"
+  users ||--o| user_stats : "user_id"
+  tutor_sessions ||--o{ planner_decisions : "session_id"
+  tutor_sessions ||--o{ buddy_events : "session_id"
+  topics |o--o{ buddy_events : "topic_id"
+  messages |o--o{ buddy_events : "message_id"
+  users |o--o{ ai_calls : "user_id"
+  tutor_sessions |o--o{ ai_calls : "session_id"
+
+  users {
+    uuid id PK "auth.users"
+  }
+  exam_preps {
+    uuid id PK "see figure 2"
+  }
+  scope_versions {
+    uuid id PK "see figure 2"
+  }
+  topics {
+    uuid id PK "see figure 2"
+  }
+  topic_skills {
+    uuid id PK "see figure 2"
+  }
+  tutor_sessions {
+    uuid id PK
+    uuid user_id FK
+    uuid exam_prep_id FK
+    uuid scope_version_id FK
+    uuid current_topic_id FK
+    text stage "probe | teach | verify | practice | done | park"
+    text mode "normal | tight | triage | final"
+    bool buddy_muted
+    text end_reason
+  }
+  messages {
+    uuid id PK
+    uuid session_id FK
+    text role "user | tutor | buddy | card | system"
+    text content
+    jsonb card
+    text input_mode "text | voice | image"
+  }
+  problems {
+    uuid id PK
+    uuid session_id FK
+    uuid topic_id FK
+    uuid skill_id FK
+    text source "generated | past_exam | doc"
+    uuid source_ref "no FK"
+    text answer_format
+    bool verified
+    text purpose "probe | verify | practice | review"
+  }
+  attempts {
+    uuid id PK
+    uuid user_id FK
+    uuid problem_id FK
+    uuid topic_id FK
+    uuid skill_id FK
+    text verdict
+    bool is_correct
+    text error_type
+    text decided_by "sympy | llm"
+    bool independent
+  }
+  checker_disagreements {
+    uuid id PK
+    uuid attempt_id FK
+    jsonb sympy_result
+    jsonb llm_result
+  }
+  topic_progress {
+    uuid user_id PK, FK
+    uuid topic_id PK, FK
+    uuid exam_prep_id FK
+    numeric mastery
+    text level "not_started | weak | developing | passed"
+    jsonb skill_coverage
+    int review_step
+    date next_review_at
+  }
+  user_stats {
+    uuid user_id PK, FK
+    numeric avg_minutes_per_problem
+    numeric avg_session_minutes
+  }
+  planner_decisions {
+    uuid id PK
+    uuid session_id FK
+    jsonb decision
+    text reason_code
+  }
+  buddy_events {
+    uuid id PK
+    uuid session_id FK
+    uuid topic_id FK
+    uuid message_id FK
+    text role
+    text trigger
+  }
+  ai_calls {
+    uuid id PK
+    uuid user_id FK
+    uuid session_id FK
+    text purpose
+    text model
+    text prompt_version
+    int tokens_in
+    int tokens_out
+  }
+```
+
+### FK ที่ไม่ใช่ `on delete cascade`
+
+FK ส่วนใหญ่เป็น `on delete cascade` (ลบแม่แล้วลูกหายตาม) ยกเว้น:
+
+- `on delete set null` (ลบแม่แล้วลูกยังอยู่ แต่ FK กลายเป็น null): `memberships.org_unit_id`, `exam_preps.active_scope_version_id`, `past_exam_questions.topic_id` / `skill_id`, `tutor_sessions.current_topic_id`, `problems.skill_id`, `attempts.skill_id`, `buddy_events.topic_id` / `message_id`, `ai_calls.user_id` / `session_id`
+- ไม่มี `on delete` (ลบแม่ไม่ได้ถ้ายังมีลูก): `tutor_sessions.scope_version_id`
+- ไม่มี FK แต่เก็บ id: `topics.prereq_ids` (array ของ `topics.id`) และ `problems.source_ref` (spec ยังไม่ได้ระบุว่าชี้ไปตารางไหน · ดู "สิ่งที่ยังไม่ชัด" ด้านล่าง)
 
 ## ตารางตาม flow
 
@@ -59,7 +346,25 @@ erDiagram
 
 Golden sets ของการวัดผล AI ไม่อยู่ใน DB แต่อยู่ในโฟลเดอร์ `evals/`
 
+## สิ่งที่ยังไม่ชัด
+
+- `problems.source_ref` เป็น `uuid` ที่ไม่มี FK · `ai-orchestration.md` §3 ระบุแค่ชื่อ column ไม่ได้บอกว่าตอน `source = past_exam` หรือ `doc` ต้องชี้ไปตารางไหน (น่าจะเป็น `past_exam_questions` / `chunks` แต่ยังไม่ได้ตกลงกัน)
+
 ## สิ่งที่ยังรอผล PoC
 
 - มิติของ `chunks.embedding` (ตอนนี้ `vector(768)`) เปลี่ยนตาม embedding model ที่เลือกใน P3 ด้วย migration ใหม่
 - index แบบ HNSW ใช้ cosine distance ยืนยันอีกครั้งหลังเลือก model
+
+### สิ่งที่อาจต้องแก้ใน schema จาก P3a (จดไว้ 2026-10-20 · ยังไม่เขียน migration)
+
+อ่านจาก branch `poc/P3` (`apps/api/app/models/scope_ai.py`, `poc/P3/`, `docs/worklog/poc-P3.md`) · P3a ยังรันไม่ครบ (A6 ยังไม่ผ่าน schema) และ P3b (embedding) ยังไม่เริ่ม · ทุกข้อด้านล่างเป็นแค่ข้อเสนอ รอผลจริงก่อน
+
+| # | ที่มาใน P3 | schema ตอนนี้ | ข้อเสนอ |
+|---|---|---|---|
+| 1 | A6 `merge_topics` คืน `sources` (ช่วงหน้าของแต่ละหัวข้อ) เพราะขั้น 5d ต้องใช้สร้าง `topic_chunks` และ SM-04 ต้องแสดงเลขหน้า | `topics` ไม่มีที่เก็บช่วงหน้า | เพิ่มตาราง `topic_sources (topic_id, material_id, page_from, page_to)` หรือ `topics.sources jsonb` · ต้องเลือกหลังรู้ว่าจะ query ช่วงหน้าไหม |
+| 2 | A4 `split_past_exam` คืน `points` (คะแนนของข้อ) | `past_exam_questions` ไม่มี column คะแนน | ถ้าสูตรดาวหรือ planner จะใช้คะแนน ให้เพิ่ม `points numeric` · ถ้าไม่ใช้ ไม่ต้องเพิ่ม |
+| 3 | A7 `map_questions` คืน `topic_id: null` พร้อม `note` (ข้อที่ map ไม่ได้ ตรงกับ `unmapped` ใน label) | `topic_id` เป็น null ได้แล้ว แต่ไม่มีที่เก็บเหตุผล | อาจเพิ่ม `map_note text` ให้หน้า scope แสดงว่าทำไมข้อนี้ไม่มีหัวข้อ |
+| 4 | A6 คืน `excluded_by_note` (หัวข้อที่ตัดออกเพราะ note ของผู้ใช้) | มี `topics.status = 'excluded'` แต่ไม่รู้ว่าใครตัด | น่าจะพอด้วย `status = 'excluded'` + บันทึกใน `scope_changes` (`actor = 'ai'`) · ไม่ต้องเพิ่ม column ถ้าตกลงแบบนี้ |
+| 5 | ingest ใช้ `vision_extract_pages` อ่านทั้งไฟล์ใน call เดียว และวัด % ตัวอักษรไทยเพื่อเลือกระหว่าง text layer กับ vision | `material_pages.extract_method` มี `vision` อยู่แล้ว · ไม่มีที่เก็บค่าคุณภาพข้อความ | ไม่ต้องแก้ ถ้าไม่ต้องการ debug ย้อนหลัง · ถ้าต้องการ ให้เพิ่ม `material_pages.text_quality numeric` |
+
+ไม่กระทบ schema: `thinking` อยู่ใน `config/ai.yaml` · ค่า `stars.*` อยู่ใน `config/learning.yaml` · `q_no` แบบ `ก1.2` เก็บใน `text` ได้อยู่แล้ว
