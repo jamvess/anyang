@@ -5,16 +5,23 @@
 | Owner | Jam |
 | Branch | `poc/P1` (ต่อจาก `poc/P3` เพื่อใช้ gateway · merge PR #15 ก่อน) |
 | Checklist item | P1: รันรูปทั้งหมดกับ Gemini, Claude, Mathpix · ให้คะแนนด้วย SymPy · วาด precision–recall ของ confidence |
-| Status | in progress · 2026-10-20 |
+| Status | paused · 2026-10-20 |
 
-## Done today (2026-10-19)
+## Done today (2026-10-20)
+
+- Jam ตัดสิน 2 เรื่องที่ค้าง (bug escape: แก้ใน gateway บน `poc/P3` · `x`/`X`: นับว่าผิดตามจริง)
+- แก้ gateway ให้ซ่อม LaTeX ที่ model ลืม escape (`repair_unescaped_latex` · test 6 ตัว) บน `poc/P3` แล้ว merge เข้ามา
+- ตรวจผลกระทบใหม่: โดนแค่ hw_004 (ไม่ใช่ 13/18) · ซ่อม cache แล้ว
+- ให้คะแนน 18 รูปกับ label จริงของ May: 93.3% · threshold ยังไม่ผ่าน · เจอ label hw_009 บรรทัด 4 ไม่ตรงกับรูป (ส่งให้ May แก้)
+
+## Done (2026-10-19)
 
 - แผน + ตัดสินใจขั้น 1 (ฟรีทั้งหมด: Gemini 3.5-flash กับ 3.5-flash-lite · ขอ consent เพิ่มเรื่อง free tier ซึ่งทั้ง 5 คน OK แล้ว · จับคู่บรรทัดด้วย LCS)
 - `poc/P1/lines.py` (ตัดสินบรรทัดด้วย SymPy antlr) · `run.py` · `score.py` · README · test 30 ตัวเขียว
 - อ่านรูปจริงด้วย `gemini-3.5-flash-lite` แล้ว 18/30 รูป (hw_001–hw_018 · เฉลี่ยประมาณ 3.5 วินาทีต่อรูป · ได้ 503 1 ครั้ง)
 - เจอ bug ร้ายแรงเรื่อง JSON escape ของ LaTeX (ดู Decisions) · ยังไม่ได้แก้ รอ Jam ตอบ
 
-spec: `specs/poc/README.md` P1 · data: `evals/handwriting/` (30 รูป, `labels.jsonl` รอ May พิมพ์ `lines` ภายใน 22 ต.ค.) · prompt: `prompts/extract_answer/v1.md`
+spec: `specs/poc/README.md` P1 · data: `evals/handwriting/` (30 รูป, `labels.jsonl` ของ May merge แล้วใน PR #26) · prompt: `prompts/extract_answer/v1.md`
 
 ## Plan
 
@@ -56,7 +63,8 @@ spec: `specs/poc/README.md` P1 · data: `evals/handwriting/` (30 รูป, `lab
 
 ## Next step
 
-หลัง 14:00 น. (เช็คโควตาด้วย request เดียวก่อน): `cd apps/api && uv run python ../../poc/P1/run.py --model gemini:gemini-3.5-flash-lite` (อ่าน hw_019–hw_030 ที่เหลือ) → `score.py` กับ label ของ May · ก่อนถึงเวลานั้นรัน `score.py` กับ 18 รูปที่มีอยู่ได้เลย (ไม่ใช้โควตา)
+ขั้น 9 (ต้องเป็นหลัง 14:00 น. ของวันที่โควตารีเซ็ต · `run.py` จะข้ามรูปที่อ่านแล้วให้เอง):
+`cd apps/api && uv run python ../../poc/P1/run.py --model gemini:gemini-3.5-flash-lite` (อ่าน hw_019–hw_030) → ถ้าต้องการรุ่นกลางด้วย `run.py --model gemini:gemini-3.5-flash --limit 8` (โควตา 20 ครั้งต่อวัน ใช้ร่วมกับ P3) → `uv run --with "antlr4-python3-runtime==4.11.*" python ../../poc/P1/score.py --model gemini:gemini-3.5-flash-lite` → ถ้า May แก้ label hw_009 แล้ว ให้ `git merge origin/main` ก่อนให้คะแนน → commit `poc/P1/results/` → `/poc-report P1`
 
 ## Waiting on
 
@@ -67,3 +75,7 @@ spec: `specs/poc/README.md` P1 · data: `evals/handwriting/` (30 รูป, `lab
 - preview script (เทียบกับใบลอก) อยู่ใน scratchpad ของ session 2026-10-19: อ่าน `S` จาก `evals/handwriting/raw/copy-sheets/build_sheets.py` และ map hw → version จาก `copy_sheets_key.md` (ทั้งสองไฟล์ gitignored อยู่ในเครื่อง Jam) · ห้ามใช้เป็นผลทางการ และห้ามให้ May เห็น
 
 - SymPy service ตัวจริง (`apps/api/app/math/`) เป็นงาน S3 ของ Junior · `poc/P1/lines.py` เป็นโค้ด PoC ใช้แล้วทิ้ง แต่สิ่งที่เจอ (antlr vs lark, กรณีพิเศษ) ควรส่งต่อให้ Junior
+- `poc/P1/results/` ยังไม่ commit (ผลจาก 18 รูป · `score.py` เขียนทับให้เองตอนรันครบ)
+- test ของ `poc/P1` กับ `poc/P3` ต้องรันแยกกัน เพราะทั้งสองมีไฟล์ `score.py` ชื่อเดียวกัน (ถ้ารัน `pytest poc` ทีเดียวจะ ImportError)
+- Git Bash heredoc บางทีกิน `\` (เช่น `r"\frac"` กลายเป็น `\f`) · ถ้าจะเขียนโค้ดที่มี backslash ให้ใช้ Edit/Write tool หรือเขียน script เป็นไฟล์
+- รายชื่อบรรทัดที่อ่านผิดพร้อม confidence: script `misreads.py` อยู่ใน scratchpad ของ session 2026-10-20 (ไม่ได้ commit) · ใช้ `lines.align` เทียบ `out/<model>/hw_*.json` กับ `labels.jsonl`
