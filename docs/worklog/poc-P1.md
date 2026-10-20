@@ -51,6 +51,8 @@ spec: `specs/poc/README.md` P1 · data: `evals/handwriting/` (30 รูป, `lab
 - 2026-10-20 · (Jam เลือกตามคำแนะนำ) bug escape: แก้ตามข้อเสนอ (1)+(2) · ทำบน `poc/P3` แล้ว merge `poc/P3` เข้า `poc/P1` เพราะ P1 แตกจาก P3 (ถ้าทำกลับทาง โค้ด P1 จะติดไปใน P3) · เพิ่มประโยคเรื่องการซ่อมใน `ai-orchestration.md` §Output ใน PR เดียวกัน เพราะเป็น behavior ใหม่ของ gateway · `gateway.py` เป็นไฟล์ของ Junior: แจ้งในกลุ่มแล้วให้ Junior review
 - 2026-10-20 · (Jam เลือกตามคำแนะนำ) `x` อ่านเป็น `X`: นับว่าผิดตามจริง แล้วรายงานเป็นข้อค้นพบใน report · ไม่แก้ prompt ระหว่าง PoC เพื่อให้ตัวเลขตรงความจริง
 - 2026-10-20 · gateway ซ่อม escape แล้ว (`repair_unescaped_latex` · commit บน `poc/P3` แล้ว merge เข้ามา) · **ผลกระทบจริงน้อยกว่าที่เขียนไว้วันที่ 19:** P1 โดนแค่ hw_004 (form feed 9 จุด ใน 5 บรรทัด) ไม่ใช่ 13/18 · P3 ไม่โดนเลย · ซ่อม hw_004 แล้วด้วยฟังก์ชันเดียวกับ gateway (script ใช้ครั้งเดียว ไม่ได้ commit · สำรองไว้ที่ `out/gemini-3.5-flash-lite/hw_004.json.bak`) · scan ซ้ำแล้ว 0/18 · (Jam เลือกตามคำแนะนำ) กฎ newline ไม่ซ่อม `\ne` `\ni` `\nu` `\not` เพราะชนกับข้อความคณิตปกติ (รายละเอียดอยู่ใน `ai-orchestration.md` §Output)
+- 2026-10-20 · **ผลเบื้องต้นกับ label ของ May (18/30 รูป · 3.5-flash-lite · หลังซ่อม hw_004):** line accuracy 70/75 = 93.3% (ผ่านเป้า 80%) · อ่านผิด 5 บรรทัด: hw_009 4 บรรทัด (`x` เป็น `X` · confidence 0.95–0.98) และ hw_018 1 บรรทัด (`x=-1` เป็น `x=1` · 0.85) · ยังไม่มี threshold ไหนจับได้ ≥ 95% (ที่ 0.90 จับได้ 1/5) เพราะ confidence ของ hw_009 สูง · latency เฉลี่ย 3.4 วินาที (p95 5.6) · token ต่อรูป 1,609 in / 182 out · `results/` ยังไม่ commit เพราะยังไม่ครบ 30 รูป
+- 2026-10-20 · **label hw_009 บรรทัด 4 ไม่ตรงกับรูป:** ในรูปเขียน `=(2x-3)(x+2` (ไม่มีวงเล็บปิด) แต่ label เป็น `=(2x-3)(x+2)` ซึ่งขัดกับกฎข้อ 1 ใน `evals/README.md` (พิมพ์ตามที่เขียน) · ตัว `x` ในรูปนี้ก็ดูคล้าย `X` ด้วย · (Jam เลือกตามคำแนะนำ) ส่งให้ May แก้เอง เพราะคนทำ PoC ไม่ควรแก้ label เอง · ตัวเลขไม่เปลี่ยนเพราะบรรทัดนี้ผิดจาก X อยู่แล้ว · ใน report ให้เขียนว่า x ในรูปนี้กำกวม
 
 ## Next step
 
@@ -58,7 +60,7 @@ spec: `specs/poc/README.md` P1 · data: `evals/handwriting/` (30 รูป, `lab
 
 ## Waiting on
 
-โควตา free tier รีเซ็ต 20 ต.ค. ≈ 14:00 น. · Junior review การแก้ gateway (PR #15)
+โควตา free tier รีเซ็ต 20 ต.ค. ≈ 14:00 น. · May แก้ label hw_009 บรรทัด 4 · Junior review การแก้ gateway (PR #15)
 
 ## Notes for next time
 
