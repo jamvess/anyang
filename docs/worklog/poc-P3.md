@@ -9,9 +9,10 @@
 
 ## Done today (2026-10-20)
 
-- แก้ gateway ให้ซ่อม LaTeX ที่ model ลืม escape (`repair_unescaped_latex` · test 6 ตัว · bullet ใหม่ใน `ai-orchestration.md` §Output) · merge เข้า `poc/P1` แล้ว
+- แก้ gateway ให้ซ่อม LaTeX ที่ model ลืม escape · รอบแรกซ่อมทุก string ใน `_parse` แล้ว Junior review ว่าไปแก้ข้อความธรรมดาด้วย · รอบสองเปลี่ยนเป็น opt-in: `LatexStr` / `MathTextStr` ใน `apps/api/app/ai/latex.py`
 - ตรวจ cache ของ P3 แล้วไม่มีจุดเสีย จึงรัน A7 ได้เลยโดยไม่ต้องซ่อม
-- ขอ Junior review ล่วงหน้าเฉพาะส่วน `apps/api/` + `config/ai.yaml` (เพิ่ม reviewer + comment ใน PR #15 · PR ยังเป็น draft เพราะ PoC ยังไม่เสร็จ)
+- ขอ Junior review ล่วงหน้าเฉพาะส่วน `apps/api/` + `config/ai.yaml` · Junior ขอแก้ 2 จุด (backoff, LaTeX opt-in) · แก้ครบแล้ว (`b39587f` test, `aa51819` แก้) · ตอบใน PR #15 และขอ review รอบสองแล้ว
+- merge `poc/P3` เข้า `poc/P1` แล้ว 2 รอบ (รอบล่าสุดหลังแก้ตาม review)
 
 ## Done (2026-10-19)
 
@@ -105,3 +106,6 @@
 - dry run แบบไม่ใช้โควตา: script `dry_run.py` อยู่ใน scratchpad ของ session 2026-10-19 (ไม่ได้ commit) · ใช้ FakeProvider + label มาปลอมเป็นคำตอบของ A5/A6/A7
 - python ใน Git Bash heredoc ที่มีภาษาไทยบางทีขึ้น `SyntaxError: Non-UTF-8` · สาเหตุคือ `python` ของเครื่องเป็น 3.9 ซึ่งอ่านบรรทัดยาวที่มีภาษาไทยไม่ได้ · ให้ใช้ Edit tool หรือ `uv run --project apps/api python` (3.12) แทน
 - 2026-10-19 (session 3) แก้ §2.3.3 + §2.3.7 + §3.1 ของ `ai-orchestration.md` ให้ตรงกับ prompt และ model แล้ว (A2b, schema แบบ object, เช็คคุณภาพข้อความ, ข้อจำกัดของ PyMuPDF) · ก่อนทำ P1 ต้องแก้เรื่อง AI-07 (รูปลายมือห้ามส่งผ่าน free tier)
+- test ของ gateway มี fixture `sleeps` (autouse) ที่แทน `app.ai.gateway._sleep` · ถ้าเขียน test ใหม่ที่ retry ไม่ต้องกลัวรอจริง · ใช้ `sleeps` เป็น argument เพื่อตรวจเวลาที่รอ
+- field ใหม่ของ output model ที่เป็น LaTeX ต้องใช้ `LatexStr` (ทั้ง string) หรือ `MathTextStr` (ไทยปนสูตรใน `$...$`) · `str` ธรรมดาจะไม่ถูกซ่อม
+- PoC ตั้ง gateway `retries: 0` ใน `Run` เอง จึงไม่โดน backoff ใหม่ (2 key ใหม่ใน `ai.yaml`: `retry_backoff_seconds`, `max_retry_wait_seconds`)
