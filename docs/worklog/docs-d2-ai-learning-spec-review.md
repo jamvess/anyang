@@ -14,7 +14,7 @@
 - [x] 3. 🤖 รวบรวมเป็นตาราง findings ใน PR description: จุด · ปัญหา · ข้อเสนอ · ไฟล์ของใคร
 - [x] 4. 🙋 Jam ตัดสินทีละข้อ: แก้เลย / ไม่แก้ / เลื่อนไปทำหลังผล PoC (ข้อ S4 "อัปเดต threshold ตามผล P1 P2 P3") · ตอบเป็นเลขข้อ เช่น "1 แก้, 2 เลื่อน"
 - [x] 5. 🤖 แก้ตามที่ Jam ตัดสินใน `ai-orchestration.md` และ `learning-model.md` (ไฟล์ของ Jam) · ถ้าต้องแก้ไฟล์ของคนอื่นหรือไฟล์กลาง (`requirements.md`, `api.md`, `config/ai.yaml`, `data-model.md`) จะถามก่อนทุกครั้ง
-- [ ] 6. 🤖 ติ๊ก checklist ใน `docs/team/sprint-checklists.md` แล้ว `/work-done`
+- [x] 6. 🤖 ติ๊ก checklist ใน `docs/team/sprint-checklists.md` แล้ว `/work-done`
 
 ## Definition of done
 
@@ -61,7 +61,7 @@
 
 ## Next step
 
-ขั้น 6: ติ๊ก checklist ข้อ D2 ของ Jam ใน `docs/team/sprint-checklists.md` (S1) → `/work-done` (PR #31 ready for review, reviewer Junior เพราะแก้ `settings.py` + `learning.yaml`)
+`/work-done`: PR #31 ready for review · reviewer Junior (แก้ `apps/api/app/settings.py` + `config/learning.yaml`) · ไฟล์กลางไม่ได้แตะ
 
 ## Waiting on
 
