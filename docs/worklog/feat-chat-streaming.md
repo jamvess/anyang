@@ -1,4 +1,4 @@
-﻿# หน้าแชท P4-lite · stream ข้อความจาก SSE
+# หน้าแชท P4-lite · stream ข้อความจาก SSE
 
 | | |
 |---|---|
@@ -13,8 +13,8 @@
 - [x] 2. 🙋 May review spec และตอบ open questions (Claude ถามเป็นตัวเลือก) · บอก Junior ในกลุ่มเรื่อง api.md ที่ต้องแก้
 - [x] 3. 🤖 `/spec-to-tests` เขียน test ที่ fail จาก AC + เปลี่ยนชื่อ test เดิม TM04/TM05 → TM20/TM21 ตามที่ `chat-room-ui.md` §10 ข้อ 1 ตกลงไว้
 - [x] 4. 🙋 May review test (ชื่อใหม่ + test ใหม่)
-- [ ] 5. 🤖 `/implement-feature` จน test ผ่าน + lint + typecheck
-- [ ] 6. 🙋 May ลองในเบราว์เซอร์: `cd apps/web` → `pnpm dev` → เปิด `http://localhost:3000/preps/demo/room` → พิมพ์ข้อความแล้วกด Enter → ดูว่าตัวอักษรไหลออกมาทีละส่วนและสมการ render ถูก
+- [x] 5. 🤖 `/implement-feature` จน test ผ่าน + lint + typecheck
+- [x] 6. 🙋 May ลองในเบราว์เซอร์: `cd apps/web` → `pnpm dev` → เปิด `http://localhost:3000/preps/demo/room` → พิมพ์ข้อความแล้วกด Enter → ดูว่าตัวอักษรไหลออกมาทีละส่วนและสมการ render ถูก
 
 ## Definition of done
 
@@ -32,11 +32,13 @@
 - 2026-10-20 · `$` ที่ยังไม่ปิดระหว่าง stream ซ่อนไว้ แสดงทั้งหมดเมื่อจบ · ไม่ให้เห็น LaTeX ดิบกระพริบ แต่ไม่ทำให้ข้อความหาย (May)
 - 2026-10-20 · `sendMessage` ของ ChatRoom ไม่บังคับ ค่าเริ่มต้นตอบ `done` ทันที · test S2 ที่ review แล้ว render ChatRoom โดยไม่มี transport ต้องผ่านโดยไม่แก้ (เพิ่มใน spec §2)
 - 2026-10-20 · test AC-21 รอได้ 5 วินาทีแทนหน่วง 0 · หน้า page รับ prop ไม่ได้ จึงตั้งค่าหน่วงให้ test เป็น 0 ไม่ได้ (แก้ AC-21 ใน spec)
+- 2026-10-20 · event `buddy` ปิด bubble ปัจจุบัน token buddy ถัดไปจึงเป็น bubble ใหม่ · spec ไม่ได้ระบุ ให้ข้อความ buddy นอกจังหวะแยกเป็นข้อความของมันเอง
+- 2026-10-20 · หน้า room อ่าน `tutor_reply.txt` ตอน build · หน้าไม่มีข้อมูล dynamic จึง prerender ได้ (ต้องเช็คบน Vercel preview)
 - 2026-10-20 · เลื่อนจอตาม stream ทำในงานนี้ เฉพาะเมื่ออยู่ใกล้ล่างสุด · stream ยาวจะล้นจอตอน demo (May)
 
 ## Next step
 
-May review test ใน `apps/web/tests/chat/ChatRoomStream.test.tsx`, `tests/fakeTransport.test.ts`, test ใหม่ท้าย `tests/chat/RoomPage.test.tsx` และชื่อที่เปลี่ยนใน `MessageList` / `Composer` / `RoomPage` · ถ้า ok ให้รัน `/implement-feature specs/features/tutor/chat-streaming.md`
+เปิด Vercel preview ของ PR #32 ที่ `/preps/demo/room` ให้แน่ใจว่าหน้าโหลด fixture ได้ แล้วรัน `/work-done`
 
 ## Waiting on
 
