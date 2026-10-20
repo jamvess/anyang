@@ -24,8 +24,8 @@ spec: `specs/poc/README.md` P1 · data: `evals/handwriting/` (30 รูป, `lab
 - [x] 4. 🤖 `poc/P1/run.py`: รัน `extract_answer` ทุกรูปกับทุก provider · เก็บผลดิบ, latency, token
 - [x] 5. 🤖 `poc/P1/score.py`: line accuracy ต่อ provider · precision–recall ของ confidence ที่หลาย threshold · ต้นทุนและเวลาต่อรูป · dry run ด้วย fake provider + เฉลยปลอม
 - [x] 6. 🙋 รอ May ส่ง `labels.jsonl` ที่พิมพ์แล้ว (ภายใน 22 ต.ค.) · merge แล้วใน PR #26 (20 ต.ค.)
-- [ ] 7. 🤖 แก้ bug escape ใน gateway บน `poc/P3`: test ก่อน → 🙋 Jam review test → แก้ `_parse` + เพิ่มประโยคใน `ai-orchestration.md` §Output → merge `poc/P3` เข้า `poc/P1`
-- [ ] 8. 🤖 ซ่อม cache แบบ offline: `poc/P1/out/` และ `poc/P3/out/{pages,questions}/` ด้วยฟังก์ชันเดียวกับ gateway
+- [x] 7. 🤖 แก้ bug escape ใน gateway บน `poc/P3`: test ก่อน → 🙋 Jam review test → แก้ `_parse` + เพิ่มประโยคใน `ai-orchestration.md` §Output → merge `poc/P3` เข้า `poc/P1`
+- [x] 8. 🤖 ซ่อม cache แบบ offline: `poc/P1/out/` และ `poc/P3/out/{pages,questions}/` ด้วยฟังก์ชันเดียวกับ gateway
 - [ ] 9. 🤖 อ่านรูปที่เหลือ hw_019–hw_030 (หลัง 14:00 น.) → รันให้คะแนนกับ label ของ May → สรุปผล → `/poc-report P1` · เสนอ provider + ค่า `ocr.confirm_below_confidence`
 
 ## Definition of done
@@ -50,14 +50,15 @@ spec: `specs/poc/README.md` P1 · data: `evals/handwriting/` (30 รูป, `lab
 - 2026-10-19 · **AI อ่าน `x` เป็น `X`** (hw_009 ลายมือ Junior · ได้ 0/4 บรรทัด) · ข้อเสนอ: (1) นับว่าผิดตามจริง แล้วรายงานเป็นข้อค้นพบ (แนะนำ) (2) ให้คะแนนแบบไม่สนตัวพิมพ์ใหญ่/เล็กของตัวแปร (3) ทำ `extract_answer/v2` ให้ใช้ตัวพิมพ์เล็กถ้าไม่ชัด · hw_009 บรรทัดสุดท้ายในรูปไม่มีวงเล็บปิด AI อ่านตามจริงและเขียนไว้ใน notes ถูกต้องตามคู่มือ · hw_018 AI อ่าน `x=-1` เป็น `x=1` และ confidence ลดเหลือ 0.85 (อ่านผิดจริง)
 - 2026-10-20 · (Jam เลือกตามคำแนะนำ) bug escape: แก้ตามข้อเสนอ (1)+(2) · ทำบน `poc/P3` แล้ว merge `poc/P3` เข้า `poc/P1` เพราะ P1 แตกจาก P3 (ถ้าทำกลับทาง โค้ด P1 จะติดไปใน P3) · เพิ่มประโยคเรื่องการซ่อมใน `ai-orchestration.md` §Output ใน PR เดียวกัน เพราะเป็น behavior ใหม่ของ gateway · `gateway.py` เป็นไฟล์ของ Junior: แจ้งในกลุ่มแล้วให้ Junior review
 - 2026-10-20 · (Jam เลือกตามคำแนะนำ) `x` อ่านเป็น `X`: นับว่าผิดตามจริง แล้วรายงานเป็นข้อค้นพบใน report · ไม่แก้ prompt ระหว่าง PoC เพื่อให้ตัวเลขตรงความจริง
+- 2026-10-20 · gateway ซ่อม escape แล้ว (`repair_unescaped_latex` · commit บน `poc/P3` แล้ว merge เข้ามา) · **ผลกระทบจริงน้อยกว่าที่เขียนไว้วันที่ 19:** P1 โดนแค่ hw_004 (form feed 9 จุด ใน 5 บรรทัด) ไม่ใช่ 13/18 · P3 ไม่โดนเลย · ซ่อม hw_004 แล้วด้วยฟังก์ชันเดียวกับ gateway (script ใช้ครั้งเดียว ไม่ได้ commit · สำรองไว้ที่ `out/gemini-3.5-flash-lite/hw_004.json.bak`) · scan ซ้ำแล้ว 0/18 · (Jam เลือกตามคำแนะนำ) กฎ newline ไม่ซ่อม `\ne` `\ni` `\nu` `\not` เพราะชนกับข้อความคณิตปกติ (รายละเอียดอยู่ใน `ai-orchestration.md` §Output)
 
 ## Next step
 
-บน `poc/P3`: เขียน test การซ่อม escape ต่อท้าย `apps/api/tests/unit/test_ai_gateway.py` (ต้อง fail) → ให้ Jam review
+หลัง 14:00 น. (เช็คโควตาด้วย request เดียวก่อน): `cd apps/api && uv run python ../../poc/P1/run.py --model gemini:gemini-3.5-flash-lite` (อ่าน hw_019–hw_030 ที่เหลือ) → `score.py` กับ label ของ May · ก่อนถึงเวลานั้นรัน `score.py` กับ 18 รูปที่มีอยู่ได้เลย (ไม่ใช้โควตา)
 
 ## Waiting on
 
-Jam review test escape · โควตา free tier รีเซ็ต 20 ต.ค. ≈ 14:00 น.
+โควตา free tier รีเซ็ต 20 ต.ค. ≈ 14:00 น. · Junior review การแก้ gateway (PR #15)
 
 ## Notes for next time
 
