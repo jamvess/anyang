@@ -5,7 +5,7 @@
 | Owner | Jam |
 | Branch | `poc/P1` (ต่อจาก `poc/P3` เพื่อใช้ gateway · merge PR #15 ก่อน) |
 | Checklist item | P1: รันรูปทั้งหมดกับ Gemini, Claude, Mathpix · ให้คะแนนด้วย SymPy · วาด precision–recall ของ confidence |
-| Status | paused · 2026-10-19 |
+| Status | in progress · 2026-10-20 |
 
 ## Done today (2026-10-19)
 
@@ -23,8 +23,10 @@ spec: `specs/poc/README.md` P1 · data: `evals/handwriting/` (30 รูป, `lab
 - [x] 3. ~~provider ที่ยังไม่มี~~ ไม่ต้องทำ: ใช้ Gemini 2 รุ่นซึ่งมี provider อยู่แล้ว
 - [x] 4. 🤖 `poc/P1/run.py`: รัน `extract_answer` ทุกรูปกับทุก provider · เก็บผลดิบ, latency, token
 - [x] 5. 🤖 `poc/P1/score.py`: line accuracy ต่อ provider · precision–recall ของ confidence ที่หลาย threshold · ต้นทุนและเวลาต่อรูป · dry run ด้วย fake provider + เฉลยปลอม
-- [ ] 6. 🙋 รอ May ส่ง `labels.jsonl` ที่พิมพ์แล้ว (ภายใน 22 ต.ค.)
-- [ ] 7. 🤖 รันจริง → สรุปผล → `/poc-report P1` · เสนอ provider + ค่า `ocr.confirm_below_confidence`
+- [x] 6. 🙋 รอ May ส่ง `labels.jsonl` ที่พิมพ์แล้ว (ภายใน 22 ต.ค.) · merge แล้วใน PR #26 (20 ต.ค.)
+- [ ] 7. 🤖 แก้ bug escape ใน gateway บน `poc/P3`: test ก่อน → 🙋 Jam review test → แก้ `_parse` + เพิ่มประโยคใน `ai-orchestration.md` §Output → merge `poc/P3` เข้า `poc/P1`
+- [ ] 8. 🤖 ซ่อม cache แบบ offline: `poc/P1/out/` และ `poc/P3/out/{pages,questions}/` ด้วยฟังก์ชันเดียวกับ gateway
+- [ ] 9. 🤖 อ่านรูปที่เหลือ hw_019–hw_030 (หลัง 14:00 น.) → รันให้คะแนนกับ label ของ May → สรุปผล → `/poc-report P1` · เสนอ provider + ค่า `ocr.confirm_below_confidence`
 
 ## Definition of done
 
@@ -43,17 +45,19 @@ spec: `specs/poc/README.md` P1 · data: `evals/handwriting/` (30 รูป, `lab
 - 2026-10-19 · ทั้ง 5 คนตอบ OK เรื่อง free tier แล้ว (Jam ยืนยัน) · ไม่ต้อง `--exclude-writer`
 - 2026-10-19 · `poc/P1/score.py` เขียว (test ของ P1 รวม 30 ตัว) · line accuracy รวม/แยกตาม medium และ writer · PR curve ที่ threshold 0.50–0.95 · เลือก threshold ต่ำสุดที่ recall ≥ 95% · latency/token ต่อรูป · ให้คะแนนเฉพาะแถวที่ `labeled_by` มีค่า · dry run ด้วยเฉลยปลอมได้ตัวเลขตามที่ควร · README ของ P1 เขียนแล้ว
 
-- 2026-10-19 · **BUG (ยังไม่แก้): LaTeX หายเพราะ JSON escape** · Gemini เขียน `\frac` ลงใน JSON โดยไม่ escape backslash · `\f` `\b` `\t` `\r` `\n` เป็นรหัสพิเศษของ JSON จึงถูก parse เป็นตัวอักษรควบคุมแบบเงียบๆ (`\frac` → form feed + `rac`) · กระทบ P1 13/18 รูป และ P3: `out/pages/midterm-*.json` (form feed 88/92 จุด), `out/questions/*.json` (23/30 จุด) ซึ่งเป็น input ของ A7 · ข้อเสนอที่รอ Jam ตอบ: (1) แก้ใน gateway หลัง `json.loads` ก่อน validate: form feed/backspace → `\f`/`\b` เสมอ · tab/CR ที่ตามด้วยตัวอักษร → `\t`/`\r` · newline ที่ตามด้วย neq/nabla/not/nu/ni/ne → `\n` · newline ปกติไม่แตะ · test ก่อน (2) ซ่อมไฟล์ cache ของ P1/P3 ด้วยกฎเดียวกันแบบ offline (ไม่เสียโควตา)
+- 2026-10-19 · **BUG: LaTeX หายเพราะ JSON escape** · Gemini เขียน `\frac` ลงใน JSON โดยไม่ escape backslash · `\f` `\b` `\t` `\r` `\n` เป็นรหัสพิเศษของ JSON จึงถูก parse เป็นตัวอักษรควบคุมแบบเงียบๆ (`\frac` → form feed + `rac`) · กระทบ P1 13/18 รูป และ P3: `out/pages/midterm-*.json` (form feed 88/92 จุด), `out/questions/*.json` (23/30 จุด) ซึ่งเป็น input ของ A7 · ข้อเสนอที่รอ Jam ตอบ: (1) แก้ใน gateway หลัง `json.loads` ก่อน validate: form feed/backspace → `\f`/`\b` เสมอ · tab/CR ที่ตามด้วยตัวอักษร → `\t`/`\r` · newline ที่ตามด้วย neq/nabla/not/nu/ni/ne → `\n` · newline ปกติไม่แตะ · test ก่อน (2) ซ่อมไฟล์ cache ของ P1/P3 ด้วยกฎเดียวกันแบบ offline (ไม่เสียโควตา)
 - 2026-10-19 · **ผลเบื้องต้น (ไม่เป็นทางการ เทียบกับข้อความในใบลอก ไม่ใช่เฉลยของ May · และยังติด bug escape):** 3.5-flash-lite ถูก 65/75 บรรทัด (87%) · อ่านผิด 10 บรรทัด แต่ 9 บรรทัดมาจาก hw_004 (bug escape) กับ hw_009 · ไม่มี threshold ที่จับได้ ≥ 95% เพราะบรรทัดที่ผิดมี confidence 0.95–0.98 · หลังแก้ bug ต้องคิดใหม่
-- 2026-10-19 · **รอ Jam ตัดสิน: AI อ่าน `x` เป็น `X`** (hw_009 ลายมือ Junior · ได้ 0/4 บรรทัด) · ข้อเสนอ: (1) นับว่าผิดตามจริง แล้วรายงานเป็นข้อค้นพบ (แนะนำ) (2) ให้คะแนนแบบไม่สนตัวพิมพ์ใหญ่/เล็กของตัวแปร (3) ทำ `extract_answer/v2` ให้ใช้ตัวพิมพ์เล็กถ้าไม่ชัด · hw_009 บรรทัดสุดท้ายในรูปไม่มีวงเล็บปิด AI อ่านตามจริงและเขียนไว้ใน notes ถูกต้องตามคู่มือ · hw_018 AI อ่าน `x=-1` เป็น `x=1` และ confidence ลดเหลือ 0.85 (อ่านผิดจริง)
+- 2026-10-19 · **AI อ่าน `x` เป็น `X`** (hw_009 ลายมือ Junior · ได้ 0/4 บรรทัด) · ข้อเสนอ: (1) นับว่าผิดตามจริง แล้วรายงานเป็นข้อค้นพบ (แนะนำ) (2) ให้คะแนนแบบไม่สนตัวพิมพ์ใหญ่/เล็กของตัวแปร (3) ทำ `extract_answer/v2` ให้ใช้ตัวพิมพ์เล็กถ้าไม่ชัด · hw_009 บรรทัดสุดท้ายในรูปไม่มีวงเล็บปิด AI อ่านตามจริงและเขียนไว้ใน notes ถูกต้องตามคู่มือ · hw_018 AI อ่าน `x=-1` เป็น `x=1` และ confidence ลดเหลือ 0.85 (อ่านผิดจริง)
+- 2026-10-20 · (Jam เลือกตามคำแนะนำ) bug escape: แก้ตามข้อเสนอ (1)+(2) · ทำบน `poc/P3` แล้ว merge `poc/P3` เข้า `poc/P1` เพราะ P1 แตกจาก P3 (ถ้าทำกลับทาง โค้ด P1 จะติดไปใน P3) · เพิ่มประโยคเรื่องการซ่อมใน `ai-orchestration.md` §Output ใน PR เดียวกัน เพราะเป็น behavior ใหม่ของ gateway · `gateway.py` เป็นไฟล์ของ Junior: แจ้งในกลุ่มแล้วให้ Junior review
+- 2026-10-20 · (Jam เลือกตามคำแนะนำ) `x` อ่านเป็น `X`: นับว่าผิดตามจริง แล้วรายงานเป็นข้อค้นพบใน report · ไม่แก้ prompt ระหว่าง PoC เพื่อให้ตัวเลขตรงความจริง
 
 ## Next step
 
-ถาม Jam 2 เรื่องที่ค้างใน Decisions (bug escape: ok ตามที่เสนอไหม · x/X: เลือก 1/2/3) → ถ้า ok: เขียน test ของการซ่อม escape ใน `apps/api/tests/unit/test_ai_gateway.py` (ต่อท้าย) → ให้ Jam review → แก้ `_parse` ใน `apps/api/app/ai/gateway.py` → script ซ่อม cache ของ `poc/P1/out/` และ `poc/P3/out/{pages,questions}/` → รัน preview ของ P1 ใหม่ · ⚠️ แก้ gateway บน branch นี้แล้ว ต้อง merge กลับไป `poc/P3` ด้วย (หรือแก้บน `poc/P3` แล้ว merge มาที่นี่) เพราะ P3 ต้องใช้ก่อนรัน A7 พรุ่งนี้ 14:00 น. · อ่านรูปที่เหลือ hw_019–hw_030 ด้วย 3.5-flash-lite หลังโควตารีเซ็ต (20 ต.ค. 14:00 น.)
+บน `poc/P3`: เขียน test การซ่อม escape ต่อท้าย `apps/api/tests/unit/test_ai_gateway.py` (ต้อง fail) → ให้ Jam review
 
 ## Waiting on
 
-Jam ตอบ 2 เรื่องใน Decisions · May (`labels.jsonl` ภายใน 22 ต.ค.)
+Jam review test escape · โควตา free tier รีเซ็ต 20 ต.ค. ≈ 14:00 น.
 
 ## Notes for next time
 
