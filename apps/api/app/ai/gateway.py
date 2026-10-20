@@ -3,14 +3,15 @@
 Every AI call in the backend goes through here (AI-01). The gateway loads the prompt version
 named in config/ai.yaml, fills its ``{{placeholders}}``, routes to the model of the purpose's
 tier (AI-02), validates the output with Pydantic and retries with the error (AI-05), retries
-provider errors and timeouts, and reports one ``CallRecord`` per call to listeners (AI-04).
+provider errors and timeouts after a backoff (§2.10), and reports one ``CallRecord`` per call
+to listeners (AI-04). Lost LaTeX backslashes are repaired by the output models' field types
+(``app/ai/latex.py``), not here.
 
 Not in the lite version yet (Junior, S3): fallback provider, circuit breaker, guards, and
 writing records to the ``ai_calls`` table.
 """
 
 import asyncio
-import json
 import logging
 import re
 import time
@@ -22,7 +23,13 @@ from typing import Any, Literal
 import yaml
 from pydantic import BaseModel, ValidationError
 
-from app.ai.providers.base import Image, Provider, ProviderRequest, ProviderResponse
+from app.ai.providers.base import (
+    Image,
+    Provider,
+    ProviderRateLimited,
+    ProviderRequest,
+    ProviderResponse,
+)
 from app.settings import AIConfig
 
 __all__ = [
@@ -33,24 +40,17 @@ __all__ = [
     "CallRecord",
     "Gateway",
     "Image",
-    "repair_unescaped_latex",
 ]
 
 log = logging.getLogger(__name__)
 
 InputValue = str | Image | list[Image]
 
+_sleep = asyncio.sleep  # module attribute so tests can replace it
+
 _PLACEHOLDER = re.compile(r"\{\{(\w+)\}\}")
 _CODE_FENCE = re.compile(r"^```(?:json)?\s*(.*?)\s*```$", re.DOTALL)
 _PREVIOUS_ANSWER_CHARS = 2000
-# A LaTeX backslash the model forgot to escape that JSON read as a control character:
-# form feed and backspace always, tab and CR before a letter, newline before a command name.
-# \ne \ni \nu \not are left out: a line starting with e^{x}, i), u = or "not" looks the same.
-_LOST_BACKSLASH = re.compile(
-    r"[\f\b]|[\t\r](?=[A-Za-z])"
-    r"|\n(?=(?:abla|eg|eq|exists|geq|leq|mid|otin)(?![A-Za-z]))"
-)
-_ESCAPES = {"\f": r"\f", "\b": r"\b", "\t": r"\t", "\r": r"\r", "\n": r"\n"}
 
 
 class AIConfigError(Exception):
@@ -137,26 +137,7 @@ def _parse[T: BaseModel](text: str, schema: type[T]) -> T:
     stripped = text.strip()
     if match := _CODE_FENCE.match(stripped):
         stripped = match.group(1)
-    try:
-        data = json.loads(stripped)
-    except json.JSONDecodeError:
-        return schema.model_validate_json(stripped)  # raises the ValidationError for the retry
-    return schema.model_validate(repair_unescaped_latex(data))
-
-
-def repair_unescaped_latex(value: Any) -> Any:
-    r"""Put back LaTeX backslashes in every string of parsed JSON (found in PoC P1).
-
-    A model that writes ``"\frac"`` without escaping the backslash gets a form feed + ``rac``
-    from the JSON parser, which still passes the schema. Plain newlines and tabs are kept.
-    """
-    if isinstance(value, str):
-        return _LOST_BACKSLASH.sub(lambda match: _ESCAPES[match.group()], value)
-    if isinstance(value, list):
-        return [repair_unescaped_latex(item) for item in value]
-    if isinstance(value, dict):
-        return {key: repair_unescaped_latex(item) for key, item in value.items()}
-    return value
+    return schema.model_validate_json(stripped)
 
 
 def _retry_prompt(prompt: str, answer: str, error: ValidationError) -> str:
@@ -275,14 +256,26 @@ class Gateway:
     async def _generate(
         self, provider: Provider, request: ProviderRequest, timeout_s: float
     ) -> ProviderResponse:
+        gateway = self._config.gateway
+        attempts = gateway.retries + 1
         last_error = ""
-        for _ in range(self._config.gateway.retries + 1):
+        for attempt in range(attempts):
+            asked_wait: float | None = None
             try:
                 return await asyncio.wait_for(provider.generate(request), timeout_s)
             except TimeoutError:
                 last_error = f"timeout after {timeout_s}s"
+            except ProviderRateLimited as error:
+                last_error = f"{type(error).__name__}: {error}"
+                asked_wait = error.retry_after
             except Exception as error:  # provider SDKs raise many error types
                 last_error = f"{type(error).__name__}: {error}"
+            if attempt == attempts - 1:
+                break
+            wait = gateway.retry_backoff_seconds if asked_wait is None else asked_wait
+            if wait > gateway.max_retry_wait_seconds:
+                break  # waiting that long inside a chat turn is worse than failing now
+            await _sleep(wait)
         raise AIProviderError(f"{request.purpose}: {last_error}")
 
     def _emit(self, record: CallRecord) -> None:

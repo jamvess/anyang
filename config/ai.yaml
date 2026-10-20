@@ -39,6 +39,8 @@ purposes:
 
 gateway:
   retries: 1                           # then fallback provider, then degrade
+  retry_backoff_seconds: 1             # [C] wait before a retry when the provider gives no retry delay · after Alpha: pick from ai_calls (success rate of retries by wait)
+  max_retry_wait_seconds: 10           # [C] do not retry if the provider asks to wait longer (a chat turn targets TTFT p95 2 s) · after Alpha: from ai_calls
   schema_retries: 1                    # retry once with the validation error appended
   circuit_breaker:                     # [B] Resilience4j defaults
     failure_rate_threshold: 0.5

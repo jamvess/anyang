@@ -50,6 +50,7 @@ class DoneConfig(_Strict):
 class ParkConfig(_Strict):
     max_problems_per_skill_per_day: int = Field(ge=1)
     max_fail_streak_per_skill: int = Field(ge=1)
+    return_after_sessions: int = Field(ge=1)
 
 
 class SpacingConfig(_Strict):
@@ -161,6 +162,8 @@ class CircuitBreakerConfig(_Strict):
 
 class GatewayConfig(_Strict):
     retries: int = Field(ge=0)
+    retry_backoff_seconds: float = Field(ge=0)
+    max_retry_wait_seconds: float = Field(ge=0)
     schema_retries: int = Field(ge=0)
     circuit_breaker: CircuitBreakerConfig
 

@@ -3,9 +3,22 @@ the Google SDK (AI-01). Vertex AI can replace it later by building the client wi
 ``vertexai=True`` and a project instead of an API key."""
 
 from google import genai
-from google.genai import types
+from google.genai import errors, types
 
-from app.ai.providers.base import ProviderRequest, ProviderResponse
+from app.ai.providers.base import ProviderRateLimited, ProviderRequest, ProviderResponse
+
+
+def retry_after_seconds(error_json: dict) -> float | None:
+    """The wait a Gemini 429 asks for (``RetryInfo.retryDelay`` such as ``"36s"``), or ``None``."""
+    error = error_json.get("error") if isinstance(error_json, dict) else None
+    for detail in (error or {}).get("details") or []:
+        if str(detail.get("@type", "")).endswith("google.rpc.RetryInfo"):
+            delay = str(detail.get("retryDelay", ""))
+            try:
+                return float(delay.removesuffix("s"))
+            except ValueError:
+                return None
+    return None
 
 
 class GeminiProvider:
@@ -20,20 +33,25 @@ class GeminiProvider:
             for image in request.images
         ]
         contents.append(request.prompt)
-        response = await self._client.aio.models.generate_content(
-            model=request.model,
-            contents=contents,
-            config=types.GenerateContentConfig(
-                temperature=request.temperature,
-                max_output_tokens=request.max_tokens,
-                response_mime_type="application/json",
-                thinking_config=(
-                    types.ThinkingConfig(thinking_level=request.thinking)
-                    if request.thinking
-                    else None
+        try:
+            response = await self._client.aio.models.generate_content(
+                model=request.model,
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    temperature=request.temperature,
+                    max_output_tokens=request.max_tokens,
+                    response_mime_type="application/json",
+                    thinking_config=(
+                        types.ThinkingConfig(thinking_level=request.thinking)
+                        if request.thinking
+                        else None
+                    ),
                 ),
-            ),
-        )
+            )
+        except errors.APIError as error:
+            if error.code == 429:
+                raise ProviderRateLimited(str(error), retry_after_seconds(error.details)) from error
+            raise
         usage = response.usage_metadata
         tokens_in = (usage.prompt_token_count or 0) if usage else 0
         # Thinking tokens are billed as output tokens.

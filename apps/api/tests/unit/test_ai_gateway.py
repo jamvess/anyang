@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
+import app.ai.gateway as gateway_module
 from app.ai.gateway import (
     AIConfigError,
     AIInputError,
@@ -20,7 +21,8 @@ from app.ai.gateway import (
     Gateway,
     Image,
 )
-from app.ai.providers.base import ProviderRequest, ProviderResponse
+from app.ai.latex import LatexStr, MathTextStr
+from app.ai.providers.base import ProviderRateLimited, ProviderRequest, ProviderResponse
 from app.ai.providers.fake import FakeProvider
 from app.settings import get_settings
 
@@ -47,7 +49,7 @@ class TopicsResult(BaseModel):
 
 
 class AnswerLine(BaseModel):
-    latex: str
+    latex: LatexStr  # opt-in LaTeX repair (review of PR #15); was str
     confidence: float
 
 
@@ -73,6 +75,18 @@ def write_prompt(
         f"output_schema: X\ninputs: [{inputs}]\n---\n\n{body}\n",
         encoding="utf-8",
     )
+
+
+@pytest.fixture(autouse=True)
+def sleeps(monkeypatch: pytest.MonkeyPatch) -> list[float]:
+    """Retry waits are recorded instead of slept, so no test waits for real."""
+    recorded: list[float] = []
+
+    async def fake_sleep(seconds: float) -> None:
+        recorded.append(seconds)
+
+    monkeypatch.setattr(gateway_module, "_sleep", fake_sleep)
+    return recorded
 
 
 # --- AI-03 fake provider ------------------------------------------------------------------
@@ -407,7 +421,8 @@ async def test_AI01_list_input_must_contain_only_images(tmp_path: Path):
 
 # --- AI-05 LaTeX backslashes the model forgot to escape in JSON (found in PoC P1) -----------
 # A model writes "\frac" inside a JSON string. JSON reads "\f" as a form feed, so the LaTeX
-# silently becomes form feed + "rac" and still passes the schema. The gateway puts it back.
+# silently becomes form feed + "rac" and still passes the schema. Fields typed LatexStr put it
+# back; other fields are left alone (review of PR #15).
 
 
 async def call_extract_answer(raw: str) -> tuple[AnswerResult, FakeProvider]:
@@ -464,3 +479,83 @@ async def test_AI05_correctly_escaped_latex_is_not_changed():
     result, _ = await call_extract_answer(answer_json(r"\\frac{1}{x}", r"a\\\\b"))
 
     assert [line.latex for line in result.lines] == [r"\frac{1}{x}", r"a\\b"]
+
+
+class MixedText(BaseModel):
+    text: MathTextStr
+    plain: str
+
+
+async def call_mixed(text: str, plain: str) -> MixedText:
+    """Raw model text for MixedText, with each backslash exactly as the model wrote it."""
+    fake = FakeProvider({"extract_answer": [f'{{"text": "{text}", "plain": "{plain}"}}']})
+    photo = Image(data=b"\xff\xd8 jpeg bytes", mime_type="image/jpeg")
+    return await make_gateway(fake).call(
+        "extract_answer", {"image": photo, "problem_text": "x"}, MixedText
+    )
+
+
+async def test_AI05_plain_text_fields_are_not_repaired():
+    # Junior's examples from the review of PR #15: a newline before "mid-term" and a tab
+    # before a letter are real text, not lost LaTeX backslashes.
+    result = await call_mixed("x", r"ตารางคะแนน\nmid-term 30%\tx\ty")
+
+    assert result.plain == "ตารางคะแนน\nmid-term 30%\tx\ty"
+
+
+async def test_AI05_math_text_is_repaired_only_inside_dollar_signs():
+    result = await call_mixed(r"1. จงหา $\frac{1}{x}$ และ $\theta$\nmid-term\tx", "x")
+
+    assert result.text == "1. จงหา $\\frac{1}{x}$ และ $\\theta$\nmid-term\tx"
+
+
+async def test_AI05_math_text_without_dollar_signs_is_not_changed():
+    result = await call_mixed(r"ตารางคะแนน\nmid-term 30%", "x")
+
+    assert result.text == "ตารางคะแนน\nmid-term 30%"
+
+
+# --- ai-orchestration.md §2.10 retry backoff (review of PR #15) --------------------------------
+
+
+async def test_ai_orchestration_2_10_retry_waits_backoff_from_config(sleeps: list[float]):
+    backoff = get_settings().ai.gateway.retry_backoff_seconds
+    fake = FakeProvider({"extract_topics_local": [RuntimeError("503"), VALID_TOPICS]})
+
+    await make_gateway(fake).call("extract_topics_local", TOPICS_INPUT, TopicsResult)
+
+    assert sleeps == [backoff]
+
+
+async def test_ai_orchestration_2_10_retry_waits_the_delay_the_provider_asked_for(
+    sleeps: list[float],
+):
+    max_wait = get_settings().ai.gateway.max_retry_wait_seconds
+    rate_limited = ProviderRateLimited("429", retry_after=max_wait / 2)
+    fake = FakeProvider({"extract_topics_local": [rate_limited, VALID_TOPICS]})
+
+    await make_gateway(fake).call("extract_topics_local", TOPICS_INPUT, TopicsResult)
+
+    assert sleeps == [max_wait / 2]
+
+
+async def test_ai_orchestration_2_10_no_retry_when_provider_asks_to_wait_too_long(
+    sleeps: list[float],
+):
+    max_wait = get_settings().ai.gateway.max_retry_wait_seconds
+    rate_limited = ProviderRateLimited("429", retry_after=max_wait + 1)
+    fake = FakeProvider({"extract_topics_local": [rate_limited, VALID_TOPICS]})
+
+    with pytest.raises(AIProviderError, match="429"):
+        await make_gateway(fake).call("extract_topics_local", TOPICS_INPUT, TopicsResult)
+    assert sleeps == []
+    assert len(fake.requests) == 1
+
+
+async def test_ai_orchestration_2_10_no_wait_after_the_last_attempt(sleeps: list[float]):
+    retries = get_settings().ai.gateway.retries
+    fake = FakeProvider({"extract_topics_local": [RuntimeError("503")] * (retries + 1)})
+
+    with pytest.raises(AIProviderError):
+        await make_gateway(fake).call("extract_topics_local", TOPICS_INPUT, TopicsResult)
+    assert len(sleeps) == retries

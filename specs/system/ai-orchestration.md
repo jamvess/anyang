@@ -329,11 +329,11 @@ A5: `pages` เป็นช่วง `"start-end"` ตามป้าย `[p.N]`
 |---|---|
 | `answer` | ส่งเข้า answer checker (2.4) |
 | `question_on_topic` | ตอบจาก grounding แล้วกลับมาที่โจทย์ที่ค้างอยู่ |
-| `question_off_scope` | vector search ไม่พบในเอกสาร บอกว่านอกชีท ตอบสั้น แล้วดึงกลับ |
+| `question_off_scope` | vector search ไม่พบในเอกสาร บอกว่านอกชีท ตอบสั้น ถามว่าอยากเพิ่มเป็นหัวข้อไหม แล้วดึงกลับ (SM-10) · ถ้าตกลง บันทึกเป็น `add_topic` ใน draft ใหม่ของ scope (2.3.6) มีผลตั้งแต่ session ถัดไป เพราะ scope ไม่เปลี่ยนกลาง session (2.2.2) |
 | `command` | เปลี่ยนเรื่อง, พอแค่นี้, ขอยากขึ้น, ดูความคืบหน้า, mute buddy: planner ปรับตาม |
 | `dispute` | user แย้งผลตรวจ (2.4.7) |
 | `teach_back` | user อธิบายให้ buddy ฟัง (2.1) tutor ให้ feedback สั้นๆ ไม่นับเข้า mastery |
-| `off_topic` / `emotion` | buddy ตอบ 1 ประโยค (2.1.8) แล้ว tutor ดึงกลับ |
+| `off_topic` / `emotion` | buddy ตอบ 1 ประโยค (2.1.7) แล้ว tutor ดึงกลับ |
 | `distress` | ตอบด้วย template ที่ดูแลความรู้สึก พร้อมสายด่วนสุขภาพจิต 1323 (2.9) |
 
 ### 2.2.5 Input หลายช่องทาง
@@ -353,11 +353,11 @@ A5: `pages` เป็นช่วง `"start-end"` ตามป้าย `[p.N]`
 
 | Table | Columns หลัก | เขียนเมื่อ |
 |---|---|---|
-| `tutor_sessions` | tenant_id, user_id, exam_prep_id, scope_version, current_topic_id, stage, running_summary, summary, buddy_muted, started_at, ended_at, end_reason | เริ่ม, ทุก turn, จบ |
+| `tutor_sessions` | tenant_id, user_id, exam_prep_id, scope_version_id, current_topic_id, stage, running_summary, summary, buddy_muted, started_at, ended_at, end_reason | เริ่ม, ทุก turn, จบ |
 | `messages` | session_id, role (user / tutor / buddy / card), content, input_mode (text / voice / image), attachment_path, extracted_text, intent | ทุกข้อความ |
 | `problems` | session_id, topic_id, skill_id, source (generated / past_exam / doc), source_ref, text, reference_answer, solution_steps, answer_format, verified, difficulty 1–3, purpose (probe / verify / practice / review) | ก่อนส่งโจทย์ |
 | `attempts` | problem_id, user_id, topic_id, skill_id, answer_text, verdict, is_correct, error_type, first_wrong_line, evidence, method, decided_by, confidence, independent, overridden | ทุกครั้งที่ตอบ |
-| `topic_progress` | user_id, exam_prep_id, topic_id, mastery, level, stage, skill_coverage (jsonb), attempts_n, correct_n, error_counts (jsonb), fail_streak, review_step, next_review_at, parked_reason, last_seen_at | หลัง attempt |
+| `topic_progress` | user_id, exam_prep_id, topic_id, mastery, level, stage, skill_coverage (jsonb), attempts_n, correct_n, error_counts (jsonb), fail_streak, review_step, next_review_at, parked_reason, parked_at, last_seen_at | หลัง attempt |
 
 **Mastery: Bayesian Knowledge Tracing (BKT)** แบบ fixed parameters ซึ่งตรงกับทฤษฎีที่อ้างไว้ใน Proposal บทที่ 2
 
@@ -378,7 +378,7 @@ A5: `pages` เป็นช่วง `"start-end"` ตามป้าย `[p.N]`
 | `check_answer` | mid | เป็นคำตอบ (2.4) |
 | `generate_problem` | mid | directive ต้องการโจทย์ใหม่ที่ไม่ได้มาจากข้อสอบเก่า |
 | `tutor_reply` | main | ทุก turn (stream) รวมฉาก buddy ถ้ามี |
-| `update_running_summary` | small | ทุก 8 turns ทำเบื้องหลังหลังตอบ user แล้ว |
+| `update_running_summary` | small | ทุก 8 turns (`session.context_recent_turns`) ทำเบื้องหลังหลังตอบ user แล้ว |
 
 โดยเฉลี่ย 2–4 calls ต่อ turn ส่วนต้นทุนดูที่ 2.10
 
@@ -490,7 +490,7 @@ Output ที่เก็บลง `attempts` และส่ง SSE `verdict` �
 
 ### 2.4.8 วัดคุณภาพ checker
 
-- Golden set ประมาณ 100 คำตอบ (ลายมือจริงของทีมและเพื่อน) พร้อม label verdict, error_type และ first_wrong_line
+- Golden set: PoC P2 ใช้ 50 คำตอบ (`evals/answers/`) · เป้าก่อน Beta ประมาณ 100 คำตอบ โดยเพิ่มจากเคส dispute (2.4.7) · ลายมือจริงของทีมและเพื่อน พร้อม label verdict, error_type และ first_wrong_line
 - เป้าหมาย: verdict accuracy ≥ 95%, error_type accuracy ≥ 80%, first_wrong_line ≥ 85%
 - รันเป็น test suite ทุกครั้งที่แก้ prompt หรือเปลี่ยน model (2.11)
 
@@ -537,7 +537,7 @@ Output ที่เก็บลง `attempts` และส่ง SSE `verdict` �
 1. **Review due:** สูงสุด 2 ข้อตอนต้น session (หัวข้อละ 1 โจทย์)
 2. **หัวข้อที่ค้างอยู่** จาก session ก่อน: ทำให้จบก่อนเปิดหัวข้อใหม่
 3. **Prerequisite** ที่ถูก push มาจาก Park
-4. **หัวข้อที่ Park ไว้:** กลับมาทำเมื่อผ่านไปอย่างน้อย 1 session
+4. **หัวข้อที่ Park ไว้:** กลับมาทำเมื่อผ่านไปอย่างน้อย 1 session (`park.return_after_sessions`)
 5. **หัวข้อถัดไปตามลำดับที่ตกลงกัน** โดยข้ามหัวข้อที่ mode ปัจจุบันตัดออก
 
 **User override ชนะเสมอ:** "อยากทำสมการกำลังสอง" → ทำทันที (ถ้าเป็นหัวข้อที่ตัดออก tutor บอกก่อน), "ข้ามเรื่องนี้" → Park ด้วย `reason = user_skip`
@@ -554,8 +554,8 @@ Output ที่เก็บลง `attempts` และส่ง SSE `verdict` �
 
 ### 2.5.5 Spaced review
 
-- รอบที่ k ห่าง `round(1 × 2.5^(k−1))` วัน (1, 3, 6, ...) ตามค่าเริ่มต้นของ SM-2
-- ถ้ารอบถัดไปห่างเกิน 20% ของวันที่เหลือก่อนสอบ (Cepeda et al. 2008) ให้หยุดตั้งรอบ แล้วทวนอีกครั้งใน Final mode
+- รอบที่ k ห่าง `round_half_up(1 × 2.5^(k−1))` วัน (1, 3, 6, ...) ตามค่าเริ่มต้นของ SM-2 · ปัดครึ่งขึ้นด้วย `floor(x + 0.5)` ห้ามใช้ `round()` ของ Python ซึ่งปัด 2.5 เป็น 2
+- ถ้ารอบถัดไปห่างเกิน 20% ของวันที่เหลือก่อนสอบ (Cepeda et al. 2008) ให้หยุดตั้งรอบ แล้วทวนอีกครั้งใน Final mode · วันที่เหลือนับ ณ วันที่ตั้งรอบถัดไป ไม่ใช่วันที่หัวข้อผ่าน
 - ตัวอย่าง: ผ่านตอนเหลือ 30 วัน → ทวนวันที่ 1, 4 แล้ว Final mode (รายละเอียด learning-model.md §3)
 - ทวนผิด: ลดระดับเป็น "กำลังดี", reset รอบ และหัวข้อกลับเข้า queue ในลำดับที่ 2
 - รอบที่เลยวันสอบถูกตัดทิ้ง ส่วน Final mode ดึงหัวข้อ ★★★ ทั้งหมดมาทวนรวมกัน
@@ -571,7 +571,7 @@ Output ที่เก็บลง `attempts` และส่ง SSE `verdict` �
 - `planner_decisions` (session_id, mode, decision, reason_code, inputs jsonb) ใช้ debug และตอบคำถามว่า "ทำไมระบบเลือกแบบนี้"
 
 1. นาทีต่อวัน: ถามแบบ optional ใน S08 และเรียนรู้จากการใช้งานจริง
-2. เกณฑ์ ratio 0.8 / 1.2 / ≤ 3 วัน เป็นค่าเริ่มต้น ปรับตอน pilot
+2. เกณฑ์ ratio 0.8 / 1.2 / ≤ 3 วัน (`planner.tight_ratio`, `planner.triage_ratio`, `planner.triage_days_left`) เป็นค่าเริ่มต้น ปรับตอน pilot
 3. Queue ใช้กฎเรียงลำดับ ไม่ใช้สูตรคะแนนรวม
 4. Interleaving เป็น Could
 
@@ -607,14 +607,14 @@ Output ที่เก็บลง `attempts` และส่ง SSE `verdict` �
 
 1. User เปิด buddy และไม่ได้สั่ง mute ใน session นี้
 2. ไม่มีโจทย์ค้างรอคำตอบจาก user
-3. จำนวนครั้งที่แทรกในหัวข้อนี้ยังไม่เกิน quota: ความถี่ต่ำ 1, กลาง 2, สูง 3 (จาก persona) และใน Triage/Final mode หารครึ่ง
-4. ห่างจากการแทรกครั้งก่อนอย่างน้อย 4 user turns
+3. จำนวนครั้งที่แทรกในหัวข้อนี้ยังไม่เกิน quota: ความถี่ต่ำ 1, กลาง 2, สูง 3 (จาก persona · `buddy.quota_per_topic`) และใน Triage/Final mode หารครึ่งแล้วปัดขึ้น (`buddy.halve_quota_in_modes` · ได้ 1/1/2 ความถี่ต่ำยังแทรกได้ 1 ครั้ง)
+4. ห่างจากการแทรกครั้งก่อนอย่างน้อย 4 user turns (`buddy.min_user_turns_between`)
 
 ### 2.1.4 Roles
 
 | Role | Trigger | Seed | ข้อห้าม |
 |---|---|---|---|
-| **ให้กำลังใจ** | `fail_streak ≥ 2` หรือ intent = บ่นเหนื่อย/ท้อ | error ล่าสุดของ user | **ห้ามตอบถูกหรือบอกว่าตัวเองทำได้** (TM-05) |
+| **ให้กำลังใจ** | `fail_streak ≥ buddy.encourage_fail_streak` (2) หรือ intent = บ่นเหนื่อย/ท้อ | error ล่าสุดของ user | **ห้ามตอบถูกหรือบอกว่าตัวเองทำได้** (TM-05) |
 | **ขอให้สอน** (protégé effect) | หัวข้อเพิ่ง Done | skill ที่ยากที่สุดในหัวข้อ | ถามได้ไม่เกิน 1 ครั้งต่อหัวข้อ |
 | **ถามแทน** | Teach จบ และ skill นี้มี trap ที่ user ยังไม่เจอ | `trap` จากข้อสอบเก่า | ต้องเป็นคำถาม ไม่ใช่เฉลย |
 | **ตอบผิดให้ดู** | Practice + user ตอบถูกข้อล่าสุด + skill มี common mistake ที่ user ยังไม่เคยทำผิด | `common_mistakes` | tutor ต้องแก้ในฉากเดียวกันเสมอ ห้ามปล่อยคำตอบผิดค้างไว้ |
@@ -623,12 +623,14 @@ Output ที่เก็บลง `attempts` และส่ง SSE `verdict` �
 
 ### 2.1.5 Pseudocode (feature spec สำหรับ SDD)
 
+ตัวเลขทุกตัวอ่านจาก `config/learning.yaml` (`cfg = learning.buddy`) ห้าม hard-code
+
 ```
-def buddy_decide(s: TurnState) -> BuddyScene | None:
+def buddy_decide(s: TurnState, cfg: BuddyConfig) -> BuddyScene | None:
     if not s.buddy.enabled or s.buddy.muted: return None
     if s.problem_pending: return None
-    if s.buddy_count[s.topic] >= quota(s.buddy.frequency, s.mode): return None
-    if s.turns_since_buddy < 4: return None
+    if s.buddy_count[s.topic] >= quota(cfg, s.buddy.frequency, s.mode): return None
+    if s.turns_since_buddy < cfg.min_user_turns_between: return None
     for role in (ENCOURAGE, TEACH_BACK, ASK_TRAP, WRONG_DEMO):
         seed = role.match(s)          # คืน None ถ้า trigger ไม่ตรง
         if seed: return BuddyScene(role, seed)
@@ -669,7 +671,7 @@ directive: { "buddy_scene": { "role": "ask_trap",
 
 - **ประกอบใหม่จาก DB ทุก turn** (10 layers ใน 2.2.3) Cloud Run ไม่เก็บ state ใน memory การออกจากห้องแล้วกลับมาต่อ (TM-13) จึงทำได้ตามธรรมชาติ
 - **เรียงเพื่อ prompt caching:** static (system, source policy, persona) → semi-static (scope snapshot, grounding ของหัวข้อ) → dynamic (performance, directive, conversation, input) prefix ที่ไม่เปลี่ยนจะถูก cache ทั้งฝั่ง Gemini และ Claude ทำให้ถูกและเร็วขึ้น
-- **Rolling window:** เก็บ 8 turns ล่าสุดแบบเต็ม ส่วนที่เก่ากว่ารวมเป็น `running_summary` ด้วย small model ทุก 8 turns (ทำเบื้องหลัง) summary เก็บสิ่งที่สอนไปแล้ว และสิ่งที่ user บอกว่าชอบ เช่น "ชอบให้ยกตัวอย่างก่อน"
+- **Rolling window:** เก็บ 8 turns ล่าสุดแบบเต็ม ส่วนที่เก่ากว่ารวมเป็น `running_summary` ด้วย small model ทุก 8 turns (ทำเบื้องหลัง · ใช้ `session.context_recent_turns` ตัวเดียวกับขนาด window เพราะสรุปเมื่อ turn หลุดจาก window) summary เก็บสิ่งที่สอนไปแล้ว และสิ่งที่ user บอกว่าชอบ เช่น "ชอบให้ยกตัวอย่างก่อน"
 - **Token budget 6,000:** ถ้าเกิน ตัด turns เก่าก่อน แล้วลด chunks จาก 4 เหลือ 2 **ห้ามตัด layer 1–6**
 - **ความจำข้าม session:** ใช้ `tutor_sessions.summary` ของ session ล่าสุด + ข้อมูลใน `topic_progress`
 
@@ -719,7 +721,7 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 **Output**
 
 - Schema validation (Pydantic) ทุก structured call ไม่ผ่านให้ retry 1 ครั้งพร้อม error message ถ้ายังไม่ผ่านให้ degrade
-- **ซ่อม backslash ของ LaTeX ก่อน validate:** model มักลืม escape `\` ใน JSON ทำให้ `\frac` `\beta` `\theta` `\right` `\neq` ถูก parse เป็นตัวอักษรควบคุม (form feed + `rac`) และยังผ่าน schema แบบเงียบๆ (เจอใน PoC P1) · gateway จึงเปลี่ยนกลับเป็น `\` ใน string ทุกตัวหลัง parse JSON: form feed/backspace ทุกครั้ง · tab/CR ที่มีตัวอักษรตามหลัง · newline เฉพาะเมื่อตามด้วยชื่อคำสั่งเต็มคำ (`neq` `nabla` `notin` ...) · ไม่ซ่อม `\ne` `\ni` `\nu` `\not` เพราะชนกับบรรทัดที่ขึ้นต้นด้วย `e^{x}` `i)` `u =` หรือคำว่า not (ข้อความ PyMuPDF ของชีท MTH10101 ชน 296 จุด) · newline และ tab ทั่วไปไม่แตะ · คำสั่งที่ไม่ใช่ escape ของ JSON (เช่น `\lim`) ทำให้ parse ไม่ผ่าน จึงเข้า retry ตามข้อบน
+- **ซ่อม backslash ของ LaTeX เฉพาะ field ที่เป็นสูตร:** model มักลืม escape `\` ใน JSON ทำให้ `\frac` `\beta` `\theta` `\right` `\neq` ถูก parse เป็นตัวอักษรควบคุม (form feed + `rac`) และยังผ่าน schema แบบเงียบๆ (เจอใน PoC P1) · ซ่อมด้วย type ของ field ใน output model (`app/ai/latex.py`) ไม่ซ่อมทุก string เพราะข้อความธรรมดามี newline และ tab จริง (review ของ PR #15: newline ก่อน `mid-term` ถูกแก้ผิด): `LatexStr` = ทั้ง string เป็น LaTeX (`AnswerLine.latex`, `latex_blocks`) · `MathTextStr` = ข้อความปนสูตร ซ่อมเฉพาะใน `$...$` และ `$$...$$` (`text` ของ A2, A2b, A4) · กฎการซ่อม: form feed/backspace ทุกครั้ง · tab/CR ที่มีตัวอักษรตามหลัง · newline เฉพาะเมื่อตามด้วยชื่อคำสั่งเต็มคำ (`neq` `nabla` `notin` ...) · ไม่ซ่อม `\ne` `\ni` `\nu` `\not` เพราะชนกับบรรทัดที่ขึ้นต้นด้วย `e^{x}` `i)` `u =` หรือคำว่า not (ข้อความ PyMuPDF ของชีท MTH10101 ชน 296 จุด) · newline และ tab ทั่วไปไม่แตะ · คำสั่งที่ไม่ใช่ escape ของ JSON (เช่น `\lim`) ทำให้ parse ไม่ผ่าน จึงเข้า retry ตามข้อบน
 - **Answer-leak check:** ถ้า tutor reply มี `reference_answer` ของโจทย์ที่ยังค้างอยู่ (ตรวจด้วย string match และ SymPy) ให้ generate ใหม่ เป็นการบังคับกฎ "ไม่เฉลยก่อนตอบ" แบบ deterministic
 - กฎของ buddy บังคับด้วย code (2.1)
 
@@ -728,19 +730,20 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 - RLS ตาม `tenant_id` (3.4)
 - Prompt ไม่มีข้อมูลของ user อื่น สถิติ common mistakes ใช้แบบ aggregate เท่านั้น
 - ส่งเฉพาะชื่อเล่นให้ LLM ไม่ส่งอีเมลหรือข้อมูลส่วนตัวอื่น
+- ตั้งแต่ Beta ทุก tier ต้องใช้ provider ที่ไม่นำข้อมูลไป train (Vertex AI แบบเสียเงิน) · free tier ใช้ได้เฉพาะ PoC กับข้อมูลที่เจ้าของให้ consent แล้ว (AI-07)
 
 ## 2.10 Model routing, cost และ fallback
 
 | Tier | Purposes | Primary (Vertex AI) | Fallback |
 |---|---|---|---|
-| small | route_intent, classify_material, split_past_exam, map_questions, normalize_math, persona_extract, summaries | Gemini รุ่นเล็ก | Claude Haiku |
+| small | route_intent, classify_material, split_past_exam, map_questions, normalize_math, persona_extract, persona_preview, latex_to_speech, summaries (update_running_summary, session_summary) | Gemini รุ่นเล็ก | Claude Haiku |
 | mid | check_answer, generate_problem, extract_topics_local, scope_edit | Gemini รุ่นกลาง | Claude Haiku |
 | main | tutor_reply (+ buddy scene), merge_topics, dispute re-check | Gemini รุ่นกลางหรือใหญ่ (เลือกจาก spike) | Claude Sonnet |
-| vision | vision_extract, extract_answer | Gemini รุ่นกลาง | Mathpix (ถ้า OCR < 80% ใน PoC P1) |
-| embed | ingest, คำถามอิสระ | เลือกจาก spike (OI-04) | — |
+| vision | vision_extract, vision_extract_pages, extract_answer | Gemini รุ่นกลาง | Mathpix (ถ้า OCR < 80% ใน PoC P1) |
+| embed | ingest, คำถามอิสระ | เลือกจาก spike ใน PoC P3 (3.6) | — |
 
 - **Config อยู่ใน YAML ใน repo** (purpose → tier, model, temperature, max_tokens, timeout, fallback, prompt_version) เปลี่ยน model ได้โดยไม่แก้ code
-- **Fallback chain:** retry 1 ครั้ง (backoff) → provider สำรองใน tier เดียวกัน → degrade (checker: ใช้ผล SymPy อย่างเดียวไม่มี error_type, tutor: ข้อความ template "ระบบช้า ลองส่งอีกทีนะ", STT: ให้พิมพ์แทน)
+- **Fallback chain:** retry 1 ครั้ง (backoff: รอตามที่ provider ขอ เช่น `retryDelay` ของ Gemini 429 ถ้าไม่บอกรอ `gateway.retry_backoff_seconds` · ถ้าต้องรอเกิน `gateway.max_retry_wait_seconds` ไม่ retry เพราะรอนานกลาง turn แย่กว่าล้มทันที) → provider สำรองใน tier เดียวกัน → degrade (checker: ใช้ผล SymPy อย่างเดียวไม่มี error_type, tutor: ข้อความ template "ระบบช้า ลองส่งอีกทีนะ", STT: ให้พิมพ์แทน)
 - **Circuit breaker:** ใช้ค่า default ของ Resilience4j คือ error ≥ 50% จากอย่างน้อย 10 calls ให้ route ไป fallback 60 วินาที แล้วลองกลับ
 - **ควบคุมต้นทุน:** quota token ต่อ user/วัน และต่อ tenant (ผูกกับ plan), prompt caching, ข้าม router เมื่อส่งรูป, cache TTS, embed เฉพาะตอน ingest
 - **เป้าหมาย:** ต้นทุน ≤ 5 บาทต่อ session 45 นาที และ TTFT p95 < 2 วินาที (ตัวเลขประมาณการ วัดจริงใน PoC)
@@ -773,7 +776,7 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 | A6 | `merge_topics` | 2.3 | main | หัวข้อกลาง + ลำดับ + prereqs + skills + common_mistakes |
 | A7 | `map_questions` | 2.3 | small | topic_id, skill_id, trap ต่อข้อ |
 | A8 | `scope_edit` | 2.3 | mid | reply + actions |
-| T1 | `route_intent` | 2.2 | small | intent (8 ประเภท) |
+| T1 | `route_intent` | 2.2 | small | intent (9 ประเภท ตาม 2.2.4) |
 | T2 | `extract_answer` | 2.2 | vision | คำตอบรายบรรทัด LaTeX + confidence |
 | T3 | `normalize_math` | 2.4 | small | LaTeX รายบรรทัด |
 | T4 | `check_answer` | 2.4 | mid | error_type, evidence, method (+ verdict ถ้าไม่มี SymPy) |
@@ -797,6 +800,7 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 | `tenants` | type (personal / organization), name, plan, quota_tokens_day, status | 3.4 |
 | `org_units` | tenant_id, parent_id, name (schema มีแล้ว ยังไม่มี UI ใน v1) | 3.4 |
 | `memberships` | user_id, tenant_id, org_unit_id, role | 3.4 |
+| `profiles` | user_id, nickname, education_level, explain_language | 2.2, 2.7 |
 | `tutor_profiles`, `buddy_profiles` | user_id, description_raw, params, version, enabled (buddy) | 2.7 |
 | `exam_preps` | subject, exam_date, daily_minutes, active_scope_version_id | 2.3, 2.5 |
 | `materials` | exam_prep_id, storage_path, kind, kind_confidence, kind_confirmed, user_note, relevance_weight, status, error | 2.3 |
@@ -818,7 +822,7 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 | `planner_decisions` | session_id, mode, decision, reason_code, inputs | 2.5 |
 | `buddy_events` | session_id, topic_id, role, trigger, seed, message_id | 2.1 |
 | `checker_disagreements` | attempt_id, sympy_result, llm_result | 2.4 |
-| `golden_answers` | image_path, lines, label_verdict, label_error_type, label_line | 2.4, 2.11 |
+| `golden_answers` | image_path, lines, label_verdict, label_error_type, label_line · **เทอม 2** (เก็บเคส dispute ตาม 2.4.7) ยังไม่อยู่ใน migration · v1 เก็บ golden set เป็นไฟล์ใน `evals/` | 2.4, 2.11 |
 | `ai_calls` | ดู 2.11 | 2.11 |
 
 ## 3.3 SSE events
@@ -869,9 +873,76 @@ Target user ของ v1 คือนักเรียนรายคน แต
 | Vision LLM อ่านลายมือคณิตได้แม่นพอ | ≥ 80% ของบรรทัด | P1 อ่านลายมือ (50 รูป, เทียบ Gemini / Claude / Mathpix) |
 | OCR confidence ใช้แยกบรรทัดที่อ่านผิดได้ | threshold 0.8 | P1 |
 | Topic extraction ตรงกับที่คนทำ | หัวข้อ ≥ 80%, ★★★ ≥ 80%, ≤ 3 นาที/ไฟล์ | P3 เอกสาร → หัวข้อ + ดาว |
-| Embedding model สำหรับภาษาไทย | ยังไม่เลือก (OI-04) | P3 |
+| Embedding model สำหรับภาษาไทย | ยังไม่เลือก | P3 (ลอง 2–3 ตัวกับคำถาม 20 ข้อ) |
 | Checker แม่นตามเป้า | verdict ≥ 95%, error_type ≥ 80% | P2 Answer checker |
 | TTFT และต้นทุน | < 2 วินาที, ≤ 5 บาท/session | P4 Tutor loop + P7 AI gateway |
 | Fallback ทำงาน | สลับอัตโนมัติ, log ครบ | P7 |
 | STT ภาษาไทยปนคณิต | word error rate ≤ 15% เมื่อใช้ phrase hints | P5 Voice |
 | BKT params, ratio ของ planner, quota buddy | ตามเอกสารนี้ | ปรับตอน Alpha/Beta |
+
+## 3.7 Requirement → section
+
+ใช้ไล่ว่า requirement แต่ละข้อใน `specs/requirements/requirements.md` ถูกออกแบบไว้ที่ไหน (กลุ่ม SM, TM, AM, PM, AI ที่ยังใช้อยู่) · "นอก AI flow" = เป็นงานหน้าเว็บหรือ API ล้วน ดู spec อื่น · ⚠️ = spec ยังไม่ครอบคลุมทั้งข้อ
+
+ไม่อยู่ในตาราง: SM-05, PM-07 (deferred) · AM-10 (obsolete)
+
+| Req | Section | หมายเหตุ |
+|---|---|---|
+| SM-01 | 1.4, 2.3.4 | |
+| SM-02 | 2.3.4 (5b), 2.3.7 A6 `prereqs` | |
+| SM-03 | 2.3.5, learning-model §2 | |
+| SM-04 | 2.3.7 A6 `sources`, 2.3.8 (API 8) | |
+| SM-06 | 2.3.6, 2.8 | พูดผ่าน STT ลงช่องพิมพ์เหมือนห้องติว |
+| SM-07 | 2.3.6 (`scope_patch`) | |
+| SM-08 | 2.3.2 (ขั้น 7), 2.3.8 (API 10–11) | |
+| SM-09 | 2.3.2 (ขั้น 7), 2.2.2 | |
+| SM-10 | 1.4, 2.2.4 (`question_off_scope`) | |
+| SM-11 | 1.4 | |
+| SM-12 | 2.3.4, 2.3.6 | |
+| TM-01 | 2.5 | |
+| TM-02 | 2.5.1 (`reason_code`), 2.5.6 | |
+| TM-03 | 2.2.4 (Probe) | |
+| TM-04 | 2.2.4 | |
+| TM-05 | 2.1 | |
+| TM-06 | 2.2.5 | ไม่มีปุ่ม choice เป็นงาน UI |
+| TM-07 | 2.2.5, 2.8 | |
+| TM-08 | นอก AI flow | KaTeX ฝั่งหน้าเว็บ · 2.2.8 การ์ดโจทย์ |
+| TM-09 | 2.8 | |
+| TM-10 | — | ⚠️ ยังไม่มี spec: ตอบไม่ตรงคำถามแล้วถามกลับให้แคบลง · ออกแบบใน feature spec ห้องติว (S3) |
+| TM-11 | 2.2.2 | |
+| TM-12 | 2.2.9 | |
+| TM-13 | 1.3 (P8), 2.6 | |
+| TM-14 | 2.2.4 | ให้โจทย์ทีละข้อ ไม่มี flow ที่สร้าง mock exam |
+| TM-15 | 2.2.2 | |
+| TM-16 | 2.2.4 (Done), learning-model §4 | |
+| TM-17 | 2.5.5, learning-model §3 | |
+| TM-18 | 2.5.2, learning-model §6 | |
+| TM-19 | 2.2.4 (Park), 2.5.3, learning-model §7 | |
+| TM-20 | นอก AI flow | `specs/features/tutor/chat-room-ui.md`, `specs/features/tutor/chat-streaming.md` · 2.1.6 แยก speaker |
+| TM-21 | 2.9 (Limits) | ค่าจาก `config/ai.yaml` → `guards` |
+| AM-01 | 2.2.5 (`extract_answer`), 3.6 (P1) | |
+| AM-02 | 2.2.5 | |
+| AM-03 | 2.11 (quality signals) | |
+| AM-04 | 2.4.3 | |
+| AM-05 | 2.4.3 (first wrong line) | |
+| AM-06 | 1.5, 2.4.4 | |
+| AM-07 | 2.2.4 (Teach) | |
+| AM-08 | 2.2.4 (Verify) | |
+| AM-09 | 1.4, 2.2.4 | |
+| AM-11 | 2.2.4 (ที่มาของโจทย์), 2.4.6 | |
+| AM-12 | 2.4.7 | |
+| AM-13 | 2.9 (Output) | |
+| PM-01 | 2.2.6 (`attempts`) | |
+| PM-02 | 2.2.6, learning-model §1 | |
+| PM-03 | 2.2.2, learning-model §5 | |
+| PM-04 | นอก AI flow | หน้า home · ข้อมูลจาก `GET /exam-preps/{id}/progress` (2.2.8) |
+| PM-05 | 2.2.9 | |
+| PM-06 | 2.2.6 (`topic_progress` แยกตาม `exam_prep_id`) | |
+| AI-01 | 1.3 (P7), 2.6–2.11 | |
+| AI-02 | 2.10 | |
+| AI-03 | 1.3 (P7) | |
+| AI-04 | 2.11 (`ai_calls`) | |
+| AI-05 | 2.9 (Output) | |
+| AI-06 | 2.6 | |
+| AI-07 | 2.9 (Data), 2.10 | |
+| AI-08 | 2.3.3 (Embed) | |

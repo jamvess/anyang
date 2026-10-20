@@ -13,6 +13,8 @@ from typing import Annotated, Literal, Self
 
 from pydantic import AfterValidator, BaseModel, Field, model_validator
 
+from app.ai.latex import LatexStr, MathTextStr
+
 # prompts/extract_topics_local/v1.md rule 8 · prompts/merge_topics/v1.md rule 6
 MAX_PREREQS = 3
 
@@ -60,14 +62,14 @@ QuestionNo = Annotated[str, AfterValidator(_q_no)]
 
 
 class VisionExtractResult(BaseModel):
-    text: str
-    latex_blocks: list[str]
+    text: MathTextStr
+    latex_blocks: list[LatexStr]
     notes: str = ""
 
 
 class PageText(BaseModel):
     page: int = Field(ge=1)
-    text: str
+    text: MathTextStr
 
 
 class VisionExtractPagesResult(BaseModel):
@@ -89,7 +91,7 @@ class VisionExtractPagesResult(BaseModel):
 
 class PastExamQuestion(BaseModel):
     q_no: QuestionNo
-    text: str = Field(min_length=1)
+    text: MathTextStr = Field(min_length=1)
     page: int = Field(ge=1)
     points: float | None
 
@@ -224,7 +226,7 @@ class MapQuestionsResult(BaseModel):
 
 
 class AnswerLine(BaseModel):
-    latex: str
+    latex: LatexStr
     confidence: float = Field(ge=0, le=1)
 
 

@@ -67,7 +67,7 @@ describe("Composer", () => {
     { delta: -1, allowed: true },
     { delta: 0, allowed: true },
     { delta: 1, allowed: false },
-  ])("TM06 text of max_message_chars $delta chars: allowed=$allowed", ({ delta, allowed }) => {
+  ])("TM21 text of max_message_chars $delta chars: allowed=$allowed", ({ delta, allowed }) => {
     const { input, send, queryByText } = setup();
     const max = limits.max_message_chars;
 
@@ -120,7 +120,7 @@ describe("Composer", () => {
     expect(send.disabled).toBe(true);
   });
 
-  it("TM06 does not attach a file that is not an image and says only photos are allowed", () => {
+  it("TM21 does not attach a file that is not an image and says only photos are allowed", () => {
     const { file, send, queryByText, getByText } = setup();
 
     fireEvent.change(file, {
@@ -136,7 +136,7 @@ describe("Composer", () => {
     { delta: -1, allowed: true },
     { delta: 0, allowed: true },
     { delta: 1, allowed: false },
-  ])("TM06 photo of max_image_mb $delta bytes: allowed=$allowed", ({ delta, allowed }) => {
+  ])("TM21 photo of max_image_mb $delta bytes: allowed=$allowed", ({ delta, allowed }) => {
     const { file, queryByText } = setup();
     const max = limits.max_image_mb;
 

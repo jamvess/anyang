@@ -16,6 +16,7 @@ from app.models.scope_ai import (
     MapQuestionsResult,
     MergeTopicsResult,
     SplitPastExamResult,
+    VisionExtractPagesResult,
     VisionExtractResult,
 )
 from app.settings import get_settings
@@ -266,3 +267,40 @@ def test_AM01_extract_answer_confidence_is_between_0_and_1(confidence: float):
 
 def test_AM01_extract_answer_accepts_empty_photo():
     assert ExtractAnswerResult.model_validate({"lines": [], "notes": "blank"}).lines == []
+
+
+# --- AI-05 which fields repair lost LaTeX backslashes (review of PR #15) ----------------------
+# "\x0c" is the form feed JSON makes from an unescaped "\frac".
+
+
+def test_AI05_extract_answer_latex_is_repaired_but_notes_are_not():
+    result = ExtractAnswerResult.model_validate(
+        {"lines": [{"latex": "\x0crac{1}{x}", "confidence": 0.9}], "notes": "line\nmid-term"}
+    )
+
+    assert result.lines[0].latex == "\\frac{1}{x}"
+    assert result.notes == "line\nmid-term"
+
+
+def test_AI05_vision_extract_repairs_latex_blocks_and_math_in_text():
+    result = VisionExtractResult.model_validate(
+        {
+            "text": "ตารางคะแนน\nmid-term · จงหา $\x0crac{1}{2}$",
+            "latex_blocks": ["\x0crac{1}{2}"],
+        }
+    )
+
+    assert result.latex_blocks == ["\\frac{1}{2}"]
+    assert result.text == "ตารางคะแนน\nmid-term · จงหา $\\frac{1}{2}$"
+
+
+def test_AI05_scanned_pages_and_exam_questions_repair_math_in_text():
+    pages = VisionExtractPagesResult.model_validate(
+        {"pages": [{"page": 1, "text": "ข้อ 1\n$\x0crac{2}{x}$"}]}
+    )
+    exam = SplitPastExamResult.model_validate(
+        {"questions": [{"q_no": "1", "text": "จงหา $\x0crac{1}{x}$", "page": 1, "points": None}]}
+    )
+
+    assert pages.pages[0].text == "ข้อ 1\n$\\frac{2}{x}$"
+    assert exam.questions[0].text == "จงหา $\\frac{1}{x}$"
