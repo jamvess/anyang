@@ -1,0 +1,39 @@
+# เปิด branch protection ของ main
+
+| | |
+|---|---|
+| Owner | Jam |
+| Branch | `chore/enable-branch-protection` |
+| Checklist item | ⭐ สร้าง repo, วาง starter files · branch protection ยังไม่ได้ตั้ง (ruleset 25137368 หายไป ตรวจ 19 ต.ค. · ruleset ใหม่ main id 25374094 ยังปิดอยู่ ตามที่ Jam ขอเลื่อน) · Jam จะตั้งใหม่ · repo เป็น public |
+| Status | in progress · 2026-10-20 |
+
+## Plan
+
+- [x] 1. 🤖 ตรวจ ruleset 25374094 และ CI · ตั้งค่าครบแล้วแต่ `enforcement: disabled`: ห้ามลบ branch, ห้าม force push, ต้องผ่าน PR และ approve 1 คน, ต้องผ่าน check `api`, `api-integration`, `web` · ไม่มี bypass · `ci.yml` รันทุก PR ไม่มี path filter และ 6 รอบล่าสุดผ่านหมด
+- [ ] 2. 🙋 Jam บอกทีมในกลุ่มก่อนเปิด (ข้อความร่างใน worklog ขั้นนี้)
+- [ ] 3. 🙋 Jam เปิด ruleset ใน GitHub (Settings → Rules → Rulesets → main → Enforcement status = Active → Save changes) หรือสั่งให้ Claude รัน `gh api`
+- [ ] 4. 🤖 ตรวจว่าเปิดจริง: `enforcement: active` และ PR ที่ยังไม่มี approve ขึ้นว่า merge ไม่ได้
+- [ ] 5. 🤖 อัปเดตบรรทัด branch protection ใน `docs/team/sprint-checklists.md` แล้ว `/work-done`
+
+## Definition of done
+
+- ruleset `main` เป็น Active · merge เข้า `main` ต้องมี approve 1 คนและ CI ผ่าน 3 check
+- ทีมรู้ก่อนเปิด
+- checklist อัปเดตแล้ว
+
+## Decisions
+
+- 2026-10-20 · เริ่มงานนี้เพราะ PR #31 และ #33 ถูก merge โดยไม่มี review ทั้งที่ขั้นตอนของทีมต้องรอ Approve
+- 2026-10-20 · ใช้ ruleset 25374094 ที่ตั้งไว้แล้ว ไม่สร้างใหม่ · branch protection เป็นหน้าที่ของ Junior ตาม `roles.md` แต่ Jam เป็นเจ้าของ repo จึงเป็นคนเปิด
+
+## Next step
+
+ขั้น 2: Jam ส่งข้อความในกลุ่มบอกว่าจะเปิด branch protection
+
+## Waiting on
+
+Jam (ขั้น 2–3)
+
+## Notes for next time
+
+- `poc/` ขึ้นเป็น untracked บน branch นี้ (คือ `out/` และ `results/` ของ P1) · ห้าม commit
