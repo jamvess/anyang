@@ -20,7 +20,7 @@
 
 ### S1 · 5–16 ต.ค.
 
-- [x] ⭐ สร้าง repo, วาง starter files · branch protection ยังไม่ได้ตั้ง (ruleset 25137368 หายไป ตรวจ 19 ต.ค. · ruleset ใหม่ main id 25374094 ยังปิดอยู่ ตามที่ Jam ขอเลื่อน) · Jam จะตั้งใหม่ · repo เป็น public
+- [x] ⭐ สร้าง repo, วาง starter files · branch protection เปิดแล้ว 20 ต.ค. (ruleset `main` id 25374094 · ต้อง approve 1 คน + CI `api`, `api-integration`, `web` ผ่าน · ห้าม force push และลบ branch · ไม่มี bypass) · repo เป็น public
 - [x] ⭐ ให้ Claude Code scaffold `apps/api` และตรวจผล
 - [x] ⭐ `npx supabase init` + `db push` `0001_init.sql` ขึ้น Supabase cloud `anyang-dev` + เปิด custom access token hook
 - [x] GitHub Actions รันครบ 3 job และเขียวบน `main`

@@ -13,7 +13,7 @@
 - [x] 2. 🙋 Jam บอกทีมในกลุ่มก่อนเปิด (ข้อความร่างใน worklog ขั้นนี้)
 - [x] 3. 🙋 Jam เปิด ruleset ใน GitHub (Settings → Rules → Rulesets → main → Enforcement status = Active → Save changes) หรือสั่งให้ Claude รัน `gh api`
 - [x] 4. 🤖 ตรวจว่าเปิดจริง: `enforcement: active` และ PR ที่ยังไม่มี approve ขึ้นว่า merge ไม่ได้
-- [ ] 5. 🤖 อัปเดตบรรทัด branch protection ใน `docs/team/sprint-checklists.md` แล้ว `/work-done`
+- [x] 5. 🤖 อัปเดตบรรทัด branch protection ใน `docs/team/sprint-checklists.md` แล้ว `/work-done`
 
 ## Definition of done
 
@@ -29,7 +29,7 @@
 
 ## Next step
 
-ขั้น 5: อัปเดตบรรทัด branch protection ใน `docs/team/sprint-checklists.md` (S1 ⭐ ข้อแรก) แล้ว `/work-done` · PR นี้ต้องรอ Junior หรือ May approve ก่อน merge
+`/work-done` · reviewer Junior · PR นี้ต้องรอ approve ก่อน merge
 
 ## Waiting on
 
@@ -38,5 +38,4 @@
 ## Notes for next time
 
 - `poc/` ขึ้นเป็น untracked บน branch นี้ (คือ `out/` และ `results/` ของ P1) · ห้าม commit
-- Junior review PR #15 (20 ต.ค. 11:24): ต้องแก้ 2 จุดบน `poc/P3` ก่อน merge: (1) retry ไม่มี backoff (2) `repair_unescaped_latex` แก้ทุก string รวมข้อความไทย/อังกฤษ เช่น `
-mid-term` · Junior เสนอซ่อมเฉพาะ field LaTeX (`AnswerLine.latex`, `latex_blocks`) · ไม่ block: license PyMuPDF (AGPL) ให้ทีมคุย
+- Junior review PR #15 (20 ต.ค. 11:24): ต้องแก้ 2 จุดบน `poc/P3` ก่อน merge: (1) retry ไม่มี backoff (2) `repair_unescaped_latex` แก้ทุก string รวมข้อความไทย/อังกฤษ เช่น newline ก่อน `mid-term` · Junior เสนอซ่อมเฉพาะ field LaTeX (`AnswerLine.latex`, `latex_blocks`) · ไม่ block: license PyMuPDF (AGPL) ให้ทีมคุย
