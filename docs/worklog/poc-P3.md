@@ -5,9 +5,14 @@
 | Owner | Jam |
 | Branch | `poc/P3` |
 | Checklist item | P3: ingest → A5 → A6 → A7 → `compute_importance` · เทียบกับ label · ลอง embedding 2–3 ตัวกับคำถาม 20 ข้อ |
-| Status | in progress · 2026-10-20 |
+| Status | paused · 2026-10-20 |
 
-## Done today (2026-10-19)
+## Done today (2026-10-20)
+
+- แก้ gateway ให้ซ่อม LaTeX ที่ model ลืม escape (`repair_unescaped_latex` · test 6 ตัว · bullet ใหม่ใน `ai-orchestration.md` §Output) · merge เข้า `poc/P1` แล้ว
+- ตรวจ cache ของ P3 แล้วไม่มีจุดเสีย จึงรัน A7 ได้เลยโดยไม่ต้องซ่อม
+
+## Done (2026-10-19)
 
 - Junior OK ให้ Jam เขียน gateway lite · ได้ `ai.call()` + fake/Gemini provider + thinking level + รับ input เป็น list ของรูป · test ของ api เขียว 78 ตัว (รวม model ของ output flow 2.3 ทั้งหมด)
 - prompt v1: vision_extract, vision_extract_pages, split_past_exam, merge_topics, map_questions · โค้ด PoC ครบ: `poc/P3/{common,ingest,run,stars,score}.py` + README · test ของ PoC 12 ตัว · ทดสอบครบวงจรด้วย fake provider ผ่าน
@@ -81,7 +86,7 @@ merge `poc/P3` เข้า `poc/P1` (gateway ที่ซ่อม escape แ�
 
 ## Waiting on
 
-โควตา free tier ของ gemini-3.5-flash รีเซ็ต 2026-10-20 ≈ 14:00 น.
+โควตา free tier ของ gemini-3.5-flash รีเซ็ต 2026-10-20 ≈ 14:00 น. · Junior review การแก้ gateway (PR #15)
 
 ## Notes for next time
 
