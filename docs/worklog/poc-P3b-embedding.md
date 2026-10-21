@@ -67,6 +67,8 @@ spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผล�
 
 - 2026-10-21 · Junior comment ใน #39 แล้ว (ส่วน apps/api + config/ai.yaml OK · ตกลง 3 ข้อ) · Junior แก้ `data-model.md` บรรทัด 362–363 ใน PR #54 (มิติ 768 + HNSW cosine ยืนยันแล้ว) · Jam approve #54 แล้ว (nit: backtick หาย ไม่บล็อก)
 
+- 2026-10-21 · (Jam ok) `config/ai.yaml` `embedding.dimensions: 768` ใส่ใน PR นี้ (PR #60 ใส่ไม่ได้เพราะ section `embedding` ยังไม่อยู่บน main) · แก้ test 2 จุดให้ไม่ขึ้นกับค่าใน ai.yaml: `make_gateway` ตั้ง `dimensions=None` เป็นค่าเริ่มต้น + test แบ่ง batch ใส่ `"dimensions": None` · assert ทุกตัวเหมือนเดิม · `embed.py`: model API ใช้ `--dimensions` ไม่งั้นใช้ค่าใน ai.yaml, model ในเครื่องใช้ขนาดของตัวเอง, ชื่อ cache/ผลมีขนาดเสมอ (ผล 3072 รอบแรกยังชื่อเดิม) · api 172 · PoC 25 ผ่าน
+
 ## Next step
 
 1. Junior ตกลงส่วน `apps/api/` แล้ว (ดู Decisions 21 ต.ค.) ไม่ต้องแก้โค้ด

@@ -2,13 +2,16 @@
 
     cd apps/api
     uv run python ../../poc/P3/chunking.py                                     # out/chunks.json
-    uv run python ../../poc/P3/embed.py --model gemini:gemini-embedding-2
-    uv run python ../../poc/P3/embed.py --model gemini:gemini-embedding-001
+    uv run python ../../poc/P3/embed.py --model gemini:gemini-embedding-2      # 768 (ai.yaml)
+    uv run python ../../poc/P3/embed.py --model gemini:gemini-embedding-2 --dimensions 3072
     uv run --with sentence-transformers python ../../poc/P3/embed.py --model local:BAAI/bge-m3
 
-Every embedding goes through ``Gateway.embed`` (AI-01). Chunk vectors are cached per model in
-out/embed/<model>/ next to each chunk's content_hash (AI-08), so a rerun only embeds new text.
-Results (recall, dimensions, time; question ids only) go to results/embed-<model>.json.
+Every embedding goes through ``Gateway.embed`` (AI-01). Chunk vectors are cached per model and
+size in out/embed/<model>-d<size>/ next to each chunk's content_hash (AI-08), so a rerun only
+embeds new text. An API model uses --dimensions, else embedding.dimensions of config/ai.yaml; a
+local model keeps its own size. Results (recall, dimensions, time; question ids only) go to
+results/embed-<model>-d<size>.json. The first 3072 run (21 Oct) predates the size in the name:
+results/embed-gemini_gemini-embedding-2.json.
 """
 
 import argparse
@@ -141,10 +144,15 @@ async def main(model: str, questions_path: Path, dimensions: int | None) -> None
             update={"embedding": config.embedding.model_copy(update={"timeout_s": LOCAL_TIMEOUT_S})}
         )
         await asyncio.to_thread(local.load, model.partition(":")[2])
-    if dimensions:
-        config = config.model_copy(
-            update={"embedding": config.embedding.model_copy(update={"dimensions": dimensions})}
-        )
+    # A local model has one fixed size; an API model takes --dimensions, else config/ai.yaml.
+    # The size goes into the cache name so vectors of different sizes never mix.
+    if not model.startswith("gemini:"):
+        dimensions = None
+    elif dimensions is None:
+        dimensions = config.embedding.dimensions
+    config = config.model_copy(
+        update={"embedding": config.embedding.model_copy(update={"dimensions": dimensions})}
+    )
     gateway = Gateway.live(config, settings.env.prompts_dir, providers, model)
 
     chunks = [Chunk(**c) for c in json.loads((OUT / "chunks.json").read_text(encoding="utf-8"))]

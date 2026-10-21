@@ -66,6 +66,10 @@ class AnswerResult(BaseModel):
 
 def make_gateway(fake: FakeProvider, prompts_dir: Path = REPO_PROMPTS, **config_changes) -> Gateway:
     config = get_settings().ai
+    # Fakes return short vectors: ignore the vector size of config/ai.yaml unless a test sets it.
+    config = config.model_copy(
+        update={"embedding": config.embedding.model_copy(update={"dimensions": None})}
+    )
     if config_changes:
         config = config.model_copy(update=config_changes)
     return Gateway(config=config, prompts_dir=prompts_dir, provider=fake)
@@ -603,7 +607,8 @@ async def test_AI01_embed_sends_batches_of_batch_size_from_config():
     config = get_settings().ai
     embedder = FakeEmbedder()
     gateway = make_gateway(
-        embedder, embedding=config.embedding.model_copy(update={"batch_size": 2})
+        embedder,
+        embedding=config.embedding.model_copy(update={"batch_size": 2, "dimensions": None}),
     )
 
     vectors = await gateway.embed(["a", "bb", "ccc", "dddd", "eeeee"], role="query")
