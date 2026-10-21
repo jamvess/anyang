@@ -172,6 +172,8 @@ export interface components {
             input_mode: ("text" | "voice" | "image") | null;
             /** Attachment Path */
             attachment_path: string | null;
+            /** Attachment Name */
+            attachment_name: string | null;
             /**
              * Created At
              * Format: date-time

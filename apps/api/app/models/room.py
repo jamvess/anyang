@@ -36,6 +36,7 @@ class Message(_Api):
     card: dict[str, Any] | None
     input_mode: Literal["text", "voice", "image"] | None
     attachment_path: str | None
+    attachment_name: str | None  # display only, never part of the Storage path
     created_at: datetime
 
 
