@@ -143,6 +143,7 @@
 - [ ] Report P1 และ P3 ด้วย `/poc-report`
   - P1 เสร็จแล้ว (`specs/poc/reports/P1.md`) · เหลือ P3
 - [ ] อัปเดต `config/learning.yaml` (`ocr.confirm_below_confidence`, `stars.*`) และ `config/ai.yaml` (model ที่เลือก) ผ่าน PR
+  - ส่วน ocr เสร็จแล้ว (PR #45): `ocr.always_confirm: true` แทน threshold · AM-02 ยืนยันทุกครั้ง (ทีมตกลง) · เหลือ `stars.*` และ model ใน `ai.yaml` รอผล P3
 
 **Done เมื่อ:** ตัดสินแล้วว่าใช้ provider ไหนอ่านลายมือ และใช้ embedding ตัวไหน
 

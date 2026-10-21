@@ -14,7 +14,7 @@
 - [x] 1. 🤖 ร่างข้อเสนอให้ทีมตัดสิน (ใน PR description + ข้อความกลุ่ม): ทางเลือก, ผลกระทบต่อ UX/API/ไฟล์ของแต่ละคน, ข้อเสนอแนะ · รวมเรื่อง "ส่งรูปพร้อมข้อความกำกับ" ที่ `api.md` รอ Jam อยู่ (flow เดียวกัน)
 - [x] 2. 🙋 Jam ส่งในกลุ่ม · ทีมตัดสิน (Junior: API/checker · May: UI กล่องยืนยัน)
 - [x] 3. 🤖 แก้ตามที่ตัดสิน: `requirements.md` AM-02 (ไฟล์กลาง) · `learning.yaml` `ocr.*` + `learning-model.md` §8–9 · `ai-orchestration.md` §2.2.5, §2.2.10, §3.5, §3.6 · `specs/poc/README.md` P1 · `api.md` ข้อรอตัดสิน (ไฟล์กลาง)
-- [ ] 4. 🤖 checklist: sub-bullet ใต้ข้อ "อัปเดต config" ว่าส่วน ocr เสร็จ · `/work-done` · reviewer ทั้ง Junior และ May (ไฟล์กลาง)
+- [x] 4. 🤖 checklist: sub-bullet ใต้ข้อ "อัปเดต config" ว่าส่วน ocr เสร็จ · `/work-done` · reviewer ทั้ง Junior และ May (ไฟล์กลาง)
 
 ## Definition of done
 
@@ -31,7 +31,7 @@
 
 ## Next step
 
-ขั้น 4: sub-bullet ใต้ข้อ "อัปเดต config" ใน checklist (ส่วน ocr เสร็จ) → `/work-done` · reviewer Junior + May
+`/work-done` · reviewer Junior + May (ไฟล์กลาง requirements.md, api.md)
 
 ## Waiting on
 
