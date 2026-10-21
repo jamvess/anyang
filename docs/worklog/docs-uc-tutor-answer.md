@@ -26,7 +26,7 @@
 
 - 2026-10-20 · ทำใน S2 แทน S4 · ไม่ต้องรอใคร และงาน S3 ที่เหลือรอ endpoint `/messages` ของ Junior
 - 2026-10-21 · UC-03: May ตัดสิน 4 เรื่อง (กลับเข้าห้อง, ปิดอัตโนมัติ, เพิ่มหัวข้อนอกชีท, เรียกเพื่อนติวกลับ) · ดู "ตัดสินแล้ว" ใน use-cases.md
-- 2026-10-21 · api.md "รอตัดสิน" (May ตอบ ยังไม่ได้แก้ api.md เพราะเป็นไฟล์กลาง): ข้อ 3 ใช้ `$…$` / `$$…$$` เป็น contract และ `\$` = เครื่องหมาย $ จริง (web ยังไม่รองรับ `\$` ต้องเพิ่มตอนทำ feature) · ข้อ 5 `done` ส่ง `{message_ids: [...]}` เรียงตาม bubble ที่ stream · ข้อ 6 เพิ่ม field ชื่อไฟล์ใน `messages` (Junior แก้ migration) path ใน Storage เป็น uuid
+- 2026-10-21 · api.md "รอตัดสิน" (May ตอบ · แก้ api.md เป็น v1.3 ใน PR นี้ ขอ Junior + Jam review เพราะเป็นไฟล์กลาง): ข้อ 3 ใช้ `$…$` / `$$…$$` เป็น contract และ `\$` = เครื่องหมาย $ จริง (web ยังไม่รองรับ `\$` ต้องเพิ่มตอนทำ feature) · ข้อ 5 `done` ส่ง `{message_ids: [...]}` เรียงตาม bubble ที่ stream · ข้อ 6 เพิ่ม field ชื่อไฟล์ใน `messages` (Junior แก้ migration) path ใน Storage เป็น uuid
 
 ## Next step
 
@@ -34,7 +34,7 @@
 
 ## Waiting on
 
-ไม่มี
+Junior ยืนยัน api.md v1.3 ข้อ 5 (`done.message_ids`) และข้อ 6 (`attachment_name` ต้องแก้ migration) ใน PR #36
 
 ## Notes for next time
 
