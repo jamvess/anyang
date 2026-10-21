@@ -38,6 +38,7 @@
 ### S2 · 19–30 ต.ค.
 
 - [ ] Cloud Build trigger: merge → deploy `api-staging` อัตโนมัติ (P6-lite)
+  - ⚠️ ต้องตั้ง `CORS_ALLOW_ORIGINS` และ `CORS_ALLOW_ORIGIN_REGEX` ใน env ของ `api-staging` (`--set-env-vars` ใน `infra/cloudbuild.yaml`) ไม่งั้น Vercel preview เรียก staging ไม่ได้ (ค่าดู `.env.example` · PR #49) · ใน `cloudbuild.yaml` ต้องเขียน `$` ของ regex เป็น `$$` เพราะ Cloud Build ใช้ `$` แทนค่าตัวแปร
 - [x] `test_SA06_tenant_isolation` รันใน CI (P6-lite) · เสร็จก่อนกำหนดใน S1
 - [x] ตรวจว่าไม่มี secret ใน git history · เสร็จก่อนกำหนดใน S1 (15 ต.ค.)
 - [ ] ปรับ `schema.sql` ตามที่เจอระหว่าง P3 + วาด ERD (D3)

@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from pydantic.json_schema import models_json_schema
 from starlette.exceptions import HTTPException
 
+from app.cors import add_cors
 from app.models.room import EVENT_MODELS
 from app.routers import health, room
 from app.settings import get_settings
@@ -22,6 +23,8 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="anyang-api", lifespan=lifespan)
+# Middleware must be added before startup, so CORS reads settings here, not in lifespan.
+add_cors(app, get_settings().env)
 app.include_router(health.router)
 app.include_router(room.router)
 

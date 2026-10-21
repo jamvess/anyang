@@ -9,12 +9,12 @@
 
 ## Plan
 
-- [ ] 1. 🤖 test `tests/unit/test_cors.py` จาก requirement ของ May → red · Junior review test ก่อน implement
-- [ ] 2. 🤖 `EnvSettings.cors_allow_origins` (comma-separated, default `http://localhost:3000`, ห้าม `*` / `/` ท้าย / ว่าง) + `cors_allow_origin_regex` (default ว่าง = ปิด)
-- [ ] 3. 🤖 `app/cors.py` → `add_cors(app, env)` · `main.py` เรียกตอนสร้าง app → green
-- [ ] 4. 🤖 `.env.example` + ตาราง env ใน `docs/team/setup.md` A5
-- [ ] 5. 🤖 ruff + pytest ทั้งหมด · CI เขียว
-- [ ] 6. 🙋 ตอบ May ใน PR #42 (OQ5, OQ6, OQ7) หลัง Junior อนุมัติข้อความ
+- [x] 1. 🤖 test `tests/unit/test_cors.py` จาก requirement ของ May → red · Junior review test แล้ว ok (แก้ regex เป็น `+` + เพิ่มกรณี hash 8 ตัว)
+- [x] 2. 🤖 `EnvSettings.cors_allow_origins` (comma-separated, default `http://localhost:3000`, ห้าม `*` / `/` ท้าย / ว่าง) + `cors_allow_origin_regex` (default ว่าง = ปิด · ตรวจว่า compile ได้)
+- [x] 3. 🤖 `app/cors.py` → `add_cors(app, env)` · `main.py` เรียกตอนสร้าง app → green
+- [x] 4. 🤖 `.env.example` + ตาราง env ใน `docs/team/setup.md` A5
+- [ ] 5. 🤖 ruff + pytest ทั้งหมดในเครื่องผ่านแล้ว (156) · รอ CI เขียวบน PR #49
+- [x] 6. 🙋 ตอบ May ใน PR #42 (OQ5, OQ6, OQ7) + comment #40 (`exam_prep_not_found`) + เปิด issue #50 (X-Request-Id middleware)
 
 ## Definition of done
 
@@ -31,7 +31,7 @@
 
 ## Next step
 
-ขั้น 1: Junior review `tests/unit/test_cors.py`
+ขั้น 5: `gh pr checks 49` ต้องเขียวทั้ง 3 job แล้วไป `/work-done` · ตอนทำ P6-lite (Cloud Run staging) ต้องตั้ง `CORS_ALLOW_ORIGINS` และ `CORS_ALLOW_ORIGIN_REGEX` ใน env ของ service ด้วย
 
 ## Waiting on
 

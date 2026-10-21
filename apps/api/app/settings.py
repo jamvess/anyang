@@ -6,13 +6,14 @@ YAML files (root CLAUDE.md rules 5 and 3). The models below mirror those files w
 silently ignored.
 """
 
+import re
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 # apps/api/app/settings.py -> repo root
 _REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -225,6 +226,34 @@ class EnvSettings(BaseSettings):
 
     # --- App ---
     app_env: Literal["local", "test", "staging", "production"] = "local"
+    # CORS (room-http.md OQ6): exact origins, comma-separated, plus one regex for Vercel previews.
+    cors_allow_origins: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
+    cors_allow_origin_regex: str = ""
+
+    @field_validator("cors_allow_origins", mode="before")
+    @classmethod
+    def _split_origins(cls, value: object) -> object:
+        if isinstance(value, str):
+            return [origin.strip() for origin in value.split(",") if origin.strip()]
+        return value
+
+    @field_validator("cors_allow_origins")
+    @classmethod
+    def _check_origins(cls, origins: list[str]) -> list[str]:
+        # CORS compares origins exactly, so "*" or a trailing "/" is always a mistake here.
+        if not origins:
+            raise ValueError("CORS_ALLOW_ORIGINS must list at least one origin")
+        for origin in origins:
+            if "*" in origin or origin.endswith("/"):
+                raise ValueError(f"CORS origin must be exact, no '*' or trailing '/': {origin!r}")
+        return origins
+
+    @field_validator("cors_allow_origin_regex")
+    @classmethod
+    def _check_origin_regex(cls, pattern: str) -> str:
+        if pattern:
+            re.compile(pattern)
+        return pattern
 
     # --- Supabase ---
     supabase_url: str = ""
