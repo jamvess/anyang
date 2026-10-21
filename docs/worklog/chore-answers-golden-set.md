@@ -27,13 +27,16 @@
 - 2026-10-21 · Claude ไม่เดา verdict ล่วงหน้า เพราะ golden set ต้องมาจากคนล้วนๆ
 - 2026-10-21 · ใบงานเป็น markdown 1 หัวข้อต่อ 1 คำตอบ (ไม่ใช่ตาราง) เพราะ LaTeX มี `|` (`\left|x\right|`) ซึ่งทำให้ตาราง markdown พัง และกรอกง่ายกว่าแก้ JSONL ตรงๆ
 
+- 2026-10-21 · (Jam ok) โควตาคำตอบพิมพ์ 20 ข้อ: sign 3 · prerequisite 3 · wrong_method 3 · concept 3 (มี incomplete ≥ 1) · calculation 3 · no_answer 2 · correct_with_flaw 2 · correct + method other 1
+- 2026-10-21 · ข้อ 1 test (red): 15 function / 32 case ใน `evals/answers/test_make_worksheet.py` · ใบงานใช้ `problem_id` (P01–P17) แล้ว `--build` ดึง problem, reference, answer_format จาก `problems.md` · `--build` เขียนเฉพาะข้อที่กรอก verdict แล้ว (label ทีละส่วนได้ และ `run_eval.py` ไม่เจอแถวว่าง) · method ว่าง = `doc` · ถ้ามีข้อผิดกติกาแม้ข้อเดียว ไม่เขียนไฟล์เลย · ชื่อ test ใช้ `evals_readme_p2` แบบเดียวกับ `test_make_labels.py`
+
 ## Next step
 
-ข้อ 1: เขียน `evals/answers/test_make_worksheet.py` (red)
+ข้อ 1: Jam review `evals/answers/test_make_worksheet.py` · ok แล้วไปข้อ 2 implement `make_worksheet.py`
 
 ## Waiting on
 
-ไม่มี
+Jam review test
 
 ## Notes for next time
 
