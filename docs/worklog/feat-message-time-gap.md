@@ -9,8 +9,8 @@
 
 ## Plan
 
-- [ ] 1. 🤖 `/spec-feature`: แก้ `specs/features/tutor/chat-room-ui.md` (เพิ่ม AC-3b) หรือ spec ใหม่ · กติกา: ข้อความติดกันของคนเดิมรวมใต้ชื่อเดียว (AC-3 เดิม) ยกเว้นห่างจากข้อความก่อนหน้าเกินค่าที่กำหนด → แสดงชื่อ + เวลาใหม่ · 🙋 May เลือกค่า
-- [ ] 2. 🙋 May review spec
+- [x] 1. 🤖 `/spec-feature`: แก้ `specs/features/tutor/chat-room-ui.md` (เพิ่ม AC-3b) หรือ spec ใหม่ · กติกา: ข้อความติดกันของคนเดิมรวมใต้ชื่อเดียว (AC-3 เดิม) ยกเว้นห่างจากข้อความก่อนหน้าเกินค่าที่กำหนด → แสดงชื่อ + เวลาใหม่ · 🙋 May เลือกค่า
+- [x] 2. 🙋 May review spec
 - [ ] 3. 🤖 `/spec-to-tests` · test ใหม่ใน `MessageList.test.tsx` (ไม่แก้ test เดิม)
 - [ ] 4. 🙋 May review test
 - [ ] 5. 🤖 `/implement-feature` ใน `MessageList.tsx` + lint, typecheck, test, build
@@ -22,9 +22,11 @@
 
 ## Decisions
 
+- 2026-10-21 · ช่วงห่าง `MESSAGE_GROUP_GAP_MIN` = 5 นาที (May เลือก) · ตั้งแต่ 5 นาทีขึ้นไป (รวม 5 นาทีพอดี) แสดงชื่อและเวลาใหม่ · เพิ่มเป็น AC-3b ใน chat-room-ui.md
+
 ## Next step
 
-ขั้น 1: เขียน spec และถาม May เรื่องค่าช่วงห่าง
+ขั้น 3: `/spec-to-tests` สำหรับ AC-3b ใน MessageList.test.tsx
 
 ## Waiting on
 
