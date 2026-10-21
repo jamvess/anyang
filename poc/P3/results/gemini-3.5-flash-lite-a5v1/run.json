@@ -1,0 +1,107 @@
+{
+  "model": "gemini:gemini-3.5-flash-lite",
+  "wall_seconds": 84.1,
+  "tokens_in": 124745,
+  "tokens_out": 28707,
+  "calls": [
+    {
+      "tag": "run:sheet-01:a5",
+      "file": "sheet-01",
+      "purpose": "extract_topics_local",
+      "status": "ok",
+      "latency_ms": 2247,
+      "tokens_in": 45572,
+      "tokens_out": 328,
+      "schema_retries": 0
+    },
+    {
+      "tag": "run:sheet-02:a5",
+      "file": "sheet-02",
+      "purpose": "extract_topics_local",
+      "status": "ok",
+      "latency_ms": 2011,
+      "tokens_in": 8671,
+      "tokens_out": 361,
+      "schema_retries": 0
+    },
+    {
+      "tag": "run:sheet-03:a5",
+      "file": "sheet-03",
+      "purpose": "extract_topics_local",
+      "status": "ok",
+      "latency_ms": 2796,
+      "tokens_in": 2493,
+      "tokens_out": 709,
+      "schema_retries": 0
+    },
+    {
+      "tag": "run:sheet-04:a5",
+      "file": "sheet-04",
+      "purpose": "extract_topics_local",
+      "status": "ok",
+      "latency_ms": 2728,
+      "tokens_in": 2629,
+      "tokens_out": 695,
+      "schema_retries": 0
+    },
+    {
+      "tag": "run:merge",
+      "file": "",
+      "purpose": "merge_topics",
+      "status": "ok",
+      "latency_ms": 13801,
+      "tokens_in": 3081,
+      "tokens_out": 5795,
+      "schema_retries": 0
+    },
+    {
+      "tag": "run:midterm-2559-1:a7",
+      "file": "midterm-2559-1",
+      "purpose": "map_questions",
+      "status": "ok",
+      "latency_ms": 5322,
+      "tokens_in": 4895,
+      "tokens_out": 2017,
+      "schema_retries": 0
+    },
+    {
+      "tag": "run:midterm-2561-1:a7",
+      "file": "midterm-2561-1",
+      "purpose": "map_questions",
+      "status": "ok",
+      "latency_ms": 5197,
+      "tokens_in": 3994,
+      "tokens_out": 1727,
+      "schema_retries": 0
+    },
+    {
+      "tag": "ingest:midterm-2559-1",
+      "file": "midterm-2559-1",
+      "purpose": "ingest",
+      "status": "ok",
+      "latency_ms": 72600,
+      "tokens_in": 36372,
+      "tokens_out": 11284,
+      "schema_retries": 0
+    },
+    {
+      "tag": "ingest:midterm-2561-1",
+      "file": "midterm-2561-1",
+      "purpose": "ingest",
+      "status": "ok",
+      "latency_ms": 31500,
+      "tokens_in": 17038,
+      "tokens_out": 5791,
+      "schema_retries": 0
+    }
+  ],
+  "notes": {
+    "a5": {
+      "sheet-01": "",
+      "sheet-02": "",
+      "sheet-03": "",
+      "sheet-04": ""
+    },
+    "a6": ""
+  }
+}
