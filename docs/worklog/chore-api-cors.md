@@ -31,7 +31,7 @@
 
 ## Next step
 
-ขั้น 5: `gh pr checks 49` ต้องเขียวทั้ง 3 job แล้วไป `/work-done` · ตอนทำ P6-lite (Cloud Run staging) ต้องตั้ง `CORS_ALLOW_ORIGINS` และ `CORS_ALLOW_ORIGIN_REGEX` ใน env ของ service ด้วย
+ครบทุกขั้นแล้ว · รัน `/work-done` · เรื่อง env ของ staging ย้ายไปอยู่ใน `sprint-checklists.md` ใต้ข้อ Cloud Build (P6-lite) แล้ว · 500 ที่หลุด CORS อยู่ใน issue #50
 
 ## Waiting on
 
