@@ -25,7 +25,7 @@
 - [x] ⭐ `npx supabase init` + `db push` `0001_init.sql` ขึ้น Supabase cloud `anyang-dev` + เปิด custom access token hook
 - [x] GitHub Actions รันครบ 3 job และเขียวบน `main`
 - [ ] สร้าง GCP project, เปิด API, Artifact Registry, Secret Manager (`infra/README.md`)
-- [ ] สร้าง Supabase project `anyang-staging`
+- [x] สร้าง Supabase project `anyang-staging` · ref `sfapuygntxuelsxsgkay` Singapore (21 ต.ค., PR #28)
   - ⚠️ รอ Jam (เจ้าของ Vercel): (ก) เปลี่ยน Vercel **Preview** env (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) ให้ชี้ `anyang-staging` (`sfapuygntxuelsxsgkay`) แล้ว redeploy · (ข) ตรวจ **Production** env ถ้ายังชี้ project Tokyo ที่ลบแล้ว (`xztfzskxusykuqtpomrf`) แปลว่า `anyang-amber.vercel.app` พังอยู่ ต้องแก้ก่อน demo 30 ต.ค. (ดู `infra/README.md` หัวข้อ Frontend · Vercel)
 - [ ] ให้สิทธิ์ทีม: GitHub collaborator + Supabase org (เจ้าของ repo ทำ, `setup.md` A0), GCP (Jam: Vertex AI User)
 - [x] แก้ `.github/CODEOWNERS` เป็น username จริง · + เพิ่ม `/.github/` ให้ Junior ตาม `roles.md` (19 ต.ค.)
