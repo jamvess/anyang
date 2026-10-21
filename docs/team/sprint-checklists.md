@@ -145,8 +145,9 @@
 - [ ] P3: ingest → A5 → A6 → A7 → `compute_importance` · เทียบกับ label · ลอง embedding 2–3 ตัวกับคำถาม 20 ข้อ
 - [ ] Report P1 และ P3 ด้วย `/poc-report`
   - P1 เสร็จแล้ว (`specs/poc/reports/P1.md`) · เหลือ P3
-- [ ] อัปเดต `config/learning.yaml` (`ocr.confirm_below_confidence`, `stars.*`) และ `config/ai.yaml` (model ที่เลือก) ผ่าน PR
-  - ส่วน ocr เสร็จแล้ว (PR #45): `ocr.always_confirm: true` แทน threshold · AM-02 ยืนยันทุกครั้ง (ทีมตกลง) · เหลือ `stars.*` และ model ใน `ai.yaml` รอผล P3
+- [x] อัปเดต `config/learning.yaml` (`ocr.confirm_below_confidence`, `stars.*`) และ `config/ai.yaml` (model ที่เลือก) ผ่าน PR
+  - ส่วน ocr เสร็จแล้ว (PR #45): `ocr.always_confirm: true` แทน threshold · AM-02 ยืนยันทุกครั้ง (ทีมตกลง)
+  - 21 ต.ค. (PR #60): `stars.*` ค่าเดิม ติดป้ายผล P3 · `ai.yaml` v1.2: vision = flash-lite (P1), mid = flash (P3), main = flash ชั่วคราว (A6 รอวัดบน Vertex), embed = gemini-embedding-2 · small ยัง TODO · `embedding.dimensions: 768` อยู่ใน PR #39
 
 **Done เมื่อ:** ตัดสินแล้วว่าใช้ provider ไหนอ่านลายมือ และใช้ embedding ตัวไหน
 
