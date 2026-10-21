@@ -1,0 +1,15 @@
+{
+  "model": "gemini:gemini-embedding-2",
+  "questions": 20,
+  "chunks": 116,
+  "dimensions": 3072,
+  "recall_at_1": 0.75,
+  "recall_at_4": 0.9,
+  "seconds_embed_new_chunks": 21.0,
+  "new_chunks_embedded": 116,
+  "seconds_per_question": 0.161,
+  "misses_at_k": [
+    "6",
+    "17"
+  ]
+}

@@ -95,7 +95,7 @@
 - [x] Label หัวข้อ ดาว และ map ข้อสอบรายข้อของวิชา pilot ร่วมกับ Jam ลง `evals/topics/` (ให้ P3)
 - [x] ตรวจ wireframe ทั้ง 27 หน้าว่าไม่มีส่วนที่ขัดกับ design ใหม่ (D6)
 - [x] เริ่มหน้าแชท: layout, bubble ของ tutor/buddy/user, composer (พิมพ์ + ส่งรูป)
-- [ ] เขียนคำถาม 20 ข้อ + หน้าที่มีคำตอบ สำหรับวัด embedding (P3b) ลง `evals/topics/mth10101/retrieval_questions.md` (เทมเพลตและกติกาอยู่ใน branch `poc/P3b-embedding`) · คนเขียนต้องไม่ใช่ Jam · ส่งให้ Jam ภายใน จ. 26 ต.ค.
+- [x] เขียนคำถาม 20 ข้อ + หน้าที่มีคำตอบ สำหรับวัด embedding (P3b) ลง `evals/topics/mth10101/retrieval_questions.md` (เทมเพลตและกติกาอยู่ใน branch `poc/P3b-embedding`) · คนเขียนต้องไม่ใช่ Jam · ส่งให้ Jam ภายใน จ. 26 ต.ค. · เสร็จ 21 ต.ค. (PR #46 เข้า #39): 20 ข้อ 19 หัวข้อ
 
 **Done เมื่อ:** label ครบและส่งให้ Jam ก่อน ศ. 23 ต.ค. (Jam ต้องใช้รัน PoC) · คำถาม P3b ส่งภายใน จ. 26 ต.ค.
 
@@ -144,9 +144,11 @@
 ### S2 · 19–30 ต.ค.
 
 - [x] P1: รันรูปทั้งหมดกับ Gemini, Claude, Mathpix · ให้คะแนนด้วย SymPy · วาด precision–recall ของ confidence · 30 รูปด้วย `gemini-3.5-flash-lite` อย่างเดียว (ไม่ใช้ Claude/Mathpix เพราะต้องเสียเงิน) · line accuracy 95.2% PASS · threshold ของ confidence FAIL · PR curve เป็นตารางใน `score.json` ยังไม่ได้วาดกราฟ · report: `specs/poc/reports/P1.md`
-- [ ] P3: ingest → A5 → A6 → A7 → `compute_importance` · เทียบกับ label · ลอง embedding 2–3 ตัวกับคำถาม 20 ข้อ
-- [ ] Report P1 และ P3 ด้วย `/poc-report`
-  - P1 เสร็จแล้ว (`specs/poc/reports/P1.md`) · เหลือ P3
+- [x] P3: ingest → A5 → A6 → A7 → `compute_importance` · เทียบกับ label · ลอง embedding 2–3 ตัวกับคำถาม 20 ข้อ
+  - P3b เสร็จ 21 ต.ค. (PR #39): `gemini-embedding-2` ที่ 768 มิติ recall@4 95% (bge-m3 45%) · `Gateway.embed` + `embedding.dimensions: 768` · เหลือ P3a (PR #37)
+  - P3a รันแล้ว 21 ต.ค. (PR #37) · **ไม่ผ่านเป้า:** flash-lite หัวข้อตรง 1/27 · flash ได้ถึง A5 (56%) แต่ A6 ไม่ได้คำตอบที่ผ่าน schema บน free tier (0/20) · สูตรดาว + map ของทีม ★★★ 83% ผ่าน · ใช้ fallback ปรับ prompt A5/A6 และวัดใหม่บน Vertex (รอ GCP #20)
+- [x] Report P1 และ P3 ด้วย `/poc-report`
+  - P1 เสร็จแล้ว (`specs/poc/reports/P1.md`) · P3 เสร็จ 21 ต.ค. (`specs/poc/reports/P3.md`, PR #37)
 - [x] อัปเดต `config/learning.yaml` (`ocr.confirm_below_confidence`, `stars.*`) และ `config/ai.yaml` (model ที่เลือก) ผ่าน PR
   - ส่วน ocr เสร็จแล้ว (PR #45): `ocr.always_confirm: true` แทน threshold · AM-02 ยืนยันทุกครั้ง (ทีมตกลง)
   - 21 ต.ค. (PR #60): `stars.*` ค่าเดิม ติดป้ายผล P3 · `ai.yaml` v1.2: vision = flash-lite (P1), mid = flash (P3), main = flash ชั่วคราว (A6 รอวัดบน Vertex), embed = gemini-embedding-2 · small ยัง TODO · `embedding.dimensions: 768` อยู่ใน PR #39
