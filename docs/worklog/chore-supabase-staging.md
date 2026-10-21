@@ -10,8 +10,8 @@
 ## Plan
 
 - [x] 1. 🙋 `anyang-staging` สร้างแล้ว: ref `sfapuygntxuelsxsgkay` · region `ap-southeast-1` (Singapore) · org เดียวกับ `anyang-dev` · Junior เป็น Administrator · ตรวจด้วย `npx supabase projects list` 2026-10-21
-- [ ] 2. 🙋 + 🤖 Junior รัน `npx supabase link --project-ref sfapuygntxuelsxsgkay` ใน Git Bash (พิมพ์ password เอง) → Claude ตรวจ `supabase/.temp/project-ref` → `npx supabase migration list` + `npx supabase db push --dry-run` · **ถ้า remote มีตารางอยู่แล้วแต่ไม่มี migration history ให้หยุด ห้าม push** (ใช้ `migration repair` หลังตรวจ) → Junior ตอบ ok → `npx supabase db push`
-- [ ] 3. 🤖 ตรวจ: `migration list` ต้องเห็น `0001`, `0002` ทั้งฝั่ง Local และ Remote · ตารางมีครบ · จากนั้น `npx supabase unlink` (หลังขั้น 3b ซึ่งไม่ต้องใช้ link) · กลับไปทำ dev ต้อง `npx supabase link --project-ref mnwwhkbizjioibjvpnxl` ใหม่
+- [x] 2. 🙋 + 🤖 Junior รัน `npx supabase link --project-ref sfapuygntxuelsxsgkay` ใน Git Bash (พิมพ์ password เอง) → Claude ตรวจ `supabase/.temp/project-ref` → `npx supabase migration list` + `npx supabase db push --dry-run` · **ถ้า remote มีตารางอยู่แล้วแต่ไม่มี migration history ให้หยุด ห้าม push** (ใช้ `migration repair` หลังตรวจ) → Junior ตอบ ok → `npx supabase db push`
+- [ ] 3. 🤖 ตรวจแล้ว 2026-10-21: history ตรงกัน `0001`, `0002` · ตารางใน `public` 27 ตัว (เท่ากับ `create table` ใน 0001) RLS เปิดครบ 27 · มี `messages.attachment_name` และ function `custom_access_token_hook` · ก่อน push ไม่มีตาราง/function/user เลย (ไม่ต้อง `migration repair`) · link ไม่ต้องถาม password · เหลือ `unlink` · เดิม: `migration list` ต้องเห็น `0001`, `0002` ทั้งฝั่ง Local และ Remote · ตารางมีครบ · จากนั้น `npx supabase unlink` (หลังขั้น 3b ซึ่งไม่ต้องใช้ link) · กลับไปทำ dev ต้อง `npx supabase link --project-ref mnwwhkbizjioibjvpnxl` ใหม่
 - [ ] 3b. 🙋 RLS isolation test กับ staging (`test_rls_isolation.py` อ่าน `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` จาก env) · ต้องเปิด Custom Access Token hook (ขั้น 4) ก่อน · Junior รันเองเพราะต้องใช้ service role key ของ staging
 - [ ] 4. 🙋 ตรวจ RLS ใน Dashboard (Table Editor ทุกตารางต้องไม่มีป้าย "RLS disabled") + เปิด Custom Access Token hook (`public.custom_access_token_hook`)
 - [ ] 5. 🙋 ตั้ง Auth URL: Site URL = `https://anyang-amber.vercel.app` (ค่าเดียวกับ `anyang-dev` ถ้า dev ตั้งไว้ต่างจากนี้ ให้ใช้ตาม dev)
@@ -34,7 +34,7 @@
 
 ## Next step
 
-ขั้น 2: Junior รัน `npx supabase link --project-ref sfapuygntxuelsxsgkay` ใน Git Bash แล้ว Claude ตรวจ `project-ref` → `migration list` → `db push --dry-run`
+ขั้น 4 (เปิด Custom Access Token hook ใน Dashboard ของ staging) → ขั้น 3b (RLS test กับ staging) → `npx supabase unlink`
 
 ## Waiting on
 
