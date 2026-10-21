@@ -11,8 +11,8 @@
 
 - [x] 1. 🤖 `/spec-feature`: `specs/features/tutor/math-escape.md` (TM-08) · `\$` นอกสมการ = เครื่องหมาย $ ไม่เปิด/ปิดสมการ · ในสมการส่งต่อให้ KaTeX · ระหว่าง stream ไม่ถือเป็น `$` ที่ยังไม่ปิด
 - [x] 2. 🙋 May review spec
-- [ ] 3. 🤖 `/spec-to-tests` · test ใหม่ใน `tests/chat/MessageText.test.tsx` (ไม่แก้ test เดิม)
-- [ ] 4. 🙋 May review test
+- [x] 3. 🤖 `/spec-to-tests` · test ใหม่ใน `tests/chat/MessageText.test.tsx` (ไม่แก้ test เดิม)
+- [x] 4. 🙋 May review test
 - [ ] 5. 🤖 `/implement-feature` ใน `components/chat/MessageText.tsx` + lint, typecheck, test, build
 
 ## Definition of done
@@ -26,7 +26,7 @@
 
 ## Next step
 
-ขั้น 3: `/spec-to-tests specs/features/tutor/math-escape.md`
+ขั้น 5: `/implement-feature specs/features/tutor/math-escape.md`
 
 ## Waiting on
 
