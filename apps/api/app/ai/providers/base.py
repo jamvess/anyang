@@ -32,11 +32,12 @@ class ProviderResponse:
 @dataclass(frozen=True)
 class EmbedRequest:
     """Texts to embed (A3 ``embed``). ``role`` lets a model embed a search query differently
-    from a document chunk."""
+    from a document chunk. ``dimensions`` asks for shorter vectors; ``None`` keeps the model's."""
 
     model: str
     texts: list[str]
     role: Literal["query", "document"]
+    dimensions: int | None = None
 
 
 @dataclass(frozen=True)

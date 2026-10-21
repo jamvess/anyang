@@ -91,7 +91,11 @@ class GeminiProvider:
             response = await self._client.aio.models.embed_content(
                 model=request.model,
                 contents=contents,
-                config=types.EmbedContentConfig(task_type=task_type),
+                # Below 3,072 dimensions Gemini does not normalize the vectors; cosine
+                # similarity does not need it.
+                config=types.EmbedContentConfig(
+                    task_type=task_type, output_dimensionality=request.dimensions
+                ),
             )
         except errors.APIError as error:
             if error.code == 429:

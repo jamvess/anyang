@@ -255,7 +255,10 @@ class Gateway:
         try:
             for start in range(0, len(texts), settings.batch_size):
                 request = EmbedRequest(
-                    model=model, texts=texts[start : start + settings.batch_size], role=role
+                    model=model,
+                    texts=texts[start : start + settings.batch_size],
+                    role=role,
+                    dimensions=settings.dimensions,
                 )
                 response = await self._with_retries(
                     lambda request=request: provider.embed(request), "embed", settings.timeout_s
@@ -263,6 +266,14 @@ class Gateway:
                 if len(response.vectors) != len(request.texts):
                     raise AIProviderError(
                         f"embed: {len(response.vectors)} vectors for {len(request.texts)} texts"
+                    )
+                if settings.dimensions is not None and any(
+                    len(v) != settings.dimensions for v in response.vectors
+                ):
+                    sizes = sorted({len(v) for v in response.vectors})
+                    raise AIProviderError(
+                        f"embed: vectors of {sizes} dimensions, config asks for "
+                        f"{settings.dimensions}"
                     )
                 vectors.extend(response.vectors)
                 tokens_in += response.tokens_in

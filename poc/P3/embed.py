@@ -88,6 +88,12 @@ def recall_at_k(
     return sum(hits) / len(hits) if hits else 0.0
 
 
+def run_name(model: str, dimensions: int | None) -> str:
+    """Folder of the vector cache and name of the result file: one per model and vector size."""
+    name = model.replace(":", "_").replace("/", "_")
+    return f"{name}-d{dimensions}" if dimensions else name
+
+
 # --- run ------------------------------------------------------------------------------------
 
 
@@ -116,7 +122,7 @@ class LocalEmbedder:
         return EmbedResponse(vectors=await asyncio.to_thread(encode), tokens_in=0)
 
 
-async def main(model: str, questions_path: Path) -> None:
+async def main(model: str, questions_path: Path, dimensions: int | None) -> None:
     sys.path.insert(0, str(REPO / "apps" / "api"))
     from app.ai.gateway import Gateway
     from app.ai.providers.gemini import GeminiProvider
@@ -135,6 +141,10 @@ async def main(model: str, questions_path: Path) -> None:
             update={"embedding": config.embedding.model_copy(update={"timeout_s": LOCAL_TIMEOUT_S})}
         )
         await asyncio.to_thread(local.load, model.partition(":")[2])
+    if dimensions:
+        config = config.model_copy(
+            update={"embedding": config.embedding.model_copy(update={"dimensions": dimensions})}
+        )
     gateway = Gateway.live(config, settings.env.prompts_dir, providers, model)
 
     chunks = [Chunk(**c) for c in json.loads((OUT / "chunks.json").read_text(encoding="utf-8"))]
@@ -142,7 +152,7 @@ async def main(model: str, questions_path: Path) -> None:
     if not questions:
         sys.exit(f"no filled questions in {questions_path}")
 
-    name = model.replace(":", "_").replace("/", "_")
+    name = run_name(model, dimensions)
     cache_path = OUT / "embed" / name / "chunks.json"
     cache = json.loads(cache_path.read_text(encoding="utf-8")) if cache_path.exists() else {}
     todo = [c for c in chunks if c.content_hash not in cache]
@@ -192,5 +202,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True, help="gemini:<id> or local:<huggingface id>")
     parser.add_argument("--questions", type=Path, default=QUESTIONS)
+    parser.add_argument(
+        "--dimensions", type=int, default=None, help="vector size to ask for (default: model's)"
+    )
     args = parser.parse_args()
-    asyncio.run(main(args.model, args.questions))
+    asyncio.run(main(args.model, args.questions, args.dimensions))

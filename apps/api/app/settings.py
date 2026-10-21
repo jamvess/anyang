@@ -190,6 +190,8 @@ class RetentionConfig(_Strict):
 class EmbeddingConfig(_Strict):
     timeout_s: float = Field(gt=0)
     batch_size: int = Field(ge=1)
+    # Must match chunks.embedding vector(n) in the data model; None keeps the model's own size.
+    dimensions: int | None = Field(default=None, ge=1)
 
 
 class AIConfig(_Strict):

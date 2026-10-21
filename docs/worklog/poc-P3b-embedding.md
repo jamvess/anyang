@@ -22,7 +22,7 @@ spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผล�
 - [x] 2. 🙋 **May (หรือ Junior) เขียนคำถาม 20 ข้อ + เฉลยหน้า** (ไม่ใช่ Jam · คน label ไม่ใช่คนทำ PoC) · Jam ส่งงานในกลุ่ม
 - [x] 3. 🙋 Jam ตัดสิน model ที่จะลอง 2–3 ตัว และวิธีเรียก embedding ผ่าน provider layer (AI-01)
 - [x] 4. 🤖 test ก่อน → โค้ด spike `poc/P3/embed.py`: embed chunk + คำถาม · recall@4 ต่อ model · มิติ vector · เวลา · ต้นทุน → 🙋 Jam review test
-- [ ] 5a. 🤖 test ก่อน: `output_dimensionality` (`embedding.dimensions` ใน config ค่าเริ่มต้น `None` · ตรวจขนาด vector · `embed.py --dimensions`) → 🙋 Jam review test → implement → รัน 768 มิติ
+- [x] 5a. 🤖 test ก่อน: `output_dimensionality` (`embedding.dimensions` ใน config ค่าเริ่มต้น `None` · ตรวจขนาด vector · `embed.py --dimensions`) → 🙋 Jam review test → implement → รัน 768 มิติ
 - [ ] 5. 🤖 รันจริง → สรุปเทียบ → ใส่ใน report P3 (ส่วน P3b)
 
 ## Definition of done
@@ -51,13 +51,15 @@ spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผล�
 
 - 2026-10-21 · (Jam เลือก) ขอ 768 มิติจาก API (`output_dimensionality`) ให้ตรงกับ `chunks.embedding vector(768)` แล้ววัด recall ซ้ำ · `EmbeddingConfig.dimensions` ค่าเริ่มต้น `None` (ไม่แก้ `config/ai.yaml` ตอนนี้ เพราะเป็นไฟล์ร่วม · ใส่ค่าจริงตอนอัปเดต `ai.yaml` ใน S2) · gateway ตรวจว่า vector ยาวเท่า `dimensions` (กันใส่ผิดขนาดลง DB) · PoC ส่ง `--dimensions 768` · cache/ผลแยกชื่อ `-d768` · test ใหม่: gateway 3 · gemini 2 · PoC 2 · red 4 + PoC import error (test "without dimensions keeps default" ผ่านอยู่แล้ว เป็นตัวกัน)
 
+- 2026-10-21 · ข้อ 5a implement: `EmbedRequest.dimensions` · `EmbeddingConfig.dimensions` (ค่าเริ่มต้น `None`) · `Gateway.embed` ส่งค่าและ error ถ้า vector ยาวไม่ตรง · `GeminiProvider.embed` ส่ง `output_dimensionality` · `embed.py` `run_name()` + `--dimensions` · test api 152 + PoC 25 ผ่าน · **ผล 768 มิติ: recall@4 95% (19/20) · recall@1 75% · embed 116 chunk 21.6 วินาที · 0.16 วินาที/คำถาม · พลาดแค่ข้อ 6** · สูงกว่า 3,072 มิติ (90%) อยู่ 1 ข้อ (ข้อ 17) ซึ่งด้วยคำถามแค่ 20 ข้อถือว่าเท่ากัน · สรุป: ใช้ 768 มิติได้โดยไม่เสีย recall · `vector(768)` ใน schema ใช้ได้เลยโดยไม่ต้องทำ migration
+
 ## Next step
 
-ข้อ 5a: Jam review test 7 ตัว (ท้าย `apps/api/tests/unit/test_ai_gateway.py`, ท้าย `test_gemini_provider.py`, ท้าย `poc/P3/test_embed.py`) · ok แล้ว implement: `EmbedRequest.dimensions`, `EmbeddingConfig.dimensions`, `Gateway.embed` ส่ง + ตรวจขนาด, `GeminiProvider.embed` ใส่ `output_dimensionality`, `embed.py` `run_name()` + `--dimensions` → รัน `embed.py --model gemini:gemini-embedding-2 --dimensions 768`
+ข้อ 5 (ส่วนสุดท้าย): ใส่ตาราง P3b (embedding-2 @3072 / @768 / bge-m3: recall@4, recall@1, มิติ, เวลา) ใน report P3 · report อยู่บน branch `poc/P3` (`specs/poc/reports/poc-P3.md`, PR #37) จึงต้องสลับไป `poc/P3` หรือ merge `poc/P3b-embedding` เข้าไป · แนะนำให้เขียนตอนทำ report P3 พร้อมผล flash หลัง 14:00 น. · ก่อนเอา PR #39 ออกจาก draft ต้องให้ Junior review ส่วน `apps/api/`
 
 ## Waiting on
 
-Jam review test
+ไม่มี
 
 ## Notes for next time
 
