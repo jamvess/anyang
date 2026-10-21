@@ -78,11 +78,14 @@ def fill(text: str, ans_id: str, lines: list[str] | None = None, **fields: objec
     old = section(text, ans_id)
     new = old
     for name, value in fields.items():
-        new, count = re.subn(rf"^- {name}:.*$", f"- {name}: {value}", new, flags=re.M)
+        filled = f"- {name}: {value}"
+        new, count = re.subn(rf"^- {name}:.*$", lambda _, s=filled: s, new, flags=re.M)
         assert count == 1, f"{ans_id} has no field {name}"
     if lines is not None:
         numbered = "\n".join(f"{i}. `{line}`" for i, line in enumerate(lines, start=1))
-        new, count = re.subn(r"(?<=^lines:\n\n).*?(?=\n\n- )", numbered, new, flags=re.M | re.S)
+        new, count = re.subn(
+            r"(?<=^lines:\n\n).*?(?=\n\n- )", lambda _: numbered, new, flags=re.M | re.S
+        )
         assert count == 1, f"{ans_id} has no lines block"
     return text.replace(old, new)
 
