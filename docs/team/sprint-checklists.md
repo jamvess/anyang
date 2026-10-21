@@ -152,7 +152,7 @@
 
 - [ ] Label golden set คำตอบ 50 ข้อ (D8)
 - [ ] P2: merge rules + LLM classifier (`prompts/check_answer/v1`) ใช้ SymPy service ของ Junior
-- [ ] Script `evals/run_eval.py` ออกคะแนน verdict, error type, บรรทัดผิด
+- [x] Script `evals/run_eval.py` ออกคะแนน verdict, error type, บรรทัดผิด · เสร็จก่อนกำหนด (21 ต.ค. · PR #47) · ให้คะแนนจากไฟล์ prediction (`--predictions`) · นิยาม metric ใน `evals/README.md` "การให้คะแนน" · ต่อกับ checker จริงตอนทำ P2 · การรันใน CI เมื่อ prompt เปลี่ยน (§2.11) รอ Junior
 - [ ] Report P2
 
 **Done เมื่อ:** มีตัวเลข 3 ตัวของ P2 เทียบกับเป้า
