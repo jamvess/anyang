@@ -11,8 +11,8 @@
 
 - [ ] 1. 🤖 `specs/system/api.md` v1.4: type ของ `progress_card.topics[]` (`id`, `name`: string · `stars`: integer ช่วงตามที่ May ตอบ, ไม่เป็น null · `level`: `not_started` \| `weak` \| `developing` \| `passed` · `review_due`: boolean · `origin`: `doc` \| `user`) + กฎ: backend ไม่ส่งหัวข้อที่ `importance` ยังไม่ได้คำนวณ (ดาวคำนวณในขั้น 5d ก่อนยืนยัน scope และการ์ดแสดงหลังยืนยัน) · ไฟล์ร่วม → May + Jam review, บอกแชทกลุ่ม
 - [x] 2. 🤖 test ใหม่ `apps/api/tests/unit/test_progress_card_topics_contract.py` (red): fixture ของ stub ผ่าน · ปฏิเสธ `level`/`origin` ที่ไม่รู้จัก, `stars` นอกช่วง, `stars = null`, field เกิน · `level` Literal = `learning.yaml` `levels.show` · OpenAPI: `level`/`origin` เป็น enum, `stars` เป็น integer ไม่ nullable และ required · ไม่แก้ `test_room_api_contract.py`
-- [ ] 3. 🙋 review test ข้อ 2
-- [ ] 4. 🤖 `app/models/room.py`: `ProgressTopic` + `ProgressCardEvent.topics: list[ProgressTopic]` (green) · ruff + pytest
+- [x] 3. 🙋 review test ข้อ 2
+- [x] 4. 🤖 `app/models/room.py`: `ProgressTopic` + `ProgressCardEvent.topics: list[ProgressTopic]` (green) · ruff + pytest
 - [ ] 5. 🤖 regenerate `apps/web/lib/api-schema.ts` ด้วย `pnpm gen:api` (ไม่แตะ `ProgressCard.tsx` ของ May)
 - [ ] 6. 🙋 May ตอบช่วงของ `stars` (0–3 หรือ 1–3) ใน PR #63 → ปรับ api.md + test + model ให้ตรง
 
@@ -29,12 +29,13 @@
 - 2026-10-21 · `stars` ไม่เป็น null ใน progress_card: backend ตัดหัวข้อที่ `importance` ยังเป็น NULL ออก · type ที่ generate จึงเป็น number
 - 2026-10-21 · ช่วงของ `stars` ที่ยังไม่ตัดสินอยู่ใน api.md "รอตัดสิน" ข้อ 4
 - 2026-10-21 · test ที่ขึ้นกับช่วงของ stars (0 ดาว) ใส่ `pytest.mark.skip` ไว้ก่อน · enum เช็คกับทั้ง `learning.yaml` และ check ใน `0001_init.sql` (กัน drift)
+- 2026-10-21 · model ใช้ `stars` 0-3 ตาม DB ไปก่อน · ถ้า May เลือก 1-3 แก้ `ge=1` + เขียน test 0 ดาวที่ skip ไว้
 - 2026-10-21 · `id` เป็น `str` ไม่ใช่ `UUID` (stub ใช้ `"t1"`, api.md บอก string)
 - 2026-10-21 · `progress-card.md` (ของ May) Open questions 3, 4 ตอบแล้ว → แค่บอกใน PR description ไม่แก้ไฟล์เอง
 
 ## Next step
 
-ข้อ 3 (🙋 Junior): review `apps/api/tests/unit/test_progress_card_topics_contract.py` · หลัง ok → ข้อ 4 เพิ่ม `ProgressTopic` ใน `app/models/room.py`
+ข้อ 5: รัน API (`uv run fastapi dev app/main.py`) แล้ว `pnpm gen:api` ใน `apps/web` · เช็คว่า `ProgressTopic.stars` เป็น `number` · commit `apps/web/lib/api-schema.ts`
 
 ## Waiting on
 
