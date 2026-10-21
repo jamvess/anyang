@@ -41,7 +41,7 @@ PoC คือการลองทำส่วนที่ยากที่ส�
 - **ผลที่ต้องได้:** embedding model + มิติ vector, ขนาด chunk, ค่า `stars.*` ที่ยืนยันแล้ว
 - **ถ้าไม่ผ่าน:** ใช้ Google Document AI กับไฟล์สแกน และปรับ prompt A5/A6
 
-## P2 · ตรวจคำตอบ · Jam (+ Junior ทำ SymPy service) · S3
+## P2 · ตรวจคำตอบ · Jam (รวม SymPy service · ย้ายจาก Junior 21 ต.ค.) · S3
 
 - **คำถาม:** SymPy + LLM ตัดสินถูกผิดและจำแนก error ได้ตามเป้าไหม
 - **Data:** `evals/answers/` 50 คำตอบ (expression, factored, equation) label: verdict, error_type, first_wrong_line
