@@ -7,10 +7,12 @@ import type { SSEEvent } from "@/lib/sse";
 type Schemas = components["schemas"];
 
 /**
- * A message of the room (`GET /sessions/{id}` → `messages`). `card` is optional
- * because messages built in the browser while streaming have none.
+ * A message of the room (`GET /sessions/{id}` → `messages`). `card` and
+ * `attachment_name` are optional because messages built in the browser while
+ * streaming may not have them.
  */
-export type ChatMessage = Omit<Schemas["Message"], "card"> & { card?: Schemas["Message"]["card"] };
+export type ChatMessage = Omit<Schemas["Message"], "card" | "attachment_name"> &
+  Partial<Pick<Schemas["Message"], "card" | "attachment_name">>;
 
 export type MessageRole = ChatMessage["role"];
 

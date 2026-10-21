@@ -5,7 +5,7 @@
 | Owner | May |
 | Branch | `feat/room-http-transport` |
 | Checklist item | หน้าแชท P4-lite: อ่าน SSE ผ่าน `lib/sse.ts`, แสดงข้อความที่ไหลออกมา, render KaTeX, ส่งรูป |
-| Status | paused · 2026-10-21 |
+| Status | in progress · 2026-10-21 |
 
 ## Plan
 
@@ -15,6 +15,9 @@
 - [x] 4. 🙋 May review test
 - [x] 5. 🤖 `/implement-feature`: เขียนโค้ดจน test ผ่าน + lint, typecheck, build
 - [ ] 6. 🙋 May ลองจริงในเครื่อง: เปิด API + web แล้วคุยในห้องติว เห็นข้อความไหลจาก stub (Claude ให้ขั้นตอนทีละคลิก)
+- [x] 7. 🤖 spec: `chat-room-ui.md` เพิ่ม AC-6b ชื่อไฟล์รูปมาจาก `attachment_name` (api.md v1.3 · PR #43) · ถ้าเป็น null ใช้ท้าย `attachment_path` ตามเดิม (AC-6 เดิมผ่านโดยไม่แก้) · 🙋 May review
+- [x] 8. 🤖 test ใหม่ใน `MessageList.test.tsx` + `ChatRoomStream`/`RoomPageHttp` ถ้าจำเป็น · 🙋 May review
+- [ ] 9. 🤖 implement `MessageList.tsx` + ข้อความในเครื่องของ ChatRoom ใช้ `attachment_name`
 
 ## Definition of done
 
@@ -38,10 +41,11 @@
 - 2026-10-21 · implement: `ChatMessage.card` ไม่บังคับ และ `RoomData.messages` เป็น `ChatMessage[]` เพื่อให้ test เดิมที่ review แล้ว typecheck ผ่านโดยไม่แก้ · บันทึกใน spec §2 แล้ว
 - 2026-10-21 · page.tsx อ่าน `params` ใน `<Suspense>` เพราะ Next 16 ไม่ให้ prerender อ่าน request data นอก Suspense
 - red → green: 3 รอบ (transport + Composer · TutorRoom + opening ของ ChatRoom · หลังแก้ test helper) + แก้ lint/typecheck/build อีก 3 รอบ
+- 2026-10-21 · merge main (PR #43 attachment_name): `ChatMessage.attachment_name` ไม่บังคับเหมือน `card` เพื่อให้ test เดิมที่ review แล้ว typecheck ผ่าน
 
 ## Next step
 
-ขั้น 6: เมื่อ Junior เพิ่ม CORS ใน FastAPI แล้ว merge main เข้ามา · เปิด API (`uv run uvicorn app.main:app --port 8000` ใน apps/api) + web (`pnpm dev`) · ให้ May เปิด `http://localhost:3000/preps/<uuid ใดก็ได้>/room` แล้วส่งข้อความ ดูคำตอบไหลจาก stub
+May review AC-6b, AC-6c ใน `chat-room-ui.md` และ test 2 ตัวท้าย `MessageList.test.tsx` → ขั้น 9 implement
 
 ## Waiting on
 
