@@ -101,17 +101,17 @@
 
 ## Next step
 
-1. Jam ตรวจ report P3 ที่ปิดแล้ว (`specs/poc/reports/P3.md` ไม่มี ⏳ แล้ว)
-2. 16:00 น. 2026-10-21 ลอง flash อีกรอบเดียว: `cd apps/api && uv run python ../../poc/P3/run.py --a5-prompt v1` → ถ้าผ่าน `score.py --a5-prompt v1` แล้วแทนคอลัมน์ flash ในตาราง P3a · ถ้า 503 อีก ไม่ต้องลองต่อ เพิ่ม "21 ต.ค. 16:00" ในรายการรอบของ report
-3. merge `poc/P3b-embedding` เข้า PR นี้หรือ merge #39 ก่อน แล้ว `/work-done` (Junior review · report แตะไฟล์ร่วมเฉพาะใน §5 ที่เป็นข้อเสนอ)
+1. (Jam ตรวจ report แล้ว ok 21 ต.ค.) ลอง flash อีกรอบเดียว ตั้งแต่ 16:00 น. 2026-10-21 (ถ้าเลยวันนั้นแล้ว ลองครั้งเดียวในวันที่กลับมา · โควตารีเซ็ตรายวัน): `cd apps/api && uv run python ../../poc/P3/run.py --a5-prompt v1` → ถ้าผ่าน `score.py --a5-prompt v1` แล้วแทนคอลัมน์ flash ในตาราง P3a · ถ้า 503 อีก ไม่ต้องลองต่อ เพิ่ม "21 ต.ค. 16:00" ในรายการรอบของ report
+2. merge `poc/P3b-embedding` เข้า PR นี้หรือ merge #39 ก่อน แล้ว `/work-done` (Junior review · report แตะไฟล์ร่วมเฉพาะใน §5 ที่เป็นข้อเสนอ)
 
 ## Waiting on
 
-เวลา: `gemini-3.5-flash` ตอบ 503 ช่วงเช้า · ลองใหม่หลัง 14:00 น. (หรือวันถัดไปถ้าเลยวันนี้ไปแล้ว · โควตารีเซ็ตรายวัน)
+เวลา 16:00 น. (รอบสุดท้ายของ flash บน free tier) · ไม่ได้รอคน
 
 ## Notes for next time
 
-- report P3 อยู่ที่ `specs/poc/reports/P3.md` (ร่าง 21 ต.ค.) · ตัวเลข P3b มาจาก branch `poc/P3b-embedding` (PR #39) · ไฟล์ผล embed ไม่อยู่บน branch นี้ ดูด้วย `git show origin/poc/P3b-embedding:poc/P3/results/<file>` · §5 ของ report เป็นข้อเสนอแก้ไฟล์ร่วม ต้องคุยทีมก่อนแก้จริง · ข้อเสนอ "code ตั้ง skill id เอง" ต้องถาม Junior (กระทบ `scope_ai.py`)
+- นับ call ของ A6 จาก log ทุกไฟล์: `cat poc/P3/out/calls*.jsonl` แล้วกรอง `purpose == merge_topics` (ถึง 21 ต.ค. 14:09: flash 20 call · 503 18 · ได้คำตอบแต่ไม่ผ่าน schema 2) · โควตา flash วันที่ 21 เหลือ ~12
+- report P3 อยู่ที่ `specs/poc/reports/P3.md` (ปิดแล้ว 21 ต.ค. 14:12 · P3b ผ่าน, P3a FAIL) · ตัวเลข P3b มาจาก branch `poc/P3b-embedding` (PR #39) · ไฟล์ผล embed ไม่อยู่บน branch นี้ ดูด้วย `git show origin/poc/P3b-embedding:poc/P3/results/<file>` · §5 ของ report เป็นข้อเสนอแก้ไฟล์ร่วม ต้องคุยทีมก่อนแก้จริง · ข้อเสนอ "code ตั้ง skill id เอง" ต้องถาม Junior (กระทบ `scope_ai.py`)
 - งานที่ค้าง: `chore/prompt-extract-topics-local` (PR #13) รอ Junior review · `chore/handwriting-photos` merge แล้ว
 - บน branch นี้ `poc/P1/` จะโผล่เป็น untracked (คือ `out/` กับ `results/` ของ P1 ซึ่ง gitignore อยู่แค่บน `poc/P1`) · ห้าม commit บน branch นี้
 - PyMuPDF ทำ ∞ หาย และสมการ Equation Editor กระจายออกมาบรรทัดละตัว (ดู PR #13)
