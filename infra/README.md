@@ -33,8 +33,8 @@ printf '%s' "<anthropic-key>"    | gcloud secrets create anthropic-api-key --dat
 |---|---|
 | Production | https://anyang-amber.vercel.app |
 | Vercel project | `anyang` ใน team `anyang4` (Hobby, account ของ Jam) · root directory = `apps/web` |
-| Env (Preview) | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` ชี้ Supabase `anyang-staging` (URL ไม่มี `/rest/v1/` ต่อท้าย, key เป็น `sb_publishable_...`) · architecture.md: staging = Vercel preview |
-| Env (Production) | รอ Jam ตรวจ: ถ้ายังชี้ `xztfzskxusykuqtpomrf` (ลบแล้ว) ต้องเปลี่ยน · เสนอชี้ `anyang-staging` ตัวใหม่จนกว่าจะมี `anyang-prod` |
+| Env (Preview) | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` ชี้ Supabase `anyang-staging` แล้ว 21 ต.ค. (Config) (URL ไม่มี `/rest/v1/` ต่อท้าย, key เป็น `sb_publishable_...`) · architecture.md: staging = Vercel preview |
+| Env (Production) | ชี้ anyang-staging แล้ว 21 ต.ค. (Config) |
 
 **ทำงานยังไง**
 
