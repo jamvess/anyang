@@ -13,7 +13,7 @@
 - [x] 2. 🤖 test ใหม่ `apps/api/tests/unit/test_progress_card_topics_contract.py` (red): fixture ของ stub ผ่าน · ปฏิเสธ `level`/`origin` ที่ไม่รู้จัก, `stars` นอกช่วง, `stars = null`, field เกิน · `level` Literal = `learning.yaml` `levels.show` · OpenAPI: `level`/`origin` เป็น enum, `stars` เป็น integer ไม่ nullable และ required · ไม่แก้ `test_room_api_contract.py`
 - [x] 3. 🙋 review test ข้อ 2
 - [x] 4. 🤖 `app/models/room.py`: `ProgressTopic` + `ProgressCardEvent.topics: list[ProgressTopic]` (green) · ruff + pytest
-- [ ] 5. 🤖 regenerate `apps/web/lib/api-schema.ts` ด้วย `pnpm gen:api` (ไม่แตะ `ProgressCard.tsx` ของ May)
+- [x] 5. 🤖 regenerate `apps/web/lib/api-schema.ts` ด้วย `pnpm gen:api` (ไม่แตะ `ProgressCard.tsx` ของ May)
 - [ ] 6. 🙋 May ตอบช่วงของ `stars` (0–3 หรือ 1–3) ใน PR #63 → ปรับ api.md + test + model ให้ตรง
 
 ## Definition of done
@@ -35,7 +35,7 @@
 
 ## Next step
 
-ข้อ 5: รัน API (`uv run fastapi dev app/main.py`) แล้ว `pnpm gen:api` ใน `apps/web` · เช็คว่า `ProgressTopic.stars` เป็น `number` · commit `apps/web/lib/api-schema.ts`
+ข้อ 6 (🙋 May): รอคำตอบช่วงของ `stars` ใน PR #63 · ระหว่างรอ: ใส่ PR description ของ #71 (Part of #40, progress-card.md Open questions 3-4 ตอบแล้ว), บอกแชทกลุ่มเรื่อง api.md v1.4, ขอ review May + Jam · ถ้าได้ 1-3: `ge=1` ใน `ProgressTopic`, เขียน test 0 ดาวที่ skip, แก้ api.md ตาราง + ปิดรอตัดสินข้อ 4, `pnpm gen:api` ไม่เปลี่ยน · ถ้าได้ 0-3: เขียน test ให้รับ 0 + แก้ api.md
 
 ## Waiting on
 
