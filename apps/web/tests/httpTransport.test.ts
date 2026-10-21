@@ -7,7 +7,7 @@ import type { SSEEvent } from "@/lib/sse";
 const fixture = (name: string) => readFileSync(join(__dirname, "fixtures", "sse", name), "utf8");
 
 function sseResponse(text: string): Response {
-  return new Response(new Blob([text]).stream(), {
+  return new Response(text, {
     status: 200,
     headers: { "Content-Type": "text/event-stream" },
   });

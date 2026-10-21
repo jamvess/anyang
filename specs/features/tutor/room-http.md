@@ -48,9 +48,8 @@
 
 **Type (apps/web/CLAUDE.md: ห้ามเขียน request type เอง)**
 
-- `ChatMessage` = `components["schemas"]["Message"]` (ได้ field `card` เพิ่ม) · `RoomData` = `components["schemas"]["Room"]` (ได้ `session_id` เพิ่ม) · `InputLimits` = `components["schemas"]["Limits"]`
+- `ChatMessage` = `components["schemas"]["Message"]` แต่ `card` ไม่บังคับ (ข้อความที่สร้างในเครื่องระหว่าง stream ไม่มี card · และ test เดิมที่ review แล้วสร้างข้อความโดยไม่มี `card`) · `RoomData` = `components["schemas"]["Room"]` ที่ `messages` เป็น `ChatMessage[]` (ได้ `session_id` เพิ่ม) · `InputLimits` = `components["schemas"]["Limits"]` (ปรับตอน implement 2026-10-21)
 - body ของการส่งข้อความใช้ `components["schemas"]["SendMessageRequest"]`
-- ChatRoom สร้างข้อความในเครื่อง (`local-n`) ต้องใส่ `card: null` ให้ครบ type
 
 **ขีดจำกัด (TM-21)**: ใช้ `limits` จาก `Room` ที่ได้จาก API แทน fixture · Composer ไม่ต้องแก้
 

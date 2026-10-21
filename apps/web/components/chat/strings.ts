@@ -14,4 +14,10 @@ export const roomStrings = {
   imageTooBig: (max: number) => `รูปใหญ่เกิน ${max} MB`,
   typing: "กำลังพิมพ์",
   sendFailed: "ส่งไม่สำเร็จ ลองส่งอีกทีนะ",
+  imagesNotYet: "ตอนนี้ยังส่งรูปไม่ได้ พิมพ์คำตอบมาก่อนนะ",
+  loading: "กำลังเปิดห้องติว…",
+  loadFailed: "เปิดห้องติวไม่สำเร็จ",
+  prepNotFound: "ไม่พบการเตรียมสอบนี้",
+  retry: "ลองใหม่",
+  backHome: "กลับหน้าหลัก",
 } as const;

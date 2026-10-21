@@ -23,7 +23,7 @@ const sse = (name: string) => readFileSync(join(__dirname, "..", "fixtures", "ss
 const room = (overrides: Record<string, unknown> = {}) => ({
   ...fixture,
   session_id: SESSION,
-  messages: fixture.messages.slice(0, 3).map((m) => ({ ...m, card: null })),
+  messages: fixture.messages.slice(1, 4).map((m) => ({ ...m, card: null })),
   ...overrides,
 });
 
@@ -31,7 +31,7 @@ const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 const notFound = (code: string) => json({ error: { code, message: "not found" } }, 404);
 const sseResponse = (text: string) =>
-  new Response(new Blob([text]).stream(), { status: 200, headers: { "Content-Type": "text/event-stream" } });
+  new Response(text, { status: 200, headers: { "Content-Type": "text/event-stream" } });
 
 /** An SSE response the test writes to chunk by chunk; `close()` ends it without anything more. */
 function openStream() {

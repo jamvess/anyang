@@ -13,7 +13,7 @@
 - [x] 2. 🙋 May review spec และตัดสินเรื่องที่ยังไม่ชัด (Claude ถามเป็นตัวเลือก)
 - [x] 3. 🤖 `/spec-to-tests`: เขียน test ที่ fail จาก acceptance criteria
 - [x] 4. 🙋 May review test
-- [ ] 5. 🤖 `/implement-feature`: เขียนโค้ดจน test ผ่าน + lint, typecheck, build
+- [x] 5. 🤖 `/implement-feature`: เขียนโค้ดจน test ผ่าน + lint, typecheck, build
 - [ ] 6. 🙋 May ลองจริงในเครื่อง: เปิด API + web แล้วคุยในห้องติว เห็นข้อความไหลจาก stub (Claude ให้ขั้นตอนทีละคลิก)
 
 ## Definition of done
@@ -27,13 +27,18 @@
 - 2026-10-21 · spec room-http.md: May ตัดสิน 4 เรื่อง (ข้อความเปิดไหลเข้าห้อง, โหลดไม่สำเร็จมีลองใหม่ + กลับหน้าหลัก, ปุ่มแนบรูปกดได้แต่แจ้งว่ายังส่งไม่ได้, ลบโหมด demo)
 - 2026-10-21 · May อนุมัติ spec และให้เลิกใช้ test "Room page (S3, fake transport)" (chat-streaming.md AC-21) ใน RoomPage.test.tsx · แทนด้วย AC-6 ใน RoomPageHttp.test.tsx
 
+- 2026-10-21 · implement: May อนุมัติแก้ test helper 2 จุด (`new Response(text)` แทน `Blob.stream()` ที่ jsdom ไม่มี · ใช้ข้อความ 2–4 ของ fixture เพราะข้อความแรกเป็น card ไม่มี bubble) · ไม่เปลี่ยนสิ่งที่ test ตรวจ
+- 2026-10-21 · implement: `ChatMessage.card` ไม่บังคับ และ `RoomData.messages` เป็น `ChatMessage[]` เพื่อให้ test เดิมที่ review แล้ว typecheck ผ่านโดยไม่แก้ · บันทึกใน spec §2 แล้ว
+- 2026-10-21 · page.tsx อ่าน `params` ใน `<Suspense>` เพราะ Next 16 ไม่ให้ prerender อ่าน request data นอก Suspense
+- red → green: 3 รอบ (transport + Composer · TutorRoom + opening ของ ChatRoom · หลังแก้ test helper) + แก้ lint/typecheck/build อีก 3 รอบ
+
 ## Next step
 
-ขั้น 5: `/implement-feature specs/features/tutor/room-http.md`
+ขั้น 6: เมื่อ Junior เพิ่ม CORS ใน FastAPI แล้ว merge main เข้ามา · เปิด API (`uv run uvicorn app.main:app --port 8000` ใน apps/api) + web (`pnpm dev`) · ให้ May เปิด `http://localhost:3000/preps/<uuid ใดก็ได้>/room` แล้วส่งข้อความ ดูคำตอบไหลจาก stub
 
 ## Waiting on
 
-Junior: CORS หรือ Next rewrites (room-http.md OQ 6) ต้องมีก่อนขั้น 6 ลองจริงในเครื่อง · OQ 5, 7
+Junior: เพิ่ม CORS ใน FastAPI ให้ `http://localhost:3000` (และ origin ของ Vercel) เรียก API ได้ (room-http.md OQ 6 · May เลือก 2026-10-21) · OQ 5 (ข้อความเปิดซ้ำไหม), OQ 7 (code ของ 404 ไม่พบการเตรียมสอบ)
 
 ## Notes for next time
 
