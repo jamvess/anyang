@@ -5,7 +5,7 @@
 | Owner | May |
 | Branch | `feat/progress-card` |
 | Checklist item | ไม่มีข้อตรงใน checklist · ส่วนหนึ่งของหน้าห้องติว (S15) ที่ demo ช่วง 3 ใช้ (`docs/design/demo-flow.md`) · stub ส่ง event `progress_card` แล้วแต่หน้าเว็บยังไม่แสดง |
-| Status | in progress · 2026-10-21 |
+| Status | ready for work-done · 2026-10-21 |
 
 ## Plan
 
@@ -13,7 +13,7 @@
 - [x] 2. 🙋 May review spec (รวมการเปลี่ยน chat-room-ui AC-4 ที่ตอนนี้ซ่อน role `card`)
 - [x] 3. 🤖 `/spec-to-tests`
 - [x] 4. 🙋 May review test
-- [ ] 5. 🤖 `/implement-feature` + lint, typecheck, test, build
+- [x] 5. 🤖 `/implement-feature` + lint, typecheck, test, build
 
 ## Definition of done
 
@@ -24,10 +24,11 @@
 
 - 2026-10-21 · หัวข้อเกิน 6 แสดง 6 + ปุ่ม "อีก n หัวข้อ" · `review_due` และ `origin = user` เป็นป้ายเล็กข้างชื่อ (May เลือก)
 - 2026-10-21 · test เดิม chat-streaming AC-7 ส่ง progress_card คั่น token แล้วคาด bubble เดียว ขัดกับ AC-9 · May อนุมัติตัดบรรทัด progress_card ออก (spec AC-10 แก้ตาม)
+- 2026-10-21 · implement: `ProgressCard.tsx` ใหม่ · MessageList แสดง role card ที่มี card เป็นการ์ด (ไม่มี data-role) · ChatRoom เพิ่มการ์ดเมื่อได้ `progress_card` และตัดการรวม bubble · red → green 2 รอบ · test 119/119, lint 0 error, typecheck, build ผ่าน
 
 ## Next step
 
-ขั้น 5: `/implement-feature specs/features/tutor/progress-card.md`
+รัน /work-done (หรือ May ลองเปิดห้องกับ API stub ในเครื่องก่อนก็ได้)
 
 ## Waiting on
 
