@@ -5,7 +5,7 @@
 | Owner | May |
 | Branch | `docs/uc-tutor-answer` |
 | Checklist item | Use case UC ติว และ UC ส่งคำตอบ ให้ครบ 4 UC (D7) |
-| Status | in progress · 2026-10-21 |
+| Status | ready for work-done · 2026-10-21 |
 
 ## Plan
 
@@ -13,8 +13,8 @@
 - [x] 2. 🤖 เขียน UC-03 ติวในห้องติว ตามรูปแบบเดียวกับ UC-01/02 (ตารางหัว, main flow, A, E, ต้องเพิ่มใน spec, คำถามเปิด)
 - [x] 3. 🙋 May ตัดสินเรื่องที่ spec ยังไม่กำหนดของ UC-03 (Claude ถามเป็นตัวเลือก) แล้วตรวจเนื้อหา
 - [x] 4. 🤖 เขียน UC-04 ส่งคำตอบและรับผลตรวจ
-- [ ] 5. 🙋 May ตัดสินเรื่องที่ยังไม่กำหนดของ UC-04 (ตัดสินแล้ว 2026-10-21) แล้วตรวจเนื้อหา UC-03 + UC-04 · เหลือ approve
-- [ ] 6. 🤖 อัปเดตตารางสถานะใน `use-cases.md` และติ๊ก checklist ใน `sprint-checklists.md`
+- [x] 5. 🙋 May ตัดสินเรื่องที่ยังไม่กำหนดของ UC-04 (ตัดสินแล้ว 2026-10-21) แล้วตรวจเนื้อหา UC-03 + UC-04 · เหลือ approve
+- [x] 6. 🤖 อัปเดตตารางสถานะใน `use-cases.md` และติ๊ก checklist ใน `sprint-checklists.md`
 
 ## Definition of done
 
@@ -31,7 +31,7 @@
 
 ## Next step
 
-May อ่าน UC-03 + UC-04 ใน docs/design/use-cases.md แล้ว approve (หรือบอกจุดแก้) → ขั้น 6 อัปเดตตารางสถานะเป็น "May approve <วันที่>" และติ๊ก checklist
+รัน /work-done (May approve UC-03 + UC-04 แล้ว 2026-10-21)
 
 ## Waiting on
 

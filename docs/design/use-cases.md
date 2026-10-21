@@ -6,8 +6,8 @@ Use case หลัก 4 UC ของระบบ เล่าว่าผู้�
 |---|---|---|---|
 | UC-01 | สมัครสมาชิกและตั้งค่าเริ่มต้น | S01–S07 | May approve 2026-10-19 |
 | UC-02 | สร้างการเตรียมสอบ อัปโหลดไฟล์ และยืนยันขอบเขต | S07–S14 | May approve 2026-10-19 |
-| UC-03 | ติวในห้องติว | S15–S20, S24, S26, S27 | ร่างเสร็จ · May ตัดสินแล้ว 2026-10-21 · รอ May approve |
-| UC-04 | ส่งคำตอบและรับผลตรวจ | S16, S18, S21–S23, S25 | ร่างเสร็จ · May ตัดสินแล้ว 2026-10-21 · รอ May approve |
+| UC-03 | ติวในห้องติว | S15–S20, S24, S26, S27 | May approve 2026-10-21 |
+| UC-04 | ส่งคำตอบและรับผลตรวจ | S16, S18, S21–S23, S25 | May approve 2026-10-21 |
 
 **ที่มา:** `specs/requirements/requirements.md` v1.2 · `docs/design/wireframe.html` (แก้ตาม `wireframe-s2-review.md`) · `specs/system/ai-orchestration.md` · `specs/system/api.md` · `supabase/migrations/0001_init.sql`
 
