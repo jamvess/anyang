@@ -25,7 +25,9 @@
 
 ## Decisions
 
-- 2026-10-21 · regex `^https://anyang-[a-z0-9]{9}-anyang4\.vercel\.app$` · เพราะ URL preview จริง 8 อันจาก deployment ของ repo เป็น hash 9 ตัว a-z0-9 ทุกอัน · ไม่ใช้ `[a-z0-9-]+` เพราะ team อื่นที่ slug ลงท้าย `-anyang4` จะ match ได้ · branch alias (`anyang-git-<branch>-anyang4`) ไม่ match ตั้งใจ
+- 2026-10-21 · (Junior) regex `^https://anyang-[a-z0-9]+-anyang4\.vercel\.app$` · hash ไม่มี `-` จึงกัน team อื่นที่ slug ลงท้าย `-anyang4` ได้อยู่แล้ว (เช่น `anyang-abc-evil-anyang4`) และไม่พังถ้า Vercel เปลี่ยนความยาว hash (URL จริงตอนนี้เป็น 9 ตัว) · มี test hash 8 ตัวที่ต้องผ่าน · branch alias (`anyang-git-<branch>-anyang4`) ไม่ match
+- 2026-10-21 · (Junior) ชื่อ test ใช้ `test_roomhttp_cors_*` เพราะที่มาคือ room-http.md OQ6 · ข้อความ CORS ใน api.md Conventions ไปรวมกับ PR api.md ข้อ 5
+- 2026-10-21 · (Junior) `CORS_ALLOW_ORIGINS=""` ให้พังตอน boot · `X-Request-Id` middleware แยกเป็น issue
 
 ## Next step
 
