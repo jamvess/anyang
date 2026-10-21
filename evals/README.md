@@ -8,7 +8,9 @@ evals/
 │  ├─ raw/             # รูปจริง (gitignored ถ้าเป็นลายมือเพื่อน · เก็บใน Drive ทีม)
 │  └─ labels.jsonl
 ├─ answers/            # P2
-│  ├─ labels.jsonl
+│  ├─ worksheet.md     # ใบงานที่คน label กรอก · ดู "ใบงาน" ด้านล่าง
+│  ├─ make_worksheet.py
+│  ├─ labels.jsonl     # สร้างจาก worksheet.md ด้วย make_worksheet.py --build
 │  └─ results/         # <prompt>.json ที่ run_eval.py เขียน
 ├─ topics/             # P3 · ดูเกณฑ์เลือกวิชาและกติกาไฟล์ใน topics/README.md
 │  └─ <subject>/       # raw/ (gitignored), sources.md, labels.json
@@ -138,6 +140,31 @@ uv run --project apps/api pytest evals/test_run_eval.py
 - `reference` คือเฉลยที่ถูก ถ้าโจทย์มาจากข้อสอบเก่าที่ไม่มีเฉลย ให้แก้เองแล้วให้อีกคนตรวจ
 - `image` ใส่ `null` ได้ถ้าเป็นคำตอบที่พิมพ์
 - error_type ใน JSON ใช้ตัวเล็กและ `_` แทนช่องว่าง (`wrong_method`, `no_answer`)
+
+### ใบงาน · `answers/worksheet.md`
+
+ไม่ต้องแก้ `labels.jsonl` เอง ให้กรอกใบงาน แล้วให้ script สร้างไฟล์และตรวจกติกาให้ · **คน label คือ May หรือ Junior ไม่ใช่ Jam** เพราะ Jam ทำ P2 (ทีมตกลง 21 ต.ค. · PR #51)
+
+1. ใบงานมี 50 หัวข้อ (`ans_001`–`ans_050`) · 30 ข้อแรกมาจากรูปลายมือที่ label `lines` ไว้แล้วใน `handwriting/` · 20 ข้อหลังเป็นคำตอบแบบพิมพ์ (`image: none`)
+2. **ข้อพิมพ์:** ใส่ `problem_id` (P01–P17 ในตารางของ `handwriting/problems.md`), `writer` และบรรทัดคำตอบแบบ ``1. `x(x^{2}-1)` `` ทีละบรรทัด · script ดึงโจทย์, เฉลย และ `answer_format` จาก `problem_id` เอง · เขียนคำตอบผิดให้ได้ตามโควตาด้านล่าง
+3. **ทุกข้อ:** กรอก `verdict`, `error_type`, `first_wrong_line`, `method` (ว่าง = `doc`) และ `labeled_by` ตามคู่มือข้างบน · ข้อไหนยังไม่กรอก `verdict` ถือว่ายังไม่ label
+4. รัน `uv run --project apps/api python evals/answers/make_worksheet.py --build` · ถ้ามีข้อไหนผิดกติกา script บอก id ของข้อนั้นและไม่เขียนไฟล์ · ถ้าผ่าน ได้ `labels.jsonl` เฉพาะข้อที่ label แล้ว จึงทำทีละส่วนได้
+5. **ห้ามเปิด** `handwriting/raw/copy-sheets/copy_sheets_key.md` (เฉลยว่ารูปไหนตั้งใจผิด) จนกว่าจะ label ครบ
+
+**โควตาคำตอบพิมพ์ 20 ข้อ** (รูปลายมือมีบรรทัดผิดแค่ ~8 รูป จึงเติมให้ error type ทุกแบบมีข้อมูล)
+
+| แบบ | จำนวน |
+|---|---|
+| `sign` | 3 |
+| `prerequisite` | 3 |
+| `wrong_method` | 3 |
+| `concept` (เป็น `incomplete` อย่างน้อย 1) | 3 |
+| `calculation` | 3 |
+| `no_answer` | 2 |
+| `correct_with_flaw` | 2 |
+| `correct` + `method: other` | 1 |
+
+สร้างใบงานใหม่: `uv run --project apps/api python evals/answers/make_worksheet.py` (ไม่เขียนทับถ้ามีใบงานอยู่แล้ว) · test: `uv run --project apps/api pytest evals/answers`
 
 ### การให้คะแนน · `run_eval.py --purpose check_answer`
 
