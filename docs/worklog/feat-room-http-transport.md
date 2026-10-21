@@ -5,7 +5,7 @@
 | Owner | May |
 | Branch | `feat/room-http-transport` |
 | Checklist item | หน้าแชท P4-lite: อ่าน SSE ผ่าน `lib/sse.ts`, แสดงข้อความที่ไหลออกมา, render KaTeX, ส่งรูป |
-| Status | paused · 2026-10-21 |
+| Status | in progress · 2026-10-21 |
 
 ## Plan
 
@@ -52,11 +52,11 @@
 
 ## Waiting on
 
-Junior: เพิ่ม CORS ใน FastAPI ให้ `http://localhost:3000` (และ origin ของ Vercel) เรียก API ได้ (room-http.md OQ 6 · May เลือก 2026-10-21) · OQ 5 (ข้อความเปิดซ้ำไหม), OQ 7 (code ของ 404 ไม่พบการเตรียมสอบ)
+ไม่มี · CORS merge แล้ว (PR #49) · OQ 5–7 Junior ตอบแล้ว
 
 ## Notes for next time
 
-- API ยังไม่มี CORS (`grep -rn CORS apps/api/app` ไม่เจอ) · browser ที่ :3000 เรียก :8000 ไม่ได้ จะขึ้น "เปิดห้องติวไม่สำเร็จ"
+- CORS: `apps/api/app/cors.py` (PR #49) · ค่าเริ่มต้นอนุญาต `http://localhost:3000` ไม่ต้องแก้ `.env` ของ API
 - ต้องตั้ง `NEXT_PUBLIC_API_URL=http://localhost:8000` ใน `apps/web/.env.local` ก่อนลองจริง (🙋 May ตั้งเอง · Claude ห้ามอ่าน .env)
 - stub ตรวจว่า path param เป็น uuid · ใช้ uuid จริงใน URL เช่น `/preps/11111111-1111-4111-8111-111111111111/room`
 - jsdom ไม่มี `Blob.stream()` · ใน test ใช้ `new Response(text)` สร้าง stream

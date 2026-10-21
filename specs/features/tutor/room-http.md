@@ -6,7 +6,7 @@
 | Requirements | TM-20, TM-13, TM-06, TM-21 · วัดผลภายหลัง: NFR-P1 |
 | Owner | May |
 | Reviewer | Junior |
-| Status | approved by May 2026-10-21 (owner) · รอ Junior review ใน PR (OQ 5–7) |
+| Status | approved by May 2026-10-21 (owner) · OQ 5–7 ตอบแล้วใน PR #49 · รอ Junior review ใน PR |
 | Related system spec | api.md v1.3 "Conventions", "ห้องติว", "SSE events", "รอตัดสิน" ข้อ 1–3 · ai-orchestration.md §2.2.2, §2.2.8 · `chat-room-ui.md` · `chat-streaming.md` · `docs/design/use-cases.md` UC-03 E1, E2 |
 
 ## 1. Context
@@ -148,14 +148,13 @@ fixture ใหม่: `tests/fixtures/sse/room_session_start.txt` (คัดล�
 3. ปุ่มแนบรูป: กดได้ แต่แจ้งว่ายังส่งรูปไม่ได้ (AC-12)
 4. โหมด demo: ลบทิ้ง หน้าห้องใช้ API อย่างเดียว
 
-ให้ Junior ตอบ (reviewer):
+Junior ตอบแล้ว (PR #49 · 2026-10-21)
 
-5. **ข้อความเปิดซ้ำไหม (AC-2):** `GET /sessions/{id}` ที่เรียกทันทีหลัง event `session` จะยังไม่มีข้อความเปิดใช่ไหม (บันทึกตอนจบ stream)
-6. **CORS:** (ก) เพิ่ม CORS ใน FastAPI (`allow_origins` จาก env) หรือ (ข) หน้าเว็บเรียกผ่าน Next.js rewrites (`/api/*` → API) ไม่ต้องแก้ backend · ต้องเช็กว่า rewrite ไม่ buffer SSE · **ระหว่างนี้ test ทั้งหมด mock `fetch` จึงไม่ติด แต่ขั้นลองจริงในเครื่อง (ขั้น 6 ของ worklog) ต้องมีทางใดทางหนึ่ง**
-7. **code ของ 404 ไม่พบการเตรียมสอบ:** api.md ยังไม่มีรายการ `error.code` (api.md "รอตัดสิน" ข้อ 3) · spec นี้ถือว่า 404 ทุก code ที่ไม่ใช่ `no_active_session` = ไม่พบ · test ใช้ `prep_not_found` เป็นตัวอย่าง
+5. ข้อความถูกบันทึกตอน stream จบ · `GET /sessions/{id}` ทันทีหลัง event `session` จึงยังไม่มีข้อความเปิด ไม่ซ้ำ (เปลี่ยนได้ถ้าเลือกทาง A ของ #36)
+6. CORS ใน FastAPI (`apps/api/app/cors.py`) · origin จาก env `CORS_ALLOW_ORIGINS` (ค่าเริ่มต้น `http://localhost:3000`) และ `CORS_ALLOW_ORIGIN_REGEX` (Vercel preview) · 500 ที่ไม่ได้ดักจะหลุด CORS ทำให้ browser เห็นเป็น network error · หน้าห้องแสดง "เปิดห้องติวไม่สำเร็จ" เหมือนกัน
+7. 404 ไม่พบการเตรียมสอบ = `exam_prep_not_found` (รวมถึงของ user อื่น) · พฤติกรรมของ spec ไม่เปลี่ยน (404 ทุก code ที่ไม่ใช่ `no_active_session` = ไม่พบ) · test ใช้ `prep_not_found` เป็นตัวอย่าง ผลเหมือนกัน ไม่แก้ test ที่ review แล้ว
 
 ## 11. Spec changes needed
 
-- **api.md** (ไฟล์ร่วม) Conventions: ระบุวิธีเรียก API จาก browser (CORS หรือ proxy) ตามคำตอบ Open question 6
 - **`chat-room-ui.md`** §3: `ChatMessage` / `RoomData` เปลี่ยนเป็น type ที่ generate จาก API (เพิ่ม `card`, `session_id`)
 - **`chat-streaming.md`** AC-21 และ §2 "หน้า room ใช้ fake transport": แทนด้วย spec นี้ (หน้า room ใช้ API)
