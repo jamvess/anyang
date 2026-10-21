@@ -38,4 +38,4 @@ Junior ยืนยัน api.md v1.3 ข้อ 5 (`done.message_ids`) และ
 
 ## Notes for next time
 
-- ห้ามแก้ `requirements.md` / `api.md` (ไฟล์กลาง) ใน PR นี้ · จดเป็นข้อเสนอใน "ต้องเพิ่มใน spec" แทน เหมือน UC-01/02
+- ไฟล์กลาง: `api.md` แก้ใน PR นี้แล้วเพราะ May สั่ง (2026-10-21) เฉพาะข้อ 3, 5, 6 · เรื่องอื่นจาก use case ยังจดเป็นข้อเสนอใน "ต้องเพิ่มใน spec" ไม่แก้ `requirements.md` / `ai-orchestration.md` เอง
