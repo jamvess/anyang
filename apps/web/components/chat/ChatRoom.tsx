@@ -83,7 +83,8 @@ export function ChatRoom({
     append(
       newMessage("user", text, {
         input_mode: image ? "image" : "text",
-        attachment_path: image ? image.name : null,
+        // Not uploaded yet, so no Storage path (chat-room-ui.md AC-6c).
+        attachment_name: image ? image.name : null,
       }),
     );
     stick.current = true;

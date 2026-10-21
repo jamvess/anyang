@@ -17,7 +17,7 @@
 - [ ] 6. 🙋 May ลองจริงในเครื่อง: เปิด API + web แล้วคุยในห้องติว เห็นข้อความไหลจาก stub (Claude ให้ขั้นตอนทีละคลิก)
 - [x] 7. 🤖 spec: `chat-room-ui.md` เพิ่ม AC-6b ชื่อไฟล์รูปมาจาก `attachment_name` (api.md v1.3 · PR #43) · ถ้าเป็น null ใช้ท้าย `attachment_path` ตามเดิม (AC-6 เดิมผ่านโดยไม่แก้) · 🙋 May review
 - [x] 8. 🤖 test ใหม่ใน `MessageList.test.tsx` + `ChatRoomStream`/`RoomPageHttp` ถ้าจำเป็น · 🙋 May review
-- [ ] 9. 🤖 implement `MessageList.tsx` + ข้อความในเครื่องของ ChatRoom ใช้ `attachment_name`
+- [x] 9. 🤖 implement `MessageList.tsx` + ข้อความในเครื่องของ ChatRoom ใช้ `attachment_name`
 
 ## Definition of done
 
@@ -42,10 +42,11 @@
 - 2026-10-21 · page.tsx อ่าน `params` ใน `<Suspense>` เพราะ Next 16 ไม่ให้ prerender อ่าน request data นอก Suspense
 - red → green: 3 รอบ (transport + Composer · TutorRoom + opening ของ ChatRoom · หลังแก้ test helper) + แก้ lint/typecheck/build อีก 3 รอบ
 - 2026-10-21 · merge main (PR #43 attachment_name): `ChatMessage.attachment_name` ไม่บังคับเหมือน `card` เพื่อให้ test เดิมที่ review แล้ว typecheck ผ่าน
+- 2026-10-21 · ขั้น 9: MessageList ใช้ `attachment_name` ก่อน ถ้า null ใช้ท้าย `attachment_path` · ChatRoom สร้างข้อความรูปด้วย `attachment_name` · red → green 1 รอบ · test 103/103, lint 0 error, typecheck, build ผ่าน
 
 ## Next step
 
-May review AC-6b, AC-6c ใน `chat-room-ui.md` และ test 2 ตัวท้าย `MessageList.test.tsx` → ขั้น 9 implement
+ขั้น 6: เมื่อ Junior เพิ่ม CORS ใน FastAPI แล้ว merge main เข้ามา · ตั้ง `NEXT_PUBLIC_API_URL=http://localhost:8000` ใน `apps/web/.env.local` (🙋 May) · เปิด API (`uv run uvicorn app.main:app --port 8000` ใน apps/api) + web (`pnpm dev`) · May เปิด `http://localhost:3000/preps/11111111-1111-4111-8111-111111111111/room` แล้วส่งข้อความ ดูคำตอบไหลจาก stub
 
 ## Waiting on
 
