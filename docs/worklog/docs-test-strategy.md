@@ -11,8 +11,8 @@
 
 - [x] 1. 🤖 สำรวจ test ที่มีจริง: จำนวนและชั้นของ test (api unit / integration, web Vitest, PoC, evals), job ใน CI, กติกาตั้งชื่อ, fake / live provider · สรุปเป็นตาราง "มีแล้ว / ยังไม่มี"
 - [x] 2. 🤖 ร่าง `specs/system/test-strategy.md` 1 หน้า: test แต่ละชั้น (อะไร, เครื่องมือ, รันที่ไหน, ใครเขียน, ใคร review), การวัดคุณภาพ AI ด้วย golden set, กฎ SDD/TDD และ traceability, ข้อมูลทดสอบและความเป็นส่วนตัว, ช่องว่างที่ยังไม่มีพร้อมเจ้าของ · อ้างที่มาจาก spec ที่มีอยู่ ไม่คิดกฎใหม่เอง
-- [ ] 3. 🙋 Jam ตัดสินเรื่องที่ spec ยังไม่ได้บอก (Claude ให้ตัวเลือกพร้อมคำแนะนำ)
-- [ ] 4. 🤖 แก้ตามที่ตัดสิน + เช็คว่าไม่เกิน 1 หน้า
+- [x] 3. 🙋 Jam ตัดสินเรื่องที่ spec ยังไม่ได้บอก (Claude ให้ตัวเลือกพร้อมคำแนะนำ)
+- [x] 4. 🤖 แก้ตามที่ตัดสิน + เช็คว่าไม่เกิน 1 หน้า
 
 ## Definition of done
 
@@ -25,9 +25,12 @@
 - 2026-10-21 · ทำล่วงหน้า (เป็นงาน S4) ระหว่างรอ flash ของ P3 หลัง 14:00 น.
 - 2026-10-21 · `specs/system/test-strategy.md` เป็นไฟล์ใหม่ใน `specs/system/` ซึ่ง CODEOWNERS ให้ทั้ง 3 คน → ถือเป็นไฟล์ร่วม · ไม่แก้ `CLAUDE.md` หรือ `architecture.md` ใน PR นี้ (ถ้าจะลิงก์ ต้องถามก่อน)
 
+- 2026-10-21 · (Jam เลือก ⭐ ทุกข้อ) §5: eval รันมือ + แนบผลใน PR จนถึง Vertex (เทอม 2) · `evals/` เข้า job `api` ของ CI (Junior · S3) · `poc/` ไม่เข้า CI · isolation test วนทุกตารางที่มี `tenant_id` (Junior · S4) · ไม่ตั้งเป้า coverage เป็น % ใช้ AC ↔ test ID แทน · e2e เป็น checklist ทำมือ, Playwright เทอม 2 · ข้อของ Junior ยังเป็นข้อเสนอจน Junior ตกลงใน PR
+- 2026-10-21 · ข้อ 4: หน้าเดียว 56 บรรทัด
+
 ## Next step
 
-ข้อ 3: Jam ตัดสิน 5 ช่องว่างใน §5 ของ `specs/system/test-strategy.md` (ตัวเลือกอยู่ในแชท · ถ้าไม่มีแชทให้ถามใหม่) แล้วเติมคอลัมน์ "เสนอ"
+ครบทุกขั้นแล้ว · `/work-done` (PR #55 ให้ Junior + May review · Junior ต้องตกลงข้อ `.github/` และ isolation test ใน §5)
 
 ## Waiting on
 
