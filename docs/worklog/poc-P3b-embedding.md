@@ -5,7 +5,7 @@
 | Owner | Jam |
 | Branch | `poc/P3b-embedding` |
 | Checklist item | P3: ingest → A5 → A6 → A7 → `compute_importance` · เทียบกับ label · ลอง embedding 2–3 ตัวกับคำถาม 20 ข้อ (ส่วน embedding · ส่วน P3a อยู่ใน PR #37) |
-| Status | paused · 2026-10-21 |
+| Status | in progress · 2026-10-21 |
 
 ## Done today (2026-10-20 → 21)
 
@@ -19,7 +19,7 @@ spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผล�
 ## Plan
 
 - [x] 1. 🤖 ตัด chunk ของชีท 4 ไฟล์ตาม §2.3.3 (400–800 tokens ไม่คร่อมเกิน 2 หน้า) จากข้อความ PyMuPDF ที่ ingest ไว้แล้ว · ทำเทมเพลตคำถาม `evals/topics/mth10101/retrieval_questions.jsonl` + คู่มือ + รายชื่อหัวข้อจาก label ให้กระจายคำถามครบ
-- [ ] 2. 🙋 **May (หรือ Junior) เขียนคำถาม 20 ข้อ + เฉลยหน้า** (ไม่ใช่ Jam · คน label ไม่ใช่คนทำ PoC) · Jam ส่งงานในกลุ่ม
+- [x] 2. 🙋 **May (หรือ Junior) เขียนคำถาม 20 ข้อ + เฉลยหน้า** (ไม่ใช่ Jam · คน label ไม่ใช่คนทำ PoC) · Jam ส่งงานในกลุ่ม
 - [x] 3. 🙋 Jam ตัดสิน model ที่จะลอง 2–3 ตัว และวิธีเรียก embedding ผ่าน provider layer (AI-01)
 - [x] 4. 🤖 test ก่อน → โค้ด spike `poc/P3/embed.py`: embed chunk + คำถาม · recall@4 ต่อ model · มิติ vector · เวลา · ต้นทุน → 🙋 Jam review test
 - [ ] 5. 🤖 รันจริง → สรุปเทียบ → ใส่ใน report P3 (ส่วน P3b)
@@ -45,16 +45,16 @@ spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผล�
 - 2026-10-21 · (Jam อนุญาตแก้ test) `CHARS_PER_TOKEN` 3 → 1.7 (`Fraction(17, 10)` กันปัดเศษ float ที่ขอบ) · test 3 จุดแก้ตามอัตราใหม่ สิ่งที่ตรวจเหมือนเดิม · ตัด chunk ใหม่: **116 chunk** (sheet-01 90, sheet-02 20, sheet-03 3, sheet-04 3) · median 486 token · ต่ำกว่า 400: 25 · เกิน 800: 0 · 2 หน้า: 64 · ผล bge-m3 ที่รันค้างไว้ใช้ chunk ชุดเก่า ต้องรันใหม่
 - 2026-10-21 · smoke test bge-m3 ผ่าน (คำถามทิ้ง 2 ข้อ · ลบไฟล์ผลทิ้งแล้ว ไม่ใช่ผลจริง): 116 chunk · 1,024 มิติ · embed chunk ทั้งหมด 409 วินาทีบน CPU (ครั้งเดียว มี cache ใน `out/embed/`) · 0.13 วินาทีต่อคำถาม · แก้ bug ของ PoC: `setdefault` โหลด model ใหม่ทุก call · local model ใช้ timeout 900 วินาทีเฉพาะ PoC (`ai.yaml` คง 60) และโหลด model ก่อนจับเวลา
 
+- 2026-10-21 · ผลจริง (คำถาม 20 ข้อของ May, PR #46 · 116 chunk): **`gemini-embedding-2` recall@4 90% (18/20) · recall@1 75% · 3,072 มิติ · embed 116 chunk 21 วินาที · 0.16 วินาที/คำถาม** · พลาดข้อ 6 (diff cot) และ 17 (L'Hôpital) · **`bge-m3` recall@4 45% (9/20) · recall@1 45% · 1,024 มิติ · 0.57 วินาที/คำถามบน CPU** · @1 = @4 ของ bge-m3 ไม่ใช่ bug: เช็คอันดับของ chunk ที่ถูกแล้ว (script ใน scratchpad ไม่ commit) ข้อที่พลาดอยู่อันดับ 5, 6, 7, 7, 17, 18, 18, 20, 21, 79, 99 · ข้อที่พลาดหนักเป็นคำถามสูตร (cot อันดับ 79, sec⁻¹ อันดับ 99) เพราะ PyMuPDF ฉีกสมการเป็นตัวอักษรทีละบรรทัด · page ของ chunk ตรงกับเลขหน้า PDF viewer (เช็ค sheet-01:46 มี cot จริง)
+- 2026-10-21 · ⚠️ schema ตอนนี้ `chunks.embedding vector(768)` แต่ embedding-2 ให้ 3,072 มิติ · pgvector index HNSW รับได้ไม่เกิน 2,000 มิติ · ต้องตัดสิน: ขอ `output_dimensionality` 768 หรือ 1536 จาก API แล้ววัด recall ซ้ำ หรือใช้ 3,072 กับ `halfvec`
+
 ## Next step
 
-เมื่อ May กรอก `evals/topics/mth10101/retrieval_questions.md` ครบ (merge หรือ pull จาก branch ที่ May ใช้):
-1. `cd apps/api && uv run --with sentence-transformers python ../../poc/P3/embed.py --model local:BAAI/bge-m3` (ใช้ cache chunk · embed แค่คำถาม)
-2. `uv run python ../../poc/P3/embed.py --model gemini:gemini-embedding-2` (116 chunk เว้นช่วงไม่เกิน 25K token/นาที · ประมาณ 3–4 นาที)
-3. ผลอยู่ที่ `poc/P3/results/embed-*.json` → commit → สรุปเทียบ (recall@4, มิติ, เวลา) ใส่ใน report P3 ร่วมกับ P3a (PR #37)
+รอ Jam ตัดสินเรื่องมิติ vector (768 / 1536 / 3,072) · ถ้าเลือกวัดที่ 768 หรือ 1536: เพิ่ม `output_dimensionality` ใน `Gateway.embed` + `GeminiProvider.embed` (test ก่อน · `apps/api` ต้องให้ Junior review) แล้วรัน `embed.py --model gemini:gemini-embedding-2` ซ้ำ (cache แยกตามมิติ) · จากนั้นใส่ตาราง P3b ใน report P3 (`specs/poc/reports/poc-P3.md` บน branch `poc/P3`)
 
 ## Waiting on
 
-May (หรือ Junior) เขียนคำถาม 20 ข้อ (ขั้น 2) · Jam ส่งเทมเพลตให้แล้วหรือยัง ให้เช็คในกลุ่ม
+Jam ตัดสินมิติ vector
 
 ## Notes for next time
 
