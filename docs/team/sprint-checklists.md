@@ -108,7 +108,8 @@
 ### S4 · 16–27 พ.ย.
 
 - [ ] P8-lite ร่วมกับทีม (review test)
-- [ ] Use case UC ติว และ UC ส่งคำตอบ ให้ครบ 4 UC (D7)
+- [x] Use case UC ติว และ UC ส่งคำตอบ ให้ครบ 4 UC (D7)
+  - ทำก่อนกำหนด 21 ต.ค. (PR #36) · มีข้อเสนอแก้ AM-02, ai-orchestration และ api.md v1.3 รอ Junior + Jam review
 - [ ] เตรียมลำดับหน้าจอสำหรับ demo รวม
 
 ### Buffer · 30 พ.ย.–4 ธ.ค.
