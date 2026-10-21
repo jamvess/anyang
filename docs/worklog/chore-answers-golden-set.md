@@ -11,7 +11,7 @@
 
 - [x] 1. 🤖 test ก่อน: `evals/answers/make_worksheet.py` (a) สร้างใบงาน `evals/answers/worksheet.md` 50 หัวข้อ: ans_001–030 จากรูปลายมือ (image, writer, problem, answer_format, reference, lines ก๊อปจาก `handwriting/`) + ans_031–050 คำตอบแบบพิมพ์ (ช่องว่างให้เขียน) · ช่อง verdict / error_type / first_wrong_line / method ว่างทุกข้อ (b) `--build` อ่านใบงานที่กรอกแล้วเขียน `labels.jsonl` และตรวจกติกาใน `evals/README.md` (ค่าที่อนุญาต, error_type ว่างเมื่อ `correct`, `incomplete` → `concept`, first_wrong_line `null` ตามกฎ และไม่เกินจำนวนบรรทัด) → 🙋 Jam review test
 - [x] 2. 🤖 implement จน test ผ่าน แล้วสร้าง `worksheet.md` จริง
-- [ ] 3. 🤖 `evals/README.md`: ขั้นตอนใช้ใบงาน + โควตา error type ของคำตอบพิมพ์ 20 ข้อ · แก้ข้อความ checklist (ไฟล์ร่วม · Jam ตกลงแล้ว 21 ต.ค.)
+- [x] 3. 🤖 `evals/README.md`: ขั้นตอนใช้ใบงาน + โควตา error type ของคำตอบพิมพ์ 20 ข้อ · แก้ข้อความ checklist (ไฟล์ร่วม · Jam ตกลงแล้ว 21 ต.ค.)
 - [ ] 4. 🙋 Jam ส่งข้อความในกลุ่ม (Claude ร่างให้) ขอ May หรือ Junior เขียนคำตอบพิมพ์ 20 ข้อ และ label ครบ 50 ข้อ
 
 ## Definition of done
@@ -33,9 +33,11 @@
 - 2026-10-21 · (Jam ok) แก้ `fill()` ใน test ที่ review แล้ว 2 จุด: `re.subn` อ่าน `\cos` ในข้อความแทนเป็น escape (`bad escape \c`) → เปลี่ยนเป็น `lambda` · สิ่งที่ test ตรวจเหมือนเดิม
 - 2026-10-21 · ข้อ 2: `make_worksheet.py` ผ่าน 32/32 (evals ทั้งหมด 64) · สร้าง `worksheet.md` จริง: 50 หัวข้อ (รูป 30 · พิมพ์ 20) · ลอง `--build` กับใบงานว่างได้ 0 แถว (ลบไฟล์ทิ้ง ไม่ commit `labels.jsonl` ว่าง)
 
+- 2026-10-21 · ข้อ 3: หัวข้อ "ใบงาน · `answers/worksheet.md`" ใน `evals/README.md` (5 ขั้น + โควตา 20 ข้อ) + ผังโฟลเดอร์ · checklist ของ Jam เพิ่ม sub-bullet (ไม่ติ๊ก) · ไม่ได้เพิ่มข้อใน checklist ของ May/Junior เอง เพราะเป็นส่วนของเพื่อน ให้เพื่อนเพิ่มเองหลังตกลงในกลุ่ม
+
 ## Next step
 
-ข้อ 3: เพิ่มหัวข้อ "ใบงาน" ใน `evals/README.md` (คำสั่ง, ขั้นตอน, โควตาคำตอบพิมพ์ 20 ข้อ) + แก้ข้อความ checklist ข้อ "Label golden set คำตอบ 50 ข้อ (D8)" ของ Jam
+ข้อ 4: Jam ส่งข้อความในกลุ่ม (ร่างอยู่ในแชท session 2026-10-21) ขอ May หรือ Junior เขียนคำตอบพิมพ์ 20 ข้อ + label 50 ข้อ · ตกลงกันได้แล้วจด "ใคร · ภายในวันไหน" ไว้ใน Decisions แล้ว `/work-done`
 
 ## Waiting on
 
