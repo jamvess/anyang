@@ -11,8 +11,8 @@
 
 - [x] 1. 🤖 `/spec-feature check/merge-rules AM-04 AM-05 AM-06` → `specs/features/check/merge-rules.md` · input = ผลของ SymPy (ตาม answer_format) + ผลของ LLM classifier · output = verdict ตาม §2.4.5 · ตัวตัดสินอยู่ใน `apps/api/app/domain/` (code ล้วน ไม่เรียก AI)
 - [x] 2. 🙋 Jam review spec + ตอบ open questions · 🙋 ขอ Junior ตกลงรูปแบบผลของ SymPy service (`app/math/`) ที่ merge rules จะรับ
-- [ ] 3. 🤖 `/spec-to-tests` → test ใน `apps/api/tests/unit/` (red) · ใช้ผลของ SymPy ปลอม
-- [ ] 4. 🙋 Jam review test (+ Junior เพราะอยู่ใน `apps/api/`)
+- [x] 3. 🤖 `/spec-to-tests` → test ใน `apps/api/tests/unit/` (red) · ใช้ผลของ SymPy ปลอม
+- [x] 4. 🙋 Jam review test (+ Junior เพราะอยู่ใน `apps/api/`)
 - [ ] 5. 🤖 `/implement-feature` จนเขียว
 
 ## Definition of done
@@ -29,13 +29,15 @@
 
 - 2026-10-21 · Junior ตกลงตามที่แนะนำ: รูปแบบผลของ SymPy ตาม §3 · merge rules หาบรรทัดแรกที่ผิดเองจาก `line_ok` · `attempts.first_wrong_line` + `method` เพิ่มใน migration ถัดไป (รวม #67) · spec status = approved
 
+- 2026-10-21 · ข้อ 3: `apps/api/tests/unit/test_check_merge_rules.py` 16 test (25 case) ครบ AC-1 ถึง AC-15 · red: `ModuleNotFoundError: app.domain.checker` · API ที่ test กำหนด: `merge_check(answer_format, lines, sympy, llm) -> CheckResult` · `SympyResult`, `LlmResult`, `CheckResult` (field ตาม spec §3)
+
 ## Next step
 
-ข้อ 3: `/spec-to-tests specs/features/check/merge-rules.md` → `apps/api/tests/unit/test_check_merge_rules.py` (red)
+ข้อ 4: Jam + Junior review `apps/api/tests/unit/test_check_merge_rules.py` · ok แล้วไปข้อ 5 `/implement-feature` เขียน `apps/api/app/domain/checker.py`
 
 ## Waiting on
 
-ไม่มี
+Jam + Junior review test
 
 ## Notes for next time
 
