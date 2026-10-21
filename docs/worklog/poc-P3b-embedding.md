@@ -33,10 +33,13 @@ spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผล�
 - 2026-10-20 · ขั้น 4a test ก่อน: gateway `embed()` 6 ตัว (ต่อท้าย `test_ai_gateway.py`) · Gemini embed 4 ตัว (`test_gemini_provider.py`) · PoC `test_embed.py` 4 ตัว · fail 14 ตัวตามที่ควร · โครง: `EmbedRequest`/`EmbedResponse`/`EmbedProvider` ใน `providers/base.py` · `EmbeddingConfig` ใน `settings.py` · `config/ai.yaml` เพิ่ม section `embedding` (timeout_s 60, batch_size 50 · ป้าย [C]) เพราะ embed ไม่มี prompt จึงใช้ purpose เดิมไม่ได้
 - 2026-10-20 · ขั้น 4b implement: `Gateway.embed` (แบ่ง batch, retry/backoff ร่วมกับ call ผ่าน `_with_retries`, ตรวจจำนวน vector, CallRecord purpose embed) · `GeminiProvider.embed` · `poc/P3/embed.py` (recall@1/@4, cache vector ต่อ model ตาม content_hash, LocalEmbedder เฉพาะ PoC) · test API 109 + PoC 23 ผ่าน
 - 2026-10-21 · smoke test (คำถามทิ้ง 2 ข้อใน scratchpad ไม่ใช้เป็นผล) เจอ bug 2 จุด: (1) `gemini-embedding-2` รวมข้อความหลายอันใน request เป็น vector เดียว ต้องห่อแต่ละข้อความด้วย `types.Content` · แก้แล้ว + test ใหม่ 1 ตัว (test 001 ที่ review แล้วไม่แก้) (2) embedding-2 รับรวม 8,192 tokens ต่อ request → `embedding.batch_size` 50 → 10 · หลังแก้: embedding-2 ได้ 429 quota ทันที (ไม่มี retryDelay) · embedding-001 ได้ "Server disconnected" หลังรอหลายนาที · (Jam เลือก) รัน bge-m3 ในเครื่องก่อน + Jam เช็คโควตาที่ ai.dev/rate-limit
+- 2026-10-21 · โควตาจาก ai.dev/rate-limit (Jam ส่งภาพ): Gemini Embedding 2 = RPM 100 · **TPM 30K** (ใช้ไป 31.41K) · นับ 1 ข้อความ = 1 request · **Gemini Embedding 001 ไม่มีในรายการของ key นี้** · Gemini 3.6 Flash (= 3.5-flash ของเรา) RPD เกินแล้ว (42) ทั้งที่ request ส่วนใหญ่ได้ 503 · (Jam ok) **ตัด `gemini-embedding-001` ออก** เหลือเทียบ embedding-2 กับ bge-m3 (spec ขอ 2–3 ตัว) · `embed.py` เว้นช่วงให้ไม่เกิน 25K token/นาที และ save cache ทีละ batch
+- 2026-10-21 · **ภาษาไทยจริง ≈ 1.5–1.8 ตัวอักษรต่อ token** (วัดด้วย count_tokens ของ gemini-embedding-2 กับ 5 chunk: 1.47, 1.64, 1.70, 1.82, 1.82) · `chunking.py` ประมาณไว้ 3 → ต่ำไปประมาณ 1.75 เท่า · chunk จริงใหญ่กว่าที่คิด (มีก้อนหนึ่ง 1,096 token เกิน 800) · ข้อสังเกตเมื่อวานว่า chunk เล็กเกินไปจึงผิด · ต้องแก้ค่าประมาณแล้วตัด chunk ใหม่ (แก้ test ที่ Jam review แล้ว ต้องขออนุญาต)
+- 2026-10-21 · (Jam อนุญาตแก้ test) `CHARS_PER_TOKEN` 3 → 1.7 (`Fraction(17, 10)` กันปัดเศษ float ที่ขอบ) · test 3 จุดแก้ตามอัตราใหม่ สิ่งที่ตรวจเหมือนเดิม · ตัด chunk ใหม่: **116 chunk** (sheet-01 90, sheet-02 20, sheet-03 3, sheet-04 3) · median 486 token · ต่ำกว่า 400: 25 · เกิน 800: 0 · 2 หน้า: 64 · ผล bge-m3 ที่รันค้างไว้ใช้ chunk ชุดเก่า ต้องรันใหม่
 
 ## Next step
 
-รัน smoke test ด้วย `local:BAAI/bge-m3` (`uv run --with sentence-transformers`) · Jam เช็คโควตา embedding ที่ ai.dev/rate-limit · รอ May เขียนคำถาม
+รอผล smoke test bge-m3 (ชุดเก่า) เพื่อยืนยันว่า pipeline ใช้ได้ · เมื่อ May ส่งคำถาม: รัน `embed.py` กับ embedding-2 และ bge-m3 บน chunk 116 ก้อน · ถ้าอยากเทียบขนาด chunk ให้ตัดอีกชุด (เช่น 1 หน้า) แล้วรันซ้ำ
 
 ## Waiting on
 

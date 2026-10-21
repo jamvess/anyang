@@ -2,7 +2,8 @@
 
 Rules from ai-orchestration.md §2.3.3: about 400-800 tokens per chunk, never across more than
 2 pages, keep page numbers (SM-04) and keep the text next to its hash so vectors can be rebuilt
-(AI-08). Tokens are estimated from characters (PoC only, no tokenizer call).
+(AI-08). Tokens are estimated from characters (PoC only, no tokenizer call) at 1.7 Thai
+characters per token, measured with Gemini count_tokens on 5 chunks (1.47-1.82) on 21 Oct.
 
     cd apps/api && uv run pytest ../../poc/P3 -q
 """
@@ -13,16 +14,17 @@ RULES = {"min_tokens": 400, "max_tokens": 800, "max_pages": 2}
 
 
 def page(no: int, tokens: int) -> dict:
-    """A page whose text is estimated at exactly ``tokens`` tokens."""
-    return {"page": no, "text": "ก" * (tokens * 3)}
+    """A page whose text is estimated at exactly ``tokens`` tokens (``tokens`` a multiple of 10)."""
+    return {"page": no, "text": "ก" * (tokens * 17 // 10)}
 
 
 def spans(chunks: list[Chunk]) -> list[tuple[int, int]]:
     return [(c.page_from, c.page_to) for c in chunks]
 
 
-def test_P3_estimate_tokens_is_about_three_characters_each():
-    assert estimate_tokens("ก" * 300) == 100
+def test_P3_estimate_tokens_uses_the_measured_thai_ratio():
+    assert estimate_tokens("ก" * 170) == 100
+    assert estimate_tokens("ก" * 171) == 101  # rounded up
     assert estimate_tokens("") == 0
 
 
@@ -46,7 +48,7 @@ def test_P3_a_chunk_does_not_grow_past_max_tokens():
 
 
 def test_P3_a_page_longer_than_max_tokens_is_split_on_its_own_page():
-    long_page = {"page": 7, "text": "\n".join(["ก" * 300] * 10)}  # 10 lines x 100 tokens
+    long_page = {"page": 7, "text": "\n".join(["ก" * 170] * 10)}  # 10 lines x 100 tokens
 
     chunks = chunk_pages("sheet-01", [long_page], **RULES)
 

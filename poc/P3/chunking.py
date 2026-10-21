@@ -7,9 +7,13 @@ sha256 of the text, so its vector can be rebuilt if the embedding model changes 
 """
 
 import hashlib
+import math
 from dataclasses import dataclass
+from fractions import Fraction
 
-CHARS_PER_TOKEN = 3  # rough estimate for Thai text; PoC only, no tokenizer call
+# Thai characters per Gemini token, measured with count_tokens on 5 chunks (1.47-1.82, 21 Oct).
+# A Fraction keeps the estimate exact (no float rounding at the chunk limits). PoC only.
+CHARS_PER_TOKEN = Fraction(17, 10)
 
 
 @dataclass(frozen=True)
@@ -23,12 +27,12 @@ class Chunk:
 
 
 def estimate_tokens(text: str) -> int:
-    return -(-len(text) // CHARS_PER_TOKEN)  # ceiling division
+    return math.ceil(len(text) / CHARS_PER_TOKEN)
 
 
 def _split_long_page(text: str, max_tokens: int) -> list[str]:
     """Parts of one page, each at most ``max_tokens``, cut at line breaks where possible."""
-    max_chars = max_tokens * CHARS_PER_TOKEN
+    max_chars = math.floor(max_tokens * CHARS_PER_TOKEN)
     parts: list[str] = []
     current: list[str] = []
     for line in text.split("\n"):

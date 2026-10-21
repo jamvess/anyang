@@ -29,6 +29,10 @@ OUT = HERE / "out"  # gitignored: contains text of the course files
 RESULTS = HERE / "results"
 QUESTIONS = REPO / "evals" / "topics" / "mth10101" / "retrieval_questions.md"
 K = 4  # recall@4: the PoC metric in specs/poc/README.md P3
+# Free tier of gemini-embedding-2: 30K tokens per minute (ai.dev/rate-limit, 21 Oct). Stay under
+# it with a margin, counting Thai at 1.5 characters per token (measured 1.47-1.82 on 5 chunks).
+FREE_TIER_TOKENS_PER_MINUTE = 25_000
+FREE_TIER_CHARS_PER_TOKEN = 1.5
 
 _PAGE = re.compile(r"(sheet-\d+):(\d+)(?:-(\d+))?")
 
@@ -126,14 +130,22 @@ async def main(model: str, questions_path: Path) -> None:
     cache_path = OUT / "embed" / name / "chunks.json"
     cache = json.loads(cache_path.read_text(encoding="utf-8")) if cache_path.exists() else {}
     todo = [c for c in chunks if c.content_hash not in cache]
-    started = time.perf_counter()
-    for c, vector in zip(
-        todo, await gateway.embed([c.text for c in todo], "document"), strict=True
-    ):
-        cache[c.content_hash] = vector
-    chunk_seconds = time.perf_counter() - started
     cache_path.parent.mkdir(parents=True, exist_ok=True)
-    cache_path.write_text(json.dumps(cache), encoding="utf-8")
+    chunk_seconds = 0.0
+    used_tokens, window_start = 0, time.monotonic()
+    step = settings.ai.embedding.batch_size
+    for start in range(0, len(todo), step):
+        part = todo[start : start + step]
+        tokens = sum(len(c.text) for c in part) / FREE_TIER_CHARS_PER_TOKEN
+        if model.startswith("gemini:") and used_tokens + tokens > FREE_TIER_TOKENS_PER_MINUTE:
+            await asyncio.sleep(max(0.0, 60 - (time.monotonic() - window_start)))
+            used_tokens, window_start = 0, time.monotonic()
+        started = time.perf_counter()
+        vectors = await gateway.embed([c.text for c in part], "document")
+        chunk_seconds += time.perf_counter() - started
+        used_tokens += tokens
+        cache.update({c.content_hash: v for c, v in zip(part, vectors, strict=True)})
+        cache_path.write_text(json.dumps(cache), encoding="utf-8")  # keep progress on errors
 
     started = time.perf_counter()
     query_vectors = await gateway.embed([q.text for q in questions], "query")
