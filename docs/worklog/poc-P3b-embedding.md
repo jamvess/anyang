@@ -13,6 +13,7 @@
 - เช็คแล้วว่า @1 = @4 ของ bge-m3 ไม่ใช่ bug (อันดับของ chunk ที่ถูกอยู่ใน Decisions)
 - เพิ่ม `embedding.dimensions` ใน gateway + Gemini (`output_dimensionality`) + `embed.py --dimensions` · test ก่อน (Jam review) → api 172 · PoC 25 ผ่าน
 - merge main แล้ว · ขอ Junior review ล่วงหน้าเฉพาะ `apps/api/` + `config/ai.yaml` ใน comment ของ PR #39 (Junior เป็น reviewer แล้ว · PR ยังเป็น draft)
+- (เที่ยง) Junior comment ใน #39 ว่า OK + ตกลง 3 ข้อ (vector ผิดขนาด = error · cosine · tokens_in 0 จนย้าย Vertex) · Junior แก้ `data-model.md` ใน PR #54 · Jam approve #54 แล้ว
 
 ## Done (2026-10-20 → 21 เช้า)
 
@@ -85,4 +86,5 @@ spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผล�
 - Git Bash heredoc กับ `python -c "..."` ที่มี `$` หรือ `\` ให้ระวัง · ใช้ Write tool เขียน script เป็นไฟล์ปลอดภัยกว่า
 - รัน embed ที่มิติอื่น: `cd apps/api && uv run python ../../poc/P3/embed.py --model gemini:gemini-embedding-2 --dimensions 768` · cache และผลแยกชื่อ `-d768` · 116 chunk ใช้ ~22 วินาที
 - ยังไม่ใส่ `embedding.dimensions: 768` และ model ของ tier `embed` ใน `config/ai.yaml` (ไฟล์ร่วม) · ทำใน PR อัปเดต `ai.yaml` ของ S2 หลังผล P3a
+- PR #54 (`data-model.md` มิติ 768 + cosine) ของ Junior: approve แล้ว · ถ้ายังไม่ merge ตอนกลับมา ให้เตือน Junior กด Merge เมื่อ CI `api-integration` เขียว
 - ruff ของโค้ดนอก `apps/api` ให้รันจาก `apps/api` ด้วย `--config pyproject.toml` · ถ้ารันจาก root จะเตือน import order ของ `test_rls_isolation.py` ผิดๆ
