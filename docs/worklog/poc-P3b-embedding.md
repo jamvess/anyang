@@ -5,9 +5,16 @@
 | Owner | Jam |
 | Branch | `poc/P3b-embedding` |
 | Checklist item | P3: ingest → A5 → A6 → A7 → `compute_importance` · เทียบกับ label · ลอง embedding 2–3 ตัวกับคำถาม 20 ข้อ (ส่วน embedding · ส่วน P3a อยู่ใน PR #37) |
-| Status | in progress · 2026-10-21 |
+| Status | paused · 2026-10-21 |
 
-## Done today (2026-10-20 → 21)
+## Done today (2026-10-21, session บ่าย)
+
+- คำถามของ May (PR #46) เข้ามาแล้ว · รันจริงครบ: **gemini-embedding-2 @768 recall@4 95%** · @3072 90% · bge-m3 45% · ผลใน `poc/P3/results/embed-*.json`
+- เช็คแล้วว่า @1 = @4 ของ bge-m3 ไม่ใช่ bug (อันดับของ chunk ที่ถูกอยู่ใน Decisions)
+- เพิ่ม `embedding.dimensions` ใน gateway + Gemini (`output_dimensionality`) + `embed.py --dimensions` · test ก่อน (Jam review) → api 172 · PoC 25 ผ่าน
+- merge main แล้ว · ขอ Junior review ล่วงหน้าเฉพาะ `apps/api/` + `config/ai.yaml` ใน comment ของ PR #39 (Junior เป็น reviewer แล้ว · PR ยังเป็น draft)
+
+## Done (2026-10-20 → 21 เช้า)
 
 - branch + draft PR #39 · ตัด chunk ชีท 4 ไฟล์ (`poc/P3/chunking.py`) · เทมเพลตคำถามให้ May
 - `Gateway.embed()` + `GeminiProvider.embed()` + `embed.py` (recall@1/@4, cache vector) · test API 109 + PoC 23 ผ่าน
@@ -57,7 +64,9 @@ spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผล�
 
 ## Next step
 
-ข้อ 5 (ส่วนสุดท้าย): ใส่ตาราง P3b (embedding-2 @3072 / @768 / bge-m3: recall@4, recall@1, มิติ, เวลา) ใน report P3 · report อยู่บน branch `poc/P3` (`specs/poc/reports/poc-P3.md`, PR #37) จึงต้องสลับไป `poc/P3` หรือ merge `poc/P3b-embedding` เข้าไป · แนะนำให้เขียนตอนทำ report P3 พร้อมผล flash หลัง 14:00 น. · ก่อนเอา PR #39 ออกจาก draft ต้องให้ Junior review ส่วน `apps/api/`
+1. ดูว่า Junior ตอบใน PR #39 แล้วหรือยัง (`gh pr view 39 --comments`) · ถ้าขอแก้ ให้เขียน test ก่อนแล้วแก้ตาม (ห้ามแก้ test ที่ Jam review แล้วโดยไม่ถาม)
+2. ข้อ 5 (ส่วนสุดท้าย) ทำบน branch `poc/P3` ไม่ใช่ที่นี่: ใส่ตาราง P3b ใน report P3 (`specs/poc/reports/poc-P3.md`, PR #37) · ตัวเลขอยู่ใน `poc/P3/results/embed-gemini_gemini-embedding-2-d768.json`, `embed-gemini_gemini-embedding-2.json`, `embed-local_BAAI_bge-m3.json` (ดูได้ด้วย `git show origin/poc/P3b-embedding:<path>`) · ทำพร้อมผล flash ของ P3a
+3. เมื่อ Junior approve และ report มีตาราง P3b แล้ว → `/work-done` บน branch นี้
 
 ## Waiting on
 
@@ -70,3 +79,6 @@ Junior review ส่วน `apps/api/` + `config/ai.yaml` ใน PR #39
 - ภาษาไทย ≈ 1.7 ตัวอักษรต่อ Gemini token (วัดด้วย count_tokens) · ต้นทุนและการตัด chunk ของระบบจริงต้องใช้ค่านี้ ไม่ใช่ ÷3 หรือ ÷4 แบบภาษาอังกฤษ
 - bge-m3 บน CPU: โหลด model ครั้งแรกต้องดาวน์โหลด torch + model ประมาณ 2–3 GB · embed 116 chunk ใช้ 409 วินาที · smoke test ใช้คำถามทิ้ง 2 ข้อใน scratchpad (ลบผลทิ้งแล้ว)
 - Git Bash heredoc กับ `python -c "..."` ที่มี `$` หรือ `\` ให้ระวัง · ใช้ Write tool เขียน script เป็นไฟล์ปลอดภัยกว่า
+- รัน embed ที่มิติอื่น: `cd apps/api && uv run python ../../poc/P3/embed.py --model gemini:gemini-embedding-2 --dimensions 768` · cache และผลแยกชื่อ `-d768` · 116 chunk ใช้ ~22 วินาที
+- ยังไม่ใส่ `embedding.dimensions: 768` และ model ของ tier `embed` ใน `config/ai.yaml` (ไฟล์ร่วม) · ทำใน PR อัปเดต `ai.yaml` ของ S2 หลังผล P3a
+- ruff ของโค้ดนอก `apps/api` ให้รันจาก `apps/api` ด้วย `--config pyproject.toml` · ถ้ารันจาก root จะเตือน import order ของ `test_rls_isolation.py` ผิดๆ
