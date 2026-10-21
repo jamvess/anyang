@@ -1,11 +1,36 @@
 """P3b embedding spike: embed sheet chunks and questions, then measure recall@4.
 
-Step 4 scaffold: the tests in test_embed.py come first; the implementation follows after review.
+    cd apps/api
+    uv run python ../../poc/P3/chunking.py                                     # out/chunks.json
+    uv run python ../../poc/P3/embed.py --model gemini:gemini-embedding-2
+    uv run python ../../poc/P3/embed.py --model gemini:gemini-embedding-001
+    uv run --with sentence-transformers python ../../poc/P3/embed.py --model local:BAAI/bge-m3
+
+Every embedding goes through ``Gateway.embed`` (AI-01). Chunk vectors are cached per model in
+out/embed/<model>/ next to each chunk's content_hash (AI-08), so a rerun only embeds new text.
+Results (recall, dimensions, time; question ids only) go to results/embed-<model>.json.
 """
 
+import argparse
+import asyncio
+import json
+import math
+import re
+import sys
+import time
 from dataclasses import dataclass
+from pathlib import Path
 
 from chunking import Chunk
+
+HERE = Path(__file__).parent
+REPO = HERE.parents[1]
+OUT = HERE / "out"  # gitignored: contains text of the course files
+RESULTS = HERE / "results"
+QUESTIONS = REPO / "evals" / "topics" / "mth10101" / "retrieval_questions.md"
+K = 4  # recall@4: the PoC metric in specs/poc/README.md P3
+
+_PAGE = re.compile(r"(sheet-\d+):(\d+)(?:-(\d+))?")
 
 
 @dataclass(frozen=True)
@@ -16,18 +41,128 @@ class Question:
 
 
 def parse_questions(markdown: str) -> list[Question]:
-    raise NotImplementedError
+    """Filled rows of the question table: a number, a question and at least one page."""
+    questions = []
+    for line in markdown.splitlines():
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if len(cells) < 3 or not cells[0].isdigit() or not cells[1]:
+            continue
+        pages = [
+            (file, page)
+            for file, first, last in _PAGE.findall(cells[2])
+            for page in range(int(first), int(last or first) + 1)
+        ]
+        if pages:
+            questions.append(Question(id=cells[0], text=cells[1], pages=pages))
+    return questions
+
+
+def _cosine(a: list[float], b: list[float]) -> float:
+    norm = math.sqrt(sum(x * x for x in a)) * math.sqrt(sum(y * y for y in b))
+    return sum(x * y for x, y in zip(a, b, strict=True)) / norm if norm else 0.0
 
 
 def rank(query: list[float], chunk_vectors: list[list[float]]) -> list[int]:
-    raise NotImplementedError
+    """Chunk indexes from most to least similar to the query."""
+    scores = [_cosine(query, vector) for vector in chunk_vectors]
+    return sorted(range(len(scores)), key=lambda i: -scores[i])
 
 
 def hit_at_k(question: Question, ranking: list[int], chunks: list[Chunk], k: int) -> bool:
-    raise NotImplementedError
+    return any(
+        chunks[i].file == file and chunks[i].page_from <= page <= chunks[i].page_to
+        for i in ranking[:k]
+        for file, page in question.pages
+    )
 
 
 def recall_at_k(
     questions: list[Question], rankings: list[list[int]], chunks: list[Chunk], k: int
 ) -> float:
-    raise NotImplementedError
+    hits = [hit_at_k(q, r, chunks, k) for q, r in zip(questions, rankings, strict=True)]
+    return sum(hits) / len(hits) if hits else 0.0
+
+
+# --- run ------------------------------------------------------------------------------------
+
+
+class LocalEmbedder:
+    """Open-source model on this machine (PoC only; needs ``uv run --with sentence-transformers``).
+    Speaks the gateway's EmbedProvider interface so the call still goes through Gateway.embed."""
+
+    def __init__(self) -> None:
+        self._models: dict = {}
+
+    async def embed(self, request):
+        from app.ai.providers.base import EmbedResponse
+
+        def encode():
+            from sentence_transformers import SentenceTransformer
+
+            model = self._models.setdefault(request.model, SentenceTransformer(request.model))
+            return model.encode(request.texts, normalize_embeddings=True).tolist()
+
+        return EmbedResponse(vectors=await asyncio.to_thread(encode), tokens_in=0)
+
+
+async def main(model: str, questions_path: Path) -> None:
+    sys.path.insert(0, str(REPO / "apps" / "api"))
+    from app.ai.gateway import Gateway
+    from app.ai.providers.gemini import GeminiProvider
+    from app.settings import get_settings
+
+    settings = get_settings()
+    providers: dict = {"local": LocalEmbedder()}
+    if model.startswith("gemini:"):
+        providers["gemini"] = GeminiProvider(settings.env.gemini_api_key.get_secret_value())
+    gateway = Gateway.live(settings.ai, settings.env.prompts_dir, providers, model)
+
+    chunks = [Chunk(**c) for c in json.loads((OUT / "chunks.json").read_text(encoding="utf-8"))]
+    questions = parse_questions(questions_path.read_text(encoding="utf-8"))
+    if not questions:
+        sys.exit(f"no filled questions in {questions_path}")
+
+    name = model.replace(":", "_").replace("/", "_")
+    cache_path = OUT / "embed" / name / "chunks.json"
+    cache = json.loads(cache_path.read_text(encoding="utf-8")) if cache_path.exists() else {}
+    todo = [c for c in chunks if c.content_hash not in cache]
+    started = time.perf_counter()
+    for c, vector in zip(
+        todo, await gateway.embed([c.text for c in todo], "document"), strict=True
+    ):
+        cache[c.content_hash] = vector
+    chunk_seconds = time.perf_counter() - started
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    cache_path.write_text(json.dumps(cache), encoding="utf-8")
+
+    started = time.perf_counter()
+    query_vectors = await gateway.embed([q.text for q in questions], "query")
+    query_seconds = time.perf_counter() - started
+
+    chunk_vectors = [cache[c.content_hash] for c in chunks]
+    rankings = [rank(v, chunk_vectors) for v in query_vectors]
+    result = {
+        "model": model,
+        "questions": len(questions),
+        "chunks": len(chunks),
+        "dimensions": len(chunk_vectors[0]),
+        "recall_at_1": recall_at_k(questions, rankings, chunks, 1),
+        f"recall_at_{K}": recall_at_k(questions, rankings, chunks, K),
+        "seconds_embed_new_chunks": round(chunk_seconds, 1),
+        "new_chunks_embedded": len(todo),
+        "seconds_per_question": round(query_seconds / len(questions), 3),
+        "misses_at_k": [
+            q.id for q, r in zip(questions, rankings, strict=True) if not hit_at_k(q, r, chunks, K)
+        ],
+    }
+    RESULTS.mkdir(exist_ok=True)
+    (RESULTS / f"embed-{name}.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
+    print(json.dumps(result, indent=2))
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", required=True, help="gemini:<id> or local:<huggingface id>")
+    parser.add_argument("--questions", type=Path, default=QUESTIONS)
+    args = parser.parse_args()
+    asyncio.run(main(args.model, args.questions))

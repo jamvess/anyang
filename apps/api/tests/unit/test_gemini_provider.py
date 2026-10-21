@@ -124,3 +124,19 @@ async def test_AI01_gemini_embed_returns_one_vector_per_text_in_order():
     assert call["model"] == "gemini-embedding-001"
     assert call["contents"] == ["a", "b"]
     assert call["config"].task_type == "RETRIEVAL_QUERY"
+
+
+async def test_AI01_gemini_embedding_2_sends_one_content_per_text():
+    # Found in the P3b smoke test: plain strings to gemini-embedding-2 came back as 1 vector
+    # for 50 texts, because the multimodal model merges the parts of one request.
+    provider = GeminiProvider(api_key="test-key")
+    models = RecordingModels()
+    provider._client = type("C", (), {"aio": type("A", (), {"models": models})()})()
+
+    response = await provider.embed(
+        EmbedRequest(model="gemini-embedding-2", texts=["a", "b"], role="document")
+    )
+
+    assert len(response.vectors) == 2
+    contents = models.calls[0]["contents"]
+    assert [c.parts[0].text for c in contents] == ["title: none | text: a", "title: none | text: b"]

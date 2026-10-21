@@ -32,7 +32,11 @@ def embed_contents(model: str, texts: list[str], role: str) -> tuple[list[str], 
 
     ``gemini-embedding-001`` takes ``task_type``; ``gemini-embedding-2`` takes a text prefix.
     """
-    raise NotImplementedError  # PoC P3b step 4 scaffold
+    if model.startswith("gemini-embedding-001"):
+        return list(texts), "RETRIEVAL_QUERY" if role == "query" else "RETRIEVAL_DOCUMENT"
+    if role == "query":
+        return [f"task: search result | query: {text}" for text in texts], None
+    return [f"title: none | text: {text}" for text in texts], None
 
 
 class GeminiProvider:
@@ -77,4 +81,23 @@ class GeminiProvider:
         )
 
     async def embed(self, request: EmbedRequest) -> EmbedResponse:
-        raise NotImplementedError  # PoC P3b step 4 scaffold
+        texts, task_type = embed_contents(request.model, request.texts, request.role)
+        contents: list = list(texts)
+        if task_type is None:
+            # gemini-embedding-2 is multimodal: plain strings in one request are merged into one
+            # vector. One Content per text gives one vector per text (Gemini embeddings docs).
+            contents = [types.Content(parts=[types.Part.from_text(text=t)]) for t in texts]
+        try:
+            response = await self._client.aio.models.embed_content(
+                model=request.model,
+                contents=contents,
+                config=types.EmbedContentConfig(task_type=task_type),
+            )
+        except errors.APIError as error:
+            if error.code == 429:
+                raise ProviderRateLimited(str(error), retry_after_seconds(error.details)) from error
+            raise
+        vectors = [list(embedding.values or []) for embedding in response.embeddings or []]
+        # The Gemini API does not report tokens for embeddings; AI-04 gets 0 until Vertex AI
+        # (which reports billable characters) replaces it.
+        return EmbedResponse(vectors=vectors, tokens_in=0)

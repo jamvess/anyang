@@ -5,7 +5,7 @@
 | Owner | Jam |
 | Branch | `poc/P3b-embedding` |
 | Checklist item | P3: ingest → A5 → A6 → A7 → `compute_importance` · เทียบกับ label · ลอง embedding 2–3 ตัวกับคำถาม 20 ข้อ (ส่วน embedding · ส่วน P3a อยู่ใน PR #37) |
-| Status | in progress · 2026-10-20 |
+| Status | in progress · 2026-10-21 |
 
 spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผลที่ต้องได้: embedding model + มิติ vector + ขนาด chunk) · `specs/system/ai-orchestration.md` §1.4 Retrieval, §2.3.3 Chunk/Embed · AI-01, AI-08
 
@@ -31,10 +31,12 @@ spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผล�
 - 2026-10-20 · ขั้น 1 เสร็จ: `chunking.py` ผ่าน test 7 ตัว · ตัดชีทจริงได้ 93 chunk (sheet-01 71, sheet-02 17, sheet-03 2, sheet-04 3) เก็บที่ `poc/P3/out/chunks.json` (gitignored) · **median 334 tokens · 58/93 chunk ต่ำกว่า 400** เพราะกฎ "ไม่คร่อมเกิน 2 หน้า" ตันก่อน: หน้าของชีทสั้น (median ~190 tokens ต่อหน้า เพราะ PyMuPDF กระจายสมการทีละบรรทัด) · ข้อมูลสำหรับเลือกขนาด chunk: อาจลองเทียบ 1 หน้า vs 2 หน้าใน spike
 - 2026-10-20 · (Jam เลือกตามคำแนะนำ) เทียบ 3 model: `gemini-embedding-2`, `gemini-embedding-001` (Gemini API, key เดิม) และ `BAAI/bge-m3` (open-source รันในเครื่อง เป็นเส้นฐาน) · ไม่เอา multilingual-e5-large เพราะ input สูงสุด 512 tokens · เรียกผ่าน provider layer: เพิ่ม `Gateway.embed()` + `GeminiProvider.embed()` พร้อม test (route ตาม tier `embed`) · bge-m3 เป็น provider เฉพาะ PoC ใน `poc/P3/` · ติดตั้ง sentence-transformers ชั่วคราวผ่าน `uv run --with` · Jam บอก Junior ในกลุ่ม
 - 2026-10-20 · ขั้น 4a test ก่อน: gateway `embed()` 6 ตัว (ต่อท้าย `test_ai_gateway.py`) · Gemini embed 4 ตัว (`test_gemini_provider.py`) · PoC `test_embed.py` 4 ตัว · fail 14 ตัวตามที่ควร · โครง: `EmbedRequest`/`EmbedResponse`/`EmbedProvider` ใน `providers/base.py` · `EmbeddingConfig` ใน `settings.py` · `config/ai.yaml` เพิ่ม section `embedding` (timeout_s 60, batch_size 50 · ป้าย [C]) เพราะ embed ไม่มี prompt จึงใช้ purpose เดิมไม่ได้
+- 2026-10-20 · ขั้น 4b implement: `Gateway.embed` (แบ่ง batch, retry/backoff ร่วมกับ call ผ่าน `_with_retries`, ตรวจจำนวน vector, CallRecord purpose embed) · `GeminiProvider.embed` · `poc/P3/embed.py` (recall@1/@4, cache vector ต่อ model ตาม content_hash, LocalEmbedder เฉพาะ PoC) · test API 109 + PoC 23 ผ่าน
+- 2026-10-21 · smoke test (คำถามทิ้ง 2 ข้อใน scratchpad ไม่ใช้เป็นผล) เจอ bug 2 จุด: (1) `gemini-embedding-2` รวมข้อความหลายอันใน request เป็น vector เดียว ต้องห่อแต่ละข้อความด้วย `types.Content` · แก้แล้ว + test ใหม่ 1 ตัว (test 001 ที่ review แล้วไม่แก้) (2) embedding-2 รับรวม 8,192 tokens ต่อ request → `embedding.batch_size` 50 → 10 · หลังแก้: embedding-2 ได้ 429 quota ทันที (ไม่มี retryDelay) · embedding-001 ได้ "Server disconnected" หลังรอหลายนาที · (Jam เลือก) รัน bge-m3 ในเครื่องก่อน + Jam เช็คโควตาที่ ai.dev/rate-limit
 
 ## Next step
 
-Jam review test ขั้น 4a → ok แล้ว implement `Gateway.embed`, `embed_contents`, `GeminiProvider.embed`, `poc/P3/embed.py` + provider bge-m3 เฉพาะ PoC
+รัน smoke test ด้วย `local:BAAI/bge-m3` (`uv run --with sentence-transformers`) · Jam เช็คโควตา embedding ที่ ai.dev/rate-limit · รอ May เขียนคำถาม
 
 ## Waiting on
 

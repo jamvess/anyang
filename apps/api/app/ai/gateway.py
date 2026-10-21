@@ -15,7 +15,7 @@ import asyncio
 import logging
 import re
 import time
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
@@ -24,6 +24,7 @@ import yaml
 from pydantic import BaseModel, ValidationError
 
 from app.ai.providers.base import (
+    EmbedRequest,
     Image,
     Provider,
     ProviderRateLimited,
@@ -239,8 +240,48 @@ class Gateway:
     async def embed(
         self, texts: list[str], role: Literal["query", "document"]
     ) -> list[list[float]]:
-        """A3 ``embed``: one vector per text, in order, from the model of tier ``embed``."""
-        raise NotImplementedError  # PoC P3b step 4 scaffold
+        """A3 ``embed``: one vector per text, in order, from the model of tier ``embed``.
+        Texts go in batches of ``embedding.batch_size``; each batch is retried like ``call``."""
+        if not texts:
+            return []
+        provider_name, provider, model = self._route("embed")
+        if not hasattr(provider, "embed"):
+            raise AIConfigError(f"provider {provider_name!r} cannot embed")
+        settings = self._config.embedding
+        started = time.perf_counter()
+        tokens_in = 0
+        status: Literal["ok", "schema_error", "provider_error"] = "provider_error"
+        vectors: list[list[float]] = []
+        try:
+            for start in range(0, len(texts), settings.batch_size):
+                request = EmbedRequest(
+                    model=model, texts=texts[start : start + settings.batch_size], role=role
+                )
+                response = await self._with_retries(
+                    lambda request=request: provider.embed(request), "embed", settings.timeout_s
+                )
+                if len(response.vectors) != len(request.texts):
+                    raise AIProviderError(
+                        f"embed: {len(response.vectors)} vectors for {len(request.texts)} texts"
+                    )
+                vectors.extend(response.vectors)
+                tokens_in += response.tokens_in
+            status = "ok"
+            return vectors
+        finally:
+            self._emit(
+                CallRecord(
+                    purpose="embed",
+                    provider=provider_name,
+                    model=model,
+                    prompt_version="none",
+                    status=status,
+                    tokens_in=tokens_in,
+                    tokens_out=0,
+                    latency_ms=(time.perf_counter() - started) * 1000,
+                    schema_retries=0,
+                )
+            )
 
     def _route(self, tier: str) -> tuple[str, Provider, str]:
         model = self._model_override or self._config.tiers[tier].primary
@@ -262,13 +303,21 @@ class Gateway:
     async def _generate(
         self, provider: Provider, request: ProviderRequest, timeout_s: float
     ) -> ProviderResponse:
+        return await self._with_retries(
+            lambda: provider.generate(request), request.purpose, timeout_s
+        )
+
+    async def _with_retries[R](
+        self, attempt_call: Callable[[], Awaitable[R]], purpose: str, timeout_s: float
+    ) -> R:
+        """Run ``attempt_call`` with the timeout, retrying provider errors after a backoff."""
         gateway = self._config.gateway
         attempts = gateway.retries + 1
         last_error = ""
         for attempt in range(attempts):
             asked_wait: float | None = None
             try:
-                return await asyncio.wait_for(provider.generate(request), timeout_s)
+                return await asyncio.wait_for(attempt_call(), timeout_s)
             except TimeoutError:
                 last_error = f"timeout after {timeout_s}s"
             except ProviderRateLimited as error:
@@ -282,7 +331,7 @@ class Gateway:
             if wait > gateway.max_retry_wait_seconds:
                 break  # waiting that long inside a chat turn is worse than failing now
             await _sleep(wait)
-        raise AIProviderError(f"{request.purpose}: {last_error}")
+        raise AIProviderError(f"{purpose}: {last_error}")
 
     def _emit(self, record: CallRecord) -> None:
         for listener in self._listeners:

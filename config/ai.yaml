@@ -39,7 +39,7 @@ purposes:
 
 embedding:                             # A3 embed (ai-orchestration §2.3.3), tier `embed` · no prompt
   timeout_s: 60                        # [C] one batch request · PoC P3b: set from measured latency
-  batch_size: 50                       # [C] texts per request · PoC P3b: 93 chunks -> 2 requests
+  batch_size: 10                       # [C] texts per request · gemini-embedding-2 allows 8,192 tokens per request in total and chunks are up to 800
 
 gateway:
   retries: 1                           # then fallback provider, then degrade
