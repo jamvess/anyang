@@ -20,6 +20,7 @@ export const roomStrings = {
   prepNotFound: "ไม่พบการเตรียมสอบนี้",
   retry: "ลองใหม่",
   backHome: "กลับหน้าหลัก",
+  problem: "โจทย์",
   progress: "ความคืบหน้า",
   progressPassed: (passed: number, total: number) => `${passed} / ${total} หัวข้อ`,
   progressPassedLabel: "ผ่านแล้ว",
