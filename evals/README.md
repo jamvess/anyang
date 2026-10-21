@@ -143,7 +143,7 @@ uv run --project apps/api pytest evals/test_run_eval.py
 
 ### ใบงาน · `answers/worksheet.md`
 
-ไม่ต้องแก้ `labels.jsonl` เอง ให้กรอกใบงาน แล้วให้ script สร้างไฟล์และตรวจกติกาให้ · **คน label คือ May หรือ Junior ไม่ใช่ Jam** เพราะ Jam ทำ P2 (ทีมตกลง 21 ต.ค. · PR #51)
+ไม่ต้องแก้ `labels.jsonl` เอง ให้กรอกใบงาน แล้วให้ script สร้างไฟล์และตรวจกติกาให้ · แผนเดิมคือให้ May หรือ Junior label เพราะ Jam ทำ P2 (PR #51) · **รอบแรก (21 ต.ค., PR #52) ทีม (May + Jam) ตกลงให้ AI (Claude) ร่าง label ทั้ง 50 ข้อและเขียนคำตอบพิมพ์ ans_031–050 (writer `w06`)** · ดูข้อจำกัดและการตรวจซ้ำใน "กฎ"
 
 1. ใบงานมี 50 หัวข้อ (`ans_001`–`ans_050`) · 30 ข้อแรกมาจากรูปลายมือที่ label `lines` ไว้แล้วใน `handwriting/` · 20 ข้อหลังเป็นคำตอบแบบพิมพ์ (`image: none`)
 2. **ข้อพิมพ์:** ใส่ `problem_id` (P01–P17 ในตารางของ `handwriting/problems.md`), `writer` และบรรทัดคำตอบแบบ ``1. `x(x^{2}-1)` `` ทีละบรรทัด · script ดึงโจทย์, เฉลย และ `answer_format` จาก `problem_id` เอง · เขียนคำตอบผิดให้ได้ตามโควตาด้านล่าง
@@ -194,5 +194,8 @@ uv run --project apps/api pytest evals/test_run_eval.py
 ## กฎ
 
 - คน label ไม่ใช่คนทำ PoC ตัวนั้น
+  - **ข้อยกเว้น: golden set ของ P2 รอบแรก AI ร่าง label** (ทีมตกลง 21 ต.ค., PR #52) · `labeled_by` ในไฟล์เป็น `May` ทุกข้อ แต่หมายถึงคนที่วางไฟล์ ไม่ใช่คนที่ตัดสิน
+  - ผลที่ตามมา: label อาจเอนไปทางเดียวกับ checker ที่เป็น LLM ทำให้ verdict และ error_type accuracy **สูงเกินจริง**
+  - ก่อนเขียน report P2: คนที่ไม่ใช่ Jam ตรวจซ้ำ**ทุกข้อที่ไม่ใช่ `correct` (28 ข้อ)** เพราะ error_type เป็น metric ที่เสี่ยงที่สุด · ข้อที่ไม่เห็นด้วยให้แก้ใน `worksheet.md` แล้ว `--build` ใหม่ · report P2 รายงานว่าแก้ไปกี่ข้อจาก 28
 - ขอความยินยอมก่อนใช้ลายมือของเพื่อน และไม่ commit รูปลง repo สาธารณะ
 - เป้าหมายของแต่ละ eval อยู่ใน `specs/poc/README.md`

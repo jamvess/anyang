@@ -1,0 +1,24 @@
+{
+  "model": "local:BAAI/bge-m3",
+  "questions": 20,
+  "chunks": 116,
+  "dimensions": 1024,
+  "recall_at_1": 0.45,
+  "recall_at_4": 0.45,
+  "seconds_embed_new_chunks": 0.0,
+  "new_chunks_embedded": 0,
+  "seconds_per_question": 0.568,
+  "misses_at_k": [
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "15",
+    "17"
+  ]
+}

@@ -5,7 +5,13 @@ the Google SDK (AI-01). Vertex AI can replace it later by building the client wi
 from google import genai
 from google.genai import errors, types
 
-from app.ai.providers.base import ProviderRateLimited, ProviderRequest, ProviderResponse
+from app.ai.providers.base import (
+    EmbedRequest,
+    EmbedResponse,
+    ProviderRateLimited,
+    ProviderRequest,
+    ProviderResponse,
+)
 
 
 def retry_after_seconds(error_json: dict) -> float | None:
@@ -19,6 +25,18 @@ def retry_after_seconds(error_json: dict) -> float | None:
             except ValueError:
                 return None
     return None
+
+
+def embed_contents(model: str, texts: list[str], role: str) -> tuple[list[str], str | None]:
+    """What to send for each text, and the ``task_type`` if the model takes one.
+
+    ``gemini-embedding-001`` takes ``task_type``; ``gemini-embedding-2`` takes a text prefix.
+    """
+    if model.startswith("gemini-embedding-001"):
+        return list(texts), "RETRIEVAL_QUERY" if role == "query" else "RETRIEVAL_DOCUMENT"
+    if role == "query":
+        return [f"task: search result | query: {text}" for text in texts], None
+    return [f"title: none | text: {text}" for text in texts], None
 
 
 class GeminiProvider:
@@ -61,3 +79,29 @@ class GeminiProvider:
         return ProviderResponse(
             text=response.text or "", tokens_in=tokens_in, tokens_out=tokens_out
         )
+
+    async def embed(self, request: EmbedRequest) -> EmbedResponse:
+        texts, task_type = embed_contents(request.model, request.texts, request.role)
+        contents: list = list(texts)
+        if task_type is None:
+            # gemini-embedding-2 is multimodal: plain strings in one request are merged into one
+            # vector. One Content per text gives one vector per text (Gemini embeddings docs).
+            contents = [types.Content(parts=[types.Part.from_text(text=t)]) for t in texts]
+        try:
+            response = await self._client.aio.models.embed_content(
+                model=request.model,
+                contents=contents,
+                # Below 3,072 dimensions Gemini does not normalize the vectors; cosine
+                # similarity does not need it.
+                config=types.EmbedContentConfig(
+                    task_type=task_type, output_dimensionality=request.dimensions
+                ),
+            )
+        except errors.APIError as error:
+            if error.code == 429:
+                raise ProviderRateLimited(str(error), retry_after_seconds(error.details)) from error
+            raise
+        vectors = [list(embedding.values or []) for embedding in response.embeddings or []]
+        # The Gemini API does not report tokens for embeddings; AI-04 gets 0 until Vertex AI
+        # (which reports billable characters) replaces it.
+        return EmbedResponse(vectors=vectors, tokens_in=0)

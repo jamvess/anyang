@@ -1,14 +1,16 @@
 # AI gateway configuration (ai-orchestration §2.10). Change models here, not in code.
-# Model IDs are filled in after the PoC spikes; keep the TODO markers until then.
+# Model IDs come from the PoC reports (specs/poc/reports/); a tier not measured yet keeps its TODO.
+# "vertex:" until Beta needs a Vertex AI provider (AI-07: no free tier for real users); the PoC runs
+# with AI_MODEL_OVERRIDE=gemini:<model> on the Gemini API.
 
-version: 1.1
+version: 1.2
 
 tiers:
-  small:  {primary: "vertex:TODO-gemini-small",  fallback: "anthropic:TODO-claude-haiku"}
-  mid:    {primary: "vertex:TODO-gemini-mid",    fallback: "anthropic:TODO-claude-haiku"}
-  main:   {primary: "vertex:TODO-gemini-main",   fallback: "anthropic:TODO-claude-sonnet"}
-  vision: {primary: "vertex:TODO-gemini-mid",    fallback: "mathpix"}       # Mathpix only if P1 says so
-  embed:  {primary: "TODO-after-P3-spike",       fallback: null}
+  small:  {primary: "vertex:TODO-gemini-small",  fallback: "anthropic:TODO-claude-haiku"}  # not measured (P3 ran A4 on flash only)
+  mid:    {primary: "vertex:gemini-3.5-flash",   fallback: "anthropic:TODO-claude-haiku"}  # P3: A5 on 4/4 sheets, schema ok · flash-lite too coarse (P3.md)
+  main:   {primary: "vertex:gemini-3.5-flash",   fallback: "anthropic:TODO-claude-sonnet"} # interim: P3 A6 never answered on the free tier (0/20) · measure on Vertex (P3.md)
+  vision: {primary: "vertex:gemini-3.5-flash-lite", fallback: "mathpix"}   # P1: line accuracy 95.2% (P1.md) · Mathpix not tested
+  embed:  {primary: "vertex:gemini-embedding-2", fallback: null}           # P3b: recall@4 95% at 768 dimensions (P3.md)
 
 purposes:
   # thinking: Gemini 3 thinking level; its tokens count inside max_tokens (PoC P3, 2026-10-19)
@@ -36,6 +38,11 @@ purposes:
   persona_extract:        {tier: small,  temperature: 0.0, max_tokens: 400,  timeout_s: 15, prompt: v1}
   persona_preview:        {tier: small,  temperature: 0.7, max_tokens: 150,  timeout_s: 15, prompt: v1}
   latex_to_speech:        {tier: small,  temperature: 0.0, max_tokens: 300,  timeout_s: 8,  prompt: v1}
+
+embedding:                             # A3 embed (ai-orchestration §2.3.3), tier `embed` · no prompt
+  timeout_s: 60                        # [C] one batch request · PoC P3b: set from measured latency
+  batch_size: 10                       # [C] texts per request · gemini-embedding-2 allows 8,192 tokens per request in total and chunks are up to 800
+  dimensions: 768                      # = chunks.embedding vector(768) · P3b: gemini-embedding-2 recall@4 95% at 768 vs 90% at 3072 (specs/poc/reports/P3.md)
 
 gateway:
   retries: 1                           # then fallback provider, then degrade

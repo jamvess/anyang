@@ -75,6 +75,8 @@
 - **AC-2 (TM-05)** Given ข้อความจาก buddy When render Then หัว bubble แสดงชื่อ `buddy_name` และ avatar ของ buddy ไม่เหมือนของ tutor
 - **AC-2b (TM-04)** อักษรย่อใน avatar: พี่ตาล → ต · พี่โจ๊ก → จ · มีน → ม · ครู แอน → อ · Tar → T
 - **AC-3 (TM-04)** Given tutor ส่ง 2 ข้อความติดกัน When render Then ชื่อ "พี่ตาล" ปรากฏแค่ครั้งเดียวสำหรับสองข้อความนั้น
+- **AC-3b (TM-20 · เพิ่ม 2026-10-21 · PR #59)** ข้อความติดกันของคนเดิมรวมใต้ชื่อเดียวตาม AC-3 **เฉพาะเมื่อห่างจากข้อความก่อนหน้าไม่ถึง `MESSAGE_GROUP_GAP_MIN` (5 นาที · May เลือก · ค่าของ UI ไม่ใช่ learning model)** · ถ้าห่างตั้งแต่ 5 นาทีขึ้นไป ข้อความนั้นแสดงชื่อ avatar และเวลาของตัวเองใหม่ · Given ข้อความ user 20:47 แล้วข้อความ user ถัดไป 11:42 ของอีกวัน When render Then เห็นชื่อ "ปาล" 2 ครั้ง และเวลา 11:42 แสดงอยู่ (เจอตอนลองจริงใน PR #42)
+- **AC-3b-boundary (TM-20)** ข้อความ tutor 2 อันติดกัน ห่างกัน 4 นาที 59 วินาที → ชื่อปรากฏ 1 ครั้ง · ห่าง 5 นาทีพอดี → 2 ครั้ง · ห่าง 5 นาที 1 วินาที → 2 ครั้ง
 - **AC-4 (TM-04)** Given ข้อความ role `card` หรือ `system` When render Then ไม่มี bubble ของข้อความนั้น
 - **AC-5 (TM-04)** Given `days_left = 5` และ `prep_name = "Factorization"` When render Then แถบบนแสดง "Factorization" และ "สอบใน 5 วัน" และมีลิงก์ "ออกจากห้องติว" ไป `/`
 - **AC-6 (TM-06)** Given ข้อความ user ที่ `input_mode = image` และ `attachment_path = "sessions/s1/วิธีทำ.jpg"` When render Then แสดงกล่องรูปที่มีชื่อ "วิธีทำ.jpg"
@@ -125,7 +127,7 @@
 
 | Test | ระดับ | ครอบคลุม AC |
 |---|---|---|
-| `tests/chat/MessageList.test.tsx` | unit (component) | AC-1 ถึง AC-4, AC-6, AC-6b, AC-6c |
+| `tests/chat/MessageList.test.tsx` | unit (component) | AC-1 ถึง AC-4, AC-3b, AC-3b-boundary, AC-6, AC-6b, AC-6c |
 | `tests/chat/MessageText.test.tsx` | unit | AC-7 ถึง AC-10 |
 | `tests/chat/Composer.test.tsx` | unit | AC-11 ถึง AC-18 (รวม AC-16b), AC-boundary-text, AC-boundary-image, AC-20 |
 | `tests/chat/RoomPage.test.tsx` | integration (หน้า + fixture) | AC-5, AC-11, AC-19 |
