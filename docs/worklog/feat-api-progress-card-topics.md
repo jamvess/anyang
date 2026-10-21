@@ -27,12 +27,13 @@
 
 - 2026-10-21 · PR นี้ "Part of #40" ทำเฉพาะ topics · `error.code` แยก PR ทีหลัง · ไม่ต้องรอ api.md จาก #36
 - 2026-10-21 · `stars` ไม่เป็น null ใน progress_card: backend ตัดหัวข้อที่ `importance` ยังเป็น NULL ออก · type ที่ generate จึงเป็น number
+- 2026-10-21 · ช่วงของ `stars` ที่ยังไม่ตัดสินอยู่ใน api.md "รอตัดสิน" ข้อ 4
 - 2026-10-21 · `id` เป็น `str` ไม่ใช่ `UUID` (stub ใช้ `"t1"`, api.md บอก string)
 - 2026-10-21 · `progress-card.md` (ของ May) Open questions 3, 4 ตอบแล้ว → แค่บอกใน PR description ไม่แก้ไฟล์เอง
 
 ## Next step
 
-ข้อ 1: แก้ `specs/system/api.md` แถว `progress_card` ใน "SSE events" + bump เป็น v1.4
+ข้อ 2: เขียน `apps/api/tests/unit/test_progress_card_topics_contract.py` ตามตาราง `progress_card.topics[]` ท้าย api.md (ต้อง red ก่อนแก้ model)
 
 ## Waiting on
 
