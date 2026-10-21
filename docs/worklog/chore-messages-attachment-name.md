@@ -14,7 +14,8 @@
 - [x] 3. 🤖 `guards.max_attachment_name_chars: 255` ใน `config/ai.yaml` + `GuardsConfig` (Junior บอกกลุ่มเรื่องไฟล์กลางเอง)
 - [x] 4. 🤖 `supabase/migrations/0002_messages_attachment_name.sql` (ไม่แก้ 0001) · display-only ห้ามใช้ใน path ของ Storage
 - [x] 5. 🤖 `data-model.md`: ERD รูป 3 เพิ่ม `attachment_path`, `attachment_name` · กฎการตัดชื่อ · สถานะ 5 ข้อของ P3a (รอผลทั้งหมด)
-- [ ] 6. 🤖 ตรวจ migration ผ่าน CI แทนการรัน Docker ในเครื่อง (Junior เลือก): job `api-integration` บน PR #43 รัน `supabase start` ซึ่ง apply migration ทุกไฟล์ ต้องเขียว · pytest + ruff ในเครื่องผ่านแล้ว · ไม่ `db push`
+- [x] 6. 🤖 ตรวจ migration ผ่าน CI แทนการรัน Docker ในเครื่อง (Junior เลือก): job `api-integration` บน PR #43 รัน `supabase start` ซึ่ง apply migration ทุกไฟล์ ต้องเขียว · pytest + ruff ในเครื่องผ่านแล้ว · ไม่ `db push`
+  - 2026-10-21 · run 39537119072 · log มี "Applying migration 0002_messages_attachment_name.sql..." · integration 3 passed · `api`, `web` เขียว · มี `toomanyrequests` ตอน pull image ของ Supabase แต่ retry แล้วผ่าน (ถ้า CI แดงเพราะเรื่องนี้ให้กด re-run)
 
 ## Definition of done
 
@@ -34,7 +35,7 @@
 
 ## Next step
 
-ขั้น 6: ดู `gh pr checks 43` · ถ้า `api-integration` เขียว ติ๊กขั้น 6 แล้วไป `/work-done` · ถ้าแดง เปิด log ของ job ดูขั้น `supabase start` ว่า `0002` apply ผ่านไหม
+ครบทุกขั้นแล้ว · รัน `/work-done` เพื่อเปลี่ยน PR #43 เป็น ready for review · หลัง merge: Junior `npx supabase db push` ขึ้น `anyang-dev` และ May เปลี่ยนฝั่ง web ไปใช้ `attachment_name` (อยู่ใน PR description)
 
 ## Waiting on
 
