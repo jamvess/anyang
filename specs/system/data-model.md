@@ -362,18 +362,23 @@ Golden sets ของการวัดผล AI ไม่อยู่ใน DB 
 - มิติของ chunks.embedding ยืนยันแล้ว vector(768) ไม่ต้องทำ migration · P3b (PR #39): gemini-embedding-2 ที่ 768 มิติ (output_dimensionality) ได้ recall@4 95%
 - index แบบ HNSW ใช้ cosine distance (vector_cosine_ops) ยืนยันแล้ว · Gemini ไม่ normalize vector ที่ 768 มิติ จึงใช้ cosine ไม่ใช่ inner product (Junior + Jam ตกลง 21 ต.ค.)
   
-### สิ่งที่อาจต้องแก้ใน schema จาก P3a (จดไว้ 2026-10-20 · ยังไม่เขียน migration)
+### สิ่งที่อาจต้องแก้ใน schema จาก P3a (จดไว้ 2026-10-20 · แยกประเภท 2026-10-21 · ยังไม่เขียน migration)
 
-อ่านจาก branch `poc/P3` (`apps/api/app/models/scope_ai.py`, `poc/P3/`, `docs/worklog/poc-P3.md`) · ทุกข้อด้านล่างเป็นแค่ข้อเสนอ รอผลจริงก่อน
+อ่านจาก branch `poc/P3` (`apps/api/app/models/scope_ai.py`, `poc/P3/results/gemini-3.5-flash-lite-a5v1/`, report `specs/poc/reports/P3.md` ใน PR #37)
 
-**ตรวจสถานะ 2026-10-21:** ยังไม่มีข้อไหนยืนยันได้ จึงยังไม่เขียน migration · A6 และ A7 ยังไม่เคยรันผ่าน (19 ต.ค. ได้ 503 แล้วโควตาหมด · 20 ต.ค. ได้ 503 ทั้ง 2 รอบ · 21 ต.ค. โควตารายวันของ `gemini-3.5-flash` หมด) · ยังไม่มี report P3a (PR #37) · P3b (PR #39 embedding) ไม่เกี่ยวกับ 5 ข้อนี้
+**แยกประเภท 2026-10-21 (หลังปิด report P3):** ไม่มีข้อไหนต้องรอ A6/A7 บน Vertex แม้ P3a จะ FAIL เพราะ
 
-| # | ที่มาใน P3 | schema ตอนนี้ | ข้อเสนอ | สถานะ 2026-10-21 |
+- รูปร่างของ output (field ไหนมี ชนิดอะไร) กำหนดโดย Pydantic schema ใน `scope_ai.py` ไม่ได้ขึ้นกับ model · flash-lite รัน A6 (1/1) และ A7 (2 ชุด 43 ข้อ) ผ่าน schema แล้ว (`run.json`) · ที่ FAIL คือคุณภาพของหัวข้อ (ตรง label 3.7%) ไม่ใช่รูปร่าง
+- ข้อ 3 และ 4 ข้อมูล MTH10101 ทดสอบไม่ได้อยู่แล้ว รันซ้ำบน Vertex ก็ไม่ได้คำตอบ: label ไม่มีข้อ unmapped (`unmapped: {}`) และ P3 รันด้วย `user_notes = "ไม่มี"`
+
+ประเภท: **ยืนยันแล้วจาก P3** · **ตัดสินด้วย design** (Junior + Jam, ข้อ 3 + May) · **รอ A6/A7 บน Vertex** (ไม่มีข้อไหน)
+
+| # | ที่มาใน P3 | schema ตอนนี้ | ประเภท + หลักฐาน | ข้อเสนอ (รอ Jam ตอบ) |
 |---|---|---|---|---|
-| 1 | A6 `merge_topics` คืน `sources` (ช่วงหน้าของแต่ละหัวข้อ) เพราะขั้น 5d ต้องใช้สร้าง `topic_chunks` และ SM-04 ต้องแสดงเลขหน้า | `topics` ไม่มีที่เก็บช่วงหน้า | เพิ่มตาราง `topic_sources (topic_id, material_id, page_from, page_to)` หรือ `topics.sources jsonb` · ต้องเลือกหลังรู้ว่าจะ query ช่วงหน้าไหม | รอผล · A6 ยังไม่เคยผ่าน schema |
-| 2 | A4 `split_past_exam` คืน `points` (คะแนนของข้อ) | `past_exam_questions` ไม่มี column คะแนน | ถ้าสูตรดาวหรือ planner จะใช้คะแนน ให้เพิ่ม `points numeric` · ถ้าไม่ใช้ ไม่ต้องเพิ่ม | รอผล · A4 ตรงกับ label 43/43 และคืน `points` จริง แต่ `poc/P3/stars.py` ไม่ใช้ `points` · ตัดสินตอนทำ `compute_importance` (P8-lite, S4) |
-| 3 | A7 `map_questions` คืน `topic_id: null` พร้อม `note` (ข้อที่ map ไม่ได้ ตรงกับ `unmapped` ใน label) | `topic_id` เป็น null ได้แล้ว แต่ไม่มีที่เก็บเหตุผล | อาจเพิ่ม `map_note text` ให้หน้า scope แสดงว่าทำไมข้อนี้ไม่มีหัวข้อ | รอผล · A7 ยังไม่ได้รัน |
-| 4 | A6 คืน `excluded_by_note` (หัวข้อที่ตัดออกเพราะ note ของผู้ใช้) | มี `topics.status = 'excluded'` แต่ไม่รู้ว่าใครตัด | น่าจะพอด้วย `status = 'excluded'` + บันทึกใน `scope_changes` (`actor = 'ai'`) · ไม่ต้องเพิ่ม column ถ้าตกลงแบบนี้ | รอผล · A6 ยังไม่เคยผ่าน schema |
-| 5 | ingest ใช้ `vision_extract_pages` อ่านทั้งไฟล์ใน call เดียว และวัด % ตัวอักษรไทยเพื่อเลือกระหว่าง text layer กับ vision | `material_pages.extract_method` มี `vision` อยู่แล้ว · ไม่มีที่เก็บค่าคุณภาพข้อความ | ไม่ต้องแก้ ถ้าไม่ต้องการ debug ย้อนหลัง · ถ้าต้องการ ให้เพิ่ม `material_pages.text_quality numeric` | รอตัดสิน · ingest ยืนยันว่าเกณฑ์ % ไทยแยกได้ (สแกน 0%, ชีท 48–85%) และ `extract_method` พอสำหรับการเลือกวิธี · จะเก็บค่าไว้ debug หรือไม่ ข้อมูล P3 ตอบไม่ได้ |
+| 1 | A6 `merge_topics` คืน `sources` (ช่วงหน้าของแต่ละหัวข้อ) เพราะขั้น 5d ต้องใช้สร้าง `topic_chunks` และ SM-04 ต้องแสดงเลขหน้า | `topics` ไม่มีที่เก็บช่วงหน้า | **ยืนยันแล้วว่าต้องเก็บ** · หัวข้อเดียวมีหลายช่วงและข้ามไฟล์ได้ เช่น `t02` → `sheet-01:2-26`, `sheet-03:1-1`, `sheet-03:1-2` · ตารางหรือ jsonb = **design** | ตาราง `topic_sources (tenant_id, topic_id, material_id, page_from, page_to)` ไม่ใช้ jsonb · ขั้น 5d join ช่วงหน้ากับ `chunks` ด้วย `material_id` + `page_from/page_to` และเมื่อลบไฟล์ (CM-10) FK `on delete cascade` จะลบช่วงหน้าตามไปด้วย ถ้าเป็น jsonb จะเหลือ id ของไฟล์ที่ลบไปแล้วค้างอยู่ · ต้องมี `tenant_id` + RLS + เพิ่มใน `test_SA06_tenant_isolation` |
+| 2 | A4 `split_past_exam` คืน `points` (คะแนนของข้อ) | `past_exam_questions` ไม่มี column คะแนน | **design** · A4 ตรงกับ label 43/43 และคืน `points` จริง แต่ `poc/P3/stars.py` ไม่ใช้ | เลื่อนไปตัดสินตอนทำ `compute_importance` (P8-lite, S4) · ตอนนี้ยังไม่มี ingest จริงที่ทิ้งค่านี้ไป |
+| 3 | A7 `map_questions` คืน `topic_id: null` พร้อม `note` (ข้อที่ map ไม่ได้ ตรงกับ `unmapped` ใน label) | `topic_id` เป็น null ได้แล้ว แต่ไม่มีที่เก็บเหตุผล | **design** (UX) · A7 คืน null 0/43 และ label ไม่มีข้อ unmapped · A7 คืน `note` ในข้อที่ map ได้ด้วย 2/43 ข้อ เช่น "ใช้ Squeeze Theorem" | ถาม May ว่าหน้า scope จะแสดงเหตุผลไหม · ถ้าแสดง ให้เพิ่ม `past_exam_questions.map_note text` ที่เก็บ `note` ทุกข้อ ไม่ใช่เฉพาะข้อที่เป็น null |
+| 4 | A6 คืน `excluded_by_note` (หัวข้อที่ตัดออกเพราะ note ของผู้ใช้) | มี `topics.status = 'excluded'` แต่ไม่รู้ว่าใครตัด | **design** · P3 รันด้วย `user_notes = "ไม่มี"` จึงไม่เคยมีกรณีนี้ | ไม่เพิ่ม column · ใช้ `status = 'excluded'` + บันทึก 1 แถวใน `scope_changes` (`actor = 'ai'`) |
+| 5 | ingest ใช้ `vision_extract_pages` อ่านทั้งไฟล์ใน call เดียว และวัด % ตัวอักษรไทยเพื่อเลือกระหว่าง text layer กับ vision | `material_pages.extract_method` มี `vision` อยู่แล้ว · ไม่มีที่เก็บค่าคุณภาพข้อความ | **ยืนยันแล้วว่า `extract_method` พอสำหรับการเลือกวิธี** (สแกน 0%, ชีท 48–85%) · เก็บค่าไว้ debug หรือไม่ = **design** | ไม่เก็บ `text_quality` · ถ้าต้อง debug ให้ดูจาก log ของ ingest |
 
 ไม่กระทบ schema: `thinking` อยู่ใน `config/ai.yaml` · ค่า `stars.*` อยู่ใน `config/learning.yaml` · `q_no` แบบ `ก1.2` เก็บใน `text` ได้อยู่แล้ว
