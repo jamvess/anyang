@@ -130,6 +130,30 @@ evals/
 - `image` ใส่ `null` ได้ถ้าเป็นคำตอบที่พิมพ์
 - error_type ใน JSON ใช้ตัวเล็กและ `_` แทนช่องว่าง (`wrong_method`, `no_answer`)
 
+### การให้คะแนน · `run_eval.py --purpose check_answer`
+
+เป้าหมายของทั้ง 3 ตัวมาจาก P2 ใน `specs/poc/README.md` (และ `ai-orchestration.md` §2.4.8) · ทีมตกลงนิยามเมื่อ 21 ต.ค. (PR #47)
+
+| metric | นับว่าตรงเมื่อ | ตัวหาร | เป้า |
+|---|---|---|---|
+| verdict accuracy | `verdict` ตรงกับ label ทั้ง 4 ค่า | ทุกข้อใน `labels.jsonl` | ≥ 95% |
+| error_type accuracy | `error_type` ตรงกับ label · ถ้า checker ไม่ตอบ (`null`) นับว่าไม่ตรง | ข้อที่ label มี verdict ไม่ใช่ `correct` | ≥ 80% |
+| first_wrong_line accuracy | `first_wrong_line` ตรงกับ label | ข้อที่ label มี `first_wrong_line` ไม่ใช่ `null` | ≥ 85% |
+
+- แสดง **verdict แบบ 2 ค่า** ประกอบด้วย คือดูแค่ "นับว่าถูก" (`correct`) หรือ "นับว่าผิด" (อีก 3 ค่า) ตามตาราง verdict ด้านบน · ใช้ดูประกอบ ไม่ใช่เป้า
+- ไม่นับข้อที่ label เป็น `null` ใน first_wrong_line เพราะถ้านับ `null` ตรง `null` ว่าถูก คะแนนจะสูงเกินจริง · ข้อที่ label เป็น `null` แต่ checker ชี้บรรทัด จะไปโผล่เป็น verdict ผิดอยู่แล้ว
+- ข้อที่มีใน label แต่ไม่มีใน prediction นับว่าไม่ตรงทุก metric ที่ข้อนั้นอยู่ในตัวหาร และแสดงจำนวนไว้ในผล
+- ถ้ามี id ใน prediction ที่ไม่มีใน label หรือมี id ซ้ำ script จะหยุดและแจ้ง error
+- ผ่านเมื่อทั้ง 3 ตัวถึงเป้า · ถ้าไม่ผ่าน script จะคืน exit code 1 (ไว้ใช้ใน CI ตาม §2.11)
+
+**ไฟล์ prediction** (JSONL 1 บรรทัด = 1 คำตอบ · field ตาม output ของ §2.4.5)
+
+```json
+{"id": "ans_001", "verdict": "incorrect", "error_type": "sign", "first_wrong_line": 1}
+```
+
+ใส่ field อื่นของ §2.4.5 มาด้วยได้ (`evidence`, `method`, `decided_by`, `confidence`) · script ไม่ใช้ในการให้คะแนน
+
 ## กฎ
 
 - คน label ไม่ใช่คนทำ PoC ตัวนั้น
