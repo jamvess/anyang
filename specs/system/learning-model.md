@@ -60,8 +60,8 @@ r_t = Σ w_e·[หัวข้อ t ออกในข้อสอบชุด e
 | ค่า | ค่า | ป้าย | ที่มา / วิธี calibrate |
 |---|---|---|---|
 | w ของข้อสอบอาจารย์เดียวกัน | 1.0 | [calc] | ค่าอ้างอิง |
-| w ของข้อสอบคนละอาจารย์ | 0.5 | [C] | PoC P3: วัดว่าหัวข้อในข้อสอบของอาจารย์ 2 คนซ้อนทับกันกี่ % แล้วใช้สัดส่วนนั้น |
-| three_star_min_r | 0.6 | [calc] | ค่ากลางของช่วงที่ให้ผลเหมือนกันทุกกรณีที่พบบ่อย (ตารางล่าง) · ตรวจกับ label ของทีมใน P3 (≥ 80% ตรงกัน) |
+| w ของข้อสอบคนละอาจารย์ | 0.5 | [C] | วัดว่าหัวข้อในข้อสอบของอาจารย์ 2 คนซ้อนทับกันกี่ % แล้วใช้สัดส่วนนั้น · **P3 วัดไม่ได้** เพราะข้อสอบเก่าทั้ง 2 ชุดมาจากอาจารย์ชุดเดียวกัน (`specs/poc/reports/P3.md`) · วัดกับวิชาแรกที่มีข้อสอบของ 2 อาจารย์ |
+| three_star_min_r | 0.6 | [calc] | ค่ากลางของช่วงที่ให้ผลเหมือนกันทุกกรณีที่พบบ่อย (ตารางล่าง) · **P3:** สูตร + map ข้อสอบของทีมให้ ★★★ ตรงกับ label 10/12 = 83% (เป้า ≥ 80%) · มีข้อสอบ 2 ชุด r จึงเป็นได้แค่ 0, 0.5, 1 · P3 ยืนยันได้แค่ว่าเกณฑ์ต้องมากกว่า 0.5 |
 | prerequisite_of_three_star_gets | 2 | [calc] | = ★★ ตามสูตรดาว (ai-orchestration §2.3.5) · นับเฉพาะ prerequisite โดยตรง |
 
 **Sensitivity analysis**
@@ -173,7 +173,7 @@ ratio     = need ÷ available
 | max_generate_retries | 2 | [C] | P2/S3: วัด % ของโจทย์ที่สร้างแล้วเฉลยผ่าน SymPy ในรอบที่ 1, 2, 3 แล้วเลือกจำนวนรอบที่ครอบคลุม ≥ 95% (เดิมติดป้าย [B] โดยไม่มีอ้างอิง) |
 | idle_minutes_to_end | 15 | [C] | หลัง Alpha: ดูการกระจายของช่วงเว้นระหว่างข้อความของผู้ใช้ใน session แล้วใช้ค่า p95 |
 | TTFT p95 | < 2 วินาที | [A]+[B] | Nielsen: ภายใน 1 วินาทีความคิดไม่ขาดตอน · LLM มี latency พื้นฐาน จึงใช้ 2 วินาทีกับ streaming |
-| context_recent_turns, grounding_chunks | 8, 4 | [C] | Liu et al. (2023): LLM ใช้ข้อมูลกลาง context ยาวได้แย่ลง จึงส่งเฉพาะที่เกี่ยวข้อง · ปรับใน P3 |
+| context_recent_turns, grounding_chunks | 8, 4 | [C] | Liu et al. (2023): LLM ใช้ข้อมูลกลาง context ยาวได้แย่ลง จึงส่งเฉพาะที่เกี่ยวข้อง · **P3b:** `gemini-embedding-2` @768 หาหน้าคำตอบเจอใน 4 อันดับแรก 19/20 (อันดับ 1: 15/20) จึงคง 4 |
 | token_budget | 6,000 | [calc] | ~2 เท่าของ prompt ~3,200 tokens (ai-orchestration 2.2.3) |
 | Circuit breaker | 50%, 10 calls, 60 วินาที | [B] | ค่า default ของ Resilience4j |
 | Buddy quota, ระยะห่าง, encourage | 1/2/3, 4 turns, 2 | [C] | Alpha: อัตรา mute buddy + survey "ช่วยไหม / กวนไหม" |
@@ -184,7 +184,7 @@ ratio     = need ÷ available
 |---|---|---|
 | PoC P1 (S2) · ทำแล้ว | ocr.always_confirm (เดิม confirm_below_confidence) | golden set ลายมือ 30 รูป |
 | P2 (S3) | สัญญาณแยกบรรทัดที่อ่านผิด เพื่อลดการยืนยัน | golden set ลายมือ + คำตอบ |
-| PoC P3 (S2) | stars.weight_other_instructor, three_star_min_r, grounding_chunks | ไฟล์วิชา pilot + label ของทีม |
+| PoC P3 (S2) · ทำแล้ว (บางส่วน) | three_star_min_r (ยืนยันได้แค่ > 0.5), grounding_chunks (คง 4) · weight_other_instructor วัดไม่ได้ | ไฟล์วิชา pilot + label ของทีม · `specs/poc/reports/P3.md` |
 | PoC P4-lite (S3) | default_minutes_per_problem (ค่าแรก) | เวลาตอบใน demo |
 | หลัง Alpha | bkt.p_init, bkt.p_transit (pyBKT), max_fail_streak, planner ratios, buddy quota | ตาราง `attempts`, `planner_decisions`, `buddy_events` |
 

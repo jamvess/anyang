@@ -12,7 +12,7 @@
 - [ ] 1. 🙋 Jam ส่งข้อความในกลุ่ม: จะแก้ `config/ai.yaml` (ไฟล์ร่วม) และขอ Junior อนุญาตแก้ test `test_AI02_live_mode_refuses_placeholder_model_ids` ให้ใช้ purpose ที่ tier ยังเป็น TODO (เพราะ tier `mid` จะมี model จริงแล้ว)
 - [x] 2. 🙋 Jam ตัดสิน: prefix ของ model (`vertex:` หรือ `gemini:`) · tier `small` ใส่หรือปล่อย TODO
 - [ ] 3. 🤖 แก้ test ข้อ 1 (ถ้า Junior ok) ให้ red ก่อน แล้วแก้ `config/ai.yaml`: `vision` (P1), `embed` + `embedding.dimensions: 768` (P3b), `mid` (P3 A5), `main` ชั่วคราว (P3 A6 ยังไม่ได้วัด) · ทุกบรรทัดอ้าง report
-- [ ] 4. 🤖 `config/learning.yaml` → `stars.three_star_min_r` ค่าเดิม ป้ายเพิ่มผล P3 · `stars.weight_other_instructor` คง [C] (P3 วัด overlap ไม่ได้) · `specs/system/learning-model.md` แถว `three_star_min_r` และตาราง calibrate
+- [x] 4. 🤖 `config/learning.yaml` → `stars.three_star_min_r` ค่าเดิม ป้ายเพิ่มผล P3 · `stars.weight_other_instructor` คง [C] (P3 วัด overlap ไม่ได้) · `specs/system/learning-model.md` แถว `three_star_min_r` และตาราง calibrate
 - [ ] 5. 🤖 รัน pytest + ruff ของ api
 
 ## Definition of done
@@ -26,6 +26,8 @@
 - 2026-10-21 · ทำระหว่างรอ flash รอบ 16:00 น. ของ P3 · ถ้ารอบนั้นได้ผล A6 อาจต้องแก้ tier `main` อีกครั้ง
 
 - 2026-10-21 · (Jam เลือก a a) prefix `vertex:` ตามแผน architecture + AI-07 (Beta ห้าม free tier) · ยังไม่มี Vertex provider → error "no provider" ชัดเจน · PoC ใช้ `AI_MODEL_OVERRIDE` ไม่กระทบ · tier `small` ปล่อย TODO (ยังไม่ได้เทียบ flash กับ lite ในงานของ small)
+
+- 2026-10-21 · ข้อ 4 (ทำก่อนข้อ 3 ระหว่างรอ Junior · Jam ok): ค่าไม่เปลี่ยนเลย แก้แค่ป้าย/หมายเหตุ · `three_star_min_r` ★★★ 10/12 = 83% ยืนยันได้แค่ > 0.5 · `weight_other_instructor` คง [C] P3 วัดไม่ได้ · `grounding_chunks` คง 4 จาก P3b recall@4 19/20 · `learning-model.md` 3 แถว + ตารางแผน calibrate
 
 ## Next step
 
