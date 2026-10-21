@@ -5,7 +5,7 @@
 | Owner | May |
 | Branch | `feat/escaped-dollar` |
 | Checklist item | ไม่มีใน checklist · ทำตาม api.md v1.3 Conventions "สมการในข้อความ" (May ตัดสิน 2026-10-21 ใน PR #36) ระหว่างรอ CORS ของ PR #42 |
-| Status | in progress · 2026-10-21 |
+| Status | ready for work-done · 2026-10-21 |
 
 ## Plan
 
@@ -13,7 +13,7 @@
 - [x] 2. 🙋 May review spec
 - [x] 3. 🤖 `/spec-to-tests` · test ใหม่ใน `tests/chat/MessageText.test.tsx` (ไม่แก้ test เดิม)
 - [x] 4. 🙋 May review test
-- [ ] 5. 🤖 `/implement-feature` ใน `components/chat/MessageText.tsx` + lint, typecheck, test, build
+- [x] 5. 🤖 `/implement-feature` ใน `components/chat/MessageText.tsx` + lint, typecheck, test, build
 
 ## Definition of done
 
@@ -23,10 +23,11 @@
 ## Decisions
 
 - 2026-10-21 · `\\$` (backslash สองตัว): นับ backslash ที่ติดกัน เลขคี่ = เครื่องหมาย $ · เลขคู่ = `$` จริง (May ตัดสิน)
+- 2026-10-21 · implement: เปลี่ยน regex `MATH` เป็นตัวแยกทีละตัวอักษรใน `MessageText.tsx` เพราะต้องนับ backslash ก่อน `$` · red → green 1 รอบ (78/78) · lint, typecheck, build ผ่าน
 
 ## Next step
 
-ขั้น 5: `/implement-feature specs/features/tutor/math-escape.md`
+รัน /work-done
 
 ## Waiting on
 
