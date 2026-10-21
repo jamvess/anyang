@@ -14,6 +14,8 @@
 - รันทั้งชุดด้วย `gemini-3.5-flash-lite` (`AI_MODEL_OVERRIDE`, 7 call, 84 วินาที, schema ผ่านทุก call): A5 ได้ 5/5/10/9 หัวข้อ (flash ได้ 14/5/5/12) · A6 รวมเหลือ 10 หัวข้อ (label 27) · หัวข้อตรง 1/27 (recall 3.7%) · ★★★ pipeline 1/12 · map ข้อสอบตรง 2/43 · ≤ 1.34 นาที/ไฟล์ · ผลใน `poc/P3/results/gemini-3.5-flash-lite-a5v1/`
 - สรุป: lite หยาบเกินไปสำหรับ A5/A6 (ชีท 01 ที่ยาว 140 หน้าได้แค่ 5 หัวข้อ) · ★★★ ของ pipeline ต่ำเพราะหัวข้อไม่ตรง ไม่ใช่เพราะสูตรดาว (สูตรกับ map ของ May ยังได้ 83%)
 
+- (13:10) merge main · ร่าง `specs/poc/reports/P3.md` ทั้ง P3a + P3b · ช่อง flash ทำเครื่องหมาย ⏳ · เสนอแก้ spec/config 4 ข้อ (ยังไม่แก้)
+
 ## Done (2026-10-20)
 
 - แก้ gateway ให้ซ่อม LaTeX ที่ model ลืม escape · รอบแรกซ่อมทุก string ใน `_parse` แล้ว Junior review ว่าไปแก้ข้อความธรรมดาด้วย · รอบสองเปลี่ยนเป็น opt-in: `LatexStr` / `MathTextStr` ใน `apps/api/app/ai/latex.py`
@@ -97,7 +99,7 @@
 
 ## Next step
 
-ขั้น 8 (ต่อ): หลัง 14:00 น. ของ 2026-10-21 ลอง `gemini-3.5-flash` อีกรอบ: `cd apps/api && uv run python ../../poc/P3/run.py --a5-prompt v1` (ใช้ cache A5 · A6 + A7 ×2 = 3 call · โควตาวันนี้เหลือ ~16) → `uv run python ../../poc/P3/score.py --a5-prompt v1` → เทียบกับแถว flash-lite · ถ้า A6 ล้มเพราะ skill id ผิดอีก ห้ามใช้ไฟล์ที่แก้มือมาให้คะแนน ให้จดไว้ใน report เป็นข้อเสนอ "code ตั้ง skill id เองตามลำดับ" · ถ้า 503 ทั้งบ่าย ให้ถาม Jam
+ขั้น 8 (ต่อ): หลัง 14:00 น. ของ 2026-10-21 ลอง `gemini-3.5-flash` อีกรอบ: `cd apps/api && uv run python ../../poc/P3/run.py --a5-prompt v1` (ใช้ cache A5 · A6 + A7 ×2 = 3 call · โควตาวันนี้เหลือ ~16) → `uv run python ../../poc/P3/score.py --a5-prompt v1` → เติมช่อง ⏳ ใน `specs/poc/reports/P3.md` (ตาราง P3a คอลัมน์ flash, §4, §5 tier mid/main) แล้วลบบรรทัด "ร่าง" ด้านบน · ถ้า A6 ล้มเพราะ skill id ผิดอีก ห้ามใช้ไฟล์ที่แก้มือมาให้คะแนน ให้เขียนลง report ว่า flash A6 ไม่ผ่าน schema 3/3 ครั้ง · ถ้า 503 ทั้งบ่าย ให้ถาม Jam ว่าจะปิด report ด้วยผลที่มีไหม
 
 ## Waiting on
 
