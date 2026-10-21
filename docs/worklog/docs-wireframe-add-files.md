@@ -5,15 +5,15 @@
 | Owner | May |
 | Branch | `docs/wireframe-add-files` |
 | Checklist item | ไม่มีข้อตรงใน checklist · ส่วนที่เหลือของ "ต้องเพิ่มใน wireframe" UC-02 (หน้าเพิ่มไฟล์ทีหลัง A9) |
-| Status | in progress · 2026-10-21 |
+| Status | ready for work-done · 2026-10-21 |
 
 ## Plan
 
 - [x] 1. 🤖 branch + worklog + draft PR
-- [ ] 2. 🙋 May เลือกทางเข้า (เพิ่มไฟล์จากตรงไหน) · spec ยังไม่กำหนด
-- [ ] 3. 🤖 เพิ่ม 2 หน้าท้ายบทที่ 6: เพิ่มไฟล์ (เฉพาะไฟล์ใหม่ · CM-05) และยืนยันขอบเขตใหม่ที่แสดงเฉพาะส่วนที่เปลี่ยน (SM-08, ai-orchestration §2.3.6) · screenshot ตรวจ
-- [ ] 4. 🙋 May review
-- [ ] 5. 🤖 `use-cases.md` UC-02 ทำเครื่องหมาย A9 เสร็จ
+- [x] 2. 🙋 May เลือกทางเข้า (เพิ่มไฟล์จากตรงไหน) · spec ยังไม่กำหนด
+- [x] 3. 🤖 เพิ่ม 2 หน้าท้ายบทที่ 6: เพิ่มไฟล์ (เฉพาะไฟล์ใหม่ · CM-05) และยืนยันขอบเขตใหม่ที่แสดงเฉพาะส่วนที่เปลี่ยน (SM-08, ai-orchestration §2.3.6) · screenshot ตรวจ
+- [x] 4. 🙋 May review
+- [x] 5. 🤖 `use-cases.md` UC-02 ทำเครื่องหมาย A9 เสร็จ
 
 ## Definition of done
 
@@ -21,9 +21,11 @@
 
 ## Decisions
 
+- 2026-10-21 · ทางเข้าเพิ่มไฟล์: ปุ่ม "เพิ่มไฟล์" บนการ์ดในหน้าหลัก S27 (May เลือก) · ไม่อยู่ในห้องติว
+
 ## Next step
 
-ขั้น 2: ถาม May เรื่องทางเข้า
+รัน /work-done
 
 ## Waiting on
 
