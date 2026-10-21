@@ -72,7 +72,7 @@ planner:                               # TM-18 (learning-model.md §5)
   interleave_every_n_practice: 4       # [C] Rohrer & Taylor 2007 support interleaving; ratio not standardised (Could)
 
 ocr:
-  confirm_below_confidence: 0.8        # [C] choose from precision–recall on the P1 golden set
+  always_confirm: true                 # PoC P1 (specs/poc/reports/P1.md): self-reported confidence cannot find misread lines (all 6 at 0.85–0.98, no threshold catches ≥ 95%) · S3: try a better signal (2 reads, extract_answer/v2)
 
 checker:
   sympy_timeout_seconds: 2             # [calc] budget so the verdict arrives within the TTFT p95 target (2 s)
