@@ -5,7 +5,7 @@
 | Owner | May |
 | Branch | `feat/message-time-gap` |
 | Checklist item | ไม่มีใน checklist · เจอตอนลองหน้าห้องติวจริง (PR #42): ข้อความที่ส่งใหม่ไปรวมใต้ "ปาล 20:47" ของข้อความเก่า เวลาไม่ตรง |
-| Status | in progress · 2026-10-21 |
+| Status | ready for work-done · 2026-10-21 |
 
 ## Plan
 
@@ -13,7 +13,7 @@
 - [x] 2. 🙋 May review spec
 - [x] 3. 🤖 `/spec-to-tests` · test ใหม่ใน `MessageList.test.tsx` (ไม่แก้ test เดิม)
 - [x] 4. 🙋 May review test
-- [ ] 5. 🤖 `/implement-feature` ใน `MessageList.tsx` + lint, typecheck, test, build
+- [x] 5. 🤖 `/implement-feature` ใน `MessageList.tsx` + lint, typecheck, test, build
 
 ## Definition of done
 
@@ -23,10 +23,11 @@
 ## Decisions
 
 - 2026-10-21 · ช่วงห่าง `MESSAGE_GROUP_GAP_MIN` = 5 นาที (May เลือก) · ตั้งแต่ 5 นาทีขึ้นไป (รวม 5 นาทีพอดี) แสดงชื่อและเวลาใหม่ · เพิ่มเป็น AC-3b ใน chat-room-ui.md
+- 2026-10-21 · implement: `continued` ต้อง role เดิม และห่างจากข้อความก่อนหน้าน้อยกว่า 5 นาที · red → green 1 รอบ · test 107/107, lint 0 error (warning 2 ตัวเดิม), typecheck, build ผ่าน
 
 ## Next step
 
-ขั้น 5: implement ใน MessageList.tsx
+รัน /work-done
 
 ## Waiting on
 

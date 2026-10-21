@@ -6,6 +6,13 @@ type Speaker = "tutor" | "buddy" | "user";
 
 const SPEAKERS: ReadonlySet<string> = new Set<Speaker>(["tutor", "buddy", "user"]);
 
+/**
+ * Messages of the same speaker this many minutes apart or more get their own
+ * name and time again (chat-room-ui.md AC-3b). A UI value, not a learning-model one.
+ */
+export const MESSAGE_GROUP_GAP_MIN = 5;
+const GAP_MS = MESSAGE_GROUP_GAP_MIN * 60 * 1000;
+
 // Honorifics dropped before taking the initial, so "พี่ตาล" shows "ต" like the wireframe.
 const NAME_PREFIXES = ["พี่", "น้อง", "ครู"];
 // Thai leading vowels are written before the consonant they follow in speech.
@@ -75,7 +82,9 @@ export function MessageList({ messages, tutorName, buddyName, userName, streamin
     <ol className="flex flex-col">
       {visible.map((m, i) => {
         const role = m.role as Speaker;
-        const continued = i > 0 && visible[i - 1].role === role;
+        const prev = visible[i - 1];
+        const continued =
+          i > 0 && prev.role === role && Date.parse(m.created_at) - Date.parse(prev.created_at) < GAP_MS;
         return (
           <li key={m.id} data-role={role} className={`flex gap-3 ${continued ? "mt-1" : "mt-4"}`}>
             {continued ? <span className="w-8 shrink-0" aria-hidden /> : <Avatar role={role} name={names[role]} />}
