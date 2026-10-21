@@ -64,6 +64,8 @@ spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผล�
 
 - 2026-10-21 · **Junior ตกลง 3 ข้อในกลุ่มแชท** (review ล่วงหน้าของ #39): (1) vector ผิดขนาด = `AIProviderError` ไม่ตัดหรือเติมให้เอง (2) ใช้ cosine `<=>` ต่อ ตรงกับ HNSW `vector_cosine_ops` ใน `0001_init.sql:400` ไม่ต้อง normalize · Junior แก้ `data-model.md:363` เป็น "ยืนยันแล้ว (P3b)" เอง (3) `tokens_in = 0` ของ embed รับได้ช่วง free tier · ไม่ประมาณ ไม่เรียก count_tokens · AI-04 ของ embed ปิดตอนย้ายไป Vertex (comment ใน `gemini.py` ชี้ AI-04 อยู่แล้ว) · ต้องจดใน report P3 · Approve อย่างเป็นทางการตอนเอา #39 ออกจาก draft
 
+- 2026-10-21 · Junior comment ใน #39 แล้ว (ส่วน apps/api + config/ai.yaml OK · ตกลง 3 ข้อ) · Junior แก้ `data-model.md` บรรทัด 362–363 ใน PR #54 (มิติ 768 + HNSW cosine ยืนยันแล้ว) · Jam approve #54 แล้ว (nit: backtick หาย ไม่บล็อก)
+
 ## Next step
 
 1. Junior ตกลงส่วน `apps/api/` แล้ว (ดู Decisions 21 ต.ค.) ไม่ต้องแก้โค้ด
