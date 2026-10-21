@@ -1,0 +1,58 @@
+# progress_card.topics[] มี type (part of #40)
+
+| | |
+|---|---|
+| Owner | Junior |
+| Branch | `feat/api-progress-card-topics` |
+| Checklist item | เขียน router หัวฟังก์ชันของทุก API ใน `specs/system/api.md` ให้หน้า `/docs` ครบ (D5) |
+| Status | paused · 2026-10-21 · รอ May ตอบช่วงของ stars |
+
+## Plan
+
+- [ ] 1. 🤖 `specs/system/api.md` v1.4: type ของ `progress_card.topics[]` (`id`, `name`: string · `stars`: integer ช่วงตามที่ May ตอบ, ไม่เป็น null · `level`: `not_started` \| `weak` \| `developing` \| `passed` · `review_due`: boolean · `origin`: `doc` \| `user`) + กฎ: backend ไม่ส่งหัวข้อที่ `importance` ยังไม่ได้คำนวณ (ดาวคำนวณในขั้น 5d ก่อนยืนยัน scope และการ์ดแสดงหลังยืนยัน) · ไฟล์ร่วม → May + Jam review, บอกแชทกลุ่ม
+- [x] 2. 🤖 test ใหม่ `apps/api/tests/unit/test_progress_card_topics_contract.py` (red): fixture ของ stub ผ่าน · ปฏิเสธ `level`/`origin` ที่ไม่รู้จัก, `stars` นอกช่วง, `stars = null`, field เกิน · `level` Literal = `learning.yaml` `levels.show` · OpenAPI: `level`/`origin` เป็น enum, `stars` เป็น integer ไม่ nullable และ required · ไม่แก้ `test_room_api_contract.py`
+- [x] 3. 🙋 review test ข้อ 2
+- [x] 4. 🤖 `app/models/room.py`: `ProgressTopic` + `ProgressCardEvent.topics: list[ProgressTopic]` (green) · ruff + pytest
+- [x] 5. 🤖 regenerate `apps/web/lib/api-schema.ts` ด้วย `pnpm gen:api` (ไม่แตะ `ProgressCard.tsx` ของ May)
+- [ ] 6. 🙋 May ตอบช่วงของ `stars` (0–3 หรือ 1–3) ใน PR #63 → ปรับ api.md + test + model ให้ตรง
+
+## Definition of done
+
+- api.md มี type ของ `progress_card.topics[]` และกฎ stars ไม่เป็น null
+- `ProgressCardEvent.topics` เป็น model ที่มี type · fixture ใน `app/stubs/` ผ่าน · test ใหม่ผ่าน · test ที่ล็อกแล้วไม่ถูกแก้
+- `pnpm gen:api` ได้ `stars: number` (ไม่ใช่ `number | null`), `level`/`origin` เป็น union ของ string
+- May + Jam approve · **ไม่ merge จนกว่า May ตอบช่วงของ stars**
+
+## Decisions
+
+- 2026-10-21 · PR นี้ "Part of #40" ทำเฉพาะ topics · `error.code` แยก PR ทีหลัง · ไม่ต้องรอ api.md จาก #36
+- 2026-10-21 · `stars` ไม่เป็น null ใน progress_card: backend ตัดหัวข้อที่ `importance` ยังเป็น NULL ออก · type ที่ generate จึงเป็น number
+- 2026-10-21 · ช่วงของ `stars` ที่ยังไม่ตัดสินอยู่ใน api.md "รอตัดสิน" ข้อ 4
+- 2026-10-21 · test ที่ขึ้นกับช่วงของ stars (0 ดาว) ใส่ `pytest.mark.skip` ไว้ก่อน · enum เช็คกับทั้ง `learning.yaml` และ check ใน `0001_init.sql` (กัน drift)
+- 2026-10-21 · model ใช้ `stars` 0-3 ตาม DB ไปก่อน · ถ้า May เลือก 1-3 แก้ `ge=1` + เขียน test 0 ดาวที่ skip ไว้
+- 2026-10-21 · `id` เป็น `str` ไม่ใช่ `UUID` (stub ใช้ `"t1"`, api.md บอก string)
+- 2026-10-21 · `progress-card.md` (ของ May) Open questions 3, 4 ตอบแล้ว → แค่บอกใน PR description ไม่แก้ไฟล์เอง
+
+## Next step
+
+อ่านคำตอบของ May ใน PR #63 (หรือ #71) เรื่องหัวข้อ 0 ดาว แล้ว:
+- **1-3 (ไม่แสดง 0 ดาว):** `apps/api/app/models/room.py` `ProgressTopic.stars` → `Field(ge=1, le=3)` และลบ comment "0-3 as in the DB until…" · ใน `test_progress_card_topics_contract.py` ลบ `skip` ของ `test_apimd_progress_card_zero_stars` แล้วเขียนให้ `stars=0` ถูกปฏิเสธ · `pnpm gen:api` (type ไม่เปลี่ยน แต่ docstring อาจเปลี่ยน)
+- **0-3 (แสดง 0 ดาว):** model ไม่ต้องแก้ แค่ลบ comment "until…" · เขียน test ให้ `stars=0` ผ่าน
+- ทั้งสองทาง: `specs/system/api.md` แถว `stars` ในตาราง `progress_card.topics[]` ใส่ช่วงที่เลือก · ขีดฆ่า "รอตัดสิน" ข้อ 4 + ใส่ "ตัดสินแล้ว (May วันที่ · PR #63)" · ลบหัวข้อ ⛔ ใน description ของ #71 · รัน `uv run ruff check . && uv run pytest tests/unit` · เสร็จแล้ว `/work-done`
+
+## Waiting on
+
+- May: ช่วงของ `stars` (คำถามใน PR #63 https://github.com/jamvess/anyang/pull/63#issuecomment-6312127136)
+- May + Jam: review PR #71 (ready for review แล้ว · ขอ review 2026-10-21)
+- 🙋 Junior: บอกแชทกลุ่มว่า api.md เป็น v1.4 ใน #71
+
+## Done today (2026-10-21)
+
+- ตอบ May ใน #63 เรื่องค่า `level` / `origin` / `stars`
+- api.md v1.4 · test ใหม่ · `ProgressTopic` · regenerate `api-schema.ts` · PR #71 ready for review, CI ผ่าน (run 39575144484)
+
+## Notes for next time
+
+- CI แดงที่ commit `260490b` (test red ก่อนมี model) เป็นเรื่องตั้งใจ · `a8808df` เขียวทั้ง api, api-integration, web
+- `pnpm gen:api` ต้องเปิด API ก่อน: `cd apps/api && uv run fastapi run app/main.py --port 8000`
+- `topics.importance` ใน DB เป็น nullable 0–3 · `level` ตรงกันทั้ง `learning.yaml` และ check ของ `topic_progress.level`
