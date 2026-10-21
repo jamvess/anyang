@@ -114,16 +114,24 @@ AI ไม่ได้ตอบจากเอกสารอย่างเด�
 **Extract ตามชนิดไฟล์** (ทุกแบบต้องได้ `page_no` ติดมาด้วย)
 
 - PDF ที่มี text layer ใช้ PyMuPDF **แต่ต้องเช็คคุณภาพของข้อความก่อน** · ไฟล์สแกนมักมี OCR layer ภาษาอังกฤษซ่อนอยู่ ซึ่งดูเหมือนมีข้อความแต่เป็นขยะ · PoC P3 ใช้สัดส่วนตัวอักษรไทยต่อตัวอักษรทั้งหมด < 30% = ไฟล์สแกน (MTH10101: ข้อสอบสแกน 0%, ชีท 48–85%)
-- PDF สแกนหรือไฟล์รูป ส่ง vision model อ่าน (A2 ทีละหน้า หรือ A2b ทั้งไฟล์ · ผล PoC P3 อาจเปลี่ยนเป็น Google Document AI สำหรับไฟล์สแกน)
+- PDF สแกนหรือไฟล์รูป ส่ง vision model อ่าน (A2 ทีละหน้า หรือ A2b ทั้งไฟล์) · **P3:** A2b อ่านข้อสอบสแกน 14 หน้าใน 40.5 วินาที และ A4 ตัดรายข้อตรง label 43/43 จึงไม่ใช้ Google Document AI (`specs/poc/reports/P3.md`)
 - ข้อจำกัดของ PyMuPDF ที่เจอใน P3: สมการจาก Equation Editor ของ Word ออกมาเป็นตัวอักษรกระจายทีละบรรทัด และสัญลักษณ์ ∞ หายไป ข้อความภาษาไทยอ่านได้แต่สระอำแตก (`น ามา`)
 - PPTX อ่านทีละสไลด์, DOCX อ่านทีละหัวข้อ
 
 **Chunk**
 
 - ชีทและโน้ต ตัดตามหัวข้อหรือสไลด์ ขนาดประมาณ 400–800 tokens ห้ามคร่อมเกิน 2 หน้า
+- **นับ token ภาษาไทยที่ประมาณ 1.7 ตัวอักษรต่อ token** (P3b วัดด้วย `count_tokens` ของ `gemini-embedding-2` ได้ 1.47–1.82) ไม่ใช่ 3–4 แบบภาษาอังกฤษ ถ้าใช้ค่าภาษาอังกฤษ chunk จะใหญ่เกินจริงเกือบ 2 เท่า · MTH10101 ตัดได้ 116 chunk (median 486 token, ไม่มีอันไหนเกิน 800)
 - ข้อสอบเก่า **ใช้ AI ตัดรายข้อ** ไม่ตัดตามความยาว เพราะต้องนำไปจับคู่กับหัวข้อทีละข้อ
 
 **Embed** แบบ batch และเก็บ `text` กับ `content_hash` ไว้คู่กับ vector เสมอ เพื่อให้ re-index ได้หากเปลี่ยน embedding model
+
+- **Model:** `gemini-embedding-2` ที่ 768 มิติ (`config/ai.yaml` → `embedding.dimensions` ส่งเป็น `output_dimensionality`) · P3b: recall@4 95% ที่ 768 มิติ เทียบกับ 90% ที่ 3,072 มิติ และ 45% ของ `bge-m3` · ตรงกับ `chunks.embedding vector(768)`
+- **ทีละข้อความ:** embedding-2 เป็น model แบบ multimodal ถ้าส่ง string หลายอันใน request เดียวจะได้ vector เดียวรวมกัน provider จึงต้องห่อแต่ละข้อความเป็น `Content` แยกกัน
+- **ขนาด batch:** embedding-2 รับรวมไม่เกิน 8,192 token ต่อ request และ chunk ยาวได้ถึง 800 → `embedding.batch_size: 10`
+- **ตรวจขนาด:** gateway แจ้ง error ถ้า vector ยาวไม่เท่า `embedding.dimensions` (ไม่ตัดหรือเติมให้เอง)
+- **ค้นด้วย cosine** (`<=>`, HNSW `vector_cosine_ops`) · Gemini ไม่ normalize vector ที่ต่ำกว่า 3,072 มิติ ถ้าเปลี่ยนไปใช้ inner product ต้อง normalize ก่อนเก็บ
+- Gemini API ไม่บอกจำนวน token ของ embedding → `ai_calls.tokens_in` ของ purpose `embed` เป็น 0 จนกว่าจะย้ายไป Vertex AI (AI-04)
 
 ### 2.3.4 ขั้น 5 · Topic extraction
 
