@@ -126,7 +126,7 @@ type SendMessage = (payload: SendPayload, signal: AbortSignal) => AsyncIterable<
 
 **หน้า room**
 
-- **AC-21 (TM-20)** Given หน้า room (ใช้ fake transport ที่หน่วงตามค่า demo · test รอได้สูงสุด 5 วินาที) When ส่ง "ใช่ๆ" Then มี bubble user "ใช่ๆ" ตามด้วย bubble tutor ที่มีข้อความจาก `tutor_reply.txt` (แทน AC-19 ของ `chat-room-ui.md` ที่ไม่มีคำตอบ)
+- **AC-21 (TM-20)** Given หน้า room (ใช้ fake transport ที่หน่วงตามค่า demo · test รอได้สูงสุด 5 วินาที) When ส่ง "ใช่ๆ" Then มี bubble user "ใช่ๆ" ตามด้วย bubble tutor ที่มีข้อความจาก `tutor_reply.txt` (แทน AC-19 ของ `chat-room-ui.md` ที่ไม่มีคำตอบ) · **เลิกใช้ 2026-10-21:** หน้า room ใช้ API แทน fake transport ตาม `room-http.md` (AC-6 แทนข้อนี้ · May อนุมัติ)
 
 **เปลี่ยนชื่อ test เดิม** (ตาม `chat-room-ui.md` §10 ข้อ 1 · ไม่แก้เนื้อ test)
 

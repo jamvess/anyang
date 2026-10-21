@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Composer } from "./Composer";
 import { MessageList } from "./MessageList";
 import { roomStrings as t } from "./strings";
+import type { SSEEvent } from "@/lib/sse";
 import type { ChatMessage, MessageRole, RoomData, SendMessage, SendPayload } from "./types";
 
 /** How close to the bottom (px) still counts as "following" the stream. A UI value, not a learning-model one. */
@@ -21,7 +22,18 @@ type Token = { speaker: "tutor" | "buddy"; text: string };
  * Tutor room (specs: chat-room-ui.md, chat-streaming.md).
  * Sends through `sendMessage` and turns the SSE reply into bubbles.
  */
-export function ChatRoom({ room, sendMessage = noReply }: { room: RoomData; sendMessage?: SendMessage }) {
+export function ChatRoom({
+  room,
+  sendMessage = noReply,
+  opening,
+  imagesEnabled,
+}: {
+  room: RoomData;
+  sendMessage?: SendMessage;
+  /** Rest of the POST /exam-preps/{id}/sessions stream: the opening message streams in with no user bubble (room-http.md §2). */
+  opening?: AsyncIterable<SSEEvent>;
+  imagesEnabled?: boolean;
+}) {
   const [messages, setMessages] = useState<ChatMessage[]>(room.messages);
   const [busy, setBusy] = useState(false);
   const [typing, setTyping] = useState(false);
@@ -71,23 +83,27 @@ export function ChatRoom({ room, sendMessage = noReply }: { room: RoomData; send
     append(
       newMessage("user", text, {
         input_mode: image ? "image" : "text",
-        attachment_path: image ? image.name : null,
+        // Not uploaded yet, so no Storage path (chat-room-ui.md AC-6c).
+        attachment_name: image ? image.name : null,
       }),
     );
     stick.current = true;
+    const controller = new AbortController();
+    abort.current = controller;
+    await play(sendMessage(payload, controller.signal), controller.signal);
+  }
+
+  /** Shows one SSE reply as bubbles (chat-streaming.md §2). */
+  async function play(events: AsyncIterable<SSEEvent>, signal: AbortSignal) {
     setFailed(false);
     setBusy(true);
     setTyping(true);
-
-    const controller = new AbortController();
-    abort.current = controller;
-    const { signal } = controller;
 
     // The bubble that tokens of the same speaker are appended to, in this stream only.
     let current = null as { id: string; speaker: Token["speaker"] } | null;
     let done = false;
     try {
-      for await (const { event, data } of sendMessage(payload, signal)) {
+      for await (const { event, data } of events) {
         if (signal.aborted) return;
         if (event === "token") {
           const { speaker, text } = data as Token;
@@ -123,6 +139,16 @@ export function ChatRoom({ room, sendMessage = noReply }: { room: RoomData; send
     setFailed(!done);
   }
 
+  // The opening stream can be read only once; the ref keeps a second effect run
+  // (React Strict Mode) from reading it again. Its owner aborts it on unmount.
+  const openingStarted = useRef(false);
+  useEffect(() => {
+    if (!opening || openingStarted.current) return;
+    openingStarted.current = true;
+    void play(opening, new AbortController().signal);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- play once per opening stream
+  }, [opening]);
+
   return (
     <div className="flex h-screen flex-col px-8 pb-5">
       <header className="mx-auto flex w-full max-w-2xl items-center justify-between py-4 text-xs text-zinc-400">
@@ -151,7 +177,7 @@ export function ChatRoom({ room, sendMessage = noReply }: { room: RoomData; send
             {t.sendFailed}
           </p>
         )}
-        <Composer limits={room.limits} onSend={send} disabled={busy} />
+        <Composer limits={room.limits} onSend={send} disabled={busy} imagesEnabled={imagesEnabled} />
       </div>
     </div>
   );

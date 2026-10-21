@@ -78,6 +78,8 @@
 - **AC-4 (TM-04)** Given ข้อความ role `card` หรือ `system` When render Then ไม่มี bubble ของข้อความนั้น
 - **AC-5 (TM-04)** Given `days_left = 5` และ `prep_name = "Factorization"` When render Then แถบบนแสดง "Factorization" และ "สอบใน 5 วัน" และมีลิงก์ "ออกจากห้องติว" ไป `/`
 - **AC-6 (TM-06)** Given ข้อความ user ที่ `input_mode = image` และ `attachment_path = "sessions/s1/วิธีทำ.jpg"` When render Then แสดงกล่องรูปที่มีชื่อ "วิธีทำ.jpg"
+- **AC-6b (TM-06 · api.md v1.3)** Given ข้อความ user ที่ `input_mode = image`, `attachment_name = "วิธีทำ.jpg"` และ `attachment_path = "sessions/s1/3f2a9c1e-7b4d-4e8a-9c2f-1d5e6a7b8c90.jpg"` When render Then กล่องรูปแสดง "วิธีทำ.jpg" และไม่แสดง uuid · ชื่อไฟล์มาจาก `attachment_name` ก่อนเสมอ ถ้าเป็น `null` ใช้ส่วนท้ายของ `attachment_path` ตาม AC-6 (เพิ่ม 2026-10-21 · PR #42)
+- **AC-6c (TM-06)** Given ข้อความ user ที่ `input_mode = image`, `attachment_name = "วิธีทำ.jpg"` และ `attachment_path = null` (ข้อความในเครื่องก่อนอัปโหลดเสร็จ) When render Then แสดงกล่องรูป "วิธีทำ.jpg" · ChatRoom สร้างข้อความ user ที่มีรูปด้วย `attachment_name` = ชื่อไฟล์ และ `attachment_path = null`
 
 **สมการ (TM-08)**
 
@@ -123,7 +125,7 @@
 
 | Test | ระดับ | ครอบคลุม AC |
 |---|---|---|
-| `tests/chat/MessageList.test.tsx` | unit (component) | AC-1 ถึง AC-4, AC-6 |
+| `tests/chat/MessageList.test.tsx` | unit (component) | AC-1 ถึง AC-4, AC-6, AC-6b, AC-6c |
 | `tests/chat/MessageText.test.tsx` | unit | AC-7 ถึง AC-10 |
 | `tests/chat/Composer.test.tsx` | unit | AC-11 ถึง AC-18 (รวม AC-16b), AC-boundary-text, AC-boundary-image, AC-20 |
 | `tests/chat/RoomPage.test.tsx` | integration (หน้า + fixture) | AC-5, AC-11, AC-19 |

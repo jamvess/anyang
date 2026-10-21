@@ -12,13 +12,15 @@ type Props = {
   onSend: (payload: SendPayload) => void;
   /** While the reply streams the draft stays editable but cannot be sent. */
   disabled?: boolean;
+  /** False until the API takes photos (no /uploads yet · room-http.md §2): picking one only explains why. */
+  imagesEnabled?: boolean;
 };
 
 /**
  * Text + photo input of the tutor room. No answer choice buttons (TM-06).
  * Limits come from the API with the room data, never hard-coded.
  */
-export function Composer({ limits, onSend, disabled = false }: Props) {
+export function Composer({ limits, onSend, disabled = false, imagesEnabled = true }: Props) {
   const [text, setText] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
@@ -38,7 +40,9 @@ export function Composer({ limits, onSend, disabled = false }: Props) {
 
   function pick(file: File | undefined) {
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
+    if (!imagesEnabled) {
+      setImageError(t.imagesNotYet);
+    } else if (!file.type.startsWith("image/")) {
       setImageError(t.notImage);
     } else if (file.size > limits.max_image_mb * BYTES_PER_MB) {
       setImageError(t.imageTooBig(limits.max_image_mb));
