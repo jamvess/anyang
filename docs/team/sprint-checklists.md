@@ -102,6 +102,7 @@
 
 - [ ] หน้าแชท P4-lite: อ่าน SSE ผ่าน `lib/sse.ts`, แสดงข้อความที่ไหลออกมา, render KaTeX, ส่งรูป
   - 20 ต.ค. stream จาก fake transport เสร็จ (PR #32 · `chat-streaming.md`) · เหลือ HTTP transport + upload รูปจริง เมื่อ `POST /sessions/{id}/messages` ของ Junior มา
+  - 21 ต.ค. HTTP transport ต่อ API stub เสร็จ (PR #42 · `room-http.md`): เปิดห้อง/กลับเข้า session, ส่งข้อความ stream จาก API, ชื่อไฟล์รูปจาก `attachment_name` · ลองจริงในเครื่องผ่าน · เหลือ upload รูปจริง (รอ `/uploads` + api.md รอตัดสินข้อ 1) และทดสอบบน staging กับ AI จริง
 - [x] Generate type จาก `/openapi.json` (`pnpm gen:api`)
   - 21 ต.ค. (PR #41) · generate จาก stub ห้องติว api.md v1.2 · รัน `pnpm gen:api` ใหม่เมื่อ Junior เพิ่ม endpoint หรือทำตาม v1.3
 - [x] Use case UC สมัคร และ UC upload → scope (D7)

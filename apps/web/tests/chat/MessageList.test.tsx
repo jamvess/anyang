@@ -118,4 +118,41 @@ describe("MessageList", () => {
     expect(within(user).getByText(/วิธีทำ\.jpg/)).toBeTruthy();
     expect(user.textContent).not.toContain("sessions/s1/");
   });
+
+  // chat-room-ui.md AC-6b (api.md v1.3)
+  it("TM06 the photo box shows attachment_name, not the uuid file name in attachment_path", () => {
+    const { container } = render(
+      <MessageList
+        messages={[
+          msg({
+            id: "p",
+            role: "user",
+            input_mode: "image",
+            attachment_name: "วิธีทำ.jpg",
+            attachment_path: "sessions/s1/3f2a9c1e-7b4d-4e8a-9c2f-1d5e6a7b8c90.jpg",
+          }),
+        ]}
+        tutorName="พี่ตาล"
+        buddyName="มีน"
+      />,
+    );
+
+    const user = container.querySelector('[data-role="user"]') as HTMLElement;
+    expect(within(user).getByText(/วิธีทำ\.jpg/)).toBeTruthy();
+    expect(user.textContent).not.toContain("3f2a9c1e");
+  });
+
+  // chat-room-ui.md AC-6c
+  it("TM06 a local photo message with attachment_name and no attachment_path still shows its box", () => {
+    const { container } = render(
+      <MessageList
+        messages={[msg({ id: "p", role: "user", input_mode: "image", attachment_name: "วิธีทำ.jpg" })]}
+        tutorName="พี่ตาล"
+        buddyName="มีน"
+      />,
+    );
+
+    const user = container.querySelector('[data-role="user"]') as HTMLElement;
+    expect(within(user).getByText(/วิธีทำ\.jpg/)).toBeTruthy();
+  });
 });

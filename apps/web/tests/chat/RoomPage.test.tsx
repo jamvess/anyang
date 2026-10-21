@@ -1,6 +1,5 @@
-import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import RoomPage from "@/app/preps/[id]/room/page";
 import { ChatRoom } from "@/components/chat/ChatRoom";
 import type { RoomData } from "@/components/chat/types";
 import fixture from "../fixtures/room/session-s15.json";
@@ -39,24 +38,5 @@ describe("ChatRoom (S2, fixture data)", () => {
   });
 });
 
-describe("Room page (S3, fake transport)", () => {
-  // chat-streaming.md AC-21
-  it("TM20 a sent message gets the streamed reply from tutor_reply.txt", async () => {
-    const { container, getByLabelText, getByRole } = render(<RoomPage />);
-    const before = container.querySelectorAll("[data-role]").length;
-
-    fireEvent.change(getByLabelText("พิมพ์ตอบ"), { target: { value: "ใช่ๆ" } });
-    fireEvent.click(getByRole("button", { name: "ส่ง" }));
-
-    await waitFor(
-      () => {
-        const added = [...container.querySelectorAll("[data-role]")].slice(before);
-        expect(added.map((b) => b.getAttribute("data-role"))).toEqual(["user", "tutor", "buddy", "tutor"]);
-        expect(added[0].textContent).toContain("ใช่ๆ");
-        expect(added[1].textContent).toContain("ถูกแล้ว");
-        expect(added[3].querySelectorAll("div.tex > .katex-display")).toHaveLength(1);
-      },
-      { timeout: 5000 },
-    );
-  }, 10_000);
-});
+// "Room page (S3, fake transport)" (chat-streaming.md AC-21) was removed with the demo mode:
+// the page now talks to the API, see RoomPageHttp.test.tsx (room-http.md · approved by May 2026-10-21).
