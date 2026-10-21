@@ -22,7 +22,13 @@ from app.ai.gateway import (
     Image,
 )
 from app.ai.latex import LatexStr, MathTextStr
-from app.ai.providers.base import ProviderRateLimited, ProviderRequest, ProviderResponse
+from app.ai.providers.base import (
+    EmbedRequest,
+    EmbedResponse,
+    ProviderRateLimited,
+    ProviderRequest,
+    ProviderResponse,
+)
 from app.ai.providers.fake import FakeProvider
 from app.settings import get_settings
 
@@ -60,6 +66,10 @@ class AnswerResult(BaseModel):
 
 def make_gateway(fake: FakeProvider, prompts_dir: Path = REPO_PROMPTS, **config_changes) -> Gateway:
     config = get_settings().ai
+    # Fakes return short vectors: ignore the vector size of config/ai.yaml unless a test sets it.
+    config = config.model_copy(
+        update={"embedding": config.embedding.model_copy(update={"dimensions": None})}
+    )
     if config_changes:
         config = config.model_copy(update=config_changes)
     return Gateway(config=config, prompts_dir=prompts_dir, provider=fake)
@@ -562,3 +572,126 @@ async def test_ai_orchestration_2_10_no_wait_after_the_last_attempt(sleeps: list
     with pytest.raises(AIProviderError):
         await make_gateway(fake).call("extract_topics_local", TOPICS_INPUT, TopicsResult)
     assert len(sleeps) == retries
+
+
+# --- AI-01 A3 embed through the gateway (PoC P3b) ----------------------------------------------
+
+
+class FakeEmbedder:
+    """Returns one 2-number vector per text: [length of the text, position in the batch]."""
+
+    def __init__(self, failures: int = 0, delay_s: float = 0.0) -> None:
+        self.requests: list[EmbedRequest] = []
+        self._failures = failures
+        self._delay_s = delay_s
+
+    async def embed(self, request: EmbedRequest) -> EmbedResponse:
+        self.requests.append(request)
+        if self._delay_s:
+            await asyncio.sleep(self._delay_s)
+        if self._failures:
+            self._failures -= 1
+            raise RuntimeError("503")
+        vectors = [[float(len(text)), float(i)] for i, text in enumerate(request.texts)]
+        return EmbedResponse(vectors=vectors, tokens_in=len(request.texts))
+
+
+async def test_AI01_embed_uses_the_embed_tier_and_keeps_order():
+    embedder = FakeEmbedder()
+
+    vectors = await make_gateway(embedder).embed(["a", "bbb"], role="document")
+
+    assert vectors == [[1.0, 0.0], [3.0, 1.0]]
+    assert embedder.requests[0].model == get_settings().ai.tiers["embed"].primary
+    assert embedder.requests[0].role == "document"
+
+
+async def test_AI01_embed_sends_batches_of_batch_size_from_config():
+    config = get_settings().ai
+    embedder = FakeEmbedder()
+    gateway = make_gateway(
+        embedder,
+        embedding=config.embedding.model_copy(update={"batch_size": 2, "dimensions": None}),
+    )
+
+    vectors = await gateway.embed(["a", "bb", "ccc", "dddd", "eeeee"], role="query")
+
+    assert [len(r.texts) for r in embedder.requests] == [2, 2, 1]
+    assert [v[0] for v in vectors] == [1.0, 2.0, 3.0, 4.0, 5.0]
+
+
+async def test_AI01_embed_without_texts_makes_no_request():
+    embedder = FakeEmbedder()
+
+    assert await make_gateway(embedder).embed([], role="query") == []
+    assert embedder.requests == []
+
+
+async def test_ai_orchestration_2_10_embed_error_is_retried_after_backoff(sleeps: list[float]):
+    embedder = FakeEmbedder(failures=1)
+
+    vectors = await make_gateway(embedder).embed(["a"], role="query")
+
+    assert vectors == [[1.0, 0.0]]
+    assert sleeps == [get_settings().ai.gateway.retry_backoff_seconds]
+
+
+async def test_ai_orchestration_2_10_embed_timeout_from_config():
+    config = get_settings().ai
+    gateway = make_gateway(
+        FakeEmbedder(delay_s=0.2),
+        embedding=config.embedding.model_copy(update={"timeout_s": 0.01}),
+        gateway=config.gateway.model_copy(update={"retries": 0}),
+    )
+
+    with pytest.raises(AIProviderError, match="timeout"):
+        await gateway.embed(["a"], role="query")
+
+
+async def test_AI04_embed_call_is_recorded():
+    gateway = make_gateway(FakeEmbedder())
+    records: list[CallRecord] = []
+    gateway.add_listener(records.append)
+
+    await gateway.embed(["a", "b", "c"], role="document")
+
+    assert [(r.purpose, r.status, r.tokens_in) for r in records] == [("embed", "ok", 3)]
+
+
+# --- vector size (data-model.md: chunks.embedding vector(768), PoC P3b) ------------------------
+
+
+async def test_AI01_embed_sends_dimensions_from_config():
+    config = get_settings().ai
+    embedder = FakeEmbedder()
+    gateway = make_gateway(
+        embedder, embedding=config.embedding.model_copy(update={"dimensions": 2})
+    )
+
+    await gateway.embed(["a"], role="document")
+
+    assert embedder.requests[0].dimensions == 2
+
+
+async def test_AI01_embed_without_dimensions_lets_the_model_choose():
+    config = get_settings().ai
+    embedder = FakeEmbedder()
+    gateway = make_gateway(
+        embedder, embedding=config.embedding.model_copy(update={"dimensions": None})
+    )
+
+    await gateway.embed(["a"], role="document")
+
+    assert embedder.requests[0].dimensions is None
+
+
+async def test_AI05_embed_vector_of_another_size_than_config_is_a_provider_error():
+    config = get_settings().ai
+    gateway = make_gateway(
+        FakeEmbedder(),  # returns 2-number vectors
+        embedding=config.embedding.model_copy(update={"dimensions": 3}),
+        gateway=config.gateway.model_copy(update={"retries": 0}),
+    )
+
+    with pytest.raises(AIProviderError, match="dimensions"):
+        await gateway.embed(["a"], role="document")
