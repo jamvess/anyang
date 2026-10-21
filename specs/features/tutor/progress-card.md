@@ -67,7 +67,7 @@
 
 **ไม่กระทบของเดิม**
 
-- **AC-10** test เดิมของ MessageList, ChatRoomStream, RoomPageHttp, chat-room-ui AC-11 (มีแค่ปุ่มแนบรูปกับส่ง · fixture มี 4 หัวข้อจึงไม่มีปุ่ม "อีก") ผ่านโดยไม่แก้
+- **AC-10** test เดิมของ MessageList, RoomPageHttp, chat-room-ui AC-11 (มีแค่ปุ่มแนบรูปกับส่ง · fixture มี 4 หัวข้อจึงไม่มีปุ่ม "อีก") ผ่านโดยไม่แก้ · **ยกเว้น** chat-streaming AC-7 ใน `ChatRoomStream.test.tsx` ที่ส่ง `progress_card` คั่น token แล้วคาด bubble เดียว ขัดกับ AC-9 · ตัดบรรทัด `progress_card` ออกจาก test นั้น (May อนุมัติ 2026-10-21) ส่วน `problem`, `verdict`, event ที่ไม่รู้จักยังถูกข้ามเหมือนเดิม
 
 **AC-tenant (SA-06):** ไม่เกี่ยว · แสดงข้อมูลที่ API ส่งมา การแยก tenant อยู่ที่ API
 

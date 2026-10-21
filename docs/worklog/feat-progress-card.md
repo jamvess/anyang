@@ -11,8 +11,8 @@
 
 - [x] 1. 🤖 `/spec-feature`: `specs/features/tutor/progress-card.md` (TM-15, TM-11, PM-03, PM-04) · แสดง event `progress_card` และข้อความ role `card` ในประวัติ ตาม wireframe S15 และ api.md · 🙋 May ตัดสินเรื่องที่ spec ยังไม่กำหนด
 - [x] 2. 🙋 May review spec (รวมการเปลี่ยน chat-room-ui AC-4 ที่ตอนนี้ซ่อน role `card`)
-- [ ] 3. 🤖 `/spec-to-tests`
-- [ ] 4. 🙋 May review test
+- [x] 3. 🤖 `/spec-to-tests`
+- [x] 4. 🙋 May review test
 - [ ] 5. 🤖 `/implement-feature` + lint, typecheck, test, build
 
 ## Definition of done
@@ -23,10 +23,11 @@
 ## Decisions
 
 - 2026-10-21 · หัวข้อเกิน 6 แสดง 6 + ปุ่ม "อีก n หัวข้อ" · `review_due` และ `origin = user` เป็นป้ายเล็กข้างชื่อ (May เลือก)
+- 2026-10-21 · test เดิม chat-streaming AC-7 ส่ง progress_card คั่น token แล้วคาด bubble เดียว ขัดกับ AC-9 · May อนุมัติตัดบรรทัด progress_card ออก (spec AC-10 แก้ตาม)
 
 ## Next step
 
-ขั้น 3: `/spec-to-tests specs/features/tutor/progress-card.md`
+ขั้น 5: `/implement-feature specs/features/tutor/progress-card.md`
 
 ## Waiting on
 

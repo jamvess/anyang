@@ -193,7 +193,7 @@ describe("ChatRoom streaming", () => {
 
     await send("ตอบ");
     await t.token("tutor", "ถูก");
-    await t.event("progress_card", { days_left: 5, passed: 1, total: 4, readiness: 0.25, topics: [] });
+    // progress_card is shown since progress-card.md (it splits the bubble, AC-9) · removed here with May's approval
     await t.event("problem", { problem_id: "p1", text_latex: "x^2", difficulty: 1, purpose: "check" });
     await t.event("verdict", { verdict: "correct", first_wrong_line: null, error_type: null });
     await t.event("unknown_event", { anything: true });
@@ -508,5 +508,53 @@ describe("ChatRoom auto-scroll", () => {
     await send("ข้อต่อไป");
 
     expect(box.s.top).toBe(box.bottom());
+  });
+});
+
+// Spec: specs/features/tutor/progress-card.md AC-8, AC-9
+describe("ChatRoom · progress card in the stream", () => {
+  const CARD = {
+    days_left: 5,
+    passed: 1,
+    total: 4,
+    readiness: 0.25,
+    topics: [{ id: "t1", name: "ตัวประกอบร่วม", stars: 1, level: "passed", review_due: false, origin: "doc" }],
+  };
+
+  /** Bubbles and cards in document order: "card" for a card, else the bubble role. */
+  const items = (container: HTMLElement) =>
+    [...container.querySelectorAll<HTMLElement>('[data-role], [role="group"]')].map((el) =>
+      el.getAttribute("role") === "group" ? "card" : el.getAttribute("data-role"),
+    );
+
+  it("TM15 the opening stream shows the card before the tutor's opening message", async () => {
+    const opening = createFakeTransport(sseFixture("room_session_start.txt"), { delayMs: 0 })(
+      { text: null, image: null },
+      new AbortController().signal,
+    );
+    const r: RoomData = { ...room, messages: [] };
+    const { container, findByText } = render(<ChatRoom room={r} opening={opening} />);
+
+    await findByText("สวัสดี");
+    expect(items(container)).toEqual(["card", "tutor"]);
+  });
+
+  it("TM11 a card in the middle of a reply splits the tutor's message around it", async () => {
+    const t = controlledTransport();
+    const { send, container, getAllByText } = setup(t.sendMessage);
+    const before = items(container).length;
+
+    await send("ขอดูความคืบหน้า");
+    await t.token("tutor", "นี่เลย");
+    await t.event("progress_card", CARD);
+    await t.token("tutor", "ยังตามแผนอยู่");
+    await t.done();
+
+    expect(items(container).slice(before)).toEqual(["user", "tutor", "card", "tutor"]);
+    const tutors = [...container.querySelectorAll<HTMLElement>('[data-role="tutor"]')].slice(-2);
+    expect(tutors[0].textContent).toContain("นี่เลย");
+    expect(tutors[1].textContent).toContain("ยังตามแผนอยู่");
+    expect(within(tutors[1]).getByText(room.tutor_name)).toBeTruthy();
+    expect(getAllByText(room.tutor_name).length).toBeGreaterThanOrEqual(2);
   });
 });
