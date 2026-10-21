@@ -86,7 +86,7 @@ Screen ID (S01–S27) อ้างอิงถึง wireframe
 | ID | Requirement | Priority | Screen | Status | หมายเหตุ |
 |---|---|---|---|---|---|
 | AM-01 | ระบบต้องอ่านคำตอบที่เขียนด้วยลายมือจากรูป และแปลงเป็น LaTeX ที่ render ได้ | Must | S21 | active |  |
-| AM-02 | ระบบต้องแสดงผลที่อ่านได้ให้ user confirm ก่อนตรวจ เมื่อ confidence ต่ำสุดของบรรทัดต่ำกว่า threshold ใน config | Must | S21 | changed | เดิม: confirm ทุกครั้ง ห้ามข้าม (ai-orchestration 2.2.5) |
+| AM-02 | ระบบต้องแสดงผลที่อ่านได้ให้ user confirm ก่อนตรวจทุกครั้งที่ส่งรูป | Must | S21 | changed | กลับเป็นแบบเดิมตามผล PoC P1 (21 ต.ค. · ทีมตกลงใน PR #45): confidence ที่ model ให้ตัวเองแยกบรรทัดที่อ่านผิดไม่ได้ · ฉบับก่อนหน้า: confirm เฉพาะเมื่อ confidence ต่ำกว่า threshold |
 | AM-03 | ระบบต้อง log กรณีที่ user แจ้งว่าอ่านผิด เพื่อใช้วัด OCR accuracy | Should | — | active |  |
 | AM-04 | ระบบต้องตรวจคำตอบโดยดู mathematical equivalence ไม่ใช่เทียบ string ตรงตัว | Must | — | active |  |
 | AM-05 | เมื่อคำตอบผิด ระบบต้องระบุบรรทัดแรกที่ผิด ไม่ใช่แจ้งแค่ว่าผิด | Must | S22 | active |  |
