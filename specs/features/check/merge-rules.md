@@ -6,7 +6,7 @@
 | Requirements | AM-04, AM-05, AM-06 (+ PM-01 เฉพาะ field ที่ส่งต่อ) |
 | Owner | Jam |
 | Reviewer | Junior |
-| Status | draft |
+| Status | approved (Jam + Junior · 21 ต.ค.) |
 | Related system spec | ai-orchestration.md §2.4.1, §2.4.3, §2.4.4, §2.4.5, §2.4.9 · `evals/README.md` "คู่มือ label golden set คำตอบ · P2" |
 
 ## 1. Context
@@ -40,7 +40,7 @@ checker มี 3 ส่วน: SymPy ตัดสินถูก/ผิดแล
 |---|---|---|
 | Input `answer_format` | `expression` \| `factored` \| `equation` | `factored` |
 | Input `lines` | `list[str]` (LaTeX ที่ user ยืนยันแล้ว) | `["x^{3}-x", "x(x^{2}-1)"]` |
-| Input `sympy` (**เสนอ · ต้องตกลงกับ SymPy service ของ Junior**) | `parsed: bool` · `timed_out: bool` · `final_equal: bool \| None` · `final_in_form: bool \| None` · `line_ok: list[bool]` ยาวเท่า `lines` (บรรทัด i เท่าบรรทัด i − 1 · บรรทัด 1 เทียบกับโจทย์) | `parsed=True, timed_out=False, final_equal=True, final_in_form=False, line_ok=[True, True]` |
+| Input `sympy` (ตกลงกับ Junior 21 ต.ค. · ผลของ SymPy service `app/math/`) | `parsed: bool` · `timed_out: bool` · `final_equal: bool \| None` · `final_in_form: bool \| None` · `line_ok: list[bool]` ยาวเท่า `lines` (บรรทัด i เท่าบรรทัด i − 1 · บรรทัด 1 เทียบกับโจทย์) | `parsed=True, timed_out=False, final_equal=True, final_in_form=False, line_ok=[True, True]` |
 | Input `llm` (output ของ `check_answer`) | `error_type: ErrorType \| None` · `evidence: str` · `method: "doc" \| "other"` · `verdict: Verdict \| None` · `first_wrong_line: int \| None` · `confidence: float` | `error_type="sign", evidence="บรรทัด 2: −3 กลายเป็น +3", method="doc", verdict=None, confidence=0.9` |
 | Output `CheckResult` | `verdict` · `final_answer_correct: bool` · `first_wrong_line: int \| None` (นับจาก 1) · `error_type` · `evidence` · `method` · `decided_by: "sympy" \| "llm"` · `confidence: float` · `is_correct: bool` · `disagreement: bool` | ตาม §2.4.5 + `is_correct`, `disagreement` |
 
@@ -96,10 +96,11 @@ checker มี 3 ส่วน: SymPy ตัดสินถูก/ผิดแล
 
 ## 10. Open questions
 
-1. **รูปแบบผลของ SymPy service** (ตาราง §3) เป็นข้อเสนอ · รอ Junior ตกลง หรือ SymPy service จะคืน `first_wrong_line` มาเองแทน `line_ok`
+ไม่มีข้อที่ค้าง
 
-**ตัดสินแล้ว (Jam 21 ต.ค.)**
+**ตัดสินแล้ว (21 ต.ค.)**
 
+1. (Junior ตกลง) SymPy service คืน `parsed`, `timed_out`, `final_equal`, `final_in_form`, `line_ok` ตาม §3 · merge rules หาบรรทัดแรกที่ผิดเองจาก `line_ok` (SymPy ไม่ต้องคืน `first_wrong_line`)
 2. ไม่จับคำพูดอย่าง "ไม่รู้" · `lines` ที่ user ยืนยันมาตัดคำพูดทิ้งแล้วตามกติกาลายมือ เช็คแค่ `lines` ว่าง
 3. `decided_by` ของ no answer = `sympy` (code ตัดสิน ไม่ใช่ LLM) · ไม่ต้องแก้ data-model
 4. `confidence` เมื่อ SymPy หรือ code ตัดสิน = `1.0` · confidence ของ LLM เป็นของ error_type คนละเรื่อง
@@ -109,5 +110,5 @@ checker มี 3 ส่วน: SymPy ตัดสินถูก/ผิดแล
 
 ## 11. Spec changes needed
 
-- `data-model.md` → `attempts` ยังไม่มี `first_wrong_line` (PM-01 ต้องบันทึก) และ `method` · เสนอเพิ่มทั้ง 2 column ใน migration ใหม่ (Junior · อาจรวมกับ #67)
+- `data-model.md` → `attempts` ยังไม่มี `first_wrong_line` (PM-01 ต้องบันทึก) และ `method` · **Junior ตกลงเพิ่มทั้ง 2 column ใน migration ถัดไป (รวมกับ #67)** · merge rules ไม่ต้องรอ เพราะไม่ได้เขียน DB
 - ไม่ต้องแก้ `config/learning.yaml`

@@ -10,7 +10,7 @@
 ## Plan
 
 - [x] 1. 🤖 `/spec-feature check/merge-rules AM-04 AM-05 AM-06` → `specs/features/check/merge-rules.md` · input = ผลของ SymPy (ตาม answer_format) + ผลของ LLM classifier · output = verdict ตาม §2.4.5 · ตัวตัดสินอยู่ใน `apps/api/app/domain/` (code ล้วน ไม่เรียก AI)
-- [ ] 2. 🙋 Jam review spec + ตอบ open questions · 🙋 ขอ Junior ตกลงรูปแบบผลของ SymPy service (`app/math/`) ที่ merge rules จะรับ
+- [x] 2. 🙋 Jam review spec + ตอบ open questions · 🙋 ขอ Junior ตกลงรูปแบบผลของ SymPy service (`app/math/`) ที่ merge rules จะรับ
 - [ ] 3. 🤖 `/spec-to-tests` → test ใน `apps/api/tests/unit/` (red) · ใช้ผลของ SymPy ปลอม
 - [ ] 4. 🙋 Jam review test (+ Junior เพราะอยู่ใน `apps/api/`)
 - [ ] 5. 🤖 `/implement-feature` จนเขียว
@@ -27,13 +27,15 @@
 
 - 2026-10-21 · (Jam ok ตามคำแนะนำ) open questions 2–7 ของ spec: ไม่จับคำพูด "ไม่รู้" · no answer `decided_by=sympy` · confidence = 1.0 เมื่อ SymPy/code ตัดสิน · ผิดแต่ทุกบรรทัดถูก → first_wrong_line ของ LLM ไม่งั้นบรรทัดสุดท้าย · error_type ของ LLM บังคับด้วย schema + AI-05 · incomplete คงไว้ · เพิ่ม AC-6b, AC-7b, AC-15
 
+- 2026-10-21 · Junior ตกลงตามที่แนะนำ: รูปแบบผลของ SymPy ตาม §3 · merge rules หาบรรทัดแรกที่ผิดเองจาก `line_ok` · `attempts.first_wrong_line` + `method` เพิ่มใน migration ถัดไป (รวม #67) · spec status = approved
+
 ## Next step
 
-รอ Junior ตอบ open question 1 ของ spec (รูปแบบผลของ SymPy service) · ถ้า Junior ตกลงรูปแบบที่เสนอ: ปิดข้อ 1 ใน §10 แล้วไปข้อ 3 `/spec-to-tests specs/features/check/merge-rules.md` · ถ้าเปลี่ยน: แก้ §3 + AC ที่ใช้ `line_ok` ก่อน
+ข้อ 3: `/spec-to-tests specs/features/check/merge-rules.md` → `apps/api/tests/unit/test_check_merge_rules.py` (red)
 
 ## Waiting on
 
-Junior: รูปแบบผลของ SymPy service + column `first_wrong_line`, `method` ใน `attempts`
+ไม่มี
 
 ## Notes for next time
 
