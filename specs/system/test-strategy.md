@@ -24,7 +24,7 @@
 | Math `app/math/` | ถูก/ผิดตาม `answer_format`, บรรทัดแรกที่ผิด, timeout | pytest | ทุก PR | 0 · SymPy service (S3) |
 | AI gateway + schema | routing, retry, ตรวจ schema, ซ่อม LaTeX, ขนาด vector | pytest + fake provider | ทุก PR | ✅ 103 test ใน `tests/unit/` |
 | API contract | รูปของ response, error, SSE event ตาม `api.md` | pytest + TestClient | ทุก PR | ✅ (รวมในตัวเลขข้างบน) |
-| Isolation (SA-06) | user A อ่าน/เขียนแถวของ B ไม่ได้ | pytest + `supabase start` | ทุก PR | 🟡 1 test ครอบ 3 จาก 28 ตาราง |
+| Isolation (SA-06) | user A อ่าน/เขียนแถวของ B ไม่ได้ | pytest + `supabase start` | ทุก PR | 🟡 1 test ครอบ 3 จาก 27 ตาราง |
 | Web | component, การอ่าน SSE จาก fixture ที่อัดไว้, KaTeX | Vitest + Testing Library | ทุก PR (+ lint, typecheck, build) | ✅ 84 test |
 | คุณภาพ AI | golden set ของ P1, P2, P3 เทียบกับเป้าใน spec | `evals/run_eval.py`, `poc/*/score.py` + model จริง | เมื่อ prompt หรือ model เปลี่ยน (§2.11) | 🟡 รันมือ ยังไม่อยู่ใน CI |
 | End-to-end | flow ของ demo ผ่านหน้าเว็บจริง | Playwright (ภายหลัง) | ก่อน demo | ❌ ใช้ทดลองมือตอน demo |
@@ -51,6 +51,6 @@ Jam เลือก 21 ต.ค. · Junior ตกลง 2 แถวที่เ�
 |---|---|---|
 | eval ไม่ได้รันใน CI | เทอม 1 รันมือแล้วแนบผลใน PR ที่แก้ prompt หรือ model · ย้ายเข้า CI เมื่อใช้ Vertex AI ที่จ่ายเงิน เพราะ free tier ตอบ 503 บ่อย ถ้าอยู่ใน CI จะทำให้ CI พังโดยไม่ใช่ความผิดของโค้ด | Jam · เทอม 2 |
 | test ของ `evals/` (44) และ `poc/` (26) ไม่ได้รันใน CI | เพิ่ม `uv run pytest ../../evals` ใน job `api` (ไม่เรียก network) · `poc/` ไม่เพิ่ม เพราะเป็นโค้ดชั่วคราว | Junior (`.github/`) · S3 |
-| isolation test ครอบ 3 จาก 28 ตาราง | ตารางใหม่ต้องมี test ตาม DoD เดิม · เปลี่ยนให้ test วนทุกตารางที่มี `tenant_id` เอง | Junior · S4 (พร้อมอัปเดต data model) |
+| isolation test ครอบ 3 จาก 27 ตาราง | ตารางใหม่ต้องมี test ตาม DoD เดิม · เปลี่ยนให้ test วนทุกตารางที่มี `tenant_id` เอง | Junior · S4 (พร้อมอัปเดต data model) |
 | เป้า coverage | ไม่ตั้งเป็น % · ใช้ "ทุก acceptance criteria ใน feature spec มี test ที่ชื่อขึ้นต้นด้วย requirement ID" แทน | ทุกคน · ตรวจตอน review test |
 | ยังไม่มี e2e | เทอม 1 ใช้ checklist demo แบบทำมือ · Playwright เทอม 2 | May · เทอม 2 |
