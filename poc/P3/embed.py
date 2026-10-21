@@ -33,6 +33,7 @@ K = 4  # recall@4: the PoC metric in specs/poc/README.md P3
 # it with a margin, counting Thai at 1.5 characters per token (measured 1.47-1.82 on 5 chunks).
 FREE_TIER_TOKENS_PER_MINUTE = 25_000
 FREE_TIER_CHARS_PER_TOKEN = 1.5
+LOCAL_TIMEOUT_S = 900  # one batch of 10 chunks on this laptop's CPU; measured time goes in results
 
 _PAGE = re.compile(r"(sheet-\d+):(\d+)(?:-(\d+))?")
 
@@ -97,13 +98,19 @@ class LocalEmbedder:
     def __init__(self) -> None:
         self._models: dict = {}
 
+    def load(self, name: str):
+        """Load once and keep; call before timing so the load is not counted as embed time."""
+        if name not in self._models:
+            from sentence_transformers import SentenceTransformer
+
+            self._models[name] = SentenceTransformer(name)
+        return self._models[name]
+
     async def embed(self, request):
         from app.ai.providers.base import EmbedResponse
 
         def encode():
-            from sentence_transformers import SentenceTransformer
-
-            model = self._models.setdefault(request.model, SentenceTransformer(request.model))
+            model = self.load(request.model)
             return model.encode(request.texts, normalize_embeddings=True).tolist()
 
         return EmbedResponse(vectors=await asyncio.to_thread(encode), tokens_in=0)
@@ -116,10 +123,19 @@ async def main(model: str, questions_path: Path) -> None:
     from app.settings import get_settings
 
     settings = get_settings()
-    providers: dict = {"local": LocalEmbedder()}
+    config = settings.ai
+    local = LocalEmbedder()
+    providers: dict = {"local": local}
     if model.startswith("gemini:"):
         providers["gemini"] = GeminiProvider(settings.env.gemini_api_key.get_secret_value())
-    gateway = Gateway.live(settings.ai, settings.env.prompts_dir, providers, model)
+    else:
+        # A local model on CPU is far slower than an API call: PoC only, config/ai.yaml keeps
+        # its timeout for the real system.
+        config = config.model_copy(
+            update={"embedding": config.embedding.model_copy(update={"timeout_s": LOCAL_TIMEOUT_S})}
+        )
+        await asyncio.to_thread(local.load, model.partition(":")[2])
+    gateway = Gateway.live(config, settings.env.prompts_dir, providers, model)
 
     chunks = [Chunk(**c) for c in json.loads((OUT / "chunks.json").read_text(encoding="utf-8"))]
     questions = parse_questions(questions_path.read_text(encoding="utf-8"))

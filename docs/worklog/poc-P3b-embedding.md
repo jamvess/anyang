@@ -14,7 +14,7 @@ spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผล�
 - [x] 1. 🤖 ตัด chunk ของชีท 4 ไฟล์ตาม §2.3.3 (400–800 tokens ไม่คร่อมเกิน 2 หน้า) จากข้อความ PyMuPDF ที่ ingest ไว้แล้ว · ทำเทมเพลตคำถาม `evals/topics/mth10101/retrieval_questions.jsonl` + คู่มือ + รายชื่อหัวข้อจาก label ให้กระจายคำถามครบ
 - [ ] 2. 🙋 **May (หรือ Junior) เขียนคำถาม 20 ข้อ + เฉลยหน้า** (ไม่ใช่ Jam · คน label ไม่ใช่คนทำ PoC) · Jam ส่งงานในกลุ่ม
 - [x] 3. 🙋 Jam ตัดสิน model ที่จะลอง 2–3 ตัว และวิธีเรียก embedding ผ่าน provider layer (AI-01)
-- [ ] 4. 🤖 test ก่อน → โค้ด spike `poc/P3/embed.py`: embed chunk + คำถาม · recall@4 ต่อ model · มิติ vector · เวลา · ต้นทุน → 🙋 Jam review test
+- [x] 4. 🤖 test ก่อน → โค้ด spike `poc/P3/embed.py`: embed chunk + คำถาม · recall@4 ต่อ model · มิติ vector · เวลา · ต้นทุน → 🙋 Jam review test
 - [ ] 5. 🤖 รันจริง → สรุปเทียบ → ใส่ใน report P3 (ส่วน P3b)
 
 ## Definition of done
@@ -36,10 +36,11 @@ spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผล�
 - 2026-10-21 · โควตาจาก ai.dev/rate-limit (Jam ส่งภาพ): Gemini Embedding 2 = RPM 100 · **TPM 30K** (ใช้ไป 31.41K) · นับ 1 ข้อความ = 1 request · **Gemini Embedding 001 ไม่มีในรายการของ key นี้** · Gemini 3.6 Flash (= 3.5-flash ของเรา) RPD เกินแล้ว (42) ทั้งที่ request ส่วนใหญ่ได้ 503 · (Jam ok) **ตัด `gemini-embedding-001` ออก** เหลือเทียบ embedding-2 กับ bge-m3 (spec ขอ 2–3 ตัว) · `embed.py` เว้นช่วงให้ไม่เกิน 25K token/นาที และ save cache ทีละ batch
 - 2026-10-21 · **ภาษาไทยจริง ≈ 1.5–1.8 ตัวอักษรต่อ token** (วัดด้วย count_tokens ของ gemini-embedding-2 กับ 5 chunk: 1.47, 1.64, 1.70, 1.82, 1.82) · `chunking.py` ประมาณไว้ 3 → ต่ำไปประมาณ 1.75 เท่า · chunk จริงใหญ่กว่าที่คิด (มีก้อนหนึ่ง 1,096 token เกิน 800) · ข้อสังเกตเมื่อวานว่า chunk เล็กเกินไปจึงผิด · ต้องแก้ค่าประมาณแล้วตัด chunk ใหม่ (แก้ test ที่ Jam review แล้ว ต้องขออนุญาต)
 - 2026-10-21 · (Jam อนุญาตแก้ test) `CHARS_PER_TOKEN` 3 → 1.7 (`Fraction(17, 10)` กันปัดเศษ float ที่ขอบ) · test 3 จุดแก้ตามอัตราใหม่ สิ่งที่ตรวจเหมือนเดิม · ตัด chunk ใหม่: **116 chunk** (sheet-01 90, sheet-02 20, sheet-03 3, sheet-04 3) · median 486 token · ต่ำกว่า 400: 25 · เกิน 800: 0 · 2 หน้า: 64 · ผล bge-m3 ที่รันค้างไว้ใช้ chunk ชุดเก่า ต้องรันใหม่
+- 2026-10-21 · smoke test bge-m3 ผ่าน (คำถามทิ้ง 2 ข้อ · ลบไฟล์ผลทิ้งแล้ว ไม่ใช่ผลจริง): 116 chunk · 1,024 มิติ · embed chunk ทั้งหมด 409 วินาทีบน CPU (ครั้งเดียว มี cache ใน `out/embed/`) · 0.13 วินาทีต่อคำถาม · แก้ bug ของ PoC: `setdefault` โหลด model ใหม่ทุก call · local model ใช้ timeout 900 วินาทีเฉพาะ PoC (`ai.yaml` คง 60) และโหลด model ก่อนจับเวลา
 
 ## Next step
 
-รอผล smoke test bge-m3 (ชุดเก่า) เพื่อยืนยันว่า pipeline ใช้ได้ · เมื่อ May ส่งคำถาม: รัน `embed.py` กับ embedding-2 และ bge-m3 บน chunk 116 ก้อน · ถ้าอยากเทียบขนาด chunk ให้ตัดอีกชุด (เช่น 1 หน้า) แล้วรันซ้ำ
+รอคำถามจาก May → แปลงจาก markdown ไม่ต้องทำ (`parse_questions` อ่านตารางตรง) → รัน `embed.py` กับ `local:BAAI/bge-m3` (ใช้ cache) และ `gemini:gemini-embedding-2` (เว้นช่วงตาม TPM) → สรุปเทียบใน report P3
 
 ## Waiting on
 
