@@ -5,7 +5,7 @@
 | Owner | Junior |
 | Branch | `feat/api-progress-card-topics` |
 | Checklist item | เขียน router หัวฟังก์ชันของทุก API ใน `specs/system/api.md` ให้หน้า `/docs` ครบ (D5) |
-| Status | in progress · 2026-10-21 |
+| Status | paused · 2026-10-21 · รอ May ตอบช่วงของ stars |
 
 ## Plan
 
@@ -35,12 +35,24 @@
 
 ## Next step
 
-ข้อ 6 (🙋 May): รอคำตอบช่วงของ `stars` ใน PR #63 · ระหว่างรอ: ใส่ PR description ของ #71 (Part of #40, progress-card.md Open questions 3-4 ตอบแล้ว), บอกแชทกลุ่มเรื่อง api.md v1.4, ขอ review May + Jam · ถ้าได้ 1-3: `ge=1` ใน `ProgressTopic`, เขียน test 0 ดาวที่ skip, แก้ api.md ตาราง + ปิดรอตัดสินข้อ 4, `pnpm gen:api` ไม่เปลี่ยน · ถ้าได้ 0-3: เขียน test ให้รับ 0 + แก้ api.md
+อ่านคำตอบของ May ใน PR #63 (หรือ #71) เรื่องหัวข้อ 0 ดาว แล้ว:
+- **1-3 (ไม่แสดง 0 ดาว):** `apps/api/app/models/room.py` `ProgressTopic.stars` → `Field(ge=1, le=3)` และลบ comment "0-3 as in the DB until…" · ใน `test_progress_card_topics_contract.py` ลบ `skip` ของ `test_apimd_progress_card_zero_stars` แล้วเขียนให้ `stars=0` ถูกปฏิเสธ · `pnpm gen:api` (type ไม่เปลี่ยน แต่ docstring อาจเปลี่ยน)
+- **0-3 (แสดง 0 ดาว):** model ไม่ต้องแก้ แค่ลบ comment "until…" · เขียน test ให้ `stars=0` ผ่าน
+- ทั้งสองทาง: `specs/system/api.md` แถว `stars` ในตาราง `progress_card.topics[]` ใส่ช่วงที่เลือก · ขีดฆ่า "รอตัดสิน" ข้อ 4 + ใส่ "ตัดสินแล้ว (May วันที่ · PR #63)" · ลบหัวข้อ ⛔ ใน description ของ #71 · รัน `uv run ruff check . && uv run pytest tests/unit` · เสร็จแล้ว `/work-done`
 
 ## Waiting on
 
-May: ช่วงของ `stars` (คำถามใน PR #63 https://github.com/jamvess/anyang/pull/63#issuecomment-6312127136)
+- May: ช่วงของ `stars` (คำถามใน PR #63 https://github.com/jamvess/anyang/pull/63#issuecomment-6312127136)
+- May + Jam: review PR #71 (ready for review แล้ว · ขอ review 2026-10-21)
+- 🙋 Junior: บอกแชทกลุ่มว่า api.md เป็น v1.4 ใน #71
+
+## Done today (2026-10-21)
+
+- ตอบ May ใน #63 เรื่องค่า `level` / `origin` / `stars`
+- api.md v1.4 · test ใหม่ · `ProgressTopic` · regenerate `api-schema.ts` · PR #71 ready for review, CI ผ่าน (run 39575144484)
 
 ## Notes for next time
 
+- CI แดงที่ commit `260490b` (test red ก่อนมี model) เป็นเรื่องตั้งใจ · `a8808df` เขียวทั้ง api, api-integration, web
+- `pnpm gen:api` ต้องเปิด API ก่อน: `cd apps/api && uv run fastapi run app/main.py --port 8000`
 - `topics.importance` ใน DB เป็น nullable 0–3 · `level` ตรงกันทั้ง `learning.yaml` และ check ของ `topic_progress.level`
