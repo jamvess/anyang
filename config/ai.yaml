@@ -53,6 +53,7 @@ guards:
   rate_limit_messages_per_minute: 20
   max_image_mb: 10
   max_audio_seconds: 60
+  max_attachment_name_chars: 255       # [B] display cap for user-visible file names · counted in grapheme clusters, extension kept · never used in Storage paths
   answer_leak_check: true
 
 targets:                               # checked in PoC P4-lite and monitored in production
