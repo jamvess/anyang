@@ -21,14 +21,264 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/exam-preps/{id}/sessions/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Active Session
+         * @description Open session of this exam prep (TM-13); 404 `no_active_session` if none.
+         *
+         *     stub — replaced in P4-lite
+         */
+        get: operations["get_active_session_exam_preps__id__sessions_active_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/exam-preps/{id}/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Session
+         * @description Start a session. SSE: session → progress_card → token (opening) → problem → done.
+         *
+         *     stub — replaced in P4-lite
+         */
+        post: operations["create_session_exam_preps__id__sessions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Session
+         * @description Room data: header, input limits and messages (oldest first).
+         *
+         *     stub — replaced in P4-lite
+         */
+        get: operations["get_session_sessions__id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send Message
+         * @description Send `{text}` or `{image_path}`; the reply streams as SSE and ends with done.
+         *
+         *     stub — replaced in P4-lite
+         */
+        post: operations["send_message_sessions__id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * ActiveSession
+         * @description Response of GET /exam-preps/{id}/sessions/active.
+         */
+        ActiveSession: {
+            /**
+             * Session Id
+             * Format: uuid
+             */
+            session_id: string;
+        };
+        /** ErrorBody */
+        ErrorBody: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+        };
+        /**
+         * ErrorResponse
+         * @description {"error": {"code": "scope_not_confirmed", "message": "..."}}
+         */
+        ErrorResponse: {
+            error: components["schemas"]["ErrorBody"];
+        };
         /** HealthResponse */
         HealthResponse: {
             /** Status */
             status: string;
+        };
+        /**
+         * Limits
+         * @description Input limits from config/ai.yaml → guards. 1 MB = 1,048,576 bytes.
+         */
+        Limits: {
+            /** Max Message Chars */
+            max_message_chars: number;
+            /** Max Image Mb */
+            max_image_mb: number;
+        };
+        /** Message */
+        Message: {
+            /** Id */
+            id: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "user" | "tutor" | "buddy" | "card" | "system";
+            /** Content */
+            content: string | null;
+            /** Card */
+            card: {
+                [key: string]: unknown;
+            } | null;
+            /** Input Mode */
+            input_mode: ("text" | "voice" | "image") | null;
+            /** Attachment Path */
+            attachment_path: string | null;
+            /** Attachment Name */
+            attachment_name: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * Room
+         * @description Response of GET /sessions/{id}.
+         */
+        Room: {
+            /**
+             * Session Id
+             * Format: uuid
+             */
+            session_id: string;
+            /** Prep Name */
+            prep_name: string;
+            /** Days Left */
+            days_left: number;
+            /** User Name */
+            user_name: string;
+            /** Tutor Name */
+            tutor_name: string;
+            /** Buddy Name */
+            buddy_name: string | null;
+            limits: components["schemas"]["Limits"];
+            /** Messages */
+            messages: components["schemas"]["Message"][];
+        };
+        /**
+         * SendMessageRequest
+         * @description Body of POST /sessions/{id}/messages: exactly one of `text` or `image_path`.
+         *
+         *     api.md "รอตัดสิน" item 1 (Jam) may allow both; change this with the spec.
+         */
+        SendMessageRequest: {
+            /** Text */
+            text?: string | null;
+            /** Image Path */
+            image_path?: string | null;
+        };
+        /** BuddyEvent */
+        BuddyEvent: {
+            /** Text */
+            text: string;
+        };
+        /** DoneEvent */
+        DoneEvent: Record<string, never>;
+        /** ErrorEvent */
+        ErrorEvent: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+        };
+        /**
+         * ProblemEvent
+         * @description No reference answer: extra fields are rejected.
+         */
+        ProblemEvent: {
+            /** Problem Id */
+            problem_id: string;
+            /** Text Latex */
+            text_latex: string;
+            /** Difficulty */
+            difficulty: number;
+            /**
+             * Purpose
+             * @enum {string}
+             */
+            purpose: "probe" | "verify" | "practice" | "review";
+        };
+        /** ProgressCardEvent */
+        ProgressCardEvent: {
+            /** Days Left */
+            days_left: number;
+            /** Passed */
+            passed: number;
+            /** Total */
+            total: number;
+            /** Readiness */
+            readiness: number;
+            /** Topics */
+            topics: {
+                [key: string]: unknown;
+            }[];
+        };
+        /** SessionEvent */
+        SessionEvent: {
+            /**
+             * Session Id
+             * Format: uuid
+             */
+            session_id: string;
+        };
+        /** TokenEvent */
+        TokenEvent: {
+            /**
+             * Speaker
+             * @enum {string}
+             */
+            speaker: "tutor" | "buddy";
+            /** Text */
+            text: string;
         };
     };
     responses: never;
@@ -55,6 +305,170 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    get_active_session_exam_preps__id__sessions_active_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActiveSession"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path or body */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_session_exam_preps__id__sessions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description SSE stream; event names and payloads per api.md "SSE events" */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path or body */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_session_sessions__id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Room"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path or body */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    send_message_sessions__id__messages_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendMessageRequest"];
+            };
+        };
+        responses: {
+            /** @description SSE stream; event names and payloads per api.md "SSE events" */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path or body */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };

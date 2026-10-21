@@ -166,7 +166,7 @@ ratio     = need ÷ available
 
 | ค่า | ค่า | ป้าย | ที่มา / วิธี calibrate |
 |---|---|---|---|
-| OCR confirm_below_confidence | 0.8 | [C] | PoC P1: precision–recall บน golden set เลือกจุดที่จับบรรทัดอ่านผิดได้ ≥ 95% |
+| OCR always_confirm | true | policy (PoC P1) | P1: confidence ที่ model ให้ตัวเองแยกบรรทัดที่อ่านผิดไม่ได้ (บรรทัดผิดทั้ง 6 อยู่ที่ 0.85–0.98 · ไม่มี threshold ที่จับได้ ≥ 95%) จึงยืนยันทุกครั้ง (`specs/poc/reports/P1.md`) · S3 ลองสัญญาณอื่น เช่นอ่าน 2 รอบแล้วเทียบ |
 | Checker targets | verdict ≥ 95%, error type ≥ 80%, บรรทัดผิด ≥ 85% | requirement | ~20 คำตอบต่อ session → ผิดประมาณ 1 ครั้ง/session ซึ่งรับได้เพราะมี dispute flow |
 | SymPy timeout | 2 วินาที | [calc] | งบเวลาเพื่อให้ verdict มาก่อนเป้า TTFT p95 < 2 วินาที (เดิมติดป้าย [B] แต่ไม่ใช่มาตรฐานหรือค่า default ของ library) |
 | numeric_rel_tolerance | 0.01 | [C] | Should: แทนด้วยจำนวนเลขนัยสำคัญที่โจทย์กำหนด · P2 วัดว่ามีคำตอบทศนิยมที่ตัดสินผิดเพราะค่านี้กี่ข้อ |
@@ -182,7 +182,8 @@ ratio     = need ÷ available
 
 | เมื่อไหร่ | ค่าที่ปรับ | ข้อมูลที่ใช้ |
 |---|---|---|
-| PoC P1 (S2) | ocr.confirm_below_confidence | golden set ลายมือ |
+| PoC P1 (S2) · ทำแล้ว | ocr.always_confirm (เดิม confirm_below_confidence) | golden set ลายมือ 30 รูป |
+| P2 (S3) | สัญญาณแยกบรรทัดที่อ่านผิด เพื่อลดการยืนยัน | golden set ลายมือ + คำตอบ |
 | PoC P3 (S2) | stars.weight_other_instructor, three_star_min_r, grounding_chunks | ไฟล์วิชา pilot + label ของทีม |
 | PoC P4-lite (S3) | default_minutes_per_problem (ค่าแรก) | เวลาตอบใน demo |
 | หลัง Alpha | bkt.p_init, bkt.p_transit (pyBKT), max_fail_streak, planner ratios, buddy quota | ตาราง `attempts`, `planner_decisions`, `buddy_events` |
