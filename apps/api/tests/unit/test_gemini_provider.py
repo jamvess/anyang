@@ -140,3 +140,25 @@ async def test_AI01_gemini_embedding_2_sends_one_content_per_text():
     assert len(response.vectors) == 2
     contents = models.calls[0]["contents"]
     assert [c.parts[0].text for c in contents] == ["title: none | text: a", "title: none | text: b"]
+
+
+async def test_AI01_gemini_embed_asks_for_the_dimensions_of_the_request():
+    provider = GeminiProvider(api_key="test-key")
+    models = RecordingModels()
+    provider._client = type("C", (), {"aio": type("A", (), {"models": models})()})()
+
+    await provider.embed(
+        EmbedRequest(model="gemini-embedding-2", texts=["a"], role="query", dimensions=768)
+    )
+
+    assert models.calls[0]["config"].output_dimensionality == 768
+
+
+async def test_AI01_gemini_embed_without_dimensions_keeps_the_model_default():
+    provider = GeminiProvider(api_key="test-key")
+    models = RecordingModels()
+    provider._client = type("C", (), {"aio": type("A", (), {"models": models})()})()
+
+    await provider.embed(EmbedRequest(model="gemini-embedding-2", texts=["a"], role="query"))
+
+    assert models.calls[0]["config"].output_dimensionality is None

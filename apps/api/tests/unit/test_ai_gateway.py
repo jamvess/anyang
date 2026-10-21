@@ -648,3 +648,42 @@ async def test_AI04_embed_call_is_recorded():
     await gateway.embed(["a", "b", "c"], role="document")
 
     assert [(r.purpose, r.status, r.tokens_in) for r in records] == [("embed", "ok", 3)]
+
+
+# --- vector size (data-model.md: chunks.embedding vector(768), PoC P3b) ------------------------
+
+
+async def test_AI01_embed_sends_dimensions_from_config():
+    config = get_settings().ai
+    embedder = FakeEmbedder()
+    gateway = make_gateway(
+        embedder, embedding=config.embedding.model_copy(update={"dimensions": 2})
+    )
+
+    await gateway.embed(["a"], role="document")
+
+    assert embedder.requests[0].dimensions == 2
+
+
+async def test_AI01_embed_without_dimensions_lets_the_model_choose():
+    config = get_settings().ai
+    embedder = FakeEmbedder()
+    gateway = make_gateway(
+        embedder, embedding=config.embedding.model_copy(update={"dimensions": None})
+    )
+
+    await gateway.embed(["a"], role="document")
+
+    assert embedder.requests[0].dimensions is None
+
+
+async def test_AI05_embed_vector_of_another_size_than_config_is_a_provider_error():
+    config = get_settings().ai
+    gateway = make_gateway(
+        FakeEmbedder(),  # returns 2-number vectors
+        embedding=config.embedding.model_copy(update={"dimensions": 3}),
+        gateway=config.gateway.model_copy(update={"retries": 0}),
+    )
+
+    with pytest.raises(AIProviderError, match="dimensions"):
+        await gateway.embed(["a"], role="document")

@@ -22,6 +22,7 @@ spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผล�
 - [x] 2. 🙋 **May (หรือ Junior) เขียนคำถาม 20 ข้อ + เฉลยหน้า** (ไม่ใช่ Jam · คน label ไม่ใช่คนทำ PoC) · Jam ส่งงานในกลุ่ม
 - [x] 3. 🙋 Jam ตัดสิน model ที่จะลอง 2–3 ตัว และวิธีเรียก embedding ผ่าน provider layer (AI-01)
 - [x] 4. 🤖 test ก่อน → โค้ด spike `poc/P3/embed.py`: embed chunk + คำถาม · recall@4 ต่อ model · มิติ vector · เวลา · ต้นทุน → 🙋 Jam review test
+- [ ] 5a. 🤖 test ก่อน: `output_dimensionality` (`embedding.dimensions` ใน config ค่าเริ่มต้น `None` · ตรวจขนาด vector · `embed.py --dimensions`) → 🙋 Jam review test → implement → รัน 768 มิติ
 - [ ] 5. 🤖 รันจริง → สรุปเทียบ → ใส่ใน report P3 (ส่วน P3b)
 
 ## Definition of done
@@ -48,13 +49,15 @@ spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผล�
 - 2026-10-21 · ผลจริง (คำถาม 20 ข้อของ May, PR #46 · 116 chunk): **`gemini-embedding-2` recall@4 90% (18/20) · recall@1 75% · 3,072 มิติ · embed 116 chunk 21 วินาที · 0.16 วินาที/คำถาม** · พลาดข้อ 6 (diff cot) และ 17 (L'Hôpital) · **`bge-m3` recall@4 45% (9/20) · recall@1 45% · 1,024 มิติ · 0.57 วินาที/คำถามบน CPU** · @1 = @4 ของ bge-m3 ไม่ใช่ bug: เช็คอันดับของ chunk ที่ถูกแล้ว (script ใน scratchpad ไม่ commit) ข้อที่พลาดอยู่อันดับ 5, 6, 7, 7, 17, 18, 18, 20, 21, 79, 99 · ข้อที่พลาดหนักเป็นคำถามสูตร (cot อันดับ 79, sec⁻¹ อันดับ 99) เพราะ PyMuPDF ฉีกสมการเป็นตัวอักษรทีละบรรทัด · page ของ chunk ตรงกับเลขหน้า PDF viewer (เช็ค sheet-01:46 มี cot จริง)
 - 2026-10-21 · ⚠️ schema ตอนนี้ `chunks.embedding vector(768)` แต่ embedding-2 ให้ 3,072 มิติ · pgvector index HNSW รับได้ไม่เกิน 2,000 มิติ · ต้องตัดสิน: ขอ `output_dimensionality` 768 หรือ 1536 จาก API แล้ววัด recall ซ้ำ หรือใช้ 3,072 กับ `halfvec`
 
+- 2026-10-21 · (Jam เลือก) ขอ 768 มิติจาก API (`output_dimensionality`) ให้ตรงกับ `chunks.embedding vector(768)` แล้ววัด recall ซ้ำ · `EmbeddingConfig.dimensions` ค่าเริ่มต้น `None` (ไม่แก้ `config/ai.yaml` ตอนนี้ เพราะเป็นไฟล์ร่วม · ใส่ค่าจริงตอนอัปเดต `ai.yaml` ใน S2) · gateway ตรวจว่า vector ยาวเท่า `dimensions` (กันใส่ผิดขนาดลง DB) · PoC ส่ง `--dimensions 768` · cache/ผลแยกชื่อ `-d768` · test ใหม่: gateway 3 · gemini 2 · PoC 2 · red 4 + PoC import error (test "without dimensions keeps default" ผ่านอยู่แล้ว เป็นตัวกัน)
+
 ## Next step
 
-รอ Jam ตัดสินเรื่องมิติ vector (768 / 1536 / 3,072) · ถ้าเลือกวัดที่ 768 หรือ 1536: เพิ่ม `output_dimensionality` ใน `Gateway.embed` + `GeminiProvider.embed` (test ก่อน · `apps/api` ต้องให้ Junior review) แล้วรัน `embed.py --model gemini:gemini-embedding-2` ซ้ำ (cache แยกตามมิติ) · จากนั้นใส่ตาราง P3b ใน report P3 (`specs/poc/reports/poc-P3.md` บน branch `poc/P3`)
+ข้อ 5a: Jam review test 7 ตัว (ท้าย `apps/api/tests/unit/test_ai_gateway.py`, ท้าย `test_gemini_provider.py`, ท้าย `poc/P3/test_embed.py`) · ok แล้ว implement: `EmbedRequest.dimensions`, `EmbeddingConfig.dimensions`, `Gateway.embed` ส่ง + ตรวจขนาด, `GeminiProvider.embed` ใส่ `output_dimensionality`, `embed.py` `run_name()` + `--dimensions` → รัน `embed.py --model gemini:gemini-embedding-2 --dimensions 768`
 
 ## Waiting on
 
-Jam ตัดสินมิติ vector
+Jam review test
 
 ## Notes for next time
 

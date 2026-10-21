@@ -8,7 +8,7 @@ question writer marked as holding the answer.
 
 import pytest
 from chunking import Chunk
-from embed import Question, hit_at_k, parse_questions, rank, recall_at_k
+from embed import Question, hit_at_k, parse_questions, rank, recall_at_k, run_name
 
 TABLE = """\
 ## ตัวอย่างรูปแบบ (สมมติ ไม่ต้องใช้)
@@ -72,3 +72,12 @@ def test_P3_recall_at_k_is_the_share_of_questions_hit():
     ]
 
     assert recall_at_k(questions, [[0, 1], [0, 1]], chunks, k=2) == pytest.approx(0.5)
+
+
+def test_P3_run_name_without_dimensions_keeps_the_existing_cache_and_result_names():
+    assert run_name("gemini:gemini-embedding-2", None) == "gemini_gemini-embedding-2"
+    assert run_name("local:BAAI/bge-m3", None) == "local_BAAI_bge-m3"
+
+
+def test_P3_run_name_with_dimensions_gets_its_own_cache_and_result():
+    assert run_name("gemini:gemini-embedding-2", 768) == "gemini_gemini-embedding-2-d768"
