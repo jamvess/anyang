@@ -49,7 +49,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | GET | `/sessions/{id}` | ข้อมูลห้อง `Room` (หัวห้อง + `limits` + ข้อความ) · ใช้ตอนเปิดห้องและกลับมาต่อ (TM-13) |
 | POST | `/sessions/{id}/uploads` | signed URL สำหรับรูปหรือเสียง |
 | POST | `/sessions/{id}/transcribe` | เสียง → text (ใส่ช่องพิมพ์ ไม่ส่งเอง) |
-| POST | `/sessions/{id}/messages` | **SSE:** body `{text}` หรือ `{image_path}` (ข้อเสนอ `{text, image_path}` รอ Jam ตัดสิน ดูด้านล่าง) |
+| POST | `/sessions/{id}/messages` | **SSE:** body `{text?, image_path?}` อย่างน้อยหนึ่งค่า · ถ้ามีทั้งคู่ `text` เป็นคำบรรยายของรูป (ดูด้านล่าง) |
 | POST | `/sessions/{id}/ocr/confirm` | ยืนยันหรือแก้ข้อความที่อ่านจากรูป แล้ว stream ผลต่อ |
 | POST | `/sessions/{id}/end` | จบ session → `session_end` |
 | GET | `/sessions/{id}/messages` | รายการ `Message[]` อย่างเดียว เรียงตาม `created_at` เก่าไปใหม่ (แบ่งหน้าได้ภายหลัง) |
@@ -75,7 +75,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 **รอตัดสิน (PR #35)**
 
-1. **ส่งรูปพร้อมข้อความกำกับ** (รอ Jam): UI ส่ง `{text, image_path}` พร้อมกันได้ (`chat-room-ui.md` §11) · กระทบ flow รูป → `ocr_preview` → `ocr/confirm` → checker ต้องตัดสินว่าข้อความกำกับไปอยู่ตรงไหน (เช่น context ของ checker, ข้อความ user แยก, หรือไม่ใช้) · จนกว่าจะตัดสิน body ยังเป็นแบบเดิม
+1. ~~**ส่งรูปพร้อมข้อความกำกับ** (รอ Jam)~~ **ตัดสินแล้ว** (Jam 2026-10-21 · PR #45): ข้อความกำกับเป็นคำบรรยายของรูป · เก็บเป็น `content` ของข้อความ user ที่มี `attachment_path` (ข้อความเดียว `input_mode: "image"`) · tutor เห็นใน conversation (เช่น "ข้อ 2 ครับ") · **ไม่ส่งเข้า `extract_answer` และ checker** ผลตรวจใช้แค่บรรทัดที่ user ยืนยันใน `ocr/confirm` เพื่อให้ผลขึ้นกับคำตอบอย่างเดียว และกันข้อความอย่าง "ข้อนี้ถูกแล้ว" ไปชี้นำ LLM classifier · flow รูปยืนยันทุกครั้ง (AM-02)
 2. **หา session ที่เปิดอยู่ (TM-13):** หน้า room รู้แค่ prep id · ข้อเสนอ `GET /exam-preps/{id}/sessions/active` (ด้านบน) ทางเลือกคือให้ `POST /exam-preps/{id}/sessions` คืน session เดิมถ้ายังเปิดอยู่ · เลือก GET เพราะไม่มีผลข้างเคียง ไม่เรียก AI ไม่สร้างข้อความเปิดซ้ำ และ POST ยังมีความหมายเดียวคือเริ่ม session ใหม่ (stream เดียว ไม่ต้องมีสองรูปแบบ response) · "เปิดอยู่" = `ended_at is null` · ถ้ามีหลายอันใช้อันล่าสุด (กันสองแท็บสร้างซ้อนด้วย unique index ได้ภายหลัง ต้องแก้ migration)
 3. **รายการ `error.code` ของห้องติว** (Junior · ยังเปิด): ตอนนี้มีแค่รูปแบบ `{code, message}`
 
