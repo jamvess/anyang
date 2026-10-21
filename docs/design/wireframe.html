@@ -136,6 +136,12 @@ body{margin:0;background:var(--paper);color:var(--ink);
 .list li:last-child{border-bottom:0}
 .ck{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ok);flex:0 0 14px}
 .ck.q{color:var(--wn)}.ck.n{color:var(--ink35)}
+.ck.x{color:var(--bd)}
+.card.bd{border-color:var(--bd);background:var(--bds)}
+.err{font-size:12px;color:var(--bd);margin:-8px 0 12px}
+.sep{display:flex;align-items:center;gap:10px;margin:14px 0;font-family:"IBM Plex Mono",monospace;
+  font-size:10.5px;color:var(--ink35)}
+.sep:before,.sep:after{content:"";flex:1;border-top:1px solid var(--line2)}
 .st{font-size:12px;letter-spacing:1.5px}
 .st.on{color:var(--wn)}.st.off{color:var(--line)}
 .tag{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.09em;
@@ -201,7 +207,7 @@ body{margin:0;background:var(--paper);color:var(--ink);
 </head>
 <body>
 <div class="stage">
-  <p class="kicker">อ่านยัง? · wireframe · เว็บบนคอม · 27 หน้าจอ</p>
+  <p class="kicker">อ่านยัง? · wireframe · เว็บบนคอม · 35 หน้าจอ</p>
   <div class="win">
     <div class="chrome">
       <div class="dots"><i></i><i></i><i></i></div>
@@ -243,7 +249,7 @@ const VOICEDRAFT = (t) => `<div class="composer">
   <span class="iconb">🎤</span><span class="iconb">📷</span><span class="iconb pri">↑</span></div>
 <p class="vnote">🎤 ข้อความจากเสียง · แก้ได้ก่อนกดส่ง ระบบไม่ส่งเอง</p>`;
 
-const LABELS = ["Landing", "สมัครสมาชิก", "สมัคร · เลือกบัญชี Google", "เลือกติวเตอร์ + เพื่อนติว", "ปรับเอง · เล่าเป็นคำพูด", "ตั้งค่าตัวเอง", "หน้าหลัก · ยังว่าง", "ข้อมูลการสอบ", "อัพโหลดไฟล์ + เขียนกำกับ", "ยืนยันประเภทไฟล์", "กำลังประมวลผล", "ขอบเขต + ดาว", "แก้ขอบเขต · คุยแก้", "แก้ขอบเขต · สรุปและยืนยัน", "ห้องติว · เปิดห้อง", "ห้องติว · ตอบถูก", "ห้องติว · เพื่อนติวถามแทรก", "ห้องติว · ตอบด้วยเสียง", "ห้องติว · ตอบไม่ตรงคำถาม", "ห้องติว · ถามนอกขอบเขต", "ห้องติว · ยืนยันสิ่งที่อ่านจากลายมือ", "ห้องติว · ตอบผิด สอนทันที", "ห้องติว · โจทย์ซ้ำเพื่อวัด", "ห้องติว · ขอดูความคืบหน้า", "ห้องติว · ซ่อมจุดอ่อน", "ห้องติว · จบการติว", "หน้าหลัก · มีการเตรียมสอบแล้ว"];
+const LABELS = ["Landing", "สมัครสมาชิก", "สมัคร · เลือกบัญชี Google", "เลือกติวเตอร์ + เพื่อนติว", "ปรับเอง · เล่าเป็นคำพูด", "ตั้งค่าตัวเอง", "หน้าหลัก · ยังว่าง", "ข้อมูลการสอบ", "อัพโหลดไฟล์ + เขียนกำกับ", "ยืนยันประเภทไฟล์", "กำลังประมวลผล", "ขอบเขต + ดาว", "แก้ขอบเขต · คุยแก้", "แก้ขอบเขต · สรุปและยืนยัน", "ห้องติว · เปิดห้อง", "ห้องติว · ตอบถูก", "ห้องติว · เพื่อนติวถามแทรก", "ห้องติว · ตอบด้วยเสียง", "ห้องติว · ตอบไม่ตรงคำถาม", "ห้องติว · ถามนอกขอบเขต", "ห้องติว · ยืนยันสิ่งที่อ่านจากลายมือ", "ห้องติว · ตอบผิด สอนทันที", "ห้องติว · โจทย์ซ้ำเพื่อวัด", "ห้องติว · ขอดูความคืบหน้า", "ห้องติว · ซ่อมจุดอ่อน", "ห้องติว · จบการติว", "หน้าหลัก · มีการเตรียมสอบแล้ว", "ทางแยก · เช็คอีเมล", "ทางแยก · อีเมลนี้มีบัญชีแล้ว", "ทางแยก · แปลง persona ไม่สำเร็จ", "ทางแยก · อ่านไฟล์ไม่สำเร็จ", "ทางแยก · การ์ดกำลังอ่านไฟล์", "ทางแยก · กลับเข้าห้องกลางคัน", "ทางแยก · ถูกปิดอัตโนมัติ", "ทางแยก · รูปอ่านไม่ออก"];
 
 const steps = [
 
@@ -618,7 +624,8 @@ ch:"บทที่ 2 · สร้างการเตรียมสอบ", c
 title:"แก้ด้วยการพูดคุย ไม่ต้องหาปุ่ม",
 story:`<p>อาจารย์เน้นเรื่องการจัดกลุ่มมากในคาบล่าสุด แต่ AI ให้แค่สองดาวเพราะดูจากข้อสอบเก่าอย่างเดียว</p>
 <p>ปาลบอกไปตรงๆ ครั้งแรกเธอพิมพ์ แต่ครั้งที่สองขี้เกียจพิมพ์แล้ว เลยกดไมค์พูดเอา คำที่พูดขึ้นในช่องพิมพ์ก่อน ยังไม่ส่งจนกว่าปาลจะกด ครั้งนี้เธอบอกไปด้วยว่าเรื่องกำลังสามไม่ต้องเรียน</p>
-<p>รายการด้านซ้าย<b>ขยับให้เห็นทันที</b>ทุกครั้งที่ตกลงกัน ไม่ต้องรอจนจบแล้วค่อยไปดูว่าเปลี่ยนอะไรไปบ้าง</p>`,
+<p>รายการด้านซ้าย<b>ขยับให้เห็นทันที</b>ทุกครั้งที่ตกลงกัน ไม่ต้องรอจนจบแล้วค่อยไปดูว่าเปลี่ยนอะไรไปบ้าง</p>
+<p>คุยจนพอใจแล้ว ปาลกด <b>แก้เสร็จแล้ว</b> ใต้รายการ ระบบพาไปหน้าสรุปสิ่งที่เปลี่ยน</p>`,
 screen:`
 ${TOP()}
 <div class="app">${SIDE('fx')}
@@ -631,6 +638,8 @@ ${TOP()}
     <div class="card ok"><div class="sp mb6"><span class="t13 b5">7 · การจัดกลุ่ม</span><span class="st on">★★★</span></div>
       <p class="t12 mb0" style="color:var(--ok)">★★ → ★★★ เมื่อสักครู่</p></div>
     <div class="card"><div class="sp"><span class="t13">9 · กำลังสาม</span><span class="st on">★<span class="off">★★</span></span></div></div>
+    <div class="btn blk pri mt10">แก้เสร็จแล้ว</div>
+    <p class="go">คุยจนพอใจแล้วกด “แก้เสร็จแล้ว” เพื่อไปหน้าสรุป</p>
   </div>
   <div style="border-left:1px solid var(--line2);padding:0 26px 0 24px;display:flex;flex-direction:column">
     <div style="flex:1">
@@ -898,8 +907,9 @@ ${COMPOSER}
 ch:"บทที่ 4 · จังหวะที่ไม่ราบรื่น", clock:"20:47", url:"anyang.app/room/factorization",
 title:"ถามก่อนว่าอ่านลายมือถูกไหม",
 story:`<p>ปาลเขียนใส่กระดาษแล้วลากรูปมาวางในแชท</p>
-<p>ปกติถ้าระบบอ่านลายมือชัดทุกบรรทัด จะตรวจเลยไม่ต้องถาม แต่รูปนี้บรรทัดสองเขียนเร็ว ระบบไม่มั่นใจ พี่ตาลเลยทวนสิ่งที่อ่านได้กลับมาก่อน เหมือนคนจริงที่จะพูดว่า “เดี๋ยวขอดูก่อนนะ ที่เขียนมาคืออันนี้ใช่มั้ย”</p>
-<p>เมื่อไม่มั่นใจ ขั้นนี้ต้องมี เพราะถ้าอ่านลายมือผิดแล้วบอกว่าตอบผิดทั้งที่เขียนถูก ผู้ใช้จะเลิกใช้ทันทีโดยไม่บอกเรา</p>`,
+<p>ทุกครั้งที่ส่งรูป พี่ตาลทวนสิ่งที่อ่านได้กลับมาก่อนตรวจ เหมือนคนจริงที่จะพูดว่า “เดี๋ยวขอดูก่อนนะ ที่เขียนมาคืออันนี้ใช่มั้ย”</p>
+<p>ต้องถามทุกครั้ง ไม่ใช่แค่ตอนที่ระบบไม่มั่นใจ เพราะตอนทดสอบ (PoC P1) บรรทัดที่ AI อ่านผิดก็บอกว่ามั่นใจสูงเหมือนกัน ถ้าอ่านลายมือผิดแล้วบอกว่าตอบผิดทั้งที่เขียนถูก ผู้ใช้จะเลิกใช้ทันทีโดยไม่บอกเรา</p>
+<p>บรรทัดไหนอ่านผิด ปาลกดบรรทัดนั้นแล้วพิมพ์แก้ได้เลย หรือกด <b>ถ่ายใหม่</b> ถ้ารูปไม่ชัด รอบนี้อ่านถูกหมด เลยกด <b>ถูกแล้ว ตรวจเลย</b></p>`,
 screen:`
 <div class="room">${ROOMTOP}
 <div class="feed">
@@ -909,17 +919,14 @@ screen:`
   <div class="gap"></div>
   <div class="m"><div class="av">ต</div><div class="body">
     <p class="who">พี่ตาล<span>20:47</span></p>
-    <p>บรรทัดสองอ่านยากนิดนึง ขอเช็คก่อนว่าอ่านถูกมั้ย ที่เขียนมาคือ</p>
+    <p>ขอเช็คก่อนว่าอ่านถูกมั้ย ที่เขียนมาคือ</p>
     <div class="read">
-      <p class="t13 mb6"><span class="mono mu2">1</span> &nbsp; <span class="eq">x² − 5x + 6</span></p>
-      <p class="t13 mb6"><span class="mono mu2">2</span> &nbsp; <span class="eq">= (x − 2)(x + 3)</span> <span class="chip w mono">อ่านไม่ชัด</span></p>
-      <p class="t13 mb0"><span class="mono mu2">3</span> &nbsp; <span class="eq">= x² + x − 6</span></p>
+      <p class="t13 mb6"><span class="mono mu2">1</span> &nbsp; <span class="eq">x² − 5x + 6</span> <span class="t12 mu2">&nbsp;✎ แก้</span></p>
+      <p class="t13 mb6"><span class="mono mu2">2</span> &nbsp; <span class="eq">= (x − 2)(x + 3)</span> <span class="t12 mu2">&nbsp;✎ แก้</span></p>
+      <p class="t13 mb6"><span class="mono mu2">3</span> &nbsp; <span class="eq">= x² + x − 6</span> <span class="t12 mu2">&nbsp;✎ แก้</span></p>
+      <div class="row mt10"><span class="btn sm pri">ถูกแล้ว ตรวจเลย</span><span class="btn sm">ถ่ายใหม่</span></div>
     </div>
-    <p>ใช่มั้ย ถ้าอ่านผิดบอกได้เลยนะ</p></div></div>
-  <div class="gap"></div>
-  <div class="m"><div class="av u">ป</div><div class="body">
-    <p class="who">ปาล<span>20:48</span></p>
-    <p>ใช่ๆ</p></div></div>
+    <p class="go">อ่านผิดบรรทัดไหน กดบรรทัดนั้นแล้วพิมพ์แก้ · ถ้ารูปไม่ชัดกด “ถ่ายใหม่”</p></div></div>
 </div>
 ${COMPOSER}
 </div>`
@@ -1110,6 +1117,183 @@ ${TOP()}
   </div>
   <p class="go">กด “ติวต่อ” บนการ์ดเพื่อกลับเข้าห้องติวได้ทุกเมื่อ</p>
 </div></div>`
+},
+
+/* ===== บทที่ 6 · ทางแยกและกรณีผิดพลาด (จาก use-cases.md) ===== */
+{
+ch:"บทที่ 6 · ทางแยกและกรณีผิดพลาด", clock:"20:15", url:"anyang.app/signup/check-email",
+title:"สมัครด้วยอีเมล ต้องยืนยันอีเมลก่อน",
+story:`<p><b>UC-01 A1</b> · ถ้าปาลไม่ใช้ Google แต่กรอกฟอร์มสมัครเอง ระบบส่งลิงก์ยืนยันไปที่อีเมลก่อน กดลิงก์แล้วจึงไปเลือกติวเตอร์ต่อ</p>
+<p>สมัครด้วย Google ไม่ต้องผ่านหน้านี้ เพราะ Google ยืนยันอีเมลให้แล้ว</p>`,
+screen:`
+<div class="topbar"><span class="brand">อ่านยัง?</span><span class="t13 mu2">มีบัญชีแล้ว? เข้าสู่ระบบ</span></div>
+<div class="main" style="display:flex;align-items:center;justify-content:center">
+  <div style="width:400px;text-align:center">
+    <p style="font-size:34px;margin:0 0 6px">✉️</p>
+    <p class="h">เช็คอีเมลของคุณ</p>
+    <p class="sub">เราส่งลิงก์ยืนยันไปที่ <b>palida@email.com</b> แล้ว<br>กดลิงก์ในอีเมลเพื่อเริ่มใช้งาน</p>
+    <p class="t12 mu2">ไม่เจออีเมล ลองดูในโฟลเดอร์สแปม</p>
+    <p class="go">เปิดอีเมลแล้วกดลิงก์ยืนยัน → ไปหน้าเลือกติวเตอร์ (S04)</p>
+  </div>
+</div>`
+},
+
+{
+ch:"บทที่ 6 · ทางแยกและกรณีผิดพลาด", clock:"20:15", url:"anyang.app/signup",
+title:"อีเมลนี้มีบัญชีแล้ว",
+story:`<p><b>UC-01 E2</b> · ถ้าอีเมลที่กรอกมีบัญชีอยู่แล้ว ระบบไม่สร้างบัญชีใหม่ และบอกตรงๆ พร้อมทางไปเข้าสู่ระบบ</p>`,
+screen:`
+<div class="topbar"><span class="brand">อ่านยัง?</span><span class="t13 mu2">มีบัญชีแล้ว? เข้าสู่ระบบ</span></div>
+<div class="main" style="display:flex;align-items:center;justify-content:center">
+  <div style="width:380px">
+    <p class="h" style="text-align:center">สร้างบัญชี</p>
+    <p class="sub" style="text-align:center">ใช้เวลาไม่ถึงนาที</p>
+    <span class="lb">ชื่อ-นามสกุล</span><div class="fld v">ปาลิดา ศรีสุข</div>
+    <span class="lb">อีเมล</span><div class="fld v" style="border-color:var(--bd)">palida@email.com</div>
+    <p class="err">อีเมลนี้มีบัญชีแล้ว · <u>เข้าสู่ระบบ</u></p>
+    <span class="lb">รหัสผ่าน</span><div class="fld v">••••••••</div>
+    <div class="btn blk">สร้างบัญชี</div>
+    <p class="go" style="text-align:center">กด “เข้าสู่ระบบ” ใต้ช่องอีเมล</p>
+  </div>
+</div>`
+},
+
+{
+ch:"บทที่ 6 · ทางแยกและกรณีผิดพลาด", clock:"20:18", url:"anyang.app/onboarding/custom",
+title:"แปลงคำบรรยายเป็นติวเตอร์ไม่สำเร็จ",
+story:`<p><b>UC-01 E5</b> · ถ้า AI ช้าหรือล่มตอนแปลงคำบรรยาย คำที่ปาลพิมพ์ไว้ไม่หาย และมีสองทาง: ลองใหม่ หรือใช้แบบสำเร็จรูปที่เลือกไว้ในหน้าก่อน</p>`,
+screen:`
+${TOP()}
+<div class="main" style="max-width:640px;margin:0 auto">
+  <p class="h">ปรับเอง · เล่าเป็นคำพูด</p>
+  <span class="lb">ติวเตอร์ที่อยากได้</span>
+  <div class="fld v" style="min-height:74px">อยากได้พี่ผู้หญิงใจดี พูดกันเอง อธิบายด้วยตัวอย่างก่อน</div>
+  <div class="card bd">
+    <p class="t13 b5 mb6">ตอนนี้แปลงไม่ได้</p>
+    <p class="t12 mu mb10">คำที่พิมพ์ไว้ยังอยู่ ลองใหม่ หรือใช้แบบสำเร็จรูปที่เลือกไว้ก่อนก็ได้</p>
+    <div class="row"><span class="btn sm pri">ลองใหม่</span><span class="btn sm">ใช้แบบสำเร็จรูปที่เลือกไว้</span></div>
+  </div>
+  <p class="go">กด “ลองใหม่” หรือกลับไปใช้ preset จาก S04</p>
+</div>`
+},
+
+{
+ch:"บทที่ 6 · ทางแยกและกรณีผิดพลาด", clock:"20:25", url:"anyang.app/exam/factorization/processing",
+title:"อ่านไฟล์ไม่สำเร็จหนึ่งไฟล์",
+story:`<p><b>UC-02 E5</b> · ถ้ามีไฟล์ที่อ่านไม่สำเร็จ ไฟล์นั้นขึ้นสีแดงพร้อมสองทาง ส่วนไฟล์อื่นอ่านต่อโดยไม่ต้องรอ</p>`,
+screen:`
+${TOP()}
+<div class="main" style="display:flex;align-items:center;justify-content:center">
+  <div style="width:440px">
+    <p class="h">กำลังอ่านไฟล์ของคุณ</p>
+    <p class="sub">ใช้เวลาประมาณ 1 นาที ไม่ต้องปิดหน้านี้</p>
+    <ul class="list mb16">
+      <li><span class="ck">✓</span><span style="flex:1">ch3-factorization.pdf</span><span class="t12 mu2">14 หน้า</span></li>
+      <li><span class="ck x">✕</span><span style="flex:1;color:var(--bd)">โน้ตในคาบ.jpg</span><span class="t12" style="color:var(--bd)">อ่านไม่สำเร็จ</span></li>
+      <li style="border-bottom:0;padding-top:0"><span style="flex:0 0 14px"></span><span class="row"><span class="btn sm">ลองใหม่</span><span class="btn sm">ไปต่อโดยไม่มีไฟล์นี้</span></span></li>
+      <li><span class="ck">✓</span><span style="flex:1">midterm-2566.pdf</span><span class="t12 mu2">12 ข้อ</span></li>
+      <li><span class="ck n">◐</span><span style="flex:1">midterm-2567.pdf</span><span class="t12 mu2">กำลังแยกรายข้อ</span></li>
+    </ul>
+    <div class="bar"><i style="width:40%"></i></div>
+    <p class="go">กด “ลองใหม่” หรือ “ไปต่อโดยไม่มีไฟล์นี้” · ไฟล์อื่นอ่านต่อไปเอง</p>
+  </div>
+</div>`
+},
+
+{
+ch:"บทที่ 6 · ทางแยกและกรณีผิดพลาด", clock:"20:26", url:"anyang.app/home",
+title:"ปิดเว็บระหว่างอ่านไฟล์",
+story:`<p><b>UC-02 E6</b> · ถ้าปาลปิดเว็บระหว่างรอ ระบบยังอ่านไฟล์ต่อที่ server · กลับมาที่หน้าหลักจะเห็นการ์ด “กำลังอ่านไฟล์” กดแล้วกลับไปหน้ารอ หรือไปหน้าขอบเขตถ้าอ่านเสร็จแล้ว</p>`,
+screen:`
+${TOP()}
+<div class="app">${SIDE('fx')}
+<div class="main">
+  <p class="h">กำลังติว</p>
+  <p class="sub">เรียงตามวันสอบใกล้สุด</p>
+  <div class="grid2 mb16">
+    <div class="card">
+      <div class="sp mb6"><span class="b5 t14">Factorization</span><span class="chip a mono">กำลังอ่านไฟล์</span></div>
+      <div class="bar"><i style="width:60%"></i></div>
+      <p class="t12 mu mb0">อ่านแล้ว 3 จาก 4 ไฟล์ · ยังไม่ได้ยืนยันขอบเขต</p>
+      <div class="mt10"><span class="btn sm">ดูความคืบหน้า</span></div>
+    </div>
+    <div class="card" style="display:flex;align-items:center;justify-content:center;border-style:dashed">
+      <span class="t13 mu">+ สร้างการเตรียมสอบใหม่</span></div>
+  </div>
+  <p class="go">กดการ์ดเพื่อกลับไปหน้ารอ (S11) หรือหน้าขอบเขต (S12) ถ้าอ่านเสร็จแล้ว</p>
+</div></div>`
+},
+
+{
+ch:"บทที่ 6 · ทางแยกและกรณีผิดพลาด", clock:"20:41", url:"anyang.app/room/factorization",
+title:"ออกจากห้องกลางคัน แล้วกลับมาต่อ",
+story:`<p><b>UC-03 E1</b> · ปาลกดออกจากห้องตอนที่โจทย์ยังค้างอยู่ แล้วกลับเข้ามาก่อนครบ 15 นาที</p>
+<p>ห้องเป็น session เดิม เห็นแชทเดิมทั้งหมด และโจทย์ที่ค้างยังรอคำตอบอยู่ <b>ไม่มีการ์ดความคืบหน้าใบใหม่</b> และพี่ตาลไม่ทักซ้ำ</p>`,
+screen:`
+<div class="room">${ROOMTOP}
+<div class="feed">
+  <div class="m"><div class="av u">ป</div><div class="body">
+    <p class="who">ปาล<span>20:36</span></p>
+    <p>(x − 7)(x + 7)</p></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>20:36</span></p>
+    <p>ถูก ข้อต่อไปยากขึ้นนิดนึง</p>
+    <p><span class="eq">4x² − 25</span></p></div></div>
+  <div class="sep">ออกจากห้อง 20:37 · กลับมา 20:41</div>
+  <p class="t12 mu2" style="text-align:center">โจทย์ข้อล่าสุดยังรอคำตอบอยู่</p>
+</div>
+${COMPOSER}
+</div>`
+},
+
+{
+ch:"บทที่ 6 · ทางแยกและกรณีผิดพลาด", clock:"21:40", url:"anyang.app/room/factorization",
+title:"ไม่ได้ตอบนาน ระบบปิดให้เอง",
+story:`<p><b>UC-03 E2</b> · ปาลทิ้งห้องไว้เกิน 15 นาที ระบบจบการติวเองและเขียนสรุป 2 บรรทัดไว้ท้ายแชทของรอบนั้น</p>
+<p>พอกลับเข้ามา ปาลเห็นสรุปของรอบก่อน แล้วระบบเริ่มรอบใหม่พร้อมการ์ดความคืบหน้าใบใหม่ เหมือนเข้าห้องตามปกติ</p>`,
+screen:`
+<div class="room"><div class="roomtop"><span><b>Factorization</b> · สอบใน 4 วัน</span><span>ออกจากห้องติว</span></div>
+<div class="feed">
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>21:02</span></p>
+    <p>วันนี้เก็บไปสองเรื่อง ทำถูก 6 จาก 8 ข้อ</p>
+    <p>เหลืออีกสี่วัน ยังตามแผนอยู่นะ</p></div></div>
+  <div class="sep">จบการติวอัตโนมัติ · ไม่มีการตอบ 15 นาที</div>
+  <div class="sep">เริ่มติวรอบใหม่ 21:40</div>
+  <div class="card mb16">
+    <div class="sp mb6"><span class="tag mono mb0">ความคืบหน้า · Factorization</span><span class="t12 mu">สอบใน 4 วัน</span></div>
+    <div class="row" style="gap:28px">
+      <div><p class="t12 mu mb0">ผ่านแล้ว</p><p class="b5 t14 mb0">2 / 8 หัวข้อ</p></div>
+      <div><p class="t12 mu mb0">ความพร้อม</p><p class="b5 t14 mb0">21%</p></div>
+    </div>
+  </div>
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>21:40</span></p>
+    <p>กลับมาแล้ว ต่อเรื่องการจัดกลุ่มกัน ลองข้อนี้ก่อน</p></div></div>
+</div>
+${COMPOSER}
+</div>`
+},
+
+{
+ch:"บทที่ 6 · ทางแยกและกรณีผิดพลาด", clock:"20:47", url:"anyang.app/room/factorization",
+title:"รูปอ่านไม่ออก",
+story:`<p><b>UC-04 E1</b> · รูปที่ส่งมามืดหรือเบลอจนอ่านไม่ได้ ระบบไม่แสดงหน้ายืนยัน แต่พี่ตาลบอกสั้นๆ ให้ถ่ายใหม่หรือพิมพ์มาแทน</p>
+<p>ไม่นับเป็นการตอบ โจทย์ยังรอคำตอบอยู่</p>`,
+screen:`
+<div class="room">${ROOMTOP}
+<div class="feed">
+  <div class="m"><div class="av u">ป</div><div class="body">
+    <p class="who">ปาล<span>20:47</span></p>
+    <div class="shot">📷 วิธีทำ.jpg</div></div></div>
+  <div class="gap"></div>
+  <div class="m"><div class="av">ต</div><div class="body">
+    <p class="who">พี่ตาล<span>20:47</span></p>
+    <p>รูปนี้อ่านไม่ออกเลย ถ่ายใหม่ให้หน่อย หรือพิมพ์คำตอบมาก็ได้</p></div></div>
+</div>
+${COMPOSER}
+</div>`
 }
 
 ];
