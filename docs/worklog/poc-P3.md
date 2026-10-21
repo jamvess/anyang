@@ -5,7 +5,7 @@
 | Owner | Jam |
 | Branch | `poc/P3` |
 | Checklist item | P3: ingest → A5 → A6 → A7 → `compute_importance` · เทียบกับ label · ลอง embedding 2–3 ตัวกับคำถาม 20 ข้อ |
-| Status | in progress · 2026-10-21 |
+| Status | paused · 2026-10-21 |
 
 ## Done today (2026-10-21)
 
@@ -103,10 +103,11 @@
 
 ## Waiting on
 
-`gemini-3.5-flash` ตอบ 503 (คนใช้เยอะ) · ลองใหม่หลัง 14:00 น.
+เวลา: `gemini-3.5-flash` ตอบ 503 ช่วงเช้า · ลองใหม่หลัง 14:00 น. (หรือวันถัดไปถ้าเลยวันนี้ไปแล้ว · โควตารีเซ็ตรายวัน)
 
 ## Notes for next time
 
+- report P3 อยู่ที่ `specs/poc/reports/P3.md` (ร่าง 21 ต.ค.) · ตัวเลข P3b มาจาก branch `poc/P3b-embedding` (PR #39) · ไฟล์ผล embed ไม่อยู่บน branch นี้ ดูด้วย `git show origin/poc/P3b-embedding:poc/P3/results/<file>` · §5 ของ report เป็นข้อเสนอแก้ไฟล์ร่วม ต้องคุยทีมก่อนแก้จริง · ข้อเสนอ "code ตั้ง skill id เอง" ต้องถาม Junior (กระทบ `scope_ai.py`)
 - งานที่ค้าง: `chore/prompt-extract-topics-local` (PR #13) รอ Junior review · `chore/handwriting-photos` merge แล้ว
 - บน branch นี้ `poc/P1/` จะโผล่เป็น untracked (คือ `out/` กับ `results/` ของ P1 ซึ่ง gitignore อยู่แค่บน `poc/P1`) · ห้าม commit บน branch นี้
 - PyMuPDF ทำ ∞ หาย และสมการ Equation Editor กระจายออกมาบรรทัดละตัว (ดู PR #13)
