@@ -148,6 +148,9 @@ class PurposeConfig(_Strict):
     timeout_s: float = Field(gt=0)
     prompt: str
     stream: bool = False
+    # Gemini 3 thinking level. Thinking tokens count inside max_tokens, so transcription
+    # purposes use "low" (PoC P3: one exam page used ~4,000 tokens by default, 396 on low).
+    thinking: Literal["low", "medium", "high"] | None = None
 
 
 class CircuitBreakerConfig(_Strict):
@@ -159,6 +162,8 @@ class CircuitBreakerConfig(_Strict):
 
 class GatewayConfig(_Strict):
     retries: int = Field(ge=0)
+    retry_backoff_seconds: float = Field(ge=0)
+    max_retry_wait_seconds: float = Field(ge=0)
     schema_retries: int = Field(ge=0)
     circuit_breaker: CircuitBreakerConfig
 
@@ -166,7 +171,7 @@ class GatewayConfig(_Strict):
 class GuardsConfig(_Strict):
     max_message_chars: int = Field(ge=1)
     rate_limit_messages_per_minute: int = Field(ge=1)
-    max_image_mb: float = Field(gt=0)
+    max_image_mb: int = Field(gt=0)  # api.md Room.limits sends it as an integer
     max_audio_seconds: float = Field(gt=0)
     answer_leak_check: bool
 
@@ -228,6 +233,8 @@ class EnvSettings(BaseSettings):
 
     # --- AI providers ---
     ai_provider: Literal["fake", "live"] = "fake"
+    ai_model_override: str = ""
+    gemini_api_key: SecretStr = SecretStr("")
     google_cloud_project: str = ""
     google_cloud_location: str = ""
     google_application_credentials: str = ""

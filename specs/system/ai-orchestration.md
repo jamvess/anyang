@@ -113,8 +113,9 @@ AI ไม่ได้ตอบจากเอกสารอย่างเด�
 
 **Extract ตามชนิดไฟล์** (ทุกแบบต้องได้ `page_no` ติดมาด้วย)
 
-- PDF ที่มี text layer ใช้ PyMuPDF
-- PDF สแกนหรือไฟล์รูป ส่ง vision model อ่านทีละหน้า (ผล PoC P3 อาจเปลี่ยนเป็น Google Document AI สำหรับไฟล์สแกน)
+- PDF ที่มี text layer ใช้ PyMuPDF **แต่ต้องเช็คคุณภาพของข้อความก่อน** · ไฟล์สแกนมักมี OCR layer ภาษาอังกฤษซ่อนอยู่ ซึ่งดูเหมือนมีข้อความแต่เป็นขยะ · PoC P3 ใช้สัดส่วนตัวอักษรไทยต่อตัวอักษรทั้งหมด < 30% = ไฟล์สแกน (MTH10101: ข้อสอบสแกน 0%, ชีท 48–85%)
+- PDF สแกนหรือไฟล์รูป ส่ง vision model อ่าน (A2 ทีละหน้า หรือ A2b ทั้งไฟล์ · ผล PoC P3 อาจเปลี่ยนเป็น Google Document AI สำหรับไฟล์สแกน)
+- ข้อจำกัดของ PyMuPDF ที่เจอใน P3: สมการจาก Equation Editor ของ Word ออกมาเป็นตัวอักษรกระจายทีละบรรทัด และสัญลักษณ์ ∞ หายไป ข้อความภาษาไทยอ่านได้แต่สระอำแตก (`น ามา`)
 - PPTX อ่านทีละสไลด์, DOCX อ่านทีละหัวข้อ
 
 **Chunk**
@@ -173,15 +174,25 @@ LLM ไม่แตะ database โดยตรง แต่คืน JSON ใ�
 | # | Call | Tier | Output schema | ความถี่ |
 |---|---|---|---|---|
 | A1 | `classify_material` | small | `{kind, confidence, relevance_weight, reason}` | 1 ครั้ง/ไฟล์ |
-| A2 | `vision_extract` | vision | `{text, latex_blocks}` | เฉพาะหน้าสแกนหรือรูป |
+| A2 | `vision_extract` | vision | `{text, latex_blocks, notes}` | เฉพาะหน้าสแกนหรือรูป |
+| A2b | `vision_extract_pages` | vision | `{pages: [{page, text}], notes}` | 1 ครั้ง/ไฟล์สแกน (ทุกหน้าใน call เดียว · เพิ่มใน PoC P3) |
 | A3 | `embed` | embed | vector | 1 ครั้ง/chunk |
-| A4 | `split_past_exam` | small | `[{q_no, text, page}]` | 1 ครั้ง/ข้อสอบเก่า |
+| A4 | `split_past_exam` | small | `{questions: [{q_no, text, page, points}], notes}` | 1 ครั้ง/ข้อสอบเก่า |
 | A5 | `extract_topics_local` | mid | `{topics: [{name, pages, prereq_hint}], notes}` | 1 ครั้ง/ไฟล์ชีท |
-| A6 | `merge_topics` | **main** | `[{id, name, order, prereqs, skills: [{name, common_mistakes}]}]` | 1 ครั้ง/การเตรียมสอบ |
-| A7 | `map_questions` | small | `[{q_id, topic_id, skill_id, trap}]` | batch |
+| A6 | `merge_topics` | **main** | `{topics: [{id, name, order, sources, prereqs, excluded_by_note, skills: [{id, name, common_mistakes: [{text, error_type}]}]}], notes}` | 1 ครั้ง/การเตรียมสอบ |
+| A7 | `map_questions` | small | `{mappings: [{q_id, topic_id, skill_id, trap, note}]}` | batch |
 | A8 | `scope_edit` | mid | `{reply, actions[]}` | ทุกข้อความที่ user แก้ |
 
 A5: `pages` เป็นช่วง `"start-end"` ตามป้าย `[p.N]` (เลขหน้า PDF) · `prereq_hint` อาจเป็นหัวข้อที่อยู่ในไฟล์อื่น ให้ A6 จับคู่กับหัวข้อจริงหรือทิ้งไป · `notes` ใช้บอกเหตุผลเมื่อไฟล์ไม่มีเนื้อหาที่อ่านได้ (เช่นไฟล์สแกนที่มีข้อความขยะ)
+
+ทุก output มี `notes` และเป็น object ไม่ใช่ array (structured output เสถียรกว่า) · Pydantic model อยู่ใน `apps/api/app/models/scope_ai.py` และตรวจกฎเหล่านี้ด้วย ถ้าผิดจะถูกส่งกลับให้ model แก้ (AI-05)
+
+- A2b: เพิ่มใน PoC P3 เพราะ free tier ได้ 20 request ต่อวันต่อ model ทำทีละหน้าไม่ไหว · `page` ต้องเรียง 1..n ครบตามจำนวนรูป · จะใช้แทน A2 ในระบบจริงหรือไม่ ตัดสินจากผล P3
+- A4: `q_no` แบบ `ก1.2` / `ข3` / `3.2` ไม่ซ้ำกัน · ข้อย่อยที่มีคำนำร่วมกันต้องใส่คำนำในทุกข้อย่อย · `points` เป็น `null` ได้
+- A6: `sources` = ช่วงหน้า `<file>:<start>-<end>` ของหัวข้อ ใช้สร้าง `topic_chunks` ในขั้น 5d และแสดงที่มา (SM-04) · `prereqs` ต้องเป็น id ในรายการ ห้ามวน และต้องมาก่อนใน `order` · skill id ขึ้นต้นด้วย id ของหัวข้อ · `error_type` เป็นได้ 5 ค่า (ไม่มี `no_answer`) · `excluded_by_note` จาก note ของ user
+- A7: `topic_id` + `skill_id` เป็น `null` ทั้งคู่ได้เมื่อไม่มีหัวข้อไหนเข้า (พร้อม `note`) · skill ต้องเป็นของหัวข้อที่เลือก
+
+ทุก purpose ของ flow นี้ตั้ง `thinking` ใน `config/ai.yaml` (Gemini 3 นับ thinking token รวมใน `max_tokens`)
 
 ทุก call ผ่าน AI Gateway (2.9–2.11), ตรวจ schema ด้วย Pydantic และ log ลง `ai_calls`
 
@@ -710,6 +721,7 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 **Output**
 
 - Schema validation (Pydantic) ทุก structured call ไม่ผ่านให้ retry 1 ครั้งพร้อม error message ถ้ายังไม่ผ่านให้ degrade
+- **ซ่อม backslash ของ LaTeX เฉพาะ field ที่เป็นสูตร:** model มักลืม escape `\` ใน JSON ทำให้ `\frac` `\beta` `\theta` `\right` `\neq` ถูก parse เป็นตัวอักษรควบคุม (form feed + `rac`) และยังผ่าน schema แบบเงียบๆ (เจอใน PoC P1) · ซ่อมด้วย type ของ field ใน output model (`app/ai/latex.py`) ไม่ซ่อมทุก string เพราะข้อความธรรมดามี newline และ tab จริง (review ของ PR #15: newline ก่อน `mid-term` ถูกแก้ผิด): `LatexStr` = ทั้ง string เป็น LaTeX (`AnswerLine.latex`, `latex_blocks`) · `MathTextStr` = ข้อความปนสูตร ซ่อมเฉพาะใน `$...$` และ `$$...$$` (`text` ของ A2, A2b, A4) · กฎการซ่อม: form feed/backspace ทุกครั้ง · tab/CR ที่มีตัวอักษรตามหลัง · newline เฉพาะเมื่อตามด้วยชื่อคำสั่งเต็มคำ (`neq` `nabla` `notin` ...) · ไม่ซ่อม `\ne` `\ni` `\nu` `\not` เพราะชนกับบรรทัดที่ขึ้นต้นด้วย `e^{x}` `i)` `u =` หรือคำว่า not (ข้อความ PyMuPDF ของชีท MTH10101 ชน 296 จุด) · newline และ tab ทั่วไปไม่แตะ · คำสั่งที่ไม่ใช่ escape ของ JSON (เช่น `\lim`) ทำให้ parse ไม่ผ่าน จึงเข้า retry ตามข้อบน
 - **Answer-leak check:** ถ้า tutor reply มี `reference_answer` ของโจทย์ที่ยังค้างอยู่ (ตรวจด้วย string match และ SymPy) ให้ generate ใหม่ เป็นการบังคับกฎ "ไม่เฉลยก่อนตอบ" แบบ deterministic
 - กฎของ buddy บังคับด้วย code (2.1)
 
@@ -731,7 +743,7 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 | embed | ingest, คำถามอิสระ | เลือกจาก spike ใน PoC P3 (3.6) | — |
 
 - **Config อยู่ใน YAML ใน repo** (purpose → tier, model, temperature, max_tokens, timeout, fallback, prompt_version) เปลี่ยน model ได้โดยไม่แก้ code
-- **Fallback chain:** retry 1 ครั้ง (backoff) → provider สำรองใน tier เดียวกัน → degrade (checker: ใช้ผล SymPy อย่างเดียวไม่มี error_type, tutor: ข้อความ template "ระบบช้า ลองส่งอีกทีนะ", STT: ให้พิมพ์แทน)
+- **Fallback chain:** retry 1 ครั้ง (backoff: รอตามที่ provider ขอ เช่น `retryDelay` ของ Gemini 429 ถ้าไม่บอกรอ `gateway.retry_backoff_seconds` · ถ้าต้องรอเกิน `gateway.max_retry_wait_seconds` ไม่ retry เพราะรอนานกลาง turn แย่กว่าล้มทันที) → provider สำรองใน tier เดียวกัน → degrade (checker: ใช้ผล SymPy อย่างเดียวไม่มี error_type, tutor: ข้อความ template "ระบบช้า ลองส่งอีกทีนะ", STT: ให้พิมพ์แทน)
 - **Circuit breaker:** ใช้ค่า default ของ Resilience4j คือ error ≥ 50% จากอย่างน้อย 10 calls ให้ route ไป fallback 60 วินาที แล้วลองกลับ
 - **ควบคุมต้นทุน:** quota token ต่อ user/วัน และต่อ tenant (ผูกกับ plan), prompt caching, ข้าม router เมื่อส่งรูป, cache TTS, embed เฉพาะตอน ingest
 - **เป้าหมาย:** ต้นทุน ≤ 5 บาทต่อ session 45 นาที และ TTFT p95 < 2 วินาที (ตัวเลขประมาณการ วัดจริงใน PoC)
@@ -757,6 +769,7 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 |---|---|---|---|---|
 | A1 | `classify_material` | 2.3 | small | kind, confidence, relevance_weight, reason |
 | A2 | `vision_extract` | 2.3 | vision | text, latex_blocks ต่อหน้า |
+| A2b | `vision_extract_pages` | 2.3 | vision | text ทุกหน้าของไฟล์สแกนใน call เดียว (PoC P3) |
 | A3 | `embed` | 2.3 | embed | vector |
 | A4 | `split_past_exam` | 2.3 | small | ข้อสอบรายข้อ + เลขหน้า |
 | A5 | `extract_topics_local` | 2.3 | mid | หัวข้อของไฟล์ + เลขหน้า |
