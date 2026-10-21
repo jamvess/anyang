@@ -53,13 +53,15 @@ spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผล�
 
 - 2026-10-21 · ข้อ 5a implement: `EmbedRequest.dimensions` · `EmbeddingConfig.dimensions` (ค่าเริ่มต้น `None`) · `Gateway.embed` ส่งค่าและ error ถ้า vector ยาวไม่ตรง · `GeminiProvider.embed` ส่ง `output_dimensionality` · `embed.py` `run_name()` + `--dimensions` · test api 152 + PoC 25 ผ่าน · **ผล 768 มิติ: recall@4 95% (19/20) · recall@1 75% · embed 116 chunk 21.6 วินาที · 0.16 วินาที/คำถาม · พลาดแค่ข้อ 6** · สูงกว่า 3,072 มิติ (90%) อยู่ 1 ข้อ (ข้อ 17) ซึ่งด้วยคำถามแค่ 20 ข้อถือว่าเท่ากัน · สรุป: ใช้ 768 มิติได้โดยไม่เสีย recall · `vector(768)` ใน schema ใช้ได้เลยโดยไม่ต้องทำ migration
 
+- 2026-10-21 · merge main (ไม่มี conflict) · check: ruff ผ่าน · api 172 · PoC 25 · ขอ Junior review ล่วงหน้าเฉพาะ `apps/api/` + `config/ai.yaml` ใน comment ของ PR #39 (PR ยังเป็น draft เพราะ report ยังไม่เสร็จ) · ถาม 3 เรื่อง: vector ผิดขนาด = error, cosine vs inner product (Gemini ไม่ normalize ต่ำกว่า 3072), tokens_in = 0
+
 ## Next step
 
 ข้อ 5 (ส่วนสุดท้าย): ใส่ตาราง P3b (embedding-2 @3072 / @768 / bge-m3: recall@4, recall@1, มิติ, เวลา) ใน report P3 · report อยู่บน branch `poc/P3` (`specs/poc/reports/poc-P3.md`, PR #37) จึงต้องสลับไป `poc/P3` หรือ merge `poc/P3b-embedding` เข้าไป · แนะนำให้เขียนตอนทำ report P3 พร้อมผล flash หลัง 14:00 น. · ก่อนเอา PR #39 ออกจาก draft ต้องให้ Junior review ส่วน `apps/api/`
 
 ## Waiting on
 
-ไม่มี
+Junior review ส่วน `apps/api/` + `config/ai.yaml` ใน PR #39
 
 ## Notes for next time
 
