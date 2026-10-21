@@ -11,8 +11,8 @@
 
 - [x] 1. 🤖 `/spec-feature`: แก้ `specs/features/tutor/chat-room-ui.md` (เพิ่ม AC-3b) หรือ spec ใหม่ · กติกา: ข้อความติดกันของคนเดิมรวมใต้ชื่อเดียว (AC-3 เดิม) ยกเว้นห่างจากข้อความก่อนหน้าเกินค่าที่กำหนด → แสดงชื่อ + เวลาใหม่ · 🙋 May เลือกค่า
 - [x] 2. 🙋 May review spec
-- [ ] 3. 🤖 `/spec-to-tests` · test ใหม่ใน `MessageList.test.tsx` (ไม่แก้ test เดิม)
-- [ ] 4. 🙋 May review test
+- [x] 3. 🤖 `/spec-to-tests` · test ใหม่ใน `MessageList.test.tsx` (ไม่แก้ test เดิม)
+- [x] 4. 🙋 May review test
 - [ ] 5. 🤖 `/implement-feature` ใน `MessageList.tsx` + lint, typecheck, test, build
 
 ## Definition of done
@@ -26,7 +26,7 @@
 
 ## Next step
 
-ขั้น 3: `/spec-to-tests` สำหรับ AC-3b ใน MessageList.test.tsx
+ขั้น 5: implement ใน MessageList.tsx
 
 ## Waiting on
 
