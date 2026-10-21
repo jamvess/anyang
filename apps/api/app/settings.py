@@ -88,7 +88,7 @@ class PlannerConfig(_Strict):
 
 
 class OcrConfig(_Strict):
-    confirm_below_confidence: float = Field(ge=0, le=1)
+    always_confirm: bool
 
 
 class CheckerConfig(_Strict):

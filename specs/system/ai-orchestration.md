@@ -42,7 +42,7 @@
 | **P3 · คณิตตัดสินด้วย math engine** | ถ้า parse ได้ ให้ SymPy เป็นคนตัดสินว่าคำตอบถูกหรือผิด | LLM ตรวจพีชคณิตหลายบรรทัดพลาดบ่อย |
 | **P4 · RAG-grounded ไม่ใช่ RAG-only** | เอกสารเป็นหลักเรื่อง scope, วิธีทำ, นิยาม ส่วน internal knowledge ใช้สำหรับคำอธิบายและสร้างโจทย์ (หัวข้อ 1.4) | ได้ทั้งความถูกต้องตามรายวิชาและคุณภาพการสอน |
 | **P5 · Never-compact context** | scope, ลำดับที่ตกลงกัน และ performance ถูกประกอบใหม่จาก DB ทุก turn ไม่ถูกสรุปทิ้ง | tutor ไม่ลืมแผนเมื่อบทสนทนายาว |
-| **P6 · Human-in-the-loop ที่จุดเสี่ยง** | ยืนยันประเภทไฟล์, ยืนยัน scope, ยืนยันลายมือเมื่อ confidence ต่ำ, แก้ transcript ก่อนส่ง, แย้งผลตรวจได้ | ความผิดพลาดของ AI ไม่ถูกใช้โดยไม่มีคนเห็น |
+| **P6 · Human-in-the-loop ที่จุดเสี่ยง** | ยืนยันประเภทไฟล์, ยืนยัน scope, ยืนยันผลอ่านลายมือทุกครั้ง, แก้ transcript ก่อนส่ง, แย้งผลตรวจได้ | ความผิดพลาดของ AI ไม่ถูกใช้โดยไม่มีคนเห็น |
 | **P7 · Gateway เดียว** | ทุก AI call ผ่าน `ai.call()` ที่มี guard, routing, fallback และ log | เขียนครั้งเดียว, สลับ provider หรือ fake provider ได้ |
 | **P8 · Stateless** | Cloud Run ไม่เก็บ state ใน memory ทุกอย่างอยู่ใน DB | scale ได้, ออกจากห้องแล้วกลับมาต่อได้ (TM-13) |
 
@@ -342,8 +342,9 @@ A5: `pages` เป็นช่วง `"start-end"` ตามป้าย `[p.N]`
 |---|---|---|
 | พิมพ์ | ส่งตรง มี KaTeX preview เมื่อมีสูตร | ไม่มี |
 | พูด | กดค้างอัด (≤ 60 วินาที) → Storage → Google STT → transcript ลงช่องพิมพ์ | user แก้แล้วกดส่งเอง **ไม่ auto-send** |
-| รูป | upload ลง Storage → `extract_answer` (vision) ได้คำตอบรายบรรทัดเป็น LaTeX พร้อม confidence | แสดง "อ่านได้แบบนี้ ถูกไหม" **เฉพาะเมื่อ min confidence < 0.8** |
+| รูป | upload ลง Storage → `extract_answer` (vision) ได้คำตอบรายบรรทัดเป็น LaTeX พร้อม confidence | แสดง "อ่านได้แบบนี้ ถูกไหม" **ทุกครั้ง** (`ocr.always_confirm`) |
 
+- เหตุผลที่รูปต้องยืนยันทุกครั้ง: PoC P1 พบว่า confidence ที่ model ให้ตัวเองแยกบรรทัดที่อ่านผิดไม่ได้ (บรรทัดผิดอยู่ที่ 0.85–0.98) และพบกรณีที่ model แก้คำตอบผิดของนักเรียนให้ถูกเอง ซึ่งจะทำให้ checker ตัดสินว่าถูก (`specs/poc/reports/P1.md`)
 - เหตุผลที่เสียงไม่ auto-send: คณิตที่พูดออกมา (เช่น "x กำลังสองลบสี่") STT มักพลาด ถ้าตรวจผิดเพราะอ่านผิด user จะหมดความเชื่อใจ ให้ user แก้ก่อนส่งจึงคุ้มกว่า
 - ข้อความที่พิมพ์หรือพูดเป็นคณิต ถูกแปลงเป็น LaTeX ด้วย small model (`normalize_math`) ก่อนเข้า checker
 - Optimization: ถ้ามีโจทย์ค้างอยู่และ user ส่งรูปมา ให้ถือเป็นคำตอบทันทีโดยไม่เรียก intent router
@@ -407,7 +408,7 @@ Session จบเมื่อ user บอกว่าพอ, หมดเวล�
 2. Code คุม stage ส่วน LLM ทำตาม directive
 3. สร้างโจทย์พร้อมเฉลยและ verify ก่อนส่ง (แลกกับ latency ประมาณ 1–2 วินาที)
 4. Transcript เสียงลงช่องพิมพ์ ไม่ auto-send
-5. รูปขอให้ยืนยันเฉพาะเมื่อ confidence ต่ำ
+5. รูปขอให้ยืนยันทุกครั้ง (PoC P1: confidence แยกบรรทัดที่อ่านผิดไม่ได้)
 6. Mastery ใช้ BKT และนับเฉพาะ independent attempts
 7. Done ต้องครอบคลุมทุก skill ไม่ใช่นับจำนวนข้อ, Park เมื่อผิดครั้งที่ 3 หรือเกิน 10 ข้อ/skill/วัน
 8. Progress card ทุกครั้งที่เปิด session โดย code render ส่วน tutor สรุปจาก facts
@@ -854,7 +855,7 @@ Target user ของ v1 คือนักเรียนรายคน แต
 
 | รายการ | การเปลี่ยนแปลง |
 |---|---|
-| AM-02 | ยืนยันผลอ่านลายมือ **เฉพาะเมื่อ min confidence < 0.8** (เดิม: ทุกครั้ง) |
+| AM-02 | v1.0 เสนอยืนยันผลอ่านลายมือเฉพาะเมื่อ min confidence < 0.8 · **หลัง PoC P1 กลับเป็นยืนยันทุกครั้ง** (21 ต.ค. · PR #45) |
 | TM-07 | transcript เสียงลงช่องพิมพ์ให้ user แก้แล้วกดส่งเอง, priority เป็น Should |
 | TM-11 | แสดง progress card ทุกครั้งที่เปิด session และเมื่อ user ขอ |
 | TM-05 | ระบุ 4 roles, hard gates, quota ตามความถี่ และข้อยกเว้นนอกเรื่อง |
@@ -870,8 +871,8 @@ Target user ของ v1 คือนักเรียนรายคน แต
 
 | สมมติฐาน / threshold | ค่าเริ่มต้น | PoC |
 |---|---|---|
-| Vision LLM อ่านลายมือคณิตได้แม่นพอ | ≥ 80% ของบรรทัด | P1 อ่านลายมือ (50 รูป, เทียบ Gemini / Claude / Mathpix) |
-| OCR confidence ใช้แยกบรรทัดที่อ่านผิดได้ | threshold 0.8 | P1 |
+| Vision LLM อ่านลายมือคณิตได้แม่นพอ | ≥ 80% ของบรรทัด | P1 ✅ **95.2%** (30 รูป 125 บรรทัด · `gemini-3.5-flash-lite` · ไม่ได้ทดสอบ Claude/Mathpix เพราะงบ) |
+| OCR confidence ใช้แยกบรรทัดที่อ่านผิดได้ | threshold 0.8 | P1 ❌ ไม่มี threshold ที่จับได้ ≥ 95% → ยืนยันทุกครั้ง (`specs/poc/reports/P1.md`) |
 | Topic extraction ตรงกับที่คนทำ | หัวข้อ ≥ 80%, ★★★ ≥ 80%, ≤ 3 นาที/ไฟล์ | P3 เอกสาร → หัวข้อ + ดาว |
 | Embedding model สำหรับภาษาไทย | ยังไม่เลือก | P3 (ลอง 2–3 ตัวกับคำถาม 20 ข้อ) |
 | Checker แม่นตามเป้า | verdict ≥ 95%, error_type ≥ 80% | P2 Answer checker |

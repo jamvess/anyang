@@ -12,7 +12,7 @@
 ## Plan
 
 - [x] 1. 🤖 ร่างข้อเสนอให้ทีมตัดสิน (ใน PR description + ข้อความกลุ่ม): ทางเลือก, ผลกระทบต่อ UX/API/ไฟล์ของแต่ละคน, ข้อเสนอแนะ · รวมเรื่อง "ส่งรูปพร้อมข้อความกำกับ" ที่ `api.md` รอ Jam อยู่ (flow เดียวกัน)
-- [ ] 2. 🙋 Jam ส่งในกลุ่ม · ทีมตัดสิน (Junior: API/checker · May: UI กล่องยืนยัน)
+- [x] 2. 🙋 Jam ส่งในกลุ่ม · ทีมตัดสิน (Junior: API/checker · May: UI กล่องยืนยัน)
 - [ ] 3. 🤖 แก้ตามที่ตัดสิน: `requirements.md` AM-02 (ไฟล์กลาง) · `learning.yaml` `ocr.*` + `learning-model.md` §8–9 · `ai-orchestration.md` §2.2.5, §2.2.10, §3.5, §3.6 · `specs/poc/README.md` P1 · `api.md` ข้อรอตัดสิน (ไฟล์กลาง)
 - [ ] 4. 🤖 checklist: sub-bullet ใต้ข้อ "อัปเดต config" ว่าส่วน ocr เสร็จ · `/work-done` · reviewer ทั้ง Junior และ May (ไฟล์กลาง)
 
@@ -26,14 +26,15 @@
 
 - 2026-10-21 · เลือกทำข้อนี้ระหว่างรอโควตา (P3) และรอคำถามของ May (P3b) · ทำเฉพาะส่วน `ocr` ของข้อ "อัปเดต config"
 - 2026-10-21 · ข้อเสนออยู่ใน description ของ PR #45 · เรื่อง 1 (AM-02): ก ยืนยันทุกครั้ง (แนะนำ) / ข threshold 0.95 (ใน P1 จับ 2 กรณีที่อันตรายได้ แต่พลาด X ทั้ง 4 · ตัวอย่างน้อย) / ค คง 0.8 · เรื่อง 2 (รูป + ข้อความ): ก เป็น caption ไม่ส่งเข้า OCR/checker (แนะนำ) / ข เป็น context ของ checker / ค ไม่รับ
+- 2026-10-21 · **ทีมตัดสินเรื่อง 1 = ก** (Junior และ May ตอบใน LINE · Claude บันทึกเป็น comment ใน PR #45) · แก้แล้ว: `ocr.confirm_below_confidence: 0.8` → `ocr.always_confirm: true` (+ `OcrConfig` ใน settings.py ของ Junior) · AM-02 ใน requirements.md · learning-model §8–9 · ai-orchestration P6, §2.2.5, §2.2.10 ข้อ 5, §3.5, §3.6 (รวม F12 ที่เลื่อนไว้จาก D2) · specs/poc/README P1 · test API 136 ผ่าน · เรื่อง 2 รอ Jam ตัดสิน
 
 ## Next step
 
-🙋 Jam ส่งข้อเสนอในกลุ่ม (ลิงก์ PR #45) · รอทีมตอบเรื่อง 1 และ 2 · แล้วขั้น 3 แก้ไฟล์ตามที่ตัดสิน
+Jam ตัดสินเรื่อง 2 (ก/ข/ค) → แก้ api.md ข้อรอตัดสิน → ขั้น 4
 
 ## Waiting on
 
-ทีม (Junior, May) ตอบเรื่อง 1 และ 2 ในกลุ่มหรือ PR #45
+Jam ตัดสินเรื่อง 2
 
 ## Notes for next time
 
