@@ -61,5 +61,6 @@ Junior: เพิ่ม CORS ใน FastAPI ให้ `http://localhost:3000` (�
 - stub ตรวจว่า path param เป็น uuid · ใช้ uuid จริงใน URL เช่น `/preps/11111111-1111-4111-8111-111111111111/room`
 - jsdom ไม่มี `Blob.stream()` · ใน test ใช้ `new Response(text)` สร้าง stream
 - lint warning 2 ตัว (`_` ใน httpTransport.test.ts) เป็นของ test ที่ review แล้ว ไม่ใช่ error
+- Bash heredoc บนเครื่องนี้ตัด `\\` เหลือ `\` · ไฟล์หรือ PR body ที่มี backslash หลายตัวให้เขียนด้วย Edit/Write tool แล้วเช็กผล
 
 - รูปยังส่งไม่ได้: ไม่มี stub `POST /sessions/{id}/uploads` และ api.md "รอตัดสิน" ข้อ 1 (Jam)
