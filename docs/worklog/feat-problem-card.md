@@ -9,8 +9,8 @@
 
 ## Plan
 
-- [ ] 1. 🤖 `/spec-feature`: `specs/features/tutor/problem-card.md` (TM-04, TM-08, TM-14, AM-11) · แสดง event `problem` (`{problem_id, text_latex, difficulty, purpose}`) เป็นการ์ดที่ render สมการ · 🙋 May ตัดสินเรื่องที่ spec ยังไม่กำหนด
-- [ ] 2. 🙋 May review spec
+- [x] 1. 🤖 `/spec-feature`: `specs/features/tutor/problem-card.md` (TM-04, TM-08, TM-14, AM-11) · แสดง event `problem` (`{problem_id, text_latex, difficulty, purpose}`) เป็นการ์ดที่ render สมการ · 🙋 May ตัดสินเรื่องที่ spec ยังไม่กำหนด
+- [x] 2. 🙋 May review spec
 - [ ] 3. 🤖 `/spec-to-tests`
 - [ ] 4. 🙋 May review test
 - [ ] 5. 🤖 `/implement-feature` + lint, typecheck, test, build
@@ -22,9 +22,11 @@
 
 ## Decisions
 
+- 2026-10-21 · การ์ดโจทย์ไม่แสดง difficulty และ purpose (May เลือก) · การ์ดแยก ไม่อยู่ใน bubble (api.md §2.2.8)
+
 ## Next step
 
-ขั้น 1: `/spec-feature`
+ขั้น 3: `/spec-to-tests` (May อนุมัติตัดบรรทัด problem ใน chat-streaming AC-7 แล้ว)
 
 ## Waiting on
 
