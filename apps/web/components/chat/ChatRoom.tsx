@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Composer } from "./Composer";
 import { MessageList } from "./MessageList";
+import type { ProblemData } from "./ProblemCard";
 import { roomStrings as t } from "./strings";
 import type { SSEEvent } from "@/lib/sse";
 import type { ChatMessage, MessageRole, RoomData, SendMessage, SendPayload } from "./types";
@@ -121,6 +122,11 @@ export function ChatRoom({
           current = null;
           setStreamingId(null);
           setTyping(false);
+        } else if (event === "problem") {
+          // Shown as a problem card; the tutor's next tokens start a new bubble (problem-card.md AC-6).
+          append(newMessage("card", null, { problem: data as ProblemData }));
+          current = null;
+          setStreamingId(null);
         } else if (event === "progress_card") {
           // Shown as a card; the tutor's next tokens start a new bubble (progress-card.md AC-9).
           append(newMessage("card", null, { card: data as ChatMessage["card"] }));
@@ -132,7 +138,7 @@ export function ChatRoom({
         } else if (event === "error") {
           break;
         }
-        // Other events (problem, verdict, ...) are separate features.
+        // Other events (verdict, ...) are separate features.
       }
     } catch {
       // A network failure is shown like an error event.

@@ -5,7 +5,7 @@
 | Owner | May |
 | Branch | `feat/problem-card` |
 | Checklist item | ไม่มีข้อตรงใน checklist · ส่วนหนึ่งของหน้าห้องติว (S15) ที่ demo ช่วง 3 ใช้ (`docs/design/demo-flow.md`) · stub ส่ง event `problem` แล้วแต่หน้าเว็บยังไม่แสดง |
-| Status | in progress · 2026-10-21 |
+| Status | ready for work-done · 2026-10-21 |
 
 ## Plan
 
@@ -13,7 +13,7 @@
 - [x] 2. 🙋 May review spec
 - [x] 3. 🤖 `/spec-to-tests`
 - [x] 4. 🙋 May review test
-- [ ] 5. 🤖 `/implement-feature` + lint, typecheck, test, build
+- [x] 5. 🤖 `/implement-feature` + lint, typecheck, test, build
 
 ## Definition of done
 
@@ -24,10 +24,11 @@
 
 - 2026-10-21 · การ์ดโจทย์ไม่แสดง difficulty และ purpose (May เลือก) · การ์ดแยก ไม่อยู่ใน bubble (api.md §2.2.8)
 - 2026-10-21 · การ์ดโจทย์ใช้ `role="region"` ไม่ใช่ `group` เพื่อไม่ชนกับ test ของ progress card (AC-8) ที่ review แล้วซึ่งนับ `role="group"` · ตัดบรรทัด `problem` ใน chat-streaming AC-7 (May อนุมัติ)
+- 2026-10-21 · implement: `ProblemCard.tsx` ใหม่ · โจทย์จาก stream เก็บเป็นข้อความในเครื่อง role `card` ที่มี field `problem` (ไม่ใช่ของ API · api.md ไม่มี role โจทย์) · red → green 2 รอบ · test 126/126, lint 0 error, typecheck, build ผ่าน
 
 ## Next step
 
-ขั้น 5: implement
+รัน /work-done
 
 ## Waiting on
 
