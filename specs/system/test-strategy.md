@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Owner | Jam (review: Junior, May) |
-| Version | v0.1 ร่าง · 21 ต.ค. 2569 |
+| Version | v1.0 · 21 ต.ค. 2569 |
 | ที่มา | `CLAUDE.md` · `apps/api/CLAUDE.md` · `apps/web/CLAUDE.md` · `ai-orchestration.md` §2.4.8, §2.11 · `specs/poc/README.md` · `.github/workflows/ci.yml` |
 
 หน้านี้รวมกติกาที่กระจายอยู่ในไฟล์ข้างบนไว้ที่เดียว ถ้าขัดกัน ให้ไฟล์ต้นทางเป็นหลัก แล้วแก้หน้านี้ตาม
@@ -45,7 +45,7 @@
 
 ## 5. ช่องว่างและเจ้าของ
 
-Jam เลือก 21 ต.ค. · ข้อที่แก้ `.github/` หรือ test ของ Junior ยังเป็นข้อเสนอจนกว่า Junior จะตกลงใน PR นี้
+Jam เลือก 21 ต.ค. · Junior ตกลง 2 แถวที่เป็นของ Junior (`evals/` เข้า CI, isolation test ทุกตาราง) ในแชทกลุ่ม 21 ต.ค.
 
 | ช่องว่าง | ทำอย่างไร | เจ้าของ · เมื่อไหร่ |
 |---|---|---|
