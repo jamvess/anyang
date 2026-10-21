@@ -5,7 +5,7 @@
 | Owner | May |
 | Branch | `feat/room-http-transport` |
 | Checklist item | หน้าแชท P4-lite: อ่าน SSE ผ่าน `lib/sse.ts`, แสดงข้อความที่ไหลออกมา, render KaTeX, ส่งรูป |
-| Status | in progress · 2026-10-21 |
+| Status | ready for work-done · 2026-10-21 |
 
 ## Plan
 
@@ -14,7 +14,7 @@
 - [x] 3. 🤖 `/spec-to-tests`: เขียน test ที่ fail จาก acceptance criteria
 - [x] 4. 🙋 May review test
 - [x] 5. 🤖 `/implement-feature`: เขียนโค้ดจน test ผ่าน + lint, typecheck, build
-- [ ] 6. 🙋 May ลองจริงในเครื่อง: เปิด API + web แล้วคุยในห้องติว เห็นข้อความไหลจาก stub (Claude ให้ขั้นตอนทีละคลิก)
+- [x] 6. 🙋 May ลองจริงในเครื่อง: เปิด API + web แล้วคุยในห้องติว เห็นข้อความไหลจาก stub (Claude ให้ขั้นตอนทีละคลิก)
 - [x] 7. 🤖 spec: `chat-room-ui.md` เพิ่ม AC-6b ชื่อไฟล์รูปมาจาก `attachment_name` (api.md v1.3 · PR #43) · ถ้าเป็น null ใช้ท้าย `attachment_path` ตามเดิม (AC-6 เดิมผ่านโดยไม่แก้) · 🙋 May review
 - [x] 8. 🤖 test ใหม่ใน `MessageList.test.tsx` + `ChatRoomStream`/`RoomPageHttp` ถ้าจำเป็น · 🙋 May review
 - [x] 9. 🤖 implement `MessageList.tsx` + ข้อความในเครื่องของ ChatRoom ใช้ `attachment_name`
@@ -45,10 +45,11 @@
 - red → green: 3 รอบ (transport + Composer · TutorRoom + opening ของ ChatRoom · หลังแก้ test helper) + แก้ lint/typecheck/build อีก 3 รอบ
 - 2026-10-21 · merge main (PR #43 attachment_name): `ChatMessage.attachment_name` ไม่บังคับเหมือน `card` เพื่อให้ test เดิมที่ review แล้ว typecheck ผ่าน
 - 2026-10-21 · ขั้น 9: MessageList ใช้ `attachment_name` ก่อน ถ้า null ใช้ท้าย `attachment_path` · ChatRoom สร้างข้อความรูปด้วย `attachment_name` · red → green 1 รอบ · test 103/103, lint 0 error, typecheck, build ผ่าน
+- 2026-10-21 · ขั้น 6 ลองจริงในเครื่อง (API stub + `pnpm dev`, CORS จาก PR #49) ผ่าน: ห้องโหลดจาก `GET /sessions/{id}`, ส่งข้อความแล้วได้ tutor → buddy → tutor, สมการ render, เลือกรูปแล้วขึ้น "ตอนนี้ยังส่งรูปไม่ได้…" · May ไม่เห็น "กำลังเปิดห้องติว…" และคำตอบมาเร็ว เพราะ stub ในเครื่องตอบทันทีและส่งทุก token พร้อมกัน (ปกติ) · ทาง session ใหม่ลองจริงไม่ได้เพราะ stub ตอบว่ามี session เปิดอยู่เสมอ (มี test AC-2 ครอบ)
 
 ## Next step
 
-ขั้น 6: เมื่อ Junior เพิ่ม CORS ใน FastAPI แล้ว merge main เข้ามา · ตั้ง `NEXT_PUBLIC_API_URL=http://localhost:8000` ใน `apps/web/.env.local` (🙋 May) · เปิด API (`uv run uvicorn app.main:app --port 8000` ใน apps/api) + web (`pnpm dev`) · May เปิด `http://localhost:3000/preps/11111111-1111-4111-8111-111111111111/room` แล้วส่งข้อความ ดูคำตอบไหลจาก stub
+รัน /work-done
 
 ## Waiting on
 
