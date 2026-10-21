@@ -13,7 +13,7 @@
 - [x] 2. 🤖 `EnvSettings.cors_allow_origins` (comma-separated, default `http://localhost:3000`, ห้าม `*` / `/` ท้าย / ว่าง) + `cors_allow_origin_regex` (default ว่าง = ปิด · ตรวจว่า compile ได้)
 - [x] 3. 🤖 `app/cors.py` → `add_cors(app, env)` · `main.py` เรียกตอนสร้าง app → green
 - [x] 4. 🤖 `.env.example` + ตาราง env ใน `docs/team/setup.md` A5
-- [ ] 5. 🤖 ruff + pytest ทั้งหมดในเครื่องผ่านแล้ว (156) · รอ CI เขียวบน PR #49
+- [x] 5. 🤖 ruff + pytest ทั้งหมดในเครื่องผ่านแล้ว (156) · CI เขียวบน PR #49 (run 39542552432 ที่ `32b2226` · `api`, `api-integration`, `web`)
 - [x] 6. 🙋 ตอบ May ใน PR #42 (OQ5, OQ6, OQ7) + comment #40 (`exam_prep_not_found`) + เปิด issue #50 (X-Request-Id middleware)
 
 ## Definition of done
