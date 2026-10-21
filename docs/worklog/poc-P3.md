@@ -5,9 +5,16 @@
 | Owner | Jam |
 | Branch | `poc/P3` |
 | Checklist item | P3: ingest → A5 → A6 → A7 → `compute_importance` · เทียบกับ label · ลอง embedding 2–3 ตัวกับคำถาม 20 ข้อ |
-| Status | paused · 2026-10-20 |
+| Status | in progress · 2026-10-21 |
 
-## Done today (2026-10-20)
+## Done today (2026-10-21)
+
+- เช็ค A6 ที่ล้มเมื่อวาน (14:40) จาก `out/raw/run_merge-1.txt` โดยไม่เรียก API: JSON ครบ 28 หัวข้อ ผิดจุดเดียวคือ `t01` มี skill id `t02.s2` (ควรเป็น `t01.s2`) · แก้ id นั้นแล้ว schema ผ่านทั้งหมด · retry ของ gateway โดน 503 · token out 14,944 / 16,000 (93% ของเพดาน ยังไม่ MAX_TOKENS แต่ใกล้)
+- 10:41–10:45 น. `gemini-3.5-flash` A6 ได้ 503 ครบ 4 ครั้ง (นับในโควตารายวัน · ใช้ไป 4/20)
+- รันทั้งชุดด้วย `gemini-3.5-flash-lite` (`AI_MODEL_OVERRIDE`, 7 call, 84 วินาที, schema ผ่านทุก call): A5 ได้ 5/5/10/9 หัวข้อ (flash ได้ 14/5/5/12) · A6 รวมเหลือ 10 หัวข้อ (label 27) · หัวข้อตรง 1/27 (recall 3.7%) · ★★★ pipeline 1/12 · map ข้อสอบตรง 2/43 · ≤ 1.34 นาที/ไฟล์ · ผลใน `poc/P3/results/gemini-3.5-flash-lite-a5v1/`
+- สรุป: lite หยาบเกินไปสำหรับ A5/A6 (ชีท 01 ที่ยาว 140 หน้าได้แค่ 5 หัวข้อ) · ★★★ ของ pipeline ต่ำเพราะหัวข้อไม่ตรง ไม่ใช่เพราะสูตรดาว (สูตรกับ map ของ May ยังได้ 83%)
+
+## Done (2026-10-20)
 
 - แก้ gateway ให้ซ่อม LaTeX ที่ model ลืม escape · รอบแรกซ่อมทุก string ใน `_parse` แล้ว Junior review ว่าไปแก้ข้อความธรรมดาด้วย · รอบสองเปลี่ยนเป็น opt-in: `LatexStr` / `MathTextStr` ใน `apps/api/app/ai/latex.py`
 - ตรวจ cache ของ P3 แล้วไม่มีจุดเสีย จึงรัน A7 ได้เลยโดยไม่ต้องซ่อม
@@ -90,13 +97,11 @@
 
 ## Next step
 
-ขั้น 8: เช้า 21 ต.ค. (ช่วงคนใช้น้อย) รัน `cd apps/api && uv run python ../../poc/P3/run.py --a5-prompt v1` ด้วย gemini-3.5-flash (ใช้ cache A5 · A6 + A7 ×2 = 3 call) → `score.py --a5-prompt v1` · ถ้ายังได้ 503 ทั้งเช้า ให้ถาม Jam ว่าจะเปลี่ยน A6 เป็น tier อื่นไหม · ดู log ว่ามี MAX_TOKENS ไหม (Junior ถาม)
-
-หลัง 14:00 น. ของ 2026-10-20 (เช็คโควตาด้วย request เดียวก่อน): `cd apps/api && uv run python ../../poc/P3/run.py --a5-prompt v1` (ใช้ cache A5 v1 · เหลือ A6 + A7 ×2 = 3 call) → `uv run python ../../poc/P3/score.py --a5-prompt v1` → ถ้า A6 ไม่ผ่าน schema ให้ดู `out/raw/run_merge-*.txt` · จากนั้นถ้าโควตาเหลือ: `run.py --a5-prompt v2` (A5 ×4 + A6 + A7 ×2 = 7 call) → `score.py --a5-prompt v2` → สรุปเทียบ v1/v2 ให้ Jam
+ขั้น 8 (ต่อ): หลัง 14:00 น. ของ 2026-10-21 ลอง `gemini-3.5-flash` อีกรอบ: `cd apps/api && uv run python ../../poc/P3/run.py --a5-prompt v1` (ใช้ cache A5 · A6 + A7 ×2 = 3 call · โควตาวันนี้เหลือ ~16) → `uv run python ../../poc/P3/score.py --a5-prompt v1` → เทียบกับแถว flash-lite · ถ้า A6 ล้มเพราะ skill id ผิดอีก ห้ามใช้ไฟล์ที่แก้มือมาให้คะแนน ให้จดไว้ใน report เป็นข้อเสนอ "code ตั้ง skill id เองตามลำดับ" · ถ้า 503 ทั้งบ่าย ให้ถาม Jam
 
 ## Waiting on
 
-โควตา free tier ของ gemini-3.5-flash รีเซ็ต 2026-10-20 ≈ 14:00 น. · Junior review รอบสองใน PR #15 (แก้ 2 จุดแล้ว)
+`gemini-3.5-flash` ตอบ 503 (คนใช้เยอะ) · ลองใหม่หลัง 14:00 น.
 
 ## Notes for next time
 
