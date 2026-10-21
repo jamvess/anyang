@@ -5,7 +5,14 @@
 | Owner | Jam |
 | Branch | `poc/P3b-embedding` |
 | Checklist item | P3: ingest → A5 → A6 → A7 → `compute_importance` · เทียบกับ label · ลอง embedding 2–3 ตัวกับคำถาม 20 ข้อ (ส่วน embedding · ส่วน P3a อยู่ใน PR #37) |
-| Status | in progress · 2026-10-21 |
+| Status | paused · 2026-10-21 |
+
+## Done today (2026-10-20 → 21)
+
+- branch + draft PR #39 · ตัด chunk ชีท 4 ไฟล์ (`poc/P3/chunking.py`) · เทมเพลตคำถามให้ May
+- `Gateway.embed()` + `GeminiProvider.embed()` + `embed.py` (recall@1/@4, cache vector) · test API 109 + PoC 23 ผ่าน
+- smoke test เจอและแก้ 4 เรื่อง: embedding-2 รวมข้อความเป็น vector เดียว · เพดาน 8,192 token/request · ภาษาไทย 1.7 ตัวอักษรต่อ token (ตัด chunk ใหม่เป็น 116) · local model โหลดซ้ำทุก call
+- smoke test bge-m3 ผ่าน (vector ของ 116 chunk อยู่ใน cache แล้ว) · ตัด embedding-001 ออก (key ไม่มีโควตา)
 
 spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผลที่ต้องได้: embedding model + มิติ vector + ขนาด chunk) · `specs/system/ai-orchestration.md` §1.4 Retrieval, §2.3.3 Chunk/Embed · AI-01, AI-08
 
@@ -40,12 +47,19 @@ spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผล�
 
 ## Next step
 
-รอคำถามจาก May → แปลงจาก markdown ไม่ต้องทำ (`parse_questions` อ่านตารางตรง) → รัน `embed.py` กับ `local:BAAI/bge-m3` (ใช้ cache) และ `gemini:gemini-embedding-2` (เว้นช่วงตาม TPM) → สรุปเทียบใน report P3
+เมื่อ May กรอก `evals/topics/mth10101/retrieval_questions.md` ครบ (merge หรือ pull จาก branch ที่ May ใช้):
+1. `cd apps/api && uv run --with sentence-transformers python ../../poc/P3/embed.py --model local:BAAI/bge-m3` (ใช้ cache chunk · embed แค่คำถาม)
+2. `uv run python ../../poc/P3/embed.py --model gemini:gemini-embedding-2` (116 chunk เว้นช่วงไม่เกิน 25K token/นาที · ประมาณ 3–4 นาที)
+3. ผลอยู่ที่ `poc/P3/results/embed-*.json` → commit → สรุปเทียบ (recall@4, มิติ, เวลา) ใส่ใน report P3 ร่วมกับ P3a (PR #37)
 
 ## Waiting on
 
-May (หรือ Junior) เขียนคำถาม 20 ข้อ (ขั้น 2)
+May (หรือ Junior) เขียนคำถาม 20 ข้อ (ขั้น 2) · Jam ส่งเทมเพลตให้แล้วหรือยัง ให้เช็คในกลุ่ม
 
 ## Notes for next time
 
-- `poc/P3/out/` gitignored (มีข้อความจากชีท) · chunk และ vector เก็บใน `out/` เหมือนกัน
+- `poc/P3/out/` gitignored (มีข้อความจากชีท) · chunk อยู่ที่ `out/chunks.json` · vector อยู่ที่ `out/embed/<model>/chunks.json` (key = content_hash)
+- โควตา free tier (ai.dev/rate-limit, 21 ต.ค.): Gemini Embedding 2 = 100 RPM, **30K TPM**, นับ 1 ข้อความ = 1 request · Embedding 001 ไม่มีใน key นี้ · Gemini 3.6 Flash (= `gemini-3.5-flash`) 5 RPM / 20 RPD และ request ที่ได้ 503 ก็นับ
+- ภาษาไทย ≈ 1.7 ตัวอักษรต่อ Gemini token (วัดด้วย count_tokens) · ต้นทุนและการตัด chunk ของระบบจริงต้องใช้ค่านี้ ไม่ใช่ ÷3 หรือ ÷4 แบบภาษาอังกฤษ
+- bge-m3 บน CPU: โหลด model ครั้งแรกต้องดาวน์โหลด torch + model ประมาณ 2–3 GB · embed 116 chunk ใช้ 409 วินาที · smoke test ใช้คำถามทิ้ง 2 ข้อใน scratchpad (ลบผลทิ้งแล้ว)
+- Git Bash heredoc กับ `python -c "..."` ที่มี `$` หรือ `\` ให้ระวัง · ใช้ Write tool เขียน script เป็นไฟล์ปลอดภัยกว่า
