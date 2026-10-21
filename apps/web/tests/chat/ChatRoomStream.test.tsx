@@ -193,8 +193,8 @@ describe("ChatRoom streaming", () => {
 
     await send("ตอบ");
     await t.token("tutor", "ถูก");
-    // progress_card is shown since progress-card.md (it splits the bubble, AC-9) · removed here with May's approval
-    await t.event("problem", { problem_id: "p1", text_latex: "x^2", difficulty: 1, purpose: "check" });
+    // progress_card and problem are shown since progress-card.md and problem-card.md (they split the bubble)
+    // · removed here with May's approval
     await t.event("verdict", { verdict: "correct", first_wrong_line: null, error_type: null });
     await t.event("unknown_event", { anything: true });
     await t.token("tutor", "แล้ว");
@@ -556,5 +556,43 @@ describe("ChatRoom · progress card in the stream", () => {
     expect(tutors[1].textContent).toContain("ยังตามแผนอยู่");
     expect(within(tutors[1]).getByText(room.tutor_name)).toBeTruthy();
     expect(getAllByText(room.tutor_name).length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+// Spec: specs/features/tutor/problem-card.md AC-5, AC-6
+describe("ChatRoom · problem card in the stream", () => {
+  /** Bubbles and cards in document order: the card's aria-label, else the bubble role. */
+  const items = (container: HTMLElement) =>
+    [...container.querySelectorAll<HTMLElement>('[data-role], [role="group"], [role="region"]')].map((el) =>
+      el.hasAttribute("data-role") ? el.getAttribute("data-role") : el.getAttribute("aria-label"),
+    );
+
+  it("TM04 the opening stream shows progress card, greeting, then the problem card", async () => {
+    const opening = createFakeTransport(sseFixture("room_session_start.txt"), { delayMs: 0 })(
+      { text: null, image: null },
+      new AbortController().signal,
+    );
+    const r: RoomData = { ...room, messages: [] };
+    const { container, findByRole } = render(<ChatRoom room={r} opening={opening} />);
+
+    await findByRole("region", { name: "โจทย์" });
+    expect(items(container)).toEqual(["ความคืบหน้า", "tutor", "โจทย์"]);
+  });
+
+  it("TM04 a problem in the middle of a reply splits the tutor's message around it", async () => {
+    const t = controlledTransport();
+    const { send, container } = setup(t.sendMessage);
+    const before = items(container).length;
+
+    await send("(x-7)(x+7)");
+    await t.token("tutor", "ถูก ข้อต่อไป");
+    await t.event("problem", { problem_id: "p2", text_latex: "4x^2 - 25", difficulty: 2, purpose: "practice" });
+    await t.token("tutor", "ลองดูนะ");
+    await t.done();
+
+    expect(items(container).slice(before)).toEqual(["user", "tutor", "โจทย์", "tutor"]);
+    const tutors = [...container.querySelectorAll<HTMLElement>('[data-role="tutor"]')].slice(-2);
+    expect(tutors[0].textContent).toContain("ถูก ข้อต่อไป");
+    expect(tutors[1].textContent).toContain("ลองดูนะ");
   });
 });

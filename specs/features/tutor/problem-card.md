@@ -22,7 +22,7 @@
 - การ์ดมีหัวสั้นๆ "โจทย์" และสมการจาก `text_latex` render ด้วย `Tex` แบบ block (`display`) · ไม่ผ่าน `MessageText` เพราะไม่มีตัวคั่น
 - **ไม่แสดง** `difficulty` และ `purpose` · ติวเตอร์บอกเองในข้อความ (เช่น "ลองข้อนี้ดูก่อน")
 - ไม่มีปุ่มใดๆ ในการ์ด · ไม่มีปุ่มตัวเลือกคำตอบ (TM-06) · ไม่มีตัวจับเวลา (TM-14)
-- `role="group"` และ `aria-label="โจทย์"` · ใส่ `data-problem-id` เท่ากับ `problem_id`
+- `role="region"` และ `aria-label="โจทย์"` (ไม่ใช้ `group` เพื่อไม่ชนกับการ์ดความคืบหน้าที่ test ของ `progress-card.md` นับด้วย `role="group"`) · ใส่ `data-problem-id` เท่ากับ `problem_id`
 - `text_latex` ว่าง → ไม่แสดงการ์ด
 
 **แสดงตรงไหน**
@@ -39,7 +39,7 @@
 
 ## 4. Acceptance criteria
 
-- **AC-1 (TM08)** Given event `problem` ที่ `text_latex = "x^2 - 49"` When แสดงการ์ด Then มีการ์ด `role="group"` ชื่อ "โจทย์" ที่มี KaTeX แบบ block 1 ชิ้นซึ่ง source คือ `x^2 - 49` และ `data-problem-id="p1"`
+- **AC-1 (TM08)** Given event `problem` ที่ `text_latex = "x^2 - 49"` When แสดงการ์ด Then มีการ์ด `role="region"` ชื่อ "โจทย์" ที่มี KaTeX แบบ block 1 ชิ้นซึ่ง source คือ `x^2 - 49` และ `data-problem-id="p1"`
 - **AC-2 (TM04)** Given การ์ดโจทย์ Then ไม่มีข้อความ `difficulty` หรือ `purpose` (ไม่มีตัวเลข 1 ในหัวการ์ด, ไม่มีคำว่า "probe")
 - **AC-3 (TM06)** Given การ์ดโจทย์ Then ไม่มีปุ่มในการ์ด
 - **AC-4 (TM04)** Given `text_latex = ""` Then ไม่มีการ์ด

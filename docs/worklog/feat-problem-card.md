@@ -11,8 +11,8 @@
 
 - [x] 1. 🤖 `/spec-feature`: `specs/features/tutor/problem-card.md` (TM-04, TM-08, TM-14, AM-11) · แสดง event `problem` (`{problem_id, text_latex, difficulty, purpose}`) เป็นการ์ดที่ render สมการ · 🙋 May ตัดสินเรื่องที่ spec ยังไม่กำหนด
 - [x] 2. 🙋 May review spec
-- [ ] 3. 🤖 `/spec-to-tests`
-- [ ] 4. 🙋 May review test
+- [x] 3. 🤖 `/spec-to-tests`
+- [x] 4. 🙋 May review test
 - [ ] 5. 🤖 `/implement-feature` + lint, typecheck, test, build
 
 ## Definition of done
@@ -23,10 +23,11 @@
 ## Decisions
 
 - 2026-10-21 · การ์ดโจทย์ไม่แสดง difficulty และ purpose (May เลือก) · การ์ดแยก ไม่อยู่ใน bubble (api.md §2.2.8)
+- 2026-10-21 · การ์ดโจทย์ใช้ `role="region"` ไม่ใช่ `group` เพื่อไม่ชนกับ test ของ progress card (AC-8) ที่ review แล้วซึ่งนับ `role="group"` · ตัดบรรทัด `problem` ใน chat-streaming AC-7 (May อนุมัติ)
 
 ## Next step
 
-ขั้น 3: `/spec-to-tests` (May อนุมัติตัดบรรทัด problem ใน chat-streaming AC-7 แล้ว)
+ขั้น 5: implement
 
 ## Waiting on
 
