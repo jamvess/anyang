@@ -77,7 +77,7 @@
 - **AC-3 (TM-04)** Given tutor ส่ง 2 ข้อความติดกัน When render Then ชื่อ "พี่ตาล" ปรากฏแค่ครั้งเดียวสำหรับสองข้อความนั้น
 - **AC-3b (TM-20 · เพิ่ม 2026-10-21 · PR #59)** ข้อความติดกันของคนเดิมรวมใต้ชื่อเดียวตาม AC-3 **เฉพาะเมื่อห่างจากข้อความก่อนหน้าไม่ถึง `MESSAGE_GROUP_GAP_MIN` (5 นาที · May เลือก · ค่าของ UI ไม่ใช่ learning model)** · ถ้าห่างตั้งแต่ 5 นาทีขึ้นไป ข้อความนั้นแสดงชื่อ avatar และเวลาของตัวเองใหม่ · Given ข้อความ user 20:47 แล้วข้อความ user ถัดไป 11:42 ของอีกวัน When render Then เห็นชื่อ "ปาล" 2 ครั้ง และเวลา 11:42 แสดงอยู่ (เจอตอนลองจริงใน PR #42)
 - **AC-3b-boundary (TM-20)** ข้อความ tutor 2 อันติดกัน ห่างกัน 4 นาที 59 วินาที → ชื่อปรากฏ 1 ครั้ง · ห่าง 5 นาทีพอดี → 2 ครั้ง · ห่าง 5 นาที 1 วินาที → 2 ครั้ง
-- **AC-4 (TM-04)** Given ข้อความ role `card` หรือ `system` When render Then ไม่มี bubble ของข้อความนั้น
+- **AC-4 (TM-04)** Given ข้อความ role `card` หรือ `system` When render Then ไม่มี bubble ของข้อความนั้น · ข้อความ role `card` ที่มี `card` แสดงเป็นการ์ดความคืบหน้า (ไม่ใช่ bubble) ตาม `progress-card.md` (2026-10-21)
 - **AC-5 (TM-04)** Given `days_left = 5` และ `prep_name = "Factorization"` When render Then แถบบนแสดง "Factorization" และ "สอบใน 5 วัน" และมีลิงก์ "ออกจากห้องติว" ไป `/`
 - **AC-6 (TM-06)** Given ข้อความ user ที่ `input_mode = image` และ `attachment_path = "sessions/s1/วิธีทำ.jpg"` When render Then แสดงกล่องรูปที่มีชื่อ "วิธีทำ.jpg"
 - **AC-6b (TM-06 · api.md v1.3)** Given ข้อความ user ที่ `input_mode = image`, `attachment_name = "วิธีทำ.jpg"` และ `attachment_path = "sessions/s1/3f2a9c1e-7b4d-4e8a-9c2f-1d5e6a7b8c90.jpg"` When render Then กล่องรูปแสดง "วิธีทำ.jpg" และไม่แสดง uuid · ชื่อไฟล์มาจาก `attachment_name` ก่อนเสมอ ถ้าเป็น `null` ใช้ส่วนท้ายของ `attachment_path` ตาม AC-6 (เพิ่ม 2026-10-21 · PR #42)
