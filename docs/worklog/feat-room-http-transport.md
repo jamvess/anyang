@@ -5,7 +5,7 @@
 | Owner | May |
 | Branch | `feat/room-http-transport` |
 | Checklist item | หน้าแชท P4-lite: อ่าน SSE ผ่าน `lib/sse.ts`, แสดงข้อความที่ไหลออกมา, render KaTeX, ส่งรูป |
-| Status | in progress · 2026-10-21 |
+| Status | paused · 2026-10-21 |
 
 ## Plan
 
@@ -26,6 +26,8 @@
 - ไม่ติ๊ก checklist ทั้งข้อ (ยังเหลือส่งรูปจริงเมื่อมี `/uploads` และทดสอบบน staging) · เพิ่ม sub-bullet ว่าทำส่วนไหนแล้ว
 
 ## Done today (2026-10-21)
+
+- (รอบ 2) merge main (PR #43, #46, #48) ไม่มี conflict · ขั้น 7–9: กล่องรูปใช้ `attachment_name` (chat-room-ui.md AC-6b, AC-6c) · test 103/103
 
 - spec `specs/features/tutor/room-http.md` · May ตัดสิน 4 เรื่อง และ approve
 - test จาก AC (23 ตัวใหม่) · May review · แก้ test helper 2 จุดที่ May อนุมัติ
