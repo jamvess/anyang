@@ -103,6 +103,8 @@ code .env
 | `DATABASE_URL` | ปุ่ม **Connect** → แท็บ Direct → **Session pooler** · แทน `[YOUR-PASSWORD]` ด้วย database password ที่ขอจากเจ้าของ repo ต่อหน้า |
 | `NEXT_PUBLIC_SUPABASE_URL` | ใช้ค่าเดียวกับ `SUPABASE_URL` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ใช้ค่าเดียวกับ `SUPABASE_ANON_KEY` |
+| `CORS_ALLOW_ORIGINS` | ไม่ต้องแก้ ใช้ค่าใน `.env.example` (`http://localhost:3000`) · origin ที่ browser เรียก API ได้ ต้องตรงทุกตัวอักษร คั่นด้วย `,` ห้ามมี `*` หรือ `/` ท้าย · ถ้ารันเว็บที่ port อื่นให้เพิ่มที่นี่ |
+| `CORS_ALLOW_ORIGIN_REGEX` | ไม่ต้องแก้ · ให้ Vercel preview ของ project เรา (`anyang-<hash>-anyang4.vercel.app`) เรียก API ได้ · URL branch alias (`anyang-git-…`) เรียกไม่ได้ · ว่าง = ปิด |
 
 บรรทัดอื่น (`AI_PROVIDER=fake`, GCP, Anthropic, Sentry) ปล่อยไว้ตามเดิมก่อน
 
