@@ -218,4 +218,4 @@ Use case หลัก 4 UC ของระบบ เล่าว่าผู้�
 
 - **wireframe (May · S4):** หน้าตาเมื่อกลับเข้าห้องหลังออกกลางคัน (E1) และหลังถูกปิดอัตโนมัติ (E2) · ข้อความแจ้ง mode เปลี่ยนใน S15 (R12) ถ้ายังไม่ได้แก้
 - **ai-orchestration.md (Jam · เสนอใน PR):** §2.2.2 ข้อ 1 สร้าง session ใหม่ทุกครั้ง → ใช้ session เดิมถ้ายังไม่ถูกปิด (E1) · §2.2.9 เขียนสรุปลงแชทตอนปิดอัตโนมัติ (E2) · §2.2.4 intent `question_off_scope` ตอนนี้บอกว่าเพิ่มลง "draft ใหม่ของ scope" → ตกลงในแชทถือว่ายืนยัน (A7) · §2.2.4 `command` เพิ่ม "unmute buddy" (A9)
-- **api.md (ไฟล์ร่วม · ตอนทำ feature):** `POST /exam-preps/{id}/sessions` คืน session เดิมที่ยังเปิดอยู่แทนการสร้างใหม่ (E1)
+- **api.md (ไฟล์ร่วม):** E1 ใช้ `GET /exam-preps/{id}/sessions/active` ที่เสนอไว้ใน api.md "รอตัดสิน" ข้อ 2 ได้เลย (มี session เปิดอยู่ → `GET /sessions/{id}` · ไม่มี → `POST /exam-preps/{id}/sessions`)
