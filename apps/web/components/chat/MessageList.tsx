@@ -88,9 +88,10 @@ export function MessageList({ messages, tutorName, buddyName, userName, streamin
                   </time>
                 </p>
               )}
-              {m.input_mode === "image" && m.attachment_path && (
+              {m.input_mode === "image" && (m.attachment_name || m.attachment_path) && (
                 <p className="my-1 inline-block rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-500">
-                  📷 {fileName(m.attachment_path)}
+                  {/* attachment_name first: the Storage path is a uuid (api.md v1.3 · AC-6b) */}
+                  📷 {m.attachment_name || fileName(m.attachment_path!)}
                 </p>
               )}
               {m.content && <MessageText content={m.content} streaming={m.id === streamingId} />}
