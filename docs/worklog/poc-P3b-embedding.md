@@ -70,7 +70,7 @@ spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผล�
 ## Next step
 
 1. Junior ตกลงส่วน `apps/api/` แล้ว (ดู Decisions 21 ต.ค.) ไม่ต้องแก้โค้ด
-2. ข้อ 5 (ส่วนสุดท้าย) ทำบน branch `poc/P3` ไม่ใช่ที่นี่: ใส่ตาราง P3b ใน report P3 (`specs/poc/reports/poc-P3.md`, PR #37) · ตัวเลขอยู่ใน `poc/P3/results/embed-gemini_gemini-embedding-2-d768.json`, `embed-gemini_gemini-embedding-2.json`, `embed-local_BAAI_bge-m3.json` (ดูได้ด้วย `git show origin/poc/P3b-embedding:<path>`) · ทำพร้อมผล flash ของ P3a
+2. ข้อ 5 (ส่วนสุดท้าย) ทำบน branch `poc/P3` ไม่ใช่ที่นี่: ใส่ตาราง P3b ใน report P3 (`specs/poc/reports/P3.md` ยังไม่มีไฟล์ · สร้างด้วย `/poc-report P3` บน `poc/P3` (PR #37)) · ตัวเลขอยู่ใน `poc/P3/results/embed-gemini_gemini-embedding-2-d768.json`, `embed-gemini_gemini-embedding-2.json`, `embed-local_BAAI_bge-m3.json` (ดูได้ด้วย `git show origin/poc/P3b-embedding:<path>`) · ทำพร้อมผล flash ของ P3a
 3. เมื่อ Junior approve และ report มีตาราง P3b แล้ว → `/work-done` บน branch นี้
 
 ## Waiting on
