@@ -252,8 +252,11 @@ async def test_AI02_model_override_replaces_the_tier_model():
 
 
 async def test_AI02_live_mode_refuses_placeholder_model_ids():
-    # config/ai.yaml keeps "TODO-..." model ids until the PoC spikes choose real ones.
-    gateway = Gateway.live(config=get_settings().ai, prompts_dir=REPO_PROMPTS, providers={})
+    # A tier whose model id is still "TODO-..." must be refused in live mode.
+    config = get_settings().ai
+    mid = config.tiers["mid"].model_copy(update={"primary": "vertex:TODO-gemini-mid"})
+    config = config.model_copy(update={"tiers": {**config.tiers, "mid": mid}})
+    gateway = Gateway.live(config=config, prompts_dir=REPO_PROMPTS, providers={})
 
     with pytest.raises(AIConfigError, match="TODO"):
         await gateway.call("extract_topics_local", TOPICS_INPUT, TopicsResult)

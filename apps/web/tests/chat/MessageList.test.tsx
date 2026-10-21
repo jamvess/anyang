@@ -1,6 +1,7 @@
 import { cleanup, render, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { MessageList, avatarInitial } from "@/components/chat/MessageList";
+import { MESSAGE_GROUP_GAP_MIN } from "@/components/chat/MessageList";
 import type { ChatMessage } from "@/components/chat/types";
 import room from "../fixtures/room/session-s15.json";
 
@@ -154,5 +155,53 @@ describe("MessageList", () => {
 
     const user = container.querySelector('[data-role="user"]') as HTMLElement;
     expect(within(user).getByText(/วิธีทำ\.jpg/)).toBeTruthy();
+  });
+});
+
+// Spec: chat-room-ui.md AC-3b, AC-3b-boundary (repeat the header after a long gap)
+describe("MessageList · time gap between the same speaker", () => {
+  const at = (iso: string, plusSeconds = 0) => new Date(Date.parse(iso) + plusSeconds * 1000).toISOString();
+  const T0 = "2026-10-20T13:00:00Z";
+  const gap = MESSAGE_GROUP_GAP_MIN * 60;
+
+  function tutorPair(secondsApart: number) {
+    return render(
+      <MessageList
+        messages={[
+          msg({ id: "a", role: "tutor", content: "ข้อแรก", created_at: at(T0) }),
+          msg({ id: "b", role: "tutor", content: "ข้อสอง", created_at: at(T0, secondsApart) }),
+        ]}
+        tutorName="พี่ตาล"
+        buddyName="มีน"
+      />,
+    );
+  }
+
+  it("TM20 a user message the next day after an old one shows the name again with its own time", () => {
+    const { getAllByText, container } = render(
+      <MessageList
+        messages={[
+          msg({ id: "old", role: "user", content: "ใช่ๆ", created_at: "2026-10-20T13:47:00Z" }),
+          msg({ id: "new", role: "user", content: "(x-7)(x+7)", created_at: "2026-10-21T04:42:00Z" }),
+        ]}
+        tutorName="พี่ตาล"
+        buddyName="มีน"
+        userName="ปาล"
+      />,
+    );
+
+    expect(getAllByText("ปาล")).toHaveLength(2);
+    const times = [...container.querySelectorAll("time")].map((t) => t.textContent);
+    expect(times).toEqual(["20:47", "11:42"]);
+  });
+
+  it.each([
+    [gap - 1, 1],
+    [gap, 2],
+    [gap + 1, 2],
+  ])("TM20 two tutor messages %i seconds apart show the name %i time(s)", (seconds, headers) => {
+    const { getAllByText } = tutorPair(seconds);
+
+    expect(getAllByText("พี่ตาล")).toHaveLength(headers);
   });
 });
