@@ -37,6 +37,7 @@ done:                                  # when a topic counts as passed (TM-16)
 park:                                  # stop and come back later (TM-19)
   max_problems_per_skill_per_day: 10   # [A] Beck & Gong 2013 wheel-spinning; ASSISTments daily limit 10
   max_fail_streak_per_skill: 3         # [C] = failed after 2 different teaching angles (AM-09). Validate after Alpha: % who pass after 3rd fail.
+  return_after_sessions: 1             # [C] parked topic re-enters the queue after >= N sessions (ai-orchestration §2.5.3). After Alpha: pass rate when back after 1 vs 2+ sessions.
 
 spacing:                               # spaced review of passed topics (TM-17, learning-model.md §3)
   first_gap_days: 1                    # [A] SM-2 first interval I(1) = 1 day
@@ -71,7 +72,7 @@ planner:                               # TM-18 (learning-model.md §5)
   interleave_every_n_practice: 4       # [C] Rohrer & Taylor 2007 support interleaving; ratio not standardised (Could)
 
 ocr:
-  confirm_below_confidence: 0.8        # [C] choose from precision–recall on the P1 golden set
+  always_confirm: true                 # PoC P1 (specs/poc/reports/P1.md): self-reported confidence cannot find misread lines (all 6 at 0.85–0.98, no threshold catches ≥ 95%) · S3: try a better signal (2 reads, extract_answer/v2)
 
 checker:
   sympy_timeout_seconds: 2             # [calc] budget so the verdict arrives within the TTFT p95 target (2 s)

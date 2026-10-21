@@ -6,13 +6,14 @@ YAML files (root CLAUDE.md rules 5 and 3). The models below mirror those files w
 silently ignored.
 """
 
+import re
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 # apps/api/app/settings.py -> repo root
 _REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -50,6 +51,7 @@ class DoneConfig(_Strict):
 class ParkConfig(_Strict):
     max_problems_per_skill_per_day: int = Field(ge=1)
     max_fail_streak_per_skill: int = Field(ge=1)
+    return_after_sessions: int = Field(ge=1)
 
 
 class SpacingConfig(_Strict):
@@ -87,7 +89,7 @@ class PlannerConfig(_Strict):
 
 
 class OcrConfig(_Strict):
-    confirm_below_confidence: float = Field(ge=0, le=1)
+    always_confirm: bool
 
 
 class CheckerConfig(_Strict):
@@ -147,6 +149,9 @@ class PurposeConfig(_Strict):
     timeout_s: float = Field(gt=0)
     prompt: str
     stream: bool = False
+    # Gemini 3 thinking level. Thinking tokens count inside max_tokens, so transcription
+    # purposes use "low" (PoC P3: one exam page used ~4,000 tokens by default, 396 on low).
+    thinking: Literal["low", "medium", "high"] | None = None
 
 
 class CircuitBreakerConfig(_Strict):
@@ -158,6 +163,8 @@ class CircuitBreakerConfig(_Strict):
 
 class GatewayConfig(_Strict):
     retries: int = Field(ge=0)
+    retry_backoff_seconds: float = Field(ge=0)
+    max_retry_wait_seconds: float = Field(ge=0)
     schema_retries: int = Field(ge=0)
     circuit_breaker: CircuitBreakerConfig
 
@@ -165,8 +172,9 @@ class GatewayConfig(_Strict):
 class GuardsConfig(_Strict):
     max_message_chars: int = Field(ge=1)
     rate_limit_messages_per_minute: int = Field(ge=1)
-    max_image_mb: float = Field(gt=0)
+    max_image_mb: int = Field(gt=0)  # api.md Room.limits sends it as an integer
     max_audio_seconds: float = Field(gt=0)
+    max_attachment_name_chars: int = Field(ge=1)  # grapheme clusters, data-model.md
     answer_leak_check: bool
 
 
@@ -218,6 +226,34 @@ class EnvSettings(BaseSettings):
 
     # --- App ---
     app_env: Literal["local", "test", "staging", "production"] = "local"
+    # CORS (room-http.md OQ6): exact origins, comma-separated, plus one regex for Vercel previews.
+    cors_allow_origins: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
+    cors_allow_origin_regex: str = ""
+
+    @field_validator("cors_allow_origins", mode="before")
+    @classmethod
+    def _split_origins(cls, value: object) -> object:
+        if isinstance(value, str):
+            return [origin.strip() for origin in value.split(",") if origin.strip()]
+        return value
+
+    @field_validator("cors_allow_origins")
+    @classmethod
+    def _check_origins(cls, origins: list[str]) -> list[str]:
+        # CORS compares origins exactly, so "*" or a trailing "/" is always a mistake here.
+        if not origins:
+            raise ValueError("CORS_ALLOW_ORIGINS must list at least one origin")
+        for origin in origins:
+            if "*" in origin or origin.endswith("/"):
+                raise ValueError(f"CORS origin must be exact, no '*' or trailing '/': {origin!r}")
+        return origins
+
+    @field_validator("cors_allow_origin_regex")
+    @classmethod
+    def _check_origin_regex(cls, pattern: str) -> str:
+        if pattern:
+            re.compile(pattern)
+        return pattern
 
     # --- Supabase ---
     supabase_url: str = ""
@@ -227,6 +263,8 @@ class EnvSettings(BaseSettings):
 
     # --- AI providers ---
     ai_provider: Literal["fake", "live"] = "fake"
+    ai_model_override: str = ""
+    gemini_api_key: SecretStr = SecretStr("")
     google_cloud_project: str = ""
     google_cloud_location: str = ""
     google_application_credentials: str = ""

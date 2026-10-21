@@ -103,8 +103,17 @@ code .env
 | `DATABASE_URL` | ปุ่ม **Connect** → แท็บ Direct → **Session pooler** · แทน `[YOUR-PASSWORD]` ด้วย database password ที่ขอจากเจ้าของ repo ต่อหน้า |
 | `NEXT_PUBLIC_SUPABASE_URL` | ใช้ค่าเดียวกับ `SUPABASE_URL` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ใช้ค่าเดียวกับ `SUPABASE_ANON_KEY` |
+| `CORS_ALLOW_ORIGINS` | ไม่ต้องแก้ ใช้ค่าใน `.env.example` (`http://localhost:3000`) · origin ที่ browser เรียก API ได้ ต้องตรงทุกตัวอักษร คั่นด้วย `,` ห้ามมี `*` หรือ `/` ท้าย · ถ้ารันเว็บที่ port อื่นให้เพิ่มที่นี่ |
+| `CORS_ALLOW_ORIGIN_REGEX` | ไม่ต้องแก้ · ให้ Vercel preview ของ project เรา (`anyang-<hash>-anyang4.vercel.app`) เรียก API ได้ · URL branch alias (`anyang-git-…`) เรียกไม่ได้ · ว่าง = ปิด |
 
 บรรทัดอื่น (`AI_PROVIDER=fake`, GCP, Anthropic, Sentry) ปล่อยไว้ตามเดิมก่อน
+
+**เฉพาะคนที่รัน PoC กับ Gemini จริง** (ตอนนี้คือ Jam ใน P3) ให้ใส่ 2 ค่านี้ ส่วนคนอื่นปล่อยว่างไว้ได้ · ไม่ต้องเปลี่ยน `AI_PROVIDER` เพราะ script ของ PoC สร้าง gateway แบบ live เอง · ส่วน test ใช้ fake provider เสมอ
+
+| ตัวแปร | ค่า |
+|---|---|
+| `GEMINI_API_KEY` | https://aistudio.google.com/apikey → **Create API key** → Copy · ⚠️ ถ้าเป็น free tier Google อาจเอาข้อมูลไปใช้ train ได้ จึงห้ามส่งข้อมูลของ user จริงหรือรูปลายมือของเพื่อนถ้ายังไม่ได้เปิด billing (AI-07) |
+| `AI_MODEL_OVERRIDE` | model ที่จะใช้แทน `TODO-...` ใน `config/ai.yaml` เช่น `gemini:gemini-3.8-flash` |
 
 **2) `apps/web/.env.local` ใช้กับ frontend**
 

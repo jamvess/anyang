@@ -82,11 +82,14 @@ threshold ใดก็ได้ในช่วง 0.51–0.66 ให้ผลเ
 Cepeda et al. (2008) พบว่าระยะห่างระหว่างการทบทวนที่ดีที่สุดขึ้นกับเวลาที่ต้องจำ: สอบอีก 7 วันควรห่าง 1 วัน, 35 วันควรห่าง 11 วัน สำหรับช่วงสั้นอัตราส่วนประมาณ **20%** ของเวลาที่เหลือ ส่วนการเพิ่มระยะห่างทีละขั้นใช้ค่าเริ่มต้นของ SM-2 (รอบแรก 1 วัน, easiness factor 2.5)
 
 ```
-gap_k = round(first_gap_days × growth_factor^(k−1))        // 1, 3 (2.5→3), 6, 16, ...
+gap_k = round_half_up(first_gap_days × growth_factor^(k−1))   // 1, 3 (2.5→3), 6, 16, ...
 ถ้า gap_k > max(min_gap_days, max_gap_ratio × days_left) → หยุดตั้งรอบใหม่
                                                      → หัวข้อนี้ถูกทวนอีกครั้งใน Final mode (วันก่อนสอบ)
 ทวนผิด → ระดับกลับเป็น developing และเริ่ม k = 1 ใหม่
 ```
+
+- `round_half_up(x) = floor(x + 0.5)` · ห้ามใช้ `round()` ของ Python เพราะปัดครึ่งไปเลขคู่ (`round(2.5) = 2`) จะได้ 1, 2, 6, ... ไม่ตรงกับตัวอย่าง
+- `days_left` = วันที่เหลือก่อนสอบ **ณ วันที่ตั้งรอบถัดไป** (วันที่หัวข้อผ่าน หรือวันที่ทวนรอบล่าสุด) ไม่ใช่ค่าคงที่ ณ วันที่ผ่าน · ตารางด้านล่างคำนวณแบบนี้ (ถ้านับ ณ วันที่ผ่าน แถว 30 วันจะได้ 1, 4, 10)
 
 **ตัวอย่าง** (นับวันจากวันที่หัวข้อผ่าน)
 
@@ -157,12 +160,13 @@ ratio     = need ÷ available
 |---|---|---|---|
 | max_problems_per_skill_per_day | 10 | [A] | Beck & Gong (2013) นิยาม wheel-spinning ว่าทำเกิน 10 ข้อแล้วยังไม่ถูก 3 ข้อติด และ ASSISTments ให้พักเมื่อทำครบ 10 ข้อในวันเดียวโดยยังไม่ mastery |
 | max_fail_streak_per_skill | 3 | [C] | ผิดครั้งที่ 3 = tutor สอนไปแล้ว 2 มุม (AM-09) แต่ไม่ได้ผล เป็นสัญญาณพื้นฐานขาด · หลัง Alpha วัดว่าคนที่ผิดครั้งที่ 3 แล้วทำต่อสุดท้ายผ่านกี่ % |
+| return_after_sessions | 1 | [C] | หัวข้อที่ Park ไว้กลับเข้า queue เมื่อผ่านไปอย่างน้อยกี่ session (ai-orchestration §2.5.3) · ค่าเดิมในเอกสาร v1.0 ยังไม่มีที่มา · หลัง Alpha: เทียบอัตราผ่านของหัวข้อที่กลับมาทำหลัง 1 กับ 2+ session |
 
 ## 8. ตัวเลขอื่นที่เกี่ยวข้อง
 
 | ค่า | ค่า | ป้าย | ที่มา / วิธี calibrate |
 |---|---|---|---|
-| OCR confirm_below_confidence | 0.8 | [C] | PoC P1: precision–recall บน golden set เลือกจุดที่จับบรรทัดอ่านผิดได้ ≥ 95% |
+| OCR always_confirm | true | policy (PoC P1) | P1: confidence ที่ model ให้ตัวเองแยกบรรทัดที่อ่านผิดไม่ได้ (บรรทัดผิดทั้ง 6 อยู่ที่ 0.85–0.98 · ไม่มี threshold ที่จับได้ ≥ 95%) จึงยืนยันทุกครั้ง (`specs/poc/reports/P1.md`) · S3 ลองสัญญาณอื่น เช่นอ่าน 2 รอบแล้วเทียบ |
 | Checker targets | verdict ≥ 95%, error type ≥ 80%, บรรทัดผิด ≥ 85% | requirement | ~20 คำตอบต่อ session → ผิดประมาณ 1 ครั้ง/session ซึ่งรับได้เพราะมี dispute flow |
 | SymPy timeout | 2 วินาที | [calc] | งบเวลาเพื่อให้ verdict มาก่อนเป้า TTFT p95 < 2 วินาที (เดิมติดป้าย [B] แต่ไม่ใช่มาตรฐานหรือค่า default ของ library) |
 | numeric_rel_tolerance | 0.01 | [C] | Should: แทนด้วยจำนวนเลขนัยสำคัญที่โจทย์กำหนด · P2 วัดว่ามีคำตอบทศนิยมที่ตัดสินผิดเพราะค่านี้กี่ข้อ |
@@ -178,21 +182,23 @@ ratio     = need ÷ available
 
 | เมื่อไหร่ | ค่าที่ปรับ | ข้อมูลที่ใช้ |
 |---|---|---|
-| PoC P1 (S2) | ocr.confirm_below_confidence | golden set ลายมือ |
+| PoC P1 (S2) · ทำแล้ว | ocr.always_confirm (เดิม confirm_below_confidence) | golden set ลายมือ 30 รูป |
+| P2 (S3) | สัญญาณแยกบรรทัดที่อ่านผิด เพื่อลดการยืนยัน | golden set ลายมือ + คำตอบ |
 | PoC P3 (S2) | stars.weight_other_instructor, three_star_min_r, grounding_chunks | ไฟล์วิชา pilot + label ของทีม |
 | PoC P4-lite (S3) | default_minutes_per_problem (ค่าแรก) | เวลาตอบใน demo |
 | หลัง Alpha | bkt.p_init, bkt.p_transit (pyBKT), max_fail_streak, planner ratios, buddy quota | ตาราง `attempts`, `planner_decisions`, `buddy_events` |
 
 ## 10. หัวข้อที่จะลงรายละเอียดต่อ (งานวิจัยรองรับ learning path และ progress tracking)
 
-รายการตั้งต้นสำหรับคุยกับทีมและอาจารย์ ยังไม่ได้สรุป
+รายการงานวิจัยที่ตรวจแล้ว (20 ต.ค. 2569) อยู่ใน [`docs/research/learning-path.md`](../../docs/research/learning-path.md) · ครอบคลุม 7 ด้านที่ MVP ใช้จริง: knowledge tracing, mastery learning, progress/readiness, learning path, ฝึกด้วยโจทย์ + feedback, spaced review และการพิสูจน์ผล · interleaving และการแบ่งเวลาเมื่อเวลาไม่พอ ไม่อยู่ใน MVP
 
-- การเรียงลำดับหัวข้อตาม prerequisite (learning path) และกรอบทฤษฎีที่รองรับ
-- Mastery learning: เกณฑ์ผ่านก่อนไปหัวข้อถัดไป
-- เปรียบเทียบโมเดล tracking: BKT, Performance Factors Analysis, Deep Knowledge Tracing ว่าตัวไหนเหมาะกับข้อมูลน้อยแบบโปรเจกต์เรา
-- Retrieval practice และ immediate feedback ที่รองรับการ "ให้โจทย์ก่อน สอนทันทีเมื่อผิด"
-- Spacing และ interleaving ในบริบทเตรียมสอบระยะสั้น
-- วิธีประเมินผล (evaluation) ว่าระบบช่วยให้ผู้เรียนดีขึ้นจริงในช่วง pilot
+ประเด็นที่งานวิจัยท้าทาย design ปัจจุบัน และรอคุยกับทีมและอาจารย์ (ยังไม่ได้เปลี่ยนสูตรหรือค่าใน config)
+
+- BKT ระดับหัวข้อ หรือระดับ skill (§1, §4)
+- BKT หรือ logistic model หลังมีข้อมูลจาก Alpha (§1)
+- เกณฑ์ mastery 0.95 หรือสูงกว่า (§1, §4)
+- ความพร้อม % ทำให้ผู้เรียนมั่นใจเกินไหม และ validate กับคะแนนสอบจริงยังไง (§5)
+- mastery ควรลดลงตามเวลาไหม (§3, §5)
 
 ## References
 

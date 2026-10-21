@@ -8,11 +8,22 @@ evals/
 │  ├─ raw/             # รูปจริง (gitignored ถ้าเป็นลายมือเพื่อน · เก็บใน Drive ทีม)
 │  └─ labels.jsonl
 ├─ answers/            # P2
-│  └─ labels.jsonl
+│  ├─ worksheet.md     # ใบงานที่คน label กรอก · ดู "ใบงาน" ด้านล่าง
+│  ├─ make_worksheet.py
+│  ├─ labels.jsonl     # สร้างจาก worksheet.md ด้วย make_worksheet.py --build
+│  └─ results/         # <prompt>.json ที่ run_eval.py เขียน
 ├─ topics/             # P3 · ดูเกณฑ์เลือกวิชาและกติกาไฟล์ใน topics/README.md
 │  └─ <subject>/       # raw/ (gitignored), sources.md, labels.json
-└─ run_eval.py         # uv run python evals/run_eval.py --purpose extract_answer --prompt v1
+└─ run_eval.py         # ให้คะแนน checker (check_answer) · ดู "การให้คะแนน" ด้านล่าง
 ```
+
+```bash
+uv run --project apps/api python evals/run_eval.py --purpose check_answer --prompt v1 \
+    --predictions <checker output>.jsonl
+uv run --project apps/api pytest evals/test_run_eval.py
+```
+
+ตอนนี้ `run_eval.py` ให้คะแนนจากไฟล์ prediction ยังไม่ได้เรียก checker เอง (รอ SymPy service ของ P2) · การให้คะแนนลายมือ (`extract_answer`) ยังอยู่ที่ `poc/P1/score.py`
 
 ## รูปแบบ label
 
@@ -129,6 +140,56 @@ evals/
 - `reference` คือเฉลยที่ถูก ถ้าโจทย์มาจากข้อสอบเก่าที่ไม่มีเฉลย ให้แก้เองแล้วให้อีกคนตรวจ
 - `image` ใส่ `null` ได้ถ้าเป็นคำตอบที่พิมพ์
 - error_type ใน JSON ใช้ตัวเล็กและ `_` แทนช่องว่าง (`wrong_method`, `no_answer`)
+
+### ใบงาน · `answers/worksheet.md`
+
+ไม่ต้องแก้ `labels.jsonl` เอง ให้กรอกใบงาน แล้วให้ script สร้างไฟล์และตรวจกติกาให้ · **คน label คือ May หรือ Junior ไม่ใช่ Jam** เพราะ Jam ทำ P2 (ทีมตกลง 21 ต.ค. · PR #51)
+
+1. ใบงานมี 50 หัวข้อ (`ans_001`–`ans_050`) · 30 ข้อแรกมาจากรูปลายมือที่ label `lines` ไว้แล้วใน `handwriting/` · 20 ข้อหลังเป็นคำตอบแบบพิมพ์ (`image: none`)
+2. **ข้อพิมพ์:** ใส่ `problem_id` (P01–P17 ในตารางของ `handwriting/problems.md`), `writer` และบรรทัดคำตอบแบบ ``1. `x(x^{2}-1)` `` ทีละบรรทัด · script ดึงโจทย์, เฉลย และ `answer_format` จาก `problem_id` เอง · เขียนคำตอบผิดให้ได้ตามโควตาด้านล่าง
+3. **ทุกข้อ:** กรอก `verdict`, `error_type`, `first_wrong_line`, `method` (ว่าง = `doc`) และ `labeled_by` ตามคู่มือข้างบน · ข้อไหนยังไม่กรอก `verdict` ถือว่ายังไม่ label
+4. รัน `uv run --project apps/api python evals/answers/make_worksheet.py --build` · ถ้ามีข้อไหนผิดกติกา script บอก id ของข้อนั้นและไม่เขียนไฟล์ · ถ้าผ่าน ได้ `labels.jsonl` เฉพาะข้อที่ label แล้ว จึงทำทีละส่วนได้
+5. **ห้ามเปิด** `handwriting/raw/copy-sheets/copy_sheets_key.md` (เฉลยว่ารูปไหนตั้งใจผิด) จนกว่าจะ label ครบ
+
+**โควตาคำตอบพิมพ์ 20 ข้อ** (รูปลายมือมีบรรทัดผิดแค่ ~8 รูป จึงเติมให้ error type ทุกแบบมีข้อมูล)
+
+| แบบ | จำนวน |
+|---|---|
+| `sign` | 3 |
+| `prerequisite` | 3 |
+| `wrong_method` | 3 |
+| `concept` (เป็น `incomplete` อย่างน้อย 1) | 3 |
+| `calculation` | 3 |
+| `no_answer` | 2 |
+| `correct_with_flaw` | 2 |
+| `correct` + `method: other` | 1 |
+
+สร้างใบงานใหม่: `uv run --project apps/api python evals/answers/make_worksheet.py` (ไม่เขียนทับถ้ามีใบงานอยู่แล้ว) · test: `uv run --project apps/api pytest evals/answers`
+
+### การให้คะแนน · `run_eval.py --purpose check_answer`
+
+เป้าหมายของทั้ง 3 ตัวมาจาก P2 ใน `specs/poc/README.md` (และ `ai-orchestration.md` §2.4.8) · ทีมตกลงนิยามเมื่อ 21 ต.ค. (PR #47)
+
+| metric | นับว่าตรงเมื่อ | ตัวหาร | เป้า |
+|---|---|---|---|
+| verdict accuracy | `verdict` ตรงกับ label ทั้ง 4 ค่า | ทุกข้อใน `labels.jsonl` | ≥ 95% |
+| error_type accuracy | `error_type` ตรงกับ label · ถ้า checker ไม่ตอบ (`null`) นับว่าไม่ตรง | ข้อที่ label มี verdict ไม่ใช่ `correct` | ≥ 80% |
+| first_wrong_line accuracy | `first_wrong_line` ตรงกับ label | ข้อที่ label มี `first_wrong_line` ไม่ใช่ `null` | ≥ 85% |
+
+- แสดง **verdict แบบ 2 ค่า** ประกอบด้วย คือดูแค่ "นับว่าถูก" (`correct`) หรือ "นับว่าผิด" (อีก 3 ค่า) ตามตาราง verdict ด้านบน · ใช้ดูประกอบ ไม่ใช่เป้า
+- ไม่นับข้อที่ label เป็น `null` ใน first_wrong_line เพราะถ้านับ `null` ตรง `null` ว่าถูก คะแนนจะสูงเกินจริง · ข้อที่ label เป็น `null` แต่ checker ชี้บรรทัด จะไปโผล่เป็น verdict ผิดอยู่แล้ว
+- ข้อที่มีใน label แต่ไม่มีใน prediction นับว่าไม่ตรงทุก metric ที่ข้อนั้นอยู่ในตัวหาร และแสดงจำนวนไว้ในผล
+- ถ้ามี id ใน prediction ที่ไม่มีใน label หรือมี id ซ้ำ script จะหยุดและแจ้ง error
+- ถ้าตัวหารของ metric ไหนเป็น 0 (เช่นไม่มีข้อไหนที่ label มีเลขบรรทัด) accuracy เป็น `null` และนับว่าไม่ผ่าน
+- ผ่านเมื่อทั้ง 3 ตัวถึงเป้า · ถ้าไม่ผ่าน script จะคืน exit code 1 (ไว้ใช้ใน CI ตาม §2.11)
+
+**ไฟล์ prediction** (JSONL 1 บรรทัด = 1 คำตอบ · field ตาม output ของ §2.4.5)
+
+```json
+{"id": "ans_001", "verdict": "incorrect", "error_type": "sign", "first_wrong_line": 1}
+```
+
+ใส่ field อื่นของ §2.4.5 มาด้วยได้ (`evidence`, `method`, `decided_by`, `confidence`) · script ไม่ใช้ในการให้คะแนน
 
 ## กฎ
 
