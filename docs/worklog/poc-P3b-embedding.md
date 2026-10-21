@@ -62,15 +62,17 @@ spec: `specs/poc/README.md` P3 (metric: recall@4 ของ retrieval · ผล�
 
 - 2026-10-21 · merge main (ไม่มี conflict) · check: ruff ผ่าน · api 172 · PoC 25 · ขอ Junior review ล่วงหน้าเฉพาะ `apps/api/` + `config/ai.yaml` ใน comment ของ PR #39 (PR ยังเป็น draft เพราะ report ยังไม่เสร็จ) · ถาม 3 เรื่อง: vector ผิดขนาด = error, cosine vs inner product (Gemini ไม่ normalize ต่ำกว่า 3072), tokens_in = 0
 
+- 2026-10-21 · **Junior ตกลง 3 ข้อในกลุ่มแชท** (review ล่วงหน้าของ #39): (1) vector ผิดขนาด = `AIProviderError` ไม่ตัดหรือเติมให้เอง (2) ใช้ cosine `<=>` ต่อ ตรงกับ HNSW `vector_cosine_ops` ใน `0001_init.sql:400` ไม่ต้อง normalize · Junior แก้ `data-model.md:363` เป็น "ยืนยันแล้ว (P3b)" เอง (3) `tokens_in = 0` ของ embed รับได้ช่วง free tier · ไม่ประมาณ ไม่เรียก count_tokens · AI-04 ของ embed ปิดตอนย้ายไป Vertex (comment ใน `gemini.py` ชี้ AI-04 อยู่แล้ว) · ต้องจดใน report P3 · Approve อย่างเป็นทางการตอนเอา #39 ออกจาก draft
+
 ## Next step
 
-1. ดูว่า Junior ตอบใน PR #39 แล้วหรือยัง (`gh pr view 39 --comments`) · ถ้าขอแก้ ให้เขียน test ก่อนแล้วแก้ตาม (ห้ามแก้ test ที่ Jam review แล้วโดยไม่ถาม)
+1. Junior ตกลงส่วน `apps/api/` แล้ว (ดู Decisions 21 ต.ค.) ไม่ต้องแก้โค้ด
 2. ข้อ 5 (ส่วนสุดท้าย) ทำบน branch `poc/P3` ไม่ใช่ที่นี่: ใส่ตาราง P3b ใน report P3 (`specs/poc/reports/poc-P3.md`, PR #37) · ตัวเลขอยู่ใน `poc/P3/results/embed-gemini_gemini-embedding-2-d768.json`, `embed-gemini_gemini-embedding-2.json`, `embed-local_BAAI_bge-m3.json` (ดูได้ด้วย `git show origin/poc/P3b-embedding:<path>`) · ทำพร้อมผล flash ของ P3a
 3. เมื่อ Junior approve และ report มีตาราง P3b แล้ว → `/work-done` บน branch นี้
 
 ## Waiting on
 
-Junior review ส่วน `apps/api/` + `config/ai.yaml` ใน PR #39
+ไม่มี (Junior จะ Approve อย่างเป็นทางการตอน #39 ออกจาก draft)
 
 ## Notes for next time
 
