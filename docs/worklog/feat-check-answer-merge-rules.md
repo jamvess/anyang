@@ -13,7 +13,7 @@
 - [x] 2. 🙋 Jam review spec + ตอบ open questions · 🙋 ขอ Junior ตกลงรูปแบบผลของ SymPy service (`app/math/`) ที่ merge rules จะรับ
 - [x] 3. 🤖 `/spec-to-tests` → test ใน `apps/api/tests/unit/` (red) · ใช้ผลของ SymPy ปลอม
 - [x] 4. 🙋 Jam review test (+ Junior เพราะอยู่ใน `apps/api/`)
-- [ ] 5. 🤖 `/implement-feature` จนเขียว
+- [x] 5. 🤖 `/implement-feature` จนเขียว
 
 ## Definition of done
 
@@ -31,13 +31,15 @@
 
 - 2026-10-21 · ข้อ 3: `apps/api/tests/unit/test_check_merge_rules.py` 16 test (25 case) ครบ AC-1 ถึง AC-15 · red: `ModuleNotFoundError: app.domain.checker` · API ที่ test กำหนด: `merge_check(answer_format, lines, sympy, llm) -> CheckResult` · `SympyResult`, `LlmResult`, `CheckResult` (field ตาม spec §3)
 
+- 2026-10-21 · ข้อ 5: `app/domain/checker.py` (`merge_check` + 3 dataclass) · 25/25 ผ่าน · red → green 1 รอบ · api ทั้งหมด 218 ผ่าน · **ตัดสินเองนอก spec 3 จุด (Jam ok · เขียนลง spec §2 แล้ว):** (1) SymPy ตัดสินไม่ได้และ LLM ไม่ให้ verdict → `incorrect` (2) `final_answer_correct` = true สำหรับ correct / correct_with_flaw / incomplete, false สำหรับ incorrect (3) `final_equal=None` ถือว่า SymPy ตัดสินไม่ได้
+
 ## Next step
 
-ข้อ 4: Jam + Junior review `apps/api/tests/unit/test_check_merge_rules.py` · ok แล้วไปข้อ 5 `/implement-feature` เขียน `apps/api/app/domain/checker.py`
+ครบทุกขั้นแล้ว · `/work-done` (reviewer Junior · ข้อ checklist P2 ไม่ติ๊ก เพิ่ม sub-bullet ว่า merge rules เสร็จ เหลือ `check_answer/v1`)
 
 ## Waiting on
 
-Jam + Junior review test
+ไม่มี
 
 ## Notes for next time
 

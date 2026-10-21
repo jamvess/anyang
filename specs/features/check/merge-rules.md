@@ -28,6 +28,12 @@ checker มี 3 ส่วน: SymPy ตัดสินถูก/ผิดแล
 
 ข้อ 1 และ 3–6 ใช้ `decided_by = sympy` และ `confidence = 1.0` (code และ SymPy ไม่เดา) · **ถ้า LLM ให้ verdict มาด้วยแล้วขัดกับ SymPy เรื่องถูก/ผิด ให้ใช้ผลของ SymPy** และตั้ง `disagreement = true` ให้คนเรียกไปบันทึก `checker_disagreements` (§2.4.5)
 
+**เพิ่มตอน implement (Jam ok 21 ต.ค.)**
+
+- SymPy ตัดสินไม่ได้ **และ** LLM ไม่ให้ verdict → `incorrect` (ไม่นับว่าถูกถ้าไม่มีใครยืนยัน · user แย้งได้ AM-12)
+- `final_answer_correct` = `true` เมื่อ verdict เป็น `correct`, `correct_with_flaw` หรือ `incomplete` (คำตอบสุดท้ายมีค่าเท่าเฉลย) · `false` เมื่อเป็น `incorrect`
+- `final_equal = null` (parse ได้และไม่ timeout) ถือว่า SymPy ตัดสินไม่ได้ เหมือนข้อ 2
+
 **นับ mastery** (`is_correct`): `true` เฉพาะ `correct` (รวม `method: other`) · `correct_with_flaw`, `incomplete`, `incorrect` เป็น `false` (§2.4.9 ข้อ 2)
 
 "อยู่ในรูปที่โจทย์สั่ง" ใช้เฉพาะ `factored` (เทียบ `factor_list` · §2.4.3) · `expression` และ `equation` ถือว่าอยู่ในรูปแล้วเสมอ
