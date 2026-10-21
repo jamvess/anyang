@@ -9,12 +9,12 @@
 
 ## Plan
 
-- [ ] 1. 🤖 `test_room_api_contract.py`: เพิ่ม `attachment_name` ในชุด field ของ `Message` (spec-driven จาก api.md v1.3 · Junior ดู diff ก่อนแก้) → red
-- [ ] 2. 🤖 `Message.attachment_name: str | None` ใน `app/models/room.py` + stub `app/stubs/room.json` → green
-- [ ] 3. 🤖 `guards.max_attachment_name_chars: 255` ใน `config/ai.yaml` + `GuardsConfig` (Junior บอกกลุ่มเรื่องไฟล์กลางเอง)
-- [ ] 4. 🤖 `supabase/migrations/0002_messages_attachment_name.sql` (ไม่แก้ 0001) · display-only ห้ามใช้ใน path ของ Storage
-- [ ] 5. 🤖 `data-model.md`: ERD รูป 3 เพิ่ม `attachment_path`, `attachment_name` · กฎการตัดชื่อ · สถานะ 5 ข้อของ P3a (รอผลทั้งหมด)
-- [ ] 6. 🤖 `npx supabase db reset` + `uv run pytest` + ruff ในเครื่อง (ไม่ `db push`)
+- [x] 1. 🤖 `test_room_api_contract.py`: เพิ่ม `attachment_name` ในชุด field ของ `Message` (spec-driven จาก api.md v1.3 · Junior ดู diff แล้ว ok) → red 5 ตัว
+- [x] 2. 🤖 `Message.attachment_name: str | None` ใน `app/models/room.py` + stub `app/stubs/room.json` → green
+- [x] 3. 🤖 `guards.max_attachment_name_chars: 255` ใน `config/ai.yaml` + `GuardsConfig` (Junior บอกกลุ่มเรื่องไฟล์กลางเอง)
+- [x] 4. 🤖 `supabase/migrations/0002_messages_attachment_name.sql` (ไม่แก้ 0001) · display-only ห้ามใช้ใน path ของ Storage
+- [x] 5. 🤖 `data-model.md`: ERD รูป 3 เพิ่ม `attachment_path`, `attachment_name` · กฎการตัดชื่อ · สถานะ 5 ข้อของ P3a (รอผลทั้งหมด)
+- [ ] 6. 🤖 ตรวจ migration ผ่าน CI แทนการรัน Docker ในเครื่อง (Junior เลือก): job `api-integration` บน PR #43 รัน `supabase start` ซึ่ง apply migration ทุกไฟล์ ต้องเขียว · pytest + ruff ในเครื่องผ่านแล้ว · ไม่ `db push`
 
 ## Definition of done
 
@@ -29,10 +29,12 @@
 - 2026-10-21 · (Junior) ชื่อยาวเกิน → ตัดให้สั้น **นับเป็น grapheme cluster ไม่ใช่ code point** (สระ/วรรณยุกต์ไทยต้องไม่ถูกตัดแยกจากพยัญชนะ) และเก็บนามสกุลไฟล์ไว้ · ไม่ตอบ 422
 - 2026-10-21 · (Junior) ข้อความใน `api.md` เรื่องการตัดชื่อไปรวมกับ PR api.md ของข้อ 5 (หลัง May เลือก A/B) ไม่แยก PR
 - 2026-10-21 · (Junior) PR นี้แก้ `Message` model + stub ด้วย เพราะ api.md v1.3 บน main มี `attachment_name` แล้ว stub จึงไม่ตรง spec และ `gen:api` ของ May จะขาด field · guard ตัดชื่อจริงรอ endpoint uploads ใน S3
+- 2026-10-21 · stub `m8` เปลี่ยน `attachment_path` จาก `sessions/s1/วิธีทำ.jpg` เป็น path แบบ uuid + `attachment_name: "วิธีทำ.jpg"` · เพราะ v1.3 บอกว่า path เป็น uuid · ค่า `image_path` ใน request body ของ test API ไม่ต้องแก้ (เป็นแค่ string) · ฝั่ง web (`MessageList.test.tsx:109`, fixture `session-s15.json`) ยังเอาชื่อจากท้าย path ซึ่งเป็นงานของ May
+- 2026-10-21 · (Junior) ค่า 255 ติดป้าย `[B]` เป็นเพดานการแสดงผลของชื่อไฟล์ที่ user เห็น นับเป็น grapheme cluster เก็บนามสกุลไว้ และไม่เคยใช้ใน path ของ Storage · **ไม่ใช่**ขีดจำกัดของระบบไฟล์ (ext4 นับ 255 byte ส่วน NTFS นับ 255 หน่วย UTF-16 แต่ตัวอักษรไทยใช้ 3 byte ใน UTF-8 และ `attachment_name` ไม่เคยลงระบบไฟล์)
 
 ## Next step
 
-ขั้น 1: แสดง diff ของ `test_room_api_contract.py` ให้ Junior ดูก่อนแก้
+ขั้น 6: ดู `gh pr checks 43` · ถ้า `api-integration` เขียว ติ๊กขั้น 6 แล้วไป `/work-done` · ถ้าแดง เปิด log ของ job ดูขั้น `supabase start` ว่า `0002` apply ผ่านไหม
 
 ## Waiting on
 

@@ -1,6 +1,10 @@
-# Data model (v1.1)
+# Data model (v1.2)
 
-SQL จริงอยู่ที่ `supabase/migrations/0001_init.sql` (ทดสอบรันบน PostgreSQL + pgvector แล้ว และทดสอบ RLS ว่า user A มองไม่เห็นข้อมูลของ user B) ไฟล์นี้อธิบายภาพรวมและเหตุผล
+SQL จริงอยู่ที่ `supabase/migrations/` เริ่มจาก `0001_init.sql` (ทดสอบรันบน PostgreSQL + pgvector แล้ว และทดสอบ RLS ว่า user A มองไม่เห็นข้อมูลของ user B) แล้วแก้ต่อด้วย migration ใหม่ทีละไฟล์ ไม่แก้ไฟล์เดิม ไฟล์นี้อธิบายภาพรวมและเหตุผล
+
+| Migration | เปลี่ยนอะไร |
+|---|---|
+| `0002_messages_attachment_name.sql` | เพิ่ม `messages.attachment_name` (api.md v1.3 · 2026-10-21) |
 
 ## กฎทั่วไป
 
@@ -11,6 +15,7 @@ SQL จริงอยู่ที่ `supabase/migrations/0001_init.sql` (ท�
 - งานเบื้องหลัง (ingestion) ใช้ service role ซึ่งข้าม RLS จึงต้องใส่ `tenant_id` เองทุกครั้ง
 - ค่า threshold ไม่อยู่ใน DB ทั้งหมดอยู่ใน `config/learning.yaml`
 - Storage path: `{tenant_id}/{exam_prep_id}/{material_id}` และตั้ง storage policy ให้อ่านได้เฉพาะ prefix ของ tenant ตัวเอง
+- `messages.attachment_name` คือชื่อไฟล์เดิมที่ user เห็น (เช่น "วิธีทำ.jpg") · ค่ามาจาก user จึงใช้แสดงผลอย่างเดียว **ห้ามใช้ประกอบ path ใน Storage** · `attachment_path` ตั้งชื่อด้วย uuid เสมอ · ความยาวสูงสุดคือ `config/ai.yaml` → `guards.max_attachment_name_chars` (นับเป็น grapheme cluster) ตรวจที่ API ไม่มี `CHECK` ใน SQL · ชื่อที่ยาวเกินให้ **ตัดให้สั้น ไม่ปฏิเสธ**: ตัดเป็น grapheme cluster (สระและวรรณยุกต์ไทยต้องติดกับพยัญชนะ ไม่ตัดตาม code point) และเก็บนามสกุลไฟล์ไว้ (2026-10-21 · ข้อความใน api.md จะตามมาพร้อม PR ของ api.md ข้อ 5 · guard จริงทำพร้อม endpoint uploads ใน S3)
 
 ## ERD
 
@@ -253,6 +258,8 @@ erDiagram
     text content
     jsonb card
     text input_mode "text | voice | image"
+    text attachment_path "uuid path in Storage"
+    text attachment_name "display only (0002)"
   }
   problems {
     uuid id PK
@@ -357,14 +364,16 @@ Golden sets ของการวัดผล AI ไม่อยู่ใน DB 
 
 ### สิ่งที่อาจต้องแก้ใน schema จาก P3a (จดไว้ 2026-10-20 · ยังไม่เขียน migration)
 
-อ่านจาก branch `poc/P3` (`apps/api/app/models/scope_ai.py`, `poc/P3/`, `docs/worklog/poc-P3.md`) · P3a ยังรันไม่ครบ (A6 ยังไม่ผ่าน schema) และ P3b (embedding) ยังไม่เริ่ม · ทุกข้อด้านล่างเป็นแค่ข้อเสนอ รอผลจริงก่อน
+อ่านจาก branch `poc/P3` (`apps/api/app/models/scope_ai.py`, `poc/P3/`, `docs/worklog/poc-P3.md`) · ทุกข้อด้านล่างเป็นแค่ข้อเสนอ รอผลจริงก่อน
 
-| # | ที่มาใน P3 | schema ตอนนี้ | ข้อเสนอ |
-|---|---|---|---|
-| 1 | A6 `merge_topics` คืน `sources` (ช่วงหน้าของแต่ละหัวข้อ) เพราะขั้น 5d ต้องใช้สร้าง `topic_chunks` และ SM-04 ต้องแสดงเลขหน้า | `topics` ไม่มีที่เก็บช่วงหน้า | เพิ่มตาราง `topic_sources (topic_id, material_id, page_from, page_to)` หรือ `topics.sources jsonb` · ต้องเลือกหลังรู้ว่าจะ query ช่วงหน้าไหม |
-| 2 | A4 `split_past_exam` คืน `points` (คะแนนของข้อ) | `past_exam_questions` ไม่มี column คะแนน | ถ้าสูตรดาวหรือ planner จะใช้คะแนน ให้เพิ่ม `points numeric` · ถ้าไม่ใช้ ไม่ต้องเพิ่ม |
-| 3 | A7 `map_questions` คืน `topic_id: null` พร้อม `note` (ข้อที่ map ไม่ได้ ตรงกับ `unmapped` ใน label) | `topic_id` เป็น null ได้แล้ว แต่ไม่มีที่เก็บเหตุผล | อาจเพิ่ม `map_note text` ให้หน้า scope แสดงว่าทำไมข้อนี้ไม่มีหัวข้อ |
-| 4 | A6 คืน `excluded_by_note` (หัวข้อที่ตัดออกเพราะ note ของผู้ใช้) | มี `topics.status = 'excluded'` แต่ไม่รู้ว่าใครตัด | น่าจะพอด้วย `status = 'excluded'` + บันทึกใน `scope_changes` (`actor = 'ai'`) · ไม่ต้องเพิ่ม column ถ้าตกลงแบบนี้ |
-| 5 | ingest ใช้ `vision_extract_pages` อ่านทั้งไฟล์ใน call เดียว และวัด % ตัวอักษรไทยเพื่อเลือกระหว่าง text layer กับ vision | `material_pages.extract_method` มี `vision` อยู่แล้ว · ไม่มีที่เก็บค่าคุณภาพข้อความ | ไม่ต้องแก้ ถ้าไม่ต้องการ debug ย้อนหลัง · ถ้าต้องการ ให้เพิ่ม `material_pages.text_quality numeric` |
+**ตรวจสถานะ 2026-10-21:** ยังไม่มีข้อไหนยืนยันได้ จึงยังไม่เขียน migration · A6 และ A7 ยังไม่เคยรันผ่าน (19 ต.ค. ได้ 503 แล้วโควตาหมด · 20 ต.ค. ได้ 503 ทั้ง 2 รอบ · 21 ต.ค. โควตารายวันของ `gemini-3.5-flash` หมด) · ยังไม่มี report P3a (PR #37) · P3b (PR #39 embedding) ไม่เกี่ยวกับ 5 ข้อนี้
+
+| # | ที่มาใน P3 | schema ตอนนี้ | ข้อเสนอ | สถานะ 2026-10-21 |
+|---|---|---|---|---|
+| 1 | A6 `merge_topics` คืน `sources` (ช่วงหน้าของแต่ละหัวข้อ) เพราะขั้น 5d ต้องใช้สร้าง `topic_chunks` และ SM-04 ต้องแสดงเลขหน้า | `topics` ไม่มีที่เก็บช่วงหน้า | เพิ่มตาราง `topic_sources (topic_id, material_id, page_from, page_to)` หรือ `topics.sources jsonb` · ต้องเลือกหลังรู้ว่าจะ query ช่วงหน้าไหม | รอผล · A6 ยังไม่เคยผ่าน schema |
+| 2 | A4 `split_past_exam` คืน `points` (คะแนนของข้อ) | `past_exam_questions` ไม่มี column คะแนน | ถ้าสูตรดาวหรือ planner จะใช้คะแนน ให้เพิ่ม `points numeric` · ถ้าไม่ใช้ ไม่ต้องเพิ่ม | รอผล · A4 ตรงกับ label 43/43 และคืน `points` จริง แต่ `poc/P3/stars.py` ไม่ใช้ `points` · ตัดสินตอนทำ `compute_importance` (P8-lite, S4) |
+| 3 | A7 `map_questions` คืน `topic_id: null` พร้อม `note` (ข้อที่ map ไม่ได้ ตรงกับ `unmapped` ใน label) | `topic_id` เป็น null ได้แล้ว แต่ไม่มีที่เก็บเหตุผล | อาจเพิ่ม `map_note text` ให้หน้า scope แสดงว่าทำไมข้อนี้ไม่มีหัวข้อ | รอผล · A7 ยังไม่ได้รัน |
+| 4 | A6 คืน `excluded_by_note` (หัวข้อที่ตัดออกเพราะ note ของผู้ใช้) | มี `topics.status = 'excluded'` แต่ไม่รู้ว่าใครตัด | น่าจะพอด้วย `status = 'excluded'` + บันทึกใน `scope_changes` (`actor = 'ai'`) · ไม่ต้องเพิ่ม column ถ้าตกลงแบบนี้ | รอผล · A6 ยังไม่เคยผ่าน schema |
+| 5 | ingest ใช้ `vision_extract_pages` อ่านทั้งไฟล์ใน call เดียว และวัด % ตัวอักษรไทยเพื่อเลือกระหว่าง text layer กับ vision | `material_pages.extract_method` มี `vision` อยู่แล้ว · ไม่มีที่เก็บค่าคุณภาพข้อความ | ไม่ต้องแก้ ถ้าไม่ต้องการ debug ย้อนหลัง · ถ้าต้องการ ให้เพิ่ม `material_pages.text_quality numeric` | รอตัดสิน · ingest ยืนยันว่าเกณฑ์ % ไทยแยกได้ (สแกน 0%, ชีท 48–85%) และ `extract_method` พอสำหรับการเลือกวิธี · จะเก็บค่าไว้ debug หรือไม่ ข้อมูล P3 ตอบไม่ได้ |
 
 ไม่กระทบ schema: `thinking` อยู่ใน `config/ai.yaml` · ค่า `stars.*` อยู่ใน `config/learning.yaml` · `q_no` แบบ `ก1.2` เก็บใน `text` ได้อยู่แล้ว
