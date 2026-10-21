@@ -14,6 +14,8 @@
 - รันทั้งชุดด้วย `gemini-3.5-flash-lite` (`AI_MODEL_OVERRIDE`, 7 call, 84 วินาที, schema ผ่านทุก call): A5 ได้ 5/5/10/9 หัวข้อ (flash ได้ 14/5/5/12) · A6 รวมเหลือ 10 หัวข้อ (label 27) · หัวข้อตรง 1/27 (recall 3.7%) · ★★★ pipeline 1/12 · map ข้อสอบตรง 2/43 · ≤ 1.34 นาที/ไฟล์ · ผลใน `poc/P3/results/gemini-3.5-flash-lite-a5v1/`
 - สรุป: lite หยาบเกินไปสำหรับ A5/A6 (ชีท 01 ที่ยาว 140 หน้าได้แค่ 5 หัวข้อ) · ★★★ ของ pipeline ต่ำเพราะหัวข้อไม่ตรง ไม่ใช่เพราะสูตรดาว (สูตรกับ map ของ May ยังได้ 83%)
 
+- (Jam เลือก) ปิด report ด้วยผลที่มี: P3b ผ่าน · P3a FAIL (lite หยาบ, flash A6 0/20 call ผ่าน schema ใน 5 รอบ) · fallback ปรับ prompt A5/A6 · tier mid = flash (A5 วัดแล้ว), main = flash ชั่วคราว รอวัดบน Vertex · ลองอีกรอบเดียว 16:00 น.
+- 14:05 น. ลอง `gemini-3.5-flash` A6 อีกรอบ: 503 ครบ 4 ครั้ง (รอ 30/60/90 วินาที) · โควตาวันนี้เหลือประมาณ 12
 - (13:10) merge main · ร่าง `specs/poc/reports/P3.md` ทั้ง P3a + P3b · ช่อง flash ทำเครื่องหมาย ⏳ · เสนอแก้ spec/config 4 ข้อ (ยังไม่แก้)
 
 ## Done (2026-10-20)
@@ -99,7 +101,9 @@
 
 ## Next step
 
-ขั้น 8 (ต่อ): หลัง 14:00 น. ของ 2026-10-21 ลอง `gemini-3.5-flash` อีกรอบ: `cd apps/api && uv run python ../../poc/P3/run.py --a5-prompt v1` (ใช้ cache A5 · A6 + A7 ×2 = 3 call · โควตาวันนี้เหลือ ~16) → `uv run python ../../poc/P3/score.py --a5-prompt v1` → เติมช่อง ⏳ ใน `specs/poc/reports/P3.md` (ตาราง P3a คอลัมน์ flash, §4, §5 tier mid/main) แล้วลบบรรทัด "ร่าง" ด้านบน · ถ้า A6 ล้มเพราะ skill id ผิดอีก ห้ามใช้ไฟล์ที่แก้มือมาให้คะแนน ให้เขียนลง report ว่า flash A6 ไม่ผ่าน schema 3/3 ครั้ง · ถ้า 503 ทั้งบ่าย ให้ถาม Jam ว่าจะปิด report ด้วยผลที่มีไหม
+1. Jam ตรวจ report P3 ที่ปิดแล้ว (`specs/poc/reports/P3.md` ไม่มี ⏳ แล้ว)
+2. 16:00 น. 2026-10-21 ลอง flash อีกรอบเดียว: `cd apps/api && uv run python ../../poc/P3/run.py --a5-prompt v1` → ถ้าผ่าน `score.py --a5-prompt v1` แล้วแทนคอลัมน์ flash ในตาราง P3a · ถ้า 503 อีก ไม่ต้องลองต่อ เพิ่ม "21 ต.ค. 16:00" ในรายการรอบของ report
+3. merge `poc/P3b-embedding` เข้า PR นี้หรือ merge #39 ก่อน แล้ว `/work-done` (Junior review · report แตะไฟล์ร่วมเฉพาะใน §5 ที่เป็นข้อเสนอ)
 
 ## Waiting on
 
