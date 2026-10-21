@@ -121,13 +121,18 @@ export function ChatRoom({
           current = null;
           setStreamingId(null);
           setTyping(false);
+        } else if (event === "progress_card") {
+          // Shown as a card; the tutor's next tokens start a new bubble (progress-card.md AC-9).
+          append(newMessage("card", null, { card: data as ChatMessage["card"] }));
+          current = null;
+          setStreamingId(null);
         } else if (event === "done") {
           done = true;
           break;
         } else if (event === "error") {
           break;
         }
-        // Other events (progress_card, problem, verdict, ...) are separate features.
+        // Other events (problem, verdict, ...) are separate features.
       }
     } catch {
       // A network failure is shown like an error event.
