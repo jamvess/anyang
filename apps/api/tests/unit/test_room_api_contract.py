@@ -147,6 +147,7 @@ def test_apimd_room_schemas_have_exact_fields(client: TestClient) -> None:
         "card",
         "input_mode",
         "attachment_path",
+        "attachment_name",
         "created_at",
     }
     assert set(schemas["Limits"]["properties"]) == {"max_message_chars", "max_image_mb"}
@@ -177,6 +178,7 @@ def test_apimd_room_message_enums(data: dict[str, str], ok: bool) -> None:
         "card": None,
         "input_mode": None,
         "attachment_path": None,
+        "attachment_name": None,
         "created_at": "2026-08-28T13:30:00Z",
         **data,
     }
