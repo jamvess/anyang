@@ -5,7 +5,7 @@
 | Owner | May |
 | Branch | `docs/wireframe-uc-updates` |
 | Checklist item | ไม่มีข้อตรงใน checklist · ทำตาม "ต้องเพิ่มใน spec หรือ wireframe (May · S4)" ของ UC-01 ถึง UC-04 ใน `docs/design/use-cases.md` (D6) |
-| Status | in progress · 2026-10-21 |
+| Status | ready for work-done · 2026-10-21 |
 
 ## Plan
 
@@ -14,7 +14,7 @@
 - [x] 3. 🙋 May เปิด wireframe ใน browser ดู S13, S21 แล้ว ok หรือบอกจุดแก้
 - [x] 4. 🤖 บทท้าย "ทางแยกและกรณีผิดพลาด" ประมาณ 8 หน้า: เช็คอีเมล + อีเมลซ้ำ (UC-01 A1, E2) · แปลง persona ไม่สำเร็จ (UC-01 E5) · ไฟล์อ่านไม่สำเร็จ (UC-02 E5) · การ์ด "กำลังอ่านไฟล์" ในหน้าหลัก (UC-02 E6) · กลับเข้าห้องกลางคัน (UC-03 E1) · ถูกปิดอัตโนมัติ (UC-03 E2) · รูปอ่านไม่ได้ (UC-04 E1)
 - [x] 5. 🙋 May review บทท้าย (หน้าตา + ข้อความ)
-- [ ] 6. 🤖 อัปเดต "ต้องเพิ่มใน wireframe" ใน `use-cases.md` ว่าทำแล้ว
+- [x] 6. 🤖 อัปเดต "ต้องเพิ่มใน wireframe" ใน `use-cases.md` ว่าทำแล้ว
 
 ## Definition of done
 
@@ -28,7 +28,7 @@
 
 ## Next step
 
-ขั้น 6: อัปเดต "ต้องเพิ่มใน spec หรือ wireframe" ใน use-cases.md
+รัน /work-done
 
 ## Waiting on
 
