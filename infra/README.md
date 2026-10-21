@@ -23,7 +23,8 @@ printf '%s' "<anthropic-key>"    | gcloud secrets create anthropic-api-key --dat
 
 - สร้าง Cloud Build trigger: push เข้า `main` → ใช้ `infra/cloudbuild.yaml`
 - ให้ service account ของ Cloud Build มีสิทธิ์ deploy Cloud Run และอ่าน secrets
-- Supabase project ใหม่ (เช่น `anyang-staging`): `npx supabase login` → `npx supabase link --project-ref <ref>` → `npx supabase db push` แล้วเปิด Custom Access Token hook ใน Dashboard (Authentication → Hooks) · `anyang-dev` ทำแล้ว
+- Supabase project ใหม่ (เช่น `anyang-staging`): `npx supabase login` → `npx supabase link --project-ref <ref>` → `npx supabase db push` แล้วเปิด Custom Access Token hook ใน Dashboard (Authentication → Hooks) แล้ว `npx supabase unlink` (ถ้าลืมว่ายัง link อยู่ `db push` ครั้งหน้าจะลงผิด project) · `anyang-dev` ทำแล้ว
+  - `anyang-staging` ทำแล้ว 21 ต.ค.: ref `sfapuygntxuelsxsgkay` · region `ap-southeast-1` (Singapore ใกล้ Cloud Run `asia-southeast1`) · `0001` + `0002` · RLS ครบ 27 ตาราง · hook เปิดแล้ว · `test_SA06_tenant_isolation` ผ่าน · Auth Site URL: `https://anyang-amber.vercel.app` (`anyang-dev` ยังเป็น `http://localhost:3000` เพราะใช้ local อย่างเดียว) · Auth Redirect URLs: `http://localhost:3000/**`, `https://anyang-*-anyang4.vercel.app/**` (glob ของ Supabase หลวมกว่า CORS regex · ต้องทบทวนตอนทำ `anyang-prod`)
 - ให้สิทธิ์ Jam เป็น Vertex AI User เพื่อใช้ Gemini บนเครื่องด้วย `gcloud auth application-default login` (ไม่ต้องดาวน์โหลด key file)
 
 ## Frontend · Vercel
@@ -32,7 +33,8 @@ printf '%s' "<anthropic-key>"    | gcloud secrets create anthropic-api-key --dat
 |---|---|
 | Production | https://anyang-amber.vercel.app |
 | Vercel project | `anyang` ใน team `anyang4` (Hobby, account ของ Jam) · root directory = `apps/web` |
-| Env (Production + Preview) | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` ชี้ Supabase `anyang-staging` (URL ไม่มี `/rest/v1/` ต่อท้าย, key เป็น `sb_publishable_...`) |
+| Env (Preview) | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` ชี้ Supabase `anyang-staging` (URL ไม่มี `/rest/v1/` ต่อท้าย, key เป็น `sb_publishable_...`) · architecture.md: staging = Vercel preview |
+| Env (Production) | รอ Jam ตรวจ: ถ้ายังชี้ `xztfzskxusykuqtpomrf` (ลบแล้ว) ต้องเปลี่ยน · เสนอชี้ `anyang-staging` ตัวใหม่จนกว่าจะมี `anyang-prod` |
 
 **ทำงานยังไง**
 
