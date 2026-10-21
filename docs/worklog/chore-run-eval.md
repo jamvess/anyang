@@ -13,7 +13,7 @@
 - [x] 2. 🤖 เขียน test `evals/test_run_eval.py` จากนิยามในข้อ 1 (red) · fixture labels/predictions เล็กๆ ไม่ใช้ AI จริง
 - [x] 3. 🙋 Jam review test
 - [x] 4. 🤖 เขียน `evals/run_eval.py` จน test ผ่าน: อ่าน `answers/labels.jsonl` + predictions → คะแนน 3 ตัวเทียบเป้า → `evals/answers/results/<prompt>.json` · exit code 1 เมื่อไม่ผ่านเป้า (ใช้ใน CI ภายหลัง)
-- [ ] 5. 🤖 อัปเดตตัวอย่างคำสั่งใน `evals/README.md` + ruff
+- [x] 5. 🤖 อัปเดตตัวอย่างคำสั่งใน `evals/README.md` + ruff
 
 ## Definition of done
 
@@ -35,7 +35,7 @@
 
 ## Next step
 
-ข้อ 5: เพิ่มใน `evals/README.md` ว่าตัวหารเป็น 0 → accuracy `null` และ FAIL · แก้ตัวอย่างคำสั่งในผังโฟลเดอร์เป็น `--purpose check_answer --prompt v1 --predictions ...` · เพิ่ม `answers/results/` ในผัง
+ครบทุกขั้นแล้ว · พิมพ์ `/work-done` เพื่อเปิด PR ให้ทีม review (เอา draft ออก)
 
 ## Waiting on
 

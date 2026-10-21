@@ -8,11 +8,20 @@ evals/
 │  ├─ raw/             # รูปจริง (gitignored ถ้าเป็นลายมือเพื่อน · เก็บใน Drive ทีม)
 │  └─ labels.jsonl
 ├─ answers/            # P2
-│  └─ labels.jsonl
+│  ├─ labels.jsonl
+│  └─ results/         # <prompt>.json ที่ run_eval.py เขียน
 ├─ topics/             # P3 · ดูเกณฑ์เลือกวิชาและกติกาไฟล์ใน topics/README.md
 │  └─ <subject>/       # raw/ (gitignored), sources.md, labels.json
-└─ run_eval.py         # uv run python evals/run_eval.py --purpose extract_answer --prompt v1
+└─ run_eval.py         # ให้คะแนน checker (check_answer) · ดู "การให้คะแนน" ด้านล่าง
 ```
+
+```bash
+uv run --project apps/api python evals/run_eval.py --purpose check_answer --prompt v1 \
+    --predictions <checker output>.jsonl
+uv run --project apps/api pytest evals/test_run_eval.py
+```
+
+ตอนนี้ `run_eval.py` ให้คะแนนจากไฟล์ prediction ยังไม่ได้เรียก checker เอง (รอ SymPy service ของ P2) · การให้คะแนนลายมือ (`extract_answer`) ยังอยู่ที่ `poc/P1/score.py`
 
 ## รูปแบบ label
 
@@ -144,6 +153,7 @@ evals/
 - ไม่นับข้อที่ label เป็น `null` ใน first_wrong_line เพราะถ้านับ `null` ตรง `null` ว่าถูก คะแนนจะสูงเกินจริง · ข้อที่ label เป็น `null` แต่ checker ชี้บรรทัด จะไปโผล่เป็น verdict ผิดอยู่แล้ว
 - ข้อที่มีใน label แต่ไม่มีใน prediction นับว่าไม่ตรงทุก metric ที่ข้อนั้นอยู่ในตัวหาร และแสดงจำนวนไว้ในผล
 - ถ้ามี id ใน prediction ที่ไม่มีใน label หรือมี id ซ้ำ script จะหยุดและแจ้ง error
+- ถ้าตัวหารของ metric ไหนเป็น 0 (เช่นไม่มีข้อไหนที่ label มีเลขบรรทัด) accuracy เป็น `null` และนับว่าไม่ผ่าน
 - ผ่านเมื่อทั้ง 3 ตัวถึงเป้า · ถ้าไม่ผ่าน script จะคืน exit code 1 (ไว้ใช้ใน CI ตาม §2.11)
 
 **ไฟล์ prediction** (JSONL 1 บรรทัด = 1 คำตอบ · field ตาม output ของ §2.4.5)
