@@ -1,35 +1,26 @@
-// Shapes of the tutor room data (spec: specs/features/tutor/chat-room-ui.md §3).
-// Message fields mirror the `messages` table. In S2 they come from a fixture,
-// in S3 from GET /sessions/{id}/messages.
+// Shapes of the tutor room data come from the API schema (apps/web/CLAUDE.md:
+// no hand-written request types · room-http.md §2). Regenerate with `pnpm gen:api`.
 
+import type { components } from "@/lib/api";
 import type { SSEEvent } from "@/lib/sse";
 
-export type MessageRole = "user" | "tutor" | "buddy" | "card" | "system";
+type Schemas = components["schemas"];
 
-export type ChatMessage = {
-  id: string;
-  role: MessageRole;
-  content: string | null;
-  input_mode: "text" | "voice" | "image" | null;
-  attachment_path: string | null;
-  created_at: string;
-};
+/**
+ * A message of the room (`GET /sessions/{id}` → `messages`). `card` and
+ * `attachment_name` are optional because messages built in the browser while
+ * streaming may not have them.
+ */
+export type ChatMessage = Omit<Schemas["Message"], "card" | "attachment_name"> &
+  Partial<Pick<Schemas["Message"], "card" | "attachment_name">>;
+
+export type MessageRole = ChatMessage["role"];
 
 /** Input limits from `config/ai.yaml` → `guards`, sent by the API with the room. */
-export type InputLimits = {
-  max_message_chars: number;
-  max_image_mb: number;
-};
+export type InputLimits = Schemas["Limits"];
 
-export type RoomData = {
-  prep_name: string;
-  days_left: number;
-  user_name: string;
-  tutor_name: string;
-  buddy_name: string | null;
-  limits: InputLimits;
-  messages: ChatMessage[];
-};
+/** Response of `GET /sessions/{id}`; its messages typed like the room's own. */
+export type RoomData = Omit<Schemas["Room"], "messages"> & { messages: ChatMessage[] };
 
 export type SendPayload = { text: string | null; image: File | null };
 

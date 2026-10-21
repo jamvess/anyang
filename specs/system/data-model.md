@@ -359,9 +359,9 @@ Golden sets ของการวัดผล AI ไม่อยู่ใน DB 
 
 ## สิ่งที่ยังรอผล PoC
 
-- มิติของ `chunks.embedding` (ตอนนี้ `vector(768)`) เปลี่ยนตาม embedding model ที่เลือกใน P3 ด้วย migration ใหม่
-- index แบบ HNSW ใช้ cosine distance ยืนยันอีกครั้งหลังเลือก model
-
+- มิติของ chunks.embedding ยืนยันแล้ว vector(768) ไม่ต้องทำ migration · P3b (PR #39): gemini-embedding-2 ที่ 768 มิติ (output_dimensionality) ได้ recall@4 95%
+- index แบบ HNSW ใช้ cosine distance (vector_cosine_ops) ยืนยันแล้ว · Gemini ไม่ normalize vector ที่ 768 มิติ จึงใช้ cosine ไม่ใช่ inner product (Junior + Jam ตกลง 21 ต.ค.)
+  
 ### สิ่งที่อาจต้องแก้ใน schema จาก P3a (จดไว้ 2026-10-20 · ยังไม่เขียน migration)
 
 อ่านจาก branch `poc/P3` (`apps/api/app/models/scope_ai.py`, `poc/P3/`, `docs/worklog/poc-P3.md`) · ทุกข้อด้านล่างเป็นแค่ข้อเสนอ รอผลจริงก่อน

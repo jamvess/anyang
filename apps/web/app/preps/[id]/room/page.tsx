@@ -1,14 +1,20 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import type { RoomData } from "@/components/chat/types";
-// S2–S3: fixed sample data from wireframe S15–S17 and a recorded reply.
-// Replaced by the session API once POST /sessions/{id}/messages exists.
-import sample from "@/tests/fixtures/room/session-s15.json";
-import { DemoRoom } from "./DemoRoom";
+import { Suspense } from "react";
+import { roomStrings as t } from "@/components/chat/strings";
+import { TutorRoom } from "@/components/chat/TutorRoom";
 
-// Read at build time: the page has no dynamic data, so Next prerenders it.
-const replySSE = readFileSync(join(process.cwd(), "tests", "fixtures", "sse", "tutor_reply.txt"), "utf8");
+type Params = Promise<{ id: string }>;
 
-export default function RoomPage() {
-  return <DemoRoom room={sample as RoomData} replySSE={replySSE} />;
+// The room loads from the API in the browser (spec: specs/features/tutor/room-http.md).
+// params are request data, so they are read inside Suspense (Next.js prerendering).
+export default function RoomPage({ params }: { params: Params }) {
+  return (
+    <Suspense fallback={<p className="p-8 text-sm text-zinc-600">{t.loading}</p>}>
+      <Room params={params} />
+    </Suspense>
+  );
+}
+
+async function Room({ params }: { params: Params }) {
+  const { id } = await params;
+  return <TutorRoom prepId={id} />;
 }
