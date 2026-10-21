@@ -5,7 +5,7 @@
 | Owner | May |
 | Branch | `feat/room-http-transport` |
 | Checklist item | หน้าแชท P4-lite: อ่าน SSE ผ่าน `lib/sse.ts`, แสดงข้อความที่ไหลออกมา, render KaTeX, ส่งรูป |
-| Status | in progress · 2026-10-21 |
+| Status | paused · 2026-10-21 |
 
 ## Plan
 
@@ -21,6 +21,13 @@
 - หน้าห้องติวเปิดได้จาก API stub (กลับเข้า session เดิม หรือสร้างใหม่) และส่งข้อความแล้วเห็นคำตอบ stream จาก `POST /sessions/{id}/messages`
 - test จาก acceptance criteria ผ่าน และ lint, typecheck, test, build ของ web ผ่าน
 - ไม่ติ๊ก checklist ทั้งข้อ (ยังเหลือส่งรูปจริงเมื่อมี `/uploads` และทดสอบบน staging) · เพิ่ม sub-bullet ว่าทำส่วนไหนแล้ว
+
+## Done today (2026-10-21)
+
+- spec `specs/features/tutor/room-http.md` · May ตัดสิน 4 เรื่อง และ approve
+- test จาก AC (23 ตัวใหม่) · May review · แก้ test helper 2 จุดที่ May อนุมัติ
+- โค้ด: `lib/httpTransport.ts`, `components/chat/TutorRoom.tsx`, prop `opening` ใน ChatRoom, `imagesEnabled` ใน Composer, page.tsx ใช้ API · ลบ DemoRoom
+- lint (0 error), typecheck, test 91/91, build ผ่าน
 
 ## Decisions
 
@@ -41,5 +48,11 @@
 Junior: เพิ่ม CORS ใน FastAPI ให้ `http://localhost:3000` (และ origin ของ Vercel) เรียก API ได้ (room-http.md OQ 6 · May เลือก 2026-10-21) · OQ 5 (ข้อความเปิดซ้ำไหม), OQ 7 (code ของ 404 ไม่พบการเตรียมสอบ)
 
 ## Notes for next time
+
+- API ยังไม่มี CORS (`grep -rn CORS apps/api/app` ไม่เจอ) · browser ที่ :3000 เรียก :8000 ไม่ได้ จะขึ้น "เปิดห้องติวไม่สำเร็จ"
+- ต้องตั้ง `NEXT_PUBLIC_API_URL=http://localhost:8000` ใน `apps/web/.env.local` ก่อนลองจริง (🙋 May ตั้งเอง · Claude ห้ามอ่าน .env)
+- stub ตรวจว่า path param เป็น uuid · ใช้ uuid จริงใน URL เช่น `/preps/11111111-1111-4111-8111-111111111111/room`
+- jsdom ไม่มี `Blob.stream()` · ใน test ใช้ `new Response(text)` สร้าง stream
+- lint warning 2 ตัว (`_` ใน httpTransport.test.ts) เป็นของ test ที่ review แล้ว ไม่ใช่ error
 
 - รูปยังส่งไม่ได้: ไม่มี stub `POST /sessions/{id}/uploads` และ api.md "รอตัดสิน" ข้อ 1 (Jam)
