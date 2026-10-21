@@ -152,14 +152,14 @@ def test_AM04_eval_missing_prediction_counts_as_mismatch_in_every_metric_it_belo
 
 
 def test_AM04_eval_prediction_with_unknown_id_is_an_error():
-    preds = perfect() + [prediction("ans_999", "correct", None, None)]
+    preds = [*perfect(), prediction("ans_999", "correct", None, None)]
 
     with pytest.raises(ValueError, match="ans_999"):
         score(LABELS, preds)
 
 
 def test_AM04_eval_duplicate_prediction_id_is_an_error():
-    preds = perfect() + [prediction("ans_001", "correct", None, None)]
+    preds = [*perfect(), prediction("ans_001", "correct", None, None)]
 
     with pytest.raises(ValueError, match="ans_001"):
         score(LABELS, preds)

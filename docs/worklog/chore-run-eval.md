@@ -12,7 +12,7 @@
 - [x] 1. 🙋 Jam ตัดสินนิยาม metric 3 ตัว (ตัวหาร, การนับ `null`) และรูปแบบไฟล์ prediction · Claude เขียนลง `evals/README.md` ให้
 - [x] 2. 🤖 เขียน test `evals/test_run_eval.py` จากนิยามในข้อ 1 (red) · fixture labels/predictions เล็กๆ ไม่ใช้ AI จริง
 - [x] 3. 🙋 Jam review test
-- [ ] 4. 🤖 เขียน `evals/run_eval.py` จน test ผ่าน: อ่าน `answers/labels.jsonl` + predictions → คะแนน 3 ตัวเทียบเป้า → `evals/answers/results/<prompt>.json` · exit code 1 เมื่อไม่ผ่านเป้า (ใช้ใน CI ภายหลัง)
+- [x] 4. 🤖 เขียน `evals/run_eval.py` จน test ผ่าน: อ่าน `answers/labels.jsonl` + predictions → คะแนน 3 ตัวเทียบเป้า → `evals/answers/results/<prompt>.json` · exit code 1 เมื่อไม่ผ่านเป้า (ใช้ใน CI ภายหลัง)
 - [ ] 5. 🤖 อัปเดตตัวอย่างคำสั่งใน `evals/README.md` + ruff
 
 ## Definition of done
@@ -30,13 +30,16 @@
 
 - 2026-10-21 · ชื่อ test ใช้ requirement ของสิ่งที่วัด: verdict = AM-04, first_wrong_line = AM-05, error_type = AM-06 · ส่วน command line ใช้ `ai_orchestration_2_11` · API ที่ test กำหนด: `score(labels, predictions) -> dict` และ `main(argv) -> int` (`--purpose --prompt --labels --predictions --out`)
 
+- 2026-10-21 · Jam ให้แก้ RUF005 ใน test 2 จุด (`[*perfect(), ...]`) · แก้แค่วิธีเขียน ผล test เหมือนเดิม
+- 2026-10-21 · ถ้าตัวหารเป็น 0 (เช่นไม่มีข้อไหนที่ label มีเลขบรรทัด) accuracy เป็น `null` และนับว่า FAIL · README ยังไม่ได้เขียนเรื่องนี้ · ข้อความใน console ใช้ ASCII เพราะ console Windows (cp874) พิมพ์ `·` ไม่ได้
+
 ## Next step
 
-ข้อ 3: Jam review `evals/test_run_eval.py` (20 test) · ถ้า ok ไปข้อ 4 เขียน `evals/run_eval.py` จนเขียว
+ข้อ 5: เพิ่มใน `evals/README.md` ว่าตัวหารเป็น 0 → accuracy `null` และ FAIL · แก้ตัวอย่างคำสั่งในผังโฟลเดอร์เป็น `--purpose check_answer --prompt v1 --predictions ...` · เพิ่ม `answers/results/` ในผัง
 
 ## Waiting on
 
-Jam review test
+ไม่มี
 
 ## Notes for next time
 
