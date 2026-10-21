@@ -11,8 +11,8 @@
 
 - [x] 1. 🤖 `/spec-feature`: เขียน `specs/features/tutor/room-http.md` (TM-20, TM-13, TM-06, TM-21) · หน้าห้องหา session ด้วย `GET /exam-preps/{id}/sessions/active` → `GET /sessions/{id}` หรือ `POST /exam-preps/{id}/sessions` · ส่งข้อความด้วย `POST /sessions/{id}/messages` (SSE) · ใช้ type จาก `lib/api-schema.ts`
 - [x] 2. 🙋 May review spec และตัดสินเรื่องที่ยังไม่ชัด (Claude ถามเป็นตัวเลือก)
-- [ ] 3. 🤖 `/spec-to-tests`: เขียน test ที่ fail จาก acceptance criteria
-- [ ] 4. 🙋 May review test
+- [x] 3. 🤖 `/spec-to-tests`: เขียน test ที่ fail จาก acceptance criteria
+- [x] 4. 🙋 May review test
 - [ ] 5. 🤖 `/implement-feature`: เขียนโค้ดจน test ผ่าน + lint, typecheck, build
 - [ ] 6. 🙋 May ลองจริงในเครื่อง: เปิด API + web แล้วคุยในห้องติว เห็นข้อความไหลจาก stub (Claude ให้ขั้นตอนทีละคลิก)
 
@@ -29,7 +29,7 @@
 
 ## Next step
 
-ขั้น 3: `/spec-to-tests specs/features/tutor/room-http.md`
+ขั้น 5: `/implement-feature specs/features/tutor/room-http.md`
 
 ## Waiting on
 

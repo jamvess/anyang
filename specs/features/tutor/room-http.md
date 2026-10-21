@@ -71,7 +71,7 @@
 **เปิดห้อง (TM-13)**
 
 - **AC-1 (TM-13)** Given `GET /exam-preps/P/sessions/active` ตอบ `200 {session_id:"S"}` และ `GET /sessions/S` ตอบ Room ที่มี 3 ข้อความ When เปิด `/preps/P/room` Then เห็นทั้ง 3 ข้อความ, หัวห้องแสดง `prep_name` และ "สอบใน N วัน" ตาม Room และไม่มี request `POST /exam-preps/P/sessions`
-- **AC-2 (TM-13)** Given active ตอบ `404 {error:{code:"no_active_session"}}`, `POST /exam-preps/P/sessions` ตอบ SSE ของ `session_start.txt` (`session {session_id:"S"}` → `progress_card` → `token tutor` ข้อความเปิด → `problem` → `done`) และ `GET /sessions/S` ตอบ Room ที่ไม่มีข้อความ When เปิดห้อง Then มี `POST /exam-preps/P/sessions` 1 ครั้ง, `GET /sessions/S` 1 ครั้ง, เห็นหัวห้องตาม Room และมี bubble tutor 1 อันที่มีข้อความเปิด โดยไม่มี bubble user
+- **AC-2 (TM-13)** Given active ตอบ `404 {error:{code:"no_active_session"}}`, `POST /exam-preps/P/sessions` ตอบ SSE ของ `room_session_start.txt` (`session {session_id:"S"}` → `progress_card` → `token tutor` ข้อความเปิด → `problem` → `done`) และ `GET /sessions/S` ตอบ Room ที่ไม่มีข้อความ When เปิดห้อง Then มี `POST /exam-preps/P/sessions` 1 ครั้ง, `GET /sessions/S` 1 ครั้ง, เห็นหัวห้องตาม Room และมี bubble tutor 1 อันที่มีข้อความเปิด โดยไม่มี bubble user
 - **AC-2b (TM-13)** Given stream เปิดห้องหยุดหลัง `session` และยังไม่มี token Then เห็นห้องพร้อมตัวบอกกำลังพิมพ์ และปุ่มส่งกดไม่ได้ · When ได้ token และ `done` Then ตัวบอกหายไปและปุ่มส่งกดได้ (เมื่อพิมพ์ข้อความ)
 - **AC-2c (TM-20)** Given ห้องที่เปิดจาก session ใหม่ "S" When ส่ง "ใช่ๆ" Then request ไปที่ `POST /sessions/S/messages`
 - **AC-3 (TM-13)** Given request ยังไม่ตอบ When เปิดห้อง Then เห็น "กำลังเปิดห้องติว…" และยังไม่มี composer
@@ -129,7 +129,7 @@
 
 **test เดิมที่ต้องเลิกใช้ (ต้องให้ May อนุมัติ เพราะ review แล้ว):** `RoomPage.test.tsx` describe "Room page (S3, fake transport)" (chat-streaming.md AC-21) render หน้าที่ใช้ fixture + fake transport ซึ่งถูกลบตามที่ May ตัดสิน · แทนด้วย AC-6 ใน `RoomPageHttp.test.tsx` · describe "ChatRoom (S2, fixture data)" ในไฟล์เดียวกันไม่แก้
 
-fixture ใหม่: `tests/fixtures/sse/session_start.txt` (คัดลอกจาก `apps/api/app/stubs/session_start.sse` เพื่อให้ตรงกับ stub)
+fixture ใหม่: `tests/fixtures/sse/room_session_start.txt` (คัดลอกจาก `apps/api/app/stubs/session_start.sse` เพื่อให้ตรงกับ stub · `session_start.txt` เดิมเป็นของ `sse.test.ts` ไม่มี event `session` จึงไม่แก้)
 
 ## 9. Out of scope
 
