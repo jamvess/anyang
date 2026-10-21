@@ -19,6 +19,7 @@ Part A ทำครั้งเดียวต่อเครื่อง ใช
 | backend `apps/api` (FastAPI, `/health`, settings) | ✅ |
 | frontend `apps/web` (Next.js, `Tex`, `lib/sse.ts`) | ✅ |
 | Supabase `anyang-dev`: ทุกตาราง + RLS + custom access token hook | ✅ |
+| Supabase `anyang-staging` (ใช้กับ Vercel preview): ทุกตาราง + RLS + custom access token hook | ✅ |
 | CI ทั้ง 3 job (`api`, `api-integration`, `web`) เขียว | ✅ |
 
 คนที่ตั้งเครื่องใหม่ทำแค่ **clone แล้วตั้งค่าเครื่องตัวเอง** ห้ามรัน `supabase init`, `supabase link`, `supabase db push`, `create-next-app` หรือ `uv init` ซ้ำ
