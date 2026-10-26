@@ -9,7 +9,7 @@
 
 ## Plan
 
-- [ ] 1. 🤖 ร่าง `learning-model.md` v1.2: §1 บอกข้อจำกัดว่า BKT ไม่รู้ความยาก · §4 ระดับเป้าตามดาวและ mode + เพดาน mastery ตามระดับยากสุดที่ทำถูกเอง (ค่า [calc] ผูกกับ `weak_below` และ `mastery_threshold`) · §5 readiness ใช้ mastery หลังเพดาน · §10 เพิ่ม KT-IDEM และ Elo เป็นทางเลือกหลัง Alpha
+- [x] 1. 🤖 ร่าง `learning-model.md` v1.2: §1 บอกข้อจำกัดว่า BKT ไม่รู้ความยาก · §4 ระดับเป้าตามดาวและ mode + เพดาน mastery ตามระดับยากสุดที่ทำถูกเอง (ค่า [calc] ผูกกับ `weak_below` และ `mastery_threshold`) · §5 readiness ใช้ mastery หลังเพดาน · §10 เพิ่ม KT-IDEM และ Elo เป็นทางเลือกหลัง Alpha
 - [ ] 2. 🤖 แก้ `config/learning.yaml` ให้ตรงกับ §4 (key ระดับเป้า + เพดาน) และเช็คว่า loader ใน `apps/api` ยังอ่านได้ (`uv run pytest`)
 - [ ] 3. 🤖 แก้ `ai-orchestration.md` §2.2.4 และ §2.5.2 ให้เงื่อนไข "ผ่าน" ตรงกับ §4
 - [ ] 4. 🙋 Jam review diff ทั้ง 3 ไฟล์ (ตัดสินค่าเป้าของ ★★ และ ★)
@@ -28,10 +28,11 @@
 
 - 2026-10-26 · ใช้ A (ประตูความยาก) + C (เพดาน mastery) ใน MVP · BKT มาตรฐานไม่คิดความยาก ตอบถูกโจทย์ง่าย 3 ข้อก็ถึง 0.95 · B (guess/slip ตามความยาก) แค่ชะลอ ไม่กัน · D (Elo/logistic) รอคุยกับอาจารย์และข้อมูลหลัง Alpha
 - 2026-10-26 · เก็บค่า BKT ดิบใน DB ใช้เพดานตอนคิดระดับ, ผ่าน, readiness · ทำโจทย์ถึงเป้าแล้วค่าจริงขึ้นทันที และมีข้อมูลดิบไว้ fit ทีหลัง
+- 2026-10-26 · (ร่าง รอ Jam ยืนยัน) เพดานขาด 1 ขั้น = (weak_below + mastery_threshold) ÷ 2 = 0.725 · ขาด ≥ 2 ขั้น = weak_below · คิดจาก `bkt.*` จึงไม่เพิ่ม key ใน config · Triage ใช้เป้า ★★ = 2 เหมือน Tight · "ผ่าน" เปลี่ยนจาก "จบด้วยโจทย์ระดับเป้า" เป็น "เคยทำถูกเองที่ระดับเป้า" (`d_max`)
 
 ## Next step
 
-ร่าง `specs/system/learning-model.md` §1, §4, §5, §10 ตามข้อ 1 ของแผน
+ขั้น 2: เพิ่ม `done.two_star_final_difficulty: 3` และ `done.one_star_final_difficulty: 2` ใน `config/learning.yaml` (version 1.2) + 2 field ใน `DoneConfig` ของ `apps/api/app/settings.py` (ไฟล์ของ Junior · ถามก่อนแก้) แล้วรัน `cd apps/api && uv run ruff check . && uv run pytest`
 
 ## Waiting on
 
