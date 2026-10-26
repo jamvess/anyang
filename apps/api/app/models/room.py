@@ -6,6 +6,9 @@ Field names follow api.md, not the database columns: the router maps
 
 Difficulty 1-3 and the problem purposes repeat the check constraints of
 `problems` in 0001_init.sql; they are schema rules, not learning-model thresholds.
+The same holds for the progress card topics: stars 0-3 (`topics.importance`), level
+(`topic_progress.level`, also `levels.show` in config/learning.yaml) and origin
+(`topics.origin`). Tests keep them in sync.
 """
 
 from datetime import datetime
@@ -87,13 +90,27 @@ class TokenEvent(_Api):
     text: str
 
 
+class ProgressTopic(_Api):
+    """One row of progress_card.topics (api.md v1.4).
+
+    `stars` is never null: topics whose importance is not computed yet are left out.
+    """
+
+    id: str
+    name: str
+    # 0-3 as in the DB until api.md "รอตัดสิน" item 4 decides whether 0-star topics show.
+    stars: int = Field(ge=0, le=3)
+    level: Literal["not_started", "weak", "developing", "passed"]
+    review_due: bool
+    origin: Literal["doc", "user"]
+
+
 class ProgressCardEvent(_Api):
     days_left: int
     passed: int
     total: int
     readiness: float
-    # api.md lists the topic fields but not their types yet.
-    topics: list[dict[str, Any]]
+    topics: list[ProgressTopic]
 
 
 class ProblemEvent(_Api):
