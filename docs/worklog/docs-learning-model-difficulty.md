@@ -10,7 +10,7 @@
 ## Plan
 
 - [x] 1. 🤖 ร่าง `learning-model.md` v1.2: §1 บอกข้อจำกัดว่า BKT ไม่รู้ความยาก · §4 ระดับเป้าตามดาวและ mode + เพดาน mastery ตามระดับยากสุดที่ทำถูกเอง (ค่า [calc] ผูกกับ `weak_below` และ `mastery_threshold`) · §5 readiness ใช้ mastery หลังเพดาน · §10 เพิ่ม KT-IDEM และ Elo เป็นทางเลือกหลัง Alpha
-- [ ] 2. 🤖 แก้ `config/learning.yaml` ให้ตรงกับ §4 (key ระดับเป้า + เพดาน) และเช็คว่า loader ใน `apps/api` ยังอ่านได้ (`uv run pytest`)
+- [x] 2. 🤖 แก้ `config/learning.yaml` ให้ตรงกับ §4 (key ระดับเป้า + เพดาน) และเช็คว่า loader ใน `apps/api` ยังอ่านได้ (`uv run pytest`)
 - [ ] 3. 🤖 แก้ `ai-orchestration.md` §2.2.4 และ §2.5.2 ให้เงื่อนไข "ผ่าน" ตรงกับ §4
 - [ ] 4. 🙋 Jam review diff ทั้ง 3 ไฟล์ (ตัดสินค่าเป้าของ ★★ และ ★)
 - [ ] 5. 🙋 บอกในแชทกลุ่ม: กระทบการ์ดความคืบหน้าของ May (ระดับและความพร้อม % จะต่ำลงถ้ายังไม่เคยทำโจทย์ระดับเป้า) และ TM-16, PM-03 ใน `requirements.md` (ไฟล์ร่วม) ต้องแก้ตาม · ขอ OK ก่อนแก้ `requirements.md`
@@ -32,13 +32,15 @@
 
 ## Next step
 
-ขั้น 2: เพิ่ม `done.two_star_final_difficulty: 3` และ `done.one_star_final_difficulty: 2` ใน `config/learning.yaml` (version 1.2) + 2 field ใน `DoneConfig` ของ `apps/api/app/settings.py` (ไฟล์ของ Junior · ถามก่อนแก้) แล้วรัน `cd apps/api && uv run ruff check . && uv run pytest`
+ขั้น 3: แก้ `specs/system/ai-orchestration.md` §2.2.4 "เงื่อนไข Done" และตาราง mode ใน §2.5.2 ให้ใช้ระดับเป้า + mastery_eff ตาม `learning-model.md` §4
 
 ## Waiting on
 
 ไม่มี
 
 ## Notes for next time
+
+- 2026-10-26 · Jam อนุญาตให้แก้ `apps/api/app/settings.py` (ของ Junior) เพิ่ม 2 field ใน `DoneConfig` · ต้องบอก Junior ใน PR
 
 - ค่าที่เสนอ: เป้า ★★★ = 3 · ★★ = 3 (ปกติ) / 2 (Tight) · ★ = 2 · เพดาน: ต่ำกว่าเป้า ≥ 2 ขั้น → `weak_below` · ต่ำกว่าเป้า 1 ขั้น → ต่ำกว่า `mastery_threshold` · ถึงเป้า → ไม่มีเพดาน
 - งานวิจัยที่ต้องเปิดอ่านก่อนอ้าง: Pardos & Heffernan (2011) KT-IDEM · Pelánek (2016) Elo rating in adaptive educational systems
