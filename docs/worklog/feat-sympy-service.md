@@ -15,7 +15,7 @@
 - [x] 4. 🤖 `/spec-to-tests` → `apps/api/tests/unit/test_sympy_service.py` แบบ table-driven (ต้องแดงก่อน implement)
 - [x] 5. 🙋 Jam review test: ชื่อ test ขึ้นต้นด้วย requirement ID และครบทุก AC ใน spec §4
 - [x] 6. 🤖 `/implement-feature` → `apps/api/app/math/sympy_service.py` (parse, เทียบรายบรรทัด, `factor_list`, `solveset`, subprocess + timeout จาก `checker.sympy_timeout_seconds`) จน test เขียว + ruff ผ่าน
-- [ ] 7. 🤖 รัน service กับคำตอบ 50 ข้อใน `evals/answers/labels.jsonl` นับว่า parse ได้กี่ข้อ, timeout กี่ข้อ และ `final_equal` ตรงกับ verdict ของ label กี่ข้อ · จดตัวเลขไว้ใน worklog ให้ P2 (ยังไม่ต่อ prompt `check_answer`)
+- [x] 7. 🤖 รัน service กับคำตอบ 50 ข้อใน `evals/answers/labels.jsonl` นับว่า parse ได้กี่ข้อ, timeout กี่ข้อ และ `final_equal` ตรงกับ verdict ของ label กี่ข้อ · จดตัวเลขไว้ใน worklog ให้ P2 (ยังไม่ต่อ prompt `check_answer`)
 
 ## Definition of done
 
@@ -39,7 +39,19 @@
 
 ## Next step
 
-ขั้น 7: เขียน script ชั่วคราว (scratchpad ไม่ commit) เรียก `evaluate_lines` กับ 50 ข้อใน `evals/answers/labels.jsonl` นับ parsed / undecided / `final_equal` ตรงกับ label (`final_answer_correct` จาก verdict) / first wrong line จาก `line_ok` ตรงกับ label · จดตัวเลขใน worklog
+ครบทุกขั้น · รอ Jam ตัดสินว่าจะเพิ่ม "ตัวอย่างค้านเชิงตัวเลข" ใน `_equal` ไหม (ดูหัวข้อผลกับ golden set) · ถ้าไม่เพิ่ม → `/work-done`
+
+## ผลกับ golden set 50 ข้อ (28 ต.ค. · `check_lines` จริงผ่าน `default_pool()` timeout 2 วินาที)
+
+| | ผล |
+|---|---|
+| SymPy ตัดสินได้ | 44/50 · parse ไม่ได้ 4 (ans_004, 041, 046 implicit dy/dx · ans_047 จบที่บรรทัด `f'(x)`) · ตัดสินไม่ได้ 2 (ans_034 `solveset` คืน ConditionSet · ans_042 `equals` ตอบ None) · timeout 0 |
+| `final_equal` ตรงกับ label | 44/44 |
+| verdict หลัง merge (ให้ LLM ปลอมใช้ error_type ของ label) | 44/44 |
+| first_wrong_line | 19/21 · พลาด ans_037, ans_038 (wrong_method: ตั้ง f′ หรือ f″ = 0 ผิดตัว ทุกบรรทัดเท่ากันทางคณิต) → merge rules ใช้บรรทัดที่ LLM ชี้ (ตอนวัดให้ LLM ไม่ชี้ จึงได้บรรทัดสุดท้าย) |
+| เวลาต่อข้อ | median 0.14 วินาที · max 0.47 วินาที |
+
+อีก 6 ข้อที่ SymPy ไม่ตัดสินไปที่ LLM (merge-rules ข้อ 2) · ถ้า LLM ถูกทั้ง 6 ข้อ verdict ได้ 50/50 แต่ถ้าผิดเกิน 3 ข้อจะต่ำกว่าเป้า P2 ที่ 47/50
 
 ## Waiting on
 
