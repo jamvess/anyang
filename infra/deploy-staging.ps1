@@ -39,6 +39,5 @@ Invoke-Gcloud run deploy $Service `
     --timeout=600 `
     --env-vars-file="$Root\infra\env\api-staging.yaml"
 
-$Url = gcloud run services describe $Service --project=$Project --region=$Region --format='value(status.url)'
-Write-Host "api-staging: $Url"
-Write-Host "check: $Url/health"
+# gcloud prints "Service URL: https://api-staging-<project number>.asia-southeast1.run.app" above.
+# status.url is the older random-hash URL of the same service, so it is not printed here.

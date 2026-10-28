@@ -15,7 +15,7 @@
 - [x] 2. 🙋 Jam สร้าง project `anyang-513006` (Free Trial) ผูก billing และตั้ง budget alert $50 · Junior เป็น Owner · `gcloud projects describe` ได้ `ACTIVE`
 - [x] 3. 🙋 `gcloud config set project anyang-513006` + เปิด API 5 ตัว (`run`, `cloudbuild`, `artifactregistry`, `secretmanager`, `aiplatform`) + สร้าง Artifact Registry `anyang` (docker, `asia-southeast1`)
 - [x] 4. 🤖 เขียน `infra/deploy-staging.ps1` (build image ด้วย Cloud Build → `gcloud run deploy api-staging` ที่ `asia-southeast1`) + `.gcloudignore` · `--allow-unauthenticated` (browser เรียกตรง) · env: `APP_ENV=staging`, `AI_PROVIDER=fake`, `CORS_ALLOW_ORIGINS=https://anyang-amber.vercel.app,http://localhost:3000` + `CORS_ALLOW_ORIGIN_REGEX` ของ preview (`.env.example`) · ใช้ตัวคั่นแบบกำหนดเองของ gcloud (`^@^`) เพราะค่า origins มี `,`
-- [ ] 5. 🙋 รันสคริปต์ → ได้ URL · 🤖 ตรวจ `/health`, `/docs` และ header CORS จาก origin ของ Vercel ด้วย `curl`
+- [x] 5. 🙋 รันสคริปต์ → ได้ URL · 🤖 ตรวจ `/health`, `/docs` และ header CORS จาก origin ของ Vercel ด้วย `curl`
 - [ ] 6. 🤖 อัปเดต docs: `infra/README.md` (Project ID, URL, วิธี deploy มือ, demo-day note), `docs/team/setup.md` (gcloud, `GOOGLE_CLOUD_PROJECT`), checklist · ร่างข้อความถึง Jam ให้ตั้ง `NEXT_PUBLIC_API_URL` (อ่านใน `apps/web/lib/httpTransport.ts` `apiUrl()`) ใน Vercel ทั้ง Production + Preview เป็น URL ของ Cloud Run แล้ว redeploy (ค่า `NEXT_PUBLIC_*` ฝังตอน build) · เขียนใน PR ว่าช่วง 3 ของ demo (`docs/design/demo-flow.md`) จะตอบจาก stub (`AI_PROVIDER=fake`) จนกว่า gateway ทาง Vertex จะเสร็จ
 - [ ] 7. (ถ้ามีเวลา) 🙋 + 🤖 Cloud Build trigger: merge → deploy `api-staging` · แก้ `infra/cloudbuild.yaml` ให้ตรงกับสคริปต์ (env CORS, ไม่ใช้ `anthropic-api-key`)
 
@@ -27,6 +27,8 @@
 - `infra/README.md` และ `setup.md` ตรงกับที่ตั้งจริง · ติ๊ก checklist ข้อ "สร้าง GCP project" + เขียน sub-bullet ใต้ข้อ Cloud Build trigger ว่ามีทางสำรองแล้ว
 
 ## Decisions
+
+- 2026-10-28 · ใช้ URL แบบมี project number `https://api-staging-659706857266.asia-southeast1.run.app` เป็นชื่อหลัก (คงที่และเดาได้จากชื่อ service) · ลบบรรทัดที่พิมพ์ `status.url` (URL แบบ hash เก่า) ออกจากสคริปต์ เพราะ gcloud พิมพ์ `Service URL` ให้อยู่แล้ว
 
 - 2026-10-28 · env ของ `api-staging` ใช้ `--env-vars-file` (`infra/env/api-staging.yaml`) แทน `--set-env-vars` แบบ `^@^` · เหตุผล: บน Windows `gcloud` มักรันผ่าน `gcloud.cmd` ซึ่ง cmd.exe ใช้ `^` เป็น escape character จึงกิน `^` ทั้งของตัวคั่นและของ regex ไป · YAML รับค่าที่มี `,` `^` `$` ได้ตรงๆ และไฟล์เดียวกันใช้กับ `cloudbuild.yaml` ได้ (checklist ก็เขียนไว้ว่าใช้ไฟล์แบบนี้ได้)
 - 2026-10-28 · `--max-instances=2` กันค่าใช้จ่ายบาน (trial credit) · `--concurrency=40` และ `--timeout=600` ใช้ค่าเดียวกับ `cloudbuild.yaml`
@@ -44,6 +46,7 @@
 
 ## Done today
 
+- 2026-10-28 · ขั้น 5: deploy ผ่าน · revision `api-staging-00001-tdk` · URL `https://api-staging-659706857266.asia-southeast1.run.app` (อีกชื่อของ service เดียวกัน: `https://api-staging-ws54gmdazq-as.a.run.app`) · ตรวจด้วย curl: `/health` 200, `/docs` 200, `openapi.json` มี 5 path, preflight จาก production / preview / localhost ได้ `access-control-allow-origin` ตรง origin, origin อื่นได้ 400 · `POST /sessions/{id}/messages` stream SSE ของ stub ครบจนถึง `event: done`
 - 2026-10-28 · ขั้น 4: `infra/deploy-staging.ps1` + `infra/cloudbuild-image.yaml` (build อย่างเดียว) + `infra/env/api-staging.yaml` + `.gcloudignore` · ตรวจแล้ว: สคริปต์ parse ผ่าน, env file โหลดเข้า `EnvSettings` ได้ค่าถูก, regex match preview แต่ไม่ match origin อื่น
 - 2026-10-28 · ขั้น 3: set project · เปิด API 5 ตัว (operation `acf.p2-659706857266-…` สำเร็จ) · สร้าง Artifact Registry `anyang` (docker, `asia-southeast1`) · project number `659706857266`
 - 2026-10-28 · resume: Jam สร้าง project แล้ว · เขียนแผนใหม่ (deploy มือก่อน trigger)
@@ -53,13 +56,15 @@
 
 ## Next step
 
-ขั้น 5: ให้ Junior รัน `gcloud meta list-files-for-upload` จาก repo root (ต้องไม่มี `.env`) แล้วรัน `powershell -ExecutionPolicy Bypass -File infra\deploy-staging.ps1` · ได้ URL แล้ว Claude ตรวจ `/health`, `/docs`, preflight CORS ด้วย `curl`
+ขั้น 6: อัปเดต `infra/README.md` หัวข้อ "Backend · Cloud Run `api-staging`" (Project ID, URL, วิธี deploy มือ, demo-day note) + `docs/team/setup.md` (gcloud, `GOOGLE_CLOUD_PROJECT=anyang-513006`) + ติ๊ก checklist · ร่างข้อความถึง Jam ให้ตั้ง `NEXT_PUBLIC_API_URL` ใน Vercel · ร่างข้อความใน PR #20 เรื่องช่วง 3 ของ demo ใช้ stub
 
 ## Waiting on
 
 - ไม่มี
 
 ## Notes for next time
+
+- curl จาก Git Bash ที่ส่ง JSON ภาษาไทยใน `-d '...'` ได้ 400 เพราะ encoding ของ argument บน Windows เพี้ยน ไม่ใช่ปัญหาของ API · ให้เขียน body ลงไฟล์แล้วใช้ `--data-binary @file` แทน (ได้ 200)
 
 - ถ้าไม่ได้ตั้ง `NEXT_PUBLIC_API_URL` ใน Vercel หน้าห้องติวจะไม่ได้เรียก localhost แต่ `apiUrl()` จะ throw `NEXT_PUBLIC_API_URL must be set` ตอนเปิดห้อง
 
