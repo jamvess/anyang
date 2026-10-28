@@ -9,10 +9,10 @@
 
 ## Plan
 
-- [ ] 1. 🤖 `poc/P4-lite/ttft.py`: สคริปต์ Python (httpx · รันผ่าน `uv` ของ `apps/api`) เปิด session ด้วย `POST /exam-preps/{id}/sessions` แล้วส่ง N ข้อความไป `POST /sessions/{id}/messages` ทีละข้อความ · วัดเวลาจนได้ event `token` แรก (TTFT) และเวลาจนได้ `done` · แยกครั้งแรก (อาจเป็น cold start ของ Cloud Run) ออกจากที่เหลือ · เขียนผลเป็น JSON ใน `poc/P4-lite/results/`
-- [ ] 2. 🤖 test ของส่วนที่ไม่ใช้เน็ต (หา token แรกใน SSE, คำนวณ p50/p95) ใน `poc/P4-lite/test_ttft.py` ชื่อขึ้นต้นด้วย `NFRP1`
-- [ ] 3. 🤖 รัน 50 ข้อความกับ `api-staging` (URL ใน `infra/README.md` · ไม่มี secret · AI จำลอง ไม่เสีย credit) แล้ว commit ผล
-- [ ] 4. 🤖 `poc/P4-lite/README.md`: วิธีรัน, ผล, ข้อจำกัด (stub ไม่ผ่าน `ai.call` ยังไม่มี LLM จริง → ตัวเลขนี้คือ overhead ของ Cloud Run + SSE เท่านั้น), สิ่งที่ต้องวัดต่อเมื่อเปิด Gemini
+- [x] 1. 🤖 `poc/P4-lite/ttft.py`: สคริปต์ Python (httpx · รันผ่าน `uv` ของ `apps/api`) เปิด session ด้วย `POST /exam-preps/{id}/sessions` แล้วส่ง N ข้อความไป `POST /sessions/{id}/messages` ทีละข้อความ · วัดเวลาจนได้ event `token` แรก (TTFT) และเวลาจนได้ `done` · แยกครั้งแรก (อาจเป็น cold start ของ Cloud Run) ออกจากที่เหลือ · เขียนผลเป็น JSON ใน `poc/P4-lite/results/`
+- [x] 2. 🤖 test ของส่วนที่ไม่ใช้เน็ต (หา token แรกใน SSE, คำนวณ p50/p95) ใน `poc/P4-lite/test_ttft.py` ชื่อขึ้นต้นด้วย `NFRP1`
+- [x] 3. 🤖 รัน 50 ข้อความกับ `api-staging` (URL ใน `infra/README.md` · ไม่มี secret · AI จำลอง ไม่เสีย credit) แล้ว commit ผล
+- [x] 4. 🤖 `poc/P4-lite/README.md`: วิธีรัน, ผล, ข้อจำกัด (stub ไม่ผ่าน `ai.call` ยังไม่มี LLM จริง → ตัวเลขนี้คือ overhead ของ Cloud Run + SSE เท่านั้น), สิ่งที่ต้องวัดต่อเมื่อเปิด Gemini
 - [ ] 5. 🙋 May เปิด demo link ใน Edge แล้วดูใน DevTools ว่า request ไป staging จริง (ขั้นละเอียดให้ตอนถึงข้อนี้)
 
 ## Definition of done
@@ -25,10 +25,11 @@
 ## Decisions
 
 - 2026-10-28 · วัดกับ AI จำลองก่อน เพราะ Junior ยังห้ามเปิด `AI_PROVIDER=live` บน staging (infra/README.md) · ตัวเลขนี้คือ overhead ของ infra ใช้แยกว่าเวลาที่เพิ่มขึ้นทีหลังมาจาก LLM
+- 2026-10-28 · ผล 50 ข้อความ ล้ม 0: TTFT p50 0.12 s, p95 0.15 s, เปิด session 0.13 s (ไม่เจอ cold start เพราะ instance ตื่นอยู่) · stub ส่งทั้งก้อน TTFT ≈ total · test offline 10 ตัวผ่าน · ruff ผ่าน
 
 ## Next step
 
-ขั้น 1: เขียน `poc/P4-lite/ttft.py`
+ขั้น 5: May เปิด demo link ใน Edge แล้วดู DevTools ว่าเรียก api-staging จริง
 
 ## Waiting on
 
