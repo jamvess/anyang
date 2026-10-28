@@ -75,6 +75,7 @@ feature นี้คือส่วนแรก อยู่ใน `apps/api/app
 ### 2.5 ตัดสินไม่ได้ และ timeout
 
 - การเทียบใดที่ SymPy ตอบไม่ได้แน่ชัด (เช่น `solveset` คืน `ConditionSet`) → `final_equal = null` และ `line_ok = []` · merge rules ถือว่า SymPy ตัดสินไม่ได้ แล้วใช้ผลของ LLM (merge-rules §2 "final_equal = null")
+- **ตัวอย่างค้านเชิงตัวเลข** (เพิ่มหลังรัน golden set 28 ต.ค. · Jam ok): ถ้า `simplify(a − b)` ไม่เป็น 0 และ `equals(0)` ของ SymPy ตอบ `None` ให้แทนตัวแปรด้วยจุดตัวอย่างบวกที่ไม่ใช่จำนวนเต็ม แล้วคำนวณเป็นตัวเลข (`chop` ตัด round-off) · ได้จำนวนจริงที่ไม่ใช่ 0 ที่จุดใดจุดหนึ่ง → ไม่เท่ากัน · ไม่มีจุดไหนพิสูจน์ได้ → ตัดสินไม่ได้เหมือนเดิม · ใช้พิสูจน์ "ไม่เท่า" เท่านั้น ไม่ใช้พิสูจน์ "เท่า" · golden set: ans_042 (`2e^{x^{2}}` เทียบเฉลย) ตัดสินได้
 - **`line_ok` ยาวเท่า `lines` เฉพาะเมื่อตัดสินได้** (`parsed`, ไม่ `timed_out`, `final_equal` ไม่เป็น `null`) · ตัดสินไม่ได้ → `[]` (§10 ข้อ 5)
 - งานทั้งข้อ (parse + เทียบทุกบรรทัด) รันใน **worker process แยก** พร้อม timeout `checker.sympy_timeout_seconds` จาก `config/learning.yaml` · timeout คิดต่อ 1 คำตอบ เพราะค่านี้ตั้งเป็น budget ให้ verdict มาทัน TTFT p95 · เกินเวลา → `timed_out = true`, `parsed = true`, `final_equal = null`, `final_in_form = null`, `line_ok = []` แล้วหยุด worker ตัวนั้นและเปิดใหม่
 - **ไม่เปิด process ใหม่ทุกครั้ง:** วัดแล้ว (28 ต.ค.) การเปิด Python + import SymPy ใช้ 1.9 วินาที เกือบเท่า budget · จึงใช้ worker ที่เปิดค้างไว้ (pool) จำนวน `checker.sympy_workers` (§10 ข้อ 4)
@@ -141,6 +142,7 @@ feature นี้คือส่วนแรก อยู่ใน `apps/api/app
 - **AC-20 (AM-04)** Given ans_004 (implicit dy/dx: บรรทัดเป็นสมการของ x, y ใน `expression` format) When ตรวจ Then `parsed=False` (ไม่รองรับ · §10 ข้อ 2)
 - **AC-28 (AM-04)** Given `equation` และบรรทัด `f'(x)=3x^{2}-6x-9=0` When ตรวจ Then `parsed=False`
 - **AC-21 (AM-04)** Given การเทียบที่ SymPy ตอบไม่ได้แน่ชัด (เช่น solution set เป็น `ConditionSet`) When ตรวจ Then `parsed=True`, `final_equal=None`, `line_ok=[]`
+- **AC-30 (AM-05)** Given ans_042 (`equals` ของ SymPy ตอบ `None` กับ `2e^{x^{2}}`) When ตรวจ Then `final_equal=False`, `line_ok=[True, False, True, True]` · Given ค่าที่เท่ากันจริง (`\ln(2)+\ln(3)` เทียบ `\ln(6)`) Then `final_equal` ไม่เป็น `False`
 - **AC-22 (AM-06 ส่งต่อ)** Given `lines=[]` When ตรวจ Then `parsed=False`, `line_ok=[]` และไม่เรียก worker
 
 **timeout (`checker.sympy_timeout_seconds`)**
@@ -172,7 +174,7 @@ feature นี้คือส่วนแรก อยู่ใน `apps/api/app
 
 | Test | ระดับ | ครอบคลุม AC |
 |---|---|---|
-| `tests/unit/test_sympy_service.py` แบบ table-driven (`parametrize`) ใช้ ans_xxx จาก golden set เป็น fixture | unit | AC-1 ถึง AC-22, AC-25 ถึง AC-28 |
+| `tests/unit/test_sympy_service.py` แบบ table-driven (`parametrize`) ใช้ ans_xxx จาก golden set เป็น fixture | unit | AC-1 ถึง AC-22, AC-25 ถึง AC-28, AC-30 |
 | `tests/unit/test_sympy_service_timeout.py` งานที่ค้าง + timeout เล็ก | unit | AC-23, AC-24, AC-29, AC-boundary |
 | รัน service กับ 50 ข้อใน `evals/answers/labels.jsonl` นับ parse ได้, timeout, `final_equal` ตรงกับ label (worklog ขั้น 7) | eval | ทั้งหมด (ตัวเลขตั้งต้นให้ P2) |
 

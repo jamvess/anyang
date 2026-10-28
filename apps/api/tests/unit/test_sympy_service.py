@@ -377,3 +377,23 @@ def test_AM04_result_feeds_merge_rules() -> None:
     )
 
     assert merged.verdict == row["verdict"] == "incomplete"
+
+
+# --- numeric counterexample (spec §2.5, added after the golden-set run) -------------------
+
+
+def test_AM05_numeric_counterexample_decides_when_sympy_equals_is_unsure() -> None:
+    # AC-30: ans_042, line 2 multiplies the derivatives; SymPy's equals() returns None for
+    # 2e^{x^2} vs the reference, but the values differ at a sample point.
+    result = run("ans_042")
+
+    assert result.parsed is True
+    assert result.final_equal is False
+    assert result.line_ok == [True, False, True, True]
+
+
+def test_AM04_numeric_check_never_turns_an_identity_into_unequal() -> None:
+    # AC-30: equal values stay equal (or undecided), never False.
+    result = evaluate_lines("expression", r"\ln(6)", [r"\ln(2)+\ln(3)"])
+
+    assert result.final_equal is not False

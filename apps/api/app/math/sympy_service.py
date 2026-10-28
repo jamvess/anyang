@@ -166,8 +166,29 @@ def _equal(a: sympy.Basic, b: sympy.Basic) -> bool:
         return True
     same = difference.equals(0)
     if same is None:
+        if _nonzero_somewhere(difference):
+            return False
         raise _Undecided
     return bool(same)
+
+
+# Positive, non-integer sample points: away from the usual poles (x = 0, ±1, 2) and inside the
+# domain of ln and square roots. They prove inequality only; equality still needs simplify.
+_SAMPLE_POINTS = (sympy.Rational(3, 7), sympy.Rational(11, 5), sympy.Rational(29, 3))
+
+
+def _nonzero_somewhere(difference: sympy.Expr) -> bool:
+    """A counterexample: at some sample point the difference is a real number that is not 0
+    within the evaluation precision (``chop`` drops round-off, so an identity never counts)."""
+    symbols = difference.free_symbols
+    for point in _SAMPLE_POINTS:
+        try:
+            value = sympy.N(difference.subs({s: point for s in symbols}), chop=True)
+        except Exception:  # pole, unevaluated limit, ...
+            continue
+        if value.is_real and value.is_finite and value != 0:
+            return True
+    return False
 
 
 def _decidable(solutions: sympy.Set) -> sympy.Set:

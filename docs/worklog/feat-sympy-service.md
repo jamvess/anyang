@@ -33,25 +33,26 @@
 - 2026-10-28 · Junior OK 3 เรื่องใน spec §11 · เพิ่ม `antlr4-python3-runtime==4.11`, `checker.sympy_workers` (`learning.yaml` 1.3 + `CheckerConfig`), merge-rules §3 `line_ok = []`
 - 2026-10-28 · test กำหนดชื่อภายในเพิ่มจาก spec §3: `evaluate_lines(answer_format, reference, lines)` (ฟังก์ชันที่ worker รัน · test กฎเทียบได้โดยไม่เปิด process), `SympyWorkerPool(workers=n)` + `await pool.run(fn, *args, timeout_s=)` + `close()`, `SympyTimeoutError`, `default_pool()` (ใช้ร่วมกัน), `check_lines(..., pool=None)` · ใน repo ยังไม่มี fixture `LearningConfig` จึงอ่านค่าจาก `get_settings().learning.checker`
 - 2026-10-28 · implement: red → green 2 รอบ (1: ยังไม่มีโมดูล → 34/36 · 2: antlr อ่าน `x(x^{2}-1)` เป็นฟังก์ชัน → ใส่ `\cdot` ระหว่างตัวอักษรเดียวกับ `(` → ผ่านหมด) · เพิ่มเป็น spec §2.1 ข้อ 5 · `factored` "อยู่ในรูป" = ทุกตัวประกอบที่มีตัวแปรมี `factor_list` = (±1, [ตัวเดียว ยกกำลัง 1]) ทำให้ `3x+6` ไม่อยู่ในรูปตาม AC-12 · ตัวแปร = free symbol เดียวของเฉลยและทุกบรรทัดรวมกัน (spec §2.2 ตามตัวอักษรจะทำให้ AC-27 ที่ไม่มี symbol เลย parse ไม่ได้ จึงต้องใช้ตัวแปรเฉพาะตอนจำเป็น: อนุพันธ์และ solveset)
+- 2026-10-28 · (Jam ok ตัวเลือก 1) เพิ่มตัวอย่างค้านเชิงตัวเลขใน `_equal` เมื่อ `equals` ตอบ None · ใช้พิสูจน์ "ไม่เท่า" เท่านั้น · spec §2.5 + AC-30 · red → green รอบที่ 3 · golden set 44 → 45/50
 - 2026-10-28 · บรรทัด 1 เทียบกับเฉลยแทนตัวโจทย์ เพราะ `problems.text` เป็นภาษาไทยปน parse ไม่ได้ และ AM-11 รับประกันว่าค่าโจทย์ = เฉลย
 - 2026-10-28 · ใช้ worker ที่เปิดค้างไว้ ไม่เปิด process ใหม่ทุกครั้ง · วัดแล้วเปิด Python + import SymPy ใช้ 1.9 วินาที (budget 2 วินาที)
 - 2026-10-28 · แทน symbol `e` ด้วย `E` · ทดลองแล้ว parser อ่าน `e^{x}` เป็นตัวแปร ทำให้ P16 แก้ไม่ได้
 
 ## Next step
 
-ครบทุกขั้น · รอ Jam ตัดสินว่าจะเพิ่ม "ตัวอย่างค้านเชิงตัวเลข" ใน `_equal` ไหม (ดูหัวข้อผลกับ golden set) · ถ้าไม่เพิ่ม → `/work-done`
+ครบทุกขั้น · Jam review test ใหม่ 2 ตัว (AC-30) แล้วรัน `/work-done`
 
-## ผลกับ golden set 50 ข้อ (28 ต.ค. · `check_lines` จริงผ่าน `default_pool()` timeout 2 วินาที)
+## ผลกับ golden set 50 ข้อ (28 ต.ค. · `check_lines` จริงผ่าน `default_pool()` timeout 2 วินาที · หลังเพิ่มตัวอย่างค้านเชิงตัวเลข)
 
 | | ผล |
 |---|---|
-| SymPy ตัดสินได้ | 44/50 · parse ไม่ได้ 4 (ans_004, 041, 046 implicit dy/dx · ans_047 จบที่บรรทัด `f'(x)`) · ตัดสินไม่ได้ 2 (ans_034 `solveset` คืน ConditionSet · ans_042 `equals` ตอบ None) · timeout 0 |
-| `final_equal` ตรงกับ label | 44/44 |
-| verdict หลัง merge (ให้ LLM ปลอมใช้ error_type ของ label) | 44/44 |
-| first_wrong_line | 19/21 · พลาด ans_037, ans_038 (wrong_method: ตั้ง f′ หรือ f″ = 0 ผิดตัว ทุกบรรทัดเท่ากันทางคณิต) → merge rules ใช้บรรทัดที่ LLM ชี้ (ตอนวัดให้ LLM ไม่ชี้ จึงได้บรรทัดสุดท้าย) |
-| เวลาต่อข้อ | median 0.14 วินาที · max 0.47 วินาที |
+| SymPy ตัดสินได้ | 45/50 · parse ไม่ได้ 4 (ans_004, 041, 046 implicit dy/dx · ans_047 จบที่บรรทัด `f'(x)`) · ตัดสินไม่ได้ 1 (ans_034 `solveset` คืน ConditionSet) · timeout 0 · ก่อนเพิ่มตัวอย่างค้าน 44/50 (ans_042 `equals` ตอบ None) |
+| `final_equal` ตรงกับ label | 45/45 |
+| verdict หลัง merge (ให้ LLM ปลอมใช้ error_type ของ label) | 45/45 |
+| first_wrong_line | 20/22 · พลาด ans_037, ans_038 (wrong_method: ตั้ง f′ หรือ f″ = 0 ผิดตัว ทุกบรรทัดเท่ากันทางคณิต) → merge rules ใช้บรรทัดที่ LLM ชี้ (ตอนวัดให้ LLM ไม่ชี้ จึงได้บรรทัดสุดท้าย) |
+| เวลาต่อข้อ | median 0.14 วินาที · max 0.44 วินาที |
 
-อีก 6 ข้อที่ SymPy ไม่ตัดสินไปที่ LLM (merge-rules ข้อ 2) · ถ้า LLM ถูกทั้ง 6 ข้อ verdict ได้ 50/50 แต่ถ้าผิดเกิน 3 ข้อจะต่ำกว่าเป้า P2 ที่ 47/50
+อีก 5 ข้อที่ SymPy ไม่ตัดสินไปที่ LLM (merge-rules ข้อ 2) · verdict ถึงเป้า P2 47/50 เมื่อ LLM ถูกอย่างน้อย 2 ใน 5 ข้อ
 
 ## Waiting on
 
