@@ -5,7 +5,7 @@
 | Owner | Jam |
 | Branch | `docs/report-ai-evaluation` |
 | Checklist item | ส่วน AI, การวัดผล และงานวิจัยรองรับในรายงาน |
-| Status | in progress · 2026-10-28 |
+| Status | paused · 2026-10-28 |
 
 ## Plan
 
@@ -30,6 +30,11 @@
 - 2026-10-28 · หัวข้อ 1 ใช้ตัวอย่างตรวจคำตอบ ans_007 (sign error บรรทัด 3) เป็นเส้นเรื่องเดียวที่แสดงหลักทั้งหมด · อ้าง PR #80 ซึ่งยังไม่ merge · ต้องเช็คอีกครั้งตอนท้ายว่า merge แล้ว
 - 2026-10-28 · (Jam ตามที่เสนอ) เขียนเป็น Markdown ใน repo ที่ `docs/report/ai-evaluation.md` ให้ทีม review ผ่าน PR แล้วค่อยย้ายเข้าไฟล์ของมหาวิทยาลัยตอนท้าย · โครง 4 หัวข้อ: สถาปัตยกรรม AI · วิธีวัดผล · ผล PoC · งานวิจัยรองรับ
 
+## Done today (2026-10-28)
+
+- เขียน `docs/report/ai-evaluation.md` ครบ 4 หัวข้อ (สถาปัตยกรรม AI · วิธีวัดผล · ผล PoC · งานวิจัยรองรับ) · Jam ok ทุกหัวข้อ
+- ตัวเลขของ LLM ใน P2 เว้นไว้ "รอผล" ใน §3.1 และ §3.4
+
 ## Next step
 
 ขั้น 6 (รอ): หลัง `specs/poc/reports/P2.md` มีตัวเลขของ LLM แล้ว (branch `docs/poc-report-p2` · PR #82) เติมใน `docs/report/ai-evaluation.md` §3.1 แถว P2 และ §3.4 ย่อหน้า "ส่วน LLM" · เช็คด้วยว่า PR #80 merge แล้ว (อ้างใน §1.5)
@@ -40,4 +45,6 @@
 
 ## Notes for next time
 
+- ลำดับงานพรุ่งนี้: `feat/check-answer-classifier` (#80 รัน eval `--resume`) → `docs/poc-report-p2` (#82) → branch นี้ (#84)
+- ตอนย้ายเข้าไฟล์รายงานของภาควิชา: path ของไฟล์ใน repo (เช่น `specs/...`) อาจต้องเปลี่ยนเป็นภาคผนวกหรือลิงก์ GitHub
 - งาน Buffer (30 พ.ย.–4 ธ.ค.) ที่ทำล่วงหน้า · ยังไม่มีโครงรายงานของทั้งทีมหรือ template ของภาควิชาใน repo
