@@ -1,6 +1,6 @@
-# AI Orchestration Design (v1.2)
+# AI Orchestration Design (v1.3)
 
-ฉบับ markdown สำหรับ repo ของเอกสาร AI Orchestration Design v1.0 (30 ก.ย. 2569) พร้อมการแก้ v1.1: เกณฑ์ mastery 0.95, ระดับอ่อน 0.5, ความพร้อม = Σ(r × mastery) ÷ Σr, spaced review ตาม Cepeda/SM-2, เพดาน 10 ข้อ/skill/วัน, จำนวนข้อต่อ skill จำลองจาก BKT, circuit breaker ตาม Resilience4j · v1.2 (26 ต.ค. 2569): ระดับเป้าตามดาวและ mode + เพดาน mastery ตามระดับยากสุดที่ทำถูกเอง (learning-model.md §4)
+ฉบับ markdown สำหรับ repo ของเอกสาร AI Orchestration Design v1.0 (30 ก.ย. 2569) พร้อมการแก้ v1.1: เกณฑ์ mastery 0.95, ระดับอ่อน 0.5, ความพร้อม = Σ(r × mastery) ÷ Σr, spaced review ตาม Cepeda/SM-2, เพดาน 10 ข้อ/skill/วัน, จำนวนข้อต่อ skill จำลองจาก BKT, circuit breaker ตาม Resilience4j · v1.2 (26 ต.ค. 2569): ระดับเป้าตามดาวและ mode + เพดาน mastery ตามระดับยากสุดที่ทำถูกเอง (learning-model.md §4) · v1.3 (28 ต.ค. 2569): §2.4.3 กฎเทียบรายบรรทัดของ SymPy service (`specs/features/check/sympy-service.md`)
 
 **ตัวเลขทุกตัวในเอกสารนี้เป็นค่าอธิบาย ค่าจริงที่โค้ดใช้อยู่ใน `config/learning.yaml` และ `config/ai.yaml` ที่มาของแต่ละตัวอยู่ใน `learning-model.md`**
 
@@ -456,7 +456,9 @@ field `answer_format` จำเป็นเพราะ "ถูก" มีหล
 | `sql` | รันบน SQLite fixture แล้วเทียบผลลัพธ์ | — | Could |
 
 - **First wrong line:** ไล่เทียบบรรทัด i กับ i − 1 บรรทัดแรกที่ค่าไม่เท่ากันคือจุดที่ผิด ใช้เวลาระดับ millisecond และแม่นกว่าให้ LLM อ่านเอง
-- **Safety:** `simplify` บางครั้งค้าง จึงรันใน subprocess พร้อม timeout 2 วินาที ถ้าเกินหรือ parse ไม่ได้ ให้ LLM ตัดสินเองพร้อมค่า `confidence`
+- **Safety:** `simplify` บางครั้งค้าง จึงรันใน subprocess พร้อม timeout 2 วินาที ถ้าเกินหรือ parse ไม่ได้ ให้ LLM ตัดสินเองพร้อมค่า `confidence` · ใช้ worker ที่เปิดค้างไว้ (`checker.sympy_workers`) เพราะเปิด Python + import SymPy ใหม่ใช้เวลาเกือบเท่า timeout
+- **บรรทัด 1 เทียบกับเฉลย** แทนตัวโจทย์ (ตัวโจทย์มีข้อความไทยปน parse ไม่ได้ · ค่าของโจทย์ = เฉลยตาม AM-11) · derivative และ limit ในบรรทัดถูกคำนวณก่อนเทียบ
+- **บรรทัด definition** `f(x)`, `f'(x)`, `f''(x)`: บรรทัดอันดับ k ต้องเท่าอนุพันธ์ของบรรทัด definition ก่อนหน้า · ขั้น "ตั้งอนุพันธ์ = 0" เทียบ solution set · `e` คือค่าคงที่ · solution set คิดบนจำนวนจริง · implicit dy/dx ให้ LLM ตัดสิน (รายละเอียด `specs/features/check/sympy-service.md`)
 
 ### 2.4.4 LLM classifier
 

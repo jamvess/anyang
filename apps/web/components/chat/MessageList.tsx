@@ -3,6 +3,7 @@ import { OcrConfirmCard } from "./OcrConfirmCard";
 import { ProblemCard } from "./ProblemCard";
 import { ProgressCard, type ProgressCardData } from "./ProgressCard";
 import { roomStrings } from "./strings";
+import { VerdictMark } from "./VerdictMark";
 import type { ChatMessage } from "./types";
 
 type Speaker = "tutor" | "buddy" | "user";
@@ -91,7 +92,7 @@ export function MessageList({
   // Bubbles for speakers, a progress card for card messages that carry one (progress-card.md);
   // system messages and empty cards are not shown (chat-room-ui.md AC-4).
   const visible = messages
-    .filter((m) => SPEAKERS.has(m.role) || (m.role === "card" && (m.card || m.problem || m.ocr)))
+    .filter((m) => SPEAKERS.has(m.role) || (m.role === "card" && (m.card || m.problem || m.ocr || m.verdict)))
     .sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
 
   return (
@@ -101,7 +102,9 @@ export function MessageList({
           // Not a bubble: no data-role. Also breaks the grouping of the messages around it.
           return (
             <li key={m.id}>
-              {m.ocr ? (
+              {m.verdict ? (
+                <VerdictMark verdict={m.verdict} />
+              ) : m.ocr ? (
                 <OcrConfirmCard
                   preview={m.ocr.preview}
                   status={m.ocr.status}

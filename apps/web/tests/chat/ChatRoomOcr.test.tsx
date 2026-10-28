@@ -231,14 +231,14 @@ describe("ChatRoom handwriting confirm card", () => {
     expect(t.confirm.calls[1][0]).toEqual(["x^2 - 5x + 6", "= (x - 2)(x - 3)", "= x^2 + x - 6"]);
   });
 
-  // AC-18
-  it("AM02 a verdict inside the confirm reply does not break the tutor bubble or show text", async () => {
+  // AC-18 · verdict is shown since verdict-mark.md (it splits the bubble, see ChatRoomVerdict.test.tsx)
+  // · removed here with May's approval 2026-10-28
+  it("AM02 tokens of the confirm reply join into one tutor bubble", async () => {
     const t = setup();
     await t.showCard();
 
     await t.click("ถูกแล้ว ตรวจเลย");
     await t.confirm.token("tutor", "โอเค ");
-    await t.confirm.event("verdict", { verdict: "incorrect", first_wrong_line: 2, error_type: "sign" });
     await t.confirm.token("tutor", "บรรทัดสองยังไม่ถูก");
     await t.confirm.done();
 

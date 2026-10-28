@@ -7,8 +7,9 @@ import { MessageList } from "./MessageList";
 import type { OcrPreviewData, OcrStatus } from "./OcrConfirmCard";
 import type { ProblemData } from "./ProblemCard";
 import { roomStrings as t } from "./strings";
+import { hasVerdictMark, type VerdictData } from "./VerdictMark";
 import type { SSEEvent } from "@/lib/sse";
-import type { ChatMessage, ConfirmOcr, MessageRole, RoomData, SendMessage, SendPayload } from "./types";
+import type { ChatMessage, ConfirmOcr, MessageRole, RoomData, SendMessage, SendPayload, Transcribe } from "./types";
 
 /** How close to the bottom (px) still counts as "following" the stream. A UI value, not a learning-model one. */
 export const NEAR_BOTTOM_PX = 80;
@@ -30,6 +31,8 @@ export function ChatRoom({
   confirmOcr = noReply,
   opening,
   imagesEnabled,
+  transcribe,
+  voiceEnabled,
 }: {
   room: RoomData;
   sendMessage?: SendMessage;
@@ -38,6 +41,9 @@ export function ChatRoom({
   /** Rest of the POST /exam-preps/{id}/sessions stream: the opening message streams in with no user bubble (room-http.md §2). */
   opening?: AsyncIterable<SSEEvent>;
   imagesEnabled?: boolean;
+  /** POST /sessions/{id}/transcribe; the mic shows only when given (voice-input.md). */
+  transcribe?: Transcribe;
+  voiceEnabled?: boolean;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>(room.messages);
   const [busy, setBusy] = useState(false);
@@ -93,7 +99,7 @@ export function ChatRoom({
     const { text, image } = payload;
     append(
       newMessage("user", text, {
-        input_mode: image ? "image" : "text",
+        input_mode: image ? "image" : payload.voice ? "voice" : "text",
         // Not uploaded yet, so no Storage path (chat-room-ui.md AC-6c).
         attachment_name: image ? image.name : null,
       }),
@@ -164,6 +170,14 @@ export function ChatRoom({
           }
           current = null;
           setStreamingId(null);
+        } else if (event === "verdict") {
+          // Shown above the tutor's words; a verdict with no mark leaves the bubble whole (verdict-mark.md AC-3, AC-4).
+          const verdict = data as VerdictData;
+          if (hasVerdictMark(verdict)) {
+            append(newMessage("card", null, { verdict }));
+            current = null;
+            setStreamingId(null);
+          }
         } else if (event === "progress_card") {
           // Shown as a card; the tutor's next tokens start a new bubble (progress-card.md AC-9).
           append(newMessage("card", null, { card: data as ChatMessage["card"] }));
@@ -175,7 +189,7 @@ export function ChatRoom({
         } else if (event === "error") {
           break;
         }
-        // Other events (verdict, ...) are separate features (ocr-confirm-card.md AC-18).
+        // Other events (session_end, ...) are separate features.
       }
     } catch {
       // A network failure is shown like an error event.
@@ -235,6 +249,8 @@ export function ChatRoom({
           disabled={busy}
           imagesEnabled={imagesEnabled}
           handle={composer}
+          transcribe={transcribe}
+          voiceEnabled={voiceEnabled}
         />
       </div>
     </div>
