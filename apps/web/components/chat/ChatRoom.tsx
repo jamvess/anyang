@@ -7,6 +7,7 @@ import { MessageList } from "./MessageList";
 import type { OcrPreviewData, OcrStatus } from "./OcrConfirmCard";
 import type { ProblemData } from "./ProblemCard";
 import { roomStrings as t } from "./strings";
+import { hasVerdictMark, type VerdictData } from "./VerdictMark";
 import type { SSEEvent } from "@/lib/sse";
 import type { ChatMessage, ConfirmOcr, MessageRole, RoomData, SendMessage, SendPayload } from "./types";
 
@@ -164,6 +165,14 @@ export function ChatRoom({
           }
           current = null;
           setStreamingId(null);
+        } else if (event === "verdict") {
+          // Shown above the tutor's words; a verdict with no mark leaves the bubble whole (verdict-mark.md AC-3, AC-4).
+          const verdict = data as VerdictData;
+          if (hasVerdictMark(verdict)) {
+            append(newMessage("card", null, { verdict }));
+            current = null;
+            setStreamingId(null);
+          }
         } else if (event === "progress_card") {
           // Shown as a card; the tutor's next tokens start a new bubble (progress-card.md AC-9).
           append(newMessage("card", null, { card: data as ChatMessage["card"] }));
@@ -175,7 +184,7 @@ export function ChatRoom({
         } else if (event === "error") {
           break;
         }
-        // Other events (verdict, ...) are separate features (ocr-confirm-card.md AC-18).
+        // Other events (session_end, ...) are separate features.
       }
     } catch {
       // A network failure is shown like an error event.

@@ -70,6 +70,7 @@ body{margin:0;background:var(--paper);color:var(--ink);
   font-family:"IBM Plex Mono",monospace}
 .m p{margin:0 0 3px;font-size:14px;line-height:1.7}
 .gap{height:13px}
+.vd{font-size:12px;font-weight:500;margin:2px 0 2px 44px}.vd.ok{color:var(--ok)}.vd.bd{color:var(--bd)}
 .eq{font-family:"IBM Plex Mono",monospace;font-size:13.5px;
   background:var(--line2);padding:1px 6px;border-radius:4px}
 .shot{border:1px solid var(--line);border-radius:10px;padding:14px;margin:4px 0 6px;
@@ -757,6 +758,7 @@ title:"ตอบถูก เลยไม่ต้องสอนตั้งแ
 story:`<p>ปาลพิมพ์ตอบเอง ไม่มีปุ่มให้กด เพราะการกดเลือกจากสามตัวเลือกไม่ได้พิสูจน์ว่าทำเป็น แค่พิสูจน์ว่าเดาถูก</p>
 <p>พอตอบถูก พี่ตาลก็ไม่ปูพื้นซ้ำ ข้ามไปเน้นเงื่อนไขที่คนพลาดบ่อยแทน</p>
 <p>นี่คือสิ่งที่การอ่านชีทเองทำไม่ได้ ชีทไม่รู้ว่าเรารู้อะไรอยู่แล้ว</p>
+<p>ผลตรวจขึ้นเป็นแถบเล็ก <b>✓ ถูก</b> ก่อนที่พี่ตาลจะพิมพ์ ค่านี้มาจากระบบตรวจ (SymPy) ไม่ใช่จากคำพูดของ AI</p>
 <p>ข้อความของพี่ตาลมีปุ่ม 🔊 เล็กๆ ปาลกดฟังทีละข้อความได้ ระบบไม่อ่านเองเพราะตั้งค่าไว้ว่าปิด</p>`,
 screen:`
 <div class="room">${ROOMTOP}
@@ -764,6 +766,8 @@ screen:`
   <div class="m"><div class="av u">ป</div><div class="body">
     <p class="who">ปาล<span>20:31</span></p>
     <p>(x-7)(x+7)</p></div></div>
+  <div class="gap"></div>
+  <p class="vd ok">✓ ถูก</p>
   <div class="gap"></div>
   <div class="m"><div class="av">ต</div><div class="body">
     <p class="who">พี่ตาล<span>20:31</span><span class="spk">🔊</span></p>
@@ -937,11 +941,13 @@ ch:"บทที่ 4 · จังหวะที่ไม่ราบรื่�
 title:"ผิด แล้วเฉลยเลย ไม่มีใบ้",
 story:`<p>ปาลทำผิดเรื่องเครื่องหมาย พี่ตาลไม่ถามว่างงตรงไหน ไม่ให้ใบ้แล้วให้ลองใหม่ แต่<b>บอกวิธีแก้ทันที</b></p>
 <p>เหตุผลคือคนที่เหลือ 5 วันสอบไม่ได้มาเล่นเกมทายคำตอบ เขามาเอาความเข้าใจ</p>
-<p>และชี้บรรทัดแรกที่ผิดด้วย ไม่ใช่บอกแค่ว่าผิด</p>
+<p>และชี้บรรทัดแรกที่ผิดด้วย ไม่ใช่บอกแค่ว่าผิด แถบผลตรวจ <b>✗ ยังไม่ถูก · บรรทัด 2</b> ขึ้นก่อนพี่ตาลจะเริ่มพิมพ์</p>
 <p>ถ้าปาลคิดว่าระบบตรวจผิด แค่พิมพ์ว่า “ข้อนี้ถูกนะ” ระบบจะตรวจซ้ำอย่างละเอียด ถ้าผิดจริงพี่ตาลขอโทษและแก้ผลให้</p>`,
 screen:`
 <div class="room">${ROOMTOP}
 <div class="feed">
+  <p class="vd bd">✗ ยังไม่ถูก · บรรทัด 2</p>
+  <div class="gap"></div>
   <div class="m"><div class="av">ต</div><div class="body">
     <p class="who">พี่ตาล<span>20:48</span></p>
     <p>โอเค บรรทัดสองยังไม่ถูกนะ เครื่องหมายหลุด</p>
@@ -977,6 +983,8 @@ screen:`
   <div class="m"><div class="av u">ป</div><div class="body">
     <p class="who">ปาล<span>20:51</span></p>
     <p>(x-3)(x-4)</p></div></div>
+  <div class="gap"></div>
+  <p class="vd ok">✓ ถูก</p>
   <div class="gap"></div>
   <div class="m"><div class="av">ต</div><div class="body">
     <p class="who">พี่ตาล<span>20:51</span></p>

@@ -42,7 +42,7 @@ type SendMessage = (payload: SendPayload, signal: AbortSignal) => AsyncIterable<
 | `buddy {text}` | สร้าง bubble buddy ใหม่ 1 อันด้วย `text` ทั้งก้อน (ข้อความ buddy นอกจังหวะ §2.1.7) |
 | `done {}` | จบ stream ออกจากสถานะกำลังตอบ |
 | `error {code, message}` | จบ stream แสดงข้อความแจ้งผิดพลาดและออกจากสถานะกำลังตอบ · bubble ที่ stream มาแล้วบางส่วนยังอยู่ |
-| `progress_card`, `problem`, `ocr_preview`, `verdict`, `session_end`, `scope_patch` และ event ที่ไม่รู้จัก | ไม่แสดงอะไรใน feature นี้ ข้ามไปอ่าน event ถัดไป ห้าม crash · ภายหลังแสดงแล้วตาม feature แยก: `progress_card` (`progress-card.md`), `problem` (`problem-card.md`), `ocr_preview` (`check/ocr-confirm-card.md`) |
+| `progress_card`, `problem`, `ocr_preview`, `verdict`, `session_end`, `scope_patch` และ event ที่ไม่รู้จัก | ไม่แสดงอะไรใน feature นี้ ข้ามไปอ่าน event ถัดไป ห้าม crash · ภายหลังแสดงแล้วตาม feature แยก: `progress_card` (`progress-card.md`), `problem` (`problem-card.md`), `ocr_preview` (`check/ocr-confirm-card.md`), `verdict` (`check/verdict-mark.md`) |
 
 4. ถ้า transport throw (เช่น เน็ตหลุด, HTTP ไม่ใช่ 2xx) หรือ stream จบโดยไม่มี `done`: ทำเหมือนได้ `error`
 5. ออกจากหน้า room (unmount) ระหว่าง stream: abort `signal` และไม่ update state อีก
@@ -88,7 +88,7 @@ type SendMessage = (payload: SendPayload, signal: AbortSignal) => AsyncIterable<
 - **AC-4 (TM-20)** Given transport ส่ง token tutor → buddy → tutor แล้ว `done` When ส่ง Then มี bubble ใหม่ 3 อันตามลำดับ tutor, buddy, tutor (`data-role`) และหัว bubble buddy เป็น `buddy_name`
 - **AC-5 (TM-20)** Given ข้อความล่าสุดในห้องก่อนส่งเป็นของ tutor When stream ส่ง `token tutor` Then สร้าง bubble ใหม่ ไม่ต่อท้ายข้อความเก่าของ tutor
 - **AC-6 (TM-20)** Given transport ส่ง `buddy {text:"เหนื่อยเหมือนกันเลย"}` แล้ว `done` Then มี bubble buddy ใหม่ 1 อัน content "เหนื่อยเหมือนกันเลย"
-- **AC-7 (TM-20)** Given transport ส่ง `progress_card`, `problem`, `verdict`, event ชื่อ `unknown_event` คั่นระหว่าง token tutor 2 ตัว แล้ว `done` Then ไม่มี error และมี bubble tutor 1 อันที่รวม token ทั้ง 2 · **แก้ 2026-10-21:** `progress_card` ไม่ถูกข้ามแล้ว แสดงเป็นการ์ดและตัด bubble ตาม `progress-card.md` AC-9 · test นี้ตัด `progress_card` ออก (May อนุมัติ) · `problem` แสดงเป็นการ์ดโจทย์ตาม `problem-card.md` AC-6 · ตัดออกจาก test นี้เช่นกัน (May อนุมัติ 2026-10-21)
+- **AC-7 (TM-20)** Given transport ส่ง `progress_card`, `problem`, `verdict`, event ชื่อ `unknown_event` คั่นระหว่าง token tutor 2 ตัว แล้ว `done` Then ไม่มี error และมี bubble tutor 1 อันที่รวม token ทั้ง 2 · **แก้ 2026-10-21:** `progress_card` ไม่ถูกข้ามแล้ว แสดงเป็นการ์ดและตัด bubble ตาม `progress-card.md` AC-9 · test นี้ตัด `progress_card` ออก (May อนุมัติ) · `problem` แสดงเป็นการ์ดโจทย์ตาม `problem-card.md` AC-6 · ตัดออกจาก test นี้เช่นกัน (May อนุมัติ 2026-10-21) · `verdict` แสดงเป็นแถบผลตรวจตาม `check/verdict-mark.md` · ตัดออกจาก test นี้เช่นกัน (May อนุมัติ 2026-10-28)
 - **AC-8 (TM-20)** Given ส่งข้อความสองรอบ แต่ละรอบ stream `token tutor` Then ได้ bubble tutor 2 อัน แยกกันตามรอบ
 
 **สมการระหว่าง stream (TM-08)**
