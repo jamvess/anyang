@@ -381,4 +381,14 @@ Golden sets ของการวัดผล AI ไม่อยู่ใน DB 
 | 4 | A6 คืน `excluded_by_note` (หัวข้อที่ตัดออกเพราะ note ของผู้ใช้) | มี `topics.status = 'excluded'` แต่ไม่รู้ว่าใครตัด | **design** · P3 รันด้วย `user_notes = "ไม่มี"` จึงไม่เคยมีกรณีนี้ | ไม่เพิ่ม column · ใช้ `status = 'excluded'` + บันทึก 1 แถวใน `scope_changes` (`actor = 'ai'`) |
 | 5 | ingest ใช้ `vision_extract_pages` อ่านทั้งไฟล์ใน call เดียว และวัด % ตัวอักษรไทยเพื่อเลือกระหว่าง text layer กับ vision | `material_pages.extract_method` มี `vision` อยู่แล้ว · ไม่มีที่เก็บค่าคุณภาพข้อความ | **ยืนยันแล้วว่า `extract_method` พอสำหรับการเลือกวิธี** (สแกน 0%, ชีท 48–85%) · เก็บค่าไว้ debug หรือไม่ = **design** | ไม่เก็บ `text_quality` · ถ้าต้อง debug ให้ดูจาก log ของ ingest |
 
+**ผลการตัดสิน 2026-10-28** (Jam ตกลงข้อ 1, 2, 4, 5 ตามข้อเสนอ · May ตอบข้อ 3)
+
+| # | ผล | ทำที่ไหน |
+|---|---|---|
+| 1 | แก้ · เพิ่มตาราง `topic_sources` ตามข้อเสนอ | migration `0003` |
+| 2 | ไม่แก้ตอนนี้ · เลื่อนไปตัดสินตอนทำ `compute_importance` (P8-lite, S4) | - |
+| 3 | แก้ · หน้า scope แสดงเหตุผลของการ map · เพิ่ม `past_exam_questions.map_note text` เก็บ `note` ของ A7 ทุกข้อ ไม่ใช่เฉพาะข้อที่ `topic_id` เป็น null | migration `0003` |
+| 4 | ไม่แก้ · ใช้ `topics.status = 'excluded'` + 1 แถวใน `scope_changes` (`op = 'exclude'`, `actor = 'ai'`) · ตรวจแล้ว check ของ `op` และ `actor` ใน `0001_init.sql` รับทั้งสองค่าอยู่แล้ว ไม่ต้องแก้ constraint | - |
+| 5 | ไม่แก้ · ไม่เก็บ `text_quality` · debug จาก log ของ ingest | - |
+
 ไม่กระทบ schema: `thinking` อยู่ใน `config/ai.yaml` · ค่า `stars.*` อยู่ใน `config/learning.yaml` · `q_no` แบบ `ก1.2` เก็บใน `text` ได้อยู่แล้ว
