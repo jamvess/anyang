@@ -1,0 +1,10 @@
+{
+  "excerpts": [
+    { "material_name": "ch3-factorization.pdf", "page": 5, "text": "a² − b² = (a − b)(a + b) ใช้เมื่อพจน์ทั้งสองเป็นกำลังสองสมบูรณ์และมีเครื่องหมายลบคั่น" }
+  ],
+  "questions": [
+    { "id": "q3", "label": "midterm-2566 ข้อ 3", "text": "$x^2 - 49$", "map_note": null },
+    { "id": "q7", "label": "midterm-2566 ข้อ 7", "text": "$x^4 - 16$", "map_note": "ใช้ผลต่างกำลังสองสองรอบ" },
+    { "id": "q5", "label": "midterm-2567 ข้อ 5", "text": "$4x^2 - 25$", "map_note": "มอง 4x² เป็น (2x)² ก่อน" }
+  ]
+}
