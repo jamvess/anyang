@@ -18,7 +18,7 @@
 | Error type | calculation, sign, wrong method, concept, prerequisite, no answer |
 | Park | พักหัวข้อหรือ skill ไว้ก่อน (ผิดซ้ำหรือทำเกินเพดานต่อวัน) |
 | Spaced review | การทวนหัวข้อที่ผ่านแล้วตามรอบที่ห่างขึ้นเรื่อยๆ |
-| Readiness | ความพร้อม % = Σ(r × mastery) ÷ Σr |
+| Readiness | ความพร้อม % = Σ(r × mastery_eff) ÷ Σr · mastery_eff = mastery หลังเพดานตามระดับยากสุดที่ทำถูกเอง (learning-model §4) |
 | Planner mode | normal, tight, triage, final ตามเวลาที่ต้องใช้เทียบกับเวลาที่เหลือ |
 | Progress card | dashboard ย่อในแชทตอนเปิด session |
 | Tenant | หน่วยแยกข้อมูลและโควตา v1 คือนักเรียน 1 คน |
