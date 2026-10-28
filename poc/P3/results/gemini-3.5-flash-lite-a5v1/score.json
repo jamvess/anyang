@@ -1,0 +1,599 @@
+{
+  "model": "gemini:gemini-3.5-flash-lite",
+  "min_iou": 0.5,
+  "topics": {
+    "label": 27,
+    "ai": 10,
+    "matched": 1,
+    "recall": 0.037,
+    "precision": 0.1,
+    "iou_sensitivity": {
+      "0.3": {
+        "recall": 0.148,
+        "precision": 0.4
+      },
+      "0.5": {
+        "recall": 0.037,
+        "precision": 0.1
+      },
+      "0.7": {
+        "recall": 0.037,
+        "precision": 0.1
+      }
+    },
+    "pass": false
+  },
+  "three_star_formula_on_label_map": {
+    "label_three_star": 12,
+    "matched": 10,
+    "recall": 0.833,
+    "computed_three_star": 12,
+    "precision": 0.833,
+    "exact_stars_agreement": 0.741
+  },
+  "three_star_pipeline": {
+    "label_three_star": 12,
+    "matched": 1,
+    "recall": 0.083,
+    "computed_three_star": 1,
+    "precision": 1.0,
+    "exact_stars_agreement": 0.037,
+    "pass": false
+  },
+  "questions": {
+    "label": 43,
+    "correct_topic": 2,
+    "wrong_topic": 41,
+    "missing": 0,
+    "accuracy": 0.047
+  },
+  "minutes_per_file": {
+    "midterm-2559-1": 1.34,
+    "midterm-2561-1": 0.65,
+    "sheet-01": 0.08,
+    "sheet-02": 0.07,
+    "sheet-03": 0.08,
+    "sheet-04": 0.08
+  },
+  "max_minutes_per_file": 1.34,
+  "tokens": {
+    "in": 124745,
+    "out": 28707
+  },
+  "schema_retries": 0,
+  "unmatched_label_topics": [
+    {
+      "id": "t01",
+      "name": "ลิมิตของฟังก์ชันและลิมิตทางเดียว",
+      "pages": [
+        "sheet-01:2-6"
+      ]
+    },
+    {
+      "id": "t02",
+      "name": "การหาลิมิตรูปแบบ 0/0 และทฤษฎีบทบีบ (Squeeze Theorem)",
+      "pages": [
+        "sheet-01:7-10"
+      ]
+    },
+    {
+      "id": "t03",
+      "name": "ลิมิตที่เกี่ยวข้องกับค่าอนันต์ (Limits involving infinity)",
+      "pages": [
+        "sheet-01:11-19"
+      ]
+    },
+    {
+      "id": "t04",
+      "name": "ความต่อเนื่องของฟังก์ชัน (Continuous functions)",
+      "pages": [
+        "sheet-01:19-25"
+      ]
+    },
+    {
+      "id": "t05",
+      "name": "นิยามของอนุพันธ์ (Definition of Derivative)",
+      "pages": [
+        "sheet-01:29-37",
+        "sheet-01:66-68"
+      ]
+    },
+    {
+      "id": "t06",
+      "name": "การหาอนุพันธ์โดยใช้สูตร",
+      "pages": [
+        "sheet-01:37-40",
+        "sheet-01:68-69"
+      ]
+    },
+    {
+      "id": "t07",
+      "name": "กฎลูกโซ่ (The Chain Rule)",
+      "pages": [
+        "sheet-01:41-45"
+      ]
+    },
+    {
+      "id": "t08",
+      "name": "อนุพันธ์ของฟังก์ชันตรีโกณมิติ",
+      "pages": [
+        "sheet-01:46-50",
+        "sheet-01:70-72"
+      ]
+    },
+    {
+      "id": "t09",
+      "name": "อนุพันธ์ของฟังก์ชันลอการิทึมและฟังก์ชันชี้กำลัง",
+      "pages": [
+        "sheet-01:51-56",
+        "sheet-01:73-76"
+      ]
+    },
+    {
+      "id": "t10",
+      "name": "อนุพันธ์ของฟังก์ชันตรีโกณมิติผกผัน",
+      "pages": [
+        "sheet-01:57-61",
+        "sheet-01:76-77"
+      ]
+    },
+    {
+      "id": "t11",
+      "name": "การหาอนุพันธ์เชิงลอการิทึม",
+      "pages": [
+        "sheet-01:62-65",
+        "sheet-01:79-80"
+      ]
+    },
+    {
+      "id": "t12",
+      "name": "อนุพันธ์ของฟังก์ชันไฮเพอร์โบลิก",
+      "pages": [
+        "sheet-01:78-78"
+      ]
+    },
+    {
+      "id": "t13",
+      "name": "อนุพันธ์อันดับสูง (Derivatives of Higher Order)",
+      "pages": [
+        "sheet-01:81-83"
+      ]
+    },
+    {
+      "id": "t14",
+      "name": "การหาอนุพันธ์ของฟังก์ชันโดยปริยาย (Implicit Differentiation)",
+      "pages": [
+        "sheet-01:84-86"
+      ]
+    },
+    {
+      "id": "t15",
+      "name": "ค่าเฉลี่ยของฟังก์ชัน (Mean-Value of Function)",
+      "pages": [
+        "sheet-01:87-90"
+      ]
+    },
+    {
+      "id": "t16",
+      "name": "ฟังก์ชันเพิ่มและฟังก์ชันลด (Increasing and Decreasing Functions)",
+      "pages": [
+        "sheet-01:91-93"
+      ]
+    },
+    {
+      "id": "t17",
+      "name": "โค้งคว่ำ โค้งหงาย และจุดเปลี่ยนเว้า (Concavity and Point of Inflection)",
+      "pages": [
+        "sheet-01:94-97"
+      ]
+    },
+    {
+      "id": "t18",
+      "name": "ค่าสูงสุดสัมพัทธ์และค่าต่ำสุดสัมพัทธ์ (Relative Maximum and Relative Minimum)",
+      "pages": [
+        "sheet-01:98-98",
+        "sheet-01:102-106",
+        "sheet-01:108-110"
+      ]
+    },
+    {
+      "id": "t19",
+      "name": "ค่าสูงสุดสัมบูรณ์และค่าต่ำสุดสัมบูรณ์ (Absolute Maximum and Absolute Minimum)",
+      "pages": [
+        "sheet-01:99-102",
+        "sheet-01:107-107"
+      ]
+    },
+    {
+      "id": "t20",
+      "name": "การวาดกราฟของฟังก์ชันและเส้นกำกับ (Asymptotes)",
+      "pages": [
+        "sheet-01:111-116"
+      ]
+    },
+    {
+      "id": "t21",
+      "name": "ฟังก์ชัน (Function)",
+      "pages": [
+        "sheet-01:120-129"
+      ]
+    },
+    {
+      "id": "t22",
+      "name": "ฟังก์ชันอดิศัย (Transcendental Function)",
+      "pages": [
+        "sheet-01:130-138"
+      ]
+    },
+    {
+      "id": "t24",
+      "name": "รูปแบบยังไม่กำหนด 0/0, ∞/∞ และกฎของโลปิตาล (L'Hopital's rule)",
+      "pages": [
+        "sheet-02:9-15"
+      ]
+    },
+    {
+      "id": "t25",
+      "name": "รูปแบบยังไม่กำหนด 0·∞, ∞−∞, 0⁰, ∞⁰, 1^∞",
+      "pages": [
+        "sheet-02:16-20"
+      ]
+    },
+    {
+      "id": "t26",
+      "name": "การประยุกต์ค่าสูงสุดและค่าต่ำสุด (Application of Maxima and Minima)",
+      "pages": [
+        "sheet-02:24-27"
+      ]
+    },
+    {
+      "id": "t27",
+      "name": "อัตราสัมพัทธ์ (Related Rates)",
+      "pages": [
+        "sheet-02:28-31"
+      ]
+    }
+  ],
+  "unmatched_ai_topics": [
+    {
+      "id": "t01",
+      "name": "ฟังก์ชัน (Function)",
+      "sources": [
+        "sheet-01:119-140"
+      ]
+    },
+    {
+      "id": "t02",
+      "name": "ลิมิตและความต่อเนื่องของฟังก์ชัน (Limits and Continuity of Functions)",
+      "sources": [
+        "sheet-01:2-26",
+        "sheet-03:1-1",
+        "sheet-03:1-2"
+      ]
+    },
+    {
+      "id": "t03",
+      "name": "อนุพันธ์ของฟังก์ชัน (Derivative of a Function)",
+      "sources": [
+        "sheet-01:28-86",
+        "sheet-03:2-2"
+      ]
+    },
+    {
+      "id": "t04",
+      "name": "กฎลูกโซ่และการหาอนุพันธ์โดยปริยาย (Chain Rule and Implicit Differentiation)",
+      "sources": [
+        "sheet-03:2-2",
+        "sheet-04:2-3"
+      ]
+    },
+    {
+      "id": "t06",
+      "name": "รูปแบบไม่กำหนดและกฎของโลปิตาล (Indeterminate Forms and L'Hopital's Rule)",
+      "sources": [
+        "sheet-02:9-23",
+        "sheet-04:1-1"
+      ]
+    },
+    {
+      "id": "t07",
+      "name": "การประยุกต์อนุพันธ์ (Application of Derivatives)",
+      "sources": [
+        "sheet-01:91-118",
+        "sheet-02:24-33",
+        "sheet-03:2-3",
+        "sheet-03:3-3",
+        "sheet-04:1-1"
+      ]
+    },
+    {
+      "id": "t08",
+      "name": "ฟังก์ชันสองตัวแปร โดเมน เรนจ์ และลิมิต (Functions of Several Variables, Domain, Range, and Limits)",
+      "sources": [
+        "sheet-04:1-2"
+      ]
+    },
+    {
+      "id": "t09",
+      "name": "อนุพันธ์ย่อย กฎลูกโซ่ และอนุพันธ์โดยปริยายสำหรับฟังก์ชันหลายตัวแปร (Partial Derivatives, Chain Rule, and Implicit Differentiation)",
+      "sources": [
+        "sheet-04:2-3"
+      ]
+    },
+    {
+      "id": "t10",
+      "name": "ค่าสุดขีดของฟังก์ชันสองตัวแปรและการประมาณค่า (Extrema of Functions of Two Variables and Differentials)",
+      "sources": [
+        "sheet-04:3-3"
+      ]
+    }
+  ],
+  "pairs": [
+    {
+      "label": "t23",
+      "label_name": "ผลต่างเชิงอนุพันธ์และการประมาณค่าเชิงเส้น (Differentials and Linear Approximation)",
+      "ai": "t05",
+      "ai_name": "ผลต่างเชิงอนุพันธ์และการประมาณค่าเชิงเส้น (Differentials and Linear Approximation)"
+    }
+  ],
+  "questions_detail": [
+    {
+      "q": "midterm-2559-1:ก1.1",
+      "label": "t03",
+      "ai": "t02",
+      "ok": false
+    },
+    {
+      "q": "midterm-2559-1:ก1.2",
+      "label": "t02",
+      "ai": "t02",
+      "ok": false
+    },
+    {
+      "q": "midterm-2559-1:ก2",
+      "label": "t25",
+      "ai": "t06",
+      "ok": false
+    },
+    {
+      "q": "midterm-2559-1:ก3",
+      "label": "t04",
+      "ai": "t02",
+      "ok": false
+    },
+    {
+      "q": "midterm-2559-1:ก4",
+      "label": "t23",
+      "ai": "t05",
+      "ok": true
+    },
+    {
+      "q": "midterm-2559-1:ข1.1",
+      "label": "t06",
+      "ai": "t03",
+      "ok": false
+    },
+    {
+      "q": "midterm-2559-1:ข1.2",
+      "label": "t07",
+      "ai": "t04",
+      "ok": false
+    },
+    {
+      "q": "midterm-2559-1:ข2.1",
+      "label": "t09",
+      "ai": "t03",
+      "ok": false
+    },
+    {
+      "q": "midterm-2559-1:ข2.2",
+      "label": "t08",
+      "ai": "t03",
+      "ok": false
+    },
+    {
+      "q": "midterm-2559-1:ข2.3",
+      "label": "t09",
+      "ai": "t03",
+      "ok": false
+    },
+    {
+      "q": "midterm-2559-1:ข2.4",
+      "label": "t06",
+      "ai": "t03",
+      "ok": false
+    },
+    {
+      "q": "midterm-2559-1:ข2.5",
+      "label": "t08",
+      "ai": "t04",
+      "ok": false
+    },
+    {
+      "q": "midterm-2559-1:ข3",
+      "label": "t11",
+      "ai": "t03",
+      "ok": false
+    },
+    {
+      "q": "midterm-2559-1:ข4.1",
+      "label": "t27",
+      "ai": "t07",
+      "ok": false
+    },
+    {
+      "q": "midterm-2559-1:ข4.2",
+      "label": "t27",
+      "ai": "t07",
+      "ok": false
+    },
+    {
+      "q": "midterm-2559-1:ค1",
+      "label": "t15",
+      "ai": "t03",
+      "ok": false
+    },
+    {
+      "q": "midterm-2559-1:ค2.1",
+      "label": "t16",
+      "ai": "t07",
+      "ok": false
+    },
+    {
+      "q": "midterm-2559-1:ค2.2",
+      "label": "t18",
+      "ai": "t07",
+      "ok": false
+    },
+    {
+      "q": "midterm-2559-1:ค2.3",
+      "label": "t17",
+      "ai": "t07",
+      "ok": false
+    },
+    {
+      "q": "midterm-2559-1:ค2.4",
+      "label": "t20",
+      "ai": "t02",
+      "ok": false
+    },
+    {
+      "q": "midterm-2559-1:ค2.5",
+      "label": "t20",
+      "ai": "t07",
+      "ok": false
+    },
+    {
+      "q": "midterm-2559-1:ค3.1",
+      "label": "t26",
+      "ai": "t07",
+      "ok": false
+    },
+    {
+      "q": "midterm-2559-1:ค3.2",
+      "label": "t26",
+      "ai": "t07",
+      "ok": false
+    },
+    {
+      "q": "midterm-2561-1:ก1",
+      "label": "t04",
+      "ai": "t02",
+      "ok": false
+    },
+    {
+      "q": "midterm-2561-1:ก2",
+      "label": "t02",
+      "ai": "t02",
+      "ok": false
+    },
+    {
+      "q": "midterm-2561-1:ก3",
+      "label": "t14",
+      "ai": "t04",
+      "ok": false
+    },
+    {
+      "q": "midterm-2561-1:ก4",
+      "label": "t24",
+      "ai": "t06",
+      "ok": false
+    },
+    {
+      "q": "midterm-2561-1:ก5",
+      "label": "t24",
+      "ai": "t06",
+      "ok": false
+    },
+    {
+      "q": "midterm-2561-1:ก6",
+      "label": "t05",
+      "ai": "t03",
+      "ok": false
+    },
+    {
+      "q": "midterm-2561-1:ข1.1",
+      "label": "t09",
+      "ai": "t03",
+      "ok": false
+    },
+    {
+      "q": "midterm-2561-1:ข1.2",
+      "label": "t10",
+      "ai": "t04",
+      "ok": false
+    },
+    {
+      "q": "midterm-2561-1:ข1.3",
+      "label": "t12",
+      "ai": "t04",
+      "ok": false
+    },
+    {
+      "q": "midterm-2561-1:ข1.4",
+      "label": "t11",
+      "ai": "t03",
+      "ok": false
+    },
+    {
+      "q": "midterm-2561-1:ข2",
+      "label": "t13",
+      "ai": "t03",
+      "ok": false
+    },
+    {
+      "q": "midterm-2561-1:ข3",
+      "label": "t07",
+      "ai": "t04",
+      "ok": false
+    },
+    {
+      "q": "midterm-2561-1:ข4.1",
+      "label": "t16",
+      "ai": "t07",
+      "ok": false
+    },
+    {
+      "q": "midterm-2561-1:ข4.2",
+      "label": "t18",
+      "ai": "t07",
+      "ok": false
+    },
+    {
+      "q": "midterm-2561-1:ข4.3",
+      "label": "t17",
+      "ai": "t07",
+      "ok": false
+    },
+    {
+      "q": "midterm-2561-1:ข4.4",
+      "label": "t20",
+      "ai": "t07",
+      "ok": false
+    },
+    {
+      "q": "midterm-2561-1:ข4.5",
+      "label": "t20",
+      "ai": "t07",
+      "ok": false
+    },
+    {
+      "q": "midterm-2561-1:ค1",
+      "label": "t23",
+      "ai": "t05",
+      "ok": true
+    },
+    {
+      "q": "midterm-2561-1:ค2",
+      "label": "t27",
+      "ai": "t07",
+      "ok": false
+    },
+    {
+      "q": "midterm-2561-1:ค3",
+      "label": "t26",
+      "ai": "t07",
+      "ok": false
+    }
+  ]
+}

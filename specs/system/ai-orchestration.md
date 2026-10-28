@@ -1,6 +1,6 @@
-# AI Orchestration Design (v1.1)
+# AI Orchestration Design (v1.2)
 
-ฉบับ markdown สำหรับ repo ของเอกสาร AI Orchestration Design v1.0 (30 ก.ย. 2569) พร้อมการแก้ v1.1: เกณฑ์ mastery 0.95, ระดับอ่อน 0.5, ความพร้อม = Σ(r × mastery) ÷ Σr, spaced review ตาม Cepeda/SM-2, เพดาน 10 ข้อ/skill/วัน, จำนวนข้อต่อ skill จำลองจาก BKT, circuit breaker ตาม Resilience4j
+ฉบับ markdown สำหรับ repo ของเอกสาร AI Orchestration Design v1.0 (30 ก.ย. 2569) พร้อมการแก้ v1.1: เกณฑ์ mastery 0.95, ระดับอ่อน 0.5, ความพร้อม = Σ(r × mastery) ÷ Σr, spaced review ตาม Cepeda/SM-2, เพดาน 10 ข้อ/skill/วัน, จำนวนข้อต่อ skill จำลองจาก BKT, circuit breaker ตาม Resilience4j · v1.2 (26 ต.ค. 2569): ระดับเป้าตามดาวและ mode + เพดาน mastery ตามระดับยากสุดที่ทำถูกเอง (learning-model.md §4)
 
 **ตัวเลขทุกตัวในเอกสารนี้เป็นค่าอธิบาย ค่าจริงที่โค้ดใช้อยู่ใน `config/learning.yaml` และ `config/ai.yaml` ที่มาของแต่ละตัวอยู่ใน `learning-model.md`**
 
@@ -114,16 +114,24 @@ AI ไม่ได้ตอบจากเอกสารอย่างเด�
 **Extract ตามชนิดไฟล์** (ทุกแบบต้องได้ `page_no` ติดมาด้วย)
 
 - PDF ที่มี text layer ใช้ PyMuPDF **แต่ต้องเช็คคุณภาพของข้อความก่อน** · ไฟล์สแกนมักมี OCR layer ภาษาอังกฤษซ่อนอยู่ ซึ่งดูเหมือนมีข้อความแต่เป็นขยะ · PoC P3 ใช้สัดส่วนตัวอักษรไทยต่อตัวอักษรทั้งหมด < 30% = ไฟล์สแกน (MTH10101: ข้อสอบสแกน 0%, ชีท 48–85%)
-- PDF สแกนหรือไฟล์รูป ส่ง vision model อ่าน (A2 ทีละหน้า หรือ A2b ทั้งไฟล์ · ผล PoC P3 อาจเปลี่ยนเป็น Google Document AI สำหรับไฟล์สแกน)
+- PDF สแกนหรือไฟล์รูป ส่ง vision model อ่าน (A2 ทีละหน้า หรือ A2b ทั้งไฟล์) · **P3:** A2b อ่านข้อสอบสแกน 14 หน้าใน 40.5 วินาที และ A4 ตัดรายข้อตรง label 43/43 จึงไม่ใช้ Google Document AI (`specs/poc/reports/P3.md`)
 - ข้อจำกัดของ PyMuPDF ที่เจอใน P3: สมการจาก Equation Editor ของ Word ออกมาเป็นตัวอักษรกระจายทีละบรรทัด และสัญลักษณ์ ∞ หายไป ข้อความภาษาไทยอ่านได้แต่สระอำแตก (`น ามา`)
 - PPTX อ่านทีละสไลด์, DOCX อ่านทีละหัวข้อ
 
 **Chunk**
 
 - ชีทและโน้ต ตัดตามหัวข้อหรือสไลด์ ขนาดประมาณ 400–800 tokens ห้ามคร่อมเกิน 2 หน้า
+- **นับ token ภาษาไทยที่ประมาณ 1.7 ตัวอักษรต่อ token** (P3b วัดด้วย `count_tokens` ของ `gemini-embedding-2` ได้ 1.47–1.82) ไม่ใช่ 3–4 แบบภาษาอังกฤษ ถ้าใช้ค่าภาษาอังกฤษ chunk จะใหญ่เกินจริงเกือบ 2 เท่า · MTH10101 ตัดได้ 116 chunk (median 486 token, ไม่มีอันไหนเกิน 800)
 - ข้อสอบเก่า **ใช้ AI ตัดรายข้อ** ไม่ตัดตามความยาว เพราะต้องนำไปจับคู่กับหัวข้อทีละข้อ
 
 **Embed** แบบ batch และเก็บ `text` กับ `content_hash` ไว้คู่กับ vector เสมอ เพื่อให้ re-index ได้หากเปลี่ยน embedding model
+
+- **Model:** `gemini-embedding-2` ที่ 768 มิติ (`config/ai.yaml` → `embedding.dimensions` ส่งเป็น `output_dimensionality`) · P3b: recall@4 95% ที่ 768 มิติ เทียบกับ 90% ที่ 3,072 มิติ และ 45% ของ `bge-m3` · ตรงกับ `chunks.embedding vector(768)`
+- **ทีละข้อความ:** embedding-2 เป็น model แบบ multimodal ถ้าส่ง string หลายอันใน request เดียวจะได้ vector เดียวรวมกัน provider จึงต้องห่อแต่ละข้อความเป็น `Content` แยกกัน
+- **ขนาด batch:** embedding-2 รับรวมไม่เกิน 8,192 token ต่อ request และ chunk ยาวได้ถึง 800 → `embedding.batch_size: 10`
+- **ตรวจขนาด:** gateway แจ้ง error ถ้า vector ยาวไม่เท่า `embedding.dimensions` (ไม่ตัดหรือเติมให้เอง)
+- **ค้นด้วย cosine** (`<=>`, HNSW `vector_cosine_ops`) · Gemini ไม่ normalize vector ที่ต่ำกว่า 3,072 มิติ ถ้าเปลี่ยนไปใช้ inner product ต้อง normalize ก่อนเก็บ
+- Gemini API ไม่บอกจำนวน token ของ embedding → `ai_calls.tokens_in` ของ purpose `embed` เป็น 0 จนกว่าจะย้ายไป Vertex AI (AI-04)
 
 ### 2.3.4 ขั้น 5 · Topic extraction
 
@@ -247,7 +255,7 @@ A5: `pages` เป็นช่วง `"start-end"` ตามป้าย `[p.N]`
 | กำลังดี | mastery ≥ 0.5 แต่ยังไม่ครบเงื่อนไข Done |
 | ผ่าน | ครบเงื่อนไข Done (2.2.4) |
 
-**ความพร้อม (%)** = Σ(r × mastery) ÷ Σr โดย r คือสัดส่วนที่หัวข้อออกในข้อสอบเก่า (2.3.5) และ mastery มาจาก BKT (หัวข้อที่ตัดออกไม่นับ) ความหมายคือ "สัดส่วนของเนื้อหาข้อสอบที่คาดว่าทำได้" ไม่มีตัวเลขตั้งเองเพิ่ม (learning-model.md §5) ใต้ตัวเลขมีคำอธิบายสั้นๆ เพื่อไม่ให้ถูกอ่านเป็นคะแนนสอบ
+**ความพร้อม (%)** = Σ(r × mastery_eff) ÷ Σr โดย r คือสัดส่วนที่หัวข้อออกในข้อสอบเก่า (2.3.5) และ mastery_eff คือ mastery จาก BKT หลังเพดานตามระดับยากสุดที่ทำถูกเอง (learning-model.md §4 · หัวข้อที่ตัดออกไม่นับ) ความหมายคือ "สัดส่วนของเนื้อหาข้อสอบที่คาดว่าทำได้" ไม่มีตัวเลขตั้งเองเพิ่ม (learning-model.md §5) ใต้ตัวเลขมีคำอธิบายสั้นๆ เพื่อไม่ให้ถูกอ่านเป็นคะแนนสอบ
 
 **Facts ที่ส่งให้ tutor** (directive `open_session`)
 
@@ -306,8 +314,8 @@ A5: `pages` เป็นช่วง `"start-end"` ตามป้าย `[p.N]`
 **เงื่อนไข Done** (ต้องครบทุกข้อ)
 
 - ทุก skill ที่เคยออกสอบ (`exam_freq > 0`) มี independent correct อย่างน้อย 1 ครั้ง ถ้าไม่มีข้อสอบเก่าเลย ให้นับทุก skill
-- mastery ของหัวข้อ ≥ `bkt.mastery_threshold` (0.95 = ถูก 3 ข้อติดจากค่าเริ่มต้น)
-- หัวข้อ ★★★ ต้องมีข้อที่ถูกล่าสุดอยู่ที่ระดับข้อสอบ (difficulty 3) ส่วนใน Tight mode หัวข้อ ★★ ผ่านที่ difficulty 2 ได้ (2.5.2)
+- mastery_eff ของหัวข้อ ≥ `bkt.mastery_threshold` (0.95 = ถูก 3 ข้อติดจากค่าเริ่มต้น) · mastery_eff คือ mastery ที่ถูกจำกัดด้วยเพดานเมื่อยังไม่เคยทำถูกที่ระดับเป้า (learning-model.md §4)
+- เคยทำถูกเอง (independent) ที่ระดับเป้าแล้ว: ★★★ และ ★★ = difficulty 3 (ระดับข้อสอบ) · ★ = 2 · ใน Tight และ Triage mode ★★ = 2 (2.5.2 · `done.*_difficulty`)
 
 ด้วยเงื่อนไขนี้ จำนวนโจทย์จะปรับตามความกว้างของหัวข้อเอง หัวข้อที่มี 1 skill ใช้ประมาณ 2 ข้อ ส่วนหัวข้อที่มี 5 skills ใช้อย่างน้อย 5–7 ข้อ Teach/Verify loop ทำงานระดับ skill: ผิดที่ skill ไหน ก็สอนและ verify skill นั้น ไม่ต้องเริ่มหัวข้อใหม่ทั้งหมด
 
@@ -365,6 +373,7 @@ A5: `pages` เป็นช่วง `"start-end"` ตามป้าย `[p.N]`
 
 - p_init 0.3, p_transit 0.15, p_guess 0.2, p_slip 0.1 ค่าและที่มาอยู่ใน `config/learning.yaml` และ learning-model.md §1 (p_init, p_transit fit ใหม่ด้วย pyBKT หลัง Alpha)
 - update เฉพาะ attempt ที่ `independent = true` คือไม่ได้ทำตามสิ่งที่ tutor เพิ่งสาธิตใน turn เดียวกัน
+- `topic_progress.mastery` เก็บค่า BKT ดิบ · ระดับ, Done และความพร้อมใช้ mastery_eff ที่ code คิดจากค่าดิบ + difficulty สูงสุดของ attempt ที่ independent และถูก (`problems.difficulty`) ไม่ต้องเพิ่ม column (learning-model.md §4)
 - `skill_coverage` เก็บ `{skill_id: correct_count}` ใช้ตรวจเงื่อนไข Done
 - `error_counts` เก็บแยก 6 ประเภท ใช้ใน prompt layer 4 และแสดงเมื่อ user ขอ
 
@@ -527,7 +536,7 @@ Output ที่เก็บลง `attempts` และส่ง SSE `verdict` �
 |---|---|---|
 | Normal | ratio ≤ 0.8 | ตามลำดับที่ตกลงกัน ครบทุก skill ทวนตาม spaced review (2.5.5) |
 | Tight | 0.8 < ratio ≤ 1.2 | ย้ายหัวข้อ ★ ไปท้ายสุด, หัวข้อ ★★ ผ่านที่ difficulty 2 ได้ |
-| Triage | ratio > 1.2 หรือเหลือ ≤ 3 วัน | ทำเฉพาะ ★★★ และ ★★ ที่อ่อน, ข้าม ★, ทวนเฉพาะ ★★★, quota buddy ลดครึ่ง |
+| Triage | ratio > 1.2 หรือเหลือ ≤ 3 วัน | ทำเฉพาะ ★★★ และ ★★ ที่อ่อน, ข้าม ★, ทวนเฉพาะ ★★★, หัวข้อ ★★ ผ่านที่ difficulty 2 ได้, quota buddy ลดครึ่ง |
 | Final | วันก่อนสอบ | ไม่เปิดหัวข้อใหม่ ทำโจทย์คละแนวข้อสอบเก่าจากหัวข้อ ★★★ |
 
 เมื่อ mode เปลี่ยน tutor บอก user **ครั้งเดียว** ตอนเปิดห้อง พร้อมเหตุผล เช่น "เหลือ 3 วัน ขอข้ามลำดับ (★) ไปก่อนนะ ถ้าอยากทำบอกได้"

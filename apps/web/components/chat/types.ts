@@ -3,6 +3,7 @@
 
 import type { components } from "@/lib/api";
 import type { SSEEvent } from "@/lib/sse";
+import type { ProblemData } from "./ProblemCard";
 
 type Schemas = components["schemas"];
 
@@ -12,7 +13,10 @@ type Schemas = components["schemas"];
  * streaming may not have them.
  */
 export type ChatMessage = Omit<Schemas["Message"], "card" | "attachment_name"> &
-  Partial<Pick<Schemas["Message"], "card" | "attachment_name">>;
+  Partial<Pick<Schemas["Message"], "card" | "attachment_name">> & {
+    /** Browser-only: a problem from the SSE `problem` event (problem-card.md). Not part of the API. */
+    problem?: ProblemData;
+  };
 
 export type MessageRole = ChatMessage["role"];
 

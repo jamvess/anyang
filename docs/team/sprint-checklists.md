@@ -52,7 +52,7 @@
 
 ### S3 · 2–13 พ.ย.
 
-- [ ] SymPy service `app/math/`: parse LaTeX, เทียบทีละบรรทัด, expression / factored / equation, subprocess + timeout จาก config (ให้ Jam ใช้ใน P2)
+- ~~SymPy service `app/math/`~~ → ย้ายให้ Jam 21 ต.ค. (ทีมตกลง · ใกล้กับ P2) · ดูข้อใน S3 ของ Jam
 - [ ] AI gateway แบบ lite `app/ai/`: `ai.call()`, provider Gemini + fake, อ่าน `config/ai.yaml`, log `ai_calls`
 - [ ] Endpoint SSE `POST /sessions/{id}/messages` ที่ stream จาก gateway (P4-lite)
 - [ ] เขียน router หัวฟังก์ชันของทุก API ใน `specs/system/api.md` ให้หน้า `/docs` ครบ (D5)
@@ -144,10 +144,11 @@
 ### S2 · 19–30 ต.ค.
 
 - [x] P1: รันรูปทั้งหมดกับ Gemini, Claude, Mathpix · ให้คะแนนด้วย SymPy · วาด precision–recall ของ confidence · 30 รูปด้วย `gemini-3.5-flash-lite` อย่างเดียว (ไม่ใช้ Claude/Mathpix เพราะต้องเสียเงิน) · line accuracy 95.2% PASS · threshold ของ confidence FAIL · PR curve เป็นตารางใน `score.json` ยังไม่ได้วาดกราฟ · report: `specs/poc/reports/P1.md`
-- [ ] P3: ingest → A5 → A6 → A7 → `compute_importance` · เทียบกับ label · ลอง embedding 2–3 ตัวกับคำถาม 20 ข้อ
+- [x] P3: ingest → A5 → A6 → A7 → `compute_importance` · เทียบกับ label · ลอง embedding 2–3 ตัวกับคำถาม 20 ข้อ
   - P3b เสร็จ 21 ต.ค. (PR #39): `gemini-embedding-2` ที่ 768 มิติ recall@4 95% (bge-m3 45%) · `Gateway.embed` + `embedding.dimensions: 768` · เหลือ P3a (PR #37)
-- [ ] Report P1 และ P3 ด้วย `/poc-report`
-  - P1 เสร็จแล้ว (`specs/poc/reports/P1.md`) · เหลือ P3
+  - P3a รันแล้ว 21 ต.ค. (PR #37) · **ไม่ผ่านเป้า:** flash-lite หัวข้อตรง 1/27 · flash ได้ถึง A5 (56%) แต่ A6 ไม่ได้คำตอบที่ผ่าน schema บน free tier (0/20) · สูตรดาว + map ของทีม ★★★ 83% ผ่าน · ใช้ fallback ปรับ prompt A5/A6 และวัดใหม่บน Vertex (รอ GCP #20)
+- [x] Report P1 และ P3 ด้วย `/poc-report`
+  - P1 เสร็จแล้ว (`specs/poc/reports/P1.md`) · P3 เสร็จ 21 ต.ค. (`specs/poc/reports/P3.md`, PR #37)
 - [x] อัปเดต `config/learning.yaml` (`ocr.confirm_below_confidence`, `stars.*`) และ `config/ai.yaml` (model ที่เลือก) ผ่าน PR
   - ส่วน ocr เสร็จแล้ว (PR #45): `ocr.always_confirm: true` แทน threshold · AM-02 ยืนยันทุกครั้ง (ทีมตกลง)
   - 21 ต.ค. (PR #60): `stars.*` ค่าเดิม ติดป้ายผล P3 · `ai.yaml` v1.2: vision = flash-lite (P1), mid = flash (P3), main = flash ชั่วคราว (A6 รอวัดบน Vertex), embed = gemini-embedding-2 · small ยัง TODO · `embedding.dimensions: 768` อยู่ใน PR #39
@@ -159,7 +160,9 @@
 - [x] Label golden set คำตอบ 50 ข้อ (D8)
   - ทีมตกลง 21 ต.ค. (PR #51): คน label คือ May หรือ Junior ไม่ใช่ Jam เพราะ Jam ทำ P2 (`evals/README.md` "กฎ") · Jam เตรียมใบงาน `evals/answers/worksheet.md` แล้ว (รูป 30 ข้อ + ช่องคำตอบพิมพ์ 20 ข้อ) · เหลือ: เขียนคำตอบพิมพ์ 20 ข้อตามโควตาใน `evals/README.md` "ใบงาน" และ label ครบ 50 ข้อ
   - 21 ต.ค. เสร็จ 50/50 (PR #52) · ทีม (May + Jam) ตกลงให้ AI ร่าง label และคำตอบพิมพ์ ans_031–050 (writer `w06`) · หมายเหตุอยู่หัว `worksheet.md` · ตอนอ่านผล P2 ต้องคำนึงว่า label อาจเอนไปทางเดียวกับ checker ที่เป็น LLM · แก้ `handwriting/labels.jsonl` hw_018 ตามรูป (Jam อนุญาต)
-- [ ] P2: merge rules + LLM classifier (`prompts/check_answer/v1`) ใช้ SymPy service ของ Junior
+- [ ] SymPy service `app/math/`: parse LaTeX, เทียบทีละบรรทัด, expression / factored / equation, subprocess + timeout จาก config · ย้ายให้ Jam 21 ต.ค. (ทีมตกลง · ใกล้กับ P2) · รูปแบบผลตกลงไว้ใน `specs/features/check/merge-rules.md` §3 · Junior review เพราะอยู่ใน `apps/api/`
+- [ ] P2: merge rules + LLM classifier (`prompts/check_answer/v1`) ใช้ SymPy service
+  - 21 ต.ค. merge rules เสร็จ (PR #68): spec `specs/features/check/merge-rules.md` + `app/domain/checker.py` · รูปแบบผลของ SymPy service ตกลงกับ Junior แล้ว · เหลือ prompt `check_answer/v1` และต่อกับ SymPy service
 - [x] Script `evals/run_eval.py` ออกคะแนน verdict, error type, บรรทัดผิด · เสร็จก่อนกำหนด (21 ต.ค. · PR #47) · ให้คะแนนจากไฟล์ prediction (`--predictions`) · นิยาม metric ใน `evals/README.md` "การให้คะแนน" · ต่อกับ checker จริงตอนทำ P2 · การรันใน CI เมื่อ prompt เปลี่ยน (§2.11) รอ Junior
 - [ ] Report P2
 
@@ -169,6 +172,7 @@
 
 - [ ] P8-lite ร่วมกับทีม (เป็นเจ้าของ spec `compute_importance`)
 - [ ] อัปเดต threshold ใน AI flow specs และ `learning-model.md` ตามผล P1 P2 P3 (D2)
+  - 28 ต.ค. (PR #73 · ไม่ได้มาจากผล PoC แต่มาจากการทบทวน design): `learning-model.md` v1.2 เพิ่มระดับเป้าตามดาวและเพดาน mastery (`mastery_eff`) · `learning.yaml` 1.2 · `ai-orchestration.md` v1.2 · TM-16, PM-03 ใน `requirements.md` v1.3 · เหลือปรับค่าตามผล P1 P2 P3
 - [x] Test strategy 1 หน้าใน `specs/system/` · ทำก่อนกำหนด 21 ต.ค. (PR #55) · `specs/system/test-strategy.md` · §5 มีงานเสนอให้ Junior 2 ข้อ (`evals/` เข้า CI ใน S3, isolation test ทุกตารางใน S4) · Junior ตกลงแล้ว 21 ต.ค.
 
 ### Buffer · 30 พ.ย.–4 ธ.ค.

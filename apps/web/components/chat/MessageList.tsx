@@ -1,4 +1,6 @@
 import { MessageText } from "./MessageText";
+import { ProblemCard } from "./ProblemCard";
+import { ProgressCard, type ProgressCardData } from "./ProgressCard";
 import { roomStrings } from "./strings";
 import type { ChatMessage } from "./types";
 
@@ -73,14 +75,27 @@ export function MessageList({ messages, tutorName, buddyName, userName, streamin
     buddy: buddyName ?? "",
     user: userName ?? roomStrings.you,
   };
-  // Progress cards and system messages are not shown in S2 (spec §9).
+  // Bubbles for speakers, a progress card for card messages that carry one (progress-card.md);
+  // system messages and empty cards are not shown (chat-room-ui.md AC-4).
   const visible = messages
-    .filter((m) => SPEAKERS.has(m.role))
+    .filter((m) => SPEAKERS.has(m.role) || (m.role === "card" && (m.card || m.problem)))
     .sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
 
   return (
     <ol className="flex flex-col">
       {visible.map((m, i) => {
+        if (m.role === "card") {
+          // Not a bubble: no data-role. Also breaks the grouping of the messages around it.
+          return (
+            <li key={m.id}>
+              {m.problem ? (
+                <ProblemCard problem={m.problem} />
+              ) : (
+                <ProgressCard card={m.card as unknown as ProgressCardData} />
+              )}
+            </li>
+          );
+        }
         const role = m.role as Speaker;
         const prev = visible[i - 1];
         const continued =

@@ -258,9 +258,33 @@ export interface components {
             /** Readiness */
             readiness: number;
             /** Topics */
-            topics: {
-                [key: string]: unknown;
-            }[];
+            topics: components["schemas"]["ProgressTopic"][];
+        };
+        /**
+         * ProgressTopic
+         * @description One row of progress_card.topics (api.md v1.4).
+         *
+         *     `stars` is never null: topics whose importance is not computed yet are left out.
+         */
+        ProgressTopic: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Stars */
+            stars: number;
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "not_started" | "weak" | "developing" | "passed";
+            /** Review Due */
+            review_due: boolean;
+            /**
+             * Origin
+             * @enum {string}
+             */
+            origin: "doc" | "user";
         };
         /** SessionEvent */
         SessionEvent: {
