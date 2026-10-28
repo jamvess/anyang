@@ -5,7 +5,7 @@
 | Owner | May |
 | Branch | `feat/scope-review` |
 | Checklist item | ไม่มีข้อตรงใน checklist · SM-02, SM-03, SM-04 (แสดงผล) · UC-02 · wireframe S12, S38 |
-| Status | in progress · 2026-10-28 |
+| Status | ready for work-done · 2026-10-28 |
 
 ## Plan
 
@@ -15,7 +15,7 @@
 - [x] 4. 🤖 `/spec-to-tests` · ใช้ fixture ของหน้า scope (ข้อมูลจาก S12/S38) · ต้องแดงก่อน
 - [x] 5. 🙋 May review test
 - [x] 6. 🤖 `/implement-feature` จน test เขียว · route `app/preps/[id]/scope`
-- [ ] 7. 🙋 May ดูหน้าในเบราว์เซอร์เทียบกับ wireframe S12 / S38 (ข้อมูลจำลอง)
+- [x] 7. 🙋 May ดูหน้าในเบราว์เซอร์เทียบกับ wireframe S12 / S38 (ข้อมูลจำลอง)
 
 ## Definition of done
 
@@ -29,10 +29,11 @@
 - 2026-10-28 · May ตัดสิน OQ 1–4 ตามข้อเสนอ: "ขอแก้ก่อน" แสดงแต่กดไม่ได้ · เปิดรายละเอียดได้หลายหัวข้อ · หัวข้อ 0 ดาวแสดงท้ายรายการ ป้าย "ตัดออก" · หลังยืนยันแล้วอ่านอย่างเดียว + ลิงก์ไปห้องติว · ถาม Junior OQ 5–8 ใน PR #81
 - 2026-10-28 · test 27 ตัว (รวมที่รันซ้ำ 2 ค่า) แดงทั้งไฟล์เพราะยังไม่มี `components/scope/ScopeReview` · fixture `scope-s12.json` (6 หัวข้อ + ข้อสอบไม่เข้าหัวข้อ 1 ข้อ ตาม S12/S38) และ `sources-t3.json` (S38) · `ScopeReview` รับ `navigate` ให้ test ตรวจการไปห้องติวได้โดยไม่ต้องมี router
 - 2026-10-28 · implement เสร็จ: red → green 1 รอบ · test 242/242 · หน้า `/preps/[id]/scope` (`ScopeReviewRoute` ใช้ router · `ScopeReview` รับ `navigate`) · type ของ scope/sources เขียนเองชั่วคราวจนกว่า Junior มี schema · ไม่แก้ test เดิม
+- 2026-10-28 · May ดูบนหน้าทดลองชั่วคราว (fixture · ลบแล้ว ไม่ commit) เทียบ S12/S38: รายการ ดาว ที่มา กล่องข้อสอบไม่เข้าหัวข้อ เปิด/พับรายละเอียด ปุ่ม · ปกติ · หน้าทดลองใช้ alert แทนการเปลี่ยนหน้า (หน้าจริงใช้ router.push · AC-15)
 
 ## Next step
 
-ขั้น 7: May ดูหน้า /preps/[id]/scope ในเบราว์เซอร์เทียบ wireframe S12 / S38 ด้วยข้อมูลจำลอง (หน้าทดลองชั่วคราว ไม่ commit)
+รัน /work-done
 
 ## Waiting on
 
