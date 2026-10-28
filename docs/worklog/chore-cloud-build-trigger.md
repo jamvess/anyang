@@ -14,7 +14,7 @@
 - [x] 1. 🤖 แก้ `infra/cloudbuild.yaml` ให้ตรงกับ `deploy-staging.ps1`: `--env-vars-file=infra/env/api-staging.yaml` (`AI_PROVIDER=fake`), `--allow-unauthenticated`, `--max-instances=2`, `asia-southeast1`, ไม่มี `--set-secrets` (เอา `anthropic-api-key` และ `supabase-service-role` ออก) · `options.logging: CLOUD_LOGGING_ONLY` (บังคับเมื่อใช้ service account ที่สร้างเอง) · + sub-bullet เรื่อง `min-instances` ใน `sprint-checklists.md`
 - [x] 2. 🙋 สร้าง service account `cloudbuild-deployer` และให้ role ที่ใช้ deploy (Claude ให้คำสั่งทีละตัว): `run.admin` (deploy + ตั้ง `allUsers` invoker ของ `--allow-unauthenticated`), `artifactregistry.writer`, `logging.logWriter` และ `iam.serviceAccountUser` บน runtime SA ของ Cloud Run (`659706857266-compute@developer.gserviceaccount.com`)
 - [x] 3. 🙋 Jam ต่อ GitHub กับ Cloud Build (2nd gen, `asia-southeast1`) แล้ว link repo `jamvess/anyang` (Claude ร่างขั้นตอนให้ส่ง Jam)
-- [ ] 4. 🙋 สร้าง trigger `api-staging-deploy` ด้วย `gcloud builds triggers create github`: branch `^main$` เท่านั้น · `--included-files=apps/api/**,config/**,prompts/**,infra/**` · `--build-config=infra/cloudbuild.yaml` · `--service-account` = `cloudbuild-deployer`
+- [x] 4. 🙋 สร้าง trigger `api-staging-deploy` ด้วย `gcloud builds triggers create github`: branch `^main$` เท่านั้น · `--included-files=apps/api/**,config/**,prompts/**,infra/**` · `--build-config=infra/cloudbuild.yaml` · `--service-account` = `cloudbuild-deployer`
 - [ ] 5. 🤖 อัปเดต `infra/README.md` (trigger, SA, roles, วิธีดู build) + checklist
 - [ ] 6. 🙋 ทดสอบจริง: merge PR นี้ (แก้ `infra/**` จึง trigger เอง) → ดู build ใน Console → Claude ตรวจว่า image ของ revision ใหม่ใช้ tag = commit ของ merge และ `/health` + CORS ยังผ่าน
 
@@ -31,6 +31,7 @@
 - 2026-10-29 · ขั้น 3: Jam ต่อ GitHub (`github-anyang` / `anyang`)
 - 2026-10-29 · ขั้น 2: SA `cloudbuild-deployer@anyang-513006.iam.gserviceaccount.com` · `run.admin` (project) · `artifactregistry.writer` (เฉพาะ repo `anyang`) · `logging.logWriter` (project) · `iam.serviceAccountUser` (เฉพาะบน `659706857266-compute@developer.gserviceaccount.com`) · IAM policy ยืนยันว่า compute SA มี `roles/editor`
 - 2026-10-29 · ขั้น 4 (ไฟล์): `infra/trigger-api-staging.yaml` สำหรับ `gcloud builds triggers import`
+- 2026-10-29 · ขั้น 4: import trigger แล้ว · id `6d9a83fa-fe92-426a-b8a6-0754ed370737` · `branch: ^main$` ครบ · repository `…/repositories/anyang` · `includedFiles` 4 path · SA `cloudbuild-deployer` · ยังไม่เคยรัน
 
 ## Decisions
 
@@ -47,7 +48,7 @@
 
 ## Next step
 
-ขั้น 4: Junior รัน `gcloud builds triggers import --source=infra/trigger-api-staging.yaml --region=asia-southeast1` จาก repo root แล้ว `gcloud builds triggers describe api-staging-deploy --region=asia-southeast1` ดูว่า `branch: ^main$` ครบ · ห้ามกด Run trigger
+ขั้น 5: อัปเดต `infra/README.md` (trigger `api-staging-deploy`, SA `cloudbuild-deployer` + role, วิธี import/อัปเดต trigger, วิธีดู build, บรรทัดเก่า "สร้าง Cloud Build trigger" / "ให้ service account ของ Cloud Build มีสิทธิ์…" ให้เป็นสถานะจริง) + ย่อ note `$$`/`^@^` ใต้ข้อ trigger ใน checklist ถ้า Junior ok
 
 ## Waiting on
 
