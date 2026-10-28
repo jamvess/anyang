@@ -11,7 +11,7 @@
 
 - [x] 1. 🤖 สร้าง `docs/report/ai-evaluation.md` · โครง 4 หัวข้อ + เขียนหัวข้อ 1 **สถาปัตยกรรม AI** (code decides / LLM speaks, AI gateway, SymPy ตัดสินถูกผิด, prompt versioning, `<document>` กัน injection) จาก `CLAUDE.md`, `ai-orchestration.md` §1, `apps/api/app/ai/gateway.py`
 - [x] 2. 🤖 หัวข้อ 2 **วิธีวัดผล**: golden set 3 ชุด (ลายมือ 30 รูป, หัวข้อ MTH10101, คำตอบ 50 ข้อ), กติกา label, metric และเป้า, คนทำ PoC ไม่ใช่คน label (และข้อยกเว้นที่ทีมตกลง) จาก `evals/README.md`, `specs/system/test-strategy.md`
-- [ ] 3. 🤖 หัวข้อ 3 **ผล PoC**: P1, P3 จาก report · P2 ใช้ผล SymPy (PR #75) และเว้นตัวเลข LLM ไว้ "รอผล" (เติมหลัง PR #82)
+- [x] 3. 🤖 หัวข้อ 3 **ผล PoC**: P1, P3 จาก report · P2 ใช้ผล SymPy (PR #75) และเว้นตัวเลข LLM ไว้ "รอผล" (เติมหลัง PR #82)
 - [ ] 4. 🤖 หัวข้อ 4 **งานวิจัยรองรับ learning model**: BKT, ระดับเป้า + เพดาน mastery, readiness, spaced review, wheel-spinning, ที่มาของตัวเลข [A]/[B]/[calc]/[C] จาก `learning-model.md`, `docs/research/learning-path.md`
 - [ ] 5. 🙋 Jam อ่านทั้งไฟล์ แล้วบอกส่วนที่ต้องแก้ในแชท (ภาษา, ความยาว, สิ่งที่ขาด)
 - [ ] 6. 🤖 (หลัง P2 เสร็จ) เติมตัวเลข P2 จาก `specs/poc/reports/P2.md`
@@ -30,7 +30,7 @@
 
 ## Next step
 
-ขั้น 3: เขียนหัวข้อ 3 "ผล Proof of Concept" ใน `docs/report/ai-evaluation.md` จาก `specs/poc/reports/P1.md`, `P3.md` และร่าง `P2.md` (branch `docs/poc-report-p2`)
+ขั้น 4: เขียนหัวข้อ 4 "งานวิจัยรองรับ learning model" ใน `docs/report/ai-evaluation.md` จาก `specs/system/learning-model.md` และ `docs/research/learning-path.md`
 
 ## Waiting on
 
