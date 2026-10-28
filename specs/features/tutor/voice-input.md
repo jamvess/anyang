@@ -17,7 +17,7 @@
 
 **ปุ่มไมค์**
 
-- Composer มีปุ่ม 🎤 (`aria-label` "กดค้างเพื่อพูด") อยู่ก่อนปุ่ม 📷 ตาม wireframe S18
+- Composer มีปุ่ม 🎤 (`aria-label` "กดค้างเพื่อพูด") อยู่ก่อนปุ่ม 📷 ตาม wireframe S18 · ปุ่มแสดงเมื่อห้องได้ `transcribe` มา (ห้องที่ไม่มี transport เสียง เช่น fixture ของ S2 ไม่มีปุ่ม · test เดิมที่นับปุ่มของ Composer และห้องจึงไม่ต้องแก้)
 - **กดค้าง = อัด** (pointer down เริ่ม, pointer up หรือ pointer ลากออกจากปุ่ม = หยุด) · keyboard: Space หรือ Enter กดค้างที่ปุ่ม = อัด ปล่อย = หยุด (accessibility · apps/web/CLAUDE.md)
 - ขอสิทธิ์ไมค์ครั้งแรกที่กด (`navigator.mediaDevices.getUserMedia({audio: true})`) · อัดด้วย `MediaRecorder`
 - ระหว่างอัด: ปุ่มเปลี่ยนสถานะ (`aria-pressed="true"`) และมีตัวนับเวลา "0:05 / 1:00" ใต้ช่องพิมพ์ (`role="status"`) · ค่าสูงสุดมาจาก API (OQ 5)
