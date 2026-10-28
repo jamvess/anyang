@@ -11,8 +11,8 @@
 
 - [x] 1. 🤖 `/spec-feature` เขียน `specs/features/check/verdict-mark.md` จาก UC-04 ขั้น 5, A4, A5, A7, A8, ai-orchestration §2.4.5 ("ส่ง SSE `verdict` ก่อน tutor เริ่มพิมพ์"), `merge-rules.md` (ค่าของ `verdict` และ `error_type`) และ api.md (`verdict`) · ใส่คำถามเรื่องหน้าตา (wireframe ยังไม่มีเครื่องหมาย ✓/✗)
 - [x] 2. 🙋 May review spec และตอบคำถามเรื่อง UI (ถามเป็นตัวเลือก): แสดงอะไรบ้าง, ข้อความของแต่ละ verdict, แสดงบรรทัดที่ผิดไหม
-- [ ] 3. 🤖 `/spec-to-tests` · ต้องแดงก่อน
-- [ ] 4. 🙋 May review test
+- [x] 3. 🤖 `/spec-to-tests` · ต้องแดงก่อน
+- [x] 4. 🙋 May review test
 - [ ] 5. 🤖 `/implement-feature` จน test เขียว
 - [ ] 6. 🤖 แก้ wireframe S16 / S22 ให้มีเครื่องหมายผลตรวจตามที่ May เลือก (wireframe เป็นของ May)
 - [ ] 7. 🙋 May ลองในเบราว์เซอร์บนหน้าทดลองชั่วคราว (ไม่ commit) แบบเดียวกับ #77
@@ -27,10 +27,11 @@
 
 - 2026-10-28 · เลือกงานนี้เพราะทำให้ flow ส่งรูป → ยืนยัน → ผลตรวจ ครบฝั่งหน้าเว็บ และทำด้วย fake transport ได้
 - 2026-10-28 · May ตัดสิน OQ 1–4 ตามข้อเสนอ: แถบเล็กเหนือคำพูดติวเตอร์ · บอกเลขบรรทัดในแถบ · ไม่แสดงประเภทความผิด · no_answer ไม่แสดงแถบ
+- 2026-10-28 · May อนุมัติตัด `verdict` ออกจาก test เดิม 2 ตัว (chat-streaming AC-7, ocr-confirm-card AC-18 · AC-18 เปลี่ยนชื่อให้ตรงกับที่ตรวจ) · test ใหม่แดง 4 ตัว + ไฟล์ VerdictMark รันไม่ได้เพราะยังไม่มี component · ตัวที่เขียวอยู่แล้ว (no_answer, verdict ไม่รู้จัก) เป็นตัวกันไม่ให้แสดงแถบผิดเวลา
 
 ## Next step
 
-ขั้น 3: `/spec-to-tests` สำหรับ `specs/features/check/verdict-mark.md` · ขออนุมัติ May ก่อนปรับ test เดิม 2 ตัว (AC-10)
+ขั้น 5: `/implement-feature` สำหรับ `specs/features/check/verdict-mark.md`
 
 ## Waiting on
 
