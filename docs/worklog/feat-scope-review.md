@@ -12,8 +12,8 @@
 - [x] 1. 🤖 `/spec-feature` เขียน `specs/features/scope/scope-review.md` จาก SM-02, SM-03, SM-04, UC-02 (ขั้นตรวจขอบเขต, A4), ai-orchestration §2.3.4–2.3.6, wireframe S12 + S38, api.md (`GET /exam-preps/{id}/scope`, `GET /topics/{id}/sources`) · เสนอรูปร่างของ response (api.md ยังมีแค่ชื่อ endpoint) เป็นคำถามให้ Junior
 - [x] 2. 🙋 May review spec และตอบคำถามเรื่อง UI (ถามเป็นตัวเลือก)
 - [x] 3. 🤖 ถาม Junior เรื่อง api.md ใน PR: รูปร่างของ scope และ sources, ช่วงหน้า (`topic_sources` ยังไม่มี · data-model ข้อ 1), `map_note` (ข้อ 3)
-- [ ] 4. 🤖 `/spec-to-tests` · ใช้ fixture ของหน้า scope (ข้อมูลจาก S12/S38) · ต้องแดงก่อน
-- [ ] 5. 🙋 May review test
+- [x] 4. 🤖 `/spec-to-tests` · ใช้ fixture ของหน้า scope (ข้อมูลจาก S12/S38) · ต้องแดงก่อน
+- [x] 5. 🙋 May review test
 - [ ] 6. 🤖 `/implement-feature` จน test เขียว · route `app/preps/[id]/scope`
 - [ ] 7. 🙋 May ดูหน้าในเบราว์เซอร์เทียบกับ wireframe S12 / S38 (ข้อมูลจำลอง)
 
@@ -27,10 +27,11 @@
 
 - 2026-10-28 · ทำเฉพาะหน้า S12 (+ รายละเอียด S38) · แชทแก้ขอบเขต (S13) และหน้าสรุปยืนยัน (S14) เป็นงานถัดไป · ปุ่ม "ขอแก้ก่อน" / "ยืนยันขอบเขตนี้" จะกำหนดใน spec ว่าทำอะไรในรอบนี้
 - 2026-10-28 · May ตัดสิน OQ 1–4 ตามข้อเสนอ: "ขอแก้ก่อน" แสดงแต่กดไม่ได้ · เปิดรายละเอียดได้หลายหัวข้อ · หัวข้อ 0 ดาวแสดงท้ายรายการ ป้าย "ตัดออก" · หลังยืนยันแล้วอ่านอย่างเดียว + ลิงก์ไปห้องติว · ถาม Junior OQ 5–8 ใน PR #81
+- 2026-10-28 · test 27 ตัว (รวมที่รันซ้ำ 2 ค่า) แดงทั้งไฟล์เพราะยังไม่มี `components/scope/ScopeReview` · fixture `scope-s12.json` (6 หัวข้อ + ข้อสอบไม่เข้าหัวข้อ 1 ข้อ ตาม S12/S38) และ `sources-t3.json` (S38) · `ScopeReview` รับ `navigate` ให้ test ตรวจการไปห้องติวได้โดยไม่ต้องมี router
 
 ## Next step
 
-ขั้น 4: `/spec-to-tests` สำหรับ `specs/features/scope/scope-review.md`
+ขั้น 6: `/implement-feature` สำหรับ `specs/features/scope/scope-review.md` · route `app/preps/[id]/scope`
 
 ## Waiting on
 
