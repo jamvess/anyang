@@ -5,7 +5,7 @@
 | Owner | Jam |
 | Branch | `feat/check-answer-classifier` |
 | Checklist item | P2: merge rules + LLM classifier (`prompts/check_answer/v1`) ใช้ SymPy service |
-| Status | in progress · 2026-10-28 |
+| Status | paused · 2026-10-28 |
 
 ## Plan
 
@@ -37,18 +37,31 @@
 - 2026-10-28 · รันจริงครั้งที่ 2: timeout 15 วินาที (ans_001, ans_002) · ไฟล์ prediction ว่างเพราะไม่ได้ flush → เพิ่ม `out.flush()` · Jam เลือก: `config/ai.yaml` 1.3 เพิ่ม `thinking: low` ให้ `check_answer` (ไฟล์ร่วม · บอกแชทกลุ่ม) · คง `max_tokens: 600`, `timeout_s: 15` · เหตุผล: P3 วัด default thinking ~4,000 token เทียบ low 396 (`settings.py`)
 - 2026-10-28 · ไม่รวม Report P2 ใน branch นี้ (เป็นข้อแยกใน checklist) · ทำ `/poc-report P2` หลัง merge
 
+## Done today (2026-10-28)
+
+- spec `check-answer-classifier.md` approved · test 29 ตัว review แล้ว · implement เสร็จ (prompt v1, `CheckAnswerResult`, `app/services/checker.py`, hint sign flip, `evals/run_checker.py`) · `apps/api` 329 passed · `evals/` 67 passed
+- รันกับ Gemini จริง 3 รอบ: รอบ 1 โดน 429 (5 request/นาที) · รอบ 2 timeout 15 วินาที (default thinking) · รอบ 3 หลังเพิ่ม `thinking: low` ไม่ timeout แต่โดน 429 ซ้ำแม้รอ 60 วินาที → น่าจะหมดเพดานต่อวันของ free tier
+- `run_checker.py`: `--pause` 13 วินาที, รอ 60 วินาทีเมื่อ 429 (≤ 3 ครั้ง), `--resume`, flush ทีละข้อ · `ai.yaml` 1.3 `check_answer` เพิ่ม `thinking: low`
+
 ## Next step
 
-ขั้น 6: Jam รันในเครื่องตัวเอง (ต้องมี `GEMINI_API_KEY` ใน `.env`) จาก root ของ repo:
-`AI_PROVIDER=live AI_MODEL_OVERRIDE=gemini:gemini-3.5-flash uv run --project apps/api python evals/run_checker.py --resume` (ใช้เวลา ~10–15 นาทีเพราะ free tier 5 request ต่อนาที)
-แล้ว `uv run --project apps/api python evals/run_eval.py --purpose check_answer --prompt v1 --predictions evals/answers/predictions/v1.jsonl` · ก๊อปผลทั้ง 2 คำสั่งมาในแชท
+ขั้น 6 (🙋 Jam · หลัง quota รีเซ็ต ~14:00–15:00 เวลาไทยของวันถัดไป): ที่ root ของ repo รัน
+`AI_PROVIDER=live AI_MODEL_OVERRIDE=gemini:gemini-3.5-flash uv run --project apps/api python evals/run_checker.py --resume`
+(รันต่อจาก prediction ที่มีใน `evals/answers/predictions/v1.jsonl` · ~12–15 นาที) แล้ว
+`uv run --project apps/api python evals/run_eval.py --purpose check_answer --prompt v1 --predictions evals/answers/predictions/v1.jsonl` · ก๊อปบรรทัด `skipped` และผลคำสั่งที่ 2 มาในแชท · ถ้า `skipped` มีคำว่า `PerDay` แปลว่า quota ยังไม่รีเซ็ต
 
 ## Waiting on
 
-ไม่มี
+- 🙋 quota รายวันของ Gemini free tier รีเซ็ต แล้ว Jam รันขั้น 6
+- 🙋 Jam review test ใหม่ `test_AI05_rate_limited_answer_is_retried_after_a_wait` ใน `evals/test_run_checker.py` (เพิ่มหลังรันจริงครั้งแรก)
+- Jam บอกแชทกลุ่มเรื่อง `config/ai.yaml` 1.3 (`thinking: low`) ถ้ายังไม่ได้บอก
 
 ## Notes for next time
 
 - ผล SymPy กับ golden set (PR #75): ตัดสินได้ 45/50 · ไปที่ LLM 5 ข้อ (ans_004, 041, 046 implicit dy/dx · ans_047 จบที่ `f'(x)` · ans_034 solveset แก้ไม่ได้) · ข้อ wrong_method ans_037, ans_038 ทุกบรรทัดเท่ากันทางคณิต LLM ต้องชี้บรรทัดเอง (merge-rules ข้อ 6)
 - label ของ golden set ร่างโดย AI (หมายเหตุใน `evals/answers/worksheet.md`) · ตอนอ่านผลต้องคำนึงว่าอาจเอนไปทางเดียวกับ LLM
 - `config/ai.yaml` เป็นไฟล์ร่วม · `check_answer` มี routing อยู่แล้ว ถ้าต้องแก้ต้องขอทีมก่อน
+- `evals/answers/predictions/v1.jsonl` (มี 4 ข้อ: ans_003–006) และ `evals/answers/results/` อยู่ในเครื่อง Jam เท่านั้น ยังไม่ commit เพราะยังไม่ครบ · `--resume` อ่านไฟล์นี้ · commit ไฟล์ prediction + results ตอนรันครบ (ใช้ใน Report P2)
+- 429 ของ free tier บอก model เป็น `gemini-3.6-flash` ทั้งที่ override เป็น `gemini-3.5-flash` · น่าจะเป็น alias ของ Google · ต้องจดชื่อ model ที่ใช้จริงใน Report P2
+- ถ้า quota รายวันไม่พอ 50 ข้อ (แต่ละข้อใช้ 1 request + retry) ทางเลือก: key แบบจ่ายเงิน / Vertex (รอ GCP #20 ของ Junior) · `gemini-3.5-flash-lite` มี quota แยกแต่ไม่ใช่ tier `mid` ใช้ตัดสิน P2 ไม่ได้
+- รัน `run_checker.py` แบบไม่ใส่ `--resume` จะเขียนทับไฟล์ prediction ทั้งไฟล์
