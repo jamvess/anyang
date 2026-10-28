@@ -5,6 +5,7 @@ import type { components } from "@/lib/api";
 import type { SSEEvent } from "@/lib/sse";
 import type { OcrPreviewData, OcrStatus } from "./OcrConfirmCard";
 import type { ProblemData } from "./ProblemCard";
+import type { VerdictData } from "./VerdictMark";
 
 type Schemas = components["schemas"];
 
@@ -19,6 +20,8 @@ export type ChatMessage = Omit<Schemas["Message"], "card" | "attachment_name"> &
     problem?: ProblemData;
     /** Browser-only: lines read from a photo, waiting for the user (ocr-confirm-card.md). Not part of the API. */
     ocr?: { preview: OcrPreviewData; status: OcrStatus };
+    /** Browser-only: the check result from the SSE `verdict` event (verdict-mark.md). Not part of the API. */
+    verdict?: VerdictData;
   };
 
 export type MessageRole = ChatMessage["role"];

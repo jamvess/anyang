@@ -43,4 +43,12 @@ export const roomStrings = {
   ocrRetake: "ถ่ายใหม่",
   ocrConfirmed: "ยืนยันแล้ว",
   ocrRetaken: "ส่งรูปใหม่ได้เลย",
+  verdict: "ผลตรวจ",
+  verdicts: {
+    correct: "ถูก",
+    correct_with_flaw: "คำตอบสุดท้ายถูก แต่มีบรรทัดที่ผิด",
+    incomplete: "ค่าถูก แต่ยังไม่อยู่ในรูปที่โจทย์ถาม",
+    incorrect: "ยังไม่ถูก",
+  } as Record<string, string>,
+  verdictLine: (n: number) => `บรรทัด ${n}`,
 } as const;
