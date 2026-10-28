@@ -10,9 +10,18 @@
 
 ทำใน S1–S2 เป็นส่วนหนึ่งของ PoC P6-lite (ย้ายมาจาก `docs/team/setup.md` §5 ฉบับ 12 ต.ค.)
 
+**ทำแล้ว 28 ต.ค. (PR #20):** project `anyang-513006` (project number `659706857266`) · เปิด API 5 ตัว · Artifact Registry `anyang` (docker, `asia-southeast1`) · ยังไม่ได้สร้าง secret เพราะ `api-staging` ยังไม่ใช้ (`AI_PROVIDER=fake`)
+
+| GCP project | |
+|---|---|
+| ประเภท | **Free Trial** · $300 ภายใน 90 วัน · Jam สร้างและถือ billing · Junior เป็น Owner |
+| ⚠️ ห้าม | กด **Activate** / **Upgrade** เป็น paid account · ถ้า credit หรือ 90 วันหมด resource จะหยุดเอง ไม่ตัดบัตร |
+| Budget alert | $50 (Jam ตั้ง) · ไม่นับ promotional credits จึงเตือนเมื่อเริ่มจ่ายเงินจริง |
+| Gemini | ใช้ผ่าน **Vertex AI เท่านั้น** · credit ของ trial ไม่ครอบคลุม API key ของ AI Studio (`GEMINI_API_KEY`) · `GeminiProvider` ตอนนี้ยังใช้ API key ต้องเพิ่มทาง Vertex ก่อนเปิด live (งาน AI gateway ใน S3) |
+
 ```bash
 gcloud auth login
-gcloud config set project <PROJECT_ID>
+gcloud config set project anyang-513006
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com   artifactregistry.googleapis.com secretmanager.googleapis.com aiplatform.googleapis.com
 gcloud artifacts repositories create anyang --repository-format=docker --location=asia-southeast1
 
@@ -30,6 +39,37 @@ printf '%s' "<anthropic-key>"    | gcloud secrets create anthropic-api-key --dat
 ## Backend · Cloud Run `api-staging`
 
 > ⚠️ ห้ามเปิด AI_PROVIDER=live บน api-staging จนกว่าจะเช็ค Supabase JWT ทุก endpoint · URL เป็น public (--allow-unauthenticated) คนนอกเรียกแล้วกิน credit ได้
+
+| | |
+|---|---|
+| URL | https://api-staging-659706857266.asia-southeast1.run.app (`/health`, `/docs`) · อีกชื่อของ service เดียวกัน: `https://api-staging-ws54gmdazq-as.a.run.app` |
+| Region | `asia-southeast1` · `--min-instances=0` `--max-instances=2` `--concurrency=40` `--timeout=600` |
+| Env | `infra/env/api-staging.yaml` (ไม่มี secret) · `APP_ENV=staging`, `AI_PROVIDER=fake`, CORS ของ Vercel production + localhost + regex ของ preview |
+| ตอนนี้ตอบอะไร | `/health` + stub ห้องติวที่คืน fixture (`X-Stub: true`) · ยังไม่เรียก Supabase หรือ AI |
+
+**Deploy มือ** (ทางสำรองของ P6-lite จนกว่า Cloud Build trigger จะมี) จาก repo root ใน PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File infra\deploy-staging.ps1
+```
+
+- build image ด้วย Cloud Build (`infra/cloudbuild-image.yaml` · ไม่ต้องมี Docker ในเครื่อง) แล้ว `gcloud run deploy` · tag = commit (มี `-dirty-<เวลา>` ถ้ามีไฟล์ยังไม่ commit)
+- `.gcloudignore` กันไม่ให้ upload `.env` และทุกอย่างใน `.gitignore` · ตรวจได้ด้วย `gcloud meta list-files-for-upload`
+- env ใช้ `--env-vars-file` ไม่ใช้ `--set-env-vars` แบบ `^@^` เพราะ `gcloud.cmd` บน Windows ให้ cmd.exe กิน `^` และค่า CORS มี `,` `^` `$`
+
+**ตรวจหลัง deploy**
+
+```bash
+curl -s https://api-staging-659706857266.asia-southeast1.run.app/health
+curl -s -o /dev/null -D - -X OPTIONS https://api-staging-659706857266.asia-southeast1.run.app/health -H "Origin: https://anyang-amber.vercel.app" -H "Access-Control-Request-Method: POST" | grep -i access-control-allow-origin
+```
+
+**Demo-day (ศ. 30 ต.ค.)** กัน cold start: เย็นพฤหัส 29 ต.ค. ตั้ง min instance เป็น 1 · หลัง demo ตั้งกลับเป็น 0 ทันที (instance ที่เปิดค้างกิน trial credit)
+
+```powershell
+gcloud run services update api-staging --region=asia-southeast1 --min-instances=1   # ก่อน demo
+gcloud run services update api-staging --region=asia-southeast1 --min-instances=0   # หลัง demo
+```
 
 ## Frontend · Vercel
 

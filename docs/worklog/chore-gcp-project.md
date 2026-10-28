@@ -16,8 +16,8 @@
 - [x] 3. 🙋 `gcloud config set project anyang-513006` + เปิด API 5 ตัว (`run`, `cloudbuild`, `artifactregistry`, `secretmanager`, `aiplatform`) + สร้าง Artifact Registry `anyang` (docker, `asia-southeast1`)
 - [x] 4. 🤖 เขียน `infra/deploy-staging.ps1` (build image ด้วย Cloud Build → `gcloud run deploy api-staging` ที่ `asia-southeast1`) + `.gcloudignore` · `--allow-unauthenticated` (browser เรียกตรง) · env: `APP_ENV=staging`, `AI_PROVIDER=fake`, `CORS_ALLOW_ORIGINS=https://anyang-amber.vercel.app,http://localhost:3000` + `CORS_ALLOW_ORIGIN_REGEX` ของ preview (`.env.example`) · ใช้ตัวคั่นแบบกำหนดเองของ gcloud (`^@^`) เพราะค่า origins มี `,`
 - [x] 5. 🙋 รันสคริปต์ → ได้ URL · 🤖 ตรวจ `/health`, `/docs` และ header CORS จาก origin ของ Vercel ด้วย `curl`
-- [ ] 6. 🤖 อัปเดต docs: `infra/README.md` (Project ID, URL, วิธี deploy มือ, demo-day note), `docs/team/setup.md` (gcloud, `GOOGLE_CLOUD_PROJECT`), checklist · ร่างข้อความถึง Jam ให้ตั้ง `NEXT_PUBLIC_API_URL` (อ่านใน `apps/web/lib/httpTransport.ts` `apiUrl()`) ใน Vercel ทั้ง Production + Preview เป็น URL ของ Cloud Run แล้ว redeploy (ค่า `NEXT_PUBLIC_*` ฝังตอน build) · เขียนใน PR ว่าช่วง 3 ของ demo (`docs/design/demo-flow.md`) จะตอบจาก stub (`AI_PROVIDER=fake`) จนกว่า gateway ทาง Vertex จะเสร็จ
-- [ ] 7. (ถ้ามีเวลา) 🙋 + 🤖 Cloud Build trigger: merge → deploy `api-staging` · แก้ `infra/cloudbuild.yaml` ให้ตรงกับสคริปต์ (env CORS, ไม่ใช้ `anthropic-api-key`)
+- [x] 6. 🤖 อัปเดต docs: `infra/README.md` (Project ID, URL, วิธี deploy มือ, demo-day note), `docs/team/setup.md` (gcloud, `GOOGLE_CLOUD_PROJECT`), checklist · ร่างข้อความถึง Jam ให้ตั้ง `NEXT_PUBLIC_API_URL` (อ่านใน `apps/web/lib/httpTransport.ts` `apiUrl()`) ใน Vercel ทั้ง Production + Preview เป็น URL ของ Cloud Run แล้ว redeploy (ค่า `NEXT_PUBLIC_*` ฝังตอน build) · เขียนใน PR ว่าช่วง 3 ของ demo (`docs/design/demo-flow.md`) จะตอบจาก stub (`AI_PROVIDER=fake`) จนกว่า gateway ทาง Vertex จะเสร็จ
+- [ ] 7. ~~(ถ้ามีเวลา)~~ ย้ายไป PR แยก 29 ต.ค. (Junior ตัดสิน 28 ต.ค.) 🙋 + 🤖 Cloud Build trigger: merge → deploy `api-staging` · แก้ `infra/cloudbuild.yaml` ให้ตรงกับสคริปต์ (env CORS, ไม่ใช้ `anthropic-api-key`)
 
 ## Definition of done
 
@@ -46,6 +46,7 @@
 
 ## Done today
 
+- 2026-10-28 · ขั้น 6: `infra/README.md` (project, Free Trial rules, `api-staging`, deploy มือ, ตรวจหลัง deploy, demo-day) · `setup.md` A2 (gcloud) + A5 (`GOOGLE_CLOUD_PROJECT`) · checklist: ติ๊กข้อ GCP project + sub-bullet ใต้ข้อให้สิทธิ์ทีมและ Cloud Build trigger · ร่างข้อความถึง Jam (Vercel) + comment ใน PR #20
 - 2026-10-28 · ขั้น 5: deploy ผ่าน · revision `api-staging-00001-tdk` · URL `https://api-staging-659706857266.asia-southeast1.run.app` (อีกชื่อของ service เดียวกัน: `https://api-staging-ws54gmdazq-as.a.run.app`) · ตรวจด้วย curl: `/health` 200, `/docs` 200, `openapi.json` มี 5 path, preflight จาก production / preview / localhost ได้ `access-control-allow-origin` ตรง origin, origin อื่นได้ 400 · `POST /sessions/{id}/messages` stream SSE ของ stub ครบจนถึง `event: done`
 - 2026-10-28 · ขั้น 4: `infra/deploy-staging.ps1` + `infra/cloudbuild-image.yaml` (build อย่างเดียว) + `infra/env/api-staging.yaml` + `.gcloudignore` · ตรวจแล้ว: สคริปต์ parse ผ่าน, env file โหลดเข้า `EnvSettings` ได้ค่าถูก, regex match preview แต่ไม่ match origin อื่น
 - 2026-10-28 · ขั้น 3: set project · เปิด API 5 ตัว (operation `acf.p2-659706857266-…` สำเร็จ) · สร้าง Artifact Registry `anyang` (docker, `asia-southeast1`) · project number `659706857266`
@@ -56,11 +57,12 @@
 
 ## Next step
 
-ขั้น 6: อัปเดต `infra/README.md` หัวข้อ "Backend · Cloud Run `api-staging`" (Project ID, URL, วิธี deploy มือ, demo-day note) + `docs/team/setup.md` (gcloud, `GOOGLE_CLOUD_PROJECT=anyang-513006`) + ติ๊ก checklist · ร่างข้อความถึง Jam ให้ตั้ง `NEXT_PUBLIC_API_URL` ใน Vercel · ร่างข้อความใน PR #20 เรื่องช่วง 3 ของ demo ใช้ stub
+`/work-done` สำหรับ PR #20 · พรุ่งนี้ (29 ต.ค.) เปิด branch ใหม่ `chore/cloud-build-trigger` สำหรับขั้น 7: trigger merge → deploy `api-staging` + แก้ `infra/cloudbuild.yaml` ให้ใช้ `--env-vars-file=infra/env/api-staging.yaml` และ `--allow-unauthenticated`/`--max-instances=2` เหมือน `deploy-staging.ps1` · เอา `AI_PROVIDER=live` และ secret `anthropic-api-key` ออก
 
 ## Waiting on
 
-- ไม่มี
+- 🙋 Jam: ตั้ง `NEXT_PUBLIC_API_URL` ใน Vercel (Production + Preview) แล้ว redeploy
+- 🙋 Junior: ตั้ง `--min-instances=1` เย็นพฤหัส 29 ต.ค. และกลับเป็น 0 หลัง demo
 
 ## Notes for next time
 
