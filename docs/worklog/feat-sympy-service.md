@@ -9,7 +9,7 @@
 
 ## Plan
 
-- [ ] 1. 🤖 `/spec-feature AM-04 AM-05` → `specs/features/check/sympy-service.md` · input (โจทย์, เฉลย, `answer_format`, `lines`) → `SympyResult` ตาม merge-rules §3 · AC จากโจทย์ P01–P17 และ golden set `evals/answers/` · เขียนคำถามที่ต้องตัดสินไว้ใน §10
+- [x] 1. 🤖 `/spec-feature AM-04 AM-05` → `specs/features/check/sympy-service.md` · input (โจทย์, เฉลย, `answer_format`, `lines`) → `SympyResult` ตาม merge-rules §3 · AC จากโจทย์ P01–P17 และ golden set `evals/answers/` · เขียนคำถามที่ต้องตัดสินไว้ใน §10
 - [ ] 2. 🙋 Jam review spec และตอบคำถามใน §10 (เปิดไฟล์ spec อ่าน §2, §4, §10 แล้วตอบในแชทนี้เป็นข้อ)
 - [ ] 3. 🙋 ขอ Junior ในแชทกลุ่ม: เพิ่ม dependency `antlr4-python3-runtime==4.11` ใน `apps/api/pyproject.toml` (ไฟล์ของ Junior) · P1 พบว่า parser แบบ `lark` ของ SymPy อ่าน `2x\sin(x)+x^{2}\cos(x)` ผิดโดยไม่แจ้ง · ตอบ OK แล้วบอกในแชทนี้
 - [ ] 4. 🤖 `/spec-to-tests` → `apps/api/tests/unit/test_sympy_service.py` แบบ table-driven (ต้องแดงก่อน implement)
@@ -29,10 +29,13 @@
 ## Decisions
 
 - 2026-10-28 · ใช้ parser แบบ `antlr` ไม่ใช่ `lark` · ผลจาก P1 (`poc/P1/lines.py`): `lark` อ่านบางบรรทัดผิดโดยไม่แจ้ง
+- 2026-10-28 · (ร่าง spec · รอ Jam) บรรทัด 1 เทียบกับเฉลยแทนตัวโจทย์ เพราะ `problems.text` เป็นภาษาไทยปน parse ไม่ได้ และ AM-11 รับประกันว่าค่าโจทย์ = เฉลย
+- 2026-10-28 · ใช้ worker ที่เปิดค้างไว้ ไม่เปิด process ใหม่ทุกครั้ง · วัดแล้วเปิด Python + import SymPy ใช้ 1.9 วินาที (budget 2 วินาที)
+- 2026-10-28 · แทน symbol `e` ด้วย `E` · ทดลองแล้ว parser อ่าน `e^{x}` เป็นตัวแปร ทำให้ P16 แก้ไม่ได้
 
 ## Next step
 
-ขั้น 1: รัน `/spec-feature AM-04 AM-05` เขียน `specs/features/check/sympy-service.md`
+ขั้น 2: Jam อ่าน `specs/features/check/sympy-service.md` §2, §4, §10 แล้วตอบ Q1–Q5 · จากนั้นแก้ spec ตามคำตอบ, เปลี่ยน Status เป็น approved และแก้ merge-rules §3 / ai-orchestration §2.4.3 ตาม §11
 
 ## Waiting on
 
