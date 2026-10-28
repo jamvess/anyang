@@ -14,9 +14,9 @@
 - [x] 1. 🙋 ติดตั้ง gcloud CLI แล้ว login (`juniormonsicha.kt@gmail.com`)
 - [x] 2. 🙋 Jam สร้าง project `anyang-513006` (Free Trial) ผูก billing และตั้ง budget alert $50 · Junior เป็น Owner · `gcloud projects describe` ได้ `ACTIVE`
 - [ ] 3. 🙋 `gcloud config set project anyang-513006` + เปิด API 5 ตัว (`run`, `cloudbuild`, `artifactregistry`, `secretmanager`, `aiplatform`) + สร้าง Artifact Registry `anyang` (docker, `asia-southeast1`)
-- [ ] 4. 🤖 เขียน `infra/deploy-staging.ps1` (build image ด้วย Cloud Build → `gcloud run deploy api-staging` ที่ `asia-southeast1`) + `.gcloudignore` · env: `APP_ENV=staging`, `AI_PROVIDER=fake`, `CORS_ALLOW_ORIGINS` (Vercel production + localhost), `CORS_ALLOW_ORIGIN_REGEX` ใช้ตัวคั่นแบบกำหนดเองของ gcloud (`^@^`) เพราะค่ามี `,`
+- [ ] 4. 🤖 เขียน `infra/deploy-staging.ps1` (build image ด้วย Cloud Build → `gcloud run deploy api-staging` ที่ `asia-southeast1`) + `.gcloudignore` · `--allow-unauthenticated` (browser เรียกตรง) · env: `APP_ENV=staging`, `AI_PROVIDER=fake`, `CORS_ALLOW_ORIGINS=https://anyang-amber.vercel.app,http://localhost:3000` + `CORS_ALLOW_ORIGIN_REGEX` ของ preview (`.env.example`) · ใช้ตัวคั่นแบบกำหนดเองของ gcloud (`^@^`) เพราะค่า origins มี `,`
 - [ ] 5. 🙋 รันสคริปต์ → ได้ URL · 🤖 ตรวจ `/health`, `/docs` และ header CORS จาก origin ของ Vercel ด้วย `curl`
-- [ ] 6. 🤖 อัปเดต docs: `infra/README.md` (Project ID, URL, วิธี deploy มือ), `docs/team/setup.md` (gcloud, `GOOGLE_CLOUD_PROJECT`), checklist
+- [ ] 6. 🤖 อัปเดต docs: `infra/README.md` (Project ID, URL, วิธี deploy มือ, demo-day note), `docs/team/setup.md` (gcloud, `GOOGLE_CLOUD_PROJECT`), checklist · ร่างข้อความถึง Jam ให้ตั้ง `NEXT_PUBLIC_API_URL` (อ่านใน `apps/web/lib/httpTransport.ts` `apiUrl()`) ใน Vercel ทั้ง Production + Preview เป็น URL ของ Cloud Run แล้ว redeploy (ค่า `NEXT_PUBLIC_*` ฝังตอน build) · เขียนใน PR ว่าช่วง 3 ของ demo (`docs/design/demo-flow.md`) จะตอบจาก stub (`AI_PROVIDER=fake`) จนกว่า gateway ทาง Vertex จะเสร็จ
 - [ ] 7. (ถ้ามีเวลา) 🙋 + 🤖 Cloud Build trigger: merge → deploy `api-staging` · แก้ `infra/cloudbuild.yaml` ให้ตรงกับสคริปต์ (env CORS, ไม่ใช้ `anthropic-api-key`)
 
 ## Definition of done
@@ -27,6 +27,8 @@
 - `infra/README.md` และ `setup.md` ตรงกับที่ตั้งจริง · ติ๊ก checklist ข้อ "สร้าง GCP project" + เขียน sub-bullet ใต้ข้อ Cloud Build trigger ว่ามีทางสำรองแล้ว
 
 ## Decisions
+
+- 2026-10-28 · **Demo-day:** เย็นพฤหัส 29 ต.ค. ตั้ง `gcloud run services update api-staging --region=asia-southeast1 --min-instances=1` กัน cold start · หลัง demo ศ. 30 ต.ค. ตั้งกลับเป็น `--min-instances=0` ทันที (instance ที่เปิดค้างกิน trial credit)
 
 - 2026-10-28 · ทีมเลือก Free Trial ของ GCP · Jam สร้าง project `anyang-513006` และถือ billing · Junior เป็น Owner · budget alert $50 (Jam ตั้ง · ไม่นับ promotional credits จึงเตือนเมื่อจ่ายเงินจริง)
 - 2026-10-28 · **ห้ามกด Activate / Upgrade เป็น paid account เด็ดขาด** · Free Trial = $300 ภายใน 90 วัน หมดแล้ว resource หยุดเอง ไม่ตัดบัตร
@@ -53,6 +55,8 @@
 - ไม่มี
 
 ## Notes for next time
+
+- ถ้าไม่ได้ตั้ง `NEXT_PUBLIC_API_URL` ใน Vercel หน้าห้องติวจะไม่ได้เรียก localhost แต่ `apiUrl()` จะ throw `NEXT_PUBLIC_API_URL must be set` ตอนเปิดห้อง
 
 - ถ้ารอ credit นานเกิน ~23 ต.ค. ให้คุยทางเลือกโฮสต์ฟรี เพื่อให้ demo S2 (30 ต.ค.) ทัน · ระหว่างรอทำ Supabase `anyang-staging` + CODEOWNERS ได้ (ไม่ต้องใช้เงิน)
 
