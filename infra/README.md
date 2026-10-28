@@ -46,6 +46,7 @@ printf '%s' "<anthropic-key>"    | gcloud secrets create anthropic-api-key --dat
 | Region | `asia-southeast1` · `--min-instances=0` `--max-instances=2` `--concurrency=40` `--timeout=600` |
 | Env | `infra/env/api-staging.yaml` (ไม่มี secret) · `APP_ENV=staging`, `AI_PROVIDER=fake`, CORS ของ Vercel production + localhost + regex ของ preview |
 | ตอนนี้ตอบอะไร | `/health` + stub ห้องติวที่คืน fixture (`X-Stub: true`) · ยังไม่เรียก Supabase หรือ AI |
+| **Demo link** | https://anyang-amber.vercel.app/preps/00000000-0000-4000-8000-000000000001/room · ห้องติวบน Vercel production ที่ stream คำตอบ stub จาก `api-staging` (ตรวจใน Network แล้ว 28 ต.ค.) |
 
 **Deploy มือ** (ทางสำรองของ P6-lite จนกว่า Cloud Build trigger จะมี) จาก repo root ใน PowerShell:
 
@@ -79,6 +80,7 @@ gcloud run services update api-staging --region=asia-southeast1 --min-instances=
 | Vercel project | `anyang` ใน team `anyang4` (Hobby, account ของ Jam) · root directory = `apps/web` |
 | Env (Preview) | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` ชี้ Supabase `anyang-staging` แล้ว 21 ต.ค. (Config) (URL ไม่มี `/rest/v1/` ต่อท้าย, key เป็น `sb_publishable_...`) · architecture.md: staging = Vercel preview |
 | Env (Production) | ชี้ anyang-staging แล้ว 21 ต.ค. (Config) |
+| `NEXT_PUBLIC_API_URL` | `https://api-staging-659706857266.asia-southeast1.run.app` ทั้ง Production + Preview (28 ต.ค.) |
 
 **ทำงานยังไง**
 
@@ -96,4 +98,16 @@ gcloud run services update api-staging --region=asia-southeast1 --min-instances=
 
 - preview URL และลิงก์ Inspect เปิดได้เฉพาะ account ของ Jam (Vercel Authentication) · คนอื่นจะเจอ 404 หรือหน้า login
 - token เป็นของ Jam ถ้าหมดอายุหรือถูกลบ ต้องให้ Jam สร้างใหม่แล้วอัปเดต `VERCEL_TOKEN`
-- เพิ่ม env ใหม่ (เช่น `NEXT_PUBLIC_API_URL` ตอนมี `api-staging`) ที่ Vercel → Project → Settings → Environment Variables แล้ว deploy ใหม่
+- เพิ่มหรือแก้ env ที่ Vercel → Project → Settings → Environment Variables แล้ว**รัน workflow `web-deploy` ใหม่** · ปุ่ม Redeploy ของ Vercel ใช้ไม่ได้ เพราะ step `vercel pull --environment=…` ดึง env ตอน workflow รัน และค่า `NEXT_PUBLIC_*` ถูกฝังตอน `vercel build` ใน GitHub Actions ไม่ใช่บน Vercel
+- ข้อความ template ให้ Jam (เจ้าของ Vercel) เมื่อต้องตั้ง env:
+
+  ```
+  Jam ช่วยตั้ง env ใน Vercel ให้หน่อย 🙏
+  Vercel → project anyang → Settings → Environment Variables → Add
+    Key:   <ชื่อตัวแปร เช่น NEXT_PUBLIC_API_URL>
+    Value: <ค่า · URL ไม่มี / ท้าย>
+    Environments: ✅ Production ✅ Preview
+  แล้ว deploy ใหม่ (ไม่ใช่ปุ่ม Redeploy ของ Vercel):
+  GitHub → Actions → web-deploy → run ล่าสุดของ main → Re-run all jobs
+  preview ของ PR จะได้ค่าใหม่ตอน push commit ถัดไปของ PR นั้น (หรือ Re-run run ของ PR)
+  ```

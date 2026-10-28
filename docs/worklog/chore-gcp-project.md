@@ -46,6 +46,7 @@
 
 ## Done today
 
+- 2026-10-28 · Jam ตั้ง `NEXT_PUBLIC_API_URL` แล้ว · Junior re-run `web-deploy` ของ main → https://anyang-amber.vercel.app/preps/00000000-0000-4000-8000-000000000001/room โหลดห้องและ stream คำตอบ stub จาก `api-staging` ได้ (ตรวจใน Network) · เพิ่ม demo link + template ข้อความถึง Jam ใน `infra/README.md`
 - 2026-10-28 · ขั้น 6: `infra/README.md` (project, Free Trial rules, `api-staging`, deploy มือ, ตรวจหลัง deploy, demo-day) · `setup.md` A2 (gcloud) + A5 (`GOOGLE_CLOUD_PROJECT`) · checklist: ติ๊กข้อ GCP project + sub-bullet ใต้ข้อให้สิทธิ์ทีมและ Cloud Build trigger · ร่างข้อความถึง Jam (Vercel) + comment ใน PR #20
 - 2026-10-28 · ขั้น 5: deploy ผ่าน · revision `api-staging-00001-tdk` · URL `https://api-staging-659706857266.asia-southeast1.run.app` (อีกชื่อของ service เดียวกัน: `https://api-staging-ws54gmdazq-as.a.run.app`) · ตรวจด้วย curl: `/health` 200, `/docs` 200, `openapi.json` มี 5 path, preflight จาก production / preview / localhost ได้ `access-control-allow-origin` ตรง origin, origin อื่นได้ 400 · `POST /sessions/{id}/messages` stream SSE ของ stub ครบจนถึง `event: done`
 - 2026-10-28 · ขั้น 4: `infra/deploy-staging.ps1` + `infra/cloudbuild-image.yaml` (build อย่างเดียว) + `infra/env/api-staging.yaml` + `.gcloudignore` · ตรวจแล้ว: สคริปต์ parse ผ่าน, env file โหลดเข้า `EnvSettings` ได้ค่าถูก, regex match preview แต่ไม่ match origin อื่น
@@ -61,10 +62,11 @@
 
 ## Waiting on
 
-- 🙋 Jam: ตั้ง `NEXT_PUBLIC_API_URL` ใน Vercel (Production + Preview) แล้ว redeploy
 - 🙋 Junior: ตั้ง `--min-instances=1` เย็นพฤหัส 29 ต.ค. และกลับเป็น 0 หลัง demo
 
 ## Notes for next time
+
+- แก้ env ของ Vercel แล้วต้อง re-run workflow `web-deploy` (GitHub Actions) ไม่ใช่ปุ่ม Redeploy ของ Vercel · `vercel pull` ดึง env ตอน workflow รัน และ build เกิดใน Actions
 
 - curl จาก Git Bash ที่ส่ง JSON ภาษาไทยใน `-d '...'` ได้ 400 เพราะ encoding ของ argument บน Windows เพี้ยน ไม่ใช่ปัญหาของ API · ให้เขียน body ลงไฟล์แล้วใช้ `--data-binary @file` แทน (ได้ 200)
 
