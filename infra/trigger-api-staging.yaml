@@ -5,8 +5,8 @@
 name: api-staging-deploy
 description: merge to main -> build apps/api -> deploy Cloud Run api-staging (P6-lite)
 repositoryEventConfig:
-  # 2nd gen connection made by Jam; the repository resource is named "anayang" (typo) but points to jamvess/anyang.
-  repository: projects/anyang-513006/locations/asia-southeast1/connections/github-anyang/repositories/anayang
+  # 2nd gen connection made by Jam; repository "anyang" -> https://github.com/jamvess/anyang.git
+  repository: projects/anyang-513006/locations/asia-southeast1/connections/github-anyang/repositories/anyang
   push:
     branch: ^main$
 filename: infra/cloudbuild.yaml

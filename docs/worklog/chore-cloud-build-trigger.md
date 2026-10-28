@@ -28,7 +28,7 @@
 ## Done today
 
 - 2026-10-29 · ขั้น 1: แก้ `infra/cloudbuild.yaml` + sub-bullet `min-instances` ใน checklist + note runtime SA ใน `infra/README.md`
-- 2026-10-29 · ขั้น 3: Jam ต่อ GitHub (`github-anyang` / `anayang`)
+- 2026-10-29 · ขั้น 3: Jam ต่อ GitHub (`github-anyang` / `anyang`)
 - 2026-10-29 · ขั้น 2: SA `cloudbuild-deployer@anyang-513006.iam.gserviceaccount.com` · `run.admin` (project) · `artifactregistry.writer` (เฉพาะ repo `anyang`) · `logging.logWriter` (project) · `iam.serviceAccountUser` (เฉพาะบน `659706857266-compute@developer.gserviceaccount.com`) · IAM policy ยืนยันว่า compute SA มี `roles/editor`
 - 2026-10-29 · ขั้น 4 (ไฟล์): `infra/trigger-api-staging.yaml` สำหรับ `gcloud builds triggers import`
 
@@ -37,7 +37,7 @@
 - 2026-10-29 · สร้าง trigger จากไฟล์ `infra/trigger-api-staging.yaml` + `gcloud builds triggers import` แทน flag ของ `triggers create` · `--branch-pattern=^main$` ผ่าน `gcloud.cmd` แล้ว cmd.exe จะกิน `^` (เหลือ `main$` ซึ่ง match branch อย่าง `foo-main` ด้วย) · ไฟล์ยัง version ไว้ใน repo และใช้ import ซ้ำเพื่ออัปเดตได้ · ไฟล์เป็น ASCII ล้วน
 - 2026-10-29 · `artifactregistry.writer` ให้เฉพาะ repo `anyang` และ `iam.serviceAccountUser` ให้เฉพาะบน compute SA ไม่ให้ระดับ project · least privilege
 
-- 2026-10-29 · Jam ต่อ GitHub แล้ว: connection 2nd gen `github-anyang` (`asia-southeast1`) · repository ชื่อ **`anayang`** (พิมพ์ผิด แต่ชี้ `jamvess/anyang` จริง · Junior ตรวจด้วย `gcloud builds repositories list`) · ใช้ชื่อนี้ตามจริงใน trigger ไม่แก้ชื่อ
+- 2026-10-29 · Jam ต่อ GitHub แล้ว: connection 2nd gen `github-anyang` (`asia-southeast1`) · repository ชื่อ **`anyang`** → `https://github.com/jamvess/anyang.git` (Junior ตรวจด้วย `gcloud builds repositories list --connection=github-anyang --region=asia-southeast1`) · ชื่อ `anayang` ที่จดไว้ตอนแรกมาจากที่ Jam พิมพ์ผิดในแชท แก้ใน trigger แล้วก่อน import
 
 - 2026-10-29 · (Junior) ก่อนเปิด `AI_PROVIDER=live` ต้องย้าย `api-staging` ไปใช้ runtime SA แยกที่มีแค่ Vertex AI User + Secret Manager Secret Accessor · default compute SA ได้ Editor ทั้ง project · ไม่ทำใน PR นี้ จดไว้ใน `infra/README.md` ข้างคำเตือนเรื่อง live
 - 2026-10-29 · `cloudbuild.yaml` ใช้ `--env-vars-file` เหมือนสคริปต์ จึงไม่ต้องเขียน `$` ของ regex เป็น `$$` (Cloud Build แทนค่าเฉพาะใน `cloudbuild.yaml` ไม่แทนในไฟล์ที่ gcloud อ่าน) · note เก่าใน checklist เรื่อง `$$` และ `^@^` จึงไม่ใช้แล้ว
@@ -54,5 +54,7 @@
 ไม่มี
 
 ## Notes for next time
+
+- ชื่อ resource ใน GCP ให้เช็คจาก `gcloud ... list` เสมอ อย่าเชื่อชื่อที่พิมพ์ในแชท (`anayang` vs `anyang`)
 
 - `infra/**` รวม `infra/README.md` ด้วย แก้ docs ใน `infra/` ก็ deploy ใหม่ (ไม่มีผลเสีย แค่ build ประมาณ 3 นาที)
