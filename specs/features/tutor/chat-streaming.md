@@ -42,7 +42,7 @@ type SendMessage = (payload: SendPayload, signal: AbortSignal) => AsyncIterable<
 | `buddy {text}` | สร้าง bubble buddy ใหม่ 1 อันด้วย `text` ทั้งก้อน (ข้อความ buddy นอกจังหวะ §2.1.7) |
 | `done {}` | จบ stream ออกจากสถานะกำลังตอบ |
 | `error {code, message}` | จบ stream แสดงข้อความแจ้งผิดพลาดและออกจากสถานะกำลังตอบ · bubble ที่ stream มาแล้วบางส่วนยังอยู่ |
-| `progress_card`, `problem`, `ocr_preview`, `verdict`, `session_end`, `scope_patch` และ event ที่ไม่รู้จัก | ไม่แสดงอะไรใน feature นี้ ข้ามไปอ่าน event ถัดไป ห้าม crash |
+| `progress_card`, `problem`, `ocr_preview`, `verdict`, `session_end`, `scope_patch` และ event ที่ไม่รู้จัก | ไม่แสดงอะไรใน feature นี้ ข้ามไปอ่าน event ถัดไป ห้าม crash · ภายหลังแสดงแล้วตาม feature แยก: `progress_card` (`progress-card.md`), `problem` (`problem-card.md`), `ocr_preview` (`check/ocr-confirm-card.md`) |
 
 4. ถ้า transport throw (เช่น เน็ตหลุด, HTTP ไม่ใช่ 2xx) หรือ stream จบโดยไม่มี `done`: ทำเหมือนได้ `error`
 5. ออกจากหน้า room (unmount) ระหว่าง stream: abort `signal` และไม่ update state อีก

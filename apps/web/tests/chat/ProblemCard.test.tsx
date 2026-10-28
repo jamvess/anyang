@@ -1,9 +1,9 @@
 import { cleanup, render } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import { ProblemCard } from "@/components/chat/ProblemCard";
+import { ProblemCard, type ProblemData } from "@/components/chat/ProblemCard";
 
 // Spec: specs/features/tutor/problem-card.md
-const PROBLEM = { problem_id: "p1", text_latex: "x^2 - 49", difficulty: 1, purpose: "probe" };
+const PROBLEM: ProblemData = { problem_id: "p1", text_latex: "x^2 - 49", difficulty: 1, purpose: "probe" };
 
 /** TeX source of every KaTeX piece, read from its MathML annotation. */
 const texSources = (el: HTMLElement) =>

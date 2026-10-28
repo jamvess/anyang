@@ -1,27 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import type { components } from "@/lib/api";
 import { roomStrings as t } from "./strings";
 
-// Spec: specs/features/tutor/progress-card.md · payload: api.md "SSE events" progress_card.
+// Spec: specs/features/tutor/progress-card.md · payload: api.md v1.4 "SSE events" progress_card.
 // Every number comes from the API; this component only formats them (apps/web/CLAUDE.md).
 
-export type ProgressTopic = {
-  id: string;
-  name: string;
-  stars: number;
-  level: string;
-  review_due: boolean;
-  origin: string;
-};
-
-export type ProgressCardData = {
-  days_left: number;
-  passed: number;
-  total: number;
-  readiness: number;
-  topics: ProgressTopic[];
-};
+/** Generated from the API schema (`pnpm gen:api`), not hand-written. */
+export type ProgressCardData = components["schemas"]["ProgressCardEvent"];
 
 /** Topics shown before the "more" button (wireframe S15). A UI value, not a learning-model one. */
 export const PROGRESS_CARD_VISIBLE_TOPICS = 6;

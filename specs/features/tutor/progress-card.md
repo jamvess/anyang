@@ -6,7 +6,7 @@
 | Requirements | TM-15, TM-11, PM-03 (แสดงค่าที่ API คำนวณ) |
 | Owner | May |
 | Reviewer | Junior |
-| Status | approved by May 2026-10-21 (owner) · รอ Junior review ใน PR (OQ 3, 4) |
+| Status | implemented (#63) · OQ 3, 4 ตอบแล้วใน api.md v1.4 (#71) · type ใช้ของที่ generate (#74) |
 | Related system spec | api.md "SSE events" (`progress_card`), "ห้องติว" (`Message.card`) · ai-orchestration.md §2.2.2 (ระดับ 4 ขั้น, ความพร้อม, การ์ดเก็บใน `messages` role `card`) · wireframe S15, S24 · `chat-room-ui.md` AC-4 · `room-http.md` |
 
 ## 1. Context
@@ -23,7 +23,7 @@
 - 2 ตัวเลข: "ผ่านแล้ว {passed} / {total} หัวข้อ" และ "ความพร้อม {readiness × 100 ปัดเป็นจำนวนเต็ม}%"
 - บรรทัดอธิบายใต้ตัวเลข: "ความพร้อม = สัดส่วนของเนื้อหาข้อสอบที่คาดว่าทำได้ ไม่ใช่คะแนนสอบ" (ai-orchestration §2.2.2)
 - รายการหัวข้อ**ตามลำดับที่ API ส่งมา** (ไม่เรียงใหม่) · แต่ละแถว: ชื่อ, ดาว ★ เต็มตาม `stars` จาก 3, ระดับ
-- ระดับ: `not_started` = "ยังไม่เริ่ม" · `weak` = "อ่อน" · `developing` = "กำลังดี" · `passed` = "ผ่าน" (ai-orchestration §2.2.2 · ค่า enum ตาม stub เพราะ api.md ยังไม่ระบุ → Spec changes needed) · ค่าอื่นแสดง "—"
+- ระดับ: `not_started` = "ยังไม่เริ่ม" · `weak` = "อ่อน" · `developing` = "กำลังดี" · `passed` = "ผ่าน" (ai-orchestration §2.2.2 · enum ตาม api.md v1.4) · ค่าอื่นแสดง "—" (API ไม่ส่ง แต่กันหน้าพังถ้า backend เพิ่มค่าใหม่)
 - ป้ายเล็กข้างชื่อ (May ตัดสิน 2026-10-21): `review_due = true` → "ถึงรอบทวน" · `origin = "user"` → "นอกเอกสาร" (ai-orchestration §2.3.6)
 - หัวข้อเกิน `PROGRESS_CARD_VISIBLE_TOPICS` (6 · ค่าของ UI · May ตัดสิน ตาม wireframe S15): แสดง 6 หัวข้อแรก ตามด้วยปุ่ม "อีก {n} หัวข้อ" · กดแล้วแสดงครบทุกหัวข้อในการ์ด และปุ่มหายไป
 
@@ -104,13 +104,13 @@
 1. หัวข้อเยอะ: แสดง 6 หัวข้อ + ปุ่ม "อีก n หัวข้อ" (AC-7)
 2. `review_due` และ `origin = user`: ป้ายเล็กข้างชื่อ (AC-3)
 
-ให้ Junior ตอบ (reviewer)
+Junior ตอบแล้ว (api.md v1.4 · #71 · 2026-10-21)
 
-3. **ค่า enum ของ `level`:** api.md ยังไม่ระบุ · spec นี้ใช้ค่าจาก stub (`not_started`, `weak`, `developing`, `passed`) · `ProgressCardEvent.topics` ใน `app/models/room.py` เป็น `dict[str, Any]` ทำให้ `pnpm gen:api` ไม่ได้ type ของหัวข้อ
-4. **`origin` มีค่าอะไรบ้าง:** stub ใช้ `doc` · ai-orchestration §2.3.6 พูดถึง `user` · มีค่าอื่นไหม
+3. `level` = `not_started` | `weak` | `developing` | `passed` (ตรงกับที่ spec ใช้) · `topics[]` เป็น model `ProgressTopic` แล้ว หน้าเว็บใช้ type ที่ generate (#74)
+4. `origin` = `doc` | `user` · `stars` ไม่เป็น null
 
 ## 11. Spec changes needed
 
-- **api.md** (ไฟล์ร่วม) "SSE events" `progress_card`: ระบุ type ของ `topics[]` และ enum ของ `level`, `origin` (Open question 3, 4)
+- ~~api.md `progress_card.topics[]`~~ ทำแล้วใน v1.4 (#71)
 - **chat-room-ui.md** AC-4: เพิ่มหมายเหตุว่าข้อความ role `card` ที่มี `card` แสดงเป็นการ์ด (ไม่ใช่ bubble) ตาม `progress-card.md`
 - **chat-streaming.md** AC-7: `progress_card` ไม่ถูกข้ามแล้ว
