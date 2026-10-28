@@ -45,6 +45,8 @@ class DoneConfig(_Strict):
     require_all_skills_if_no_past_exam: bool
     min_independent_correct_per_skill: int = Field(ge=1)
     three_star_final_difficulty: int
+    two_star_final_difficulty: int
+    one_star_final_difficulty: int
     tight_mode_two_star_difficulty: int
 
 

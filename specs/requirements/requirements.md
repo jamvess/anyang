@@ -1,8 +1,10 @@
-# Requirements (v1.2)
+# Requirements (v1.3)
 
 สรุปจาก SRS v1.0 พร้อมการเปลี่ยนแปลงหลังออกแบบ AI orchestration (30 ก.ย. 2569) ใช้ ID ในตารางนี้อ้างอิงใน feature spec, test และ PR
 
 **v1.2 (19 ต.ค. 2569 · review D1 ฝั่ง UI/UX):** ข้อ `changed` เขียนความหมายปัจจุบันในช่อง Requirement และบอกของเดิมในหมายเหตุ · CM-01 เวลาต่อวันไม่บังคับ · เพิ่ม TM-20, TM-21, NFR-A1 · อัปเดตคอลัมน์ Screen ตาม wireframe ที่แก้แล้ว (`docs/design/wireframe-s2-review.md`)
+
+**v1.3 (28 ต.ค. 2569 · learning-model v1.2):** TM-16 ผ่านต้องเคยทำถูกเองที่ระดับเป้าและใช้ mastery หลังเพดาน · PM-03 readiness ใช้ mastery_eff · ทีมตกลงในแชทกลุ่ม
 
 **Status:** `active` ใช้ตามเดิม · `changed` แก้ความหมายแล้ว (ช่อง Requirement เป็นความหมายปัจจุบัน หมายเหตุบอกของเดิม) · `new` เพิ่มใหม่ใน v1.1 · `deferred` เลื่อนไปหลัง pilot · `obsolete` ยกเลิก
 
@@ -74,7 +76,7 @@ Screen ID (S01–S27) อ้างอิงถึง wireframe
 | TM-13 | ระบบต้องให้ user ออกจากห้องติวระหว่างทางและกลับมาติวต่อจากจุดเดิมได้ | Must | S27 | active |  |
 | TM-14 | ระบบต้องไม่ generate mock exam แบบจับเวลา ให้โจทย์ทีละข้อระหว่าง chat เท่านั้น | Must | — | active |  |
 | TM-15 | ทุกครั้งที่เปิด session ระบบต้องแสดง progress card (หัวข้อ ดาว ระดับ ความพร้อม %) ที่ render จาก DB แล้วให้ tutor สรุป 2–3 ประโยคจาก facts ที่ code คำนวณ แล้วส่งโจทย์ข้อแรกทันที | Must | S15 | new | |
-| TM-16 | topic นับว่าผ่านเมื่อทุก skill ที่เคยออกสอบมี independent correct อย่างน้อย 1 ครั้ง และ mastery ถึง threshold ใน config | Must | — | new | |
+| TM-16 | topic นับว่าผ่านเมื่อทุก skill ที่เคยออกสอบมี independent correct อย่างน้อย 1 ครั้ง, เคยทำถูกเองที่ระดับความยากเป้าของหัวข้อ และ mastery หลังเพดานตามความยากถึง threshold ใน config (learning-model §4) | Must | — | new | v1.3: เพิ่มระดับเป้าและเพดาน · เดิม: mastery ถึง threshold โดยไม่ดูความยาก |
 | TM-17 | topic ที่ผ่านแล้วต้องถูกนำกลับมาทวนตามรอบ spaced review ที่คำนวณจากจำนวนวันที่เหลือก่อนสอบ ถ้าทวนผิดให้ลดระดับ | Must | S15 | new | |
 | TM-18 | planner ต้องเลือก mode (normal, tight, triage, final) จากเวลาที่ต้องใช้เทียบกับเวลาที่เหลือ และบอก user เมื่อ mode เปลี่ยน | Must | S15 | new | |
 | TM-19 | ระบบต้อง Park skill ที่ทำเกินเพดานโจทย์ต่อวันโดยยังไม่ผ่าน และพาไปทวน prerequisite หรือกลับมาวันหลัง | Must | — | new | |
@@ -105,7 +107,7 @@ Screen ID (S01–S27) อ้างอิงถึง wireframe
 |---|---|---|---|---|---|
 | PM-01 | ระบบต้องบันทึกทุก attempt ประกอบด้วย topic, skill, โจทย์, คำตอบ, verdict, error type, first_wrong_line และ independent | Must | — | changed | เดิมรวมการขอ hint ซึ่งไม่มีแล้ว (AM-07) |
 | PM-02 | ระบบต้อง maintain mastery state รายหัวข้อ และ update ตามผลการตอบ | Must | — | active |  |
-| PM-03 | ระบบต้องคำนวณ readiness = Σ(r × mastery) ÷ Σr จาก mastery รายหัวข้อ ถ่วงด้วยสัดส่วน r ที่หัวข้อออกในข้อสอบเก่า | Must | S15, S24, S27 | changed | เดิมมี decay เมื่อไม่ได้ทบทวน ซึ่งแทนด้วย spaced review (TM-17) · learning-model §5 |
+| PM-03 | ระบบต้องคำนวณ readiness = Σ(r × mastery_eff) ÷ Σr จาก mastery รายหัวข้อหลังเพดานตามความยาก (mastery_eff, learning-model §4) ถ่วงด้วยสัดส่วน r ที่หัวข้อออกในข้อสอบเก่า | Must | S15, S24, S27 | changed | เดิมมี decay เมื่อไม่ได้ทบทวน ซึ่งแทนด้วย spaced review (TM-17) · learning-model §5 · v1.3: ใช้ mastery_eff แทน mastery ดิบ |
 | PM-04 | ระบบต้องแสดง readiness และจำนวน topic ที่ยังไม่แม่นบนหน้า home | Must | S27 | active |  |
 | PM-05 | ระบบต้อง summary ผลการติวเมื่อจบ session ในรูปแบบ chat message สั้นๆ โดยไม่ต้องมีหน้า report แยก | Must | S26 | active |  |
 | PM-06 | ข้อมูล weak topic และ progress ต้องแยกตาม exam prep ไม่นำข้อมูลข้ามรายการมารวมกัน | Must | — | active |  |
