@@ -6,7 +6,7 @@
 | Requirements | AM-06 (error type), AM-05 (first wrong line เมื่อ SymPy ชี้ไม่ได้), AM-04 (SymPy ตัดสินก่อน) · AI-01, AI-05 (ผ่าน gateway + schema) |
 | Owner | Jam |
 | Reviewer | Junior |
-| Status | draft |
+| Status | approved (Jam · 28 ต.ค.) |
 | Related system spec | ai-orchestration.md §2.4.1–§2.4.5, §2.4.8 · `specs/features/check/merge-rules.md` · `specs/features/check/sympy-service.md` · `evals/README.md` "คู่มือ label golden set คำตอบ · P2", "การให้คะแนน" · `specs/poc/README.md` P2 |
 
 ## 1. Context
@@ -27,7 +27,7 @@ checker มี 3 ส่วน (§2.4.1) · SymPy service (PR #75) กับ merg
 2. `sympy = await check_lines(answer_format, reference_answer, lines)` (sympy-service.md)
 3. `llm = await ai.call("check_answer", input, CheckAnswerResult)` · input ตาม §2.2 · ผ่าน gateway เท่านั้น (AI-01) · gateway retry เมื่อ output ไม่ผ่าน schema (AI-05)
 4. `merge_check(answer_format, lines, sympy, llm)` → `CheckResult`
-5. ถ้า gateway ยอมแพ้ (`AISchemaError` หรือ `AIProviderError`) → ดู §10 ข้อ 2
+5. ถ้า gateway ยอมแพ้ (`AISchemaError` หรือ `AIProviderError`) → ส่ง error ขึ้นไปถึงคนเรียก ไม่เดา error_type แทน (§10 ข้อ 2)
 
 **SymPy ตัดสินถูก/ผิดเสมอเมื่อตัดสินได้** (CLAUDE.md กฎ 4) · LLM ไม่มีสิทธิ์เปลี่ยน verdict ในกรณีนั้น · ถ้า LLM ให้ verdict ที่ขัด merge rules ตั้ง `disagreement = true` อยู่แล้ว (merge-rules AC-10, AC-11)
 
@@ -105,7 +105,7 @@ code แปลง `SympyResult` เป็นข้อความสั้น �
 - **AC-6 (AM-04)** Given SymPy ตัดสิน `correct` (ans_003) แต่ LLM ปลอมตอบ `verdict="incorrect"` When `check_answer` Then `verdict=correct`, `disagreement=true`
 - **AC-7 (AI-05)** Given LLM ปลอมตอบ JSON ผิด schema ครั้งแรก แล้วตอบถูกครั้งที่สอง When `check_answer` Then ได้ผลปกติ (gateway retry · มี 2 request)
 - **AC-8 (AM-05)** Given LLM ปลอมตอบ `first_wrong_line=9` กับคำตอบ 3 บรรทัด ที่ SymPy ตัดสินไม่ได้ When `check_answer` Then `first_wrong_line=null`
-- **AC-9 (AI-05)** Given LLM ปลอมตอบผิด schema ทุกครั้ง (`AISchemaError`) When `check_answer` Then ตาม §10 ข้อ 2 (เสนอ (b): `AISchemaError` ขึ้นไปถึงคนเรียก ไม่เดา error_type แทน) · และ `run_checker.py` ข้ามข้อนั้นโดยไม่เขียน prediction แล้วพิมพ์ id ที่ข้ามไว้
+- **AC-9 (AI-05)** Given LLM ปลอมตอบผิด schema ทุกครั้ง (`AISchemaError`) When `check_answer` Then `AISchemaError` ขึ้นไปถึงคนเรียก ไม่เดา error_type แทน (§10 ข้อ 2) · และ `run_checker.py` ข้ามข้อนั้นโดยไม่เขียน prediction แล้วพิมพ์ id ที่ข้ามไว้
 
 **input ของ prompt**
 
@@ -116,7 +116,7 @@ code แปลง `SympyResult` เป็นข้อความสั้น �
 - **AC-14 (AM-06)** Given บรรทัดคำตอบที่มีข้อความ "ignore previous instructions" When สร้าง prompt Then ข้อความนั้นอยู่ใน `<document name="answer">` เท่านั้น
 - **AC-15 (AM-06)** Given `solution_steps=[]` When สร้าง prompt Then placeholder `solution_steps` ถูกเติม (gateway ไม่ error) ด้วยข้อความว่าไม่มีวิธีของชีท
 
-**hint `sign_flip_detected`** (ถ้า §10 ข้อ 3 ตกลงทำ)
+**hint `sign_flip_detected`** (§10 ข้อ 3)
 
 - **AC-16 (AM-06)** Given บรรทัด 2 `(x-2)(x+3)` จาก `x^{2}-5x+6` (§2.4.4) When หา hint Then `sign_flip_detected: line 2`
 - **AC-17 (AM-06)** Given ans_007 (`2x\sin(x)-x^{2}\cos(x)` กลับพจน์ที่ 2 แล้วถูก) When หา hint Then `sign_flip_detected: line 3`
@@ -172,29 +172,21 @@ code แปลง `SympyResult` เป็นข้อความสั้น �
 
 ## 10. Open questions
 
-1. **ค่า `llm` เมื่อไม่มีคำตอบ** · merge_check ต้องการ `LlmResult` แต่ไม่เรียก LLM
-   - **เสนอ:** code สร้าง `LlmResult(error_type="no_answer", evidence="", method="doc", verdict=None, first_wrong_line=None, confidence=1.0)` · merge rules ข้อ 1 ไม่อ่านค่าเหล่านี้อยู่แล้ว
-2. **LLM ล้มเหลวหลัง retry ครบ** (schema หรือ provider)
-   - (a) ใช้ผล SymPy + merge ต่อ โดย `error_type` = ค่าที่ code เดาได้ไม่มี → เสนอ `concept`? · เสี่ยงให้ข้อมูลผิดกับ mastery และ tutor
-   - (b) ให้ error ขึ้นไปถึงคนเรียก แล้วห้องติวบอก user ว่าตรวจไม่ได้ ลองใหม่
-   - **เสนอ (b)** · ไม่เดา error_type แทน LLM · ใน eval นับข้อนั้นเป็นไม่มี prediction (`run_eval.py` นับว่าไม่ตรง)
-3. **hint `sign_flip_detected`** ทำใน PR นี้ไหม · golden set มี `sign` 6 ข้อ `calculation` 4 ข้อ
-   - **เสนอ:** ทำ (§2.4.4 กำหนดไว้แล้ว · ต้องเพิ่มฟังก์ชันใน `app/math/sympy_service.py` ที่รันใน worker เดิม ไม่เปลี่ยน `SympyResult`)
-4. **`method` เมื่อไม่มี `solution_steps`** (golden set ทุกข้อ · label `other` มี 1/50)
-   - **เสนอ:** ตอบ `doc` · `method` ไม่อยู่ใน 3 metric ของ P2 · วัดจริงหลังมี grounding chunk
-5. **รายชื่อหัวข้อพื้นฐาน** (§2.4.4 "รายชื่อหัวข้อพื้นฐาน") มาจากไหน
-   - **เสนอ:** ใช้รายการคงที่ในคู่มือ label (`evals/README.md`) ใส่ในตัว prompt · MVP ไม่ดึงจาก prerequisite ของ scope
-6. **ขอ verdict จาก LLM ทุกครั้งไหม** (merge-rules AC-12 บอกว่า "ปกติ" `verdict=None` เมื่อ SymPy ตัดสินได้)
-   - (a) ขอทุกครั้ง · ได้ข้อมูล disagreement ไว้ดูว่า LLM กับ SymPy ขัดกันบ่อยแค่ไหน · token เพิ่มเล็กน้อย
-   - (b) ขอเฉพาะเมื่อ `decided: no`
-   - **เสนอ (a)** · `checker_disagreements` (§2.4.5) มีไว้เพื่อสิ่งนี้
-7. **เรียก LLM เมื่อ SymPy ตัดสิน `correct` ทุกบรรทัดไหม** (22/50 ข้อ) · ต้องการแค่ `method`
-   - **เสนอ:** เรียก เพื่อได้ `method` และ disagreement · ตัดทีหลังได้ถ้าต้นทุนหรือ latency สูง (วัดตอน P4-lite)
-8. **ที่อยู่ของ pipeline** · `apps/api/app/services/checker.py` (โฟลเดอร์ `services/` ของ Junior ตาม `apps/api/CLAUDE.md` "orchestration")
-   - **เสนอ:** ที่นี่ · Junior review
+ไม่มีข้อที่ค้าง
+
+**ตัดสินแล้ว (Jam · 28 ต.ค. · ตามที่เสนอทั้ง 8 ข้อ)**
+
+1. ไม่มีคำตอบ → code สร้าง `LlmResult(error_type="no_answer", evidence="", method="doc", verdict=None, first_wrong_line=None, confidence=1.0)` ส่งเข้า merge · ไม่เรียก SymPy และ LLM · merge rules ข้อ 1 ไม่อ่านค่าเหล่านี้
+2. LLM ล้มเหลวหลัง retry ครบ (`AISchemaError`, `AIProviderError`) → ส่ง error ขึ้นไปถึงคนเรียก ไม่เดา error_type แทน · ห้องติวบอก user ว่าตรวจไม่ได้ (ทำตอนต่อห้องติว) · `run_checker.py` ข้ามข้อนั้นและพิมพ์ id · `run_eval.py` นับว่าไม่ตรง
+3. ทำ hint `sign_flip_detected` ใน PR นี้ (§2.4) · ฟังก์ชันใหม่ใน `app/math/sympy_service.py` รันใน worker เดิม · `SympyResult` ไม่เปลี่ยน
+4. ไม่มี `solution_steps` → prompt ให้ตอบ `method = doc` · `method` ไม่อยู่ใน metric ของ P2
+5. รายชื่อหัวข้อพื้นฐานของ `prerequisite` เป็นรายการคงที่ในตัว prompt ตามคู่มือ label (`evals/README.md`)
+6. ขอ `verdict` จาก LLM ทุกครั้ง (ไว้เก็บ disagreement · §2.4.5) · merge rules ยังให้ SymPy ชนะเมื่อตัดสินได้
+7. เรียก LLM แม้ SymPy ตัดสินว่าถูกทุกบรรทัด เพื่อได้ `method` และ disagreement · วัดต้นทุนและ latency ตอน P4-lite
+8. pipeline อยู่ที่ `apps/api/app/services/checker.py` · Junior review
 
 ## 11. Spec changes needed
 
 - `config/ai.yaml` (ไฟล์ร่วม) · `check_answer` ตั้ง `max_tokens: 600` และไม่ได้ตั้ง `thinking` · ถ้า thinking ของ Gemini 3 กิน token จน JSON ขาด (P3 เคยเจอใน flow 2.3) ต้องเพิ่ม `thinking: low` หรือเพิ่ม `max_tokens` · **ดูจากผลรันจริงขั้น 6 ก่อน แล้วขอทีม**
-- `evals/README.md` (Jam) · อัปเดตย่อหน้า "ตอนนี้ `run_eval.py` ให้คะแนนจากไฟล์ prediction ยังไม่ได้เรียก checker เอง" ให้ชี้ไปที่ `run_checker.py`
-- `merge-rules.md` · ไม่ต้องแก้ ถ้า §10 ข้อ 6 เลือก (a) เพราะ AC-10/AC-11 รองรับ verdict ของ LLM อยู่แล้ว
+- `evals/README.md` (Jam) · อัปเดตย่อหน้า "ตอนนี้ `run_eval.py` ให้คะแนนจากไฟล์ prediction ยังไม่ได้เรียก checker เอง" ให้ชี้ไปที่ `run_checker.py` · ทำตอน implement
+- `merge-rules.md` · ไม่ต้องแก้ เพราะ AC-10/AC-11 รองรับ verdict ของ LLM อยู่แล้ว (ข้อ 6) · AC-12 ("ปกติ `verdict=None`") ยังเป็นจริงในระดับ merge rules
