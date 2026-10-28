@@ -25,7 +25,8 @@ feature นี้คือส่วนแรก อยู่ใน `apps/api/app
 2. ตัด `=` ที่ต้นบรรทัด (กติกาลายมือข้อ 5 ให้พิมพ์ `=` ตามที่เขียน)
 3. แยกส่วนด้วย `,` ระดับบนสุด (ไม่อยู่ในวงเล็บ) เช่น `x=0, x=\ln(2)` เป็น 2 ส่วน
 4. parse ด้วย `sympy.parsing.latex.parse_latex(..., backend="antlr")` · **ไม่ใช้ `lark`** เพราะ P1 พบว่าอ่าน `2x\sin(x)+x^{2}\cos(x)` ผิดโดยไม่แจ้ง
-5. แทน symbol `e` ด้วยค่าคงที่ `E` (parser อ่าน `e^{x}` เป็นตัวแปร `e` ทำให้แก้ `e^{x}=1` ไม่ได้ · ทดลองแล้ว 28 ต.ค.)
+5. ตัวอักษรตัวเดียวที่ตามด้วย `(` และไม่ได้เป็นส่วนของคำสั่ง (`\sin`, `\ln`) คือการคูณ เช่น `x(x^{2}-1)` → `x\cdot(x^{2}-1)` · parser แบบ `antlr` อ่านเป็นฟังก์ชัน `x(…)` (พบตอน implement 28 ต.ค.)
+6. แทน symbol `e` ด้วยค่าคงที่ `E` (parser อ่าน `e^{x}` เป็นตัวแปร `e` ทำให้แก้ `e^{x}=1` ไม่ได้ · ทดลองแล้ว 28 ต.ค.)
 
 ถ้าบรรทัดใดหรือเฉลย parse ไม่ได้ (เช่น มี `\text{…}` หรือ `\?`) → ทั้งข้อ `parsed = false`
 
@@ -39,7 +40,7 @@ feature นี้คือส่วนแรก อยู่ใน `apps/api/app
 
 **บรรทัดที่มี `=` หลายตัว** (กติกาลายมือข้อ 5 · §10 ข้อ 3): ใน `expression` และ `factored` แยกด้วย `=` ระดับบนสุดเป็นขั้นย่อย เช่น `=\frac{1^{2}+1}{1+1}=\frac{2}{2}=1` เป็น 3 ขั้น · ขั้นแรกเทียบกับบรรทัดก่อนหน้า ขั้นถัดไปเทียบกับขั้นก่อน · บรรทัดถูกเมื่อทุกขั้นย่อยถูก · ค่าของบรรทัด = ขั้นสุดท้าย · ใน `equation` ถ้าส่วนใด (หลังแยก `,`) มี `=` มากกว่า 1 ตัว เช่น `f'(x)=3x^{2}-6x-9=0` → ไม่รองรับ (`parsed = false`)
 
-ตัวแปร x คือ free symbol ตัวเดียวของเฉลย (ถ้าเฉลยไม่มี symbol เลยหรือมีหลายตัว → ใช้ free symbol ตัวเดียวของบรรทัด · ถ้ายังหาไม่ได้ตัวเดียว → `parsed = false`)
+ตัวแปร x คือ free symbol ตัวเดียวของเฉลยและทุกบรรทัดรวมกัน (ตัวแปรที่ถูกผูกใน `\lim_{x \to a}` ไม่นับ) · มีมากกว่า 1 ตัว (เช่น x กับ y ใน implicit dy/dx) → `parsed = false` · ไม่มีเลยก็ได้ ถ้าไม่ต้องใช้ตัวแปร (เช่น ลิมิตที่ทุกบรรทัดเป็นตัวเลข · AC-27) · ต้องใช้แต่ไม่มี (อนุพันธ์ของบรรทัด definition, solution set) → `parsed = false` · (แก้ตอน implement 28 ต.ค.: ฉบับ approved บอกว่า "หาไม่ได้ตัวเดียว → parsed = false" ซึ่งขัดกับ AC-27)
 
 ### 2.3 คำตอบสุดท้าย (`final_equal`, `final_in_form`)
 
@@ -95,7 +96,9 @@ feature นี้คือส่วนแรก อยู่ใน `apps/api/app
 | Input `timeout_s` (optional) | `float` · ไม่ส่ง = อ่านจาก settings | `2` |
 | Output `SympyResult` (dataclass เดิมใน `app/domain/checker.py`) | `parsed: bool` · `timed_out: bool` · `final_equal: bool \| None` · `final_in_form: bool \| None` · `line_ok: list[bool]` | `parsed=True, timed_out=False, final_equal=True, final_in_form=False, line_ok=[True, True]` |
 
-ลายเซ็น: `async def check_lines(*, answer_format, reference_answer, lines, timeout_s=None) -> SympyResult`
+ลายเซ็น: `async def check_lines(*, answer_format, reference_answer, lines, timeout_s=None, pool=None) -> SympyResult`
+
+ชื่ออื่นใน `app/math/sympy_service.py` (กำหนดโดย test ที่ Jam review แล้ว): `evaluate_lines(answer_format, reference_answer, lines)` ฟังก์ชันที่ worker รัน · `SympyWorkerPool(workers=n)` มี `await run(fn, *args, timeout_s=)` และ `close()` · `SympyTimeoutError` · `default_pool()` pool ที่ใช้ร่วมกันตามขนาดใน config
 
 ## 4. Acceptance criteria
 
