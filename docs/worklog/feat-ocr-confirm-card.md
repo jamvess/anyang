@@ -5,7 +5,7 @@
 | Owner | May |
 | Branch | `feat/ocr-confirm-card` |
 | Checklist item | ไม่มีข้อตรงใน checklist · ต่อจาก "หน้าแชท P4-lite: … ส่งรูป" (S3) · UC-04 ขั้น 2–3 · AM-01, AM-02, AM-03, AM-05, TM-08 |
-| Status | in progress · 2026-10-28 |
+| Status | ready for work-done · 2026-10-28 |
 
 ## Plan
 
@@ -15,7 +15,7 @@
 - [x] 4. 🤖 `/spec-to-tests` · test ตั้งชื่อตาม requirement ID · ต้องแดงก่อน
 - [x] 5. 🙋 May review test: อ่านชื่อ test เทียบกับ AC ใน spec
 - [x] 6. 🤖 `/implement-feature` จน test เขียว · ใช้ fake transport ส่ง `ocr_preview` และ `verdict` ได้ · HTTP transport เรียก `ocr/confirm` ตาม api.md
-- [ ] 7. 🙋 May ลองในเบราว์เซอร์: ส่งรูปแล้วเห็นการ์ด แก้บรรทัด กดยืนยัน (ขั้นละเอียดให้ตอนถึงข้อนี้)
+- [x] 7. 🙋 May ลองในเบราว์เซอร์: ส่งรูปแล้วเห็นการ์ด แก้บรรทัด กดยืนยัน (ขั้นละเอียดให้ตอนถึงข้อนี้)
 
 ## Definition of done
 
@@ -30,10 +30,11 @@
 - 2026-10-28 · test แดง 13 ตัวเพราะยังไม่มี `OcrConfirmCard`, `confirmOcr` และ `createHttpOcrConfirm` · AC-4, AC-5 ใน ChatRoomOcr เขียวอยู่แล้วเพราะตอนนี้ห้องข้าม `ocr_preview` (เป็นตัวกันไม่ให้แสดงการ์ดผิดเวลา) · type `OcrPreviewData` ต้องเขียนเองชั่วคราว เพราะ OpenAPI ยังไม่มี `OcrPreviewEvent` (OQ 5) แล้วเปลี่ยนเป็นของที่ generate เมื่อ Junior เพิ่ม
 - 2026-10-28 · May review test แล้ว (ok)
 - 2026-10-28 · implement เสร็จ: red → green 3 รอบ (HTTP, การ์ด, ห้อง) · test 165/165 · ไม่แก้ test ที่ review แล้ว · กดยืนยันขณะอีก stream ยังวิ่งอยู่ (OQ 7) = ไม่ทำอะไร เพราะห้องเล่น stream ได้ทีละอัน · Composer เปิดหน้าต่างเลือกรูปผ่าน `handle` (ใช้กับ "ถ่ายใหม่") · แก้ chat-room-ui.md §2 (ปุ่มในการ์ด) และ chat-streaming.md §2 (ocr_preview แสดงแล้ว) ตาม §11 ของ spec
+- 2026-10-28 · May ลองบนหน้าทดลองชั่วคราว (fake transport · ลบแล้ว ไม่ commit): การ์ด แก้บรรทัด ยืนยัน และถ่ายใหม่ ทำงานปกติ
 
 ## Next step
 
-ขั้น 7: May ลองการ์ดในเบราว์เซอร์ (ห้องจริงยังส่งรูปไม่ได้ ต้องใช้หน้าทดลองชั่วคราวด้วย fake transport ที่ไม่ commit)
+รัน /work-done
 
 ## Waiting on
 
