@@ -9,7 +9,7 @@
 
 ## Plan
 
-- [ ] 1. 🤖 `/spec-feature AM-06 AM-05 AM-04` → `specs/features/check/check-answer-classifier.md` · input ของ LLM (โจทย์, เฉลย, `solution_steps`, `lines`, ผล SymPy รายบรรทัด, hint `sign_flip_detected`) · output schema `CheckAnswerResult` = `LlmResult` ใน `checker.py` · ฟังก์ชันตรวจ 1 คำตอบที่ต่อ SymPy → `ai.call("check_answer")` → `merge_check` · script `evals/run_checker.py` เขียน predictions ให้ `run_eval.py` · คำถามที่ต้องตัดสินใส่ใน §10
+- [x] 1. 🤖 `/spec-feature AM-06 AM-05 AM-04` → `specs/features/check/check-answer-classifier.md` · input ของ LLM (โจทย์, เฉลย, `solution_steps`, `lines`, ผล SymPy รายบรรทัด, hint `sign_flip_detected`) · output schema `CheckAnswerResult` = `LlmResult` ใน `checker.py` · ฟังก์ชันตรวจ 1 คำตอบที่ต่อ SymPy → `ai.call("check_answer")` → `merge_check` · script `evals/run_checker.py` เขียน predictions ให้ `run_eval.py` · คำถามที่ต้องตัดสินใส่ใน §10
 - [ ] 2. 🙋 Jam review spec และตอบคำถามใน §10 (เปิดไฟล์ spec อ่าน §2, §4, §10 แล้วตอบในแชทนี้เป็นข้อ)
 - [ ] 3. 🤖 `/spec-to-tests` → test ของ schema, การประกอบ input (ห่อ `<document>`, สรุปผล SymPy), ฟังก์ชันตรวจ (fake provider) และ `run_checker.py` (ต้องแดง)
 - [ ] 4. 🙋 Jam review test
@@ -28,11 +28,12 @@
 
 ## Decisions
 
+- 2026-10-28 · (ร่าง spec) hint `sign_flip_detected` กลับเครื่องหมายทีละพจน์ของทุกผลบวกในบรรทัด (ไม่ใช่แค่ระดับบนสุด) เพราะตัวอย่างใน §2.4.4 `(x-2)(x+3)` เป็นผลคูณ · ลองกับ SymPy แล้ว AC-16, AC-17 เจอ hint และ AC-18 ไม่เจอตามที่ต้องการ
 - 2026-10-28 · ไม่รวม Report P2 ใน branch นี้ (เป็นข้อแยกใน checklist) · ทำ `/poc-report P2` หลัง merge
 
 ## Next step
 
-ขั้น 1: รัน `/spec-feature AM-06 AM-05 AM-04` เขียน `specs/features/check/check-answer-classifier.md`
+ขั้น 2: Jam อ่าน `specs/features/check/check-answer-classifier.md` §2, §4, §10 แล้วตอบ 8 ข้อใน §10 · จากนั้นแก้ spec ตามคำตอบ และเปลี่ยน Status เป็น approved
 
 ## Waiting on
 
