@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import { ChatRoom } from "@/components/chat/ChatRoom";
 import type { RoomData, SendPayload } from "@/components/chat/types";
 import type { SSEEvent } from "@/lib/sse";
@@ -11,7 +11,7 @@ import fixture from "../fixtures/room/session-s15.json";
 const room = {
   ...fixture,
   limits: { ...fixture.limits, max_audio_seconds: 60, min_audio_seconds: 1 },
-} as RoomData;
+} as unknown as RoomData;
 const MIC = "กดค้างเพื่อพูด";
 
 beforeEach(() => {
@@ -48,7 +48,7 @@ function setup({
   }),
   transcribe = vi.fn(async (_a: Blob, _s: AbortSignal) => ({ text: "สองเอ็กซ์ลบห้า" })),
 }: {
-  sendMessage?: (p: SendPayload, s: AbortSignal) => AsyncIterable<SSEEvent>;
+  sendMessage?: Mock<(p: SendPayload, s: AbortSignal) => AsyncIterable<SSEEvent>>;
   transcribe?: (a: Blob, s: AbortSignal) => Promise<{ text: string }>;
 } = {}) {
   const utils = render(<ChatRoom room={room} sendMessage={sendMessage} transcribe={transcribe} voiceEnabled />);

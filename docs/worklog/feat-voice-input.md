@@ -14,7 +14,7 @@
 - [x] 3. 🤖 ถาม Junior เรื่อง api.md: `limits` ยังไม่มี `max_audio_seconds` · body/response ของ `/transcribe` · ข้อความที่มาจากเสียงส่ง `input_mode: voice` ยังไง
 - [x] 4. 🤖 `/spec-to-tests` · ต้องแดงก่อน · จำลองไมค์ด้วย fake `MediaRecorder` (jsdom ไม่มีไมค์)
 - [x] 5. 🙋 May review test
-- [ ] 6. 🤖 `/implement-feature` จน test เขียว
+- [x] 6. 🤖 `/implement-feature` จน test เขียว
 - [ ] 7. 🙋 May ลองพูดจริงในเบราว์เซอร์ (Chrome ขอสิทธิ์ไมค์) บนหน้าทดลองชั่วคราวที่ไม่ commit
 
 ## Definition of done
@@ -28,10 +28,11 @@
 - 2026-10-28 · ไม่ทำ demo แล้ว (May) · เลือกงานนี้เพราะเป็น feature ใหญ่ที่เหลือของห้องติว
 - 2026-10-28 · May ตัดสิน OQ 1–4 ตามข้อเสนอ: กดค้างอัด · ต่อท้ายข้อความเดิม · สั้นกว่า min_audio_seconds ไม่ส่ง (เสนอ config ใหม่ให้ Junior) · bubble เหมือนข้อความพิมพ์ · ถาม Junior OQ 5–8 ใน PR #79
 - 2026-10-28 · test แดง 24 ตัว (ยังไม่มีปุ่มไมค์) · ไมค์จำลองอยู่ที่ `tests/helpers/fakeMic.ts` · ไม่แก้ test เดิม: ปุ่มไมค์ขึ้นเฉพาะเมื่อห้องได้ `transcribe` (เพิ่มประโยคนี้ใน spec §2) และ payload ของข้อความพิมพ์ยังเป็น `{text, image}` เหมือนเดิม ข้อความจากเสียงเพิ่ม `voice: true`
+- 2026-10-28 · implement เสร็จ: red → green 1 รอบ (`useVoiceRecorder` + Composer + ChatRoom) · test 215/215 · May อนุมัติแก้ type 2 จุดใน `ChatRoomVoice.test.tsx` (`as unknown as RoomData`, `Mock<...>`) ไม่เปลี่ยนสิ่งที่ตรวจ · ห้องจริง (TutorRoom) ยังไม่ส่ง `transcribe` จึงยังไม่มีปุ่มไมค์ จนกว่า Junior ทำ `/transcribe` (spec §11 room-http) · แก้ chat-room-ui.md §2 รายการปุ่ม
 
 ## Next step
 
-ขั้น 6: `/implement-feature` สำหรับ `specs/features/tutor/voice-input.md`
+ขั้น 7: May ลองพูดจริงใน Chrome บนหน้าทดลองชั่วคราว (ไม่ commit)
 
 ## Waiting on
 

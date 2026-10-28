@@ -26,13 +26,17 @@ export type ChatMessage = Omit<Schemas["Message"], "card" | "attachment_name"> &
 
 export type MessageRole = ChatMessage["role"];
 
-/** Input limits from `config/ai.yaml` → `guards`, sent by the API with the room. */
-export type InputLimits = Schemas["Limits"];
+/**
+ * Input limits from `config/ai.yaml` → `guards`, sent by the API with the room. The audio limits are
+ * hand-written until the API sends them (voice-input.md OQ 5); without them the room cannot take voice.
+ */
+export type InputLimits = Schemas["Limits"] & { max_audio_seconds?: number; min_audio_seconds?: number };
 
 /** Response of `GET /sessions/{id}`; its messages typed like the room's own. */
 export type RoomData = Omit<Schemas["Room"], "messages"> & { messages: ChatMessage[] };
 
-export type SendPayload = { text: string | null; image: File | null };
+/** `voice` is set only when the text came from speech (voice-input.md · typed messages keep `{text, image}`). */
+export type SendPayload = { text: string | null; image: File | null; voice?: true };
 
 /**
  * Sends one message and yields the SSE events of the reply
@@ -44,4 +48,7 @@ export type SendMessage = (payload: SendPayload, signal: AbortSignal) => AsyncIt
  * Confirms the lines read from a photo and yields the SSE events of the check
  * (spec: specs/features/check/ocr-confirm-card.md §2).
  */
+/** Speech → text for the input box, never sent by itself (voice-input.md §2). */
+export type Transcribe = (audio: Blob, signal: AbortSignal) => Promise<{ text: string }>;
+
 export type ConfirmOcr = (lines: string[], signal: AbortSignal) => AsyncIterable<SSEEvent>;
