@@ -5,7 +5,7 @@
 | Owner | May |
 | Branch | `feat/verdict-mark` |
 | Checklist item | ไม่มีข้อตรงใน checklist · ต่อจาก `ocr-confirm-card.md` (#77) · UC-04 ขั้น 5, A4, A5, A7 · AM-05, AM-06, TM-20 |
-| Status | in progress · 2026-10-28 |
+| Status | ready for work-done · 2026-10-28 |
 
 ## Plan
 
@@ -15,7 +15,7 @@
 - [x] 4. 🙋 May review test
 - [x] 5. 🤖 `/implement-feature` จน test เขียว
 - [x] 6. 🤖 แก้ wireframe S16 / S22 ให้มีเครื่องหมายผลตรวจตามที่ May เลือก (wireframe เป็นของ May)
-- [ ] 7. 🙋 May ลองในเบราว์เซอร์บนหน้าทดลองชั่วคราว (ไม่ commit) แบบเดียวกับ #77
+- [x] 7. 🙋 May ลองในเบราว์เซอร์บนหน้าทดลองชั่วคราว (ไม่ commit) แบบเดียวกับ #77
 
 ## Definition of done
 
@@ -30,10 +30,11 @@
 - 2026-10-28 · May อนุมัติตัด `verdict` ออกจาก test เดิม 2 ตัว (chat-streaming AC-7, ocr-confirm-card AC-18 · AC-18 เปลี่ยนชื่อให้ตรงกับที่ตรวจ) · test ใหม่แดง 4 ตัว + ไฟล์ VerdictMark รันไม่ได้เพราะยังไม่มี component · ตัวที่เขียวอยู่แล้ว (no_answer, verdict ไม่รู้จัก) เป็นตัวกันไม่ให้แสดงแถบผิดเวลา
 - 2026-10-28 · implement เสร็จ: red → green 2 รอบ (component, ห้อง) · test 191/191 · verdict ที่ไม่มีแถบ (ไม่รู้จัก, no_answer) ไม่ตัด bubble · แก้ ocr-confirm-card.md (§2, AC-18, §9) และ chat-streaming.md (§2, AC-7) ตาม §11 · lint warning ใหม่ 1 อัน (`_args` ใน test ที่ review แล้ว) ไม่แก้เพราะเป็น test ที่ review แล้ว
 - 2026-10-28 · wireframe: เพิ่มแถบผลตรวจใน S16 (✓ ถูก), S22 (✗ ยังไม่ถูก · บรรทัด 2) และ S23 (✓ ถูก · คำตอบโจทย์วัด) · class `.vd` ใช้สี `--ok` และ `--bd` ที่มีอยู่
+- 2026-10-28 · May ลองบนหน้าทดลองชั่วคราว (ลบแล้ว ไม่ commit): ✓ ถูก, ✗ ยังไม่ถูก · บรรทัด 2, incomplete, no_answer ไม่มีแถบ, หลังยืนยันลายมือ · ปกติทุกกรณี
 
 ## Next step
 
-ขั้น 7: May ลองแถบผลตรวจบนหน้าทดลองชั่วคราว (ไม่ commit)
+รัน /work-done
 
 ## Waiting on
 
