@@ -1,7 +1,7 @@
 // Tutor room over HTTP (spec: specs/features/tutor/room-http.md).
 // Paths and bodies: specs/system/api.md "ห้องติว".
 
-import type { SendMessage } from "@/components/chat/types";
+import type { ConfirmOcr, SendMessage } from "@/components/chat/types";
 import type { components } from "./api";
 import { postSSE } from "./sse";
 
@@ -21,5 +21,15 @@ export function createHttpTransport(sessionId: string): SendMessage {
     // Images are blocked in the Composer until /uploads exists (room-http.md §2).
     const body: components["schemas"]["SendMessageRequest"] = { text: payload.text };
     return postSSE(apiUrl(`/sessions/${sessionId}/messages`), body, { signal });
+  };
+}
+
+/**
+ * Sends the confirmed lines to POST /sessions/{id}/ocr/confirm and yields the SSE reply.
+ * Hand-written body until the API has `OcrConfirmRequest` (ocr-confirm-card.md OQ 5).
+ */
+export function createHttpOcrConfirm(sessionId: string): ConfirmOcr {
+  return function confirm(lines, signal) {
+    return postSSE(apiUrl(`/sessions/${sessionId}/ocr/confirm`), { lines }, { signal });
   };
 }

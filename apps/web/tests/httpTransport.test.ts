@@ -72,3 +72,25 @@ describe("lib/httpTransport", () => {
     await expect(import("@/lib/httpTransport")).resolves.toBeTruthy();
   });
 });
+
+// Spec: specs/features/check/ocr-confirm-card.md AC-21 · body is the proposal in OQ 5 until Junior answers.
+describe("lib/httpTransport ocr/confirm", () => {
+  it("AM02 posts the confirmed lines to /sessions/{id}/ocr/confirm and yields the SSE reply", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+    const fetchMock = vi.fn(async () => sseResponse(fixture("tutor_reply.txt")));
+    vi.stubGlobal("fetch", fetchMock);
+    const { createHttpOcrConfirm } = await import("@/lib/httpTransport");
+
+    const controller = new AbortController();
+    const events: SSEEvent[] = [];
+    for await (const e of createHttpOcrConfirm("s1")(["a", "b"], controller.signal)) events.push(e);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("http://api.test/sessions/s1/ocr/confirm");
+    expect(init.method).toBe("POST");
+    expect(init.signal).toBe(controller.signal);
+    expect(JSON.parse(init.body as string)).toEqual({ lines: ["a", "b"] });
+    expect(events.at(-1)?.event).toBe("done");
+  });
+});
