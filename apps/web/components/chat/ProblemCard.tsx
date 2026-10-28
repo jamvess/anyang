@@ -1,15 +1,11 @@
 import { Tex } from "@/components/math/Tex";
+import type { components } from "@/lib/api";
 import { roomStrings as t } from "./strings";
 
 // Spec: specs/features/tutor/problem-card.md · payload: api.md "SSE events" problem (no answer in it).
 
-export type ProblemData = {
-  problem_id: string;
-  /** Plain LaTeX without $ delimiters (api.md Conventions). */
-  text_latex: string;
-  difficulty: number;
-  purpose: string;
-};
+/** Generated from the API schema (`pnpm gen:api`). `text_latex` is plain LaTeX without $ (api.md Conventions). */
+export type ProblemData = components["schemas"]["ProblemEvent"];
 
 /** The problem the tutor gives. No answer buttons (TM-06), no timer (TM-14), no difficulty or purpose shown. */
 export function ProblemCard({ problem }: { problem: ProblemData }) {
