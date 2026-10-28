@@ -14,7 +14,7 @@
 - [x] 1. 🙋 ติดตั้ง gcloud CLI แล้ว login (`juniormonsicha.kt@gmail.com`)
 - [x] 2. 🙋 Jam สร้าง project `anyang-513006` (Free Trial) ผูก billing และตั้ง budget alert $50 · Junior เป็น Owner · `gcloud projects describe` ได้ `ACTIVE`
 - [x] 3. 🙋 `gcloud config set project anyang-513006` + เปิด API 5 ตัว (`run`, `cloudbuild`, `artifactregistry`, `secretmanager`, `aiplatform`) + สร้าง Artifact Registry `anyang` (docker, `asia-southeast1`)
-- [ ] 4. 🤖 เขียน `infra/deploy-staging.ps1` (build image ด้วย Cloud Build → `gcloud run deploy api-staging` ที่ `asia-southeast1`) + `.gcloudignore` · `--allow-unauthenticated` (browser เรียกตรง) · env: `APP_ENV=staging`, `AI_PROVIDER=fake`, `CORS_ALLOW_ORIGINS=https://anyang-amber.vercel.app,http://localhost:3000` + `CORS_ALLOW_ORIGIN_REGEX` ของ preview (`.env.example`) · ใช้ตัวคั่นแบบกำหนดเองของ gcloud (`^@^`) เพราะค่า origins มี `,`
+- [x] 4. 🤖 เขียน `infra/deploy-staging.ps1` (build image ด้วย Cloud Build → `gcloud run deploy api-staging` ที่ `asia-southeast1`) + `.gcloudignore` · `--allow-unauthenticated` (browser เรียกตรง) · env: `APP_ENV=staging`, `AI_PROVIDER=fake`, `CORS_ALLOW_ORIGINS=https://anyang-amber.vercel.app,http://localhost:3000` + `CORS_ALLOW_ORIGIN_REGEX` ของ preview (`.env.example`) · ใช้ตัวคั่นแบบกำหนดเองของ gcloud (`^@^`) เพราะค่า origins มี `,`
 - [ ] 5. 🙋 รันสคริปต์ → ได้ URL · 🤖 ตรวจ `/health`, `/docs` และ header CORS จาก origin ของ Vercel ด้วย `curl`
 - [ ] 6. 🤖 อัปเดต docs: `infra/README.md` (Project ID, URL, วิธี deploy มือ, demo-day note), `docs/team/setup.md` (gcloud, `GOOGLE_CLOUD_PROJECT`), checklist · ร่างข้อความถึง Jam ให้ตั้ง `NEXT_PUBLIC_API_URL` (อ่านใน `apps/web/lib/httpTransport.ts` `apiUrl()`) ใน Vercel ทั้ง Production + Preview เป็น URL ของ Cloud Run แล้ว redeploy (ค่า `NEXT_PUBLIC_*` ฝังตอน build) · เขียนใน PR ว่าช่วง 3 ของ demo (`docs/design/demo-flow.md`) จะตอบจาก stub (`AI_PROVIDER=fake`) จนกว่า gateway ทาง Vertex จะเสร็จ
 - [ ] 7. (ถ้ามีเวลา) 🙋 + 🤖 Cloud Build trigger: merge → deploy `api-staging` · แก้ `infra/cloudbuild.yaml` ให้ตรงกับสคริปต์ (env CORS, ไม่ใช้ `anthropic-api-key`)
@@ -27,6 +27,9 @@
 - `infra/README.md` และ `setup.md` ตรงกับที่ตั้งจริง · ติ๊ก checklist ข้อ "สร้าง GCP project" + เขียน sub-bullet ใต้ข้อ Cloud Build trigger ว่ามีทางสำรองแล้ว
 
 ## Decisions
+
+- 2026-10-28 · env ของ `api-staging` ใช้ `--env-vars-file` (`infra/env/api-staging.yaml`) แทน `--set-env-vars` แบบ `^@^` · เหตุผล: บน Windows `gcloud` มักรันผ่าน `gcloud.cmd` ซึ่ง cmd.exe ใช้ `^` เป็น escape character จึงกิน `^` ทั้งของตัวคั่นและของ regex ไป · YAML รับค่าที่มี `,` `^` `$` ได้ตรงๆ และไฟล์เดียวกันใช้กับ `cloudbuild.yaml` ได้ (checklist ก็เขียนไว้ว่าใช้ไฟล์แบบนี้ได้)
+- 2026-10-28 · `--max-instances=2` กันค่าใช้จ่ายบาน (trial credit) · `--concurrency=40` และ `--timeout=600` ใช้ค่าเดียวกับ `cloudbuild.yaml`
 
 - 2026-10-28 · **Demo-day:** เย็นพฤหัส 29 ต.ค. ตั้ง `gcloud run services update api-staging --region=asia-southeast1 --min-instances=1` กัน cold start · หลัง demo ศ. 30 ต.ค. ตั้งกลับเป็น `--min-instances=0` ทันที (instance ที่เปิดค้างกิน trial credit)
 
@@ -41,6 +44,7 @@
 
 ## Done today
 
+- 2026-10-28 · ขั้น 4: `infra/deploy-staging.ps1` + `infra/cloudbuild-image.yaml` (build อย่างเดียว) + `infra/env/api-staging.yaml` + `.gcloudignore` · ตรวจแล้ว: สคริปต์ parse ผ่าน, env file โหลดเข้า `EnvSettings` ได้ค่าถูก, regex match preview แต่ไม่ match origin อื่น
 - 2026-10-28 · ขั้น 3: set project · เปิด API 5 ตัว (operation `acf.p2-659706857266-…` สำเร็จ) · สร้าง Artifact Registry `anyang` (docker, `asia-southeast1`) · project number `659706857266`
 - 2026-10-28 · resume: Jam สร้าง project แล้ว · เขียนแผนใหม่ (deploy มือก่อน trigger)
 
@@ -49,7 +53,7 @@
 
 ## Next step
 
-ขั้น 4: เขียน `infra/deploy-staging.ps1` + `.gcloudignore` ตามแผน แล้วให้ Junior review ก่อนรัน
+ขั้น 5: ให้ Junior รัน `gcloud meta list-files-for-upload` จาก repo root (ต้องไม่มี `.env`) แล้วรัน `powershell -ExecutionPolicy Bypass -File infra\deploy-staging.ps1` · ได้ URL แล้ว Claude ตรวจ `/health`, `/docs`, preflight CORS ด้วย `curl`
 
 ## Waiting on
 

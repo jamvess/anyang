@@ -27,6 +27,10 @@ printf '%s' "<anthropic-key>"    | gcloud secrets create anthropic-api-key --dat
   - `anyang-staging` ทำแล้ว 21 ต.ค.: ref `sfapuygntxuelsxsgkay` · region `ap-southeast-1` (Singapore ใกล้ Cloud Run `asia-southeast1`) · `0001` + `0002` · RLS ครบ 27 ตาราง · hook เปิดแล้ว · `test_SA06_tenant_isolation` ผ่าน · Auth Site URL: `https://anyang-amber.vercel.app` (`anyang-dev` ยังเป็น `http://localhost:3000` เพราะใช้ local อย่างเดียว) · Auth Redirect URLs: `http://localhost:3000/**`, `https://anyang-*-anyang4.vercel.app/**` (glob ของ Supabase หลวมกว่า CORS regex · ต้องทบทวนตอนทำ `anyang-prod`)
 - ให้สิทธิ์ Jam เป็น Vertex AI User เพื่อใช้ Gemini บนเครื่องด้วย `gcloud auth application-default login` (ไม่ต้องดาวน์โหลด key file)
 
+## Backend · Cloud Run `api-staging`
+
+> ⚠️ ห้ามเปิด AI_PROVIDER=live บน api-staging จนกว่าจะเช็ค Supabase JWT ทุก endpoint · URL เป็น public (--allow-unauthenticated) คนนอกเรียกแล้วกิน credit ได้
+
 ## Frontend · Vercel
 
 | | |
