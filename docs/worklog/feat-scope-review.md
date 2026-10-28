@@ -14,7 +14,7 @@
 - [x] 3. 🤖 ถาม Junior เรื่อง api.md ใน PR: รูปร่างของ scope และ sources, ช่วงหน้า (`topic_sources` ยังไม่มี · data-model ข้อ 1), `map_note` (ข้อ 3)
 - [x] 4. 🤖 `/spec-to-tests` · ใช้ fixture ของหน้า scope (ข้อมูลจาก S12/S38) · ต้องแดงก่อน
 - [x] 5. 🙋 May review test
-- [ ] 6. 🤖 `/implement-feature` จน test เขียว · route `app/preps/[id]/scope`
+- [x] 6. 🤖 `/implement-feature` จน test เขียว · route `app/preps/[id]/scope`
 - [ ] 7. 🙋 May ดูหน้าในเบราว์เซอร์เทียบกับ wireframe S12 / S38 (ข้อมูลจำลอง)
 
 ## Definition of done
@@ -28,10 +28,11 @@
 - 2026-10-28 · ทำเฉพาะหน้า S12 (+ รายละเอียด S38) · แชทแก้ขอบเขต (S13) และหน้าสรุปยืนยัน (S14) เป็นงานถัดไป · ปุ่ม "ขอแก้ก่อน" / "ยืนยันขอบเขตนี้" จะกำหนดใน spec ว่าทำอะไรในรอบนี้
 - 2026-10-28 · May ตัดสิน OQ 1–4 ตามข้อเสนอ: "ขอแก้ก่อน" แสดงแต่กดไม่ได้ · เปิดรายละเอียดได้หลายหัวข้อ · หัวข้อ 0 ดาวแสดงท้ายรายการ ป้าย "ตัดออก" · หลังยืนยันแล้วอ่านอย่างเดียว + ลิงก์ไปห้องติว · ถาม Junior OQ 5–8 ใน PR #81
 - 2026-10-28 · test 27 ตัว (รวมที่รันซ้ำ 2 ค่า) แดงทั้งไฟล์เพราะยังไม่มี `components/scope/ScopeReview` · fixture `scope-s12.json` (6 หัวข้อ + ข้อสอบไม่เข้าหัวข้อ 1 ข้อ ตาม S12/S38) และ `sources-t3.json` (S38) · `ScopeReview` รับ `navigate` ให้ test ตรวจการไปห้องติวได้โดยไม่ต้องมี router
+- 2026-10-28 · implement เสร็จ: red → green 1 รอบ · test 242/242 · หน้า `/preps/[id]/scope` (`ScopeReviewRoute` ใช้ router · `ScopeReview` รับ `navigate`) · type ของ scope/sources เขียนเองชั่วคราวจนกว่า Junior มี schema · ไม่แก้ test เดิม
 
 ## Next step
 
-ขั้น 6: `/implement-feature` สำหรับ `specs/features/scope/scope-review.md` · route `app/preps/[id]/scope`
+ขั้น 7: May ดูหน้า /preps/[id]/scope ในเบราว์เซอร์เทียบ wireframe S12 / S38 ด้วยข้อมูลจำลอง (หน้าทดลองชั่วคราว ไม่ commit)
 
 ## Waiting on
 
