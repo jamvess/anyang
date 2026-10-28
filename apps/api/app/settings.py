@@ -96,6 +96,7 @@ class OcrConfig(_Strict):
 
 class CheckerConfig(_Strict):
     sympy_timeout_seconds: float = Field(gt=0)
+    sympy_workers: int = Field(ge=1)
     numeric_rel_tolerance: float = Field(ge=0)
     max_generate_retries: int = Field(ge=0)
 

@@ -160,9 +160,11 @@
 - [x] Label golden set คำตอบ 50 ข้อ (D8)
   - ทีมตกลง 21 ต.ค. (PR #51): คน label คือ May หรือ Junior ไม่ใช่ Jam เพราะ Jam ทำ P2 (`evals/README.md` "กฎ") · Jam เตรียมใบงาน `evals/answers/worksheet.md` แล้ว (รูป 30 ข้อ + ช่องคำตอบพิมพ์ 20 ข้อ) · เหลือ: เขียนคำตอบพิมพ์ 20 ข้อตามโควตาใน `evals/README.md` "ใบงาน" และ label ครบ 50 ข้อ
   - 21 ต.ค. เสร็จ 50/50 (PR #52) · ทีม (May + Jam) ตกลงให้ AI ร่าง label และคำตอบพิมพ์ ans_031–050 (writer `w06`) · หมายเหตุอยู่หัว `worksheet.md` · ตอนอ่านผล P2 ต้องคำนึงว่า label อาจเอนไปทางเดียวกับ checker ที่เป็น LLM · แก้ `handwriting/labels.jsonl` hw_018 ตามรูป (Jam อนุญาต)
-- [ ] SymPy service `app/math/`: parse LaTeX, เทียบทีละบรรทัด, expression / factored / equation, subprocess + timeout จาก config · ย้ายให้ Jam 21 ต.ค. (ทีมตกลง · ใกล้กับ P2) · รูปแบบผลตกลงไว้ใน `specs/features/check/merge-rules.md` §3 · Junior review เพราะอยู่ใน `apps/api/`
+- [x] SymPy service `app/math/`: parse LaTeX, เทียบทีละบรรทัด, expression / factored / equation, subprocess + timeout จาก config · ย้ายให้ Jam 21 ต.ค. (ทีมตกลง · ใกล้กับ P2) · รูปแบบผลตกลงไว้ใน `specs/features/check/merge-rules.md` §3 · Junior review เพราะอยู่ใน `apps/api/`
+  - 28 ต.ค. (PR #75 · ทำก่อนกำหนด): spec `specs/features/check/sympy-service.md` + `app/math/sympy_service.py` · worker ที่เปิดค้างไว้ (`checker.sympy_workers`) + timeout จาก config · golden set 50 ข้อ: SymPy ตัดสินได้ 45 ข้อ ตรงกับ label 45/45 · อีก 5 ข้อ (implicit dy/dx 3, จบไม่ครบ 1, solveset แก้ไม่ได้ 1) ส่งให้ LLM
 - [ ] P2: merge rules + LLM classifier (`prompts/check_answer/v1`) ใช้ SymPy service
   - 21 ต.ค. merge rules เสร็จ (PR #68): spec `specs/features/check/merge-rules.md` + `app/domain/checker.py` · รูปแบบผลของ SymPy service ตกลงกับ Junior แล้ว · เหลือ prompt `check_answer/v1` และต่อกับ SymPy service
+  - 28 ต.ค. SymPy service เสร็จ (PR #75) · เหลือ prompt `check_answer/v1` (ต้องทำเรื่อง `first_wrong_line` ของข้อ wrong_method ที่ SymPy มองว่าทุกบรรทัดถูก เช่น ans_037, ans_038) และ checker service ที่ต่อ SymPy + LLM + merge
 - [x] Script `evals/run_eval.py` ออกคะแนน verdict, error type, บรรทัดผิด · เสร็จก่อนกำหนด (21 ต.ค. · PR #47) · ให้คะแนนจากไฟล์ prediction (`--predictions`) · นิยาม metric ใน `evals/README.md` "การให้คะแนน" · ต่อกับ checker จริงตอนทำ P2 · การรันใน CI เมื่อ prompt เปลี่ยน (§2.11) รอ Junior
 - [ ] Report P2
 

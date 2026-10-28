@@ -205,6 +205,7 @@ ratio     = need ÷ available
 | OCR always_confirm | true | policy (PoC P1) | P1: confidence ที่ model ให้ตัวเองแยกบรรทัดที่อ่านผิดไม่ได้ (บรรทัดผิดทั้ง 6 อยู่ที่ 0.85–0.98 · ไม่มี threshold ที่จับได้ ≥ 95%) จึงยืนยันทุกครั้ง (`specs/poc/reports/P1.md`) · S3 ลองสัญญาณอื่น เช่นอ่าน 2 รอบแล้วเทียบ |
 | Checker targets | verdict ≥ 95%, error type ≥ 80%, บรรทัดผิด ≥ 85% | requirement | ~20 คำตอบต่อ session → ผิดประมาณ 1 ครั้ง/session ซึ่งรับได้เพราะมี dispute flow |
 | SymPy timeout | 2 วินาที | [calc] | งบเวลาเพื่อให้ verdict มาก่อนเป้า TTFT p95 < 2 วินาที (เดิมติดป้าย [B] แต่ไม่ใช่มาตรฐานหรือค่า default ของ library) |
+| sympy_workers | 1 | [C] | จำนวน worker SymPy ที่เปิดค้างไว้ต่อ API instance · เปิดใหม่ทุกครั้งไม่ได้ เพราะวัดแล้วเปิด Python + import SymPy ใช้ 1.9 วินาที (28 ต.ค.) เกือบเท่า timeout · P4-lite: ดูว่ามีการตรวจที่ต้องรอคิว worker ไหม ถ้ามีให้เพิ่ม (`specs/features/check/sympy-service.md` §2.5) |
 | numeric_rel_tolerance | 0.01 | [C] | Should: แทนด้วยจำนวนเลขนัยสำคัญที่โจทย์กำหนด · P2 วัดว่ามีคำตอบทศนิยมที่ตัดสินผิดเพราะค่านี้กี่ข้อ |
 | max_generate_retries | 2 | [C] | P2/S3: วัด % ของโจทย์ที่สร้างแล้วเฉลยผ่าน SymPy ในรอบที่ 1, 2, 3 แล้วเลือกจำนวนรอบที่ครอบคลุม ≥ 95% (เดิมติดป้าย [B] โดยไม่มีอ้างอิง) |
 | idle_minutes_to_end | 15 | [C] | หลัง Alpha: ดูการกระจายของช่วงเว้นระหว่างข้อความของผู้ใช้ใน session แล้วใช้ค่า p95 |
