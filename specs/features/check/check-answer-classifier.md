@@ -75,7 +75,7 @@ code แปลง `SympyResult` เป็นข้อความสั้น �
 
 - อ่าน `evals/answers/labels.jsonl` · แต่ละข้อสร้างโจทย์จาก `problem`, `reference`, `answer_format`, `solution_steps = []` แล้วเรียก `check_answer()`
 - เขียน `evals/answers/predictions/<prompt>.jsonl` ตามรูปแบบใน `evals/README.md` (`id`, `verdict`, `error_type`, `first_wrong_line` + `evidence`, `method`, `decided_by`, `confidence`, `disagreement`)
-- รันทีละข้อตามลำดับ (free tier มีเพดาน request ต่อนาที · gateway retry เองเมื่อโดน rate limit)
+- รันทีละข้อตามลำดับ · **แก้หลังรันจริงครั้งแรก (28 ต.ค.):** free tier ให้ 5 request ต่อนาที และ gateway ไม่รอเกิน `max_retry_wait_seconds` (ตั้งไว้สำหรับห้องแชท) จึงได้ 429 แทบทุกข้อ · script เว้น `--pause` วินาทีระหว่างข้อ (ค่าเริ่ม 13 วินาที ให้ไม่เกิน 5 ต่อนาที) และเมื่อโดน 429 รอ 60 วินาทีแล้วลองข้อเดิมใหม่ไม่เกิน 3 ครั้ง · `--resume` เก็บ prediction ที่มีอยู่แล้วและรันเฉพาะข้อที่ยังไม่มี · ค่าเหล่านี้เป็นของ script eval ไม่ใช่ของ learning model
 - ใช้ provider ตาม `AI_PROVIDER` · fake ใน test · live เมื่อ Jam รันเอง (ขั้น 6 ใน worklog)
 - ข้อที่ gateway ยอมแพ้ (§10 ข้อ 2) ไม่เขียน prediction และพิมพ์ id ไว้ · `run_eval.py` นับข้อที่ไม่มี prediction ว่าไม่ตรง
 - หลังรัน ให้คนรัน `run_eval.py --purpose check_answer --prompt v1 --predictions …` ต่อ
@@ -187,6 +187,6 @@ code แปลง `SympyResult` เป็นข้อความสั้น �
 
 ## 11. Spec changes needed
 
-- `config/ai.yaml` (ไฟล์ร่วม) · `check_answer` ตั้ง `max_tokens: 600` และไม่ได้ตั้ง `thinking` · ถ้า thinking ของ Gemini 3 กิน token จน JSON ขาด (P3 เคยเจอใน flow 2.3) ต้องเพิ่ม `thinking: low` หรือเพิ่ม `max_tokens` · **ดูจากผลรันจริงขั้น 6 ก่อน แล้วขอทีม**
+- `config/ai.yaml` (ไฟล์ร่วม) · `check_answer` ตั้ง `max_tokens: 600` และไม่ได้ตั้ง `thinking` · ถ้า thinking ของ Gemini 3 กิน token จน JSON ขาด (P3 เคยเจอใน flow 2.3) ต้องเพิ่ม `thinking: low` หรือเพิ่ม `max_tokens` · **แก้แล้ว (28 ต.ค. · Jam):** รันจริงแล้ว timeout 15 วินาที → `ai.yaml` 1.3 เพิ่ม `thinking: low` · คง `max_tokens` และ `timeout_s`
 - `evals/README.md` (Jam) · อัปเดตย่อหน้า "ตอนนี้ `run_eval.py` ให้คะแนนจากไฟล์ prediction ยังไม่ได้เรียก checker เอง" ให้ชี้ไปที่ `run_checker.py` · ทำตอน implement
 - `merge-rules.md` · ไม่ต้องแก้ เพราะ AC-10/AC-11 รองรับ verdict ของ LLM อยู่แล้ว (ข้อ 6) · AC-12 ("ปกติ `verdict=None`") ยังเป็นจริงในระดับ merge rules

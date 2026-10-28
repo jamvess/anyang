@@ -3,7 +3,7 @@
 # "vertex:" until Beta needs a Vertex AI provider (AI-07: no free tier for real users); the PoC runs
 # with AI_MODEL_OVERRIDE=gemini:<model> on the Gemini API.
 
-version: 1.2
+version: 1.3
 
 tiers:
   small:  {primary: "vertex:TODO-gemini-small",  fallback: "anthropic:TODO-claude-haiku"}  # not measured (P3 ran A4 on flash only)
@@ -28,7 +28,7 @@ purposes:
   route_intent:           {tier: small,  temperature: 0.0, max_tokens: 100,  timeout_s: 8,  prompt: v1}
   extract_answer:         {tier: vision, temperature: 0.0, max_tokens: 1500, timeout_s: 20, prompt: v1}
   normalize_math:         {tier: small,  temperature: 0.0, max_tokens: 500,  timeout_s: 8,  prompt: v1}
-  check_answer:           {tier: mid,    temperature: 0.0, max_tokens: 600,  timeout_s: 15, prompt: v1}
+  check_answer:           {tier: mid,    temperature: 0.0, max_tokens: 600,  timeout_s: 15, prompt: v1, thinking: low}  # P2 first live run: default thinking timed out at 15 s (2026-10-28)
   generate_problem:       {tier: mid,    temperature: 0.7, max_tokens: 800,  timeout_s: 20, prompt: v1}
   tutor_reply:            {tier: main,   temperature: 0.6, max_tokens: 700,  timeout_s: 30, prompt: v1, stream: true}
   dispute_recheck:        {tier: main,   temperature: 0.0, max_tokens: 1000, timeout_s: 30, prompt: v1}

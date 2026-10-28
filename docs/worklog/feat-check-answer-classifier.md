@@ -33,12 +33,14 @@
 - 2026-10-28 · test กำหนดชื่อ: `CheckProblem`, `check_answer(problem, lines, *, gateway=None, pool=None)`, `describe_sympy(answer_format, sympy)` ใน `app/services/checker.py` · `CheckAnswerResult.to_llm_result(line_count)` ใน `app/models/check.py` · `sign_flip_line(answer_format, reference, lines)` + `detect_sign_flip(..., pool=)` ใน `sympy_service.py` · `run(rows, *, out_path, gateway, pool) -> skipped ids` ใน `evals/run_checker.py` · เลขบรรทัดในพรอมต์รูป `1. <line>`
 - 2026-10-28 · เพิ่ม `evals/conftest.py` ใส่ `apps/api` ใน `sys.path` เพราะ `evals/` ไม่มี pytest config ของตัวเอง · test ใน `evals/` ใช้ `pytestmark = pytest.mark.asyncio` (asyncio_mode auto ของ apps/api ไม่มีผลที่นี่)
 - 2026-10-28 · implement: red → green 3 รอบ (model · sign flip · pipeline + run_checker) ไม่มี test ที่ต้องแก้ · แยก `_parse_answer` / `_lines_ok` ใน `sympy_service.py` ให้ `evaluate_lines` กับ `sign_flip_line` ใช้ร่วมกัน · เรียก `detect_sign_flip` เฉพาะเมื่อ SymPy ตัดสินได้และมีบรรทัดที่ไม่ follow · `evals/README.md` ชี้ไป `run_checker.py` แล้ว (spec §11)
+- 2026-10-28 · รันจริงครั้งแรก: ได้ prediction 6/50 (5 ข้อแรกตรง label) ที่เหลือ 429 · free tier ของ Gemini 5 request ต่อนาที · gateway ไม่รอนานกว่า `max_retry_wait_seconds: 10` (ตั้งใจไว้สำหรับห้องแชท ไม่แก้) · แก้ที่ `run_checker.py`: `--pause` 13 วินาที, รอ 60 วินาทีเมื่อ 429 แล้วลองใหม่ ≤ 3 ครั้ง, `--resume` · เพิ่ม test 1 ตัว (รอ Jam review) · spec §2.6
+- 2026-10-28 · รันจริงครั้งที่ 2: timeout 15 วินาที (ans_001, ans_002) · ไฟล์ prediction ว่างเพราะไม่ได้ flush → เพิ่ม `out.flush()` · Jam เลือก: `config/ai.yaml` 1.3 เพิ่ม `thinking: low` ให้ `check_answer` (ไฟล์ร่วม · บอกแชทกลุ่ม) · คง `max_tokens: 600`, `timeout_s: 15` · เหตุผล: P3 วัด default thinking ~4,000 token เทียบ low 396 (`settings.py`)
 - 2026-10-28 · ไม่รวม Report P2 ใน branch นี้ (เป็นข้อแยกใน checklist) · ทำ `/poc-report P2` หลัง merge
 
 ## Next step
 
 ขั้น 6: Jam รันในเครื่องตัวเอง (ต้องมี `GEMINI_API_KEY` ใน `.env`) จาก root ของ repo:
-`AI_PROVIDER=live AI_MODEL_OVERRIDE=gemini:gemini-3.5-flash uv run --project apps/api python evals/run_checker.py`
+`AI_PROVIDER=live AI_MODEL_OVERRIDE=gemini:gemini-3.5-flash uv run --project apps/api python evals/run_checker.py --resume` (ใช้เวลา ~10–15 นาทีเพราะ free tier 5 request ต่อนาที)
 แล้ว `uv run --project apps/api python evals/run_eval.py --purpose check_answer --prompt v1 --predictions evals/answers/predictions/v1.jsonl` · ก๊อปผลทั้ง 2 คำสั่งมาในแชท
 
 ## Waiting on

@@ -111,3 +111,31 @@ async def test_AI05_answer_the_gateway_gives_up_on_is_skipped(tmp_path) -> None:
     ]
     assert skipped == ["ans_001"]
     assert [p["id"] for p in predictions] == ["ans_003"]
+
+
+async def test_AI05_rate_limited_answer_is_retried_after_a_wait(
+    tmp_path, monkeypatch
+) -> None:
+    # §2.6 (after the first live run): a 429 waits and checks the same answer again.
+    import app.ai.gateway as gateway_module
+    from app.ai.providers.base import ProviderRateLimited
+
+    async def no_sleep(_seconds: float) -> None:
+        return None
+
+    monkeypatch.setattr(gateway_module, "_sleep", no_sleep)
+    attempts = get_settings().ai.gateway.retries + 1
+    limited = [ProviderRateLimited("429 RESOURCE_EXHAUSTED")] * attempts
+    out = tmp_path / "v1.jsonl"
+
+    skipped = await run(
+        ROWS[:1],
+        out_path=out,
+        gateway=gateway([*limited, LLM_OK]),
+        pool=FakePool(),
+        rate_limit_wait_s=0,
+        rate_limit_retries=1,
+    )
+
+    assert skipped == []
+    assert json.loads(out.read_text(encoding="utf-8"))["id"] == "ans_001"
