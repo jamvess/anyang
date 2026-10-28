@@ -24,10 +24,12 @@
 - [x] ⭐ ให้ Claude Code scaffold `apps/api` และตรวจผล
 - [x] ⭐ `npx supabase init` + `db push` `0001_init.sql` ขึ้น Supabase cloud `anyang-dev` + เปิด custom access token hook
 - [x] GitHub Actions รันครบ 3 job และเขียวบน `main`
-- [ ] สร้าง GCP project, เปิด API, Artifact Registry, Secret Manager (`infra/README.md`)
+- [x] สร้าง GCP project, เปิด API, Artifact Registry, Secret Manager (`infra/README.md`)
+  - 28 ต.ค. (PR #20): Jam สร้าง Free Trial `anyang-513006` (ถือ billing, budget alert $50) · Junior เป็น Owner · เปิด API 5 ตัว + Artifact Registry `anyang` · Secret Manager เปิดแล้วแต่ยังไม่สร้าง secret เพราะ `api-staging` ยังไม่ใช้ · ⚠️ ห้ามกด Activate/Upgrade · Gemini ใช้ผ่าน Vertex เท่านั้น
 - [x] สร้าง Supabase project `anyang-staging` · ref `sfapuygntxuelsxsgkay` Singapore (21 ต.ค., PR #28)
   - 21 ต.ค. Jam ตั้ง Vercel env ทั้ง **Production** และ **Preview** (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) ให้ชี้ `anyang-staging` (`sfapuygntxuelsxsgkay`) แบบ Config แล้ว redeploy production · มีผลเมื่อมีหน้าที่ import `lib/supabase.ts` (ตอนนี้ยังไม่มี production จึงไม่เคยพังจริง)
 - [ ] ให้สิทธิ์ทีม: GitHub collaborator + Supabase org (เจ้าของ repo ทำ, `setup.md` A0), GCP (Jam: Vertex AI User)
+  - 28 ต.ค. ส่วน GCP ไม่ต้องทำ: Jam สร้าง project เองจึงเป็น Owner อยู่แล้ว
 - [x] แก้ `.github/CODEOWNERS` เป็น username จริง · + เพิ่ม `/.github/` ให้ Junior ตาม `roles.md` (19 ต.ค.)
 - [x] ตั้งเครื่องตัวเองตาม `setup.md` Part A · ผ่านเช็คลิสต์ A6 ครบ 5 ข้อ (19 ต.ค.)
 - [ ] ตรวจ `specs/system/architecture.md` ให้ตรงกับที่ตั้งจริง (D2)
@@ -39,6 +41,7 @@
 ### S2 · 19–30 ต.ค.
 
 - [ ] Cloud Build trigger: merge → deploy `api-staging` อัตโนมัติ (P6-lite)
+  - 28 ต.ค. ทางสำรองพร้อมแล้ว (PR #20): `infra/deploy-staging.ps1` deploy มือ · `api-staging` ขึ้นแล้วที่ https://api-staging-659706857266.asia-southeast1.run.app (`AI_PROVIDER=fake`, CORS ครบ) · env อยู่ใน `infra/env/api-staging.yaml` ใช้ไฟล์เดียวกันตอนทำ trigger · เหลือ trigger + แก้ `cloudbuild.yaml` (ยังตั้ง `AI_PROVIDER=live` และใช้ secret `anthropic-api-key`)
   - ⚠️ ต้องตั้ง `CORS_ALLOW_ORIGINS` และ `CORS_ALLOW_ORIGIN_REGEX` ใน env ของ `api-staging` (`--set-env-vars` ใน `infra/cloudbuild.yaml`) ไม่งั้น Vercel preview เรียก staging ไม่ได้ (ค่าดู `.env.example` · PR #49) · ใน `cloudbuild.yaml` ต้องเขียน `$` ของ regex เป็น `$$` เพราะ Cloud Build ใช้ `$` แทนค่าตัวแปร · `--set-env-vars` แยกตัวแปรด้วย `,` แต่ `CORS_ALLOW_ORIGINS` ก็คั่นด้วย `,` เหมือนกัน ถ้ามีมากกว่า 1 origin ให้ใช้ตัวคั่นแบบกำหนดเองของ gcloud เช่น `--set-env-vars="^@^CORS_ALLOW_ORIGINS=a,b@CORS_ALLOW_ORIGIN_REGEX=..."` หรือตั้งผ่าน `--env-vars-file`
 - [x] `test_SA06_tenant_isolation` รันใน CI (P6-lite) · เสร็จก่อนกำหนดใน S1
 - [x] ตรวจว่าไม่มี secret ใน git history · เสร็จก่อนกำหนดใน S1 (15 ต.ค.)
@@ -54,6 +57,7 @@
 
 - ~~SymPy service `app/math/`~~ → ย้ายให้ Jam 21 ต.ค. (ทีมตกลง · ใกล้กับ P2) · ดูข้อใน S3 ของ Jam
 - [ ] AI gateway แบบ lite `app/ai/`: `ai.call()`, provider Gemini + fake, อ่าน `config/ai.yaml`, log `ai_calls`
+  - ⚠️ 28 ต.ค. ห้ามเปิด AI_PROVIDER=live บน api-staging จนกว่าจะเช็ค Supabase JWT ทุก endpoint · URL เป็น public (--allow-unauthenticated) คนนอกเรียกแล้วกิน credit ได้
 - [ ] Endpoint SSE `POST /sessions/{id}/messages` ที่ stream จาก gateway (P4-lite)
 - [ ] เขียน router หัวฟังก์ชันของทุก API ใน `specs/system/api.md` ให้หน้า `/docs` ครบ (D5)
   - 20 ต.ค. api.md v1.2 ห้องติว (PR #35) + stub 4 endpoint ของห้องติวที่คืน fixture ของ May พร้อม `X-Stub: true` (PR #38) · `/docs` แสดง schema ของ `Room`, `Message`, event SSE และ `ErrorResponse` · เหลือ endpoint กลุ่มอื่นใน api.md
