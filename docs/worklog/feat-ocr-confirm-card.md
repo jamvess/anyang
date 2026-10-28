@@ -9,8 +9,8 @@
 
 ## Plan
 
-- [ ] 1. 🤖 `/spec-feature` เขียน `specs/features/check/ocr-confirm-card.md` จาก UC-04 ขั้น 2–5, A1, E1, wireframe S21, S22, S35 และ api.md (`ocr_preview`, `POST /sessions/{id}/ocr/confirm`, `verdict`) · ใส่คำถามเปิดเรื่อง body ของ `ocr/confirm` และทาง "ถ่ายใหม่" ที่ api.md ยังไม่กำหนด
-- [ ] 2. 🙋 May review spec: อ่าน AC ทีละข้อเทียบกับ wireframe S21 (`docs/design/wireframe.html` ข้อ 21) · ตอบคำถามเปิดที่เป็นเรื่อง UI (ถามเป็นตัวเลือก)
+- [x] 1. 🤖 `/spec-feature` เขียน `specs/features/check/ocr-confirm-card.md` จาก UC-04 ขั้น 2–5, A1, E1, wireframe S21, S22, S35 และ api.md (`ocr_preview`, `POST /sessions/{id}/ocr/confirm`, `verdict`) · ใส่คำถามเปิดเรื่อง body ของ `ocr/confirm` และทาง "ถ่ายใหม่" ที่ api.md ยังไม่กำหนด
+- [x] 2. 🙋 May review spec: อ่าน AC ทีละข้อเทียบกับ wireframe S21 (`docs/design/wireframe.html` ข้อ 21) · ตอบคำถามเปิดที่เป็นเรื่อง UI (ถามเป็นตัวเลือก)
 - [ ] 3. 🤖 ถาม Junior เรื่อง api.md (ไฟล์ร่วม): body ของ `ocr/confirm` (บรรทัดที่แก้) และทางยกเลิก preview ตอน "ถ่ายใหม่" · comment ใน PR นี้ · ไม่แก้ api.md เอง
 - [ ] 4. 🤖 `/spec-to-tests` · test ตั้งชื่อตาม requirement ID · ต้องแดงก่อน
 - [ ] 5. 🙋 May review test: อ่านชื่อ test เทียบกับ AC ใน spec
@@ -26,10 +26,11 @@
 ## Decisions
 
 - 2026-10-28 · เลือกงานนี้เพราะเป็น Must ต่อจากห้องติวโดยตรง และทำด้วย fake transport ได้โดยไม่ต้องรอ `/uploads` ของ Junior
+- 2026-10-28 · May ตัดสิน OQ 1–4, 7 ตามข้อเสนอทุกข้อ: การ์ดล็อกหลังยืนยัน · แก้ทีละบรรทัด · แก้ได้อย่างเดียว ลบ/เพิ่มบรรทัดไม่ได้ · ถ่ายใหม่เปิดหน้าต่างเลือกรูปทันที · พิมพ์ในแชทได้ระหว่างการ์ดค้าง
 
 ## Next step
 
-ขั้น 1: รัน `/spec-feature` สำหรับ AM-02 (การ์ดยืนยันลายมือ S21)
+ขั้น 3: comment ใน PR #77 ถาม Junior เรื่อง OQ 5, 6, 8 ของ ocr-confirm-card.md (api.md)
 
 ## Waiting on
 
