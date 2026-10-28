@@ -13,7 +13,7 @@
 
 - [x] 1. 🙋 ติดตั้ง gcloud CLI แล้ว login (`juniormonsicha.kt@gmail.com`)
 - [x] 2. 🙋 Jam สร้าง project `anyang-513006` (Free Trial) ผูก billing และตั้ง budget alert $50 · Junior เป็น Owner · `gcloud projects describe` ได้ `ACTIVE`
-- [ ] 3. 🙋 `gcloud config set project anyang-513006` + เปิด API 5 ตัว (`run`, `cloudbuild`, `artifactregistry`, `secretmanager`, `aiplatform`) + สร้าง Artifact Registry `anyang` (docker, `asia-southeast1`)
+- [x] 3. 🙋 `gcloud config set project anyang-513006` + เปิด API 5 ตัว (`run`, `cloudbuild`, `artifactregistry`, `secretmanager`, `aiplatform`) + สร้าง Artifact Registry `anyang` (docker, `asia-southeast1`)
 - [ ] 4. 🤖 เขียน `infra/deploy-staging.ps1` (build image ด้วย Cloud Build → `gcloud run deploy api-staging` ที่ `asia-southeast1`) + `.gcloudignore` · `--allow-unauthenticated` (browser เรียกตรง) · env: `APP_ENV=staging`, `AI_PROVIDER=fake`, `CORS_ALLOW_ORIGINS=https://anyang-amber.vercel.app,http://localhost:3000` + `CORS_ALLOW_ORIGIN_REGEX` ของ preview (`.env.example`) · ใช้ตัวคั่นแบบกำหนดเองของ gcloud (`^@^`) เพราะค่า origins มี `,`
 - [ ] 5. 🙋 รันสคริปต์ → ได้ URL · 🤖 ตรวจ `/health`, `/docs` และ header CORS จาก origin ของ Vercel ด้วย `curl`
 - [ ] 6. 🤖 อัปเดต docs: `infra/README.md` (Project ID, URL, วิธี deploy มือ, demo-day note), `docs/team/setup.md` (gcloud, `GOOGLE_CLOUD_PROJECT`), checklist · ร่างข้อความถึง Jam ให้ตั้ง `NEXT_PUBLIC_API_URL` (อ่านใน `apps/web/lib/httpTransport.ts` `apiUrl()`) ใน Vercel ทั้ง Production + Preview เป็น URL ของ Cloud Run แล้ว redeploy (ค่า `NEXT_PUBLIC_*` ฝังตอน build) · เขียนใน PR ว่าช่วง 3 ของ demo (`docs/design/demo-flow.md`) จะตอบจาก stub (`AI_PROVIDER=fake`) จนกว่า gateway ทาง Vertex จะเสร็จ
@@ -41,6 +41,7 @@
 
 ## Done today
 
+- 2026-10-28 · ขั้น 3: set project · เปิด API 5 ตัว (operation `acf.p2-659706857266-…` สำเร็จ) · สร้าง Artifact Registry `anyang` (docker, `asia-southeast1`) · project number `659706857266`
 - 2026-10-28 · resume: Jam สร้าง project แล้ว · เขียนแผนใหม่ (deploy มือก่อน trigger)
 
 - 2026-10-19 · เขียนแผน 6 ขั้น + เปิด draft PR #20 · เช็คว่าเครื่องยังไม่มี `gcloud`
@@ -48,7 +49,7 @@
 
 ## Next step
 
-ขั้น 3: ให้ Junior รันใน PowerShell ทีละคำสั่ง `gcloud config set project anyang-513006` → `gcloud services enable ...` → `gcloud artifacts repositories create anyang ...` แล้วดู output
+ขั้น 4: เขียน `infra/deploy-staging.ps1` + `.gcloudignore` ตามแผน แล้วให้ Junior review ก่อนรัน
 
 ## Waiting on
 
