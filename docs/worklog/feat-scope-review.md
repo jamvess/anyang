@@ -1,0 +1,41 @@
+# หน้าตรวจขอบเขต + ดาว (S12, S38)
+
+| | |
+|---|---|
+| Owner | May |
+| Branch | `feat/scope-review` |
+| Checklist item | ไม่มีข้อตรงใน checklist · SM-02, SM-03, SM-04 (แสดงผล) · UC-02 · wireframe S12, S38 |
+| Status | in progress · 2026-10-28 |
+
+## Plan
+
+- [ ] 1. 🤖 `/spec-feature` เขียน `specs/features/scope/scope-review.md` จาก SM-02, SM-03, SM-04, UC-02 (ขั้นตรวจขอบเขต, A4), ai-orchestration §2.3.4–2.3.6, wireframe S12 + S38, api.md (`GET /exam-preps/{id}/scope`, `GET /topics/{id}/sources`) · เสนอรูปร่างของ response (api.md ยังมีแค่ชื่อ endpoint) เป็นคำถามให้ Junior
+- [ ] 2. 🙋 May review spec และตอบคำถามเรื่อง UI (ถามเป็นตัวเลือก)
+- [ ] 3. 🤖 ถาม Junior เรื่อง api.md ใน PR: รูปร่างของ scope และ sources, ช่วงหน้า (`topic_sources` ยังไม่มี · data-model ข้อ 1), `map_note` (ข้อ 3)
+- [ ] 4. 🤖 `/spec-to-tests` · ใช้ fixture ของหน้า scope (ข้อมูลจาก S12/S38) · ต้องแดงก่อน
+- [ ] 5. 🙋 May review test
+- [ ] 6. 🤖 `/implement-feature` จน test เขียว · route `app/preps/[id]/scope`
+- [ ] 7. 🙋 May ดูหน้าในเบราว์เซอร์เทียบกับ wireframe S12 / S38 (ข้อมูลจำลอง)
+
+## Definition of done
+
+- AC ทุกข้อใน `scope-review.md` มี test และผ่าน · lint, typecheck, test, build ผ่าน
+- หน้าแสดงหัวข้อเรียงตามลำดับจาก API พร้อมดาว เหตุผล ที่มา · กดหัวข้อแล้วเห็นข้อความต้นฉบับ + ข้อสอบเก่าในหัวข้อ · มีกล่องข้อสอบที่ไม่เข้าหัวข้อไหน · ทุกค่ามาจาก API ไม่คำนวณดาวในหน้าเว็บ
+- คำถาม api.md ส่งถึง Junior แล้ว
+
+## Decisions
+
+- 2026-10-28 · ทำเฉพาะหน้า S12 (+ รายละเอียด S38) · แชทแก้ขอบเขต (S13) และหน้าสรุปยืนยัน (S14) เป็นงานถัดไป · ปุ่ม "ขอแก้ก่อน" / "ยืนยันขอบเขตนี้" จะกำหนดใน spec ว่าทำอะไรในรอบนี้
+
+## Next step
+
+ขั้น 1: รัน `/spec-feature` สำหรับ SM-03, SM-04 (หน้าตรวจขอบเขต S12)
+
+## Waiting on
+
+ไม่มี
+
+## Notes for next time
+
+- ดาวคำนวณด้วย code ฝั่ง backend (§2.3.5) หน้าเว็บแสดงอย่างเดียว · เหตุผลเป็น template เช่น "ออกในข้อสอบเก่า 2 ใน 2 ชุด"
+- data-model "รอผล" ข้อ 1 (ช่วงหน้า), ข้อ 3 (`map_note`) ยังไม่มีที่เก็บ
