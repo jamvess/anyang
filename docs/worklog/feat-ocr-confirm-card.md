@@ -14,7 +14,7 @@
 - [x] 3. 🤖 ถาม Junior เรื่อง api.md (ไฟล์ร่วม): body ของ `ocr/confirm` (บรรทัดที่แก้) และทางยกเลิก preview ตอน "ถ่ายใหม่" · comment ใน PR นี้ · ไม่แก้ api.md เอง
 - [x] 4. 🤖 `/spec-to-tests` · test ตั้งชื่อตาม requirement ID · ต้องแดงก่อน
 - [x] 5. 🙋 May review test: อ่านชื่อ test เทียบกับ AC ใน spec
-- [ ] 6. 🤖 `/implement-feature` จน test เขียว · ใช้ fake transport ส่ง `ocr_preview` และ `verdict` ได้ · HTTP transport เรียก `ocr/confirm` ตาม api.md
+- [x] 6. 🤖 `/implement-feature` จน test เขียว · ใช้ fake transport ส่ง `ocr_preview` และ `verdict` ได้ · HTTP transport เรียก `ocr/confirm` ตาม api.md
 - [ ] 7. 🙋 May ลองในเบราว์เซอร์: ส่งรูปแล้วเห็นการ์ด แก้บรรทัด กดยืนยัน (ขั้นละเอียดให้ตอนถึงข้อนี้)
 
 ## Definition of done
@@ -29,10 +29,11 @@
 - 2026-10-28 · May ตัดสิน OQ 1–4, 7 ตามข้อเสนอทุกข้อ: การ์ดล็อกหลังยืนยัน · แก้ทีละบรรทัด · แก้ได้อย่างเดียว ลบ/เพิ่มบรรทัดไม่ได้ · ถ่ายใหม่เปิดหน้าต่างเลือกรูปทันที · พิมพ์ในแชทได้ระหว่างการ์ดค้าง
 - 2026-10-28 · test แดง 13 ตัวเพราะยังไม่มี `OcrConfirmCard`, `confirmOcr` และ `createHttpOcrConfirm` · AC-4, AC-5 ใน ChatRoomOcr เขียวอยู่แล้วเพราะตอนนี้ห้องข้าม `ocr_preview` (เป็นตัวกันไม่ให้แสดงการ์ดผิดเวลา) · type `OcrPreviewData` ต้องเขียนเองชั่วคราว เพราะ OpenAPI ยังไม่มี `OcrPreviewEvent` (OQ 5) แล้วเปลี่ยนเป็นของที่ generate เมื่อ Junior เพิ่ม
 - 2026-10-28 · May review test แล้ว (ok)
+- 2026-10-28 · implement เสร็จ: red → green 3 รอบ (HTTP, การ์ด, ห้อง) · test 165/165 · ไม่แก้ test ที่ review แล้ว · กดยืนยันขณะอีก stream ยังวิ่งอยู่ (OQ 7) = ไม่ทำอะไร เพราะห้องเล่น stream ได้ทีละอัน · Composer เปิดหน้าต่างเลือกรูปผ่าน `handle` (ใช้กับ "ถ่ายใหม่") · แก้ chat-room-ui.md §2 (ปุ่มในการ์ด) และ chat-streaming.md §2 (ocr_preview แสดงแล้ว) ตาม §11 ของ spec
 
 ## Next step
 
-ขั้น 6: `/implement-feature` สำหรับ `specs/features/check/ocr-confirm-card.md` จน test เขียว
+ขั้น 7: May ลองการ์ดในเบราว์เซอร์ (ห้องจริงยังส่งรูปไม่ได้ ต้องใช้หน้าทดลองชั่วคราวด้วย fake transport ที่ไม่ commit)
 
 ## Waiting on
 

@@ -1,4 +1,5 @@
 import { MessageText } from "./MessageText";
+import { OcrConfirmCard } from "./OcrConfirmCard";
 import { ProblemCard } from "./ProblemCard";
 import { ProgressCard, type ProgressCardData } from "./ProgressCard";
 import { roomStrings } from "./strings";
@@ -55,6 +56,9 @@ type Props = {
   streamingId?: string | null;
   /** Show the tutor's "•••" bubble at the end while waiting for the reply. */
   typing?: boolean;
+  /** Buttons of a handwriting confirm card, by message id (ocr-confirm-card.md). */
+  onOcrConfirm?: (id: string, lines: string[]) => void;
+  onOcrRetake?: (id: string) => void;
 };
 
 function Avatar({ role, name }: { role: Speaker; name: string }) {
@@ -69,7 +73,16 @@ function Avatar({ role, name }: { role: Speaker; name: string }) {
   );
 }
 
-export function MessageList({ messages, tutorName, buddyName, userName, streamingId = null, typing = false }: Props) {
+export function MessageList({
+  messages,
+  tutorName,
+  buddyName,
+  userName,
+  streamingId = null,
+  typing = false,
+  onOcrConfirm,
+  onOcrRetake,
+}: Props) {
   const names: Record<Speaker, string> = {
     tutor: tutorName,
     buddy: buddyName ?? "",
@@ -78,7 +91,7 @@ export function MessageList({ messages, tutorName, buddyName, userName, streamin
   // Bubbles for speakers, a progress card for card messages that carry one (progress-card.md);
   // system messages and empty cards are not shown (chat-room-ui.md AC-4).
   const visible = messages
-    .filter((m) => SPEAKERS.has(m.role) || (m.role === "card" && (m.card || m.problem)))
+    .filter((m) => SPEAKERS.has(m.role) || (m.role === "card" && (m.card || m.problem || m.ocr)))
     .sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
 
   return (
@@ -88,7 +101,14 @@ export function MessageList({ messages, tutorName, buddyName, userName, streamin
           // Not a bubble: no data-role. Also breaks the grouping of the messages around it.
           return (
             <li key={m.id}>
-              {m.problem ? (
+              {m.ocr ? (
+                <OcrConfirmCard
+                  preview={m.ocr.preview}
+                  status={m.ocr.status}
+                  onConfirm={(lines) => onOcrConfirm?.(m.id, lines)}
+                  onRetake={() => onOcrRetake?.(m.id)}
+                />
+              ) : m.problem ? (
                 <ProblemCard problem={m.problem} />
               ) : (
                 <ProgressCard card={m.card as unknown as ProgressCardData} />

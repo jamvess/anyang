@@ -3,6 +3,7 @@
 
 import type { components } from "@/lib/api";
 import type { SSEEvent } from "@/lib/sse";
+import type { OcrPreviewData, OcrStatus } from "./OcrConfirmCard";
 import type { ProblemData } from "./ProblemCard";
 
 type Schemas = components["schemas"];
@@ -16,6 +17,8 @@ export type ChatMessage = Omit<Schemas["Message"], "card" | "attachment_name"> &
   Partial<Pick<Schemas["Message"], "card" | "attachment_name">> & {
     /** Browser-only: a problem from the SSE `problem` event (problem-card.md). Not part of the API. */
     problem?: ProblemData;
+    /** Browser-only: lines read from a photo, waiting for the user (ocr-confirm-card.md). Not part of the API. */
+    ocr?: { preview: OcrPreviewData; status: OcrStatus };
   };
 
 export type MessageRole = ChatMessage["role"];
@@ -33,3 +36,9 @@ export type SendPayload = { text: string | null; image: File | null };
  * (spec: specs/features/tutor/chat-streaming.md §2).
  */
 export type SendMessage = (payload: SendPayload, signal: AbortSignal) => AsyncIterable<SSEEvent>;
+
+/**
+ * Confirms the lines read from a photo and yields the SSE events of the check
+ * (spec: specs/features/check/ocr-confirm-card.md §2).
+ */
+export type ConfirmOcr = (lines: string[], signal: AbortSignal) => AsyncIterable<SSEEvent>;
