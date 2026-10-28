@@ -42,7 +42,7 @@
 **Composer (TM-06)**
 
 - ช่องพิมพ์หลายบรรทัด placeholder "พิมพ์ตอบ..." + ปุ่มแนบรูป 📷 + ปุ่มส่ง ↑
-- ห้ามมีปุ่มตัวเลือกคำตอบใดๆ ในห้องติว ปุ่มที่กดได้ในห้องมีแค่: แนบรูป, ส่ง, เอารูปที่แนบออก, ลิงก์ออกจากห้อง
+- ห้ามมีปุ่มตัวเลือกคำตอบใดๆ ในห้องติว ปุ่มที่กดได้ในห้องมีแค่: แนบรูป, ส่ง, เอารูปที่แนบออก, ลิงก์ออกจากห้อง · และปุ่มในการ์ดยืนยันลายมือ ("แก้บรรทัด n", "บันทึก", "ยกเลิก", "ถูกแล้ว ตรวจเลย", "ถ่ายใหม่" · `specs/features/check/ocr-confirm-card.md`) ซึ่งไม่ใช่ตัวเลือกคำตอบ
 - ปุ่มส่งกดได้เมื่อความยาวข้อความไม่เกิน `max_message_chars` และ (มีข้อความที่ไม่ใช่ช่องว่างล้วน หรือมีรูปแนบ)
 - ความยาวเกิน `guards.max_message_chars`: ปุ่มส่งกดไม่ได้ และขึ้นข้อความ "ข้อความยาวเกิน {max} ตัวอักษร"
 - Enter = ส่ง · Shift+Enter = ขึ้นบรรทัดใหม่ (May เลือกแล้ว)
@@ -75,9 +75,13 @@
 - **AC-2 (TM-05)** Given ข้อความจาก buddy When render Then หัว bubble แสดงชื่อ `buddy_name` และ avatar ของ buddy ไม่เหมือนของ tutor
 - **AC-2b (TM-04)** อักษรย่อใน avatar: พี่ตาล → ต · พี่โจ๊ก → จ · มีน → ม · ครู แอน → อ · Tar → T
 - **AC-3 (TM-04)** Given tutor ส่ง 2 ข้อความติดกัน When render Then ชื่อ "พี่ตาล" ปรากฏแค่ครั้งเดียวสำหรับสองข้อความนั้น
-- **AC-4 (TM-04)** Given ข้อความ role `card` หรือ `system` When render Then ไม่มี bubble ของข้อความนั้น
+- **AC-3b (TM-20 · เพิ่ม 2026-10-21 · PR #59)** ข้อความติดกันของคนเดิมรวมใต้ชื่อเดียวตาม AC-3 **เฉพาะเมื่อห่างจากข้อความก่อนหน้าไม่ถึง `MESSAGE_GROUP_GAP_MIN` (5 นาที · May เลือก · ค่าของ UI ไม่ใช่ learning model)** · ถ้าห่างตั้งแต่ 5 นาทีขึ้นไป ข้อความนั้นแสดงชื่อ avatar และเวลาของตัวเองใหม่ · Given ข้อความ user 20:47 แล้วข้อความ user ถัดไป 11:42 ของอีกวัน When render Then เห็นชื่อ "ปาล" 2 ครั้ง และเวลา 11:42 แสดงอยู่ (เจอตอนลองจริงใน PR #42)
+- **AC-3b-boundary (TM-20)** ข้อความ tutor 2 อันติดกัน ห่างกัน 4 นาที 59 วินาที → ชื่อปรากฏ 1 ครั้ง · ห่าง 5 นาทีพอดี → 2 ครั้ง · ห่าง 5 นาที 1 วินาที → 2 ครั้ง
+- **AC-4 (TM-04)** Given ข้อความ role `card` หรือ `system` When render Then ไม่มี bubble ของข้อความนั้น · ข้อความ role `card` ที่มี `card` แสดงเป็นการ์ดความคืบหน้า (ไม่ใช่ bubble) ตาม `progress-card.md` (2026-10-21)
 - **AC-5 (TM-04)** Given `days_left = 5` และ `prep_name = "Factorization"` When render Then แถบบนแสดง "Factorization" และ "สอบใน 5 วัน" และมีลิงก์ "ออกจากห้องติว" ไป `/`
 - **AC-6 (TM-06)** Given ข้อความ user ที่ `input_mode = image` และ `attachment_path = "sessions/s1/วิธีทำ.jpg"` When render Then แสดงกล่องรูปที่มีชื่อ "วิธีทำ.jpg"
+- **AC-6b (TM-06 · api.md v1.3)** Given ข้อความ user ที่ `input_mode = image`, `attachment_name = "วิธีทำ.jpg"` และ `attachment_path = "sessions/s1/3f2a9c1e-7b4d-4e8a-9c2f-1d5e6a7b8c90.jpg"` When render Then กล่องรูปแสดง "วิธีทำ.jpg" และไม่แสดง uuid · ชื่อไฟล์มาจาก `attachment_name` ก่อนเสมอ ถ้าเป็น `null` ใช้ส่วนท้ายของ `attachment_path` ตาม AC-6 (เพิ่ม 2026-10-21 · PR #42)
+- **AC-6c (TM-06)** Given ข้อความ user ที่ `input_mode = image`, `attachment_name = "วิธีทำ.jpg"` และ `attachment_path = null` (ข้อความในเครื่องก่อนอัปโหลดเสร็จ) When render Then แสดงกล่องรูป "วิธีทำ.jpg" · ChatRoom สร้างข้อความ user ที่มีรูปด้วย `attachment_name` = ชื่อไฟล์ และ `attachment_path = null`
 
 **สมการ (TM-08)**
 
@@ -123,7 +127,7 @@
 
 | Test | ระดับ | ครอบคลุม AC |
 |---|---|---|
-| `tests/chat/MessageList.test.tsx` | unit (component) | AC-1 ถึง AC-4, AC-6 |
+| `tests/chat/MessageList.test.tsx` | unit (component) | AC-1 ถึง AC-4, AC-3b, AC-3b-boundary, AC-6, AC-6b, AC-6c |
 | `tests/chat/MessageText.test.tsx` | unit | AC-7 ถึง AC-10 |
 | `tests/chat/Composer.test.tsx` | unit | AC-11 ถึง AC-18 (รวม AC-16b), AC-boundary-text, AC-boundary-image, AC-20 |
 | `tests/chat/RoomPage.test.tsx` | integration (หน้า + fixture) | AC-5, AC-11, AC-19 |
@@ -150,7 +154,7 @@
 
 ยังเปิดอยู่ (ให้ reviewer ตอบ)
 
-1. **Requirement ID ของ AC เรื่อง layout และ bubble:** `requirements.md` ไม่มีข้อที่พูดถึงหน้าตา bubble โดยตรง spec นี้ใช้ TM-04 (การติวเป็นบทสนทนา) กับ tutor/user และ TM-05 กับ buddy ใช้แบบนี้ได้ไหม
+1. ~~Requirement ID ของ AC เรื่อง layout และ bubble~~ · ตอบแล้ว: requirements v1.2 เพิ่ม **TM-20** (bubble) และ **TM-21** (ขีดจำกัด input) · ตอนทำ P4-lite ให้เปลี่ยนชื่อ test จาก TM04/TM05 เป็น TM20 และ test ขีดจำกัดเป็น TM21 (May ตัดสิน 2026-10-19 · ต้องให้ May review ชื่อใหม่)
 2. **เครื่องหมาย `$` ที่ไม่ใช่สมการ** (เช่น ราคา "$5") จะถูกอ่านเป็นสมการ · คณิตระดับนี้แทบไม่เจอ จึงยังไม่จัดการใน S2
 
 ## 11. Spec changes needed

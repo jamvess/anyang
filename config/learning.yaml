@@ -9,7 +9,7 @@
 #
 # Changing a value = PR that also updates learning-model.md §"ที่มาของตัวเลข".
 
-version: 1.1
+version: 1.2
 
 bkt:                                   # Bayesian Knowledge Tracing, per topic (learning-model.md §1)
   p_init: 0.3                          # [C] prior P(L0). Fit per skill with pyBKT (EM) after Alpha.
@@ -22,21 +22,27 @@ bkt:                                   # Bayesian Knowledge Tracing, per topic (
 
 levels:                                # display bins for the progress card (learning-model.md §4)
   # not_started: no attempts yet
-  # weak:        mastery < bkt.weak_below
+  # weak:        mastery_eff < bkt.weak_below
   # developing:  otherwise, until the Done rule holds
   # passed:      Done rule holds (done.*)
+  # mastery_eff = BKT mastery capped by the hardest difficulty solved independently (learning-model.md §4):
+  #   at target → no cap · 1 below → (weak_below + mastery_threshold) / 2 · 2+ below → weak_below
   show: [not_started, weak, developing, passed]
 
 done:                                  # when a topic counts as passed (TM-16)
   require_exam_skills_covered: true    # every skill with exam_freq > 0 needs >= 1 independent correct
   require_all_skills_if_no_past_exam: true
   min_independent_correct_per_skill: 1 # [C] after Alpha: % of skills passed with 1 correct whose spaced review is also correct; raise to 2 if low
-  three_star_final_difficulty: 3       # [calc] top of the 1–3 difficulty scale (exam level): ★★★ topics must end with one
-  tight_mode_two_star_difficulty: 2    # [calc] middle of the 1–3 difficulty scale: ★★ topics may pass at it in tight mode
+  # target difficulty: a topic passes only with an independent correct at it (learning-model.md §4)
+  three_star_final_difficulty: 3       # [calc] top of the 1–3 difficulty scale (exam level)
+  two_star_final_difficulty: 3         # [calc] exam level, like ★★★: ★★ topics are on past exams too, just not every one
+  one_star_final_difficulty: 2         # [calc] middle of the 1–3 difficulty scale: ★ topics were never on an exam
+  tight_mode_two_star_difficulty: 2    # [calc] middle of the 1–3 difficulty scale: ★★ target in tight and triage mode
 
 park:                                  # stop and come back later (TM-19)
   max_problems_per_skill_per_day: 10   # [A] Beck & Gong 2013 wheel-spinning; ASSISTments daily limit 10
   max_fail_streak_per_skill: 3         # [C] = failed after 2 different teaching angles (AM-09). Validate after Alpha: % who pass after 3rd fail.
+  return_after_sessions: 1             # [C] parked topic re-enters the queue after >= N sessions (ai-orchestration §2.5.3). After Alpha: pass rate when back after 1 vs 2+ sessions.
 
 spacing:                               # spaced review of passed topics (TM-17, learning-model.md §3)
   first_gap_days: 1                    # [A] SM-2 first interval I(1) = 1 day
@@ -50,12 +56,12 @@ spacing:                               # spaced review of passed topics (TM-17, 
 
 stars:                                 # topic importance (SM-03, learning-model.md §2)
   weight_same_instructor: 1.0          # [calc] reference weight
-  weight_other_instructor: 0.5         # [C] replace with measured topic overlap between instructors (PoC P3)
-  three_star_min_r: 0.6                # [calc] midpoint of the stable band 0.51–0.66 (sensitivity analysis); validate vs team labels in P3
+  weight_other_instructor: 0.5         # [C] PoC P3 could not measure it (both past exams from one instructor set, specs/poc/reports/P3.md) · measure on the first course with exams from 2 instructors
+  three_star_min_r: 0.6                # [calc] midpoint of the stable band 0.51–0.66 (sensitivity analysis) · P3: formula + team question map gives ★★★ 10/12 = 83% (target ≥ 80%) · with 2 past exams r ∈ {0, 0.5, 1}, so P3 only confirms > 0.5
   prerequisite_of_three_star_gets: 2   # [calc] = ★★ by the star rule (ai-orchestration §2.3.5); direct prerequisites only
   no_past_exam_method: page_terciles   # policy, open question (compute-importance.md §10); decide after P3
 
-readiness:                             # PM-03: Σ(signal_r × mastery) / Σ(signal_r); no extra constants
+readiness:                             # PM-03: Σ(signal_r × mastery_eff) / Σ(signal_r); no extra constants
   weight: signal_r                     # [calc] expected share of exam content
   exclude_zero_star: true
 
@@ -71,7 +77,7 @@ planner:                               # TM-18 (learning-model.md §5)
   interleave_every_n_practice: 4       # [C] Rohrer & Taylor 2007 support interleaving; ratio not standardised (Could)
 
 ocr:
-  confirm_below_confidence: 0.8        # [C] choose from precision–recall on the P1 golden set
+  always_confirm: true                 # PoC P1 (specs/poc/reports/P1.md): self-reported confidence cannot find misread lines (all 6 at 0.85–0.98, no threshold catches ≥ 95%) · S3: try a better signal (2 reads, extract_answer/v2)
 
 checker:
   sympy_timeout_seconds: 2             # [calc] budget so the verdict arrives within the TTFT p95 target (2 s)
@@ -88,4 +94,4 @@ session:
   idle_minutes_to_end: 15              # [C] after Alpha: p95 of the gap between a user's messages in a session
   context_recent_turns: 8              # [C] keep context short (Liu et al. 2023 "Lost in the Middle")
   token_budget: 6000                   # [calc] ≈ 2× the ~3,200-token prompt of 2.2.3
-  grounding_chunks: 4                  # [C] reduce to 2 when over budget; tune in P3
+  grounding_chunks: 4                  # [C] P3b: gemini-embedding-2 @768 finds the answer page in the top 4 for 19/20 questions (top 1: 15/20) · keep 4; reduce to 2 only when over budget

@@ -1,0 +1,6 @@
+event: token
+data: {"speaker": "tutor", "text": "ถูก"}
+
+event: error
+data: {"code": "ai_unavailable", "message": "provider timeout"}
+

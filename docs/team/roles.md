@@ -11,7 +11,7 @@
 | GitHub | `@jnmonsicha2000` | `@jantarat32443` | `@jamvess` (เจ้าของ repo) |
 | บทบาท | Backend + DevOps | Frontend + UX | AI + การวัดผล |
 | เป็นเจ้าของโฟลเดอร์ | `apps/api/`, `supabase/`, `infra/`, `.github/` | `apps/web/`, wireframe/Figma | `prompts/`, `evals/`, `config/learning.yaml`, `specs/system/ai-orchestration.md`, `learning-model.md` |
-| PoC | P6-lite, backend ของ P4-lite, SymPy service ให้ P2 | หน้าแชทของ P4-lite | P1, P3, P2 |
+| PoC | P6-lite, backend ของ P4-lite | หน้าแชทของ P4-lite | P1, P3, P2 (+ SymPy service) |
 | Deliverables | D2 (architecture), D3, D4, D5 | D6, D7 | D2 (AI flows), D8 |
 | Review PR ของ | May (ส่วนที่ต่อ API), Jam (โค้ด Python) | Junior (ส่วนที่กระทบ UI/UX) | Junior (domain logic, config) |
 | ตัดสินใจเรื่อง | โครงสร้าง backend, DB, deploy, สิทธิ์ cloud | หน้าตาและ flow ของหน้าจอ | prompt, model, threshold, เกณฑ์วัดผล |
@@ -31,7 +31,7 @@
 - ดูแล data model (`supabase/migrations/`) และ RLS ทุกตารางต้องมี isolation test
 - สร้างโครง FastAPI และ API spec (หน้า `/docs`) ให้ May ใช้ generate type
 - เขียน AI gateway แบบ lite (provider interface + fake provider + log `ai_calls`) ให้ Jam ใช้
-- เขียน SymPy service ให้ Jam ใช้ใน P2
+- ~~เขียน SymPy service ให้ Jam ใช้ใน P2~~ → ย้ายให้ Jam 21 ต.ค. (ทีมตกลง · ใกล้กับ P2)
 - ช่วย Jam ทำ ingest pipeline ของ P3 (อ่าน PDF, ตัด chunk, เก็บลง DB)
 - ดูแลเรื่อง secret: ไม่มี key ใน repo, ทุกคนมีสิทธิ์ cloud เท่าที่จำเป็น
 
@@ -60,6 +60,7 @@
 - ย้าย AI flows 2.1–2.11 เข้า `specs/system/` และอัปเดตตามผล PoC
 - เขียน prompt (`prompts/`) และ eval (`evals/`) ของ P1, P2, P3
 - ทำ PoC P1 (อ่านลายมือ), P3 (เอกสาร → หัวข้อ + ดาว), P2 (ตรวจคำตอบ)
+- เขียน SymPy service (`apps/api/app/math/`) ของ P2 · ย้ายให้ Jam 21 ต.ค. (ทีมตกลง · ใกล้กับ P2) · Junior review
 - ดูแล `config/learning.yaml` และ `learning-model.md` เมื่อเปลี่ยนตัวเลขต้องอัปเดตที่มา
 - นำเรื่องงานวิจัยรองรับ learning path และ progress tracking (ตามที่อาจารย์แนะนำ)
 - เขียน test strategy 1 หน้า

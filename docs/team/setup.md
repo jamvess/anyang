@@ -19,6 +19,7 @@ Part A ทำครั้งเดียวต่อเครื่อง ใช
 | backend `apps/api` (FastAPI, `/health`, settings) | ✅ |
 | frontend `apps/web` (Next.js, `Tex`, `lib/sse.ts`) | ✅ |
 | Supabase `anyang-dev`: ทุกตาราง + RLS + custom access token hook | ✅ |
+| Supabase `anyang-staging` (ใช้กับ Vercel preview): ทุกตาราง + RLS + custom access token hook | ✅ |
 | CI ทั้ง 3 job (`api`, `api-integration`, `web`) เขียว | ✅ |
 
 คนที่ตั้งเครื่องใหม่ทำแค่ **clone แล้วตั้งค่าเครื่องตัวเอง** ห้ามรัน `supabase init`, `supabase link`, `supabase db push`, `create-next-app` หรือ `uv init` ซ้ำ
@@ -31,7 +32,7 @@ Part A ทำครั้งเดียวต่อเครื่อง ใช
 
 1. **GitHub:** repo `anyang` → Settings → Collaborators → **Add people** → ใส่ username ของ Junior และ May
 2. **Supabase:** Dashboard → Organization ที่มี `anyang-dev` → Settings → **Team** → Invite → ใส่อีเมลของทั้งสองคน เลือก role **Developer** (ถ้าเข้าไปแล้วมองไม่เห็น API keys ให้เปลี่ยนเป็น Administrator)
-3. เมื่อได้ username ครบ ให้แก้ `.github/CODEOWNERS` โดยใส่ username จากตาราง GitHub ใน `roles.md` แทน `@junior-handle` `@may-handle` `@jam-handle` แล้วเปิด PR
+3. ~~แก้ `.github/CODEOWNERS` เป็น username จริง~~ ทำแล้ว 19 ต.ค. (PR #21) · ถ้ามีคนเข้าทีมใหม่ ให้เพิ่ม username ในตาราง GitHub ของ `roles.md` และใน `.github/CODEOWNERS` ใน PR เดียวกัน
 
 > **ห้ามส่ง key ให้กันทางแชท** ให้แต่ละคนเข้า Dashboard แล้วก๊อปเอง (ดู A5) ยกเว้น database password ซึ่ง Dashboard ไม่แสดง ให้บอกกันต่อหน้า
 
@@ -103,8 +104,17 @@ code .env
 | `DATABASE_URL` | ปุ่ม **Connect** → แท็บ Direct → **Session pooler** · แทน `[YOUR-PASSWORD]` ด้วย database password ที่ขอจากเจ้าของ repo ต่อหน้า |
 | `NEXT_PUBLIC_SUPABASE_URL` | ใช้ค่าเดียวกับ `SUPABASE_URL` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ใช้ค่าเดียวกับ `SUPABASE_ANON_KEY` |
+| `CORS_ALLOW_ORIGINS` | ไม่ต้องแก้ ใช้ค่าใน `.env.example` (`http://localhost:3000`) · origin ที่ browser เรียก API ได้ ต้องตรงทุกตัวอักษร คั่นด้วย `,` ห้ามมี `*` หรือ `/` ท้าย · ถ้ารันเว็บที่ port อื่นให้เพิ่มที่นี่ |
+| `CORS_ALLOW_ORIGIN_REGEX` | ไม่ต้องแก้ · ให้ Vercel preview ของ project เรา (`anyang-<hash>-anyang4.vercel.app`) เรียก API ได้ · URL branch alias (`anyang-git-…`) เรียกไม่ได้ · ว่าง = ปิด |
 
 บรรทัดอื่น (`AI_PROVIDER=fake`, GCP, Anthropic, Sentry) ปล่อยไว้ตามเดิมก่อน
+
+**เฉพาะคนที่รัน PoC กับ Gemini จริง** (ตอนนี้คือ Jam ใน P3) ให้ใส่ 2 ค่านี้ ส่วนคนอื่นปล่อยว่างไว้ได้ · ไม่ต้องเปลี่ยน `AI_PROVIDER` เพราะ script ของ PoC สร้าง gateway แบบ live เอง · ส่วน test ใช้ fake provider เสมอ
+
+| ตัวแปร | ค่า |
+|---|---|
+| `GEMINI_API_KEY` | https://aistudio.google.com/apikey → **Create API key** → Copy · ⚠️ ถ้าเป็น free tier Google อาจเอาข้อมูลไปใช้ train ได้ จึงห้ามส่งข้อมูลของ user จริงหรือรูปลายมือของเพื่อนถ้ายังไม่ได้เปิด billing (AI-07) |
+| `AI_MODEL_OVERRIDE` | model ที่จะใช้แทน `TODO-...` ใน `config/ai.yaml` เช่น `gemini:gemini-3.8-flash` |
 
 **2) `apps/web/.env.local` ใช้กับ frontend**
 

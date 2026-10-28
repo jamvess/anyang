@@ -67,7 +67,7 @@ describe("Composer", () => {
     { delta: -1, allowed: true },
     { delta: 0, allowed: true },
     { delta: 1, allowed: false },
-  ])("TM06 text of max_message_chars $delta chars: allowed=$allowed", ({ delta, allowed }) => {
+  ])("TM21 text of max_message_chars $delta chars: allowed=$allowed", ({ delta, allowed }) => {
     const { input, send, queryByText } = setup();
     const max = limits.max_message_chars;
 
@@ -120,7 +120,7 @@ describe("Composer", () => {
     expect(send.disabled).toBe(true);
   });
 
-  it("TM06 does not attach a file that is not an image and says only photos are allowed", () => {
+  it("TM21 does not attach a file that is not an image and says only photos are allowed", () => {
     const { file, send, queryByText, getByText } = setup();
 
     fireEvent.change(file, {
@@ -136,7 +136,7 @@ describe("Composer", () => {
     { delta: -1, allowed: true },
     { delta: 0, allowed: true },
     { delta: 1, allowed: false },
-  ])("TM06 photo of max_image_mb $delta bytes: allowed=$allowed", ({ delta, allowed }) => {
+  ])("TM21 photo of max_image_mb $delta bytes: allowed=$allowed", ({ delta, allowed }) => {
     const { file, queryByText } = setup();
     const max = limits.max_image_mb;
 
@@ -152,5 +152,30 @@ describe("Composer", () => {
     expect(getByLabelText("พิมพ์ตอบ").tagName).toBe("TEXTAREA");
     expect(getByRole("button", { name: "แนบรูป" })).toBeTruthy();
     expect(getByRole("button", { name: "ส่ง" })).toBeTruthy();
+  });
+});
+
+// Spec: specs/features/tutor/room-http.md AC-12, AC-13
+describe("Composer · imagesEnabled", () => {
+  it("TM06 without imagesEnabled a photo attaches as before", () => {
+    const { file, getByText, getByRole } = setup();
+
+    fireEvent.change(file, { target: { files: [image("วิธีทำ.jpg", 1000)] } });
+
+    expect(getByText("วิธีทำ.jpg")).toBeTruthy();
+    expect(getByRole("button", { name: "เอารูปออก" })).toBeTruthy();
+  });
+
+  it("TM06 with imagesEnabled={false} a photo is not attached and the reason is shown", () => {
+    const onSend = vi.fn();
+    const utils = render(<Composer limits={limits} onSend={onSend} imagesEnabled={false} />);
+    const file = utils.container.querySelector('input[type="file"]') as HTMLInputElement;
+
+    fireEvent.change(file, { target: { files: [image("วิธีทำ.jpg", 1000)] } });
+
+    expect(utils.getByText("ตอนนี้ยังส่งรูปไม่ได้ พิมพ์คำตอบมาก่อนนะ")).toBeTruthy();
+    expect(utils.queryByText("วิธีทำ.jpg")).toBeNull();
+    expect((utils.getByRole("button", { name: "ส่ง" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(utils.getByRole("button", { name: "แนบรูป" })).toBeTruthy();
   });
 });

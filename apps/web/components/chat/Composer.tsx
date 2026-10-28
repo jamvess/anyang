@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useImperativeHandle, useRef, useState, type Ref } from "react";
 import { roomStrings as t } from "./strings";
 import type { InputLimits, SendPayload } from "./types";
 
@@ -10,21 +10,30 @@ const BYTES_PER_MB = 1024 * 1024;
 type Props = {
   limits: InputLimits;
   onSend: (payload: SendPayload) => void;
+  /** While the reply streams the draft stays editable but cannot be sent. */
+  disabled?: boolean;
+  /** False until the API takes photos (no /uploads yet · room-http.md §2): picking one only explains why. */
+  imagesEnabled?: boolean;
+  /** Lets the room open the photo picker, e.g. for "ถ่ายใหม่" (ocr-confirm-card.md OQ 4). */
+  handle?: Ref<ComposerHandle>;
 };
+
+export type ComposerHandle = { pickPhoto: () => void };
 
 /**
  * Text + photo input of the tutor room. No answer choice buttons (TM-06).
  * Limits come from the API with the room data, never hard-coded.
  */
-export function Composer({ limits, onSend }: Props) {
+export function Composer({ limits, onSend, disabled = false, imagesEnabled = true, handle }: Props) {
   const [text, setText] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  useImperativeHandle(handle, () => ({ pickPhoto: () => fileInput.current?.click() }), []);
 
   // Count characters, not UTF-16 units, like the backend.
   const tooLong = Array.from(text).length > limits.max_message_chars;
-  const canSend = !tooLong && (text.trim() !== "" || image !== null);
+  const canSend = !disabled && !tooLong && (text.trim() !== "" || image !== null);
 
   function send() {
     if (!canSend) return;
@@ -36,7 +45,9 @@ export function Composer({ limits, onSend }: Props) {
 
   function pick(file: File | undefined) {
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
+    if (!imagesEnabled) {
+      setImageError(t.imagesNotYet);
+    } else if (!file.type.startsWith("image/")) {
       setImageError(t.notImage);
     } else if (file.size > limits.max_image_mb * BYTES_PER_MB) {
       setImageError(t.imageTooBig(limits.max_image_mb));

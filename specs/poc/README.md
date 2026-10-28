@@ -29,6 +29,7 @@ PoC คือการลองทำส่วนที่ยากที่ส�
 - **ผ่านเมื่อ:** มี provider ที่ line accuracy ≥ 80% และมี threshold ที่จับบรรทัดอ่านผิดได้ ≥ 95%
 - **ผลที่ต้องได้:** เลือก provider + ค่า `ocr.confirm_below_confidence` ใน `config/learning.yaml`
 - **ถ้าไม่ผ่าน:** ใช้ Mathpix เป็นหลัก (ขอ budget ก่อน S3)
+- **ผล (20 ต.ค. · `specs/poc/reports/P1.md`):** ทดสอบแค่ Gemini free tier (Claude/Mathpix ต้องเสียเงิน) · line accuracy 95.2% ผ่าน · threshold ไม่ผ่าน · ไม่ใช้ fallback Mathpix เพราะสิ่งที่ไม่ผ่านคือ confidence ไม่ใช่ความแม่น · ทีมตกลงให้ยืนยันทุกครั้ง (`ocr.always_confirm` · PR #45)
 
 ## P3 · เอกสาร → หัวข้อ + ดาว · Jam (+ Junior ช่วย ingest) · S2
 
@@ -40,7 +41,7 @@ PoC คือการลองทำส่วนที่ยากที่ส�
 - **ผลที่ต้องได้:** embedding model + มิติ vector, ขนาด chunk, ค่า `stars.*` ที่ยืนยันแล้ว
 - **ถ้าไม่ผ่าน:** ใช้ Google Document AI กับไฟล์สแกน และปรับ prompt A5/A6
 
-## P2 · ตรวจคำตอบ · Jam (+ Junior ทำ SymPy service) · S3
+## P2 · ตรวจคำตอบ · Jam (รวม SymPy service · ย้ายจาก Junior 21 ต.ค.) · S3
 
 - **คำถาม:** SymPy + LLM ตัดสินถูกผิดและจำแนก error ได้ตามเป้าไหม
 - **Data:** `evals/answers/` 50 คำตอบ (expression, factored, equation) label: verdict, error_type, first_wrong_line

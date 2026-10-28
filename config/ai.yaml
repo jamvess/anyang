@@ -1,23 +1,28 @@
 # AI gateway configuration (ai-orchestration §2.10). Change models here, not in code.
-# Model IDs are filled in after the PoC spikes; keep the TODO markers until then.
+# Model IDs come from the PoC reports (specs/poc/reports/); a tier not measured yet keeps its TODO.
+# "vertex:" until Beta needs a Vertex AI provider (AI-07: no free tier for real users); the PoC runs
+# with AI_MODEL_OVERRIDE=gemini:<model> on the Gemini API.
 
-version: 1.1
+version: 1.2
 
 tiers:
-  small:  {primary: "vertex:TODO-gemini-small",  fallback: "anthropic:TODO-claude-haiku"}
-  mid:    {primary: "vertex:TODO-gemini-mid",    fallback: "anthropic:TODO-claude-haiku"}
-  main:   {primary: "vertex:TODO-gemini-main",   fallback: "anthropic:TODO-claude-sonnet"}
-  vision: {primary: "vertex:TODO-gemini-mid",    fallback: "mathpix"}       # Mathpix only if P1 says so
-  embed:  {primary: "TODO-after-P3-spike",       fallback: null}
+  small:  {primary: "vertex:TODO-gemini-small",  fallback: "anthropic:TODO-claude-haiku"}  # not measured (P3 ran A4 on flash only)
+  mid:    {primary: "vertex:gemini-3.5-flash",   fallback: "anthropic:TODO-claude-haiku"}  # P3: A5 on 4/4 sheets, schema ok · flash-lite too coarse (P3.md)
+  main:   {primary: "vertex:gemini-3.5-flash",   fallback: "anthropic:TODO-claude-sonnet"} # interim: P3 A6 never answered on the free tier (0/20) · measure on Vertex (P3.md)
+  vision: {primary: "vertex:gemini-3.5-flash-lite", fallback: "mathpix"}   # P1: line accuracy 95.2% (P1.md) · Mathpix not tested
+  embed:  {primary: "vertex:gemini-embedding-2", fallback: null}           # P3b: recall@4 95% at 768 dimensions (P3.md)
 
 purposes:
+  # thinking: Gemini 3 thinking level; its tokens count inside max_tokens (PoC P3, 2026-10-19)
+  # max_tokens and timeout_s of flow 2.3 raised before the first P3 run (Thai output + thinking); confirm from P3 logs
   # flow 2.3
   classify_material:      {tier: small,  temperature: 0.0, max_tokens: 300,  timeout_s: 20, prompt: v1}
-  vision_extract:         {tier: vision, temperature: 0.0, max_tokens: 4000, timeout_s: 60, prompt: v1}
-  split_past_exam:        {tier: small,  temperature: 0.0, max_tokens: 4000, timeout_s: 60, prompt: v1}
-  extract_topics_local:   {tier: mid,    temperature: 0.2, max_tokens: 2000, timeout_s: 60, prompt: v1}
-  merge_topics:           {tier: main,   temperature: 0.2, max_tokens: 4000, timeout_s: 90, prompt: v1}
-  map_questions:          {tier: small,  temperature: 0.0, max_tokens: 2000, timeout_s: 60, prompt: v1}
+  vision_extract:         {tier: vision, temperature: 0.0, max_tokens: 4000, timeout_s: 60, prompt: v1, thinking: low}
+  vision_extract_pages:   {tier: vision, temperature: 0.0, max_tokens: 16000, timeout_s: 180, prompt: v1, thinking: low}  # PoC P3: whole scanned file in one call
+  split_past_exam:        {tier: small,  temperature: 0.0, max_tokens: 16000, timeout_s: 120, prompt: v1, thinking: low}
+  extract_topics_local:   {tier: mid,    temperature: 0.2, max_tokens: 8000, timeout_s: 120, prompt: v1, thinking: low}
+  merge_topics:           {tier: main,   temperature: 0.2, max_tokens: 16000, timeout_s: 180, prompt: v1, thinking: medium}
+  map_questions:          {tier: small,  temperature: 0.0, max_tokens: 8000, timeout_s: 120, prompt: v1, thinking: low}
   scope_edit:             {tier: mid,    temperature: 0.3, max_tokens: 800,  timeout_s: 30, prompt: v1}
   # flow 2.2 / 2.4
   route_intent:           {tier: small,  temperature: 0.0, max_tokens: 100,  timeout_s: 8,  prompt: v1}
@@ -34,8 +39,15 @@ purposes:
   persona_preview:        {tier: small,  temperature: 0.7, max_tokens: 150,  timeout_s: 15, prompt: v1}
   latex_to_speech:        {tier: small,  temperature: 0.0, max_tokens: 300,  timeout_s: 8,  prompt: v1}
 
+embedding:                             # A3 embed (ai-orchestration §2.3.3), tier `embed` · no prompt
+  timeout_s: 60                        # [C] one batch request · PoC P3b: set from measured latency
+  batch_size: 10                       # [C] texts per request · gemini-embedding-2 allows 8,192 tokens per request in total and chunks are up to 800
+  dimensions: 768                      # = chunks.embedding vector(768) · P3b: gemini-embedding-2 recall@4 95% at 768 vs 90% at 3072 (specs/poc/reports/P3.md)
+
 gateway:
   retries: 1                           # then fallback provider, then degrade
+  retry_backoff_seconds: 1             # [C] wait before a retry when the provider gives no retry delay · after Alpha: pick from ai_calls (success rate of retries by wait)
+  max_retry_wait_seconds: 10           # [C] do not retry if the provider asks to wait longer (a chat turn targets TTFT p95 2 s) · after Alpha: from ai_calls
   schema_retries: 1                    # retry once with the validation error appended
   circuit_breaker:                     # [B] Resilience4j defaults
     failure_rate_threshold: 0.5
@@ -48,6 +60,7 @@ guards:
   rate_limit_messages_per_minute: 20
   max_image_mb: 10
   max_audio_seconds: 60
+  max_attachment_name_chars: 255       # [B] display cap for user-visible file names · counted in grapheme clusters, extension kept · never used in Storage paths
   answer_leak_check: true
 
 targets:                               # checked in PoC P4-lite and monitored in production

@@ -9,7 +9,7 @@ const room = fixture as RoomData;
 afterEach(cleanup);
 
 describe("ChatRoom (S2, fixture data)", () => {
-  it("TM04 top bar shows the prep name, days left from the data and a link out of the room", () => {
+  it("TM20 top bar shows the prep name, days left from the data and a link out of the room", () => {
     const { getByText, getByRole } = render(<ChatRoom room={room} />);
 
     expect(getByText(room.prep_name)).toBeTruthy();
@@ -25,7 +25,7 @@ describe("ChatRoom (S2, fixture data)", () => {
     expect(names.sort()).toEqual(["ส่ง", "แนบรูป"].sort());
   });
 
-  it("TM06 a sent message appears at the end as a user bubble", () => {
+  it("TM20 a sent message appears at the end as a user bubble", () => {
     const { container, getByLabelText, getByRole } = render(<ChatRoom room={room} />);
 
     fireEvent.change(getByLabelText("พิมพ์ตอบ"), { target: { value: "ใช่ๆ" } });
@@ -37,3 +37,6 @@ describe("ChatRoom (S2, fixture data)", () => {
     expect(last.textContent).toContain("ใช่ๆ");
   });
 });
+
+// "Room page (S3, fake transport)" (chat-streaming.md AC-21) was removed with the demo mode:
+// the page now talks to the API, see RoomPageHttp.test.tsx (room-http.md · approved by May 2026-10-21).
