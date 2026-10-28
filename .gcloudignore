@@ -1,0 +1,12 @@
+# gcloud builds submit uploads the repo root. Keep the upload small and never send secrets:
+# everything in .gitignore (.env, keys, node_modules, .venv) plus folders the API image does not use.
+# apps/api/Dockerfile + .dockerignore pick the files that go into the image.
+.gcloudignore
+.git
+#!include:.gitignore
+apps/web/
+docs/
+evals/
+poc/
+specs/
+supabase/

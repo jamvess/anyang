@@ -1,0 +1,7 @@
+# Non-secret env of Cloud Run api-staging (gcloud run deploy --env-vars-file).
+# A YAML file instead of --set-env-vars: CORS_ALLOW_ORIGINS contains "," and the regex contains
+# "^" and "$", which would need a custom delimiter plus shell escaping. Secrets go in Secret Manager.
+APP_ENV: staging
+AI_PROVIDER: fake   # live needs the Vertex path in the gateway (AI Studio keys are not covered by the trial)
+CORS_ALLOW_ORIGINS: https://anyang-amber.vercel.app,http://localhost:3000
+CORS_ALLOW_ORIGIN_REGEX: '^https://anyang-[a-z0-9]+-anyang4\.vercel\.app$'
