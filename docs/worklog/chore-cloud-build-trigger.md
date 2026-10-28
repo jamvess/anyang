@@ -15,7 +15,7 @@
 - [x] 2. 🙋 สร้าง service account `cloudbuild-deployer` และให้ role ที่ใช้ deploy (Claude ให้คำสั่งทีละตัว): `run.admin` (deploy + ตั้ง `allUsers` invoker ของ `--allow-unauthenticated`), `artifactregistry.writer`, `logging.logWriter` และ `iam.serviceAccountUser` บน runtime SA ของ Cloud Run (`659706857266-compute@developer.gserviceaccount.com`)
 - [x] 3. 🙋 Jam ต่อ GitHub กับ Cloud Build (2nd gen, `asia-southeast1`) แล้ว link repo `jamvess/anyang` (Claude ร่างขั้นตอนให้ส่ง Jam)
 - [x] 4. 🙋 สร้าง trigger `api-staging-deploy` ด้วย `gcloud builds triggers create github`: branch `^main$` เท่านั้น · `--included-files=apps/api/**,config/**,prompts/**,infra/**` · `--build-config=infra/cloudbuild.yaml` · `--service-account` = `cloudbuild-deployer`
-- [ ] 5. 🤖 อัปเดต `infra/README.md` (trigger, SA, roles, วิธีดู build) + checklist
+- [x] 5. 🤖 อัปเดต `infra/README.md` (trigger, SA, roles, วิธีดู build) + checklist
 - [ ] 6. 🙋 ทดสอบจริง: merge PR นี้ (แก้ `infra/**` จึง trigger เอง) → ดู build ใน Console → Claude ตรวจว่า image ของ revision ใหม่ใช้ tag = commit ของ merge และ `/health` + CORS ยังผ่าน
 
 ## Definition of done
@@ -32,8 +32,11 @@
 - 2026-10-29 · ขั้น 2: SA `cloudbuild-deployer@anyang-513006.iam.gserviceaccount.com` · `run.admin` (project) · `artifactregistry.writer` (เฉพาะ repo `anyang`) · `logging.logWriter` (project) · `iam.serviceAccountUser` (เฉพาะบน `659706857266-compute@developer.gserviceaccount.com`) · IAM policy ยืนยันว่า compute SA มี `roles/editor`
 - 2026-10-29 · ขั้น 4 (ไฟล์): `infra/trigger-api-staging.yaml` สำหรับ `gcloud builds triggers import`
 - 2026-10-29 · ขั้น 4: import trigger แล้ว · id `6d9a83fa-fe92-426a-b8a6-0754ed370737` · `branch: ^main$` ครบ · repository `…/repositories/anyang` · `includedFiles` 4 path · SA `cloudbuild-deployer` · ยังไม่เคยรัน
+- 2026-10-29 · ขั้น 5: `infra/README.md` หัวข้อ "Deploy อัตโนมัติ" (trigger, SA + role, วิธีดู build, วิธีแก้ trigger) + อัปเดตสถานะบรรทัดเก่า · checklist: ย่อ note `$$`/`^@^` เป็น 1 บรรทัด (Junior สั่ง)
 
 ## Decisions
+
+- 2026-10-29 · (Junior) ขั้น 6 ทดสอบได้หลัง merge เท่านั้น · PR นี้**ไม่ติ๊ก** checklist ข้อ Cloud Build trigger · PR description ต้องมีบรรทัด "ยืนยันหลัง merge → ติ๊กใน PR report P6-lite" · ไม่เปิด PR แยกแค่เพื่อติ๊ก · PR ถัดไปคือ `/poc-report P6-lite` ซึ่งติ๊กข้อนี้และบันทึกตัวเลขจริง (นาทีจาก merge → deploy เสร็จ, เวลา build, image tag = merge commit) · PR นั้นแก้แค่ docs/specs จึงไม่ trigger build
 
 - 2026-10-29 · สร้าง trigger จากไฟล์ `infra/trigger-api-staging.yaml` + `gcloud builds triggers import` แทน flag ของ `triggers create` · `--branch-pattern=^main$` ผ่าน `gcloud.cmd` แล้ว cmd.exe จะกิน `^` (เหลือ `main$` ซึ่ง match branch อย่าง `foo-main` ด้วย) · ไฟล์ยัง version ไว้ใน repo และใช้ import ซ้ำเพื่ออัปเดตได้ · ไฟล์เป็น ASCII ล้วน
 - 2026-10-29 · `artifactregistry.writer` ให้เฉพาะ repo `anyang` และ `iam.serviceAccountUser` ให้เฉพาะบน compute SA ไม่ให้ระดับ project · least privilege
@@ -48,7 +51,7 @@
 
 ## Next step
 
-ขั้น 5: อัปเดต `infra/README.md` (trigger `api-staging-deploy`, SA `cloudbuild-deployer` + role, วิธี import/อัปเดต trigger, วิธีดู build, บรรทัดเก่า "สร้าง Cloud Build trigger" / "ให้ service account ของ Cloud Build มีสิทธิ์…" ให้เป็นสถานะจริง) + ย่อ note `$$`/`^@^` ใต้ข้อ trigger ใน checklist ถ้า Junior ok
+`/work-done` (ไม่ติ๊กข้อ Cloud Build trigger) · หลัง #83 merge: ตรวจ build ใน `gcloud builds list --region=asia-southeast1 --limit=5`, image ของ revision = merge commit SHA, env, `/health` + preflight · แล้วเริ่ม `/poc-report P6-lite` ใน branch ใหม่ ซึ่งติ๊ก checklist + บันทึกตัวเลขจริง
 
 ## Waiting on
 

@@ -1,6 +1,7 @@
 # infra/
 
-- `cloudbuild.yaml` · build + deploy backend ไป Cloud Run staging เมื่อ push เข้า `main`
+- `cloudbuild.yaml` · build + deploy backend ไป Cloud Run `api-staging` เมื่อ push เข้า `main` (trigger `api-staging-deploy` จาก `trigger-api-staging.yaml`)
+- `deploy-staging.ps1` + `cloudbuild-image.yaml` · deploy มือ (ทางสำรอง) · `env/api-staging.yaml` · env ที่ไม่ใช่ secret ใช้ทั้ง 2 ทาง
 - frontend deploy ผ่าน Vercel ด้วย GitHub Actions (`.github/workflows/web-deploy.yml`) ดูหัวข้อ "Frontend · Vercel" ด้านล่าง
 - Terraform ย้ายไปเทอม 2 (S6) ตอนนี้สร้าง resource ด้วยคำสั่งในหัวข้อ "สร้าง cloud resource" ด้านล่าง
 
@@ -30,8 +31,8 @@ printf '%s' "<service-role-key>" | gcloud secrets create supabase-service-role -
 printf '%s' "<anthropic-key>"    | gcloud secrets create anthropic-api-key --data-file=-
 ```
 
-- สร้าง Cloud Build trigger: push เข้า `main` → ใช้ `infra/cloudbuild.yaml`
-- ให้ service account ของ Cloud Build มีสิทธิ์ deploy Cloud Run และอ่าน secrets
+- Cloud Build trigger: ทำแล้ว 29 ต.ค. (PR #83) · ดูหัวข้อ "Deploy อัตโนมัติ" ด้านล่าง
+- service account ของ Cloud Build: ทำแล้ว 29 ต.ค. (`cloudbuild-deployer` · ยังไม่มีสิทธิ์อ่าน secret เพราะยังไม่ใช้)
 - Supabase project ใหม่ (เช่น `anyang-staging`): `npx supabase login` → `npx supabase link --project-ref <ref>` → `npx supabase db push` แล้วเปิด Custom Access Token hook ใน Dashboard (Authentication → Hooks) แล้ว `npx supabase unlink` (ถ้าลืมว่ายัง link อยู่ `db push` ครั้งหน้าจะลงผิด project) · `anyang-dev` ทำแล้ว
   - `anyang-staging` ทำแล้ว 21 ต.ค.: ref `sfapuygntxuelsxsgkay` · region `ap-southeast-1` (Singapore ใกล้ Cloud Run `asia-southeast1`) · `0001` + `0002` · RLS ครบ 27 ตาราง · hook เปิดแล้ว · `test_SA06_tenant_isolation` ผ่าน · Auth Site URL: `https://anyang-amber.vercel.app` (`anyang-dev` ยังเป็น `http://localhost:3000` เพราะใช้ local อย่างเดียว) · Auth Redirect URLs: `http://localhost:3000/**`, `https://anyang-*-anyang4.vercel.app/**` (glob ของ Supabase หลวมกว่า CORS regex · ต้องทบทวนตอนทำ `anyang-prod`)
 - ให้สิทธิ์ Jam เป็น Vertex AI User เพื่อใช้ Gemini บนเครื่องด้วย `gcloud auth application-default login` (ไม่ต้องดาวน์โหลด key file)
@@ -50,7 +51,23 @@ printf '%s' "<anthropic-key>"    | gcloud secrets create anthropic-api-key --dat
 | ตอนนี้ตอบอะไร | `/health` + stub ห้องติวที่คืน fixture (`X-Stub: true`) · ยังไม่เรียก Supabase หรือ AI |
 | **Demo link** | https://anyang-amber.vercel.app/preps/00000000-0000-4000-8000-000000000001/room · ห้องติวบน Vercel production ที่ stream คำตอบ stub จาก `api-staging` (ตรวจใน Network แล้ว 28 ต.ค.) |
 
-**Deploy มือ** (ทางสำรองของ P6-lite จนกว่า Cloud Build trigger จะมี) จาก repo root ใน PowerShell:
+**Deploy อัตโนมัติ** (P6-lite · ตั้งแล้ว 29 ต.ค.)
+
+| | |
+|---|---|
+| Trigger | `api-staging-deploy` (`asia-southeast1`) · ตั้งค่าใน `infra/trigger-api-staging.yaml` |
+| รันเมื่อ | push เข้า `main` (`^main$`) ที่แก้ `apps/api/**`, `config/**`, `prompts/**` หรือ `infra/**` (แก้ `infra/README.md` ก็ deploy ใหม่ · ไม่เสียหาย) |
+| ทำอะไร | `infra/cloudbuild.yaml`: build `apps/api/Dockerfile` → push `asia-southeast1-docker.pkg.dev/anyang-513006/anyang/api:$COMMIT_SHA` → `gcloud run deploy api-staging` ด้วย flag และ `env/api-staging.yaml` ชุดเดียวกับสคริปต์มือ |
+| GitHub | connection 2nd gen `github-anyang` (`asia-southeast1`) · repository `anyang` → `jamvess/anyang` · Jam ต่อไว้ (ต้องใช้ admin ของ repo) |
+| Service account | `cloudbuild-deployer@anyang-513006.iam.gserviceaccount.com` · `roles/run.admin` (project · ต้องใช้ตั้ง `allUsers` ของ `--allow-unauthenticated`) · `roles/artifactregistry.writer` (เฉพาะ repo `anyang`) · `roles/logging.logWriter` (project · build ใช้ `CLOUD_LOGGING_ONLY`) · `roles/iam.serviceAccountUser` (เฉพาะบน runtime SA `659706857266-compute@…`) |
+| ดู build | https://console.cloud.google.com/cloud-build/builds;region=asia-southeast1?project=anyang-513006 หรือ `gcloud builds list --region=asia-southeast1 --limit=5` |
+| ดูว่า deploy commit ไหน | `gcloud run services describe api-staging --region=asia-southeast1 --format="value(spec.template.spec.containers[0].image)"` · tag = commit SHA |
+
+- แก้ trigger: แก้ `infra/trigger-api-staging.yaml` แล้วรัน `gcloud builds triggers import --source=infra/trigger-api-staging.yaml --region=asia-southeast1` (ใช้ไฟล์แทน flag เพราะ cmd.exe กิน `^` ของ `^main$`)
+- แก้ flag ของ deploy: แก้ทั้ง `cloudbuild.yaml` และ `deploy-staging.ps1` ให้ตรงกัน
+- ห้ามกด **Run** trigger มือถ้า `cloudbuild.yaml` บน `main` ยังไม่ใช่ฉบับที่ต้องการ (trigger ใช้ไฟล์จาก commit ที่รัน)
+
+**Deploy มือ** (ทางสำรอง ถ้า trigger มีปัญหา หรืออยาก deploy branch ที่ยังไม่ merge) จาก repo root ใน PowerShell:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File infra\deploy-staging.ps1
