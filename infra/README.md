@@ -39,6 +39,8 @@ printf '%s' "<anthropic-key>"    | gcloud secrets create anthropic-api-key --dat
 ## Backend · Cloud Run `api-staging`
 
 > ⚠️ ห้ามเปิด AI_PROVIDER=live บน api-staging จนกว่าจะเช็ค Supabase JWT ทุก endpoint · URL เป็น public (--allow-unauthenticated) คนนอกเรียกแล้วกิน credit ได้
+>
+> ⚠️ ก่อนเปิด live ต้องเปลี่ยน runtime SA ด้วย · ตอนนี้ `api-staging` รันด้วย default compute SA (`659706857266-compute@developer.gserviceaccount.com`) ซึ่งได้ role **Editor** ของทั้ง project มาโดย default · ให้สร้าง SA แยกสำหรับ runtime ที่มีแค่ **Vertex AI User** (`roles/aiplatform.user`) + **Secret Manager Secret Accessor** (`roles/secretmanager.secretAccessor`) แล้ว deploy ด้วย `--service-account` (ทั้ง `cloudbuild.yaml` และ `deploy-staging.ps1`) · `cloudbuild-deployer` ต้องมี `iam.serviceAccountUser` บน SA ตัวใหม่แทนตัวเดิม
 
 | | |
 |---|---|
