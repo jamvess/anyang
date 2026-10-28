@@ -59,7 +59,7 @@ Part A ทำครั้งเดียวต่อเครื่อง ใช
 
 - ติดตั้งเสร็จทุกตัวแล้ว **ปิด terminal ทั้งหมดแล้วเปิดใหม่** ถ้าเจอ `not recognized` ให้ดูตารางปัญหาท้ายไฟล์
 - **macOS:** ติดตั้ง Git ด้วย `xcode-select --install` · Node จาก nodejs.org · uv ด้วย `curl -LsSf https://astral.sh/uv/install.sh | sh` · Claude Code ด้วย `curl -fsSL https://claude.ai/install.sh | bash`
-- **ยังไม่ต้องติดตั้ง:** Supabase CLI (ใช้ผ่าน `npx supabase` และ Junior คนเดียวที่ต้องใช้), Google Cloud CLI (ใช้ใน S2), Docker (ไม่ใช้)
+- **ยังไม่ต้องติดตั้ง:** Supabase CLI (ใช้ผ่าน `npx supabase` และ Junior คนเดียวที่ต้องใช้), Google Cloud CLI (เฉพาะ Junior + Jam: `winget install --id Google.CloudSDK -e` → `gcloud auth login` → `gcloud config set project anyang-513006` · ดู `infra/README.md`), Docker (ไม่ใช้)
 
 ## A3 · ตั้งค่า git (Git Bash)
 
@@ -114,6 +114,7 @@ code .env
 | ตัวแปร | ค่า |
 |---|---|
 | `GEMINI_API_KEY` | https://aistudio.google.com/apikey → **Create API key** → Copy · ⚠️ ถ้าเป็น free tier Google อาจเอาข้อมูลไปใช้ train ได้ จึงห้ามส่งข้อมูลของ user จริงหรือรูปลายมือของเพื่อนถ้ายังไม่ได้เปิด billing (AI-07) |
+| `GOOGLE_CLOUD_PROJECT` | `anyang-513006` (ใช้กับ Vertex AI · ตั้งแต่ 28 ต.ค. Gemini ใช้ผ่าน Vertex เท่านั้น เพราะ Free Trial ไม่ครอบคลุม key ของ AI Studio · ดู `infra/README.md`) |
 | `AI_MODEL_OVERRIDE` | model ที่จะใช้แทน `TODO-...` ใน `config/ai.yaml` เช่น `gemini:gemini-3.8-flash` |
 
 **2) `apps/web/.env.local` ใช้กับ frontend**
