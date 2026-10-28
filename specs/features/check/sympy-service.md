@@ -6,7 +6,7 @@
 | Requirements | AM-04, AM-05 |
 | Owner | Jam |
 | Reviewer | Junior |
-| Status | draft |
+| Status | approved (Jam · 28 ต.ค.) · §11 รอ Junior OK |
 | Related system spec | ai-orchestration.md §2.4.1, §2.4.2, §2.4.3 · `specs/features/check/merge-rules.md` §3 · architecture.md (Math: subprocess + timeout) · `evals/README.md` "คู่มือ label ลายมือ · P1" |
 
 ## 1. Context
@@ -37,6 +37,8 @@ feature นี้คือส่วนแรก อยู่ใน `apps/api/app
 | definition | `f(x)=E`, `f'(x)=E`, `f''(x)=E`, `f'''(x)=E` (ชื่อฟังก์ชันตัวเดียว) · อันดับ k = จำนวน `'` | `E` |
 | equation | `A=B` ที่ไม่ใช่ definition หรือหลายส่วนคั่น `,` เช่น `e^{x}=1, e^{x}=2`, `x=0, x=\ln(2)` | solution set บนจำนวนจริง (`solveset(A − B, x, Reals)`) · หลายส่วน = union ของทุกส่วน |
 
+**บรรทัดที่มี `=` หลายตัว** (กติกาลายมือข้อ 5 · §10 ข้อ 3): ใน `expression` และ `factored` แยกด้วย `=` ระดับบนสุดเป็นขั้นย่อย เช่น `=\frac{1^{2}+1}{1+1}=\frac{2}{2}=1` เป็น 3 ขั้น · ขั้นแรกเทียบกับบรรทัดก่อนหน้า ขั้นถัดไปเทียบกับขั้นก่อน · บรรทัดถูกเมื่อทุกขั้นย่อยถูก · ค่าของบรรทัด = ขั้นสุดท้าย · ใน `equation` ถ้าส่วนใด (หลังแยก `,`) มี `=` มากกว่า 1 ตัว เช่น `f'(x)=3x^{2}-6x-9=0` → ไม่รองรับ (`parsed = false`)
+
 ตัวแปร x คือ free symbol ตัวเดียวของเฉลย (ถ้าเฉลยไม่มี symbol เลยหรือมีหลายตัว → ใช้ free symbol ตัวเดียวของบรรทัด · ถ้ายังหาไม่ได้ตัวเดียว → `parsed = false`)
 
 ### 2.3 คำตอบสุดท้าย (`final_equal`, `final_in_form`)
@@ -61,26 +63,27 @@ feature นี้คือส่วนแรก อยู่ใน `apps/api/app
 |---|---|---|
 | (บรรทัด 1) เฉลย | expression | value(C) = value(เฉลย) |
 | (บรรทัด 1) เฉลย | equation (`equation` format) | solution set(C) = solution set(เฉลย) |
-| (บรรทัด 1) — | definition | true เสมอ ถือว่าเขียนโจทย์ซ้ำ (ดู §10 Q1) |
+| (บรรทัด 1) — | definition | true เสมอ ถือว่าเขียนโจทย์ซ้ำ (§10 ข้อ 1) · ถ้าลอกโจทย์ผิด คำตอบสุดท้ายจะผิด แล้ว merge rules ใช้ first_wrong_line ของ LLM (merge-rules ข้อ 6) |
 | expression | expression | value(C) = value(P) |
 | definition อันดับ j | definition อันดับ k > j | E_C = d^(k−j)/dx^(k−j) E_P |
 | definition | expression | value(C) = E_P |
 | definition | equation (`equation` format) | solution set(C) = solution set(E_P = 0) · ขั้น "ตั้งอนุพันธ์เท่ากับ 0" เช่น `f'(x)=3x^{2}-6x-9` → `3x^{2}-6x-9=0` |
 | equation | equation | solution set(C) = solution set(P) (§2.4.3 "solution set ของแต่ละบรรทัดต้องเท่าเดิม") |
-| อื่นๆ | | ไม่รองรับ → ทั้งข้อ `parsed = false` (เช่น equation ใน `expression` format แบบ implicit dy/dx · §10 Q2) |
+| อื่นๆ | | ไม่รองรับ → ทั้งข้อ `parsed = false` (เช่น equation ใน `expression` format แบบ implicit dy/dx · §10 ข้อ 2) |
 
 ### 2.5 ตัดสินไม่ได้ และ timeout
 
 - การเทียบใดที่ SymPy ตอบไม่ได้แน่ชัด (เช่น `solveset` คืน `ConditionSet`) → `final_equal = null` และ `line_ok = []` · merge rules ถือว่า SymPy ตัดสินไม่ได้ แล้วใช้ผลของ LLM (merge-rules §2 "final_equal = null")
+- **`line_ok` ยาวเท่า `lines` เฉพาะเมื่อตัดสินได้** (`parsed`, ไม่ `timed_out`, `final_equal` ไม่เป็น `null`) · ตัดสินไม่ได้ → `[]` (§10 ข้อ 5)
 - งานทั้งข้อ (parse + เทียบทุกบรรทัด) รันใน **worker process แยก** พร้อม timeout `checker.sympy_timeout_seconds` จาก `config/learning.yaml` · timeout คิดต่อ 1 คำตอบ เพราะค่านี้ตั้งเป็น budget ให้ verdict มาทัน TTFT p95 · เกินเวลา → `timed_out = true`, `parsed = true`, `final_equal = null`, `final_in_form = null`, `line_ok = []` แล้วหยุด worker ตัวนั้นและเปิดใหม่
-- **ไม่เปิด process ใหม่ทุกครั้ง:** วัดแล้ว (28 ต.ค.) การเปิด Python + import SymPy ใช้ 1.9 วินาที เกือบเท่า budget · จึงใช้ worker ที่เปิดค้างไว้ (pool) · จำนวน worker ดู §10 Q4
+- **ไม่เปิด process ใหม่ทุกครั้ง:** วัดแล้ว (28 ต.ค.) การเปิด Python + import SymPy ใช้ 1.9 วินาที เกือบเท่า budget · จึงใช้ worker ที่เปิดค้างไว้ (pool) จำนวน `checker.sympy_workers` (§10 ข้อ 4)
 - เป็นฟังก์ชัน `async` ไม่บล็อก event loop ของ FastAPI (CLAUDE.md ของ api: "Never call `simplify` in the request thread directly")
 
 ### 2.6 ไม่มีคำตอบ
 
 `lines = []` → คืนทันทีโดยไม่เรียก SymPy: `parsed = false`, `timed_out = false`, ค่าอื่น `null`, `line_ok = []` · merge rules จับ no answer จาก `lines` ว่างเองก่อน (merge-rules §2 ข้อ 1)
 
-ไม่มี threshold อื่นนอกจาก `checker.sympy_timeout_seconds`
+ค่าจาก config มี 2 ตัว คือ `checker.sympy_timeout_seconds` และ `checker.sympy_workers` (เพิ่มใหม่ · §11)
 
 ## 3. Inputs and outputs
 
@@ -106,6 +109,7 @@ feature นี้คือส่วนแรก อยู่ใน `apps/api/app
 - **AC-4 (AM-05)** Given ans_007 (บรรทัด 3 `2x\sin(x)-x^{2}\cos(x)`) When ตรวจ Then `line_ok=[True, True, False]`, `final_equal=False`
 - **AC-5 (AM-04)** Given ans_010 (`e^{x^{2}}\cdot 2x\cdot\ln(x)+e^{x^{2}}\cdot\frac{1}{x}` เทียบ `2xe^{x^{2}}\ln(x)+\frac{e^{x^{2}}}{x}`) When ตรวจ Then `final_equal=True` (เทียบทางคณิตศาสตร์ ไม่ใช่ string)
 - **AC-6 (AM-04)** Given บรรทัดที่มี `\left( \right)`, `\,` และ `=` ต้นบรรทัด When ตรวจ Then ผลเหมือนบรรทัดที่ไม่มีสิ่งเหล่านั้น
+- **AC-27 (AM-05)** Given `expression`, เฉลย `1`, บรรทัด `["\lim_{x \to 1} \frac{x^{2}+1}{x+1}", "=\frac{1^{2}+1}{1+1}=\frac{2}{2}=1"]` When ตรวจ Then `line_ok=[True, True]` · Given บรรทัด 2 เป็น `=\frac{1^{2}+1}{1+1}=\frac{2}{2}=3` Then `line_ok=[True, False]`, `final_equal=False`
 - **AC-7 (AM-04)** Given ans_016 (`3\cdot\frac{\sin(3x)}{3x}` ใต้ `\lim_{x \to 0}`) When ตรวจ Then `final_equal=True` และทุก `line_ok` จริง
 
 **definition (f, f′, f″)**
@@ -131,7 +135,8 @@ feature นี้คือส่วนแรก อยู่ใน `apps/api/app
 
 - **AC-18 (AM-04)** Given บรรทัดที่ parse ไม่ได้ (`\text{ดังนั้น } x=1` หรือ `x^{\?}`) When ตรวจ Then `parsed=False`, `final_equal=None`, `final_in_form=None`, `line_ok=[]`
 - **AC-19 (AM-04)** Given เฉลย parse ไม่ได้ When ตรวจ Then `parsed=False`
-- **AC-20 (AM-04)** Given ans_004 (implicit dy/dx: บรรทัดเป็นสมการของ x, y ใน `expression` format) When ตรวจ Then `parsed=False` (ไม่รองรับ · §10 Q2)
+- **AC-20 (AM-04)** Given ans_004 (implicit dy/dx: บรรทัดเป็นสมการของ x, y ใน `expression` format) When ตรวจ Then `parsed=False` (ไม่รองรับ · §10 ข้อ 2)
+- **AC-28 (AM-04)** Given `equation` และบรรทัด `f'(x)=3x^{2}-6x-9=0` When ตรวจ Then `parsed=False`
 - **AC-21 (AM-04)** Given การเทียบที่ SymPy ตอบไม่ได้แน่ชัด (เช่น solution set เป็น `ConditionSet`) When ตรวจ Then `parsed=True`, `final_equal=None`, `line_ok=[]`
 - **AC-22 (AM-06 ส่งต่อ)** Given `lines=[]` When ตรวจ Then `parsed=False`, `line_ok=[]` และไม่เรียก worker
 
@@ -141,6 +146,7 @@ feature นี้คือส่วนแรก อยู่ใน `apps/api/app
 - **AC-24 (AM-04)** Given เพิ่งเกิด timeout ตาม AC-23 When ตรวจคำตอบปกติข้อถัดไป Then ได้ผลถูกต้อง (worker ถูกเปิดใหม่)
 - **AC-boundary (AM-04)** งานที่เสร็จก่อน timeout → `timed_out=False` · งานที่เกิน → `timed_out=True` · ไม่ test ที่ "= timeout พอดี" เพราะเวลาจริงไม่แน่นอน
 - **AC-25 (AM-04)** Given ไม่ส่ง `timeout_s` When ตรวจ Then ใช้ค่า `checker.sympy_timeout_seconds` จาก settings (ไม่มีตัวเลขใน code)
+- **AC-29 (AM-04)** Given settings `checker.sympy_workers = n` When สร้าง pool Then มี worker n ตัว (ไม่มีตัวเลขใน code)
 
 **ต่อกับ merge rules**
 
@@ -163,37 +169,33 @@ feature นี้คือส่วนแรก อยู่ใน `apps/api/app
 
 | Test | ระดับ | ครอบคลุม AC |
 |---|---|---|
-| `tests/unit/test_sympy_service.py` แบบ table-driven (`parametrize`) ใช้ ans_xxx จาก golden set เป็น fixture | unit | AC-1 ถึง AC-22, AC-25, AC-26 |
-| `tests/unit/test_sympy_service_timeout.py` งานที่ค้าง + timeout เล็ก | unit | AC-23, AC-24, AC-boundary |
+| `tests/unit/test_sympy_service.py` แบบ table-driven (`parametrize`) ใช้ ans_xxx จาก golden set เป็น fixture | unit | AC-1 ถึง AC-22, AC-25 ถึง AC-28 |
+| `tests/unit/test_sympy_service_timeout.py` งานที่ค้าง + timeout เล็ก | unit | AC-23, AC-24, AC-29, AC-boundary |
 | รัน service กับ 50 ข้อใน `evals/answers/labels.jsonl` นับ parse ได้, timeout, `final_equal` ตรงกับ label (worklog ขั้น 7) | eval | ทั้งหมด (ตัวเลขตั้งต้นให้ P2) |
 
 ## 9. Out of scope
 
 - verify เฉลยของโจทย์ที่ AI สร้าง (AM-11, §2.4.6, `checker.max_generate_retries`) · ใช้ worker เดียวกันได้ทีหลัง
 - `numeric`, `short_text`, `sql`, `solution_set` (Should / Could)
-- implicit differentiation (§10 Q2) · inequality · integral ที่ SymPy คำนวณไม่ได้
+- implicit differentiation (§10 ข้อ 2) · inequality · integral ที่ SymPy คำนวณไม่ได้
 - hint `sign_flip_detected` ให้ LLM (§2.4.4) · ทำตอนต่อ prompt `check_answer`
 - checker service ที่เรียก service นี้ + LLM + merge แล้วเขียน `attempts`
 
 ## 10. Open questions
 
-1. **บรรทัด definition บรรทัดแรก** (`f(x)=…` ที่ user เขียนโจทย์ซ้ำ) ไม่มีอะไรให้เทียบ เพราะ service ไม่ได้รับตัวโจทย์
-   - (a) ถือว่าถูกเสมอ · ถ้าลอกโจทย์ผิด คำตอบสุดท้ายจะผิด แล้ว merge rules ใช้ first_wrong_line ของ LLM (merge-rules ข้อ 6) · ไม่ต้องเพิ่ม input
-   - (b) เพิ่ม input `problem_text` แล้วดึงคณิตที่อยู่นอก `\text{…}` มาเทียบ · แม่นกว่าแต่เปราะ (ข้อความไทยปน)
-   - **เสนอ (a)** · golden set ที่มี definition ทั้ง 11 ข้อเขียน `f(x)=` ซ้ำในบรรทัด 1 ถูกทุกข้อ
-2. **implicit dy/dx (P12 · 3 ข้อใน golden set)** บรรทัด 1 → 2 คือการ differentiate ทั้งสองข้าง ไม่ใช่สมการที่เท่ากัน
-   - **เสนอ:** ไม่รองรับใน MVP → `parsed=False` → LLM ตัดสินพร้อม confidence (merge-rules ข้อ 2) · กระทบเป้า P2 สูงสุด 3/50 ข้อ ถ้า LLM พลาด
-3. **บรรทัดที่มี `=` หลายตัว** เช่น `=\frac{1^{2}+1}{1+1}=\frac{2}{2}=1` (กติกาลายมือข้อ 5 อนุญาต)
-   - **เสนอ:** `expression` / `factored` → แยกด้วย `=` ระดับบนสุดแล้วตรวจเป็นหลายขั้นย่อยในบรรทัดเดียว บรรทัดถูกเมื่อทุกขั้นย่อยถูก · `equation` → ถ้าส่วนใดส่วนหนึ่ง (หลังแยก `,`) มี `=` มากกว่า 1 ตัว (เช่น `f'(x)=3x^{2}-6x-9=0`) ไม่รองรับ → `parsed=False`
-   - golden set 50 ข้อยังไม่มีบรรทัดแบบนี้ (ที่มี `=` หลายตัวเป็นรายการคั่น `,` อย่าง `x=0, x=\ln(2)` ทั้งหมด) จึงไม่กระทบตัวเลข P2
-4. **จำนวน worker** · ค่านี้ไม่ใช่ threshold ของ learning model แต่ CLAUDE.md กฎ 5 ห้ามตัวเลขลอย
-   - **เสนอ:** เพิ่ม `checker.sympy_workers: 1  # [C]` ใน `config/learning.yaml` · 1 ตัวต่อ Cloud Run instance พอสำหรับ pilot · วัดใหม่ตอน P4-lite ถ้ามีคิวรอ
-5. **`line_ok` ตอนตัดสินไม่ได้** · merge-rules §3 เขียนว่า `line_ok` "ยาวเท่า `lines`" แต่ตอน parse ไม่ได้หรือ timeout ไม่มีค่าที่ถูกต้องให้ใส่
-   - **เสนอ:** คืน `[]` (merge rules ไม่อ่าน `line_ok` ในกรณีนี้อยู่แล้ว) และเพิ่มประโยคใน merge-rules §3 ว่า "ยาวเท่า `lines` เมื่อ `parsed` และไม่ `timed_out` และ `final_equal` ไม่เป็น `null`"
+ไม่มีข้อที่ค้าง
+
+**ตัดสินแล้ว (Jam · 28 ต.ค.)**
+
+1. บรรทัด definition บรรทัดแรก (`f(x)=…` ที่เขียนโจทย์ซ้ำ) ถือว่าถูกเสมอ ไม่เพิ่ม input ตัวโจทย์ · golden set 11 ข้อที่มี definition เขียน `f(x)=` ซ้ำในบรรทัด 1 ถูกทุกข้อ · ถ้าลอกผิด merge rules ใช้ first_wrong_line ของ LLM · ไม่เลือกดึงคณิตจาก `problems.text` เพราะข้อความไทยปนทำให้เปราะ
+2. implicit dy/dx ไม่รองรับใน MVP → `parsed=False` → LLM ตัดสิน (merge-rules ข้อ 2) · กระทบเป้า P2 สูงสุด 3/50 ข้อ
+3. บรรทัด `a=b=c` ใน `expression` / `factored` แยกเป็นขั้นย่อย (§2.2) · ใน `equation` ไม่รองรับ · golden set ยังไม่มีบรรทัดแบบนี้ (`=` หลายตัวที่มีอยู่เป็นรายการคั่น `,` ทั้งหมด)
+4. จำนวน worker อ่านจาก `checker.sympy_workers: 1  # [C]` · 1 ตัวต่อ Cloud Run instance พอสำหรับ pilot · วัดใหม่ตอน P4-lite ถ้ามีคิวรอ
+5. `line_ok = []` เมื่อตัดสินไม่ได้ (§2.5) · merge rules ไม่อ่าน `line_ok` ในกรณีนี้อยู่แล้ว
 
 ## 11. Spec changes needed
 
-- `apps/api/pyproject.toml` (Junior) · เพิ่ม `antlr4-python3-runtime==4.11` (parser ของ `parse_latex` แบบ `antlr` · ต้องเป็น 4.11 ให้ตรงกับ grammar ของ SymPy)
-- `specs/features/check/merge-rules.md` §3 · ประโยคเรื่อง `line_ok` ว่าง (Q5) · Junior ตกลงรูปแบบนี้ไว้ จึงต้องให้ Junior OK
-- `specs/system/ai-orchestration.md` §2.4.3 (Jam) · เพิ่มว่าบรรทัด 1 เทียบกับเฉลย, กฎของบรรทัด definition (f, f′, f″), `e` คือค่าคงที่, solution set บนจำนวนจริง, worker ที่เปิดค้างไว้
-- `config/learning.yaml` (Jam + Junior) · `checker.sympy_workers` ถ้า Q4 ตกลง
+- `apps/api/pyproject.toml` (Junior) · เพิ่ม `antlr4-python3-runtime==4.11` (parser ของ `parse_latex` แบบ `antlr` · ต้องเป็น 4.11 ให้ตรงกับ grammar ของ SymPy) · **รอ Junior OK**
+- `config/learning.yaml` (Jam + Junior) + `apps/api/app/settings.py` `CheckerConfig` (Junior) · เพิ่ม `checker.sympy_workers` (ข้อ 4) · settings ต้องเพิ่ม field เพราะ loader เป็นแบบ strict · **รอ Junior OK**
+- `specs/features/check/merge-rules.md` §3 · `line_ok` ยาวเท่า `lines` เฉพาะเมื่อตัดสินได้ (ข้อ 5) · Junior ตกลงรูปแบบนี้ไว้ · **รอ Junior OK**
+- `specs/system/ai-orchestration.md` §2.4.3 (Jam) · บรรทัด 1 เทียบกับเฉลย, บรรทัด definition, `e` คือค่าคงที่, solution set บนจำนวนจริง, worker ที่เปิดค้างไว้ · แก้ใน PR นี้แล้ว
