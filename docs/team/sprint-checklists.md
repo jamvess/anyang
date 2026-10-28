@@ -42,7 +42,8 @@
 
 - [ ] Cloud Build trigger: merge → deploy `api-staging` อัตโนมัติ (P6-lite)
   - 28 ต.ค. ทางสำรองพร้อมแล้ว (PR #20): `infra/deploy-staging.ps1` deploy มือ · `api-staging` ขึ้นแล้วที่ https://api-staging-659706857266.asia-southeast1.run.app (`AI_PROVIDER=fake`, CORS ครบ) · env อยู่ใน `infra/env/api-staging.yaml` ใช้ไฟล์เดียวกันตอนทำ trigger · เหลือ trigger + แก้ `cloudbuild.yaml` (ยังตั้ง `AI_PROVIDER=live` และใช้ secret `anthropic-api-key`)
-  - ⚠️ ต้องตั้ง `CORS_ALLOW_ORIGINS` และ `CORS_ALLOW_ORIGIN_REGEX` ใน env ของ `api-staging` (`--set-env-vars` ใน `infra/cloudbuild.yaml`) ไม่งั้น Vercel preview เรียก staging ไม่ได้ (ค่าดู `.env.example` · PR #49) · ใน `cloudbuild.yaml` ต้องเขียน `$` ของ regex เป็น `$$` เพราะ Cloud Build ใช้ `$` แทนค่าตัวแปร · `--set-env-vars` แยกตัวแปรด้วย `,` แต่ `CORS_ALLOW_ORIGINS` ก็คั่นด้วย `,` เหมือนกัน ถ้ามีมากกว่า 1 origin ให้ใช้ตัวคั่นแบบกำหนดเองของ gcloud เช่น `--set-env-vars="^@^CORS_ALLOW_ORIGINS=a,b@CORS_ALLOW_ORIGIN_REGEX=..."` หรือตั้งผ่าน `--env-vars-file`
+  - ⏰ Demo S2: เย็นพฤหัส 29 ต.ค. `gcloud run services update api-staging --region=asia-southeast1 --min-instances=1` กัน cold start · หลัง demo ศ. 30 ต.ค. ตั้งกลับเป็น `--min-instances=0` ทันที (instance ที่เปิดค้างกิน trial credit) · คำสั่งอยู่ใน `infra/README.md` "Demo-day"
+  - env ของ api-staging อยู่ใน infra/env/api-staging.yaml (--env-vars-file) · บน Windows ห้ามส่งค่าที่มี ^ ผ่าน flag ของ gcloud (cmd.exe กิน ^) ให้ใช้ไฟล์แทน
 - [x] `test_SA06_tenant_isolation` รันใน CI (P6-lite) · เสร็จก่อนกำหนดใน S1
 - [x] ตรวจว่าไม่มี secret ใน git history · เสร็จก่อนกำหนดใน S1 (15 ต.ค.)
 - [ ] ปรับ `schema.sql` ตามที่เจอระหว่าง P3 + วาด ERD (D3)
