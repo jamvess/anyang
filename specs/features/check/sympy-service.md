@@ -6,7 +6,7 @@
 | Requirements | AM-04, AM-05 |
 | Owner | Jam |
 | Reviewer | Junior |
-| Status | approved (Jam · 28 ต.ค.) · §11 รอ Junior OK |
+| Status | approved (Jam · 28 ต.ค. · §11 Junior OK 28 ต.ค.) |
 | Related system spec | ai-orchestration.md §2.4.1, §2.4.2, §2.4.3 · `specs/features/check/merge-rules.md` §3 · architecture.md (Math: subprocess + timeout) · `evals/README.md` "คู่มือ label ลายมือ · P1" |
 
 ## 1. Context
@@ -195,7 +195,7 @@ feature นี้คือส่วนแรก อยู่ใน `apps/api/app
 
 ## 11. Spec changes needed
 
-- `apps/api/pyproject.toml` (Junior) · เพิ่ม `antlr4-python3-runtime==4.11` (parser ของ `parse_latex` แบบ `antlr` · ต้องเป็น 4.11 ให้ตรงกับ grammar ของ SymPy) · **รอ Junior OK**
-- `config/learning.yaml` (Jam + Junior) + `apps/api/app/settings.py` `CheckerConfig` (Junior) · เพิ่ม `checker.sympy_workers` (ข้อ 4) · settings ต้องเพิ่ม field เพราะ loader เป็นแบบ strict · **รอ Junior OK**
-- `specs/features/check/merge-rules.md` §3 · `line_ok` ยาวเท่า `lines` เฉพาะเมื่อตัดสินได้ (ข้อ 5) · Junior ตกลงรูปแบบนี้ไว้ · **รอ Junior OK**
+- `apps/api/pyproject.toml` (Junior) · เพิ่ม `antlr4-python3-runtime==4.11` (parser ของ `parse_latex` แบบ `antlr` · ต้องเป็น 4.11 ให้ตรงกับ grammar ของ SymPy) · Junior OK · แก้แล้ว
+- `config/learning.yaml` (Jam + Junior) + `apps/api/app/settings.py` `CheckerConfig` (Junior) · เพิ่ม `checker.sympy_workers` (ข้อ 4) · settings ต้องเพิ่ม field เพราะ loader เป็นแบบ strict · Junior OK · แก้แล้ว (`learning.yaml` 1.3 + แถวใน `learning-model.md` §8)
+- `specs/features/check/merge-rules.md` §3 · `line_ok` ยาวเท่า `lines` เฉพาะเมื่อตัดสินได้ (ข้อ 5) · Junior OK · แก้แล้ว
 - `specs/system/ai-orchestration.md` §2.4.3 (Jam) · บรรทัด 1 เทียบกับเฉลย, บรรทัด definition, `e` คือค่าคงที่, solution set บนจำนวนจริง, worker ที่เปิดค้างไว้ · แก้ใน PR นี้แล้ว

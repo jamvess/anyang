@@ -11,7 +11,7 @@
 
 - [x] 1. 🤖 `/spec-feature AM-04 AM-05` → `specs/features/check/sympy-service.md` · input (โจทย์, เฉลย, `answer_format`, `lines`) → `SympyResult` ตาม merge-rules §3 · AC จากโจทย์ P01–P17 และ golden set `evals/answers/` · เขียนคำถามที่ต้องตัดสินไว้ใน §10
 - [x] 2. 🙋 Jam review spec และตอบคำถามใน §10 (เปิดไฟล์ spec อ่าน §2, §4, §10 แล้วตอบในแชทนี้เป็นข้อ)
-- [ ] 3. 🙋 ขอ Junior ในแชทกลุ่ม 3 เรื่องตาม spec §11: (1) เพิ่ม `antlr4-python3-runtime==4.11` ใน `apps/api/pyproject.toml` (2) เพิ่ม `checker.sympy_workers` ใน `learning.yaml` + field ใน `CheckerConfig` ของ `settings.py` (3) ประโยคเรื่อง `line_ok = []` ใน merge-rules §3 · ตอบ OK แล้วบอกในแชทนี้
+- [x] 3. 🙋 ขอ Junior ในแชทกลุ่ม 3 เรื่องตาม spec §11: (1) เพิ่ม `antlr4-python3-runtime==4.11` ใน `apps/api/pyproject.toml` (2) เพิ่ม `checker.sympy_workers` ใน `learning.yaml` + field ใน `CheckerConfig` ของ `settings.py` (3) ประโยคเรื่อง `line_ok = []` ใน merge-rules §3 · ตอบ OK แล้วบอกในแชทนี้
 - [ ] 4. 🤖 `/spec-to-tests` → `apps/api/tests/unit/test_sympy_service.py` แบบ table-driven (ต้องแดงก่อน implement)
 - [ ] 5. 🙋 Jam review test: ชื่อ test ขึ้นต้นด้วย requirement ID และครบทุก AC ใน spec §4
 - [ ] 6. 🤖 `/implement-feature` → `apps/api/app/math/sympy_service.py` (parse, เทียบรายบรรทัด, `factor_list`, `solveset`, subprocess + timeout จาก `checker.sympy_timeout_seconds`) จน test เขียว + ruff ผ่าน
@@ -30,17 +30,18 @@
 
 - 2026-10-28 · ใช้ parser แบบ `antlr` ไม่ใช่ `lark` · ผลจาก P1 (`poc/P1/lines.py`): `lark` อ่านบางบรรทัดผิดโดยไม่แจ้ง
 - 2026-10-28 · Jam ตัดสิน §10 ของ spec ตามที่เสนอทั้ง 5 ข้อ: f(x) บรรทัดแรกถูกเสมอ · implicit dy/dx ให้ LLM · `a=b=c` แยกขั้นย่อย · `checker.sympy_workers: 1 [C]` · `line_ok = []` ตอนตัดสินไม่ได้ · spec approved · ai-orchestration v1.3 §2.4.3
+- 2026-10-28 · Junior OK 3 เรื่องใน spec §11 · เพิ่ม `antlr4-python3-runtime==4.11`, `checker.sympy_workers` (`learning.yaml` 1.3 + `CheckerConfig`), merge-rules §3 `line_ok = []`
 - 2026-10-28 · บรรทัด 1 เทียบกับเฉลยแทนตัวโจทย์ เพราะ `problems.text` เป็นภาษาไทยปน parse ไม่ได้ และ AM-11 รับประกันว่าค่าโจทย์ = เฉลย
 - 2026-10-28 · ใช้ worker ที่เปิดค้างไว้ ไม่เปิด process ใหม่ทุกครั้ง · วัดแล้วเปิด Python + import SymPy ใช้ 1.9 วินาที (budget 2 วินาที)
 - 2026-10-28 · แทน symbol `e` ด้วย `E` · ทดลองแล้ว parser อ่าน `e^{x}` เป็นตัวแปร ทำให้ P16 แก้ไม่ได้
 
 ## Next step
 
-ขั้น 3: ส่งข้อความขอ Junior ในแชทกลุ่ม (3 เรื่องใน spec §11) · ระหว่างรอทำขั้น 4 `/spec-to-tests` ได้เลย เพราะ test ไม่ต้องใช้ dependency ใหม่จนกว่าจะรัน
+ขั้น 4: รัน `/spec-to-tests specs/features/check/sympy-service.md` → `apps/api/tests/unit/test_sympy_service.py` + `test_sympy_service_timeout.py` (ต้องแดง)
 
 ## Waiting on
 
-- Junior: OK 3 เรื่องใน spec §11 (pyproject, `sympy_workers`, merge-rules §3)
+ไม่มี
 
 ## Notes for next time
 
