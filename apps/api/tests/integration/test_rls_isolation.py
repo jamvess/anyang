@@ -48,7 +48,7 @@ def _jwt_claims(token: str) -> dict:
 
 
 def _seed(admin: Client, user_id: str, tenant_id: str) -> dict[str, str]:
-    """Insert one exam_prep, message and attempt (plus their parents) for this user."""
+    """Insert one exam_prep, message, attempt and topic_source (plus parents) for this user."""
 
     def insert(table: str, row: dict) -> str:
         return admin.table(table).insert({"tenant_id": tenant_id, **row}).execute().data[0]["id"]
@@ -58,6 +58,14 @@ def _seed(admin: Client, user_id: str, tenant_id: str) -> dict[str, str]:
     )
     scope = insert("scope_versions", {"exam_prep_id": exam_prep, "version": 1, "snapshot": {}})
     topic = insert("topics", {"exam_prep_id": exam_prep, "name": "SA06", "order_index": 0})
+    material = insert(
+        "materials",
+        {"exam_prep_id": exam_prep, "storage_path": "sa06", "file_name": "sa06.pdf"},
+    )
+    topic_source = insert(
+        "topic_sources",
+        {"topic_id": topic, "material_id": material, "page_from": 1, "page_to": 2},
+    )
     session = insert(
         "tutor_sessions",
         {"user_id": user_id, "exam_prep_id": exam_prep, "scope_version_id": scope},
@@ -95,6 +103,8 @@ def _seed(admin: Client, user_id: str, tenant_id: str) -> dict[str, str]:
         "tutor_sessions": session,
         "problems": problem,
         "topics": topic,
+        "materials": material,
+        "topic_sources": topic_source,
     }
 
 
@@ -154,6 +164,14 @@ def _foreign_insert_row(table: str, victim: TenantUser) -> dict:
         }
     if table == "messages":
         return {**base, "session_id": rows["tutor_sessions"], "role": "user", "content": "intruder"}
+    if table == "topic_sources":
+        return {
+            **base,
+            "topic_id": rows["topics"],
+            "material_id": rows["materials"],
+            "page_from": 1,
+            "page_to": 1,
+        }
     return {
         **base,
         "user_id": victim.user_id,
@@ -169,10 +187,11 @@ _UPDATE = {
     "exam_preps": {"title": "hacked"},
     "messages": {"content": "hacked"},
     "attempts": {"answer_text": "hacked"},
+    "topic_sources": {"page_to": 999},
 }
 
 
-@pytest.mark.parametrize("table", ["exam_preps", "attempts", "messages"])
+@pytest.mark.parametrize("table", ["exam_preps", "attempts", "messages", "topic_sources"])
 def test_SA06_tenant_isolation(
     table: str, admin: Client, users: tuple[TenantUser, TenantUser]
 ) -> None:
