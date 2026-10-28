@@ -5,7 +5,7 @@
 | Owner | Jam |
 | Branch | `feat/check-answer-classifier` |
 | Checklist item | P2: merge rules + LLM classifier (`prompts/check_answer/v1`) ใช้ SymPy service |
-| Status | paused · 2026-10-28 |
+| Status | in progress · 2026-10-28 |
 
 ## Plan
 
@@ -35,6 +35,7 @@
 - 2026-10-28 · implement: red → green 3 รอบ (model · sign flip · pipeline + run_checker) ไม่มี test ที่ต้องแก้ · แยก `_parse_answer` / `_lines_ok` ใน `sympy_service.py` ให้ `evaluate_lines` กับ `sign_flip_line` ใช้ร่วมกัน · เรียก `detect_sign_flip` เฉพาะเมื่อ SymPy ตัดสินได้และมีบรรทัดที่ไม่ follow · `evals/README.md` ชี้ไป `run_checker.py` แล้ว (spec §11)
 - 2026-10-28 · รันจริงครั้งแรก: ได้ prediction 6/50 (5 ข้อแรกตรง label) ที่เหลือ 429 · free tier ของ Gemini 5 request ต่อนาที · gateway ไม่รอนานกว่า `max_retry_wait_seconds: 10` (ตั้งใจไว้สำหรับห้องแชท ไม่แก้) · แก้ที่ `run_checker.py`: `--pause` 13 วินาที, รอ 60 วินาทีเมื่อ 429 แล้วลองใหม่ ≤ 3 ครั้ง, `--resume` · เพิ่ม test 1 ตัว (รอ Jam review) · spec §2.6
 - 2026-10-28 · รันจริงครั้งที่ 2: timeout 15 วินาที (ans_001, ans_002) · ไฟล์ prediction ว่างเพราะไม่ได้ flush → เพิ่ม `out.flush()` · Jam เลือก: `config/ai.yaml` 1.3 เพิ่ม `thinking: low` ให้ `check_answer` (ไฟล์ร่วม · บอกแชทกลุ่ม) · คง `max_tokens: 600`, `timeout_s: 15` · เหตุผล: P3 วัด default thinking ~4,000 token เทียบ low 396 (`settings.py`)
+- 2026-10-28 · Jam review test rate limit แล้ว · เพิ่ม test ของ `--resume` 2 ตัว · แยก `remaining_rows(rows, out_path)` ใน `run_checker.py` ให้ test ได้โดยไม่เรียก `main()` (main สร้าง gateway จาก settings ถ้า `.env` เป็น live จะเรียก Gemini จริง) · test ทั้งไฟล์เป็น `async` เพราะ `pytestmark = asyncio` ติดทุก test ในไฟล์ · ruff ของ `evals/answers/` เดิมมี error อยู่แล้ว (RUF100, FURB167) ไม่ได้แก้
 - 2026-10-28 · ไม่รวม Report P2 ใน branch นี้ (เป็นข้อแยกใน checklist) · ทำ `/poc-report P2` หลัง merge
 
 ## Done today (2026-10-28)
@@ -53,7 +54,7 @@
 ## Waiting on
 
 - 🙋 quota รายวันของ Gemini free tier รีเซ็ต แล้ว Jam รันขั้น 6
-- 🙋 Jam review test ใหม่ `test_AI05_rate_limited_answer_is_retried_after_a_wait` ใน `evals/test_run_checker.py` (เพิ่มหลังรันจริงครั้งแรก)
+- (Jam review test rate limit และ `--resume` 2 ตัวแล้ว 28 ต.ค.)
 - Jam บอกแชทกลุ่มเรื่อง `config/ai.yaml` 1.3 (`thinking: low`) ถ้ายังไม่ได้บอก
 
 ## Notes for next time

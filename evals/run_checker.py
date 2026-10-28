@@ -110,6 +110,14 @@ async def run(
     return skipped
 
 
+def remaining_rows(rows: list[dict], out_path: Path) -> list[dict]:
+    """The rows with no prediction in ``out_path`` yet (``--resume``)."""
+    if not out_path.exists():
+        return rows
+    done = {prediction["id"] for prediction in load_jsonl(out_path)}
+    return [row for row in rows if row["id"] not in done]
+
+
 def main(argv: list[str] | None = None) -> int:
     version = get_settings().ai.purposes["check_answer"].prompt
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -129,10 +137,12 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     rows = load_jsonl(args.labels)
-    if args.resume and args.out.exists():
-        done = {row["id"] for row in load_jsonl(args.out)}
-        rows = [row for row in rows if row["id"] not in done]
-        print(f"resume: {len(done)} already in {args.out}, {len(rows)} to check")
+    if args.resume:
+        total = len(rows)
+        rows = remaining_rows(rows, args.out)
+        print(
+            f"resume: {total - len(rows)} already in {args.out}, {len(rows)} to check"
+        )
     skipped = asyncio.run(
         run(
             rows,

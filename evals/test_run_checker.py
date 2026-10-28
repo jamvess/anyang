@@ -12,7 +12,7 @@ import pytest
 from app.ai.gateway import Gateway
 from app.ai.providers.fake import FakeProvider
 from app.settings import get_settings
-from run_checker import run
+from run_checker import remaining_rows, run
 from run_eval import score
 
 # evals/ has no pytest config of its own (apps/api's asyncio_mode = "auto" does not apply here).
@@ -139,3 +139,28 @@ async def test_AI05_rate_limited_answer_is_retried_after_a_wait(
 
     assert skipped == []
     assert json.loads(out.read_text(encoding="utf-8"))["id"] == "ans_001"
+
+
+async def test_AI05_resume_keeps_saved_predictions_and_checks_the_rest(
+    tmp_path,
+) -> None:
+    # §2.6 --resume: answers already in the file are kept, only the missing ones run.
+    out = tmp_path / "v1.jsonl"
+    saved = {"id": "ans_001", "verdict": "incomplete", "error_type": "concept"}
+    out.write_text(json.dumps(saved) + "\n", encoding="utf-8")
+
+    remaining = remaining_rows(ROWS, out)
+    skipped = await run(
+        remaining, out_path=out, gateway=gateway([LLM_OK]), pool=FakePool(), append=True
+    )
+
+    lines = [json.loads(line) for line in out.read_text(encoding="utf-8").splitlines()]
+    assert [row["id"] for row in remaining] == ["ans_003"]
+    assert skipped == []
+    assert [p["id"] for p in lines] == ["ans_001", "ans_003"]
+    assert lines[0] == saved
+
+
+async def test_AI05_resume_without_a_file_checks_everything(tmp_path) -> None:
+    # §2.6 --resume on a first run: nothing saved yet.
+    assert remaining_rows(ROWS, tmp_path / "v1.jsonl") == ROWS
