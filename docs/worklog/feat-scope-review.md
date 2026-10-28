@@ -9,9 +9,9 @@
 
 ## Plan
 
-- [ ] 1. 🤖 `/spec-feature` เขียน `specs/features/scope/scope-review.md` จาก SM-02, SM-03, SM-04, UC-02 (ขั้นตรวจขอบเขต, A4), ai-orchestration §2.3.4–2.3.6, wireframe S12 + S38, api.md (`GET /exam-preps/{id}/scope`, `GET /topics/{id}/sources`) · เสนอรูปร่างของ response (api.md ยังมีแค่ชื่อ endpoint) เป็นคำถามให้ Junior
-- [ ] 2. 🙋 May review spec และตอบคำถามเรื่อง UI (ถามเป็นตัวเลือก)
-- [ ] 3. 🤖 ถาม Junior เรื่อง api.md ใน PR: รูปร่างของ scope และ sources, ช่วงหน้า (`topic_sources` ยังไม่มี · data-model ข้อ 1), `map_note` (ข้อ 3)
+- [x] 1. 🤖 `/spec-feature` เขียน `specs/features/scope/scope-review.md` จาก SM-02, SM-03, SM-04, UC-02 (ขั้นตรวจขอบเขต, A4), ai-orchestration §2.3.4–2.3.6, wireframe S12 + S38, api.md (`GET /exam-preps/{id}/scope`, `GET /topics/{id}/sources`) · เสนอรูปร่างของ response (api.md ยังมีแค่ชื่อ endpoint) เป็นคำถามให้ Junior
+- [x] 2. 🙋 May review spec และตอบคำถามเรื่อง UI (ถามเป็นตัวเลือก)
+- [x] 3. 🤖 ถาม Junior เรื่อง api.md ใน PR: รูปร่างของ scope และ sources, ช่วงหน้า (`topic_sources` ยังไม่มี · data-model ข้อ 1), `map_note` (ข้อ 3)
 - [ ] 4. 🤖 `/spec-to-tests` · ใช้ fixture ของหน้า scope (ข้อมูลจาก S12/S38) · ต้องแดงก่อน
 - [ ] 5. 🙋 May review test
 - [ ] 6. 🤖 `/implement-feature` จน test เขียว · route `app/preps/[id]/scope`
@@ -26,14 +26,15 @@
 ## Decisions
 
 - 2026-10-28 · ทำเฉพาะหน้า S12 (+ รายละเอียด S38) · แชทแก้ขอบเขต (S13) และหน้าสรุปยืนยัน (S14) เป็นงานถัดไป · ปุ่ม "ขอแก้ก่อน" / "ยืนยันขอบเขตนี้" จะกำหนดใน spec ว่าทำอะไรในรอบนี้
+- 2026-10-28 · May ตัดสิน OQ 1–4 ตามข้อเสนอ: "ขอแก้ก่อน" แสดงแต่กดไม่ได้ · เปิดรายละเอียดได้หลายหัวข้อ · หัวข้อ 0 ดาวแสดงท้ายรายการ ป้าย "ตัดออก" · หลังยืนยันแล้วอ่านอย่างเดียว + ลิงก์ไปห้องติว · ถาม Junior OQ 5–8 ใน PR #81
 
 ## Next step
 
-ขั้น 1: รัน `/spec-feature` สำหรับ SM-03, SM-04 (หน้าตรวจขอบเขต S12)
+ขั้น 4: `/spec-to-tests` สำหรับ `specs/features/scope/scope-review.md`
 
 ## Waiting on
 
-ไม่มี
+- Junior ตอบ OQ 5–8 ใน PR #81 (รูปร่างของ scope และ sources, ช่วงหน้า, map_note) · ไม่บล็อก test
 
 ## Notes for next time
 
