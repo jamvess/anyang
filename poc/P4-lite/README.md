@@ -29,6 +29,8 @@ uv run python ../../poc/P4-lite/ttft.py \
 | TTFT p50 / p95 (49 ข้อความ) | **0.12 s / 0.15 s** |
 | TTFT ต่ำสุด / สูงสุด | 0.10 s / 0.15 s |
 
+**ในเบราว์เซอร์** (May เปิด demo link บน Vercel ใน Edge DevTools → Network · 28 ต.ค.): ส่ง 1 ข้อความเห็น 2 request ไป `api-staging` คือ **preflight 165 ms** (CORS `OPTIONS` เพราะคนละ origin และส่ง `Content-Type: application/json`) แล้วจึง **fetch 50 ms** · preflight ถูก cache ตาม `max_age` ของ `CORSMiddleware` (ค่าเริ่มต้นของ Starlette 600 s · `apps/api/app/cors.py` ไม่ได้ตั้ง) จึงจ่ายเฉพาะข้อความแรก หรือหลังเว้นนานเกิน 10 นาที · ข้อความแรกในเบราว์เซอร์จึงช้ากว่าที่สคริปต์วัดประมาณ 0.17 s
+
 **อ่านผล:** overhead ของ Cloud Run + SSE + เน็ตจากไทยไปสิงคโปร์อยู่ที่ประมาณ 0.15 s ที่ p95 · เหลือเวลาให้ LLM ประมาณ 1.85 s ภายในเป้า 2 s · ยังตอบไม่ได้ว่าผ่าน NFR-P1 จนกว่าจะวัดกับ Gemini จริง
 
 ## ข้อจำกัด
@@ -36,7 +38,7 @@ uv run python ../../poc/P4-lite/ttft.py \
 - **ไม่มี LLM:** stub ส่ง `app/stubs/tutor_reply.sse` ทั้งก้อนทันที ไม่ผ่าน `ai.call` · TTFT ≈ total · ตัวเลขนี้คือ overhead ของ infra อย่างเดียว
 - **ไม่เจอ cold start:** instance ยังตื่นอยู่ตอนวัด (เปิด session 0.13 s) · ถ้าต้องการตัวเลข cold start ให้รันหลังไม่มีคนเรียก staging นานพอให้ Cloud Run ปิด instance (service ตั้ง `--min-instances=0` ไว้ · `infra/README.md`)
 - วัดจากเครื่องเดียว เน็ตบ้านเดียว · ส่งทีละข้อความ ไม่ได้วัดตอนหลายคนใช้พร้อมกัน
-- เวลาวัดที่ client (Python `httpx`) ไม่ใช่ในเบราว์เซอร์ · เบราว์เซอร์มี overhead เพิ่มเล็กน้อย
+- สคริปต์วัดที่ client (Python `httpx`) ซึ่งไม่มี CORS preflight · ในเบราว์เซอร์ข้อความแรกมี preflight เพิ่ม 1 รอบ (ดู "ในเบราว์เซอร์" ด้านบน · วัดครั้งเดียวจาก DevTools)
 
 ## ยังต้องทำต่อ (report P4-lite · ร่วมกับ Junior)
 

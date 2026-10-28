@@ -5,7 +5,7 @@
 | Owner | May |
 | Branch | `poc/P4-lite-ttft` |
 | Checklist item | เขียน report P4-lite ร่วมกับ Junior (S3) · ทำส่วนวัด TTFT พื้นฐาน · NFR-P1 (TTFT p95 < 2 วินาที) |
-| Status | in progress · 2026-10-28 |
+| Status | ready for work-done · 2026-10-28 |
 
 ## Plan
 
@@ -13,7 +13,7 @@
 - [x] 2. 🤖 test ของส่วนที่ไม่ใช้เน็ต (หา token แรกใน SSE, คำนวณ p50/p95) ใน `poc/P4-lite/test_ttft.py` ชื่อขึ้นต้นด้วย `NFRP1`
 - [x] 3. 🤖 รัน 50 ข้อความกับ `api-staging` (URL ใน `infra/README.md` · ไม่มี secret · AI จำลอง ไม่เสีย credit) แล้ว commit ผล
 - [x] 4. 🤖 `poc/P4-lite/README.md`: วิธีรัน, ผล, ข้อจำกัด (stub ไม่ผ่าน `ai.call` ยังไม่มี LLM จริง → ตัวเลขนี้คือ overhead ของ Cloud Run + SSE เท่านั้น), สิ่งที่ต้องวัดต่อเมื่อเปิด Gemini
-- [ ] 5. 🙋 May เปิด demo link ใน Edge แล้วดูใน DevTools ว่า request ไป staging จริง (ขั้นละเอียดให้ตอนถึงข้อนี้)
+- [x] 5. 🙋 May เปิด demo link ใน Edge แล้วดูใน DevTools ว่า request ไป staging จริง (ขั้นละเอียดให้ตอนถึงข้อนี้)
 
 ## Definition of done
 
@@ -26,10 +26,11 @@
 
 - 2026-10-28 · วัดกับ AI จำลองก่อน เพราะ Junior ยังห้ามเปิด `AI_PROVIDER=live` บน staging (infra/README.md) · ตัวเลขนี้คือ overhead ของ infra ใช้แยกว่าเวลาที่เพิ่มขึ้นทีหลังมาจาก LLM
 - 2026-10-28 · ผล 50 ข้อความ ล้ม 0: TTFT p50 0.12 s, p95 0.15 s, เปิด session 0.13 s (ไม่เจอ cold start เพราะ instance ตื่นอยู่) · stub ส่งทั้งก้อน TTFT ≈ total · test offline 10 ตัวผ่าน · ruff ผ่าน
+- 2026-10-28 · May เปิด demo link ใน Edge DevTools: request ไป api-staging จริง · 1 ข้อความ = preflight 165 ms + fetch 50 ms · preflight cache 600 s (ค่าเริ่มต้นของ Starlette) · บันทึกใน README · ข้อเสนอให้ Junior พิจารณาตั้ง `max_age` ให้ยาวขึ้นใน `app/cors.py` (ไฟล์ของ Junior · ไม่แก้เอง)
 
 ## Next step
 
-ขั้น 5: May เปิด demo link ใน Edge แล้วดู DevTools ว่าเรียก api-staging จริง
+รัน /work-done
 
 ## Waiting on
 
