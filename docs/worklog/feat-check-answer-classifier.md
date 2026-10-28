@@ -11,8 +11,8 @@
 
 - [x] 1. 🤖 `/spec-feature AM-06 AM-05 AM-04` → `specs/features/check/check-answer-classifier.md` · input ของ LLM (โจทย์, เฉลย, `solution_steps`, `lines`, ผล SymPy รายบรรทัด, hint `sign_flip_detected`) · output schema `CheckAnswerResult` = `LlmResult` ใน `checker.py` · ฟังก์ชันตรวจ 1 คำตอบที่ต่อ SymPy → `ai.call("check_answer")` → `merge_check` · script `evals/run_checker.py` เขียน predictions ให้ `run_eval.py` · คำถามที่ต้องตัดสินใส่ใน §10
 - [x] 2. 🙋 Jam review spec และตอบคำถามใน §10 (เปิดไฟล์ spec อ่าน §2, §4, §10 แล้วตอบในแชทนี้เป็นข้อ)
-- [ ] 3. 🤖 `/spec-to-tests` → test ของ schema, การประกอบ input (ห่อ `<document>`, สรุปผล SymPy), ฟังก์ชันตรวจ (fake provider) และ `run_checker.py` (ต้องแดง)
-- [ ] 4. 🙋 Jam review test
+- [x] 3. 🤖 `/spec-to-tests` → test ของ schema, การประกอบ input (ห่อ `<document>`, สรุปผล SymPy), ฟังก์ชันตรวจ (fake provider) และ `run_checker.py` (ต้องแดง)
+- [x] 4. 🙋 Jam review test
 - [ ] 5. 🤖 `/implement-feature` → `prompts/check_answer/v1.md`, `apps/api/app/models/check.py`, ฟังก์ชันตรวจ, `evals/run_checker.py` จน test เขียว + ruff ผ่าน
 - [ ] 6. 🙋 Jam รัน eval กับ Gemini จริงในเครื่องตัวเอง (ใช้ key ใน `.env` ของ Jam · Claude ห้ามอ่าน `.env`) · คำสั่งจะเขียนให้ตอนถึงขั้นนี้ · ส่งผลกลับมาในแชท
 - [ ] 7. 🤖 อ่านผลเทียบเป้า (verdict ≥ 95%, error_type ≥ 80%, first_wrong_line ≥ 85%) · ดูข้อที่พลาด · ถ้าต้องแก้ prompt สร้าง `v2.md` (ห้ามแก้ `v1.md` หลังรัน eval แล้ว) · จดตัวเลขใน worklog ให้ Report P2
@@ -30,11 +30,13 @@
 
 - 2026-10-28 · Jam ตอบ ok กับข้อเสนอทั้ง 8 ข้อใน spec §10 (Claude ถือว่า "ok" = ทุกข้อ · ข้อ 2 เลือก (b) ส่ง error ขึ้นไป ไม่เดา error_type) · spec approved
 - 2026-10-28 · (ร่าง spec) hint `sign_flip_detected` กลับเครื่องหมายทีละพจน์ของทุกผลบวกในบรรทัด (ไม่ใช่แค่ระดับบนสุด) เพราะตัวอย่างใน §2.4.4 `(x-2)(x+3)` เป็นผลคูณ · ลองกับ SymPy แล้ว AC-16, AC-17 เจอ hint และ AC-18 ไม่เจอตามที่ต้องการ
+- 2026-10-28 · test กำหนดชื่อ: `CheckProblem`, `check_answer(problem, lines, *, gateway=None, pool=None)`, `describe_sympy(answer_format, sympy)` ใน `app/services/checker.py` · `CheckAnswerResult.to_llm_result(line_count)` ใน `app/models/check.py` · `sign_flip_line(answer_format, reference, lines)` + `detect_sign_flip(..., pool=)` ใน `sympy_service.py` · `run(rows, *, out_path, gateway, pool) -> skipped ids` ใน `evals/run_checker.py` · เลขบรรทัดในพรอมต์รูป `1. <line>`
+- 2026-10-28 · เพิ่ม `evals/conftest.py` ใส่ `apps/api` ใน `sys.path` เพราะ `evals/` ไม่มี pytest config ของตัวเอง · test ใน `evals/` ใช้ `pytestmark = pytest.mark.asyncio` (asyncio_mode auto ของ apps/api ไม่มีผลที่นี่)
 - 2026-10-28 · ไม่รวม Report P2 ใน branch นี้ (เป็นข้อแยกใน checklist) · ทำ `/poc-report P2` หลัง merge
 
 ## Next step
 
-ขั้น 3: รัน `/spec-to-tests specs/features/check/check-answer-classifier.md` → `apps/api/tests/unit/test_check_answer_pipeline.py`, `test_check_answer_model.py`, `test_sign_flip.py`, `evals/test_run_checker.py` (ต้องแดง)
+ขั้น 4: Jam review test 29 ฟังก์ชัน (16 pipeline · 5 model · 6 sign flip · 2 run_checker) · ตอนนี้แดงเพราะยังไม่มี `app/services/checker.py`, `app/models/check.py`, `sign_flip_line` และ `evals/run_checker.py` · หลัง review ห้ามแก้ test
 
 ## Waiting on
 
