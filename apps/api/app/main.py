@@ -1,3 +1,5 @@
+import json
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
@@ -22,6 +24,32 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     yield
 
 
+class _JsonLines(logging.Formatter):
+    """One JSON object per line, so Cloud Logging reads ``severity`` and ``message``."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        entry = {
+            "severity": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+        }
+        if record.exc_info:
+            entry["stack_trace"] = self.formatException(record.exc_info)
+        return json.dumps(entry, ensure_ascii=False)
+
+
+def _configure_logging(level: str) -> None:
+    """Send our ``app.*`` loggers to stderr at LOG_LEVEL. Uvicorn sets up only its own loggers,
+    so without this every INFO line of the app (for example ``app.ai.calls``) is dropped."""
+    logger = logging.getLogger("app")
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setFormatter(_JsonLines())
+        logger.addHandler(handler)
+    logger.setLevel(level.upper())
+
+
+_configure_logging(get_settings().env.log_level)
 app = FastAPI(title="anyang-api", lifespan=lifespan)
 # Middleware must be added before startup, so CORS reads settings here, not in lifespan.
 install_middleware(app, get_settings().env)

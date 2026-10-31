@@ -3,20 +3,23 @@
 ``AICallLog`` is a gateway listener. Every ``CallRecord`` becomes one JSON line on the
 ``app.ai.calls`` logger (Cloud Logging on Cloud Run). When the call has a tenant
 (``app.ai.call_context``) the same row is also inserted into ``ai_calls``, in the background so
-the call never waits for the database (NFR-P1). A failed insert is logged and dropped.
+the call never waits for the database (NFR-P1). Inserts run one at a time on the listener's own
+thread, so a slow database cannot take the event loop's shared thread pool from other work. A
+failed insert is logged and dropped.
 """
 
 import asyncio
 import json
 import logging
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Protocol
 
 from supabase import Client, ClientOptions, create_client
 
 from app.ai.call_context import AICallContext, current_call_context
 from app.ai.gateway import CallRecord
-from app.middleware import get_request_id
+from app.request_context import get_request_id
 
 log = logging.getLogger("app.ai.calls")
 
@@ -67,7 +70,12 @@ class AICallLog:
 
     def __init__(self, writer: AICallsWriter | None = None) -> None:
         self.writer = writer
-        self._pending: set[asyncio.Task[None]] = set()
+        self._executor = (
+            ThreadPoolExecutor(max_workers=1, thread_name_prefix="ai_calls")
+            if writer is not None
+            else None
+        )
+        self._pending: set[asyncio.Future[None]] = set()
 
     def __call__(self, record: CallRecord) -> None:
         context = current_call_context()
@@ -75,31 +83,31 @@ class AICallLog:
         log.info(json.dumps(row | {"schema_retries": record.schema_retries}, ensure_ascii=False))
         if context is None or self.writer is None:
             return
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:  # no event loop: nothing to hand the insert to
-            self._insert(row)
-            return
-        task = loop.create_task(asyncio.to_thread(self._insert, row))
-        self._pending.add(task)
-        task.add_done_callback(self._pending.discard)
-
-    def _insert(self, row: dict[str, Any]) -> None:
-        try:
-            self.writer.insert(row)  # type: ignore[union-attr]  # checked by the caller
-        except Exception as error:  # DB down, network, constraint: the call is unaffected
-            log.warning(
-                "ai_calls insert failed (purpose=%s, request_id=%s): %s: %s",
-                row["purpose"],
-                row["request_id"],
-                type(error).__name__,
-                error,
-            )
+        # The gateway emits records from async code only, so a running loop is always there.
+        future = asyncio.get_running_loop().run_in_executor(
+            self._executor, _insert, self.writer, row
+        )
+        self._pending.add(future)
+        future.add_done_callback(self._pending.discard)
 
     async def flush(self) -> None:
-        """Wait for the inserts still running (tests, and app shutdown later)."""
-        if self._pending:
+        """Wait for the inserts still running, also ones started while waiting (tests, and app
+        shutdown later)."""
+        while self._pending:
             await asyncio.gather(*self._pending)
+
+
+def _insert(writer: AICallsWriter, row: dict[str, Any]) -> None:
+    try:
+        writer.insert(row)
+    except Exception as error:  # DB down, network, constraint: the call is unaffected
+        log.warning(
+            "ai_calls insert failed (purpose=%s, request_id=%s): %s: %s",
+            row["purpose"],
+            row["request_id"],
+            type(error).__name__,
+            error,
+        )
 
 
 class SupabaseAICallsWriter:
@@ -110,7 +118,7 @@ class SupabaseAICallsWriter:
         self._url = url
         self._key = service_role_key
         self._client: Client | None = None
-        self._lock = threading.Lock()  # inserts run in worker threads
+        self._lock = threading.Lock()  # inserts run off the event loop thread
 
     def _get_client(self) -> Client:
         # Made on the first insert, so building the gateway opens no connection.

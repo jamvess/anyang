@@ -3,6 +3,11 @@
 The JWT dependency sets ``tenant_id`` and ``user_id`` for a request, and a service that knows
 the session adds ``session_id``. The ``ai_calls`` listener reads it when the gateway reports a
 call; without a context (eval, PoC, requests before the JWT check) the call is only logged.
+
+The context is read when the call ends. For ``ai.stream`` that is after the last chunk, while
+the SSE response is being sent, so put the ``with`` inside the generator that reads the stream
+(for chat: ``app.services.tutor_turn.reply_events``), not around ``return EventSourceResponse``:
+that ``with`` is already over when the stream runs.
 """
 
 from collections.abc import Iterator
