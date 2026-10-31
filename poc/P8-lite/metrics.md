@@ -2,7 +2,7 @@
 
 ใช้ตอนทำ `compute_importance` ด้วยกันใน S4 (`specs/poc/README.md` P8-lite) · กรอกระหว่างทำ ไม่ใช่ย้อนนึกตอนจบ · ตัวเลขชุดนี้ใช้ใน report P8-lite และ Self-Assessment
 
-Spec: `specs/features/scope/compute-importance.md` (approved 31 ต.ค. · 25 AC) · branch และ PR: กรอกตอนเริ่ม
+Spec: `specs/features/scope/compute-importance.md` (approved 31 ต.ค. · 27 AC) · branch และ PR: กรอกตอนเริ่ม
 
 ## กติกาก่อนเริ่ม (ไม่งั้นตัวเลขเชื่อไม่ได้)
 
