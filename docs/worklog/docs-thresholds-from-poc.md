@@ -10,7 +10,7 @@
 ## Plan
 
 - [x] 1. 🤖 ทำรายการทุกค่าที่ผูกกับ PoC: ทุก key ใน `config/learning.yaml` ที่ป้ายพูดถึง P1/P2/P3 หรือรอ PoC · ตาราง calibration ใน `learning-model.md` §9 · ตัวเลขใน `ai-orchestration.md` (flow 2.3 ingest, 2.4 checker, 2.10 routing, latency/ต้นทุน) · เทียบกับตัวเลขใน `specs/poc/reports/P1.md`, `P2.md`, `P3.md` · ทำเป็นตาราง: ค่า · ตอนนี้ · PoC วัดได้อะไร · ข้อเสนอ (คง / เปลี่ยน / ยังรอ + ป้ายที่มา)
-- [ ] 2. 🙋 Jam ตัดสินทีละแถวในตาราง (ตอบเป็นเลขแถว หรือ "ok ทุกแถว")
+- [x] 2. 🙋 Jam ตัดสินทีละแถวในตาราง (ตอบเป็นเลขแถว หรือ "ok ทุกแถว")
 - [ ] 3. 🤖 แก้ตามที่ตัดสิน: `learning-model.md` (ตารางค่าและ §9), `ai-orchestration.md` (เฉพาะ flow ที่ PoC วัด) · ไม่เปลี่ยนหลักการ
 - [ ] 4. 🤖 แก้ `config/learning.yaml` (ค่าหรือป้ายที่มา) ถ้ามีแถวที่ต้องเปลี่ยน · รัน `uv run pytest` เพราะ test อ่าน config · ไฟล์นี้ Jam + Junior เป็นเจ้าของ (CODEOWNERS)
 - [ ] 5. 🙋 Jam บอกแชทกลุ่มก่อน merge (ถ้าแก้ `config/learning.yaml`) · ข้อความจะร่างให้
@@ -46,9 +46,14 @@ LM = `learning-model.md` · AO = `ai-orchestration.md` · นอกงานน�
 
 ## Decisions
 
+- 31 ต.ค. Jam ok ทุกแถวของตารางขั้น 1
+- แถว 5 → **เทอม 2**: S3–S4 งานเต็มแล้ว และการยืนยันทุกครั้ง (AM-02) ยังใช้ได้อยู่
+- แถว 9 → **S4**: วัด P3a ใหม่บน Vertex ก่อน demo รวม เพราะ demo ต้องแสดง upload → scope และ report §3 ต้องใช้ตัวเลขนี้
+- แถว 13 → **ทำ**: แก้ comment ใน `config/ai.yaml` (ไฟล์กลาง · ค่าไม่เปลี่ยน · ต้องบอกกลุ่มในขั้น 5)
+
 ## Next step
 
-ขั้น 2 (🙋): Jam ตัดสินตาราง 13 แถวด้านบน (ok ทุกแถว หรือบอกเลขแถวที่จะแก้) · และเลือกช่วงเวลาของแถว 5 และ 9
+ขั้น 3 (🤖): แก้ `learning-model.md` (แถว 1–6) และ `ai-orchestration.md` (แถว 9–12) ตามตาราง
 
 ## Waiting on
 
