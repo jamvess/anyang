@@ -167,7 +167,7 @@ P1 และ P3 ใช้ Gemini API แบบ free tier ทั้งหมด �
 2. **เพดาน request:** 5 request ต่อนาที และ 20 request ต่อวันต่อ model · P2 รันได้ 23/50 ข้อแล้วติดเพดาน จึงเพิ่ม provider `vertex` ให้ gateway (PR #87) แล้วรันใหม่ครบ 50 ข้อบน Vertex AI ด้วยเครดิต Free Trial ของ GCP โดยไม่เจอ 429 เลย
 3. **thinking ของ Gemini 3** ใช้ token และเวลามาก · ถ้าไม่ตั้ง `thinking: low` งานสั้นอย่างตรวจคำตอบก็ timeout ที่ 15 วินาที (P2) · อ่านข้อสอบสแกน 1 หน้าใช้ประมาณ 4,000 token เทียบกับ 396 token เมื่อตั้ง `low` (P3 · คอมเมนต์ใน `apps/api/app/settings.py`)
 
-ข้อ 1–2 เป็นเหตุผลหนึ่งที่ระบบจริงต้องใช้ Vertex AI (P2 แสดงแล้วว่าทางนี้ใช้ได้จริง · P3a ยังต้องวัดใหม่บน Vertex) อีกเหตุผลคือ free tier อาจนำข้อมูลไป train ซึ่งห้ามใช้กับข้อมูลของผู้ใช้จริง (AI-07) · ส่วนข้อ 3 แก้ด้วย config ต่องาน (`config/ai.yaml`)
+ข้อ 1–2 เป็นเหตุผลหนึ่งที่ระบบจริงต้องใช้ Vertex AI (P2 แสดงแล้วว่าทางนี้ใช้ได้จริง · P3a ยังต้องวัดใหม่บน Vertex) อีกเหตุผลคือ free tier ของ Gemini API นำ prompt และคำตอบไปพัฒนาผลิตภัณฑ์ได้ ซึ่งห้ามใช้กับข้อมูลของผู้ใช้จริง (AI-07) · ส่วน Vertex AI อยู่ใต้ "Training Restriction" ของ Google Cloud ที่ไม่นำข้อมูลไป train แม้ใช้เครดิต Free Trial (ตรวจเงื่อนไขแล้ว 31 ต.ค. · `specs/features/ai/gemini-vertex.md` §10) · ส่วนข้อ 3 แก้ด้วย config ต่องาน (`config/ai.yaml`)
 
 ## 4. งานวิจัยรองรับ learning model
 
