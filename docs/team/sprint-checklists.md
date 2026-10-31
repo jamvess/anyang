@@ -176,7 +176,8 @@
   - 31 ต.ค. เสร็จ (PR #80): spec `specs/features/check/check-answer-classifier.md` + prompt `check_answer/v1` + `app/services/checker.py` + `evals/run_checker.py` · รันบน Vertex 50 ข้อ: **verdict 100%, error_type 96.4% (27/28), first_wrong_line 100% (24/24) ผ่านเป้าทั้ง 3** · SymPy ตัดสิน verdict 45 ข้อ LLM 5 · พลาดข้อเดียว ans_039 (`wrong_method` → `prerequisite`) · `ai.yaml` 1.3 `thinking: low` · ผลอยู่ที่ `evals/answers/results/v1.json` · เหลือ Report P2 (PR #82)
 - [x] Script `evals/run_eval.py` ออกคะแนน verdict, error type, บรรทัดผิด · เสร็จก่อนกำหนด (21 ต.ค. · PR #47) · ให้คะแนนจากไฟล์ prediction (`--predictions`) · นิยาม metric ใน `evals/README.md` "การให้คะแนน" · ต่อกับ checker จริงตอนทำ P2 · การรันใน CI เมื่อ prompt เปลี่ยน (§2.11) รอ Junior
 - [x] Provider `vertex` ใน gateway ใช้เครดิต Free Trial ของ `anyang-513006` (เพิ่ม 31 ต.ค. · `infra/README.md` "งาน AI gateway ใน S3") · PR #87 · spec `specs/features/ai/gemini-vertex.md` · ADC ไม่มี key file · smoke บน Vertex ผ่าน (`gemini-3.5-flash`, `global`, 4.8 วินาที) · เหตุผล: free tier ของ AI Studio ได้ 20 request/วัน/model รัน P2 ได้แค่ 23/50 · Junior ok ให้แก้ `apps/api/app/ai/`
-- [ ] Report P2
+- [x] Report P2
+  - 31 ต.ค. (PR #82): `specs/poc/reports/P2.md` · **ผ่าน** (Jam ตัดสิน): 6 error types, prompt v1, Vertex · ไม่ต้อง fallback 4 แบบ · บรรทัดผลใน `specs/poc/README.md` · งานต่อก่อนเข้าห้องแชท: hint sign flip ใน job เดียวกับ SymPy, กติกา §2.5 ของ `CheckAnswerResult`
 
 **Done เมื่อ:** มีตัวเลข 3 ตัวของ P2 เทียบกับเป้า
 
