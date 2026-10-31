@@ -275,6 +275,26 @@ def _in_factored_form(written: sympy.Expr, variable: sympy.Symbol | None) -> boo
     return True
 
 
+def _parse_answer(
+    answer_format: AnswerFormat, reference_answer: str, lines: list[str]
+) -> tuple[_Line, list[_Line], sympy.Symbol | None]:
+    reference = _classify(reference_answer, answer_format)
+    written = [_classify(line, answer_format) for line in lines]
+    if isinstance(reference, _Equation) != (answer_format == "equation") or isinstance(
+        reference, _Definition
+    ):
+        raise _Unsupported
+    return reference, written, _variable([reference, *written])
+
+
+def _lines_ok(reference: _Line, written: list[_Line], variable: sympy.Symbol | None) -> list[bool]:
+    befores = [reference, *written[:-1]]
+    return [
+        _line_ok(before, line, first=i == 0, variable=variable)
+        for i, (before, line) in enumerate(zip(befores, written, strict=True))
+    ]
+
+
 def evaluate_lines(
     answer_format: AnswerFormat, reference_answer: str, lines: list[str]
 ) -> SympyResult:
@@ -282,20 +302,8 @@ def evaluate_lines(
     if not lines:
         return _NOT_PARSED
     try:
-        reference = _classify(reference_answer, answer_format)
-        written = [_classify(line, answer_format) for line in lines]
-        if isinstance(reference, _Equation) != (answer_format == "equation") or isinstance(
-            reference, _Definition
-        ):
-            raise _Unsupported
-        variable = _variable([reference, *written])
-
-        line_ok = [
-            _line_ok(before, line, first=i == 0, variable=variable)
-            for i, (before, line) in enumerate(
-                zip([reference, *written[:-1]], written, strict=True)
-            )
-        ]
+        reference, written, variable = _parse_answer(answer_format, reference_answer, lines)
+        line_ok = _lines_ok(reference, written, variable)
 
         last = written[-1]
         final_in_form = None
@@ -325,6 +333,68 @@ def evaluate_lines(
         final_in_form=final_in_form,
         line_ok=line_ok,
     )
+
+
+# --- hint for the classifier (check-answer-classifier.md §2.4) ------------------------------
+
+
+def _sign_flips(expr: sympy.Expr) -> list[sympy.Expr]:
+    """``expr`` with the sign of one term of one sum flipped, for every such term, including
+    sums inside brackets: (x-2)(x+3) gives (x-2)(x-3) among others."""
+    flips = []
+    for node in sympy.preorder_traversal(expr):
+        if isinstance(node, sympy.Add):
+            for term in node.args:
+                flipped = sympy.Add(*(-t if t is term else t for t in node.args))
+                flips.append(expr.xreplace({node: flipped}))
+    return flips
+
+
+def _flipped_lines(line: _Line) -> list[_Line]:
+    match line:
+        case _Expression():
+            return [
+                _Expression([*line.written[:i], flip, *line.written[i + 1 :]])
+                for i, step in enumerate(line.written)
+                for flip in _sign_flips(step)
+            ]
+        case _Definition():
+            return [_Definition(line.order, flip) for flip in _sign_flips(line.body)]
+        case _Equation():
+            variants = []
+            for i, (lhs, rhs) in enumerate(line.sides):
+                for side, flips in ((0, _sign_flips(lhs)), (1, _sign_flips(rhs))):
+                    for flip in flips:
+                        pair = (flip, rhs) if side == 0 else (lhs, flip)
+                        variants.append(_Equation([*line.sides[:i], pair, *line.sides[i + 1 :]]))
+            return variants
+
+
+def _follows(before: _Line, line: _Line, *, first: bool, variable: sympy.Symbol | None) -> bool:
+    try:
+        return _line_ok(before, line, first=first, variable=variable)
+    except Exception:  # undecided, unsupported or a SymPy error: not a hint
+        return False
+
+
+def sign_flip_line(
+    answer_format: AnswerFormat, reference_answer: str, lines: list[str]
+) -> int | None:
+    """Hint ``sign_flip_detected`` (ai-orchestration.md §2.4.4): the first wrong line, if
+    flipping one sign makes it follow from the line before. Runs in the worker pool."""
+    try:
+        reference, written, variable = _parse_answer(answer_format, reference_answer, lines)
+        line_ok = _lines_ok(reference, written, variable)
+    except Exception:  # not parsed or undecided: SymPy has no wrong line to offer
+        return None
+    if all(line_ok):
+        return None
+    i = line_ok.index(False)
+    before = reference if i == 0 else written[i - 1]
+    for variant in _flipped_lines(written[i]):
+        if _follows(before, variant, first=i == 0, variable=variable):
+            return i + 1
+    return None
 
 
 # --- worker processes (spec §2.5) -----------------------------------------------------------
@@ -444,3 +514,27 @@ async def check_lines(
         )
     except SympyTimeoutError:
         return _TIMED_OUT
+
+
+async def detect_sign_flip(
+    *,
+    answer_format: AnswerFormat,
+    reference_answer: str,
+    lines: list[str],
+    timeout_s: float | None = None,
+    pool: SympyWorkerPool | None = None,
+) -> int | None:
+    """``sign_flip_line`` in the worker pool, with the same timeout as ``check_lines``. The hint
+    is optional, so a timeout or a failed worker means no hint, not a failed check
+    (check-answer-classifier.md §2.4)."""
+    if not lines:
+        return None
+    if timeout_s is None:
+        timeout_s = get_settings().learning.checker.sympy_timeout_seconds
+    pool = pool or default_pool()
+    try:
+        return await pool.run(
+            sign_flip_line, answer_format, reference_answer, lines, timeout_s=timeout_s
+        )
+    except (SympyTimeoutError, RuntimeError):
+        return None
