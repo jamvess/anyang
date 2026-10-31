@@ -131,7 +131,7 @@ AI ไม่ได้ตอบจากเอกสารอย่างเด�
 - **ขนาด batch:** embedding-2 รับรวมไม่เกิน 8,192 token ต่อ request และ chunk ยาวได้ถึง 800 → `embedding.batch_size: 10`
 - **ตรวจขนาด:** gateway แจ้ง error ถ้า vector ยาวไม่เท่า `embedding.dimensions` (ไม่ตัดหรือเติมให้เอง)
 - **ค้นด้วย cosine** (`<=>`, HNSW `vector_cosine_ops`) · Gemini ไม่ normalize vector ที่ต่ำกว่า 3,072 มิติ ถ้าเปลี่ยนไปใช้ inner product ต้อง normalize ก่อนเก็บ
-- Gemini API ไม่บอกจำนวน token ของ embedding → `ai_calls.tokens_in` ของ purpose `embed` เป็น 0 จนกว่าจะย้ายไป Vertex AI (AI-04)
+- Gemini API ไม่บอกจำนวน token ของ embedding → `ai_calls.tokens_in` ของ purpose `embed` เป็น 0 · บน Vertex AI (provider `vertex`) นับจาก `statistics.token_count` ของแต่ละ embedding (AI-04 · `specs/features/ai/gemini-vertex.md`)
 
 ### 2.3.4 ขั้น 5 · Topic extraction
 
