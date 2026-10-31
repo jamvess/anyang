@@ -14,7 +14,7 @@
 - [x] 3. 🙋 Jam รัน ingest บน Vertex (A2b บน flash-lite + A4) · `cd apps/api` → `uv run python ../../poc/P3/ingest.py --provider vertex --small-model vertex:<model>` · ใช้ประมาณ 4 call · ดูว่า A4 ตัดข้อได้ 43 ข้อเหมือนเดิมไหม
 - [x] 4. 🙋 Jam รัน A5 → A6 → A7 บน Vertex 2 รอบ คือ A5 `v1` และ `v2` · `uv run python ../../poc/P3/run.py --provider vertex --small-model vertex:gemini-3.5-flash --a5-prompt v1` แล้ว `score.py --provider vertex --a5-prompt v1` · ทำซ้ำด้วย `v2` · ประมาณ 7 call ต่อรอบ
 - [x] 5. 🤖 สรุปผลเป็นตาราง เทียบกับรอบ free tier: หัวข้อตรง (IoU ≥ 0.5), ★★★ ทั้ง pipeline, map ข้อสอบ, นาทีต่อไฟล์, A6 ผ่าน schema ไหม, token out ของ `merge_topics` เทียบกับเพดาน 16,000, A2b บน flash-lite (เวลา, token, จำนวนข้อที่ A4 ตัดได้)
-- [ ] 6. 🙋 Jam ตัดสิน: ผ่านหรือไม่ผ่าน · ใช้ A5 version ไหน · model ของ tier main · ถ้า A6 ยังพังให้ทำ `merge_topics/v2` ไหม (ถ้าทำ ต้องวน ขั้น 4 อีกรอบ)
+- [x] 6. 🙋 Jam ตัดสิน: ผ่านหรือไม่ผ่าน · ใช้ A5 version ไหน · model ของ tier main · ถ้า A6 ยังพังให้ทำ `merge_topics/v2` ไหม (ถ้าทำ ต้องวน ขั้น 4 อีกรอบ)
 - [ ] 7. 🤖 `/poc-report P3` (เพิ่มส่วน "รอบ Vertex") + `specs/poc/README.md` บรรทัดผล P3 + `ai-orchestration.md` §2.10, §3.6 + `docs/report/ai-evaluation.md` §3 + `config/ai.yaml` ถ้าเปลี่ยน prompt หรือ model (ไฟล์กลาง)
 - [ ] 8. 🙋 Jam บอกแชทกลุ่ม (ถ้าแก้ `config/ai.yaml`)
 
@@ -39,6 +39,8 @@
 
 - 2026-10-31 · ขั้น 6 Jam: ทำ `merge_topics/v2` ในงานนี้ + เพิ่มงบ token (ข้อ 1 ก) · v2: เก็บทุก section ของชีทเป็นหัวข้อของตัวเอง, รวมเฉพาะที่ซ้ำข้ามไฟล์จริง, หัวข้อของไฟล์แบบฝึกหัดไปรวมกับหัวข้อในชีทที่ฝึก, skill 2–4 ข้อ และ mistake 1–2 ข้อ (จากเดิม 2–5 และ 1–3 · ลด token) · `config/ai.yaml` 1.6: `merge_topics` `max_tokens` 16000 → 32000 คง `thinking: medium` (`prompt` ยังเป็น v1 จนกว่าจะตัดสินจากผล) · `run.py`/`score.py` มี `--a6-prompt` · `SaveRaw` ไม่เขียนทับคำตอบของรอบก่อนแล้ว
 
+- 2026-10-31 · **ขั้น 6 Jam ตัดสิน:** (1) P3a บน Vertex **ผ่านบางส่วน**: ★★★ ทั้ง pipeline 10/12 = 83% ผ่าน · นาทีต่อไฟล์ผ่าน · หัวข้อตรง 20/27 = 74% ยังไม่ถึง 80% · ใช้ต่อได้เพราะผู้ใช้ยืนยันและแก้ scope ใน S12 ก่อนติว (2) `config/ai.yaml`: `extract_topics_local` → v2, `merge_topics` → v2 (★★★ คือค่าที่ระบบใช้จริง) (3) tier main = `vertex:gemini-3.5-flash` ไม่ใช่ชั่วคราวแล้ว (4) tier small = `vertex:gemini-3.5-flash` (A4 43/43, A7 ใช้ได้ · flash-lite พัง JSON ที่มี LaTeX) · fallback ของ small ยัง TODO
+
 ## ผลขั้น 5 (P3a บน Vertex · 31 ต.ค.)
 
 | Metric | เป้า | free tier 21 ต.ค. (flash-lite ทั้งชุด) | Vertex A5 v1 | Vertex A5 v2 |
@@ -55,9 +57,24 @@
 
 **อ่านผล:** คอขวดย้ายจาก A5 ไปที่ A6 · (1) A6 รวมหัวข้อที่ label แยกไว้เข้าด้วยกัน (เช่น ลิมิต + ความต่อเนื่อง, chain rule + อนุพันธ์ตรีโกณ/log/ผกผัน รวมเป็นหัวข้อเดียว) (2) A6 ใช้ output เกือบหรือเกิน 16,000 token ทุกครั้ง (`thinking: medium` นับรวมใน `max_tokens`) จึงพังแบบสุ่ม · token ของรอบ v2 ทั้ง pipeline: in 134,253 / out 53,496
 
+## ผลรอบ 2 (A6 `merge_topics/v2` · `max_tokens` 32000 · 31 ต.ค.)
+
+| Metric | เป้า | A5 v2 + A6 v1 (รอบ 1) | A5 v1 + A6 v2 | **A5 v2 + A6 v2** |
+|---|---|---|---|---|
+| A6 ผ่าน schema | — | ครั้งที่ 2 (ครั้งแรกชนเพดาน) | ✅ ครั้งแรก · out 20,018 · 58.7 s | ✅ ครั้งแรก · out 19,390 · 86.9 s |
+| หัวข้อหลัง A6 (IoU ≥ 0.5) | ≥ 80% | 7/27 = 26% | 20/27 = 74% (31 หัวข้อ · precision 64%) | 20/27 = 74% (36 หัวข้อ · precision 56%) |
+| หัวข้อที่ IoU ≥ 0.3 | — | 41% | 81% | 81% |
+| ★★★ ทั้ง pipeline | ≥ 80% | 2/12 | 8/12 = 67% | **10/12 = 83% ✅** (precision 91%) |
+| map ข้อสอบเข้าหัวข้อที่ถูก | — | 7/43 | 34/43 = 79% | 30/43 = 70% |
+| นาทีต่อไฟล์ (สูงสุด) | ≤ 3 | 0.95 | 1.22 | 1.45 ✅ |
+| token ทั้ง pipeline (in / out) | — | 134,253 / 53,496 | 80,750 / 42,698 | 71,583 / 39,941 |
+
+- A6 v2 แก้ปัญหารวมหัวข้อเกินได้ (17 → 31–36 หัวข้อ · label 27) · token out ของ A6 ราว 19,000–20,000 จึงต้องใช้เพดาน 32,000
+- รอบละ 1 ครั้ง วิชาเดียว temperature 0.2 · A5 v1 บน flash เคยได้ 56% (free tier) และ 78% (Vertex) จาก prompt เดียวกัน จึงมีความแปรปรวนสูง
+
 ## Next step
 
-ขั้น 4 รอบ 2 (🙋): Jam รัน `run.py` + `score.py` ด้วย `--a6-prompt v2` สำหรับ A5 `v1` และ `v2` (A5 อยู่ใน cache · 3 call ต่อรอบ)
+ขั้น 7 (🤖): `/poc-report P3` เพิ่มส่วนรอบ Vertex · แล้วแก้ `config/ai.yaml` (prompt v2 ทั้งคู่, tier small, comment tier main), `specs/poc/README.md`, `ai-orchestration.md` §2.3.7, §2.10, §3.6, `docs/report/ai-evaluation.md` §3
 
 ## Waiting on
 
