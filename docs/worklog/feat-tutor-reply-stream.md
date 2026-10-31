@@ -9,8 +9,8 @@
 
 ## Plan
 
-- [ ] 1. 🤖 `/spec-feature`: ร่าง `specs/features/tutor/tutor-reply-stream.md` (AI-01, AI-02, AI-03, NFR-P1, TM-08) · ขอบเขต P4-lite ตาม `specs/poc/README.md`: ข้อความ user → `tutor_reply` (stream) → event `token` → `done` · ไม่มี stage machine, planner, buddy (เทอม 2) · มีส่วน "รอตัดสิน" แยกข้อที่เป็นของ Junior (auth, การบันทึก `messages`) ออกจากข้อที่เป็นของ Jam (prompt, gateway stream)
-- [ ] 2. 🙋 Jam review spec: อ่าน AC ทุกข้อ + ตัดสินข้อที่เป็นของ Jam · ข้อของ Junior ใช้ทางที่ไม่ล็อกโครงสร้าง backend แล้วจดใน Waiting on
+- [x] 1. 🤖 `/spec-feature`: ร่าง `specs/features/tutor/tutor-reply-stream.md` (AI-01, AI-02, AI-03, NFR-P1, TM-08) · ขอบเขต P4-lite ตาม `specs/poc/README.md`: ข้อความ user → `tutor_reply` (stream) → event `token` → `done` · ไม่มี stage machine, planner, buddy (เทอม 2) · มีส่วน "รอตัดสิน" แยกข้อที่เป็นของ Junior (auth, การบันทึก `messages`) ออกจากข้อที่เป็นของ Jam (prompt, gateway stream)
+- [x] 2. 🙋 Jam review spec: อ่าน AC ทุกข้อ + ตัดสินข้อที่เป็นของ Jam · ข้อของ Junior ใช้ทางที่ไม่ล็อกโครงสร้าง backend แล้วจดใน Waiting on
 - [ ] 3. 🤖 `/spec-to-tests`: test ที่ fail ก่อน (fake provider, ไม่เรียก model จริง)
 - [ ] 4. 🙋 Jam review test (ชื่อ test ตรง AC · ไม่มี test ที่เรียก model จริงใน CI)
 - [ ] 5. 🤖 `/implement-feature`: gateway `stream()` + provider fake/gemini + prompt `tutor_reply/v1` + service + router (สัญญาเดิมของ `test_room_api_contract.py` ต้องผ่าน)
@@ -28,13 +28,20 @@
 
 ## Decisions
 
+- 2026-10-31 · Jam approve spec `tutor-reply-stream.md` และรับข้อเสนอทุกข้อใน §10
+- §10 ข้อ 2 · `{image_path}` คง stub · flow รูปเป็น feature แยก
+- §10 ข้อ 4 · fake ตอบด้วยข้อความ tutor ของ `app/stubs/tutor_reply.sse` ตัด buddy · tutor_reply ใน P4-lite ไม่มี buddy
+- §10 ข้อ 5 · เอากรณี `{text}` ออกจาก `test_apimd_room_stubs_send_x_stub_header` · docstring ของ `test_room_stubs.py` บอกไว้แล้วว่าลบใน P4-lite
+- §10 ข้อ 6 · ยังไม่มี timeout แยกของ token แรก · ดูผลวัด P4-lite ก่อน
+
 ## Next step
 
-ขั้น 1 (🤖): รัน `/spec-feature` สำหรับ `specs/features/tutor/tutor-reply-stream.md`
+ขั้น 3 (🤖): รัน `/spec-to-tests` จาก `specs/features/tutor/tutor-reply-stream.md`
 
 ## Waiting on
 
-- Junior: ตรวจ JWT ของ Supabase และการบันทึก `messages` (โครงสร้าง backend + DB เป็นของ Junior ตาม `roles.md`) · ข้อเสนอจะอยู่ในส่วน "รอตัดสิน" ของ spec
+- Junior: §10 ข้อ 1 ของ spec · P4-lite ยังไม่ตรวจ JWT และไม่บันทึก `messages` (ใช้ข้อเสนอไปก่อน)
+- Junior: §10 ข้อ 3 · `error.code` `message_too_long` (422) และ `ai_unavailable` (กลาง stream) · ยังไม่แก้ `api.md` จนกว่า Junior ตกลง
 
 ## Notes for next time
 
