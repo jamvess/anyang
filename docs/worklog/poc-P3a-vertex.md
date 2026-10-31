@@ -11,8 +11,8 @@
 
 - [x] 1. 🤖 `poc/P3/common.py` + `ingest.py` + `run.py` + `score.py`: เพิ่มโหมด `--provider vertex` · ใช้ model ตาม tier ใน `config/ai.yaml` (A2b = vision flash-lite, A5 = mid flash, A6 = main flash) · tier small (A4 `split_past_exam`, A7 `map_questions`) ยังเป็น TODO จึงรับ model จาก flag `--small-model` · เว้นระหว่าง call สั้นลง (Vertex ไม่มีโควตา 20/วัน) · ใช้ `gateway.retries` ตาม config · ผลแยกโฟลเดอร์ `out/vertex/` และ `results/vertex-a5<v>/` ไม่ทับผลเดิม · test ใน `poc/P3/test_p3.py` (ไม่เรียก AI)
 - [x] 2. 🙋 Jam เลือก model ของ tier small สำหรับรอบนี้ (A4, A7): `gemini-3.5-flash-lite` หรือ `gemini-3.5-flash`
-- [ ] 3. 🙋 Jam รัน ingest บน Vertex (A2b บน flash-lite + A4) · `cd apps/api` → `uv run python ../../poc/P3/ingest.py --provider vertex --small-model vertex:<model>` · ใช้ประมาณ 4 call · ดูว่า A4 ตัดข้อได้ 43 ข้อเหมือนเดิมไหม
-- [ ] 4. 🙋 Jam รัน A5 → A6 → A7 บน Vertex 2 รอบ คือ A5 `v1` และ `v2` · `uv run python ../../poc/P3/run.py --provider vertex --small-model vertex:<model> --a5-prompt v1` แล้ว `score.py --provider vertex --a5-prompt v1` · ทำซ้ำด้วย `v2` · ประมาณ 7 call ต่อรอบ
+- [x] 3. 🙋 Jam รัน ingest บน Vertex (A2b บน flash-lite + A4) · `cd apps/api` → `uv run python ../../poc/P3/ingest.py --provider vertex --small-model vertex:<model>` · ใช้ประมาณ 4 call · ดูว่า A4 ตัดข้อได้ 43 ข้อเหมือนเดิมไหม
+- [ ] 4. 🙋 Jam รัน A5 → A6 → A7 บน Vertex 2 รอบ คือ A5 `v1` และ `v2` · `uv run python ../../poc/P3/run.py --provider vertex --small-model vertex:gemini-3.5-flash --a5-prompt v1` แล้ว `score.py --provider vertex --a5-prompt v1` · ทำซ้ำด้วย `v2` · ประมาณ 7 call ต่อรอบ
 - [ ] 5. 🤖 สรุปผลเป็นตาราง เทียบกับรอบ free tier: หัวข้อตรง (IoU ≥ 0.5), ★★★ ทั้ง pipeline, map ข้อสอบ, นาทีต่อไฟล์, A6 ผ่าน schema ไหม, token out ของ `merge_topics` เทียบกับเพดาน 16,000, A2b บน flash-lite (เวลา, token, จำนวนข้อที่ A4 ตัดได้)
 - [ ] 6. 🙋 Jam ตัดสิน: ผ่านหรือไม่ผ่าน · ใช้ A5 version ไหน · model ของ tier main · ถ้า A6 ยังพังให้ทำ `merge_topics/v2` ไหม (ถ้าทำ ต้องวน ขั้น 4 อีกรอบ)
 - [ ] 7. 🤖 `/poc-report P3` (เพิ่มส่วน "รอบ Vertex") + `specs/poc/README.md` บรรทัดผล P3 + `ai-orchestration.md` §2.10, §3.6 + `docs/report/ai-evaluation.md` §3 + `config/ai.yaml` ถ้าเปลี่ยน prompt หรือ model (ไฟล์กลาง)
@@ -31,9 +31,13 @@
 
 - 2026-10-31 · tier small รอบนี้ (A4, A7) = `vertex:gemini-3.5-flash-lite` · ตรงกับชื่อ tier และได้ข้อมูลไว้ตัดสิน tier small ใน config · ถ้า A7 พลาดต้องแยกว่าเพราะ model หรือ prompt
 
+- 2026-10-31 · ingest รอบ 1 (small = flash-lite): A4 ของ midterm-2561-1 ไม่ผ่าน schema 2 ครั้ง เพราะ flash-lite ไม่ escape backslash ของ LaTeX ใน JSON (`\sqrt` → `Invalid \escape`) · เนื้อหาครบ · midterm-2559-1 ผ่าน (23 ข้อ) → flash-lite ไม่สม่ำเสมอกับ LaTeX ใน JSON · ใช้ประกอบการตัดสิน tier small · เสนอแยกงาน: gateway ซ่อม escape ที่ไม่ถูกต้องก่อน parse (§2.9)
+- 2026-10-31 · Jam เปลี่ยน tier small รอบนี้เป็น `vertex:gemini-3.5-flash` แล้วรัน ingest `--force` ใหม่ · A4 ได้ 23 + 20 = 43 ข้อ q_no ตรงกับรอบ free tier ทุกข้อ
+- A2b บน flash-lite (3 ครั้ง): 2559 (14 หน้า) 12.3 s / out 3,477 · 27.0 s / out 7,666 (schema retry 1 ครั้ง) · 2561 (12 หน้า) 9.6 s / out 3,199 · 8.2 s / out 3,353 · รอบเดิมบน flash 40.5 s / out 7,943 · ทุกครั้งต่ำกว่าเพดาน 16,000
+
 ## Next step
 
-ขั้น 3 (🙋): Jam รัน `cd apps/api` → `uv run python ../../poc/P3/ingest.py --provider vertex --small-model vertex:gemini-3.5-flash-lite` แล้วส่ง output มา
+ขั้น 4 (🙋): Jam รัน `run.py` + `score.py` บน Vertex ด้วย `--small-model vertex:gemini-3.5-flash` สำหรับ `--a5-prompt v1` แล้ว `v2`
 
 ## Waiting on
 
