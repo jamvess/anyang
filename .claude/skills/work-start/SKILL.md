@@ -1,13 +1,15 @@
 ---
 name: work-start
 description: Start a work session. Sync with main, show what teammates finished, pick a new task or resume an unfinished one, create the branch, the worklog and a step plan. Use at the beginning of every work session.
-argument-hint: [your name - Junior | May | Jam]
+argument-hint: [your name - Junior | May | Jam | ALL (solo time, pick from the whole team)]
 disable-model-invocation: true
 ---
 
 You are guiding **$ARGUMENTS** through the start of a work session. The person should only have to read and confirm. Talk to them in Thai (keep technical terms in English), use short sentences, and number every choice so they can answer with a number or "ok".
 
 If no name was given, ask "คุณคือใคร: 1 Junior · 2 May · 3 Jam" and stop.
+
+If the argument is `ALL` (any case), this is **solo time**: one person works while the others are offline (different time zones), and may take any teammate's task. Follow the steps below with the changes in **Mode ALL** at the end of this file. With a name, everything stays as written (overlap time: each person on their own tasks in parallel).
 
 ## 1 · Sync (do not ask, just do it)
 
@@ -69,3 +71,35 @@ When every step is done, tell them to type `/work-done`. If they want to stop fo
 - Only Junior may run `npx supabase db push` or `npx supabase link`, and only after explicit confirmation.
 - Before editing a file owned by someone else (see `docs/team/roles.md` and `.github/CODEOWNERS`) or a shared file (`CLAUDE.md`, `specs/requirements/requirements.md`, `specs/system/api.md`, `config/ai.yaml`), say so and ask first. Also remind them to tell the group chat.
 - Never change tests that a human already reviewed.
+
+## Mode ALL (solo time)
+
+The team agreed (2026-10-31) that during solo time anyone may take anyone's task, so work keeps moving while the owner is offline. Overlap time still uses names.
+
+**Who is at the keyboard.** Run `gh api user --jq .login` and map the login with the GitHub row of `docs/team/roles.md`. If `gh` is missing or the login is not in the table, ask "คุณคือใคร: 1 Junior · 2 May · 3 Jam". Call this person the **operator**. The operator owns the session: worklog Owner, 🙋 steps, secrets in their own `.env`.
+
+**Section 1 · Sync.** Same, plus list the teammates' unfinished work from the remote: open PRs (`gh pr list --state open --json number,title,author,headRefName,isDraft`) and, for each, its worklog with `git show origin/<branch>:docs/worklog/<slug>.md`.
+
+**Section 2 · Team status.** Same report, but "งานค้าง" covers everyone: one line per open branch with its owner, worklog Status and Next step.
+
+**Section 3 · Choose a task.** Up to 5 options from the whole team, in this order:
+
+1. The operator's own unfinished branches.
+2. Teammates' branches whose worklog Status is **paused** (written by `/work-pause`). Never offer a branch whose Status is `in progress`, or one with no worklog: its owner may be in the middle of it.
+3. Unchecked items of the current sprint from every section of `docs/team/sprint-checklists.md`: ⭐ first, then items someone is waiting on (unblocks another person's next step), then the rest. If the current sprint is done, take the next sprint.
+4. Skip items covered by an open PR, unless that PR's branch qualifies under 2.
+
+For each option show: owner (whose item it is), why it is next, size (S/M/L), and its 🙋 parts. **Skip, or mark "ทำได้บางส่วน",** an option whose 🙋 steps need a specific other person:
+
+- access the operator does not have (Supabase dashboard, `npx supabase db push` or `link` which only Junior may run, Vercel, a secret in someone else's `.env`, a device or account),
+- a decision that `roles.md` ("ตัดสินใจเรื่อง") gives to that person (backend/DB/deploy → Junior, screens and flow → May, prompt/model/threshold/eval → Jam).
+
+For "ทำได้บางส่วน", plan only the parts the operator can do and put the rest under **Waiting on** in the worklog, naming the person.
+
+**Section 4a · Resume a teammate's branch.** Before working, edit the worklog header: Owner `<owner> · ทำต่อโดย <operator> (<date>)`, Status `in progress · <date>`. Commit `chore(worklog): <operator> continues <branch>` and push, so the owner sees it when they come back. Do not rewrite the plan or the decisions already made; continue from Next step.
+
+**Section 4b · Start a teammate's item.** Worklog Owner `<operator> (item of <owner>)`. The Checklist item is the exact text from the owner's section.
+
+**Ownership rule.** The rule "before editing a file owned by someone else, ask first" is satisfied by the team agreement for this mode, but the operator still tells the group chat what they took (draft message in Thai: "solo time: <operator> ทำ <task> ของ <owner> · PR #__ · ถ้ามีอะไรทักได้ ไว้ดูตอนตื่น") and the PR description says whose item it was. Shared files (`CLAUDE.md`, `specs/requirements/requirements.md`, `specs/system/api.md`, `config/*.yaml`) still need the group chat message before merge, as in `/work-done`. Never change tests a human already reviewed, whoever reviewed them.
+
+**Ending.** `/work-pause` and `/work-done` work as usual. In `/work-done`, when ticking a teammate's checklist item, add a sub-bullet "ทำโดย <operator> (<date>) ช่วง solo".
