@@ -11,8 +11,8 @@
 
 - [x] 1. 🤖 `/spec-feature`: ร่าง `specs/features/tutor/tutor-reply-stream.md` (AI-01, AI-02, AI-03, NFR-P1, TM-08) · ขอบเขต P4-lite ตาม `specs/poc/README.md`: ข้อความ user → `tutor_reply` (stream) → event `token` → `done` · ไม่มี stage machine, planner, buddy (เทอม 2) · มีส่วน "รอตัดสิน" แยกข้อที่เป็นของ Junior (auth, การบันทึก `messages`) ออกจากข้อที่เป็นของ Jam (prompt, gateway stream)
 - [x] 2. 🙋 Jam review spec: อ่าน AC ทุกข้อ + ตัดสินข้อที่เป็นของ Jam · ข้อของ Junior ใช้ทางที่ไม่ล็อกโครงสร้าง backend แล้วจดใน Waiting on
-- [ ] 3. 🤖 `/spec-to-tests`: test ที่ fail ก่อน (fake provider, ไม่เรียก model จริง)
-- [ ] 4. 🙋 Jam review test (ชื่อ test ตรง AC · ไม่มี test ที่เรียก model จริงใน CI)
+- [x] 3. 🤖 `/spec-to-tests`: test ที่ fail ก่อน (fake provider, ไม่เรียก model จริง)
+- [x] 4. 🙋 Jam review test (ชื่อ test ตรง AC · ไม่มี test ที่เรียก model จริงใน CI)
 - [ ] 5. 🤖 `/implement-feature`: gateway `stream()` + provider fake/gemini + prompt `tutor_reply/v1` + service + router (สัญญาเดิมของ `test_room_api_contract.py` ต้องผ่าน)
 - [ ] 6. 🙋 Jam smoke test ในเครื่องกับ Vertex: `cd apps/api` → `AI_PROVIDER=live uv run fastapi dev app/main.py` → ส่งข้อความจากหน้าแชท `pnpm dev` (http://localhost:3000) → ต้องเห็นตัวอักษรไหลออกมาและสมการ render · ใช้ ADC + `GOOGLE_CLOUD_PROJECT` ใน `.env` ของ Jam
 - [ ] 7. 🙋 Jam บอกแชทกลุ่ม (solo time · `apps/api/` ของ Junior · `config/ai.yaml` ถ้าแตะ · `api.md` ถ้าต้องแก้)
@@ -33,10 +33,11 @@
 - §10 ข้อ 4 · fake ตอบด้วยข้อความ tutor ของ `app/stubs/tutor_reply.sse` ตัด buddy · tutor_reply ใน P4-lite ไม่มี buddy
 - §10 ข้อ 5 · เอากรณี `{text}` ออกจาก `test_apimd_room_stubs_send_x_stub_header` · docstring ของ `test_room_stubs.py` บอกไว้แล้วว่าลบใน P4-lite
 - §10 ข้อ 6 · ยังไม่มี timeout แยกของ token แรก · ดูผลวัด P4-lite ก่อน
+- 2026-10-31 · Jam review test แล้ว (2 ไฟล์ใหม่ + `test_room_stubs.py` เปลี่ยนกรณี `{text}` เป็น `{image_path}`)
 
 ## Next step
 
-ขั้น 3 (🤖): รัน `/spec-to-tests` จาก `specs/features/tutor/tutor-reply-stream.md`
+ขั้น 5 (🤖): `/implement-feature` ให้ test ใน `test_ai_gateway_stream.py` และ `test_tutor_reply_stream_api.py` ผ่าน
 
 ## Waiting on
 
