@@ -118,6 +118,7 @@
   - 21 ต.ค. (PR #41) · generate จาก stub ห้องติว api.md v1.2 · รัน `pnpm gen:api` ใหม่เมื่อ Junior เพิ่ม endpoint หรือทำตาม v1.3
 - [x] Use case UC สมัคร และ UC upload → scope (D7)
 - [ ] เขียน report P4-lite ร่วมกับ Junior
+  - 31 ต.ค. วัด TTFT พื้นฐานบน `api-staging` ด้วย AI จำลองแล้ว (PR #85 · `poc/P4-lite/`): p95 0.15 s (ทั้ง stub และผ่าน gateway หลัง #93) · cold start 6.06 s · ในเบราว์เซอร์ข้อความแรกมี CORS preflight +0.17 s · เหลือ: วัดกับ Gemini จริงเมื่อ staging เปิด live, ต้นทุนต่อข้อความ, สลับ provider ด้วย config, `/poc-report P4-lite`
 
 **Done เมื่อ:** คุยกับ AI บน staging แล้วเห็นตัวอักษรไหลออกมาและสมการ render ถูก
 
