@@ -278,7 +278,6 @@ class EnvSettings(BaseSettings):
     gemini_api_key: SecretStr = SecretStr("")
     google_cloud_project: str = ""
     google_cloud_location: str = ""
-    google_application_credentials: str = ""
     anthropic_api_key: SecretStr = SecretStr("")
     mathpix_app_id: str = ""
     mathpix_app_key: SecretStr = SecretStr("")
