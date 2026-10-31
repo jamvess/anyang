@@ -59,7 +59,7 @@ stars:                                 # topic importance (SM-03, learning-model
   weight_other_instructor: 0.5         # [C] PoC P3 could not measure it (both past exams from one instructor set, specs/poc/reports/P3.md) · measure on the first course with exams from 2 instructors
   three_star_min_r: 0.6                # [calc] midpoint of the stable band 0.51–0.66 (sensitivity analysis) · P3: formula + team question map gives ★★★ 10/12 = 83% (target ≥ 80%) · with 2 past exams r ∈ {0, 0.5, 1}, so P3 only confirms > 0.5
   prerequisite_of_three_star_gets: 2   # [calc] = ★★ by the star rule (ai-orchestration §2.3.5); direct prerequisites only
-  no_past_exam_method: page_terciles   # policy, open question (compute-importance.md §10); decide after P3
+  no_past_exam_method: page_terciles   # policy, decided 2026-10-31 (compute-importance.md §2 step 3, §10): P3 had 2 past exams so never tested it; users edit stars on S12 · signal_r = page share (learning-model §5)
 
 readiness:                             # PM-03: Σ(signal_r × mastery_eff) / Σ(signal_r); no extra constants
   weight: signal_r                     # [calc] expected share of exam content

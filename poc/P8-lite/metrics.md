@@ -15,8 +15,8 @@ Spec: `specs/features/scope/compute-importance.md` (approved 31 ต.ค. · 25 A
 รันจาก root ของ repo ตอน PR พร้อม merge:
 
 ```bash
-bash poc/P8-lite/agent_lines.sh origin/main HEAD apps        # โค้ด + test
-bash poc/P8-lite/agent_lines.sh origin/main HEAD apps/api/app # โค้ดอย่างเดียว
+bash poc/P8-lite/agent_lines.sh origin/main HEAD apps/api/app    # แถวโค้ด
+bash poc/P8-lite/agent_lines.sh origin/main HEAD apps/api/tests  # แถว test
 ```
 
 นับบรรทัดที่เพิ่ม (added) ต่อ commit แล้วแยกตามว่า commit นั้นมีบรรทัด `Co-Authored-By: Claude` ไหม · ไม่นับ merge commit · ไม่นับ spec และ worklog (อยู่นอก `apps/`) · ทดสอบกับ PR #87 ได้ agent 377/377 บรรทัด
