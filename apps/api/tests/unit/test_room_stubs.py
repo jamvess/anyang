@@ -1,6 +1,8 @@
 """Stub-only checks for the tutor room endpoints. Delete this file in P4-lite.
 
 Contract checks that the real endpoints must also pass are in test_room_api_contract.py.
+A text message is no longer a stub (specs/features/tutor/tutor-reply-stream.md, §10 item 5,
+Jam 2026-10-31); an image message still is.
 """
 
 from collections.abc import Iterator
@@ -18,7 +20,7 @@ ROOM_ENDPOINTS = [
     ("get", f"/exam-preps/{PREP_ID}/sessions/active", None),
     ("post", f"/exam-preps/{PREP_ID}/sessions", None),
     ("get", f"/sessions/{SESSION_ID}", None),
-    ("post", f"/sessions/{SESSION_ID}/messages", {"text": "(x-7)(x+7)"}),
+    ("post", f"/sessions/{SESSION_ID}/messages", {"image_path": "sessions/s1/วิธีทำ.jpg"}),
 ]
 
 

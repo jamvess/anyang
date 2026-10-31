@@ -1,6 +1,9 @@
 """Gemini through the Gemini API (API key from Google AI Studio) or Vertex AI (project + location,
 credentials from ADC). The only module that imports the Google SDK (AI-01). Both clients share
-``generate`` and ``embed`` (specs/features/ai/gemini-vertex.md)."""
+``generate``, ``stream`` and ``embed`` (specs/features/ai/gemini-vertex.md,
+specs/features/tutor/tutor-reply-stream.md)."""
+
+from collections.abc import AsyncIterator
 
 from google import genai
 from google.genai import errors, types
@@ -11,6 +14,7 @@ from app.ai.providers.base import (
     ProviderRateLimited,
     ProviderRequest,
     ProviderResponse,
+    StreamUsage,
 )
 
 
@@ -39,6 +43,40 @@ def embed_contents(model: str, texts: list[str], role: str) -> tuple[list[str], 
     return [f"title: none | text: {text}" for text in texts], None
 
 
+def _contents(request: ProviderRequest) -> list:
+    contents: list = [
+        types.Part.from_bytes(data=image.data, mime_type=image.mime_type)
+        for image in request.images
+    ]
+    contents.append(request.prompt)
+    return contents
+
+
+def _config(request: ProviderRequest, json_output: bool) -> types.GenerateContentConfig:
+    return types.GenerateContentConfig(
+        temperature=request.temperature,
+        max_output_tokens=request.max_tokens,
+        response_mime_type="application/json" if json_output else None,
+        thinking_config=(
+            types.ThinkingConfig(thinking_level=request.thinking) if request.thinking else None
+        ),
+    )
+
+
+def _usage(usage) -> tuple[int, int]:
+    if not usage:
+        return 0, 0
+    # Thinking tokens are billed as output tokens.
+    tokens_out = (usage.candidates_token_count or 0) + (usage.thoughts_token_count or 0)
+    return usage.prompt_token_count or 0, tokens_out
+
+
+def _rate_limited(error: errors.APIError) -> ProviderRateLimited | None:
+    if error.code != 429:
+        return None
+    return ProviderRateLimited(str(error), retry_after_seconds(error.details))
+
+
 class GeminiProvider:
     def __init__(self, api_key: str) -> None:
         if not api_key:
@@ -59,39 +97,46 @@ class GeminiProvider:
         return provider
 
     async def generate(self, request: ProviderRequest) -> ProviderResponse:
-        contents: list = [
-            types.Part.from_bytes(data=image.data, mime_type=image.mime_type)
-            for image in request.images
-        ]
-        contents.append(request.prompt)
         try:
             response = await self._client.aio.models.generate_content(
                 model=request.model,
-                contents=contents,
-                config=types.GenerateContentConfig(
-                    temperature=request.temperature,
-                    max_output_tokens=request.max_tokens,
-                    response_mime_type="application/json",
-                    thinking_config=(
-                        types.ThinkingConfig(thinking_level=request.thinking)
-                        if request.thinking
-                        else None
-                    ),
-                ),
+                contents=_contents(request),
+                config=_config(request, json_output=True),
             )
         except errors.APIError as error:
-            if error.code == 429:
-                raise ProviderRateLimited(str(error), retry_after_seconds(error.details)) from error
+            if (limited := _rate_limited(error)) is not None:
+                raise limited from error
             raise
-        usage = response.usage_metadata
-        tokens_in = (usage.prompt_token_count or 0) if usage else 0
-        # Thinking tokens are billed as output tokens.
-        tokens_out = (
-            (usage.candidates_token_count or 0) + (usage.thoughts_token_count or 0) if usage else 0
-        )
+        tokens_in, tokens_out = _usage(response.usage_metadata)
         return ProviderResponse(
             text=response.text or "", tokens_in=tokens_in, tokens_out=tokens_out
         )
+
+    async def stream(self, request: ProviderRequest, usage: StreamUsage) -> AsyncIterator[str]:
+        """Free text as Gemini writes it. ``usage`` gets the counts of the latest chunk that
+        has them (each chunk's usage covers the whole answer so far)."""
+        try:
+            chunks = await self._client.aio.models.generate_content_stream(
+                model=request.model,
+                contents=_contents(request),
+                config=_config(request, json_output=False),
+            )
+            try:
+                async for chunk in chunks:
+                    if chunk.usage_metadata:
+                        usage.tokens_in, usage.tokens_out = _usage(chunk.usage_metadata)
+                    if chunk.text:
+                        yield chunk.text
+            finally:
+                # Closed early (client left, timeout): stop the HTTP stream to the model now,
+                # not when the garbage collector gets to it.
+                aclose = getattr(chunks, "aclose", None)
+                if aclose is not None:
+                    await aclose()
+        except errors.APIError as error:
+            if (limited := _rate_limited(error)) is not None:
+                raise limited from error
+            raise
 
     async def embed(self, request: EmbedRequest) -> EmbedResponse:
         texts, task_type = embed_contents(request.model, request.texts, request.role)
