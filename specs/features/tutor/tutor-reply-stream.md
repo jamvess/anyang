@@ -20,7 +20,7 @@
 1. อ่าน `purposes.<purpose>` จาก `config/ai.yaml` · ถ้าไม่มี purpose หรือ `stream` ไม่ใช่ `true` → `AIConfigError` (ไม่เรียก provider)
 2. โหลด prompt `prompts/<purpose>/v<n>.md` และเติม placeholder แบบเดียวกับ `call` · route ตาม tier (รวม `AI_MODEL_OVERRIDE`) แบบเดียวกับ `call`
 3. เรียก provider แบบ stream ด้วย `temperature`, `max_tokens`, `thinking` ของ purpose · คืน async iterator ของข้อความทีละชิ้น **ตามที่ provider ส่งมา** ไม่รวมก้อน ไม่แก้ตัวอักษร (ไม่ซ่อม backslash แบบ `app/ai/latex.py` เพราะไม่ใช่ JSON) · ชิ้นที่เป็น string ว่างไม่ส่งต่อ
-4. **Retry เฉพาะก่อนได้ชิ้นแรก:** ถ้า provider ล้มหรือ rate limit ก่อนส่งชิ้นแรก ใช้กติกาเดียวกับ `call` (`gateway.retries`, `retry_backoff_seconds`, `max_retry_wait_seconds`) · หลังได้ชิ้นแรกแล้วไม่ retry (ส่งให้ user ไปแล้ว ดึงคืนไม่ได้) และส่ง error ต่อให้ผู้เรียก
+4. **Retry เฉพาะก่อนได้ชิ้นแรก** (stream ที่จบโดยไม่มีข้อความเลยนับเป็น provider error ก่อนชิ้นแรกด้วย เช่น thinking ใช้ `max_tokens` หมด · self-review 31 ต.ค.): ถ้า provider ล้มหรือ rate limit ก่อนส่งชิ้นแรก ใช้กติกาเดียวกับ `call` (`gateway.retries`, `retry_backoff_seconds`, `max_retry_wait_seconds`) · หลังได้ชิ้นแรกแล้วไม่ retry (ส่งให้ user ไปแล้ว ดึงคืนไม่ได้) และส่ง error ต่อให้ผู้เรียก
 5. Timeout ของทั้ง stream = `timeout_s` ของ purpose · เกินแล้วถือเป็น provider error ตามข้อ 4
 6. ไม่มี schema validation (ผลเป็นข้อความอิสระ)
 7. ส่ง `CallRecord` 1 ครั้งเมื่อ stream จบ (สำเร็จ, ล้ม หรือผู้เรียกหยุดกลางทาง) · `status` = `ok` เมื่อจบครบ ไม่เช่นนั้น `provider_error` · `latency_ms` = เวลาทั้ง stream · token นับจาก usage ที่ provider รายงาน (fake ใช้ค่าประมาณแบบเดียวกับ `generate`)
@@ -32,14 +32,16 @@
 
 **Endpoint `POST /sessions/{id}/messages`**
 
-1. Body ตาม `SendMessageRequest` เดิม (ส่ง `text` หรือ `image_path` อย่างใดอย่างหนึ่ง)
+1. Body ตาม `SendMessageRequest` เดิม (ส่ง `text` หรือ `image_path` อย่างใดอย่างหนึ่ง) · `text` ที่ว่างหรือมีแต่ช่องว่างถือว่าไม่มีข้อความ → `422 validation_error` (self-review 31 ต.ค.)
 2. `text` ยาวเกิน `guards.max_message_chars` (นับตัวอักษร) → ตอบ `422` แบบ `ErrorResponse` ก่อนเรียก AI · code ดู §10 ข้อ 3
 3. `text` → service `tutor_turn` เรียก `ai.stream("tutor_reply", {"message": text})` แล้วส่งแต่ละชิ้นเป็น `token {speaker: "tutor", text: <ชิ้น>}` ตามลำดับ · จบด้วย `done {}` · response **ไม่มี** header `X-Stub`
 4. Provider ล้ม**ก่อน**ส่ง token แรก (หลัง retry แล้ว): ส่ง `token {speaker: "tutor", text: "ระบบช้า ลองส่งอีกทีนะ"}` แล้ว `done {}` (api.md "ระบบช้า")
 5. Provider ล้ม**หลัง**ส่ง token ไปแล้ว: ส่ง `error {code, message}` แล้วจบ stream (ไม่มี `done`) · หน้าเว็บแสดง "ส่งไม่สำเร็จ ลองส่งอีกทีนะ" และเก็บ bubble ที่ได้แล้วไว้ (`chat-streaming.md` AC-13) · code ดู §10 ข้อ 3
+5b. Error อื่นใน stream (config หรือ prompt ผิด เช่นไม่มี provider ของ model): ส่ง `error {code: "internal_error"}` แล้วจบ (code เดียวกับ 500 นอก stream ใน `app/middleware.py`) · `message` ของทุก `error` เป็นข้อความคงที่ ไม่มีข้อความจาก exception (รายละเอียดอยู่ใน log) · self-review 31 ต.ค.
 6. `image_path` → ยังเป็น stub เดิม (flow รูป, `ocr_preview`, `ocr/confirm` เป็น feature แยก) · ดู §10 ข้อ 2
 7. ทุก event ผ่าน model ใน `app/models/room.py` (`TokenEvent`, `DoneEvent`, `ErrorEvent`) จึงผ่าน `test_room_api_contract.py` เดิม
-8. ถ้า client ตัดการเชื่อมต่อกลาง stream: หยุดอ่านจาก provider (ไม่อ่านต่อจนจบ)
+8. ถ้า client ตัดการเชื่อมต่อกลาง stream: หยุดอ่านจาก provider (ไม่อ่านต่อจนจบ) และปิด stream ของ SDK ทันที
+9. Fake ของ fake mode อยู่ตลอดอายุ process จึงไม่เก็บประวัติ request และ chunk (`record=False`)
 
 **Prompt `prompts/tutor_reply/v1.md`** (Jam · frontmatter ตาม `prompts/README.md`)
 
@@ -89,6 +91,13 @@
 - **AC-18 (AI-01)** Given client ปิดการเชื่อมต่อหลังได้ token แรก When fake ยังมีชิ้นเหลือ Then fake ไม่ถูกอ่านจนจบ (ชิ้นที่ยังไม่ได้ส่งไม่ถูกขอ) และมี `CallRecord` 1 อัน
 - **AC-contract** `test_room_api_contract.py` ผ่านโดยไม่แก้
 
+**เพิ่มจาก self-review (31 ต.ค.)**
+
+- **AC-19 (AI-01)** Given gateway ที่ไม่มี provider ของ model ของ tier When ส่ง `{text}` Then ได้ `error {code: "internal_error"}` เป็น event เดียว · Given provider ล้มกลาง stream ด้วยข้อความ "…project-secret" Then `error.message` ไม่มีข้อความนั้น
+- **AC-20 (AI-01)** Given fake ตอบ stream ที่ไม่มีข้อความ 2 ครั้ง และ `retries = 1` When `ai.stream` Then provider ถูกเรียก 2 ครั้งแล้ว `AIProviderError` · When ส่ง `{text}` Then ได้ข้อความ degrade + `done`
+- **AC-21 (AI-01)** Given `text` เป็น `""`, `"   "` หรือ `"\n\t"` When ส่ง Then `422 validation_error` และ provider ไม่ถูกเรียก
+- **AC-22 (AI-03, AI-01)** Given fake `record=False` When stream 3 ครั้ง Then `requests` และ `chunks_sent` ว่าง · Given Gemini stream ถูกปิดหลังชิ้นแรก Then stream ของ SDK ถูก `aclose()`
+
 **Tenant (SA-06):** feature นี้ไม่อ่านและไม่เขียน DB (§10 ข้อ 1) จึงยังไม่มี AC-tenant · เมื่อ Junior ตัดสินให้บันทึก `messages` ต้องเพิ่ม AC ว่า user ของ tenant อื่นส่งข้อความเข้า session นี้ไม่ได้
 
 ## 5. Data changes
@@ -136,6 +145,10 @@
 | `test_TM08_send_message_sse_keeps_latex` | unit | AC-17 |
 | `test_AI01_send_message_stops_provider_on_disconnect` | unit | AC-18 |
 | `test_room_api_contract.py` (เดิม) | unit | AC-contract |
+| `test_AI01_send_message_config_error_ends_with_error_event` · `..._error_message_hides_provider_text` | unit | AC-19 |
+| `test_AI01_stream_without_text_is_retried_then_fails` · `test_AI01_send_message_degrades_when_reply_has_no_text` | unit | AC-20 |
+| `test_AI01_send_message_rejects_blank_text` (3 แถว) | unit | AC-21 |
+| `test_AI03_fake_without_record_keeps_no_history` · `test_AI01_gemini_stream_closes_the_sdk_stream_when_closed_early` | unit | AC-22 |
 | live smoke: `@pytest.mark.live` stream `tutor_reply` บน Vertex 1 ข้อความ | integration (ไม่อยู่ใน CI) | §2 Gemini/Vertex |
 
 ## 9. Out of scope
@@ -159,5 +172,5 @@
 ## 11. Spec changes needed
 
 - `specs/system/api.md` (ไฟล์กลาง · ต้องบอกกลุ่ม): เพิ่ม error code ตาม §10 ข้อ 3 เมื่อ Junior ตกลง · ไม่แก้ใน PR นี้ถ้ายังไม่ตกลง (implement ตามข้อเสนอ แล้วจดไว้)
-- `config/ai.yaml`: ไม่ต้องแก้ (`tutor_reply` มี `stream: true` อยู่แล้ว) · ยกเว้นถ้าตัดสิน §10 ข้อ 6 ให้เพิ่ม key
+- `config/ai.yaml` 1.5 (ไฟล์กลาง · Jam ok 31 ต.ค.): `tutor_reply` เพิ่ม `thinking: low` และ `max_tokens` 700 → 2000 จาก smoke บน Vertex (ค่าเดิมทำให้ TTFT 5.2 วินาที และคำตอบถูกตัดที่ 696/700 token) · `stream: true` มีอยู่แล้ว
 - `prompts/tutor_reply/v1.md`: ไฟล์ใหม่ (Jam เป็นเจ้าของ `prompts/`) · ยังไม่มี eval ของ tutor behavior (§2.11) จึงใช้ live smoke แทนใน P4-lite

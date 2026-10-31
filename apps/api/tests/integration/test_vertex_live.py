@@ -80,6 +80,8 @@ async def test_AI01_vertex_streams_tutor_reply():
             first_token_ms = (time.perf_counter() - started) * 1000
         chunks.append(chunk)
 
+    assert chunks, "Vertex returned no text"
+    assert first_token_ms is not None
     record = records[-1]
     # The Windows console garbles Thai mixed with LaTeX, so the reply goes to a UTF-8 file.
     reply_file = Path(__file__).resolve().parents[2] / ".pytest_cache" / "tutor_reply_smoke.txt"
@@ -90,5 +92,4 @@ async def test_AI01_vertex_streams_tutor_reply():
         f"ttft_ms={first_token_ms:.0f} total_ms={record.latency_ms:.0f} "
         f"tokens_in={record.tokens_in} tokens_out={record.tokens_out}\nreply: {reply_file}"
     )
-    assert chunks
     assert record.status == "ok"

@@ -121,11 +121,18 @@ class GeminiProvider:
                 contents=_contents(request),
                 config=_config(request, json_output=False),
             )
-            async for chunk in chunks:
-                if chunk.usage_metadata:
-                    usage.tokens_in, usage.tokens_out = _usage(chunk.usage_metadata)
-                if chunk.text:
-                    yield chunk.text
+            try:
+                async for chunk in chunks:
+                    if chunk.usage_metadata:
+                        usage.tokens_in, usage.tokens_out = _usage(chunk.usage_metadata)
+                    if chunk.text:
+                        yield chunk.text
+            finally:
+                # Closed early (client left, timeout): stop the HTTP stream to the model now,
+                # not when the garbage collector gets to it.
+                aclose = getattr(chunks, "aclose", None)
+                if aclose is not None:
+                    await aclose()
         except errors.APIError as error:
             if (limited := _rate_limited(error)) is not None:
                 raise limited from error

@@ -9,6 +9,7 @@ A text message is real since P4-lite: the reply streams from the gateway
 """
 
 from collections.abc import AsyncIterator
+from contextlib import aclosing
 from typing import Annotated, Any
 from uuid import UUID
 
@@ -124,7 +125,9 @@ async def send_message(
         return JSONResponse(ErrorResponse(error=error).model_dump(), status_code=422)
 
     async def events() -> AsyncIterator[dict[str, str]]:
-        async for event, payload in reply_events(gateway, body.text):
-            yield {"event": event, "data": payload.model_dump_json()}
+        # aclosing: a client that leaves closes the provider stream now (spec §2 Endpoint 8).
+        async with aclosing(reply_events(gateway, body.text)) as replies:
+            async for event, payload in replies:
+                yield {"event": event, "data": payload.model_dump_json()}
 
     return EventSourceResponse(events())

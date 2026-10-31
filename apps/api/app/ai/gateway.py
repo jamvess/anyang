@@ -18,6 +18,7 @@ writing records to the ``ai_calls`` table.
 import asyncio
 import logging
 import re
+import threading
 import time
 from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass
@@ -248,8 +249,9 @@ class Gateway:
         """Free-text chunks of ``purpose`` as the model writes them, empty chunks skipped and
         nothing else changed. ``timeout_s`` of the purpose covers the whole stream. Errors
         before the first chunk are retried like ``call``; after it they end the stream with
-        ``AIProviderError``. One ``CallRecord`` is sent when the stream ends, also when the
-        caller stops reading early (then ``provider_error``)."""
+        ``AIProviderError``. A stream with no text at all counts as a provider error too (for
+        example thinking used up ``max_tokens``). One ``CallRecord`` is sent when the stream
+        ends, also when the caller stops reading early (then ``provider_error``)."""
         settings = self._config.purposes.get(purpose)
         if settings is None:
             raise AIConfigError(f"unknown purpose {purpose!r}; add it to config/ai.yaml")
@@ -279,7 +281,10 @@ class Gateway:
             attempt = streamer.stream(request, usage)
             deadline = loop.time() + settings.timeout_s
             try:
-                return attempt, deadline, await _next_chunk(attempt)
+                first = await _next_chunk(attempt)
+                if first is None:
+                    raise AIProviderError(f"{purpose}: the model returned no text")
+                return attempt, deadline, first
             except BaseException:
                 await _close(attempt)
                 raise
@@ -466,7 +471,8 @@ def build_default_gateway() -> Gateway:
             for event, data in stubs.events("tutor_reply")
             if event == "token" and data["speaker"] == "tutor"
         ]
-        fake = FakeProvider({}, defaults={"tutor_reply": reply})
+        # record=False: this provider lives as long as the process, so it keeps no history.
+        fake = FakeProvider({}, defaults={"tutor_reply": reply}, record=False)
         return Gateway(settings.ai, env.prompts_dir, fake, env.ai_model_override)
 
     from app.ai.providers.gemini import GeminiProvider
@@ -486,6 +492,7 @@ def build_default_gateway() -> Gateway:
 
 
 _default: Gateway | None = None
+_default_lock = threading.Lock()  # FastAPI runs sync dependencies in a thread pool
 
 
 def get_gateway() -> Gateway:
@@ -493,7 +500,9 @@ def get_gateway() -> Gateway:
     so tests can replace it with ``app.dependency_overrides``."""
     global _default
     if _default is None:
-        _default = build_default_gateway()
+        with _default_lock:
+            if _default is None:
+                _default = build_default_gateway()
     return _default
 
 
