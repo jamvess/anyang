@@ -1,6 +1,6 @@
 # AI Orchestration Design (v1.5)
 
-ฉบับ markdown สำหรับ repo ของเอกสาร AI Orchestration Design v1.0 (30 ก.ย. 2569) พร้อมการแก้ v1.1: เกณฑ์ mastery 0.95, ระดับอ่อน 0.5, ความพร้อม = Σ(r × mastery) ÷ Σr, spaced review ตาม Cepeda/SM-2, เพดาน 10 ข้อ/skill/วัน, จำนวนข้อต่อ skill จำลองจาก BKT, circuit breaker ตาม Resilience4j · v1.2 (26 ต.ค. 2569): ระดับเป้าตามดาวและ mode + เพดาน mastery ตามระดับยากสุดที่ทำถูกเอง (learning-model.md §4) · v1.3 (28 ต.ค. 2569): §2.4.3 กฎเทียบรายบรรทัดของ SymPy service (`specs/features/check/sympy-service.md`) · v1.4 (31 ต.ค. 2569): ผล PoC P1 P2 P3 ใน §2.3.3, §2.3.7 (A2b แทน A2 สำหรับ PDF สแกน), §2.10 (model ของแต่ละ tier) และ §3.6 · v1.5 (31 ต.ค. 2569): ผล P3a บน Vertex ใน §2.3.7, §2.10, §3.6 (tier main, small · prompt A5/A6 v2)
+ฉบับ markdown สำหรับ repo ของเอกสาร AI Orchestration Design v1.0 (30 ก.ย. 2569) พร้อมการแก้ v1.1: เกณฑ์ mastery 0.95, ระดับอ่อน 0.5, ความพร้อม = Σ(r × mastery) ÷ Σr, spaced review ตาม Cepeda/SM-2, เพดาน 10 ข้อ/skill/วัน, จำนวนข้อต่อ skill จำลองจาก BKT, circuit breaker ตาม Resilience4j · v1.2 (26 ต.ค. 2569): ระดับเป้าตามดาวและ mode + เพดาน mastery ตามระดับยากสุดที่ทำถูกเอง (learning-model.md §4) · v1.3 (28 ต.ค. 2569): §2.4.3 กฎเทียบรายบรรทัดของ SymPy service (`specs/features/check/sympy-service.md`) · v1.4 (31 ต.ค. 2569): ผล PoC P1 P2 P3 ใน §2.3.3, §2.3.7 (A2b แทน A2 สำหรับ PDF สแกน), §2.10 (model ของแต่ละ tier) และ §3.6 · v1.5 (31 ต.ค. 2569): ผล P3a บน Vertex ใน §2.3.7, §2.10, §3.6 (tier main, small · prompt A5/A6 v2) · v1.6 (31 ต.ค. 2569): §2.11 call ที่ไม่มี tenant ลงแค่ log (`ai-calls-log.md`)
 
 **ตัวเลขทุกตัวในเอกสารนี้เป็นค่าอธิบาย ค่าจริงที่โค้ดใช้อยู่ใน `config/learning.yaml` และ `config/ai.yaml` ที่มาของแต่ละตัวอยู่ใน `learning-model.md`**
 
@@ -764,6 +764,7 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 ## 2.11 Observability และ evaluation
 
 - `ai_calls` เก็บทุก call: tenant_id, user_id, session_id, purpose, provider, model, prompt_version, tokens_in, tokens_out, cached_tokens, latency, cost, status, fallback_used, request_id
+  - call ที่ไม่มี tenant (eval, PoC, request ที่ยังไม่ตรวจ JWT) เขียนเฉพาะ log JSON ใน Cloud Logging เพราะ `tenant_id` เป็น `not null` · ทุก call มี log 1 บรรทัด (`specs/features/ai/ai-calls-log.md`)
 - **Prompt versioning:** prompts อยู่ใน repo (`prompts/{purpose}/v{n}.md`) แก้ผ่าน PR และต้องผ่าน eval ก่อน merge
 - **Eval suites** (รันใน CI เฉพาะเมื่อ prompt หรือ model เปลี่ยน เพราะมีค่าใช้จ่าย)
   - checker: golden answers (2.4.8)

@@ -203,3 +203,37 @@ def test_SA06_tenant_isolation(
     row = admin.table(table).select("*").eq("id", other_id).single().execute().data
     for column, value in _UPDATE[table].items():
         assert row[column] != value
+
+
+def _ai_call_row(tenant_id: str, user_id: str) -> dict:
+    return {
+        "tenant_id": tenant_id,
+        "user_id": user_id,
+        "purpose": "tutor_reply",
+        "provider": "fake",
+        "model": "fake",
+        "status": "ok",
+    }
+
+
+def test_SA06_ai_calls_isolated_and_not_insertable_by_users(
+    admin: Client, users: tuple[TenantUser, TenantUser]
+) -> None:
+    """ai-calls-log.md AC-tenant: rows come only from the backend (service role)."""
+    a, b = users
+    own_id = admin.table("ai_calls").insert(_ai_call_row(a.tenant_id, a.user_id)).execute()
+    other_id = admin.table("ai_calls").insert(_ai_call_row(b.tenant_id, b.user_id)).execute()
+    own_id, other_id = own_id.data[0]["id"], other_id.data[0]["id"]
+
+    # Read: A sees its own row, never B's.
+    visible = {r["id"] for r in a.client.table("ai_calls").select("id").execute().data}
+    assert own_id in visible
+    assert other_id not in visible
+
+    # Insert is rejected even into A's own tenant: the policy is select only.
+    for victim in (a, b):
+        with pytest.raises(APIError) as exc:
+            a.client.table("ai_calls").insert(
+                _ai_call_row(victim.tenant_id, victim.user_id)
+            ).execute()
+        assert exc.value.code == "42501"
