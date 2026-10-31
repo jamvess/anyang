@@ -364,9 +364,17 @@ def build_default_gateway() -> Gateway:
 
     from app.ai.providers.gemini import GeminiProvider
 
-    providers: dict[str, Provider] = {
-        "gemini": GeminiProvider(env.gemini_api_key.get_secret_value())
-    }
+    # The model id prefix in config/ai.yaml picks one of these per call (gemini-vertex.md §2.2).
+    providers: dict[str, Provider] = {}
+    api_key = env.gemini_api_key.get_secret_value()
+    if api_key:
+        providers["gemini"] = GeminiProvider(api_key)
+    if env.google_cloud_project:
+        providers["vertex"] = GeminiProvider.vertex(
+            env.google_cloud_project, env.google_cloud_location
+        )
+    if not providers:
+        raise AIConfigError("AI_PROVIDER=live needs GEMINI_API_KEY or GOOGLE_CLOUD_PROJECT in .env")
     return Gateway.live(settings.ai, env.prompts_dir, providers, env.ai_model_override)
 
 

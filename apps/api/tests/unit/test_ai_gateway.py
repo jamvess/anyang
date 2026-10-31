@@ -9,9 +9,11 @@ import asyncio
 from pathlib import Path
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 
 import app.ai.gateway as gateway_module
+import app.ai.providers.gemini as gemini_module
+import app.settings as settings_module
 from app.ai.gateway import (
     AIConfigError,
     AIInputError,
@@ -695,3 +697,126 @@ async def test_AI05_embed_vector_of_another_size_than_config_is_a_provider_error
 
     with pytest.raises(AIProviderError, match="dimensions"):
         await gateway.embed(["a"], role="document")
+
+
+# --- Provider choice from env (specs/features/ai/gemini-vertex.md §2.2) ----------------------
+
+
+@pytest.fixture
+def built_clients(monkeypatch: pytest.MonkeyPatch) -> list[dict]:
+    """genai.Client is replaced by a recorder of the keyword arguments it was built with."""
+    built: list[dict] = []
+
+    def recording_client(**kwargs):
+        built.append(kwargs)
+        return object()
+
+    monkeypatch.setattr(gemini_module.genai, "Client", recording_client)
+    return built
+
+
+def use_env(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    ai_provider: str = "live",
+    gemini_api_key: str = "",
+    google_cloud_project: str = "",
+    google_cloud_location: str = "global",
+) -> None:
+    """build_default_gateway() reads these settings instead of the developer's .env."""
+    settings = get_settings()
+    env = settings.env.model_copy(
+        update={
+            "ai_provider": ai_provider,
+            "ai_model_override": "",
+            "gemini_api_key": SecretStr(gemini_api_key),
+            "google_cloud_project": google_cloud_project,
+            "google_cloud_location": google_cloud_location,
+        }
+    )
+    changed = settings.model_copy(update={"env": env})
+    monkeypatch.setattr(settings_module, "get_settings", lambda: changed)
+
+
+def test_AI02_live_with_only_a_gcp_project_registers_vertex(monkeypatch, built_clients):
+    use_env(monkeypatch, google_cloud_project="p-test")
+
+    gateway = gateway_module.build_default_gateway()
+
+    assert sorted(gateway._providers) == ["vertex"]
+    assert built_clients[0]["vertexai"] is True
+    assert built_clients[0]["project"] == "p-test"
+    assert built_clients[0]["location"] == "global"
+
+
+def test_AI02_live_with_only_an_api_key_registers_gemini(monkeypatch, built_clients):
+    use_env(monkeypatch, gemini_api_key="k")
+
+    gateway = gateway_module.build_default_gateway()
+
+    assert sorted(gateway._providers) == ["gemini"]
+
+
+def test_AI02_live_with_key_and_project_registers_both(monkeypatch, built_clients):
+    use_env(monkeypatch, gemini_api_key="k", google_cloud_project="p-test")
+
+    gateway = gateway_module.build_default_gateway()
+
+    assert sorted(gateway._providers) == ["gemini", "vertex"]
+
+
+def test_AI02_live_without_key_or_project_names_both_variables(monkeypatch, built_clients):
+    use_env(monkeypatch)
+
+    with pytest.raises(AIConfigError) as raised:
+        gateway_module.build_default_gateway()
+    assert "GEMINI_API_KEY" in str(raised.value)
+    assert "GOOGLE_CLOUD_PROJECT" in str(raised.value)
+
+
+def test_AI03_fake_mode_builds_no_google_client(monkeypatch, built_clients):
+    use_env(monkeypatch, ai_provider="fake", google_cloud_project="p-test")
+
+    gateway = gateway_module.build_default_gateway()
+
+    assert built_clients == []
+    assert isinstance(gateway._single, FakeProvider)
+
+
+class RecordingProvider:
+    def __init__(self) -> None:
+        self.requests: list[ProviderRequest] = []
+
+    async def generate(self, request: ProviderRequest) -> ProviderResponse:
+        self.requests.append(request)
+        return ProviderResponse(text=VALID_TOPICS, tokens_in=10, tokens_out=5)
+
+
+async def test_AI02_config_model_without_override_goes_to_vertex():
+    # extract_topics_local is tier mid, the tier of check_answer (P2).
+    config = get_settings().ai
+    primary = config.tiers["mid"].primary
+    assert primary.startswith("vertex:")
+    vertex = RecordingProvider()
+    records: list[CallRecord] = []
+    gateway = Gateway.live(config=config, prompts_dir=REPO_PROMPTS, providers={"vertex": vertex})
+    gateway.add_listener(records.append)
+
+    await gateway.call("extract_topics_local", TOPICS_INPUT, TopicsResult)
+
+    assert vertex.requests[0].model == primary.removeprefix("vertex:")
+    assert records[0].provider == "vertex"
+
+
+async def test_AI02_override_to_a_provider_that_is_not_registered_does_not_fall_back():
+    vertex = RecordingProvider()
+    gateway = Gateway.live(
+        config=get_settings().ai,
+        prompts_dir=REPO_PROMPTS,
+        providers={"vertex": vertex},
+        model_override="gemini:gemini-test",
+    )
+
+    with pytest.raises(AIConfigError, match="no provider for model"):
+        await gateway.call("extract_topics_local", TOPICS_INPUT, TopicsResult)
+    assert vertex.requests == []

@@ -58,6 +58,7 @@
 
 - ~~SymPy service `app/math/`~~ → ย้ายให้ Jam 21 ต.ค. (ทีมตกลง · ใกล้กับ P2) · ดูข้อใน S3 ของ Jam
 - [ ] AI gateway แบบ lite `app/ai/`: `ai.call()`, provider Gemini + fake, อ่าน `config/ai.yaml`, log `ai_calls`
+  - 31 ต.ค. Jam เพิ่ม provider `vertex` (PR #87 · Junior ok) · ยังเหลือ log `ai_calls` ลงตาราง
   - ⚠️ 28 ต.ค. ห้ามเปิด AI_PROVIDER=live บน api-staging จนกว่าจะเช็ค Supabase JWT ทุก endpoint · URL เป็น public (--allow-unauthenticated) คนนอกเรียกแล้วกิน credit ได้
 - [ ] Endpoint SSE `POST /sessions/{id}/messages` ที่ stream จาก gateway (P4-lite)
 - [ ] เขียน router หัวฟังก์ชันของทุก API ใน `specs/system/api.md` ให้หน้า `/docs` ครบ (D5)
@@ -170,7 +171,9 @@
 - [ ] P2: merge rules + LLM classifier (`prompts/check_answer/v1`) ใช้ SymPy service
   - 21 ต.ค. merge rules เสร็จ (PR #68): spec `specs/features/check/merge-rules.md` + `app/domain/checker.py` · รูปแบบผลของ SymPy service ตกลงกับ Junior แล้ว · เหลือ prompt `check_answer/v1` และต่อกับ SymPy service
   - 28 ต.ค. SymPy service เสร็จ (PR #75) · เหลือ prompt `check_answer/v1` (ต้องทำเรื่อง `first_wrong_line` ของข้อ wrong_method ที่ SymPy มองว่าทุกบรรทัดถูก เช่น ans_037, ans_038) และ checker service ที่ต่อ SymPy + LLM + merge
+  - 31 ต.ค. eval ของ PR #80 บน free tier ได้ 23/50 แล้วติด quota รายวัน · จะรันใหม่ครบ 50 ข้อบน Vertex หลัง PR #87
 - [x] Script `evals/run_eval.py` ออกคะแนน verdict, error type, บรรทัดผิด · เสร็จก่อนกำหนด (21 ต.ค. · PR #47) · ให้คะแนนจากไฟล์ prediction (`--predictions`) · นิยาม metric ใน `evals/README.md` "การให้คะแนน" · ต่อกับ checker จริงตอนทำ P2 · การรันใน CI เมื่อ prompt เปลี่ยน (§2.11) รอ Junior
+- [x] Provider `vertex` ใน gateway ใช้เครดิต Free Trial ของ `anyang-513006` (เพิ่ม 31 ต.ค. · `infra/README.md` "งาน AI gateway ใน S3") · PR #87 · spec `specs/features/ai/gemini-vertex.md` · ADC ไม่มี key file · smoke บน Vertex ผ่าน (`gemini-3.5-flash`, `global`, 4.8 วินาที) · เหตุผล: free tier ของ AI Studio ได้ 20 request/วัน/model รัน P2 ได้แค่ 23/50 · Junior ok ให้แก้ `apps/api/app/ai/`
 - [ ] Report P2
 
 **Done เมื่อ:** มีตัวเลข 3 ตัวของ P2 เทียบกับเป้า
