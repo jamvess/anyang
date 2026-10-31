@@ -1,6 +1,6 @@
-"""Gemini through the Gemini API (API key from Google AI Studio). The only module that imports
-the Google SDK (AI-01). Vertex AI can replace it later by building the client with
-``vertexai=True`` and a project instead of an API key."""
+"""Gemini through the Gemini API (API key from Google AI Studio) or Vertex AI (project + location,
+credentials from ADC). The only module that imports the Google SDK (AI-01). Both clients share
+``generate`` and ``embed`` (specs/features/ai/gemini-vertex.md)."""
 
 from google import genai
 from google.genai import errors, types
@@ -43,7 +43,20 @@ class GeminiProvider:
     def __init__(self, api_key: str) -> None:
         if not api_key:
             raise ValueError("GEMINI_API_KEY is empty; set it in .env (docs/team/setup.md A5)")
-        self._client = genai.Client(api_key=api_key)
+        # vertexai is always passed: otherwise the SDK reads GOOGLE_GENAI_USE_VERTEXAI.
+        self._client = genai.Client(api_key=api_key, vertexai=False)
+
+    @classmethod
+    def vertex(cls, project: str, location: str) -> "GeminiProvider":
+        """Gemini on Vertex AI. Credentials come from ADC (``gcloud auth application-default
+        login`` locally, the service account on Cloud Run); no key file."""
+        if not project:
+            raise ValueError("GOOGLE_CLOUD_PROJECT is empty; set it in .env for Vertex AI")
+        if not location:
+            raise ValueError("GOOGLE_CLOUD_LOCATION is empty; set it in .env for Vertex AI")
+        provider = cls.__new__(cls)
+        provider._client = genai.Client(vertexai=True, project=project, location=location)
+        return provider
 
     async def generate(self, request: ProviderRequest) -> ProviderResponse:
         contents: list = [
@@ -101,7 +114,12 @@ class GeminiProvider:
             if error.code == 429:
                 raise ProviderRateLimited(str(error), retry_after_seconds(error.details)) from error
             raise
-        vectors = [list(embedding.values or []) for embedding in response.embeddings or []]
-        # The Gemini API does not report tokens for embeddings; AI-04 gets 0 until Vertex AI
-        # (which reports billable characters) replaces it.
-        return EmbedResponse(vectors=vectors, tokens_in=0)
+        embeddings = response.embeddings or []
+        vectors = [list(embedding.values or []) for embedding in embeddings]
+        # Vertex AI reports tokens per embedding (AI-04); the Gemini API does not, so it counts
+        # as 0. getattr: the stubs of the older embed tests have no ``statistics`` field.
+        tokens_in = 0
+        for embedding in embeddings:
+            statistics = getattr(embedding, "statistics", None)
+            tokens_in += int(statistics.token_count or 0) if statistics else 0
+        return EmbedResponse(vectors=vectors, tokens_in=tokens_in)
