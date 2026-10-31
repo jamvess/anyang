@@ -84,12 +84,19 @@ The team agreed (2026-10-31) that during solo time anyone may take anyone's task
 
 **Section 2 · Team status.** Same report, but "งานค้าง" covers everyone: one line per open branch with its owner, worklog Status and Next step.
 
-**Section 3 · Choose a task.** Up to 5 options from the whole team, in this order:
+**Section 3 · Choose a task.** Show two numbered groups, so tasks nobody has started are always on the list:
+
+**ก · ทำต่อ** (all of them)
 
 1. The operator's own unfinished branches.
 2. Teammates' branches whose worklog Status is **paused** (written by `/work-pause`). Never offer a branch whose Status is `in progress`, or one with no worklog: its owner may be in the middle of it.
-3. Unchecked items of the current sprint from every section of `docs/team/sprint-checklists.md`: ⭐ first, then items someone is waiting on (unblocks another person's next step), then the rest. If the current sprint is done, take the next sprint.
-4. Skip items covered by an open branch (its worklog's Checklist item), unless that branch qualifies under 2.
+
+**ข · เริ่มใหม่** (at least 3, even when group ก is long) · unchecked items that no open branch covers (match each branch's worklog Checklist item), from every section of `docs/team/sprint-checklists.md`:
+
+1. Current sprint: ⭐ first, then items someone is waiting on (unblocks another person's next step), then the rest.
+2. If fewer than 3 are left, fill from the next sprint, then from items still unchecked in earlier sprints.
+
+End with one more option: **"ดูงานที่ยังไม่เริ่มทั้งหมด"**. If chosen, list every unchecked, unstarted item of every person and every sprint (grouped by sprint, owner shown, sizes and 🙋 parts as below) and let the operator pick any of them.
 
 For each option show: owner (whose item it is), why it is next, size (S/M/L), and its 🙋 parts. **Skip, or mark "ทำได้บางส่วน",** an option whose 🙋 steps need a specific other person:
 
