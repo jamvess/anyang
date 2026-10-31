@@ -195,7 +195,7 @@ A5: `pages` เป็นช่วง `"start-end"` ตามป้าย `[p.N]`
 
 ทุก output มี `notes` และเป็น object ไม่ใช่ array (structured output เสถียรกว่า) · Pydantic model อยู่ใน `apps/api/app/models/scope_ai.py` และตรวจกฎเหล่านี้ด้วย ถ้าผิดจะถูกส่งกลับให้ model แก้ (AI-05)
 
-- A2b: เพิ่มใน PoC P3 เพราะ free tier ได้ 20 request ต่อวันต่อ model ทำทีละหน้าไม่ไหว · `page` ต้องเรียง 1..n ครบตามจำนวนรูป · **ใช้แทน A2 สำหรับ PDF สแกน** (ตัดสิน 31 ต.ค. จากผล P3: อ่านข้อสอบสแกน 14 หน้าใน 40.5 วินาที และ A4 ตัดข้อตรง label 43/43 · `specs/poc/reports/P3.md`)
+- A2b: เพิ่มใน PoC P3 เพราะ free tier ได้ 20 request ต่อวันต่อ model ทำทีละหน้าไม่ไหว · `page` ต้องเรียง 1..n ครบตามจำนวนรูป · **ใช้แทน A2 สำหรับ PDF สแกน** (ตัดสิน 31 ต.ค. จากผล P3: อ่านข้อสอบสแกน 14 หน้าใน 40.5 วินาที และ A4 ตัดข้อตรง label 43/43 · `specs/poc/reports/P3.md`) · ⚠️ P3 รัน A2b บน `gemini-3.5-flash` ไม่ใช่ flash-lite ของ tier vision · วัด A2b บน flash-lite ในรอบวัด P3a ใหม่บน Vertex (S4) · ไฟล์ 14 หน้าใช้ token out 7,943 (ประมาณ 570 ต่อหน้า) เพดาน `max_tokens` ของ A2b จึงพอประมาณ 25 หน้า · ไฟล์ที่ยาวกว่านั้นต้องแบ่งเป็นชุดหน้า หลาย call (ขนาดชุดตัดสินใน feature spec ของ ingest)
 - A4: `q_no` แบบ `ก1.2` / `ข3` / `3.2` ไม่ซ้ำกัน · ข้อย่อยที่มีคำนำร่วมกันต้องใส่คำนำในทุกข้อย่อย · `points` เป็น `null` ได้
 - A6: `sources` = ช่วงหน้า `<file>:<start>-<end>` ของหัวข้อ ใช้สร้าง `topic_chunks` ในขั้น 5d และแสดงที่มา (SM-04) · `prereqs` ต้องเป็น id ในรายการ ห้ามวน และต้องมาก่อนใน `order` · skill id ขึ้นต้นด้วย id ของหัวข้อ · `error_type` เป็นได้ 5 ค่า (ไม่มี `no_answer`) · `excluded_by_note` จาก note ของ user
 - A7: `topic_id` + `skill_id` เป็น `null` ทั้งคู่ได้เมื่อไม่มีหัวข้อไหนเข้า (พร้อม `note`) · skill ต้องเป็นของหัวข้อที่เลือก
@@ -781,7 +781,7 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 | ID | Call | Flow | Tier | Output |
 |---|---|---|---|---|
 | A1 | `classify_material` | 2.3 | small | kind, confidence, relevance_weight, reason |
-| A2 | `vision_extract` | 2.3 | vision | text, latex_blocks ต่อหน้า |
+| A2 | `vision_extract` | 2.3 | vision | text, latex_blocks ของไฟล์รูปเดี่ยว (PDF สแกนใช้ A2b) |
 | A2b | `vision_extract_pages` | 2.3 | vision | text ทุกหน้าของไฟล์สแกนใน call เดียว (PoC P3) |
 | A3 | `embed` | 2.3 | embed | vector |
 | A4 | `split_past_exam` | 2.3 | small | ข้อสอบรายข้อ + เลขหน้า |
@@ -885,10 +885,10 @@ Target user ของ v1 คือนักเรียนรายคน แต
 |---|---|---|
 | Vision LLM อ่านลายมือคณิตได้แม่นพอ | ≥ 80% ของบรรทัด | P1 ✅ **95.2%** (30 รูป 125 บรรทัด · `gemini-3.5-flash-lite` · ไม่ได้ทดสอบ Claude/Mathpix เพราะงบ) |
 | OCR confidence ใช้แยกบรรทัดที่อ่านผิดได้ | threshold 0.8 | P1 ❌ ไม่มี threshold ที่จับได้ ≥ 95% → ยืนยันทุกครั้ง (`specs/poc/reports/P1.md`) |
-| Topic extraction ตรงกับที่คนทำ | หัวข้อ ≥ 80%, ★★★ ≥ 80%, ≤ 3 นาที/ไฟล์ | P3a ❌ หัวข้อตรง 1/27 (flash-lite) · A5 ของ flash 15/27 = 56% · A6 วัดไม่ได้บน free tier · ★★★ จากสูตรดาว + map ของทีม ✅ 10/12 = 83% · ≤ 3 นาที ✅ (1.34) · ใช้ fallback ปรับ prompt A5/A6 แล้ววัดใหม่บน Vertex ใน S4 (`specs/poc/reports/P3.md`) |
+| Topic extraction ตรงกับที่คนทำ | หัวข้อ ≥ 80%, ★★★ ≥ 80%, ≤ 3 นาที/ไฟล์ | P3a ❌ หัวข้อตรง 1/27 (flash-lite) · A5 ของ flash 15/27 = 56% · A6 วัดไม่ได้บน free tier · ★★★ ทั้ง pipeline ❌ 1/12 (เพราะหัวข้อไม่ตรง) · สูตรดาวกับ map ของทีม (ไม่ใช้ AI) ✅ 10/12 = 83% · ≤ 3 นาที ✅ เฉพาะ flash-lite (1.34) ซึ่งไม่ใช้แล้ว · flash วัดไม่ครบ · ใช้ fallback ปรับ prompt A5/A6 แล้ววัดทุกเกณฑ์ใหม่บน Vertex ใน S4 (`specs/poc/reports/P3.md`) |
 | Embedding model สำหรับภาษาไทย | ยังไม่เลือก | P3b ✅ `gemini-embedding-2` ที่ 768 มิติ recall@4 95% (`bge-m3` 45%) |
 | Checker แม่นตามเป้า | verdict ≥ 95%, error_type ≥ 80%, first_wrong_line ≥ 85% | P2 ✅ 100%, 96.4%, 100% (50 ข้อ · `vertex:gemini-3.5-flash` · `specs/poc/reports/P2.md`) |
-| TTFT และต้นทุน | < 2 วินาที, ≤ 5 บาท/session | P4 Tutor loop + P7 AI gateway |
+| TTFT และต้นทุน | < 2 วินาที, ≤ 5 บาท/session | P4-lite (S3) · ต้นทุนดูจาก log `ai_calls` ของ gateway (P7) |
 | Fallback ทำงาน | สลับอัตโนมัติ, log ครบ | P7 |
 | STT ภาษาไทยปนคณิต | word error rate ≤ 15% เมื่อใช้ phrase hints | P5 Voice |
 | BKT params, ratio ของ planner, quota buddy | ตามเอกสารนี้ | ปรับตอน Alpha/Beta |

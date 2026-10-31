@@ -14,7 +14,7 @@ tiers:
 
 purposes:
   # thinking: Gemini 3 thinking level; its tokens count inside max_tokens (PoC P3, 2026-10-19)
-  # max_tokens and timeout_s of flow 2.3 raised before the first P3 run (Thai output + thinking) · P3: merge_topics used 14,944 of 16,000 output tokens (93%), a larger course may hit the cap · re-check in the P3a re-run on Vertex (S4)
+  # max_tokens and timeout_s of flow 2.3 raised before the first P3 run (Thai output + thinking) · P3: both free-tier merge_topics answers failed the schema (11,242 and 14,944 output tokens of 16,000), so no valid size yet · vision_extract_pages: 7,943 tokens for 14 pages · re-check both in the P3a re-run on Vertex (S4)
   # flow 2.3
   classify_material:      {tier: small,  temperature: 0.0, max_tokens: 300,  timeout_s: 20, prompt: v1}
   vision_extract:         {tier: vision, temperature: 0.0, max_tokens: 4000, timeout_s: 60, prompt: v1, thinking: low}
