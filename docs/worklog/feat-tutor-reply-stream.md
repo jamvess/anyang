@@ -14,7 +14,7 @@
 - [x] 3. 🤖 `/spec-to-tests`: test ที่ fail ก่อน (fake provider, ไม่เรียก model จริง)
 - [x] 4. 🙋 Jam review test (ชื่อ test ตรง AC · ไม่มี test ที่เรียก model จริงใน CI)
 - [x] 5. 🤖 `/implement-feature`: gateway `stream()` + provider fake/gemini + prompt `tutor_reply/v1` + service + router (สัญญาเดิมของ `test_room_api_contract.py` ต้องผ่าน)
-- [ ] 6. 🙋 Jam smoke test ในเครื่องกับ Vertex: `cd apps/api` → `AI_PROVIDER=live uv run fastapi dev app/main.py` → ส่งข้อความจากหน้าแชท `pnpm dev` (http://localhost:3000) → ต้องเห็นตัวอักษรไหลออกมาและสมการ render · ใช้ ADC + `GOOGLE_CLOUD_PROJECT` ใน `.env` ของ Jam
+- [x] 6. 🙋 Jam smoke test ในเครื่องกับ Vertex: `cd apps/api` → `AI_PROVIDER=live uv run fastapi dev app/main.py` → ส่งข้อความจากหน้าแชท `pnpm dev` (http://localhost:3000) → ต้องเห็นตัวอักษรไหลออกมาและสมการ render · ใช้ ADC + `GOOGLE_CLOUD_PROJECT` ใน `.env` ของ Jam
 - [ ] 7. 🙋 Jam บอกแชทกลุ่ม (solo time · `apps/api/` ของ Junior · `config/ai.yaml` ถ้าแตะ · `api.md` ถ้าต้องแก้)
 
 ## Definition of done
@@ -37,10 +37,14 @@
 
 ## Next step
 
-ขั้น 6 (🙋): Jam smoke test กับ Vertex ในเครื่อง · (ก) `cd apps/api` → `uv run pytest tests/integration/test_vertex_live.py -m live -k streams -s` ต้องเห็นบรรทัด `vertex stream: ... ttft_ms=...` และคำตอบภาษาไทยที่มี `$...$` · (ข) `AI_PROVIDER=live uv run fastapi dev app/main.py` + `cd apps/web && pnpm dev` → เปิดห้องที่ http://localhost:3000 แล้วส่ง "แยกตัวประกอบ $x^2-49$ ยังไง" ต้องเห็นตัวอักษรไหลออกมาและสมการ render
+ขั้น 7 (🙋): Jam ส่งข้อความแชทกลุ่ม (solo time + `config/ai.yaml` 1.5 + แก้ test ของ Junior + Waiting on 2 ข้อ) แล้วรัน `/work-done`
 
 - 2026-10-31 · implement: `Gateway.stream` + `get_gateway` (FastAPI dependency) + `ai.stream` · provider protocol `stream(request, usage)` · fake แบ่งข้อความเป็นทีละคำ (เว้นวรรคติดไปกับคำ) และมี `defaults` ให้ตอบซ้ำได้ทุกข้อความใน fake mode · red → green 3 รอบ (gateway + fake · Gemini · endpoint)
 - 2026-10-31 · เพิ่ม live smoke `test_AI01_vertex_streams_tutor_reply` ใน `tests/integration/test_vertex_live.py` (อยู่ใน test plan §8 แต่ตกไปตอน `/spec-to-tests`) · ต้องให้ Jam review
+
+- 2026-10-31 · smoke บน Vertex (`test_AI01_vertex_streams_tutor_reply`, 1 ข้อความ, จากเครื่อง Jam): (1) default thinking + `max_tokens` 700 → TTFT 5,160 ms, ชนเพดาน 696/700 คำตอบถูกตัด (2) `thinking: low` + 700 → TTFT 4,350 ms ยังชนเพดาน (3) `thinking: low` + 2000 → TTFT 3,656 ms, tokens_out 666, คำตอบครบ 5 chunk · `config/ai.yaml` 1.5 (Jam ok)
+- 2026-10-31 · TTFT ยังเกินเป้า 2 s (NFR-P1) · Jam: ไม่ block งานนี้ ให้ report P4-lite วัดบน staging แล้วตัดสิน
+- 2026-10-31 · ข้ามส่วน ข (ลองในเบราว์เซอร์) · API ส่ง event รูปแบบเดิม และหน้าเว็บมี test ของ chunk ที่ตัดกลางสมการแล้ว (`chat-streaming.md` AC-9, AC-11)
 
 ## Waiting on
 

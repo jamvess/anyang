@@ -3,6 +3,7 @@ pytest and CI skip it unless run with ``-m live``. Needs ADC (``gcloud auth
 application-default login``) and GOOGLE_CLOUD_PROJECT / GOOGLE_CLOUD_LOCATION in .env."""
 
 import time
+from pathlib import Path
 
 import pytest
 from pydantic import BaseModel
@@ -80,10 +81,14 @@ async def test_AI01_vertex_streams_tutor_reply():
         chunks.append(chunk)
 
     record = records[-1]
+    # The Windows console garbles Thai mixed with LaTeX, so the reply goes to a UTF-8 file.
+    reply_file = Path(__file__).resolve().parents[2] / ".pytest_cache" / "tutor_reply_smoke.txt"
+    reply_file.parent.mkdir(exist_ok=True)
+    reply_file.write_text("\n---chunk---\n".join(chunks), encoding="utf-8")
     print(
         f"\nvertex stream: model={record.model} chunks={len(chunks)} "
         f"ttft_ms={first_token_ms:.0f} total_ms={record.latency_ms:.0f} "
-        f"tokens_in={record.tokens_in} tokens_out={record.tokens_out}\n{''.join(chunks)}"
+        f"tokens_in={record.tokens_in} tokens_out={record.tokens_out}\nreply: {reply_file}"
     )
     assert chunks
     assert record.status == "ok"

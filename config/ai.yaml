@@ -3,7 +3,7 @@
 # "vertex:" runs on Vertex AI when GOOGLE_CLOUD_PROJECT is set (specs/features/ai/gemini-vertex.md;
 # AI-07: no free tier for real users). AI_MODEL_OVERRIDE=gemini:<model> still uses the Gemini API key.
 
-version: 1.4
+version: 1.5
 
 tiers:
   small:  {primary: "vertex:TODO-gemini-small",  fallback: "anthropic:TODO-claude-haiku"}  # not measured (P3 ran A4 on flash only)
@@ -30,7 +30,7 @@ purposes:
   normalize_math:         {tier: small,  temperature: 0.0, max_tokens: 500,  timeout_s: 8,  prompt: v1}
   check_answer:           {tier: mid,    temperature: 0.0, max_tokens: 600,  timeout_s: 15, prompt: v1, thinking: low}  # P2 first live run: default thinking timed out at 15 s (2026-10-28)
   generate_problem:       {tier: mid,    temperature: 0.7, max_tokens: 800,  timeout_s: 20, prompt: v1}
-  tutor_reply:            {tier: main,   temperature: 0.6, max_tokens: 700,  timeout_s: 30, prompt: v1, stream: true}
+  tutor_reply:            {tier: main,   temperature: 0.6, max_tokens: 2000, timeout_s: 30, prompt: v1, stream: true, thinking: low}  # P4-lite smoke on Vertex (2026-10-31): default thinking gave TTFT 5.2 s; low still used ~550 thinking tokens and 700 cut the reply (696/700) · [C] 2000 from one smoke message, tune from ai_calls
   dispute_recheck:        {tier: main,   temperature: 0.0, max_tokens: 1000, timeout_s: 30, prompt: v1}
   update_running_summary: {tier: small,  temperature: 0.2, max_tokens: 400,  timeout_s: 20, prompt: v1}
   session_summary:        {tier: small,  temperature: 0.3, max_tokens: 150,  timeout_s: 15, prompt: v1}
