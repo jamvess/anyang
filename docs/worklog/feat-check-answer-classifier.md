@@ -5,7 +5,7 @@
 | Owner | Jam |
 | Branch | `feat/check-answer-classifier` |
 | Checklist item | P2: merge rules + LLM classifier (`prompts/check_answer/v1`) ใช้ SymPy service |
-| Status | paused · 2026-10-31 · รอ `feat/gemini-vertex` |
+| Status | in progress · 2026-10-31 · eval ผ่าน รอ `/work-done` |
 
 ## Plan
 
@@ -14,8 +14,8 @@
 - [x] 3. 🤖 `/spec-to-tests` → test ของ schema, การประกอบ input (ห่อ `<document>`, สรุปผล SymPy), ฟังก์ชันตรวจ (fake provider) และ `run_checker.py` (ต้องแดง)
 - [x] 4. 🙋 Jam review test
 - [x] 5. 🤖 `/implement-feature` → `prompts/check_answer/v1.md`, `apps/api/app/models/check.py`, ฟังก์ชันตรวจ, `evals/run_checker.py` จน test เขียว + ruff ผ่าน
-- [ ] 6. 🙋 Jam รัน eval กับ Gemini จริงในเครื่องตัวเอง (ใช้ key ใน `.env` ของ Jam · Claude ห้ามอ่าน `.env`) · คำสั่งจะเขียนให้ตอนถึงขั้นนี้ · ส่งผลกลับมาในแชท
-- [ ] 7. 🤖 อ่านผลเทียบเป้า (verdict ≥ 95%, error_type ≥ 80%, first_wrong_line ≥ 85%) · ดูข้อที่พลาด · ถ้าต้องแก้ prompt สร้าง `v2.md` (ห้ามแก้ `v1.md` หลังรัน eval แล้ว) · จดตัวเลขใน worklog ให้ Report P2
+- [x] 6. 🙋 Jam รัน eval กับ Gemini จริงในเครื่องตัวเอง (ใช้ key ใน `.env` ของ Jam · Claude ห้ามอ่าน `.env`) · คำสั่งจะเขียนให้ตอนถึงขั้นนี้ · ส่งผลกลับมาในแชท
+- [x] 7. 🤖 อ่านผลเทียบเป้า (verdict ≥ 95%, error_type ≥ 80%, first_wrong_line ≥ 85%) · ดูข้อที่พลาด · ถ้าต้องแก้ prompt สร้าง `v2.md` (ห้ามแก้ `v1.md` หลังรัน eval แล้ว) · จดตัวเลขใน worklog ให้ Report P2
 
 ## Definition of done
 
@@ -36,6 +36,10 @@
 - 2026-10-28 · รันจริงครั้งแรก: ได้ prediction 6/50 (5 ข้อแรกตรง label) ที่เหลือ 429 · free tier ของ Gemini 5 request ต่อนาที · gateway ไม่รอนานกว่า `max_retry_wait_seconds: 10` (ตั้งใจไว้สำหรับห้องแชท ไม่แก้) · แก้ที่ `run_checker.py`: `--pause` 13 วินาที, รอ 60 วินาทีเมื่อ 429 แล้วลองใหม่ ≤ 3 ครั้ง, `--resume` · เพิ่ม test 1 ตัว (รอ Jam review) · spec §2.6
 - 2026-10-28 · รันจริงครั้งที่ 2: timeout 15 วินาที (ans_001, ans_002) · ไฟล์ prediction ว่างเพราะไม่ได้ flush → เพิ่ม `out.flush()` · Jam เลือก: `config/ai.yaml` 1.3 เพิ่ม `thinking: low` ให้ `check_answer` (ไฟล์ร่วม · บอกแชทกลุ่ม) · คง `max_tokens: 600`, `timeout_s: 15` · เหตุผล: P3 วัด default thinking ~4,000 token เทียบ low 396 (`settings.py`)
 - 2026-10-28 · Jam review test rate limit แล้ว · เพิ่ม test ของ `--resume` 2 ตัว · แยก `remaining_rows(rows, out_path)` ใน `run_checker.py` ให้ test ได้โดยไม่เรียก `main()` (main สร้าง gateway จาก settings ถ้า `.env` เป็น live จะเรียก Gemini จริง) · test ทั้งไฟล์เป็น `async` เพราะ `pytestmark = asyncio` ติดทุก test ในไฟล์ · ruff ของ `evals/answers/` เดิมมี error อยู่แล้ว (RUF100, FURB167) ไม่ได้แก้
+- 2026-10-31 · **ผล P2 บน Vertex (50 ข้อ · รอบเดียว · prompt v1 · `vertex:gemini-3.5-flash` location `global` · `thinking: low` · `--pause 1`):** verdict 50/50 = 100% (เป้า ≥ 95%) PASS · error_type 27/28 = 96.4% (≥ 80%) PASS · first_wrong_line 24/24 = 100% (≥ 85%) PASS · ไม่มี skipped · SymPy ตัดสิน verdict 45 ข้อ LLM 5 ข้อ (ตรงกับที่คาดจาก PR #75) · `disagreement` 0 ข้อ · ไม่ต้องทำ prompt v2
+- 2026-10-31 · ข้อที่พลาดข้อเดียว: ans_039 (`lim x→∞ (3x²−x)/(2x²+5)` แทน ∞ ตรงๆ) label `wrong_method` · LLM ตอบ `prerequisite` (บรรทัด 2 ตรงกัน) · ทั้งสองแบบพอเถียงได้ เพราะคู่มือ label ให้ `wrong_method` = เลือกวิธีที่ใช้กับโจทย์แบบนี้ไม่ได้ · label ถูกตามคู่มือ
+- 2026-10-31 · ข้อควรระวังสำหรับ Report P2: label ans_031–050 (writer `w06`) ร่างโดย AI แล้ว May ตรวจ (`worksheet.md`) · LLM ตัดสิน verdict แค่ 5 ข้อ ตัวเลข verdict 100% จึงมาจาก SymPy เป็นหลัก · error_type มาจาก LLM ทั้ง 28 ข้อ · golden set มี 50 ข้อ ช่วงความเชื่อมั่นยังกว้าง · ไม่ได้จด model version ที่ Vertex ตอบจริง (prediction ไม่เก็บ)
+- 2026-10-31 · ผลรอบ free tier 23 ข้อ (ans_001–023) เก็บไว้ในเครื่องที่ `evals/answers/predictions/v1-free-tier.jsonl` ไม่ commit · commit เฉพาะ `predictions/v1.jsonl` + `results/v1.json` ของรอบ Vertex
 - 2026-10-28 · ไม่รวม Report P2 ใน branch นี้ (เป็นข้อแยกใน checklist) · ทำ `/poc-report P2` หลัง merge
 - 2026-10-31 · รัน `--resume` บน free tier ได้ถึง 23/50 (ans_001–023) แล้วโดน 429 รายวัน (`limit: 20` ต่อวันต่อ model) · Jam เลือกใช้เครดิต Free Trial ของทีมผ่าน **Vertex AI** (`anyang-513006`) แทน API key แบบจ่ายเงิน · ไม่กด "Activate billing" ใน AI Studio (`infra/README.md`: ห้าม Activate/Upgrade · เครดิต trial ใช้กับ AI Studio key ไม่ได้) · ทำ Vertex provider ใน branch `feat/gemini-vertex` ก่อน แล้วรัน P2 **ใหม่ครบ 50 ข้อบน Vertex** ให้ผลมาจากรอบเดียวกันและตรงกับ `vertex:` ใน `config/ai.yaml` · ค่าใช้จ่ายประมาณ ~$0.45 ต่อ 50 ข้อ (input ~2,000 + output ~600 token ต่อข้อ · ยังไม่ได้วัดจริง)
 
@@ -47,13 +51,11 @@
 
 ## Next step
 
-ขั้น 6 (🙋 Jam · หลัง PR ของ `feat/gemini-vertex` merge): `git merge origin/main` · ย้ายไฟล์ prediction 23 ข้อของ free tier ไปเก็บไว้ (`evals/answers/predictions/v1.jsonl` → `v1-free-tier.jsonl`) · รัน **ไม่ใส่** `--resume` ให้ครบ 50 ข้อบน Vertex (`AI_PROVIDER=live` · ไม่ใส่ `AI_MODEL_OVERRIDE` หรือใส่ `vertex:<model>`) · คำสั่งที่แน่นอนดูใน worklog ของ `feat/gemini-vertex` · แล้ว `uv run --project apps/api python evals/run_eval.py --purpose check_answer --prompt v1 --predictions evals/answers/predictions/v1.jsonl` · ก๊อปบรรทัด `skipped` และผลคำสั่งที่ 2 มาในแชท
+`/work-done` (self-review ด้วย `/code-review` แล้ว merge) · จากนั้นสลับไป `docs/poc-report-p2` ขั้น 4: `git merge origin/main` แล้วเติมตัวเลขจาก `evals/answers/results/v1.json` และข้อควรระวังใน Decisions ของ worklog นี้
 
 ## Waiting on
 
-- `feat/gemini-vertex` (Vertex provider ใน gateway) merge ก่อน แล้ว Jam รันขั้น 6
-- (Jam review test rate limit และ `--resume` 2 ตัวแล้ว 28 ต.ค.)
-- Jam บอกแชทกลุ่มเรื่อง `config/ai.yaml` 1.3 (`thinking: low`) ถ้ายังไม่ได้บอก
+ไม่มี
 
 ## Notes for next time
 

@@ -5,9 +5,9 @@
         --predictions evals/answers/predictions/v1.jsonl
 
 The checker is ``app.services.checker.check_answer`` (SymPy -> check_answer -> merge rules), with
-the provider chosen by AI_PROVIDER: ``live`` calls Gemini with the key in .env, ``fake`` has no
-scripted answers. Answers run one at a time (free tier request limits; the gateway retries rate
-limits). An answer the gateway gives up on gets no prediction and is listed at the end;
+the provider chosen by AI_PROVIDER: ``live`` calls Gemini on Vertex AI when GOOGLE_CLOUD_PROJECT
+is set (``--pause 1`` is enough there), ``fake`` has no scripted answers. Answers run one at a
+time (the default pause fits the free tier of a Gemini API key; the gateway retries rate limits). An answer the gateway gives up on gets no prediction and is listed at the end;
 run_eval.py counts it as a miss. Spec: specs/features/check/check-answer-classifier.md §2.6.
 """
 
