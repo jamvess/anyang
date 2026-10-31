@@ -11,7 +11,7 @@
 
 - [x] 1. 🤖 ทำรายการทุกค่าที่ผูกกับ PoC: ทุก key ใน `config/learning.yaml` ที่ป้ายพูดถึง P1/P2/P3 หรือรอ PoC · ตาราง calibration ใน `learning-model.md` §9 · ตัวเลขใน `ai-orchestration.md` (flow 2.3 ingest, 2.4 checker, 2.10 routing, latency/ต้นทุน) · เทียบกับตัวเลขใน `specs/poc/reports/P1.md`, `P2.md`, `P3.md` · ทำเป็นตาราง: ค่า · ตอนนี้ · PoC วัดได้อะไร · ข้อเสนอ (คง / เปลี่ยน / ยังรอ + ป้ายที่มา)
 - [x] 2. 🙋 Jam ตัดสินทีละแถวในตาราง (ตอบเป็นเลขแถว หรือ "ok ทุกแถว")
-- [ ] 3. 🤖 แก้ตามที่ตัดสิน: `learning-model.md` (ตารางค่าและ §9), `ai-orchestration.md` (เฉพาะ flow ที่ PoC วัด) · ไม่เปลี่ยนหลักการ
+- [x] 3. 🤖 แก้ตามที่ตัดสิน: `learning-model.md` (ตารางค่าและ §9), `ai-orchestration.md` (เฉพาะ flow ที่ PoC วัด) · ไม่เปลี่ยนหลักการ
 - [ ] 4. 🤖 แก้ `config/learning.yaml` (ค่าหรือป้ายที่มา) ถ้ามีแถวที่ต้องเปลี่ยน · รัน `uv run pytest` เพราะ test อ่าน config · ไฟล์นี้ Jam + Junior เป็นเจ้าของ (CODEOWNERS)
 - [ ] 5. 🙋 Jam บอกแชทกลุ่มก่อน merge (ถ้าแก้ `config/learning.yaml`) · ข้อความจะร่างให้
 
@@ -53,7 +53,7 @@ LM = `learning-model.md` · AO = `ai-orchestration.md` · นอกงานน�
 
 ## Next step
 
-ขั้น 3 (🤖): แก้ `learning-model.md` (แถว 1–6) และ `ai-orchestration.md` (แถว 9–12) ตามตาราง
+ขั้น 4 (🤖): แก้ป้ายใน `config/learning.yaml` (แถว 1–3, 5) และ `config/ai.yaml` (แถว 13) · ค่าไม่เปลี่ยน · bump version · รัน `uv run pytest` + `ruff`
 
 ## Waiting on
 

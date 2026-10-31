@@ -1,6 +1,8 @@
-# Learning model · สูตรและที่มาของตัวเลข (v1.2)
+# Learning model · สูตรและที่มาของตัวเลข (v1.3)
 
 **v1.2 (26 ต.ค. 2569):** BKT ไม่รู้ความยากของโจทย์ จึงเพิ่มระดับเป้าตามดาวและ mode และเพดาน mastery ตามระดับยากสุดที่ทำถูกเอง (§4) · ความพร้อมใช้ mastery หลังเพดาน (§5)
+
+**v1.3 (31 ต.ค. 2569):** ป้ายที่มาตามผล PoC P2 (§8, §9) · ไม่มีค่าไหนเปลี่ยน
 
 ไฟล์นี้อธิบายทุกการคำนวณที่เกี่ยวกับการเรียนรู้ของผู้ใช้ ตัวเลขทุกตัวอยู่ใน `config/learning.yaml` ที่เดียว และแต่ละตัวมีที่มาเป็นหนึ่งใน 4 แบบ
 
@@ -202,12 +204,12 @@ ratio     = need ÷ available
 
 | ค่า | ค่า | ป้าย | ที่มา / วิธี calibrate |
 |---|---|---|---|
-| OCR always_confirm | true | policy (PoC P1) | P1: confidence ที่ model ให้ตัวเองแยกบรรทัดที่อ่านผิดไม่ได้ (บรรทัดผิดทั้ง 6 อยู่ที่ 0.85–0.98 · ไม่มี threshold ที่จับได้ ≥ 95%) จึงยืนยันทุกครั้ง (`specs/poc/reports/P1.md`) · S3 ลองสัญญาณอื่น เช่นอ่าน 2 รอบแล้วเทียบ |
-| Checker targets | verdict ≥ 95%, error type ≥ 80%, บรรทัดผิด ≥ 85% | requirement | ~20 คำตอบต่อ session → ผิดประมาณ 1 ครั้ง/session ซึ่งรับได้เพราะมี dispute flow |
-| SymPy timeout | 2 วินาที | [calc] | งบเวลาเพื่อให้ verdict มาก่อนเป้า TTFT p95 < 2 วินาที (เดิมติดป้าย [B] แต่ไม่ใช่มาตรฐานหรือค่า default ของ library) |
+| OCR always_confirm | true | policy (PoC P1) | P1: confidence ที่ model ให้ตัวเองแยกบรรทัดที่อ่านผิดไม่ได้ (บรรทัดผิดทั้ง 6 อยู่ที่ 0.85–0.98 · ไม่มี threshold ที่จับได้ ≥ 95%) จึงยืนยันทุกครั้ง (`specs/poc/reports/P1.md`) · สัญญาณอื่น (อ่าน 2 รอบแล้วเทียบ, `extract_answer/v2`) ลองในเทอม 2 · P2 ไม่ได้วัดเพราะใช้บรรทัดจาก label |
+| Checker targets | verdict ≥ 95%, error type ≥ 80%, บรรทัดผิด ≥ 85% | requirement | ~20 คำตอบต่อ session → ผิดประมาณ 1 ครั้ง/session ซึ่งรับได้เพราะมี dispute flow · **P2:** 100%, 96.4%, 100% ผ่านทั้ง 3 (golden set 50 ข้อ · `specs/poc/reports/P2.md`) |
+| SymPy timeout | 2 วินาที | [calc] | งบเวลาเพื่อให้ verdict มาก่อนเป้า TTFT p95 < 2 วินาที (เดิมติดป้าย [B] แต่ไม่ใช่มาตรฐานหรือค่า default ของ library) · **P2:** median 0.14 วินาที ช้าสุด 0.44 วินาที ไม่มี timeout ใน 50 ข้อ จึงคง 2 |
 | sympy_workers | 1 | [C] | จำนวน worker SymPy ที่เปิดค้างไว้ต่อ API instance · เปิดใหม่ทุกครั้งไม่ได้ เพราะวัดแล้วเปิด Python + import SymPy ใช้ 1.9 วินาที (28 ต.ค.) เกือบเท่า timeout · P4-lite: ดูว่ามีการตรวจที่ต้องรอคิว worker ไหม ถ้ามีให้เพิ่ม (`specs/features/check/sympy-service.md` §2.5) |
-| numeric_rel_tolerance | 0.01 | [C] | Should: แทนด้วยจำนวนเลขนัยสำคัญที่โจทย์กำหนด · P2 วัดว่ามีคำตอบทศนิยมที่ตัดสินผิดเพราะค่านี้กี่ข้อ |
-| max_generate_retries | 2 | [C] | P2/S3: วัด % ของโจทย์ที่สร้างแล้วเฉลยผ่าน SymPy ในรอบที่ 1, 2, 3 แล้วเลือกจำนวนรอบที่ครอบคลุม ≥ 95% (เดิมติดป้าย [B] โดยไม่มีอ้างอิง) |
+| numeric_rel_tolerance | 0.01 | [C] | Should: แทนด้วยจำนวนเลขนัยสำคัญที่โจทย์กำหนด · **P2 วัดไม่ได้** เพราะ golden set ไม่มีโจทย์ `numeric` (expression 30, equation 11, factored 9) · วัดตอนทำ `numeric` (Should): นับคำตอบทศนิยมที่ตัดสินผิดเพราะค่านี้ |
+| max_generate_retries | 2 | [C] | P2 ไม่ได้ทดสอบเพราะยังไม่มี `generate_problem` · วัดตอนมี `generate_problem` ในห้องติว: % ของโจทย์ที่สร้างแล้วเฉลยผ่าน SymPy ในรอบที่ 1, 2, 3 แล้วเลือกจำนวนรอบที่ครอบคลุม ≥ 95% (เดิมติดป้าย [B] โดยไม่มีอ้างอิง) |
 | idle_minutes_to_end | 15 | [C] | หลัง Alpha: ดูการกระจายของช่วงเว้นระหว่างข้อความของผู้ใช้ใน session แล้วใช้ค่า p95 |
 | TTFT p95 | < 2 วินาที | [A]+[B] | Nielsen: ภายใน 1 วินาทีความคิดไม่ขาดตอน · LLM มี latency พื้นฐาน จึงใช้ 2 วินาทีกับ streaming |
 | context_recent_turns, grounding_chunks | 8, 4 | [C] | Liu et al. (2023): LLM ใช้ข้อมูลกลาง context ยาวได้แย่ลง จึงส่งเฉพาะที่เกี่ยวข้อง · **P3b:** `gemini-embedding-2` @768 หาหน้าคำตอบเจอใน 4 อันดับแรก 19/20 (อันดับ 1: 15/20) จึงคง 4 |
@@ -220,7 +222,8 @@ ratio     = need ÷ available
 | เมื่อไหร่ | ค่าที่ปรับ | ข้อมูลที่ใช้ |
 |---|---|---|
 | PoC P1 (S2) · ทำแล้ว | ocr.always_confirm (เดิม confirm_below_confidence) | golden set ลายมือ 30 รูป |
-| P2 (S3) | สัญญาณแยกบรรทัดที่อ่านผิด เพื่อลดการยืนยัน | golden set ลายมือ + คำตอบ |
+| PoC P2 (S3) · ทำแล้ว | sympy_timeout_seconds (คง 2) · numeric_rel_tolerance, max_generate_retries วัดไม่ได้ (ดู §8) | golden set คำตอบ 50 ข้อ · `specs/poc/reports/P2.md` |
+| เทอม 2 | สัญญาณแยกบรรทัดที่อ่านผิด เพื่อลดการยืนยัน (ocr.always_confirm) · P2 ไม่ได้วัดเพราะใช้บรรทัดจาก label | golden set ลายมือ + คำตอบ |
 | PoC P3 (S2) · ทำแล้ว (บางส่วน) | three_star_min_r (ยืนยันได้แค่ > 0.5), grounding_chunks (คง 4) · weight_other_instructor วัดไม่ได้ | ไฟล์วิชา pilot + label ของทีม · `specs/poc/reports/P3.md` |
 | PoC P4-lite (S3) | default_minutes_per_problem (ค่าแรก) | เวลาตอบใน demo |
 | หลัง Alpha | bkt.p_init, bkt.p_transit (pyBKT), max_fail_streak, planner ratios, buddy quota | ตาราง `attempts`, `planner_decisions`, `buddy_events` |
