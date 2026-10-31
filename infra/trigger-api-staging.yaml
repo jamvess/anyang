@@ -1,0 +1,18 @@
+# Cloud Build trigger: push to main that touches the API image -> infra/cloudbuild.yaml -> api-staging.
+# Apply (create or update) from the repo root:
+#   gcloud builds triggers import --source=infra/trigger-api-staging.yaml --region=asia-southeast1
+# A file instead of `triggers create` flags: "^main$" would lose its "^" when gcloud.cmd runs it via cmd.exe.
+name: api-staging-deploy
+description: merge to main -> build apps/api -> deploy Cloud Run api-staging (P6-lite)
+repositoryEventConfig:
+  # 2nd gen connection made by Jam; repository "anyang" -> https://github.com/jamvess/anyang.git
+  repository: projects/anyang-513006/locations/asia-southeast1/connections/github-anyang/repositories/anyang
+  push:
+    branch: ^main$
+filename: infra/cloudbuild.yaml
+includedFiles:
+  - apps/api/**
+  - config/**
+  - prompts/**
+  - infra/**
+serviceAccount: projects/anyang-513006/serviceAccounts/cloudbuild-deployer@anyang-513006.iam.gserviceaccount.com
