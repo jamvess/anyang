@@ -251,7 +251,7 @@ items this sprint. Do not change any files.
 
 ดูที่ [`daily-workflow.md`](daily-workflow.md) ที่เดียว ทุกวันใช้แค่ 4 คำสั่งใน Claude Code: `/work-start <ชื่อ>` → (`/work-check` หลังทุกขั้น) → `/work-pause` หรือ `/work-done`
 
-ในไฟล์นั้นมีทั้งวิธีดูว่าเพื่อนทำอะไรเสร็จแล้ว, วงจรของ 1 งาน, worklog, การ review PR ของเพื่อน (หัวข้อ D) และคู่มือแบบทำเองถ้าไม่ใช้คำสั่งอัตโนมัติ
+ในไฟล์นั้นมีทั้งวิธีดูว่าเพื่อนทำอะไรเสร็จแล้ว, วงจรของ 1 งาน, worklog, การดู PR ของเพื่อนย้อนหลัง (หัวข้อ D · ไม่บังคับ) และคู่มือแบบทำเองถ้าไม่ใช้คำสั่งอัตโนมัติ
 
 ## B3 · กฎการใช้ Claude Code ของทีม
 
@@ -263,7 +263,7 @@ items this sprint. Do not change any files.
 6. **ใช้ AI coding tool ตัวเดียว** คือ Claude Code ห้ามติดตั้งตัวอื่นที่แก้ repo พร้อมกัน
 7. **กรอกตัวเลขใน PR template** (% โค้ดที่ agent เขียน, จำนวนรอบ red → green) ทีมต้องใช้ตัวเลขนี้ใน Self-Assessment
 8. **ถ้า Claude ทำผิดเรื่องเดิมซ้ำ** ให้เพิ่มกฎใน `CLAUDE.md` ผ่าน PR แทนการบอกซ้ำทุกครั้ง
-9. **ถ้าเจอ usage limit ของ Pro** ให้สลับไปทำงานที่ไม่ใช้ AI ก่อน เช่น review PR, label ข้อมูล, wireframe
+9. **ถ้าเจอ usage limit ของ Pro** ให้สลับไปทำงานที่ไม่ใช้ AI ก่อน เช่น ดู PR ของเพื่อนย้อนหลัง, label ข้อมูล, wireframe
 
 ---
 

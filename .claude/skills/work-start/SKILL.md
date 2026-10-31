@@ -21,12 +21,12 @@ If no name was given, ask "คุณคือใคร: 1 Junior · 2 May · 3 J
 
 ## 2 · Team status
 
-Read `docs/team/sprint-checklists.md`, `docs/team/roles.md` and `git log --oneline -15`. If the `gh` command exists, also run `gh pr list --state open` to see drafts and review requests.
+Read `docs/team/sprint-checklists.md`, `docs/team/roles.md` and `git log --oneline -15`. If the `gh` command exists, also run `gh pr list --state open` to see what teammates are working on.
 
 Report in Thai, at most 12 lines:
 
 - **เพื่อนทำอะไรเสร็จล่าสุด** (from the git log and the checklist)
-- **PR ที่รอให้คุณ review** (only if gh exists). If there are any, recommend doing the review first (`docs/team/daily-workflow.md` section D).
+- **PR ที่เพื่อนเปิดอยู่** (only if gh exists): one line each, so the person does not start the same work. No approval is needed from anyone (root `CLAUDE.md`, "How we work" 5), so do not suggest reviewing first.
 - **งานที่คุณค้างอยู่** (unfinished branches + their "Next step")
 - **Sprint ตอนนี้** (match today's date to the sprint table) and how many of their items are left
 

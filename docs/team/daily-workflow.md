@@ -16,7 +16,7 @@ claude
 | `/work-start Junior` (หรือ `May`, `Jam`) | เริ่มทุกครั้ง | pull, อัปเดต library, บอกว่าเพื่อนเสร็จอะไรไปแล้ว, เสนองานให้เลือก, สร้าง branch, worklog, Draft PR และแผนทีละขั้น | เลือกเลขงาน แล้วตอบ `ok` กับแผน |
 | (อัตโนมัติหลังแต่ละขั้น) `/work-check` | หลังทำเสร็จทุกขั้น | รัน test, อธิบายว่าทำอะไรไป, บอก **🔍 สิ่งที่ต้องเช็ค** 2–5 ข้อ | เช็คตามที่บอก แล้วตอบ `ok` → AI commit + push และทำขั้นต่อไปเอง |
 | `/work-pause` | จะหยุดทั้งที่งานยังไม่เสร็จ | push ทุกอย่าง, เขียนลง worklog ว่าค้างตรงไหนและครั้งหน้าต้องทำอะไร, ร่างข้อความแชทกลุ่มให้ | ก๊อปข้อความไปแปะในกลุ่ม |
-| `/work-done` | งานเสร็จแล้ว | ดึง main มารวม, รัน test ทั้งหมด, **อัปเดตเอกสารที่เกี่ยวข้อง**, ติ๊ก `sprint-checklists.md`, เขียน PR description, ขอ review | เช็ค 3 ข้อ, ส่งข้อความในกลุ่ม, รอเพื่อน Approve แล้วกด Merge |
+| `/work-done` | งานเสร็จแล้ว | ดึง main มารวม, รัน test ทั้งหมด, **อัปเดตเอกสารที่เกี่ยวข้อง**, ติ๊ก `sprint-checklists.md`, เขียน PR description, **self-review ด้วย `/code-review`** แล้วแก้, รอ CI เขียว แล้ว merge | เช็ค 3 ข้อ, ถ้าเป็นงานเสี่ยงบอกกลุ่มก่อน merge, ตอบ ok ให้ merge, ส่งข้อความในกลุ่ม |
 
 **วงจร**
 
@@ -27,14 +27,14 @@ claude
                           ยังไม่เสร็จแต่จะหยุด ◀─────┴────▶ เสร็จแล้ว
                                  /work-pause                 /work-done
                                                                 │
-                                         เพื่อน Approve + CI เขียว ─▶ Merge ─▶ /work-start
+                                  self-review + CI เขียว ─▶ Merge ─▶ /work-start
 ```
 
 **สิ่งที่ AI ทำเองไม่ได้ (🙋)** AI จะบอกทีละคลิกว่าต้องทำอะไร เช่น กดใน Supabase/GCP Dashboard, ใส่ key ลง `.env`, ถ่ายรูปลายมือ, ตัดสินใจเรื่อง design, กด Merge บน GitHub
 
 **ไฟล์ worklog** (`docs/worklog/<branch>.md`) เป็นที่ที่ AI จดว่างานถึงไหนแล้ว เพราะ Claude Code จำ session ก่อนไม่ได้ ครั้งหน้าพอพิมพ์ `/work-start` มันจะอ่านไฟล์นี้แล้วทำต่อได้ทันที พอ `/work-done` ไฟล์นี้จะถูกย้ายไปเป็น PR description
 
-**ตั้งครั้งเดียว (แนะนำ):** ติดตั้ง GitHub CLI แล้ว AI จะเปิด PR, ขอ review และดูว่ามีใครขอให้เรา review ได้เอง ไม่ต้องเข้าเว็บ
+**ตั้งครั้งเดียว (แนะนำ):** ติดตั้ง GitHub CLI แล้ว AI จะเปิด PR, รอ CI และ merge ให้เอง (หลังเราตอบ ok) ไม่ต้องเข้าเว็บ
 
 ```powershell
 winget install --id GitHub.cli -e
@@ -96,7 +96,7 @@ claude
 
 **5. เช็ค GitHub** (เปิด `github.com/jamvess/anyang` → แท็บ **Pull requests**)
 
-- มี PR ที่ขอให้เรา review ไหม → ถ้ามี ให้ทำ **D · Review PR ของเพื่อน** ก่อนเริ่มงานตัวเอง เพื่อนจะได้ไม่ต้องรอ
+- ไม่มีใครต้องรอเรา approve แล้ว (ทีมตกลง 31 ต.ค. · ดูหัวข้อ F) · ถ้ามีเวลาค่อยดู PR ที่เพื่อน merge แล้วย้อนหลังตาม **D**
 - มี Draft PR ของเพื่อนที่ทำเรื่องเดียวกับเราไหม → ถ้ามี ให้คุยกันก่อน จะได้ไม่ทำซ้ำ
 
 **6. เลือกงาน 1 ชิ้น แล้วบอกในกลุ่ม**
@@ -184,9 +184,11 @@ what is done and what is left. Do not change any files yet.
 
 ---
 
-## D · Review PR ของเพื่อน
+## D · ดู PR ของเพื่อนย้อนหลัง (ไม่บังคับ)
 
-**1.** เปิด GitHub → PR ของเพื่อน → แท็บ **Files changed**
+ตั้งแต่ 31 ต.ค. ไม่ต้อง approve ก่อน merge แล้ว เพราะเราอยู่คนละ time zone และการรอ review ทำให้งานติด · หัวข้อนี้ใช้เมื่อมีเวลาและอยากดูงานของเพื่อนหลัง merge · ถ้าเจอปัญหาให้เปิด PR แก้ หรือบอกในกลุ่ม
+
+**1.** เปิด GitHub → PR ของเพื่อน (แท็บ **Closed** ถ้า merge แล้ว) → แท็บ **Files changed**
 
 **2. ให้ Claude Code ช่วยดู**
 
@@ -204,9 +206,7 @@ with file and line, in Thai. Do not change any files.
 
 **3. อ่านเองด้วย** โดยเฉพาะไฟล์ test เพราะ test เป็นตัวกำหนดว่าโค้ดต้องทำอะไร
 
-**4. ตัดสินใจบน GitHub:** กด **Review changes** แล้วเลือก
-- **Approve** ถ้าโอเค
-- **Request changes** ถ้าต้องแก้ พร้อมเขียนว่าต้องแก้อะไร
+**4. ถ้าเจอปัญหา:** เขียน comment ใน PR (ใช้ได้แม้ merge แล้ว) แล้วบอกเจ้าของในกลุ่ม · ถ้าแก้เองได้ให้เปิด PR ใหม่แก้เลย
 
 **5. กลับมาที่งานของตัวเอง**
 
@@ -234,7 +234,7 @@ Commit what we have so far with a "wip:" message and push.
 
 ---
 
-## F · ส่งงานให้เพื่อนตรวจ
+## F · ส่งงานและ merge เอง
 
 **1. ดึงงานล่าสุดของเพื่อนมารวม**
 
@@ -258,23 +258,22 @@ Commit and push. Then write the PR description from .github/pull_request_templat
 so I can paste it on GitHub.
 ```
 
-**5. บน GitHub**
-- วาง description ลงใน PR
-- กด **Ready for review**
-- เลือก reviewer ตามตารางด้านล่าง
-- บอกในกลุ่มว่า "ขอ review PR ___ หน่อย"
+**5. Self-review**
 
-| งานของ | ให้ใคร review |
-|---|---|
-| Junior (backend, DB, CI) | Jam (โค้ด Python) หรือ May (ส่วนที่ต่อกับหน้าเว็บ) |
-| May (หน้าเว็บ) | Junior (ส่วนที่เรียก API) |
-| Jam (prompt, eval, config) | Junior (โค้ดและ config) |
-| ไฟล์กลาง (`CLAUDE.md`, `requirements.md`, `api.md`) | ทั้ง 2 คนที่เหลือ |
+```
+Run /code-review high on this branch. Fix the real findings (never change tests
+that were already reviewed) and write a "Self-review" section for the PR description.
+```
 
-**6. Merge** เมื่อเพื่อน **Approve** แล้ว **และ** CI ขึ้นติ๊กเขียวครบทุกตัว
-- ตั้งแต่ 20 ต.ค. GitHub บังคับข้อนี้แล้ว (ruleset `main`): ปุ่ม Merge จะกดไม่ได้จนกว่าจะมี approve 1 คนและ `api`, `api-integration`, `web` ผ่าน · ไม่มีใคร bypass ได้ ถ้ารีบให้ทักเพื่อนในกลุ่ม
+**6. บน GitHub**
+- วาง description ลงใน PR (รวมหัวข้อ Self-review)
+- กด **Ready for review** (ไม่ต้องเลือก reviewer)
+- **ถ้าเป็นงานเสี่ยง** ให้บอกในกลุ่ม **ก่อน merge**: migration หรือ RLS, ไฟล์กลาง (`CLAUDE.md`, `requirements.md`, `api.md`, `config/*.yaml`, `.env.example`), `infra/`, `.github/`
+
+**7. Merge** เมื่อ CI ขึ้นติ๊กเขียวครบทุกตัว
+- ruleset `main` บังคับแค่ CI `api`, `api-integration`, `web` ต้องผ่าน · ไม่ต้องมี approve (เปลี่ยนจาก 1 คนเมื่อ 31 ต.ค. · ทีมตกลง) · ยังห้าม push ตรงเข้า `main` และห้าม force push
 - กด **Merge pull request** แล้วกด **Delete branch**
-- บอกในกลุ่มว่า "merge ___ แล้ว"
+- บอกในกลุ่มว่า "merge ___ แล้ว · ใครว่างดูย้อนหลังได้"
 - กลับไปทำ **A ข้อ 2** เพื่อดึง main ล่าสุด
 
 ---

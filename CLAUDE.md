@@ -25,10 +25,10 @@ Senior project, KMUTT Computer Engineering. Team: Junior (backend + DevOps), May
 ## How we work: Spec-Driven + Test-Driven
 
 1. **Spec first.** Every feature has a spec in `specs/features/<area>/<feature>.md` (template: `specs/features/_TEMPLATE.md`). Behavior that is not in a spec does not get built.
-2. **Tests from the spec.** Write tests from the acceptance criteria before the implementation. A human reviews the tests before you implement.
+2. **Tests from the spec.** Write tests from the acceptance criteria before the implementation. A human (the author is fine) reviews the tests before you implement.
 3. **Implement until green**, then refactor.
-4. **CI must pass** (lint, unit, integration, RLS isolation, evals when prompts change).
-5. **PR reviewed by a teammate** before merge.
+4. **CI must pass** (lint, unit, integration, RLS isolation, evals when prompts change). CI is the merge gate.
+5. **Self-review, then merge.** No teammate approval is required (team decision 2026-10-31: we work in different time zones and waiting for reviews blocked us). `/work-done` runs `/code-review` and fixes real findings before the PR is merged. Before merging a risky change (a migration or RLS; a shared file such as `CLAUDE.md`, `specs/requirements/requirements.md`, `specs/system/api.md`, `config/*.yaml`, `.env.example`; `infra/`; `.github/`), announce it in the group chat. Teammates may review after merge; fixes go in a new PR.
 
 If a spec is unclear, contradictory or missing a case: **stop and say so**. Propose the spec change in the PR description. Never guess behavior and never edit a spec silently.
 
@@ -86,11 +86,12 @@ pnpm lint && pnpm typecheck
 ## Definition of Done for a PR
 
 - [ ] Linked feature spec (or PoC spec) and requirement IDs
-- [ ] Tests written from acceptance criteria, reviewed, passing
+- [ ] Tests written from acceptance criteria, reviewed by a human (the author is fine), passing
+- [ ] `/code-review` run on the branch; real findings fixed, the rest explained in the PR
 - [ ] No provider SDK outside the gateway, no hard-coded thresholds
 - [ ] New tables have `tenant_id` + RLS + an isolation test
 - [ ] Prompt changes bump the prompt version and pass evals
-- [ ] Spec updated in the same PR if behavior changed (with reviewer approval)
+- [ ] Spec updated in the same PR if behavior changed (announced in the group chat if the spec is shared)
 
 ## Language
 
