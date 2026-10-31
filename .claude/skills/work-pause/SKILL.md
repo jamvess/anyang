@@ -8,7 +8,8 @@ The person wants to stop. Make sure nothing is lost and the next session (which 
 
 1. Run `git status`. Show the list of changed files. Commit them with `wip: <short description>`. Never commit `.env*`. If a file looks like it should not be committed, ask first.
 2. Update the worklog in `docs/worklog/` for this branch:
-   - **Status:** paused · today's date
+   - **Status:** paused · today's date (this releases the lock: `/work-start ALL` only picks up paused branches)
+   - **Owner:** keep as is. If it says `ทำต่อโดย <name>`, keep that too so the owner knows who worked on it
    - **Done today:** bullets
    - **Next step:** the very next concrete action, written so that a fresh session can do it without asking
    - **Waiting on:** a person or a 🙋 action, or "ไม่มี"
@@ -16,6 +17,6 @@ The person wants to stop. Make sure nothing is lost and the next session (which 
 3. Commit `chore(worklog): pause <branch>` and `git push`.
 4. Print in Thai:
    - **สรุปวันนี้** in 3 lines
-   - **ข้อความสำหรับแชทกลุ่ม** ready to copy, for example "วันนี้ทำ ___ ไปถึง ___ · พรุ่งนี้ต่อ ___ · รอ ___"
+   - **ข้อความสำหรับแชทกลุ่ม** ready to copy, for example "วันนี้ทำ ___ ไปถึง ___ · พรุ่งนี้ต่อ ___ · รอ ___" · if the branch belongs to a teammate (Owner says `ทำต่อโดย`), address them: "<owner>: solo time ทำ <branch> ต่อให้ถึง ___ · ขั้นถัดไป ___ · ทำต่อได้เลย"
    - **ครั้งหน้า:** "พิมพ์ `/work-start <ชื่อ>` แล้วเลือกทำต่องานนี้"
    - **ก่อนปิดเครื่อง:** "กด Ctrl+C ทุกหน้าต่างที่เปิด dev server แล้วพิมพ์ /exit"

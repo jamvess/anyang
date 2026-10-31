@@ -42,11 +42,11 @@ Compare `git diff origin/main...HEAD` with this table. Update every row that app
 
 ## 5 · Tick the checklist
 
-In `docs/team/sprint-checklists.md`, change the exact item named in the worklog from `[ ]` to `[x]`. If the task completed only part of the item, leave it unticked and add a short sub-bullet saying what is done.
+In `docs/team/sprint-checklists.md`, change the exact item named in the worklog from `[ ]` to `[x]`. If the task completed only part of the item, leave it unticked and add a short sub-bullet saying what is done. **Solo work:** if the worklog Owner says `ทำต่อโดย <name>` or `(item of <owner>)`, also add the sub-bullet "ทำโดย <name> (<date>) ช่วง solo" under the item.
 
 ## 6 · PR description, then remove the worklog
 
-Write the PR description with `.github/pull_request_template.md`, using the worklog: what was done, decisions and why, requirement IDs, a rough % of code written by the agent, the number of red → green cycles. Save it to a temporary file outside the repo. Then delete `docs/worklog/<slug>.md`, because its content now lives in the PR.
+Write the PR description with `.github/pull_request_template.md`, using the worklog: what was done, decisions and why, requirement IDs, a rough % of code written by the agent, the number of red → green cycles. **Solo work:** start the description with one line saying whose item it is and who did which part (from the Owner line and the worklog's Decisions). Save it to a temporary file outside the repo. Then delete `docs/worklog/<slug>.md`, because its content now lives in the PR.
 
 ## 7 · Commit and push
 
