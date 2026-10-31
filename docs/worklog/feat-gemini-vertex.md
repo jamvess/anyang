@@ -9,11 +9,11 @@
 
 ## Plan
 
-- [ ] 1. 🙋 Jam แจ้ง Junior ในแชทกลุ่ม: `apps/api/app/ai/` เป็นส่วนที่ Junior เขียน (`roles.md`, CODEOWNERS `/apps/api/`) · Jam จะเพิ่มทาง Vertex ให้ `GeminiProvider` และ `build_default_gateway` · Junior เป็นคน review PR · รอ Junior ตอบ ok (หรือบอกว่าอยากทำเอง)
+- [x] 1. 🙋 Jam แจ้ง Junior ในแชทกลุ่ม: `apps/api/app/ai/` เป็นส่วนที่ Junior เขียน (`roles.md`, CODEOWNERS `/apps/api/`) · Jam จะเพิ่มทาง Vertex ให้ `GeminiProvider` และ `build_default_gateway` · Junior เป็นคน review PR · รอ Junior ตอบ ok (หรือบอกว่าอยากทำเอง)
 - [x] 2. 🤖 `/spec-feature AI-01 AI-02 AI-04 AI-07` → `specs/features/ai/gemini-vertex.md` · สร้าง client ด้วย `vertexai=True` + `GOOGLE_CLOUD_PROJECT` + `GOOGLE_CLOUD_LOCATION` (ADC ไม่ใช้ key file) · `build_default_gateway` ลงทะเบียน provider `vertex` (ตรงกับ `vertex:` ใน `config/ai.yaml`) และ `gemini` เฉพาะเมื่อมี key · token ของ embedding บน Vertex (AI-04) · คำถามที่ต้องตัดสินใส่ใน §10 (เช่น location ของ Gemini 3 บน Vertex อาจต้องเป็น `global`)
 - [x] 3. 🙋 Jam review spec และตอบคำถามใน §10
-- [ ] 4. 🤖 `/spec-to-tests` → test ใช้ client ปลอม ไม่เรียก network (ต้องแดง)
-- [ ] 5. 🙋 Jam review test
+- [x] 4. 🤖 `/spec-to-tests` → test ใช้ client ปลอม ไม่เรียก network (ต้องแดง)
+- [x] 5. 🙋 Jam review test
 - [ ] 6. 🤖 `/implement-feature` → test เขียว + ruff ผ่าน · อัปเดต `.env.example` และวิธีตั้งเครื่องใน `docs/team/setup.md` / `infra/README.md` (ไฟล์ของ Junior · ถามก่อน)
 - [ ] 7. 🙋 Jam ตั้งเครื่อง: ติดตั้ง Google Cloud CLI → `gcloud auth application-default login` → ตั้ง `GOOGLE_CLOUD_PROJECT` / `GOOGLE_CLOUD_LOCATION` ใน `.env` → รัน smoke 1 call บน Vertex · คำสั่งทีละคลิกจะเขียนให้ตอนถึงขั้นนี้
 - [ ] 8. 🤖 จดผล smoke (model ที่ตอบจริง, token, เวลา) ใน worklog และ PR · ให้ Junior review
@@ -29,6 +29,8 @@
 
 ## Decisions
 
+- 2026-10-31 · test 17 ตัว + smoke `live` 1 ตัว: 12 แดงด้วยเหตุผลที่ถูก (ยังไม่มี `GeminiProvider.vertex`, ยังไม่ส่ง `vertexai`, build ยังไม่ลงทะเบียน `vertex`) · 5 เขียวอยู่แล้วเพราะเป็นพฤติกรรมเดิมที่ต้องคงไว้ (AC-4, 6, 9, 10, 11) · AC-10 และ smoke ใช้ `extract_topics_local` (tier `mid` เหมือน `check_answer`) แทน `check_answer` เพราะ prompt `check_answer/v1` ยังอยู่ใน PR #80 ยังไม่อยู่ใน `main` (ต่างจาก spec §10 ข้อ 6 · Jam ok ตอน review test · แก้ spec ตามแล้ว) · smoke อยู่ที่ `tests/integration/test_vertex_live.py` สร้าง gateway จาก config ตรงๆ ไม่ขึ้นกับ `AI_PROVIDER`
+- 2026-10-31 · Junior ok ให้ Jam แก้ `apps/api/app/ai/` (Jam แจ้งในแชทกลุ่ม)
 - 2026-10-31 · spec approved · Jam ok ข้อเสนอทั้ง 6 ข้อใน §10: location `global` (ยืนยันด้วย smoke) · เลิกใช้ key file (`GOOGLE_APPLICATION_CREDENTIALS`) · `GeminiProvider.vertex(project, location)` · ไม่มี provider → `AIConfigError` (Junior ยืนยันตอน review) · AI-07 กับ Free Trial Jam เช็คเอกสารแล้วจดใน PR · smoke ใช้ `check_answer` กับ ans_003
 - 2026-10-31 · Jam ok แผน 8 ขั้น · Claude เริ่มร่าง spec ระหว่างรอ Junior ตอบเรื่องแก้ `apps/api/app/ai/`
 - 2026-10-31 · (ร่าง spec) ส่ง `vertexai=True/False` ให้ SDK ทุกครั้ง เพราะ SDK เดาจาก env `GOOGLE_GENAI_USE_VERTEXAI` ได้ · ส่ง project / location จาก `EnvSettings` ตรงๆ เพราะ pydantic-settings ไม่ใส่ค่าจาก `.env` ลง `os.environ` · token ของ embed บน Vertex มาจาก `ContentEmbedding.statistics.token_count` (google-genai 2.29.0 มี field นี้)
@@ -36,11 +38,11 @@
 
 ## Next step
 
-ขั้น 4 (🤖): `/spec-to-tests specs/features/ai/gemini-vertex.md` → test ใน `apps/api/tests/unit/test_gemini_provider.py`, `test_ai_gateway.py` และ test scan import (ต้องแดง) · ถ้า Junior ยังไม่ตอบเรื่องแก้ `apps/api/` ถาม Jam ก่อน
+ขั้น 6 (🤖): `/implement-feature specs/features/ai/gemini-vertex.md` จน test 12 ตัวที่แดงเขียว · ห้ามแก้ test ที่ Jam review แล้ว · แล้วแก้เอกสารตาม spec §11
 
 ## Waiting on
 
-- Junior ตอบเรื่องแก้ `apps/api/app/ai/`
+ไม่มี
 
 ## Notes for next time
 

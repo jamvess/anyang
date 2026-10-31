@@ -101,7 +101,7 @@ ai-orchestration §2.9 กำหนดว่าตั้งแต่ Beta ทุ
 
 **Smoke (ไม่อยู่ใน CI)**
 
-- **AC-16 (AI-01, AI-07)** test mark `live` 1 ตัว: Given ADC ของ Jam + `GOOGLE_CLOUD_PROJECT=anyang-513006` When `call` purpose เล็ก 1 ครั้งโดยไม่ override Then ได้ผลผ่าน schema และ `tokens_in > 0` · ข้ามเองถ้าไม่มี `GOOGLE_CLOUD_PROJECT` · จดชื่อ model, location และ latency ใน PR
+- **AC-16 (AI-01, AI-07)** test mark `live` 1 ตัว: Given ADC ของ Jam + `GOOGLE_CLOUD_PROJECT=anyang-513006` When `call("extract_topics_local", …)` (tier `mid`) 1 ครั้งโดยไม่ override Then ได้ผลผ่าน schema และ `tokens_in > 0` · ข้ามเองถ้าไม่มี `GOOGLE_CLOUD_PROJECT` · จดชื่อ model, location และ latency ใน PR
 
 ## 5. Data changes
 
@@ -135,7 +135,7 @@ ai-orchestration §2.9 กำหนดว่าตั้งแต่ Beta ทุ
 
 ## 10. Open questions
 
-**ตัดสินแล้ว 2026-10-31:** Jam ตอบ ok กับข้อเสนอทั้ง 6 ข้อ · ข้อ 4 ให้ Junior ยืนยันตอน review PR · ข้อ 5 Jam เช็คเอกสารแล้วจดใน PR
+**ตัดสินแล้ว 2026-10-31:** Jam ตอบ ok กับข้อเสนอทั้ง 6 ข้อ · ข้อ 4 ให้ Junior ยืนยันตอน review PR · ข้อ 5 Jam เช็คเอกสารแล้วจดใน PR · **แก้ข้อ 6 ตอน review test (Jam ok):** ใช้ `extract_topics_local` แทน `check_answer` เพราะ prompt `check_answer/v1` ยังอยู่ใน PR #80 ไม่ได้อยู่ใน `main` · tier `mid` model เดียวกัน · `check_answer` บน Vertex จะถูกลองตอนรัน P2 ต่อ
 
 1. **Location:** Gemini 3.x บน Vertex มักเปิดที่ `global` ก่อน region · `.env.example` ตั้ง `asia-southeast1` ซึ่งอาจไม่มี `gemini-3.5-flash` · เสนอ: ใช้ `global` เป็นค่าใน `.env.example` แล้วยืนยันด้วย smoke (AC-16) · ถ้าต้องการให้ข้อมูลอยู่ในภูมิภาค (PDPA) ให้ตัดสินตอน Beta
 2. **`GOOGLE_APPLICATION_CREDENTIALS`:** `.env.example` บอกว่าเป็น "path to service-account json for local dev" แต่ `infra/README.md` บอกว่าใช้ `gcloud auth application-default login` ไม่ต้องมี key file · เสนอ: เลิกใช้ key file · ลบตัวแปรนี้ออกจาก `.env.example` และ `EnvSettings` (ไม่มีโค้ดไหนใช้) หรือเก็บไว้แต่แก้ comment ว่าไม่แนะนำ
