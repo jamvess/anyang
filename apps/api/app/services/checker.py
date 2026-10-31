@@ -6,6 +6,7 @@ merge rules (app/domain/checker.py) join the two. The caller writes ``attempts``
 SSE ``verdict``. Spec: specs/features/check/check-answer-classifier.md.
 """
 
+import re
 from dataclasses import dataclass
 
 from app import ai
@@ -25,6 +26,13 @@ _NO_ANSWER_LLM = LlmResult(
     confidence=1.0,
 )
 _NO_SOLUTION_STEPS = "(none: the course sheet gives no method for this problem)"
+_CLOSING_DOCUMENT = re.compile(r"</\s*document", re.IGNORECASE)
+
+
+def _as_data(text: str) -> str:
+    """Text for inside a ``<document>``: a closing tag in it would end the data block early
+    and let the rest read as instructions (CLAUDE.md rule 8)."""
+    return _CLOSING_DOCUMENT.sub("<\\/document", text)
 
 
 @dataclass(frozen=True)
@@ -63,11 +71,13 @@ def _prompt_input(
     problem: CheckProblem, lines: list[str], sympy: SympyResult, sign_flip: int | None
 ) -> dict[str, str]:
     return {
-        "problem": problem.text,
-        "reference_answer": problem.reference_answer,
+        "problem": _as_data(problem.text),
+        "reference_answer": _as_data(problem.reference_answer),
         "answer_format": problem.answer_format,
-        "solution_steps": "\n".join(problem.solution_steps) or _NO_SOLUTION_STEPS,
-        "answer_lines": "\n".join(f"{n}. {line}" for n, line in enumerate(lines, start=1)),
+        "solution_steps": _as_data("\n".join(problem.solution_steps)) or _NO_SOLUTION_STEPS,
+        "answer_lines": _as_data(
+            "\n".join(f"{n}. {line}" for n, line in enumerate(lines, start=1))
+        ),
         "sympy_result": describe_sympy(problem.answer_format, sympy),
         "hints": f"sign_flip_detected: line {sign_flip}" if sign_flip else "none",
     }
@@ -83,22 +93,16 @@ async def check_answer(
     """Verdict for one confirmed answer (spec §2.1). ``gateway`` and ``pool`` default to the
     shared ones. ``AISchemaError`` / ``AIProviderError`` reach the caller: no error type is
     guessed when the classifier fails (§10 decision 2)."""
-    if not lines:
-        return merge_check(
-            answer_format=problem.answer_format,
-            lines=lines,
-            sympy=SympyResult(
-                parsed=False, timed_out=False, final_equal=None, final_in_form=None, line_ok=[]
-            ),
-            llm=_NO_ANSWER_LLM,
-        )
-
     sympy = await check_lines(
         answer_format=problem.answer_format,
         reference_answer=problem.reference_answer,
         lines=lines,
         pool=pool,
-    )
+    )  # no lines: returns "not parsed" without using the pool
+    if not lines:
+        return merge_check(
+            answer_format=problem.answer_format, lines=lines, sympy=sympy, llm=_NO_ANSWER_LLM
+        )
     sign_flip = None
     if sympy.final_equal is not None and not all(sympy.line_ok):
         sign_flip = await detect_sign_flip(

@@ -524,8 +524,9 @@ async def detect_sign_flip(
     timeout_s: float | None = None,
     pool: SympyWorkerPool | None = None,
 ) -> int | None:
-    """``sign_flip_line`` in the worker pool, with the same timeout as ``check_lines``. A
-    timeout means no hint, not an error (check-answer-classifier.md §2.4)."""
+    """``sign_flip_line`` in the worker pool, with the same timeout as ``check_lines``. The hint
+    is optional, so a timeout or a failed worker means no hint, not a failed check
+    (check-answer-classifier.md §2.4)."""
     if not lines:
         return None
     if timeout_s is None:
@@ -535,5 +536,5 @@ async def detect_sign_flip(
         return await pool.run(
             sign_flip_line, answer_format, reference_answer, lines, timeout_s=timeout_s
         )
-    except SympyTimeoutError:
+    except (SympyTimeoutError, RuntimeError):
         return None

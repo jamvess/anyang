@@ -155,6 +155,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"{len(rows) - len(skipped)}/{len(rows)} predictions -> {args.out}")
     if skipped:
         print(f"skipped: {', '.join(skipped)}")
+        return 1  # scripts must not read a partial run as success; --resume fills the gaps
     return 0
 
 

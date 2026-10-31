@@ -86,3 +86,22 @@ async def test_AM06_timeout_gives_no_hint() -> None:
     )
 
     assert result is None
+
+
+class CrashingPool:
+    async def run(self, fn, *args, timeout_s: float):
+        raise RuntimeError("SymPy worker stopped unexpectedly")
+
+
+async def test_AM06_failed_worker_gives_no_hint() -> None:
+    # Self-review of PR #80: the hint is optional, so a crashed worker must not fail the check.
+    row = golden()["ans_007"]
+
+    result = await detect_sign_flip(
+        answer_format=row["answer_format"],
+        reference_answer=row["reference"],
+        lines=row["lines"],
+        pool=CrashingPool(),
+    )
+
+    assert result is None
