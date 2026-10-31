@@ -36,7 +36,7 @@ Use the project skills: `/spec-feature`, `/spec-to-tests`, `/implement-feature`,
 
 ## Work sessions
 
-- Start every session with `/work-start <name>` (Junior, May or Jam).
+- Start every session with `/work-start <name>` (Junior, May or Jam) when the team overlaps, or `/work-start ALL` during solo time to pick the most important task from anyone (team decision 2026-10-31; rules in the skill's "Mode ALL").
 - Run `/work-check` after every step.
 - End with `/work-pause` (unfinished) or `/work-done` (ready for PR).
 - Progress lives in `docs/worklog/<branch>.md` (branch name with `/` replaced by `-`), so anyone can pick up where the last session stopped. See `docs/team/daily-workflow.md`.
