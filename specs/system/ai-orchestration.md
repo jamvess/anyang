@@ -743,7 +743,7 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 - RLS ตาม `tenant_id` (3.4)
 - Prompt ไม่มีข้อมูลของ user อื่น สถิติ common mistakes ใช้แบบ aggregate เท่านั้น
 - ส่งเฉพาะชื่อเล่นให้ LLM ไม่ส่งอีเมลหรือข้อมูลส่วนตัวอื่น
-- ตั้งแต่ Beta ทุก tier ต้องใช้ provider ที่ไม่นำข้อมูลไป train (Vertex AI แบบเสียเงิน) · free tier ใช้ได้เฉพาะ PoC กับข้อมูลที่เจ้าของให้ consent แล้ว (AI-07)
+- ตั้งแต่ Beta ทุก tier ต้องใช้ provider ที่ไม่นำข้อมูลไป train (Vertex AI · AI-07) · free tier ของ Gemini API ใช้ได้เฉพาะ PoC กับข้อมูลที่เจ้าของให้ consent แล้ว · Vertex ช่วง Free Trial ก็อยู่ใต้ "Training Restriction" ของ Google Cloud (ตรวจ 31 ต.ค. 2569 · `specs/features/ai/gemini-vertex.md` §10 ข้อ 5) แต่ Beta ต้องใช้บัญชีแบบเสียเงิน เพราะ Free Trial ไม่มี SLA และหมดอายุ · เรื่องที่อยู่ของข้อมูล (location / PDPA) ตัดสินตอน Beta
 
 ## 2.10 Model routing, cost และ fallback
 
