@@ -54,7 +54,7 @@
 
 ### 2.5 AI-07
 
-ai-orchestration §2.9 กำหนดว่าตั้งแต่ Beta ทุก tier ต้องใช้ "Vertex AI แบบเสียเงิน" · feature นี้ทำให้ทางนั้นใช้ได้ แต่ **ไม่ได้บังคับ** ว่า staging / production ต้องไม่ใช้ `gemini` (การบังคับเป็นงานตอนเปิด Beta · §9)
+ai-orchestration §2.9 กำหนดว่าตั้งแต่ Beta ทุก tier ต้องใช้ Vertex AI (ไม่นำข้อมูลไป train · AI-07) บนบัญชีแบบเสียเงิน (SLA และไม่หมดอายุ) · feature นี้ทำให้ทางนั้นใช้ได้ แต่ **ไม่ได้บังคับ** ว่า staging / production ต้องไม่ใช้ `gemini` (การบังคับเป็นงานตอนเปิด Beta · §9)
 
 ## 3. Inputs and outputs
 
@@ -135,13 +135,13 @@ ai-orchestration §2.9 กำหนดว่าตั้งแต่ Beta ทุ
 
 ## 10. Open questions
 
-**ตัดสินแล้ว 2026-10-31:** Jam ตอบ ok กับข้อเสนอทั้ง 6 ข้อ · ข้อ 4 ให้ Junior ยืนยันตอน review PR · ข้อ 5 Jam เช็คเอกสารแล้วจดใน PR · **แก้ข้อ 6 ตอน review test (Jam ok):** ใช้ `extract_topics_local` แทน `check_answer` เพราะ prompt `check_answer/v1` ยังอยู่ใน PR #80 ไม่ได้อยู่ใน `main` · tier `mid` model เดียวกัน · `check_answer` บน Vertex จะถูกลองตอนรัน P2 ต่อ
+**ตัดสินแล้ว 2026-10-31:** Jam ตอบ ok กับข้อเสนอทั้ง 6 ข้อ · ข้อ 4 ให้ Junior ยืนยันตอน review PR · ข้อ 5 ยืนยันแล้ว 31 ต.ค. (ดูข้อ 5 · PR #90) · **แก้ข้อ 6 ตอน review test (Jam ok):** ใช้ `extract_topics_local` แทน `check_answer` เพราะ prompt `check_answer/v1` ยังอยู่ใน PR #80 ไม่ได้อยู่ใน `main` · tier `mid` model เดียวกัน · `check_answer` บน Vertex จะถูกลองตอนรัน P2 ต่อ
 
 1. **Location:** Gemini 3.x บน Vertex มักเปิดที่ `global` ก่อน region · `.env.example` ตั้ง `asia-southeast1` ซึ่งอาจไม่มี `gemini-3.5-flash` · เสนอ: ใช้ `global` เป็นค่าใน `.env.example` แล้วยืนยันด้วย smoke (AC-16) · ถ้าต้องการให้ข้อมูลอยู่ในภูมิภาค (PDPA) ให้ตัดสินตอน Beta
 2. **`GOOGLE_APPLICATION_CREDENTIALS`:** `.env.example` บอกว่าเป็น "path to service-account json for local dev" แต่ `infra/README.md` บอกว่าใช้ `gcloud auth application-default login` ไม่ต้องมี key file · เสนอ: เลิกใช้ key file · ลบตัวแปรนี้ออกจาก `.env.example` และ `EnvSettings` (ไม่มีโค้ดไหนใช้) หรือเก็บไว้แต่แก้ comment ว่าไม่แนะนำ
 3. **ชื่อ API:** `GeminiProvider.vertex(project, location)` (classmethod) หรือแยก class `VertexGeminiProvider` · เสนอ classmethod เพราะ `generate` / `embed` เหมือนกันทุกบรรทัด
 4. **Error เมื่อไม่มี provider:** ตอนนี้ key ว่างได้ `ValueError` จาก `GeminiProvider` · spec เสนอให้ `build_default_gateway` ตรวจก่อนแล้วโยน `AIConfigError` (AC-8) · Junior โอเคกับการเปลี่ยนชนิด error ไหม
-5. **AI-07 กับ Free Trial:** ข้อมูลที่ส่งผ่าน Vertex ระหว่างใช้เครดิต Free Trial อยู่ใต้เงื่อนไขข้อมูลเดียวกับ Vertex แบบเสียเงิน (ไม่นำไป train) หรือไม่ · **ยืนยันแล้ว 31 ต.ค. (Jam อ่านเอกสาร · PR #90):** ใช่ · [Service Specific Terms](https://cloud.google.com/terms/service-terms) หัวข้อ "Training Restriction": Google ไม่ใช้ Customer Data ไป train หรือ fine-tune model โดยไม่ได้รับอนุญาต · [Free Trial terms](https://cloud.google.com/terms/free-trial): การใช้งานช่วงทดลองอยู่ใต้ GCP Agreement รวม Service Specific Terms ยกเว้นที่ระบุ (ไม่มี SLA, indemnity, Technical Support) ไม่มีข้อยกเว้นเรื่องการ train · ต่างจาก Gemini API free tier ที่ Google ใช้ prompt และคำตอบไปพัฒนาผลิตภัณฑ์ได้ ([Gemini API Additional Terms](https://ai.google.dev/gemini-api/terms)) · ตอนเปิด Beta ยังต้องใช้บัญชีแบบเสียเงินตาม ai-orchestration §2.9 เพราะ Free Trial ไม่มี SLA และหมดอายุ
+5. **AI-07 กับ Free Trial:** ข้อมูลที่ส่งผ่าน Vertex ระหว่างใช้เครดิต Free Trial อยู่ใต้เงื่อนไขข้อมูลเดียวกับ Vertex แบบเสียเงิน (ไม่นำไป train) หรือไม่ · **ยืนยันแล้ว 31 ต.ค. (Jam อ่านเอกสาร · PR #90):** ใช่ · [Service Specific Terms](https://cloud.google.com/terms/service-terms) หัวข้อ "Training Restriction": Google ไม่ใช้ Customer Data ไป train หรือ fine-tune model โดยไม่ได้รับอนุญาต · [Free Trial terms](https://cloud.google.com/terms/free-trial): การใช้งานช่วงทดลองอยู่ใต้ GCP Agreement รวม Service Specific Terms ยกเว้นที่ระบุ (ไม่มี SLA, indemnity, Technical Support) ไม่มีข้อยกเว้นเรื่องการ train · ต่างจาก Gemini API free tier ที่ Google ใช้ prompt และคำตอบไปพัฒนาผลิตภัณฑ์ได้ ([Gemini API Additional Terms](https://ai.google.dev/gemini-api/terms)) · ตอนเปิด Beta ยังต้องใช้บัญชีแบบเสียเงินเพราะ Free Trial ไม่มี SLA และหมดอายุ 27 ม.ค. 2027 (เขียนเพิ่มใน ai-orchestration §2.9 แล้ว) · ข้อนี้ตอบแค่เรื่องการ train · Vertex ยังเก็บ log เพื่อตรวจการใช้ผิดวัตถุประสงค์และ cache ชั่วคราว ([Abuse monitoring](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/learn/abuse-monitoring)) และเรื่องที่อยู่ของข้อมูลยังเปิดอยู่ (ข้อ 1) · จึงยังไม่ส่งข้อมูลของผู้ใช้จริงจนกว่าจะถึง Beta
 6. **Smoke purpose:** AC-16 ใช้ purpose ไหน · เสนอ `check_answer` กับ golden set ข้อ ans_003 เพราะเป็น tier `mid` ตัวเดียวกับที่จะรัน P2 ต่อ
 
 ## 11. Spec changes needed

@@ -115,7 +115,7 @@ code .env
 |---|---|
 | `GOOGLE_CLOUD_PROJECT` | `anyang-513006` → gateway ได้ provider `vertex` (ค่า default ของ `config/ai.yaml`) · ใช้ credit ของ Free Trial · ต้องทำ ADC ข้างล่างก่อน |
 | `GOOGLE_CLOUD_LOCATION` | `global` (ค่าใน `.env.example` · Gemini 3 บน Vertex) |
-| `GEMINI_API_KEY` | ไม่ต้องใส่ถ้าใช้ Vertex · ใส่เมื่ออยากลอง model ผ่าน AI Studio: https://aistudio.google.com/apikey → **Create API key** → Copy แล้วใช้ `AI_MODEL_OVERRIDE=gemini:<model>` · ⚠️ free tier ได้ 20 request/วัน/model และ Google อาจเอาข้อมูลไป train จึงห้ามส่งข้อมูลของ user จริงหรือรูปลายมือของเพื่อน (AI-07) |
+| `GEMINI_API_KEY` | ไม่ต้องใส่ถ้าใช้ Vertex · ใส่เมื่ออยากลอง model ผ่าน AI Studio: https://aistudio.google.com/apikey → **Create API key** → Copy แล้วใช้ `AI_MODEL_OVERRIDE=gemini:<model>` · ⚠️ free tier ได้ 20 request/วัน/model และ Google ใช้ prompt กับคำตอบไปพัฒนาผลิตภัณฑ์ได้ และอาจมีคนอ่าน ([Gemini API Additional Terms](https://ai.google.dev/gemini-api/terms)) จึงห้ามส่งข้อมูลของ user จริงหรือรูปลายมือของเพื่อน (AI-07) · Vertex ไม่นำข้อมูลไป train แม้ใช้เครดิต Free Trial (`specs/features/ai/gemini-vertex.md` §10 ข้อ 5) |
 | `AI_MODEL_OVERRIDE` | ปกติปล่อยว่าง · ใส่เมื่ออยากลอง model อื่นแทนทุก tier เช่น `vertex:gemini-3.8-flash` |
 
 **ADC (Application Default Credentials) สำหรับ Vertex** · ทำครั้งเดียวต่อเครื่อง ไม่มี key file
