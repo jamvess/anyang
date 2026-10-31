@@ -1,0 +1,114 @@
+{
+  "model": "vertex (config/ai.yaml tiers, small = vertex:gemini-3.5-flash)",
+  "wall_seconds": 114.2,
+  "tokens_in": 134253,
+  "tokens_out": 53496,
+  "calls": [
+    {
+      "tag": "run:sheet-01:a5",
+      "file": "sheet-01",
+      "purpose": "extract_topics_local",
+      "model": "gemini-3.5-flash",
+      "status": "ok",
+      "latency_ms": 6591,
+      "tokens_in": 45703,
+      "tokens_out": 1556,
+      "schema_retries": 0
+    },
+    {
+      "tag": "run:sheet-02:a5",
+      "file": "sheet-02",
+      "purpose": "extract_topics_local",
+      "model": "gemini-3.5-flash",
+      "status": "ok",
+      "latency_ms": 1717,
+      "tokens_in": 8802,
+      "tokens_out": 337,
+      "schema_retries": 0
+    },
+    {
+      "tag": "run:sheet-03:a5",
+      "file": "sheet-03",
+      "purpose": "extract_topics_local",
+      "model": "gemini-3.5-flash",
+      "status": "ok",
+      "latency_ms": 5188,
+      "tokens_in": 2624,
+      "tokens_out": 986,
+      "schema_retries": 0
+    },
+    {
+      "tag": "run:sheet-04:a5",
+      "file": "sheet-04",
+      "purpose": "extract_topics_local",
+      "model": "gemini-3.5-flash",
+      "status": "ok",
+      "latency_ms": 3463,
+      "tokens_in": 2760,
+      "tokens_out": 936,
+      "schema_retries": 0
+    },
+    {
+      "tag": "run:merge",
+      "file": "",
+      "purpose": "merge_topics",
+      "model": "gemini-3.5-flash",
+      "status": "ok",
+      "latency_ms": 83584,
+      "tokens_in": 10519,
+      "tokens_out": 29125,
+      "schema_retries": 1
+    },
+    {
+      "tag": "run:midterm-2559-1:a7",
+      "file": "midterm-2559-1",
+      "purpose": "map_questions",
+      "model": "gemini-3.5-flash",
+      "status": "ok",
+      "latency_ms": 6694,
+      "tokens_in": 5549,
+      "tokens_out": 2105,
+      "schema_retries": 0
+    },
+    {
+      "tag": "run:midterm-2561-1:a7",
+      "file": "midterm-2561-1",
+      "purpose": "map_questions",
+      "model": "gemini-3.5-flash",
+      "status": "ok",
+      "latency_ms": 6883,
+      "tokens_in": 4912,
+      "tokens_out": 1905,
+      "schema_retries": 0
+    },
+    {
+      "tag": "ingest:midterm-2559-1",
+      "file": "midterm-2559-1",
+      "purpose": "ingest",
+      "status": "ok",
+      "latency_ms": 36400,
+      "tokens_in": 36310,
+      "tokens_out": 10810,
+      "schema_retries": 0
+    },
+    {
+      "tag": "ingest:midterm-2561-1",
+      "file": "midterm-2561-1",
+      "purpose": "ingest",
+      "status": "ok",
+      "latency_ms": 14800,
+      "tokens_in": 17074,
+      "tokens_out": 5736,
+      "schema_retries": 0
+    }
+  ],
+  "notes": {
+    "a5": {
+      "sheet-01": "Page 1 is a cover page. Pages 26-28, 66-80, 83, 86, 90, 117-119, and 138-140 contain exercises and answers, which are excluded from the page ranges of the topics.",
+      "sheet-02": "",
+      "sheet-03": "This is an exercise sheet covering limits, continuity, derivatives, and their applications (Module 1 Part 1).",
+      "sheet-04": "This is an exercise sheet covering Calculus topics in Module 1 Part 2, including single-variable calculus applications (L'Hopital, differentials, optimization, related rates) and multivariable calculus (limits, continuity, 3D surfaces, partial derivatives, chain rule, implicit differentiation, Jacobian, total differentials, and local extrema)."
+    },
+    "a6": ""
+  }
+}

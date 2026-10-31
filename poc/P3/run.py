@@ -56,13 +56,20 @@ async def extract_local(run: Run, stem: str, model: str, force: bool) -> dict:
     return data
 
 
-def results_name(model: str, a5_prompt: str) -> str:
-    return f"{model}-a5{a5_prompt}"
+def results_name(model: str, a5_prompt: str, a6_prompt: str = "v1") -> str:
+    """results/<model>-a5<v>/ as before; a merge_topics version other than v1 adds -a6<v>."""
+    return f"{model}-a5{a5_prompt}" + ("" if a6_prompt == "v1" else f"-a6{a6_prompt}")
 
 
-async def main(force: bool, a5_prompt: str, provider: str, small_model: str) -> None:
+async def main(
+    force: bool, a5_prompt: str, a6_prompt: str, provider: str, small_model: str
+) -> None:
     settings = get_settings()
-    run = Run({"extract_topics_local": a5_prompt}, provider=provider, small_model=small_model)
+    run = Run(
+        {"extract_topics_local": a5_prompt, "merge_topics": a6_prompt},
+        provider=provider,
+        small_model=small_model,
+    )
     model = run.label
     ingest = read_json(run.out / "ingest.json")
     sheets = [f["file"].removesuffix(".pdf") for f in ingest["files"] if f["kind"] == "lecture"]
@@ -117,7 +124,7 @@ async def main(force: bool, a5_prompt: str, provider: str, small_model: str) -> 
         settings.learning.stars,
     )
 
-    folder = RESULTS / results_name(model, a5_prompt)
+    folder = RESULTS / results_name(model, a5_prompt, a6_prompt)
     write_json(
         folder / "topics.json",
         [
@@ -189,6 +196,11 @@ if __name__ == "__main__":
         default=get_settings().ai.purposes["extract_topics_local"].prompt,
         help="prompt version of extract_topics_local for this run (default: config/ai.yaml)",
     )
+    parser.add_argument(
+        "--a6-prompt",
+        default=get_settings().ai.purposes["merge_topics"].prompt,
+        help="prompt version of merge_topics for this run (default: config/ai.yaml)",
+    )
     add_provider_args(parser)
     args = parser.parse_args()
-    asyncio.run(main(args.force, args.a5_prompt, args.provider, args.small_model))
+    asyncio.run(main(args.force, args.a5_prompt, args.a6_prompt, args.provider, args.small_model))

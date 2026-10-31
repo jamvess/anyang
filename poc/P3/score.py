@@ -15,6 +15,7 @@ import re
 from collections import defaultdict
 
 from common import LABELS, RESULTS, VERTEX, read_json, write_json
+from run import results_name
 from stars import Topic, stars
 
 from app.settings import get_settings
@@ -203,9 +204,14 @@ if __name__ == "__main__":
         default=get_settings().ai.purposes["extract_topics_local"].prompt,
         help="prompt version of extract_topics_local that run.py used",
     )
+    parser.add_argument(
+        "--a6-prompt",
+        default=get_settings().ai.purposes["merge_topics"].prompt,
+        help="prompt version of merge_topics that run.py used",
+    )
     args = parser.parse_args()
     if args.provider == VERTEX:
         label = VERTEX
     else:
         label = args.model or get_settings().env.ai_model_override.partition(":")[2]
-    main(f"{label}-a5{args.a5_prompt}")
+    main(results_name(label, args.a5_prompt, args.a6_prompt))

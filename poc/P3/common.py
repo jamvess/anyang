@@ -69,6 +69,9 @@ class SaveRaw:
         tag = _tag.get().replace(":", "_") or request.purpose
         self._count[tag] = self._count.get(tag, 0) + 1
         path = self._out / "raw" / f"{tag}-{self._count[tag]}.txt"
+        while path.exists():  # keep answers of earlier runs (a new process counts from 1)
+            self._count[tag] += 1
+            path = self._out / "raw" / f"{tag}-{self._count[tag]}.txt"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(response.text, encoding="utf-8")
         return response

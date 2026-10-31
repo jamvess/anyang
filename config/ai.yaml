@@ -3,7 +3,7 @@
 # "vertex:" runs on Vertex AI when GOOGLE_CLOUD_PROJECT is set (specs/features/ai/gemini-vertex.md;
 # AI-07: no free tier for real users). AI_MODEL_OVERRIDE=gemini:<model> still uses the Gemini API key.
 
-version: 1.5
+version: 1.6
 
 tiers:
   small:  {primary: "vertex:TODO-gemini-small",  fallback: "anthropic:TODO-claude-haiku"}  # not measured (P3 ran A4 on flash only)
@@ -21,7 +21,7 @@ purposes:
   vision_extract_pages:   {tier: vision, temperature: 0.0, max_tokens: 16000, timeout_s: 180, prompt: v1, thinking: low}  # PoC P3: whole scanned file in one call
   split_past_exam:        {tier: small,  temperature: 0.0, max_tokens: 16000, timeout_s: 120, prompt: v1, thinking: low}
   extract_topics_local:   {tier: mid,    temperature: 0.2, max_tokens: 8000, timeout_s: 120, prompt: v1, thinking: low}
-  merge_topics:           {tier: main,   temperature: 0.2, max_tokens: 16000, timeout_s: 180, prompt: v1, thinking: medium}
+  merge_topics:           {tier: main,   temperature: 0.2, max_tokens: 32000, timeout_s: 180, prompt: v1, thinking: medium}  # P3a on Vertex (2026-10-31): 3 of 4 answers hit 16000 and were cut (thinking counts inside) · [C] 32000, re-check token out
   map_questions:          {tier: small,  temperature: 0.0, max_tokens: 8000, timeout_s: 120, prompt: v1, thinking: low}
   scope_edit:             {tier: mid,    temperature: 0.3, max_tokens: 800,  timeout_s: 30, prompt: v1}
   # flow 2.2 / 2.4
