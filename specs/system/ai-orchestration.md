@@ -1,6 +1,6 @@
-# AI Orchestration Design (v1.4)
+# AI Orchestration Design (v1.5)
 
-ฉบับ markdown สำหรับ repo ของเอกสาร AI Orchestration Design v1.0 (30 ก.ย. 2569) พร้อมการแก้ v1.1: เกณฑ์ mastery 0.95, ระดับอ่อน 0.5, ความพร้อม = Σ(r × mastery) ÷ Σr, spaced review ตาม Cepeda/SM-2, เพดาน 10 ข้อ/skill/วัน, จำนวนข้อต่อ skill จำลองจาก BKT, circuit breaker ตาม Resilience4j · v1.2 (26 ต.ค. 2569): ระดับเป้าตามดาวและ mode + เพดาน mastery ตามระดับยากสุดที่ทำถูกเอง (learning-model.md §4) · v1.3 (28 ต.ค. 2569): §2.4.3 กฎเทียบรายบรรทัดของ SymPy service (`specs/features/check/sympy-service.md`) · v1.4 (31 ต.ค. 2569): ผล PoC P1 P2 P3 ใน §2.3.3, §2.3.7 (A2b แทน A2 สำหรับ PDF สแกน), §2.10 (model ของแต่ละ tier) และ §3.6
+ฉบับ markdown สำหรับ repo ของเอกสาร AI Orchestration Design v1.0 (30 ก.ย. 2569) พร้อมการแก้ v1.1: เกณฑ์ mastery 0.95, ระดับอ่อน 0.5, ความพร้อม = Σ(r × mastery) ÷ Σr, spaced review ตาม Cepeda/SM-2, เพดาน 10 ข้อ/skill/วัน, จำนวนข้อต่อ skill จำลองจาก BKT, circuit breaker ตาม Resilience4j · v1.2 (26 ต.ค. 2569): ระดับเป้าตามดาวและ mode + เพดาน mastery ตามระดับยากสุดที่ทำถูกเอง (learning-model.md §4) · v1.3 (28 ต.ค. 2569): §2.4.3 กฎเทียบรายบรรทัดของ SymPy service (`specs/features/check/sympy-service.md`) · v1.4 (31 ต.ค. 2569): ผล PoC P1 P2 P3 ใน §2.3.3, §2.3.7 (A2b แทน A2 สำหรับ PDF สแกน), §2.10 (model ของแต่ละ tier) และ §3.6 · v1.5 (31 ต.ค. 2569): ผล P3a บน Vertex ใน §2.3.7, §2.10, §3.6 (tier main, small · prompt A5/A6 v2)
 
 **ตัวเลขทุกตัวในเอกสารนี้เป็นค่าอธิบาย ค่าจริงที่โค้ดใช้อยู่ใน `config/learning.yaml` และ `config/ai.yaml` ที่มาของแต่ละตัวอยู่ใน `learning-model.md`**
 
@@ -195,7 +195,7 @@ A5: `pages` เป็นช่วง `"start-end"` ตามป้าย `[p.N]`
 
 ทุก output มี `notes` และเป็น object ไม่ใช่ array (structured output เสถียรกว่า) · Pydantic model อยู่ใน `apps/api/app/models/scope_ai.py` และตรวจกฎเหล่านี้ด้วย ถ้าผิดจะถูกส่งกลับให้ model แก้ (AI-05)
 
-- A2b: เพิ่มใน PoC P3 เพราะ free tier ได้ 20 request ต่อวันต่อ model ทำทีละหน้าไม่ไหว · `page` ต้องเรียง 1..n ครบตามจำนวนรูป · **ใช้แทน A2 สำหรับ PDF สแกน** (ตัดสิน 31 ต.ค. จากผล P3: อ่านข้อสอบสแกน 14 หน้าใน 40.5 วินาที และ A4 ตัดข้อตรง label 43/43 · `specs/poc/reports/P3.md`) · ⚠️ P3 รัน A2b บน `gemini-3.5-flash` ไม่ใช่ flash-lite ของ tier vision · วัด A2b บน flash-lite ในรอบวัด P3a ใหม่บน Vertex (S4) · ไฟล์ 14 หน้าใช้ token out 7,943 (ประมาณ 570 ต่อหน้า) เพดาน `max_tokens` ของ A2b จึงพอประมาณ 25 หน้า · ไฟล์ที่ยาวกว่านั้นต้องแบ่งเป็นชุดหน้า หลาย call (ขนาดชุดตัดสินใน feature spec ของ ingest)
+- A2b: เพิ่มใน PoC P3 เพราะ free tier ได้ 20 request ต่อวันต่อ model ทำทีละหน้าไม่ไหว · `page` ต้องเรียง 1..n ครบตามจำนวนรูป · **ใช้แทน A2 สำหรับ PDF สแกน** (ตัดสิน 31 ต.ค. จากผล P3: อ่านข้อสอบสแกน 14 หน้าใน 40.5 วินาที และ A4 ตัดข้อตรง label 43/43 · `specs/poc/reports/P3.md`) · P3 รอบแรกรัน A2b บน `gemini-3.5-flash` · **รอบ Vertex (31 ต.ค.) วัดบน flash-lite ของ tier vision แล้ว:** 14 หน้า 12.3 และ 27.0 วินาที (ครั้งหลัง schema retry 1) · 12 หน้า 8.2–9.6 วินาที · A4 บน flash ตัดข้อตรง 43/43 เท่าเดิม · ไฟล์ 14 หน้าใช้ token out 7,943 (ประมาณ 570 ต่อหน้า) เพดาน `max_tokens` ของ A2b จึงพอประมาณ 25 หน้า · ไฟล์ที่ยาวกว่านั้นต้องแบ่งเป็นชุดหน้า หลาย call (ขนาดชุดตัดสินใน feature spec ของ ingest)
 - A4: `q_no` แบบ `ก1.2` / `ข3` / `3.2` ไม่ซ้ำกัน · ข้อย่อยที่มีคำนำร่วมกันต้องใส่คำนำในทุกข้อย่อย · `points` เป็น `null` ได้
 - A6: `sources` = ช่วงหน้า `<file>:<start>-<end>` ของหัวข้อ ใช้สร้าง `topic_chunks` ในขั้น 5d และแสดงที่มา (SM-04) · `prereqs` ต้องเป็น id ในรายการ ห้ามวน และต้องมาก่อนใน `order` · skill id ขึ้นต้นด้วย id ของหัวข้อ · `error_type` เป็นได้ 5 ค่า (ไม่มี `no_answer`) · `excluded_by_note` จาก note ของ user
 - A7: `topic_id` + `skill_id` เป็น `null` ทั้งคู่ได้เมื่อไม่มีหัวข้อไหนเข้า (พร้อม `note`) · skill ต้องเป็นของหัวข้อที่เลือก
@@ -749,10 +749,10 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 
 | Tier | Purposes | Primary (Vertex AI) | Fallback |
 |---|---|---|---|
-| small | route_intent, classify_material, split_past_exam, map_questions, normalize_math, persona_extract, persona_preview, latex_to_speech, summaries (update_running_summary, session_summary) | Gemini รุ่นเล็ก | Claude Haiku |
-| mid | check_answer, generate_problem, extract_topics_local, scope_edit | `gemini-3.5-flash` (P3: A5 ครบ 4 ชีท · P2: checker ผ่านเป้า) | Claude Haiku |
-| main | tutor_reply (+ buddy scene), merge_topics, dispute re-check | `gemini-3.5-flash` ชั่วคราว · P3 วัด A6 `merge_topics` ไม่ได้ (free tier 0/20) · วัด P3a ใหม่บน Vertex ใน S4 | Claude Sonnet |
-| vision | vision_extract, vision_extract_pages, extract_answer | `gemini-3.5-flash-lite` (P1: 95.2% ของบรรทัด) | Mathpix (ยังไม่ทดสอบ · P1 ผ่านเป้า จึงไม่ต้องใช้เป็นหลัก) |
+| small | route_intent, classify_material, split_past_exam, map_questions, normalize_math, persona_extract, persona_preview, latex_to_speech, summaries (update_running_summary, session_summary) | `gemini-3.5-flash` (P3a บน Vertex: A4 ตัดข้อสอบ 43/43 · flash-lite ไม่ escape LaTeX ใน JSON 1 จาก 2 ไฟล์) | Claude Haiku |
+| mid | check_answer, generate_problem, extract_topics_local, scope_edit | `gemini-3.5-flash` (P3: A5 ครบ 4 ชีท, Vertex 74–78% ก่อน merge · P2: checker ผ่านเป้า) | Claude Haiku |
+| main | tutor_reply (+ buddy scene), merge_topics, dispute re-check | `gemini-3.5-flash` (P3a บน Vertex: A6 `merge_topics/v2` ผ่าน schema ครั้งแรก, ★★★ 10/12 · ใช้ token out ราว 20,000 จึงตั้ง `max_tokens` 32,000) | Claude Sonnet |
+| vision | vision_extract, vision_extract_pages, extract_answer | `gemini-3.5-flash-lite` (P1: 95.2% ของบรรทัด · P3a: A2b 14 หน้า 12–27 วินาที) | Mathpix (ยังไม่ทดสอบ · P1 ผ่านเป้า จึงไม่ต้องใช้เป็นหลัก) |
 | embed | ingest, คำถามอิสระ | `gemini-embedding-2` ที่ 768 มิติ (P3b: recall@4 95%) | — |
 
 - **Config อยู่ใน YAML ใน repo** (purpose → tier, model, temperature, max_tokens, timeout, fallback, prompt_version) เปลี่ยน model ได้โดยไม่แก้ code
@@ -885,7 +885,7 @@ Target user ของ v1 คือนักเรียนรายคน แต
 |---|---|---|
 | Vision LLM อ่านลายมือคณิตได้แม่นพอ | ≥ 80% ของบรรทัด | P1 ✅ **95.2%** (30 รูป 125 บรรทัด · `gemini-3.5-flash-lite` · ไม่ได้ทดสอบ Claude/Mathpix เพราะงบ) |
 | OCR confidence ใช้แยกบรรทัดที่อ่านผิดได้ | threshold 0.8 | P1 ❌ ไม่มี threshold ที่จับได้ ≥ 95% → ยืนยันทุกครั้ง (`specs/poc/reports/P1.md`) |
-| Topic extraction ตรงกับที่คนทำ | หัวข้อ ≥ 80%, ★★★ ≥ 80%, ≤ 3 นาที/ไฟล์ | P3a ❌ หัวข้อตรง 1/27 (flash-lite) · A5 ของ flash 15/27 = 56% · A6 วัดไม่ได้บน free tier · ★★★ ทั้ง pipeline ❌ 1/12 (เพราะหัวข้อไม่ตรง) · สูตรดาวกับ map ของทีม (ไม่ใช้ AI) ✅ 10/12 = 83% · ≤ 3 นาที ✅ เฉพาะ flash-lite (1.34) ซึ่งไม่ใช้แล้ว · flash วัดไม่ครบ · ใช้ fallback ปรับ prompt A5/A6 แล้ววัดทุกเกณฑ์ใหม่บน Vertex ใน S4 (`specs/poc/reports/P3.md`) |
+| Topic extraction ตรงกับที่คนทำ | หัวข้อ ≥ 80%, ★★★ ≥ 80%, ≤ 3 นาที/ไฟล์ | P3a **ผ่านบางส่วน** (Vertex 31 ต.ค. · `extract_topics_local/v2` + `merge_topics/v2` · Jam ตัดสิน): ★★★ ทั้ง pipeline ✅ 10/12 = 83% · ≤ 3 นาที ✅ (สูงสุด 1.45) · หัวข้อตรง ❌ 20/27 = 74% (ผู้ใช้แก้ได้ใน S12) · รอบแรกบน free tier หัวข้อ 1/27 · วัดรอบละครั้ง วิชาเดียว (`specs/poc/reports/P3.md` §7) |
 | Embedding model สำหรับภาษาไทย | ยังไม่เลือก | P3b ✅ `gemini-embedding-2` ที่ 768 มิติ recall@4 95% (`bge-m3` 45%) |
 | Checker แม่นตามเป้า | verdict ≥ 95%, error_type ≥ 80%, first_wrong_line ≥ 85% | P2 ✅ 100%, 96.4%, 100% (50 ข้อ · `vertex:gemini-3.5-flash` · `specs/poc/reports/P2.md`) |
 | TTFT และต้นทุน | < 2 วินาที, ≤ 5 บาท/session | P4-lite (S3) · ต้นทุนดูจาก log `ai_calls` ของ gateway (P7) |

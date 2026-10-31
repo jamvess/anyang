@@ -368,7 +368,8 @@ async def test_AI04_every_call_produces_a_record_with_tokens():
     assert len(records) == 1
     record = records[0]
     assert record.purpose == "extract_topics_local"
-    assert record.prompt_version == "v1"
+    # Version from config/ai.yaml, not a literal (Jam ok 2026-10-31: v2 since P3a on Vertex).
+    assert record.prompt_version == get_settings().ai.purposes["extract_topics_local"].prompt
     assert record.status == "ok"
     assert record.schema_retries == 1
     assert record.tokens_in == sum(r.tokens_in for r in fake.responses_sent)

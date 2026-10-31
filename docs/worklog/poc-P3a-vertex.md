@@ -15,7 +15,7 @@
 - [x] 4. 🙋 Jam รัน A5 → A6 → A7 บน Vertex 2 รอบ คือ A5 `v1` และ `v2` · `uv run python ../../poc/P3/run.py --provider vertex --small-model vertex:gemini-3.5-flash --a5-prompt v1` แล้ว `score.py --provider vertex --a5-prompt v1` · ทำซ้ำด้วย `v2` · ประมาณ 7 call ต่อรอบ
 - [x] 5. 🤖 สรุปผลเป็นตาราง เทียบกับรอบ free tier: หัวข้อตรง (IoU ≥ 0.5), ★★★ ทั้ง pipeline, map ข้อสอบ, นาทีต่อไฟล์, A6 ผ่าน schema ไหม, token out ของ `merge_topics` เทียบกับเพดาน 16,000, A2b บน flash-lite (เวลา, token, จำนวนข้อที่ A4 ตัดได้)
 - [x] 6. 🙋 Jam ตัดสิน: ผ่านหรือไม่ผ่าน · ใช้ A5 version ไหน · model ของ tier main · ถ้า A6 ยังพังให้ทำ `merge_topics/v2` ไหม (ถ้าทำ ต้องวน ขั้น 4 อีกรอบ)
-- [ ] 7. 🤖 `/poc-report P3` (เพิ่มส่วน "รอบ Vertex") + `specs/poc/README.md` บรรทัดผล P3 + `ai-orchestration.md` §2.10, §3.6 + `docs/report/ai-evaluation.md` §3 + `config/ai.yaml` ถ้าเปลี่ยน prompt หรือ model (ไฟล์กลาง)
+- [x] 7. 🤖 `/poc-report P3` (เพิ่มส่วน "รอบ Vertex") + `specs/poc/README.md` บรรทัดผล P3 + `ai-orchestration.md` §2.10, §3.6 + `docs/report/ai-evaluation.md` §3 + `config/ai.yaml` ถ้าเปลี่ยน prompt หรือ model (ไฟล์กลาง)
 - [ ] 8. 🙋 Jam บอกแชทกลุ่ม (ถ้าแก้ `config/ai.yaml`)
 
 ## Definition of done
@@ -40,6 +40,9 @@
 - 2026-10-31 · ขั้น 6 Jam: ทำ `merge_topics/v2` ในงานนี้ + เพิ่มงบ token (ข้อ 1 ก) · v2: เก็บทุก section ของชีทเป็นหัวข้อของตัวเอง, รวมเฉพาะที่ซ้ำข้ามไฟล์จริง, หัวข้อของไฟล์แบบฝึกหัดไปรวมกับหัวข้อในชีทที่ฝึก, skill 2–4 ข้อ และ mistake 1–2 ข้อ (จากเดิม 2–5 และ 1–3 · ลด token) · `config/ai.yaml` 1.6: `merge_topics` `max_tokens` 16000 → 32000 คง `thinking: medium` (`prompt` ยังเป็น v1 จนกว่าจะตัดสินจากผล) · `run.py`/`score.py` มี `--a6-prompt` · `SaveRaw` ไม่เขียนทับคำตอบของรอบก่อนแล้ว
 
 - 2026-10-31 · **ขั้น 6 Jam ตัดสิน:** (1) P3a บน Vertex **ผ่านบางส่วน**: ★★★ ทั้ง pipeline 10/12 = 83% ผ่าน · นาทีต่อไฟล์ผ่าน · หัวข้อตรง 20/27 = 74% ยังไม่ถึง 80% · ใช้ต่อได้เพราะผู้ใช้ยืนยันและแก้ scope ใน S12 ก่อนติว (2) `config/ai.yaml`: `extract_topics_local` → v2, `merge_topics` → v2 (★★★ คือค่าที่ระบบใช้จริง) (3) tier main = `vertex:gemini-3.5-flash` ไม่ใช่ชั่วคราวแล้ว (4) tier small = `vertex:gemini-3.5-flash` (A4 43/43, A7 ใช้ได้ · flash-lite พัง JSON ที่มี LaTeX) · fallback ของ small ยัง TODO
+
+- 2026-10-31 · ขั้น 7: `P3.md` §7 + สรุปบนสุด · `config/ai.yaml` 1.7 (A5/A6 prompt v2, tier small = flash, comment tier main/vision) · `specs/poc/README.md` บรรทัดผล P3 · `ai-orchestration.md` v1.5 §2.3.7, §2.10, §3.6 · `docs/report/ai-evaluation.md` ตาราง model, ตารางสรุป, §3.3
+- 2026-10-31 · test ที่ review แล้ว `test_AI04_every_call_produces_a_record_with_tokens` เขียน `prompt_version == "v1"` ตายตัว จึง fail เมื่อ config เป็น v2 · Jam อนุญาตให้แก้เป็นอ่านจาก `config/ai.yaml` (สิ่งที่ test ตรวจยังเหมือนเดิม)
 
 ## ผลขั้น 5 (P3a บน Vertex · 31 ต.ค.)
 
@@ -74,7 +77,7 @@
 
 ## Next step
 
-ขั้น 7 (🤖): `/poc-report P3` เพิ่มส่วนรอบ Vertex · แล้วแก้ `config/ai.yaml` (prompt v2 ทั้งคู่, tier small, comment tier main), `specs/poc/README.md`, `ai-orchestration.md` §2.3.7, §2.10, §3.6, `docs/report/ai-evaluation.md` §3
+ขั้น 8 (🙋): Jam ส่งข้อความแชทกลุ่ม (`config/ai.yaml` 1.6–1.7) แล้วรัน `/work-done`
 
 ## Waiting on
 
