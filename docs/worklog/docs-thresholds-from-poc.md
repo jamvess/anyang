@@ -5,7 +5,7 @@
 | Owner | Jam |
 | Branch | `docs/thresholds-from-poc` |
 | Checklist item | อัปเดต threshold ใน AI flow specs และ `learning-model.md` ตามผล P1 P2 P3 (D2) |
-| Status | in progress · 2026-10-31 |
+| Status | paused · 2026-10-31 |
 
 ## Plan
 
