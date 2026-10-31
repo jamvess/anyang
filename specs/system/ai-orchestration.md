@@ -885,7 +885,7 @@ Target user ของ v1 คือนักเรียนรายคน แต
 |---|---|---|
 | Vision LLM อ่านลายมือคณิตได้แม่นพอ | ≥ 80% ของบรรทัด | P1 ✅ **95.2%** (30 รูป 125 บรรทัด · `gemini-3.5-flash-lite` · ไม่ได้ทดสอบ Claude/Mathpix เพราะงบ) |
 | OCR confidence ใช้แยกบรรทัดที่อ่านผิดได้ | threshold 0.8 | P1 ❌ ไม่มี threshold ที่จับได้ ≥ 95% → ยืนยันทุกครั้ง (`specs/poc/reports/P1.md`) |
-| Topic extraction ตรงกับที่คนทำ | หัวข้อ ≥ 80%, ★★★ ≥ 80%, ≤ 3 นาที/ไฟล์ | P3a **ผ่านบางส่วน** (Vertex 31 ต.ค. · `extract_topics_local/v2` + `merge_topics/v2` · Jam ตัดสิน): ★★★ ทั้ง pipeline ✅ 10/12 = 83% · ≤ 3 นาที ✅ (สูงสุด 1.45) · หัวข้อตรง ❌ 20/27 = 74% (ผู้ใช้แก้ได้ใน S12) · รอบแรกบน free tier หัวข้อ 1/27 · วัดรอบละครั้ง วิชาเดียว (`specs/poc/reports/P3.md` §7) |
+| Topic extraction ตรงกับที่คนทำ | หัวข้อ ≥ 80%, ★★★ ≥ 80%, ≤ 3 นาที/ไฟล์ | P3a **ผ่านบางส่วน** (Vertex 31 ต.ค. · `extract_topics_local/v2` + `merge_topics/v2` · Jam ตัดสิน): ★★★ ทั้ง pipeline ✅ 10/12 = 83% · ≤ 3 นาที ✅ (A6 รวมทั้งวิชา 87 วินาที · A5 ต่อชีทไม่เกิน 15 วินาที) · หัวข้อตรง ❌ 20/27 = 74% (ผู้ใช้แก้ได้ใน S12) · รอบแรกบน free tier หัวข้อ 1/27 · วัดรอบละครั้ง วิชาเดียว (`specs/poc/reports/P3.md` §7) |
 | Embedding model สำหรับภาษาไทย | ยังไม่เลือก | P3b ✅ `gemini-embedding-2` ที่ 768 มิติ recall@4 95% (`bge-m3` 45%) |
 | Checker แม่นตามเป้า | verdict ≥ 95%, error_type ≥ 80%, first_wrong_line ≥ 85% | P2 ✅ 100%, 96.4%, 100% (50 ข้อ · `vertex:gemini-3.5-flash` · `specs/poc/reports/P2.md`) |
 | TTFT และต้นทุน | < 2 วินาที, ≤ 5 บาท/session | P4-lite (S3) · ต้นทุนดูจาก log `ai_calls` ของ gateway (P7) |

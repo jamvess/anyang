@@ -40,7 +40,7 @@ PoC คือการลองทำส่วนที่ยากที่ส�
 - **ผ่านเมื่อ:** หัวข้อตรง ≥ 80%, ★★★ ตรง ≥ 80%, ≤ 3 นาที/ไฟล์
 - **ผลที่ต้องได้:** embedding model + มิติ vector, ขนาด chunk, ค่า `stars.*` ที่ยืนยันแล้ว
 - **ถ้าไม่ผ่าน:** ใช้ Google Document AI กับไฟล์สแกน และปรับ prompt A5/A6
-- **ผล (21 ต.ค. free tier + 31 ต.ค. Vertex · `specs/poc/reports/P3.md`):** P3b ผ่าน: `gemini-embedding-2` 768 มิติ recall@4 19/20 · P3a รอบแรกไม่ผ่าน (หัวข้อ 1/27) · ใช้ fallback ปรับ prompt แล้ววัดบน Vertex: **ผ่านบางส่วน** (Jam ตัดสิน) · `extract_topics_local/v2` + `merge_topics/v2`: ★★★ ทั้ง pipeline 10/12 = 83% ผ่าน · ≤ 1.45 นาที/ไฟล์ ผ่าน · หัวข้อตรง 20/27 = 74% ยังไม่ถึง 80% (ผู้ใช้แก้ได้ใน S12) · ไม่ใช้ Document AI · วัดรอบละครั้งเดียว วิชาเดียว
+- **ผล (21 ต.ค. free tier + 31 ต.ค. Vertex · `specs/poc/reports/P3.md`):** P3b ผ่าน: `gemini-embedding-2` 768 มิติ recall@4 19/20 · P3a รอบแรกไม่ผ่าน (หัวข้อ 1/27) · ใช้ fallback ปรับ prompt แล้ววัดบน Vertex: **ผ่านบางส่วน** (Jam ตัดสิน) · `extract_topics_local/v2` + `merge_topics/v2`: ★★★ ทั้ง pipeline 10/12 = 83% ผ่าน · ≤ 3 นาที/ไฟล์ ผ่าน (A6 รวมทั้งวิชา 87 วินาที · A5 ต่อชีทไม่เกิน 15 วินาที) · หัวข้อตรง 20/27 = 74% ยังไม่ถึง 80% (ผู้ใช้แก้ได้ใน S12) · ไม่ใช้ Document AI · วัดรอบละครั้งเดียว วิชาเดียว
 
 ## P2 · ตรวจคำตอบ · Jam (รวม SymPy service · ย้ายจาก Junior 21 ต.ค.) · S3
 
