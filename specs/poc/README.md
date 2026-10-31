@@ -62,5 +62,6 @@ PoC คือการลองทำส่วนที่ยากที่ส�
 
 - **คำถาม:** pipeline spec → test → code ใช้ได้จริงไหม
 - **ทำ:** ใช้ `specs/features/scope/compute-importance.md` ผ่านครบ: `/spec-feature` (มีร่างให้แล้ว แค่ review) → `/spec-to-tests` → ทีม review test → `/implement-feature` → CI → PR review
-- **Metrics:** % โค้ดที่ agent เขียน (นับบรรทัดใน PR), จำนวนรอบ red → green, บั๊กที่ test จับได้ก่อน merge, เวลาที่คนใช้ review
+- **Metrics:** % โค้ดที่ agent เขียน (นับบรรทัดใน PR), จำนวนรอบ red → green, บั๊กที่ test จับได้ก่อน merge, เวลาที่คนใช้ review · กรอกใน `poc/P8-lite/metrics.md` ระหว่างทำ (นับบรรทัดด้วย `poc/P8-lite/agent_lines.sh`)
+- **เตรียมแล้ว (31 ต.ค. · PR #89):** spec approved · 25 AC · test plan 18 ชื่อ
 - **ผ่านเมื่อ:** merge ได้โดย CI เขียว และเก็บ metrics ครบ (ใช้ใน Self-Assessment)

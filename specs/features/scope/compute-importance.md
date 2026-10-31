@@ -6,7 +6,7 @@
 | Requirements | SM-03, SM-09 |
 | Owner | Jam |
 | Reviewer | Junior |
-| Status | draft (ใช้เป็นตัวอย่างของ PoC P8-lite) · ปรับตามผล P3 31 ต.ค. 2569 |
+| Status | approved 31 ต.ค. 2569 (Jam · ปรับตามผล P3) · ใช้เป็นตัวอย่างของ PoC P8-lite · เริ่ม `/spec-to-tests` ใน S4 |
 | Related system spec | ai-orchestration.md §2.3.4–2.3.5, learning-model.md §2, `config/learning.yaml` → `stars` · สูตรที่ P3 ใช้จริง: `poc/P3/stars.py` (★★★ ตรง label 10/12 · `specs/poc/reports/P3.md`) |
 
 ## 1. Context

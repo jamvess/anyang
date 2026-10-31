@@ -14,7 +14,7 @@
 - [x] 3. 🙋 Jam อ่าน spec §2, §4, §10 แล้วตอบคำถามเปิดในแชท
 - [x] 4. 🙋 Jam บอกแชทกลุ่มว่า spec พร้อมสำหรับ P8-lite ใน S4 (ข้อความจะร่างให้) · Junior เป็น reviewer ของ spec · ไม่ต้องรอ approve (`CLAUDE.md` "How we work" 5)
 - [x] 5. 🤖 เตรียมใบเก็บ metrics ของ P8-lite (`poc/P8-lite/metrics.md`): วิธีนับ % โค้ดที่ agent เขียน, รอบ red → green, บั๊กที่ test จับได้ก่อน merge, เวลาที่คนใช้ review · ให้ S4 เก็บแบบเดียวกันทุกคน
-- [ ] 6. 🤖 ตั้ง spec เป็น approved · จดการตัดสินใจ · sub-bullet ใน checklist (ยังไม่ติ๊ก เพราะ P8-lite จบเมื่อ implement + merge ใน S4)
+- [x] 6. 🤖 ตั้ง spec เป็น approved · จดการตัดสินใจ · sub-bullet ใน checklist (ยังไม่ติ๊ก เพราะ P8-lite จบเมื่อ implement + merge ใน S4)
 
 ## Definition of done
 
@@ -26,6 +26,7 @@
 
 ## Decisions
 
+- 2026-10-31 · (ขั้น 6) spec approved · `specs/poc/README.md` P8-lite ชี้ไปที่ใบ metrics และบอกว่าเตรียมอะไรแล้ว · checklist เพิ่ม sub-bullet ไม่ติ๊ก
 - 2026-10-31 · (ขั้น 4) Jam แจ้งแชทกลุ่มแล้ว · (ขั้น 5) `poc/P8-lite/metrics.md` 6 ส่วน + `poc/P8-lite/agent_lines.sh` นับบรรทัดที่เพิ่มต่อ commit แยกตามบรรทัด `Co-Authored-By: Claude` · ลองกับ PR #87 ได้ agent 377/377 · กติกา: คนแก้โค้ดเองต้อง commit แยก · เพิ่มส่วน "test ที่ผิด" และ "สิ่งที่ spec ไม่ชัด" นอกจาก 4 metric ใน README เพราะเป็นตัววัดคุณภาพของ spec-to-tests
 - 2026-10-31 · (ขั้น 3) Jam ok ข้อเสนอทั้ง 5 ข้อใน §10 และผลของ AC-16 (หน้าเท่ากัน → ★★★ ได้มากกว่า 1/3) กับ AC-13 (ผู้ใช้ตั้ง ★★★ เองทำให้ prerequisite ได้ ★★)
 - 2026-10-31 · (ขั้น 1) สูตรหลักตรงกันทุกแหล่ง (ai-orchestration §2.3.5, learning-model §2, `learning.yaml`, `poc/P3/stars.py`) และ schema มีคอลัมน์ครบ · เจอ 12 จุด: excluded มาจาก `topics.status`, จำนวนหน้ามาจาก `topic_chunks` → `chunks`, ข้อความเหตุผล 3 แบบ, AC ขอบเดิมใช้ r = 0.599 ที่สร้างจากน้ำหนักจริงไม่ได้, กรณีขอบที่ P3 ทำไว้แต่ spec ไม่ได้เขียน (excluded ยังคำนวณ r และไม่นับเป็น ★★★, r > 0 ชนะเหตุผล prerequisite, หลาย parent ใช้ตัวแรก, น้ำหนักรวม 0), และ 4 ข้อให้ Jam ตัดสิน · Jam ok รายการ
@@ -34,7 +35,7 @@
 
 ## Next step
 
-ขั้น 6 (🤖): spec เป็น approved · `specs/poc/README.md` P8-lite ชี้ไปที่ใบ metrics · sub-bullet ใน checklist (ไม่ติ๊ก)
+ครบทุกขั้นแล้ว · Jam พิมพ์ `/work-done`
 
 ## Waiting on
 
