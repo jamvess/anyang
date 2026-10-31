@@ -13,7 +13,7 @@
 | เป็นเจ้าของโฟลเดอร์ | `apps/api/`, `supabase/`, `infra/`, `.github/` | `apps/web/`, wireframe/Figma | `prompts/`, `evals/`, `config/learning.yaml`, `specs/system/ai-orchestration.md`, `learning-model.md` |
 | PoC | P6-lite, backend ของ P4-lite | หน้าแชทของ P4-lite | P1, P3, P2 (+ SymPy service) |
 | Deliverables | D2 (architecture), D3, D4, D5 | D6, D7 | D2 (AI flows), D8 |
-| Review PR ของ | May (ส่วนที่ต่อ API), Jam (โค้ด Python) | Junior (ส่วนที่กระทบ UI/UX) | Junior (domain logic, config) |
+| ดู PR ย้อนหลังของ (ไม่บังคับ · ตั้งแต่ 31 ต.ค.) | May (ส่วนที่ต่อ API), Jam (โค้ด Python) | Junior (ส่วนที่กระทบ UI/UX) | Junior (domain logic, config) |
 | ตัดสินใจเรื่อง | โครงสร้าง backend, DB, deploy, สิทธิ์ cloud | หน้าตาและ flow ของหน้าจอ | prompt, model, threshold, เกณฑ์วัดผล |
 | เวลา | ~12.5 ชม./สัปดาห์ | ~12.5 ชม./สัปดาห์ | ~12.5 ชม./สัปดาห์ |
 
@@ -71,8 +71,9 @@
 
 ## กติการ่วม
 
-- **PR ทุกอันต้องมีคน review 1 คน** ตาม CODEOWNERS ไม่ merge งานตัวเอง
-- **Review test ก่อน implement** คนที่ review test ควรเป็นคนละคนกับคนที่เขียน spec
+- **Merge งานตัวเองได้เมื่อ CI เขียว** ไม่ต้องรอ approve (ทีมตกลง 31 ต.ค. เพราะอยู่คนละ time zone และการรอ review ทำให้งานติด) · ต้อง self-review ด้วย `/code-review` ก่อน (`/work-done` ทำให้) · เพื่อนดูย้อนหลังได้ ถ้าเจอปัญหาเปิด PR แก้
+- **งานเสี่ยงต้องบอกในแชทกลุ่มก่อน merge:** migration หรือ RLS, ไฟล์กลาง (`CLAUDE.md`, `requirements.md`, `api.md`, `config/*.yaml`, `.env.example`), `infra/`, `.github/`
+- **Review test ก่อน implement** คนเขียน review เองได้ · ถ้าเป็น test ของ RLS หรือ domain logic ที่คนอื่นใช้ต่อ ให้ชวนเพื่อนดูถ้ามีเวลา
 - **ติดเกิน 1 วันให้บอกในแชทกลุ่ม** อย่ารอจน demo
 - **คนที่เปลี่ยน spec หรือ config** ต้องบอกในแชทกลุ่ม เพราะกระทบงานคนอื่น
 - **ตัวเลขทุกตัวใน learning model** ต้องมี source หรือแผน calibrate (ดู `learning-model.md`)

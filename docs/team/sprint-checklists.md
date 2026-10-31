@@ -21,6 +21,7 @@
 ### S1 · 5–16 ต.ค.
 
 - [x] ⭐ สร้าง repo, วาง starter files · branch protection เปิดแล้ว 20 ต.ค. (ruleset `main` id 25374094 · ต้อง approve 1 คน + CI `api`, `api-integration`, `web` ผ่าน · ห้าม force push และลบ branch · ไม่มี bypass) · repo เป็น public
+  - 31 ต.ค. ทีมตกลงเลิกบังคับ approve (อยู่คนละ time zone · การรอ review ทำให้งานติด) · ruleset เปลี่ยนเป็น approve 0 คน ยังต้องเปิด PR + CI 3 ตัวผ่าน · แทนด้วย self-review `/code-review` ใน `/work-done` + บอกกลุ่มก่อน merge งานเสี่ยง (`CLAUDE.md` "How we work" 5)
 - [x] ⭐ ให้ Claude Code scaffold `apps/api` และตรวจผล
 - [x] ⭐ `npx supabase init` + `db push` `0001_init.sql` ขึ้น Supabase cloud `anyang-dev` + เปิด custom access token hook
 - [x] GitHub Actions รันครบ 3 job และเขียวบน `main`
