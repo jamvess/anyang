@@ -21,7 +21,7 @@ from pydantic import BaseModel  # noqa: E402
 from app.ai.gateway import AIProviderError, CallRecord, Gateway  # noqa: E402
 from app.ai.providers.base import ProviderRequest, ProviderResponse  # noqa: E402
 from app.ai.providers.gemini import GeminiProvider  # noqa: E402
-from app.settings import get_settings  # noqa: E402
+from app.settings import AIConfig, get_settings  # noqa: E402
 
 SUBJECT = "mth10101"
 RAW = REPO / "evals" / "topics" / SUBJECT / "raw"
@@ -36,6 +36,10 @@ RESULTS = Path(__file__).parent / "results"  # committed: metrics and topic list
 FREE_TIER_REQUESTS_PER_MINUTE = 5
 MIN_SECONDS_BETWEEN_REQUESTS = 60 / FREE_TIER_REQUESTS_PER_MINUTE + 1
 BACKOFF_SECONDS = (30, 60, 90)
+# Vertex AI (re-run of 31 Oct · PoC P2 ran 50 calls 1 s apart without a 429): no daily quota,
+# so calls only need a short gap. Its results go to out/vertex/ and results/vertex-a5<v>/.
+VERTEX_SECONDS_BETWEEN_REQUESTS = 1
+VERTEX = "vertex"
 
 _tag: contextvars.ContextVar[str] = contextvars.ContextVar("tag", default="")
 
@@ -70,6 +74,38 @@ class SaveRaw:
         return response
 
 
+def vertex_config(config: AIConfig, small_model: str) -> AIConfig:
+    """config/ai.yaml as it is (each purpose on its tier's model, gateway retries as set),
+    except tier ``small``, which is still a TODO: it gets ``small_model`` for this run."""
+    if not small_model.startswith(f"{VERTEX}:"):
+        raise ValueError(f"--small-model must be a vertex: model id, got {small_model!r}")
+    tiers = config.tiers | {
+        "small": config.tiers["small"].model_copy(update={"primary": small_model})
+    }
+    return config.model_copy(update={"tiers": tiers})
+
+
+def label_of(provider: str, model: str) -> str:
+    """Folder label of a run: the model id on the free tier, ``vertex`` on Vertex (where each
+    tier has its own model, written per call in run.json)."""
+    return VERTEX if provider == VERTEX else model.partition(":")[2]
+
+
+def add_provider_args(parser: Any) -> None:
+    parser.add_argument(
+        "--provider",
+        choices=["gemini", VERTEX],
+        default="gemini",
+        help="gemini: free tier, one model (AI_MODEL_OVERRIDE); vertex: config/ai.yaml tiers",
+    )
+    parser.add_argument(
+        "--small-model",
+        default="",
+        help="vertex only: model of tier small (still TODO in config/ai.yaml), e.g. "
+        "vertex:gemini-3.5-flash-lite",
+    )
+
+
 class Run:
     """A live gateway whose call records are appended to <out>/calls.jsonl with a tag.
     Also used by poc/P1 (its own ``out`` folder and ``model``)."""
@@ -79,33 +115,52 @@ class Run:
         prompt_versions: dict[str, str] | None = None,
         out: Path = OUT,
         model: str | None = None,
+        provider: str = "gemini",
+        small_model: str = "",
     ) -> None:
         """``prompt_versions`` overrides the prompt of a purpose for this run only, e.g.
-        {"extract_topics_local": "v2"}, so a new version is compared before config changes."""
+        {"extract_topics_local": "v2"}, so a new version is compared before config changes.
+        ``provider="vertex"`` runs on Vertex AI with the models of config/ai.yaml and writes to
+        ``out/vertex/`` (``small_model`` is required: tier small has no model yet)."""
         settings = get_settings()
         env = settings.env
-        self.model = model or env.ai_model_override
-        self.out = out
-        # Free tier: a 503 counts against the 20-per-day quota, so the gateway's immediate
-        # retry is turned off here and Run.call waits BACKOFF_SECONDS instead. PoC only;
-        # config/ai.yaml keeps retries: 1.
         purposes = {
             name: p.model_copy(update={"prompt": (prompt_versions or {}).get(name, p.prompt)})
             for name, p in settings.ai.purposes.items()
         }
-        config = settings.ai.model_copy(
-            update={
-                "gateway": settings.ai.gateway.model_copy(update={"retries": 0}),
-                "purposes": purposes,
-            }
-        )
         self.prompts = {name: p.prompt for name, p in purposes.items()}
-        self.gateway = Gateway.live(
-            config,
-            env.prompts_dir,
-            {"gemini": SaveRaw(GeminiProvider(env.gemini_api_key.get_secret_value()), out)},
-            self.model,
-        )
+        if provider == VERTEX:
+            self.model = f"{VERTEX} (config/ai.yaml tiers, small = {small_model})"
+            self.out = out / VERTEX
+            self.label = VERTEX
+            self._gap = VERTEX_SECONDS_BETWEEN_REQUESTS
+            config = vertex_config(settings.ai, small_model).model_copy(
+                update={"purposes": purposes}
+            )
+            vertex = GeminiProvider.vertex(env.google_cloud_project, env.google_cloud_location)
+            self.gateway = Gateway.live(
+                config, env.prompts_dir, {VERTEX: SaveRaw(vertex, self.out)}
+            )
+        else:
+            self.model = model or env.ai_model_override
+            self.out = out
+            self.label = label_of(provider, self.model)
+            self._gap = MIN_SECONDS_BETWEEN_REQUESTS
+            # Free tier: a 503 counts against the 20-per-day quota, so the gateway's immediate
+            # retry is turned off here and Run.call waits BACKOFF_SECONDS instead. PoC only;
+            # config/ai.yaml keeps retries: 1.
+            config = settings.ai.model_copy(
+                update={
+                    "gateway": settings.ai.gateway.model_copy(update={"retries": 0}),
+                    "purposes": purposes,
+                }
+            )
+            self.gateway = Gateway.live(
+                config,
+                env.prompts_dir,
+                {"gemini": SaveRaw(GeminiProvider(env.gemini_api_key.get_secret_value()), out)},
+                self.model,
+            )
         self.records: list[tuple[str, CallRecord]] = []
         self.gateway.add_listener(self._log)
         self._one_at_a_time = asyncio.Lock()
@@ -123,7 +178,7 @@ class Run:
     ) -> T:
         async with self._one_at_a_time:
             for wait in (*BACKOFF_SECONDS, None):
-                gap = self._last_start + MIN_SECONDS_BETWEEN_REQUESTS - time.monotonic()
+                gap = self._last_start + self._gap - time.monotonic()
                 if gap > 0:
                     await asyncio.sleep(gap)
                 self._last_start = time.monotonic()

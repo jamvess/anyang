@@ -7,6 +7,7 @@ pages in one call; see vision_pages for why this differs from A2 in the spec).
 Past exams are then split into sub-questions by A4 split_past_exam.
 
     cd apps/api && uv run python ../../poc/P3/ingest.py [--force]
+    cd apps/api && uv run python ../../poc/P3/ingest.py --provider vertex --small-model vertex:<id>
 
 Writes out/pages/<file>.json, out/questions/<file>.json and out/ingest.json. Files already in
 out/ are reused unless --force, so a re-run does not pay for the same calls twice.
@@ -19,7 +20,7 @@ import time
 from pathlib import Path
 
 import pymupdf
-from common import OUT, RAW, Run, read_json, write_json
+from common import RAW, Run, add_provider_args, read_json, write_json
 
 from app.ai.gateway import Image
 from app.models.scope_ai import SplitPastExamResult, VisionExtractPagesResult
@@ -69,7 +70,7 @@ def pages_text(pages: list[dict]) -> str:
 
 async def ingest_file(run: Run, path: Path, force: bool) -> dict:
     started = time.perf_counter()
-    pages_path = OUT / "pages" / f"{path.stem}.json"
+    pages_path = run.out / "pages" / f"{path.stem}.json"
     doc = pymupdf.open(path)
     layer = [page.get_text() for page in doc]
     share = thai_share("".join(layer))
@@ -87,7 +88,7 @@ async def ingest_file(run: Run, path: Path, force: bool) -> dict:
     kind = kind_of(path)
     questions = None
     if kind == "past_exam":
-        questions_path = OUT / "questions" / f"{path.stem}.json"
+        questions_path = run.out / "questions" / f"{path.stem}.json"
         if questions_path.exists() and not force:
             questions = read_json(questions_path)["questions"]
         else:
@@ -120,17 +121,19 @@ async def ingest_file(run: Run, path: Path, force: bool) -> dict:
     return summary
 
 
-async def main(force: bool) -> None:
-    run = Run()
+async def main(force: bool, provider: str, small_model: str) -> None:
+    run = Run(provider=provider, small_model=small_model)
     files = sorted(RAW.glob("*.pdf"))
     print(f"model {run.model} · {len(files)} files", flush=True)
     summaries = []
     for path in files:  # one file at a time so seconds per file stay comparable
         summaries.append(await ingest_file(run, path, force))
-    write_json(OUT / "ingest.json", {"model": run.model, "files": summaries})
+    write_json(run.out / "ingest.json", {"model": run.model, "files": summaries})
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--force", action="store_true", help="redo files already in out/")
-    asyncio.run(main(parser.parse_args().force))
+    add_provider_args(parser)
+    args = parser.parse_args()
+    asyncio.run(main(args.force, args.provider, args.small_model))

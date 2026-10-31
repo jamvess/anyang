@@ -9,8 +9,8 @@
 
 ## Plan
 
-- [ ] 1. 🤖 `poc/P3/common.py` + `ingest.py` + `run.py` + `score.py`: เพิ่มโหมด `--provider vertex` · ใช้ model ตาม tier ใน `config/ai.yaml` (A2b = vision flash-lite, A5 = mid flash, A6 = main flash) · tier small (A4 `split_past_exam`, A7 `map_questions`) ยังเป็น TODO จึงรับ model จาก flag `--small-model` · เว้นระหว่าง call สั้นลง (Vertex ไม่มีโควตา 20/วัน) · ใช้ `gateway.retries` ตาม config · ผลแยกโฟลเดอร์ `out/vertex/` และ `results/vertex-a5<v>/` ไม่ทับผลเดิม · test ใน `poc/P3/test_p3.py` (ไม่เรียก AI)
-- [ ] 2. 🙋 Jam เลือก model ของ tier small สำหรับรอบนี้ (A4, A7): `gemini-3.5-flash-lite` หรือ `gemini-3.5-flash`
+- [x] 1. 🤖 `poc/P3/common.py` + `ingest.py` + `run.py` + `score.py`: เพิ่มโหมด `--provider vertex` · ใช้ model ตาม tier ใน `config/ai.yaml` (A2b = vision flash-lite, A5 = mid flash, A6 = main flash) · tier small (A4 `split_past_exam`, A7 `map_questions`) ยังเป็น TODO จึงรับ model จาก flag `--small-model` · เว้นระหว่าง call สั้นลง (Vertex ไม่มีโควตา 20/วัน) · ใช้ `gateway.retries` ตาม config · ผลแยกโฟลเดอร์ `out/vertex/` และ `results/vertex-a5<v>/` ไม่ทับผลเดิม · test ใน `poc/P3/test_p3.py` (ไม่เรียก AI)
+- [x] 2. 🙋 Jam เลือก model ของ tier small สำหรับรอบนี้ (A4, A7): `gemini-3.5-flash-lite` หรือ `gemini-3.5-flash`
 - [ ] 3. 🙋 Jam รัน ingest บน Vertex (A2b บน flash-lite + A4) · `cd apps/api` → `uv run python ../../poc/P3/ingest.py --provider vertex --small-model vertex:<model>` · ใช้ประมาณ 4 call · ดูว่า A4 ตัดข้อได้ 43 ข้อเหมือนเดิมไหม
 - [ ] 4. 🙋 Jam รัน A5 → A6 → A7 บน Vertex 2 รอบ คือ A5 `v1` และ `v2` · `uv run python ../../poc/P3/run.py --provider vertex --small-model vertex:<model> --a5-prompt v1` แล้ว `score.py --provider vertex --a5-prompt v1` · ทำซ้ำด้วย `v2` · ประมาณ 7 call ต่อรอบ
 - [ ] 5. 🤖 สรุปผลเป็นตาราง เทียบกับรอบ free tier: หัวข้อตรง (IoU ≥ 0.5), ★★★ ทั้ง pipeline, map ข้อสอบ, นาทีต่อไฟล์, A6 ผ่าน schema ไหม, token out ของ `merge_topics` เทียบกับเพดาน 16,000, A2b บน flash-lite (เวลา, token, จำนวนข้อที่ A4 ตัดได้)
@@ -29,9 +29,11 @@
 
 ## Decisions
 
+- 2026-10-31 · tier small รอบนี้ (A4, A7) = `vertex:gemini-3.5-flash-lite` · ตรงกับชื่อ tier และได้ข้อมูลไว้ตัดสิน tier small ใน config · ถ้า A7 พลาดต้องแยกว่าเพราะ model หรือ prompt
+
 ## Next step
 
-ขั้น 1 (🤖): เพิ่มโหมด `--provider vertex` ใน `poc/P3/common.py` แล้วต่อเข้า `ingest.py`, `run.py`, `score.py`
+ขั้น 3 (🙋): Jam รัน `cd apps/api` → `uv run python ../../poc/P3/ingest.py --provider vertex --small-model vertex:gemini-3.5-flash-lite` แล้วส่ง output มา
 
 ## Waiting on
 

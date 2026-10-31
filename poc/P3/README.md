@@ -23,6 +23,20 @@ uv run python ../../poc/P3/ingest.py && uv run python ../../poc/P3/run.py && uv 
 - ถ้าจะเทียบ model อื่น ให้เปลี่ยน `AI_MODEL_OVERRIDE` แล้วรัน `run.py` + `score.py` ใหม่ (ผลจะแยกโฟลเดอร์ตาม model)
 - ถ้าจะเทียบ prompt A5 version อื่นโดยไม่แก้ `config/ai.yaml`: `uv run python ../../poc/P3/run.py --a5-prompt v2` แล้ว `uv run python ../../poc/P3/score.py --a5-prompt v2` · ผลอยู่ใน `results/<model>-a5<version>/`
 
+## รันบน Vertex AI (31 ต.ค. · วัด P3a ใหม่)
+
+ต้องมี ADC (`gcloud auth application-default login`) และ `GOOGLE_CLOUD_PROJECT` / `GOOGLE_CLOUD_LOCATION` ใน `.env` (`docs/team/setup.md` A5) · ไม่ใช้ `AI_MODEL_OVERRIDE`: แต่ละ call ใช้ model ของ tier ตัวเองใน `config/ai.yaml` (A2b = vision, A5 = mid, A6 = main) · tier small (A4, A7) ยังเป็น TODO จึงต้องบอกด้วย `--small-model`
+
+```bash
+cd apps/api
+uv run python ../../poc/P3/ingest.py --provider vertex --small-model vertex:gemini-3.5-flash-lite
+uv run python ../../poc/P3/run.py --provider vertex --small-model vertex:gemini-3.5-flash-lite --a5-prompt v1
+uv run python ../../poc/P3/score.py --provider vertex --a5-prompt v1
+```
+
+- cache แยกไว้ที่ `out/vertex/` (ไม่ทับผล free tier) · ผลสรุปอยู่ที่ `results/vertex-a5<version>/` · `run.json` บอก model ของแต่ละ call
+- เว้น 1 วินาทีระหว่าง call (Vertex ไม่มีโควตา 20 ต่อวัน) และ retry ตาม `gateway.retries` ของ config
+
 ## Test
 
 ```bash

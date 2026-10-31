@@ -1,6 +1,7 @@
 """PoC P3 step 3 · compare the pipeline output with May's labels (evals/topics/mth10101).
 
     cd apps/api && uv run python ../../poc/P3/score.py [--model gemini-3.5-flash]
+    cd apps/api && uv run python ../../poc/P3/score.py --provider vertex --a5-prompt v2
 
 Targets from specs/poc/README.md P3: topics match >= 80%, three-star match >= 80%,
 <= 3 minutes per file. Topics are paired by overlapping PDF pages (Jam's choice): the IoU of
@@ -13,7 +14,7 @@ import json
 import re
 from collections import defaultdict
 
-from common import LABELS, OUT, RESULTS, read_json, write_json
+from common import LABELS, RESULTS, VERTEX, read_json, write_json
 from stars import Topic, stars
 
 from app.settings import get_settings
@@ -190,17 +191,21 @@ def main(model: str) -> None:
             indent=2,
         )
     )
-    print(f"wrote {folder / 'score.json'} (inputs from {OUT})")
+    print(f"wrote {folder / 'score.json'}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default="", help="default: AI_MODEL_OVERRIDE")
+    parser.add_argument("--provider", choices=["gemini", VERTEX], default="gemini")
     parser.add_argument(
         "--a5-prompt",
         default=get_settings().ai.purposes["extract_topics_local"].prompt,
         help="prompt version of extract_topics_local that run.py used",
     )
     args = parser.parse_args()
-    model = args.model or get_settings().env.ai_model_override.partition(":")[2]
-    main(f"{model}-a5{args.a5_prompt}")
+    if args.provider == VERTEX:
+        label = VERTEX
+    else:
+        label = args.model or get_settings().env.ai_model_override.partition(":")[2]
+    main(f"{label}-a5{args.a5_prompt}")

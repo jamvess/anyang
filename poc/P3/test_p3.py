@@ -9,10 +9,11 @@ match_topics(): pairs AI topics with label topics by overlapping PDF pages (Jam'
 """
 
 import pytest
+from common import VERTEX, label_of, vertex_config
 from score import match_topics, page_set
 from stars import Topic, stars
 
-from app.settings import StarsConfig
+from app.settings import StarsConfig, get_settings
 
 CFG = StarsConfig(
     weight_same_instructor=1.0,
@@ -107,3 +108,35 @@ def test_p3_match_each_ai_topic_used_once():
     label = {"L1": ["sheet-01:1-9"], "L2": ["sheet-01:1-10"]}
 
     assert match_topics(ai, label, min_iou=0.5) == {"L2": "a1"}  # best pair wins
+
+
+# --- Vertex re-run (31 Oct · docs/worklog/poc-P3a-vertex.md) -----------------------------
+
+
+def test_p3_vertex_config_keeps_tiers_and_fills_small():
+    config = get_settings().ai
+
+    vertex = vertex_config(config, "vertex:gemini-test-small")
+
+    assert vertex.tiers["small"].primary == "vertex:gemini-test-small"
+    for tier in ("mid", "main", "vision"):
+        assert vertex.tiers[tier] == config.tiers[tier]  # measured with config/ai.yaml as is
+    assert vertex.gateway.retries == config.gateway.retries  # no free-tier retry workaround
+
+
+def test_p3_vertex_config_needs_a_vertex_small_model():
+    with pytest.raises(ValueError, match="vertex:"):
+        vertex_config(get_settings().ai, "gemini:gemini-test-small")
+    with pytest.raises(ValueError, match="vertex:"):
+        vertex_config(get_settings().ai, "")
+
+
+@pytest.mark.parametrize(
+    ("provider", "model", "label"),
+    [
+        ("gemini", "gemini:gemini-3.5-flash-lite", "gemini-3.5-flash-lite"),  # old folders
+        (VERTEX, "", VERTEX),
+    ],
+)
+def test_p3_results_label_by_provider(provider: str, model: str, label: str):
+    assert label_of(provider, model) == label
