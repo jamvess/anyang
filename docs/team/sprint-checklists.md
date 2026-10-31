@@ -61,7 +61,10 @@
 - [ ] AI gateway แบบ lite `app/ai/`: `ai.call()`, provider Gemini + fake, อ่าน `config/ai.yaml`, log `ai_calls`
   - 31 ต.ค. Jam เพิ่ม provider `vertex` (PR #87 · Junior ok) · ยังเหลือ log `ai_calls` ลงตาราง
   - ⚠️ 28 ต.ค. ห้ามเปิด AI_PROVIDER=live บน api-staging จนกว่าจะเช็ค Supabase JWT ทุก endpoint · URL เป็น public (--allow-unauthenticated) คนนอกเรียกแล้วกิน credit ได้
-- [ ] Endpoint SSE `POST /sessions/{id}/messages` ที่ stream จาก gateway (P4-lite)
+- [x] Endpoint SSE `POST /sessions/{id}/messages` ที่ stream จาก gateway (P4-lite)
+  - ทำโดย Jam (31 ต.ค.) ช่วง solo
+  - 31 ต.ค. (PR #93 · `specs/features/tutor/tutor-reply-stream.md`): ข้อความ text → `ai.stream("tutor_reply")` (ของใหม่ใน gateway · retry เฉพาะก่อนชิ้นแรก) → `token` → `done` · ล้มก่อนชิ้นแรกส่ง "ระบบช้า ลองส่งอีกทีนะ" · ล้มกลางทางส่ง `error` · รูปยังเป็น stub · prompt `tutor_reply/v1` · `ai.yaml` 1.5 `thinking: low`, `max_tokens` 2000 · smoke บน Vertex ในเครื่อง TTFT 3.7 วินาที (เป้า 2 วินาที · ให้ report P4-lite ตัดสิน)
+  - รอ Junior: (1) P4-lite ยังไม่ตรวจ JWT และไม่บันทึก `messages` ใช่ไหม (spec §10 ข้อ 1) (2) `error.code` `message_too_long`, `ai_unavailable` (ข้อ 3 · ยังไม่แก้ `api.md`) · staging ยังเป็น fake (ตอบด้วยข้อความ tutor ของ stub ไม่มี buddy)
 - [ ] เขียน router หัวฟังก์ชันของทุก API ใน `specs/system/api.md` ให้หน้า `/docs` ครบ (D5)
   - 20 ต.ค. api.md v1.2 ห้องติว (PR #35) + stub 4 endpoint ของห้องติวที่คืน fixture ของ May พร้อม `X-Stub: true` (PR #38) · `/docs` แสดง schema ของ `Room`, `Message`, event SSE และ `ErrorResponse` · เหลือ endpoint กลุ่มอื่นใน api.md
 - [ ] วัด TTFT และต้นทุนบน staging ร่วมกับ May (P4-lite)
