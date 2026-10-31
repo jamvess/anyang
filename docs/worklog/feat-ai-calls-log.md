@@ -13,8 +13,8 @@
 - [x] 2. 🙋 Jam review spec และตัดสินเรื่องฝั่ง AI: `cost_usd` คิดจากตารางราคาใน `config/ai.yaml` (ไฟล์กลาง) หรือปล่อยเป็น null ไปก่อน · การ map `status`
 - [x] 3. 🤖 `/spec-to-tests`: unit test ใช้ writer ปลอม · integration test กับ Supabase ในเครื่อง (service role insert ได้ · user อ่านได้เฉพาะแถวของ tenant ตัวเอง)
 - [x] 4. 🙋 Jam review test
-- [ ] 5. 🤖 `/implement-feature`: `app/db/ai_calls.py` + ต่อ listener ใน `build_default_gateway()` + contextvar ของ tenant
-- [ ] 6. 🤖 ruff + pytest + integration (🙋 ถ้า Docker ไม่ได้เปิด: เปิด Docker Desktop แล้ว `npx supabase start`)
+- [x] 5. 🤖 `/implement-feature`: `app/db/ai_calls.py` + ต่อ listener ใน `build_default_gateway()` + contextvar ของ tenant
+- [x] 6. 🤖 ruff + pytest + integration (🙋 ถ้า Docker ไม่ได้เปิด: เปิด Docker Desktop แล้ว `npx supabase start`)
 - [ ] 7. 🤖 `/work-done`
 
 ## Definition of done
@@ -37,7 +37,7 @@
 
 ## Next step
 
-ขั้น 5: `/implement-feature specs/features/ai/ai-calls-log.md` · เขียน `app/ai/call_context.py`, `app/db/ai_calls.py` (`to_row`, `AICallLog`, `SupabaseAICallsWriter`) และต่อ `AICallLog` ใน `build_default_gateway()` จน `tests/unit/test_ai_calls_log.py` ผ่าน (ห้ามแก้ test · Jam review แล้ว 31 ต.ค.)
+ขั้น 7: พิมพ์ `/work-done` · PR body ร่างไว้แล้ว (ส่วน What, spec, cycles 2, open points ของ Junior) · ใส่ผล `/code-review` ใน Self-review
 
 ## Waiting on
 
@@ -45,6 +45,6 @@
 
 ## Notes for next time
 
-- Docker ในเครื่อง Jam ไม่ได้เปิด (31 ต.ค.) · integration test ยังไม่ได้รันในเครื่อง · CI job `api-integration` รันให้ด้วย `supabase start`
+- 31 ต.ค. Docker ในเครื่อง Jam ไม่ได้เปิด · `uv run pytest` รัน integration กับ `anyang-dev` (cloud) ตาม `.env` · ผ่าน 5/5 · tenant ทดสอบลบหมด (เหลือ 0) · CI job `api-integration` รันกับ `supabase start`
 
 - `CallRecord.status` (`ok`, `schema_error`, `provider_error`) ไม่ตรงกับ check ของตาราง (`ok`, `schema_retry`, `fallback`, `degraded`, `error`) ต้อง map

@@ -11,8 +11,10 @@ to listeners (AI-04). Lost LaTeX backslashes are repaired by the output models' 
 free text chunk by chunk for purposes with ``stream: true``. It retries only before the first
 chunk, because chunks already sent to the user cannot be taken back.
 
-Not in the lite version yet (Junior, S3): fallback provider, circuit breaker, guards, and
-writing records to the ``ai_calls`` table.
+``build_default_gateway()`` adds ``app.db.ai_calls.AICallLog``, which logs every record and
+writes the ones with a tenant to ``ai_calls`` (specs/features/ai/ai-calls-log.md).
+
+Not in the lite version yet (Junior, S3): fallback provider, circuit breaker, guards.
 """
 
 import asyncio
@@ -455,7 +457,24 @@ async def _close(chunks: AsyncIterator[str]) -> None:
 
 
 def build_default_gateway() -> Gateway:
-    """Gateway from settings: fake provider unless AI_PROVIDER=live."""
+    """Gateway from settings: fake provider unless AI_PROVIDER=live. Every call is logged,
+    and written to ``ai_calls`` when Supabase is configured (ai-calls-log.md §2.4)."""
+    from app.db.ai_calls import AICallLog, SupabaseAICallsWriter
+    from app.settings import get_settings
+
+    env = get_settings().env
+    gateway = _build_gateway()
+    service_key = env.supabase_service_role_key.get_secret_value()
+    writer = (
+        SupabaseAICallsWriter(env.supabase_url, service_key)
+        if env.supabase_url and service_key
+        else None
+    )
+    gateway.add_listener(AICallLog(writer))
+    return gateway
+
+
+def _build_gateway() -> Gateway:
     from app.ai.providers.fake import FakeProvider, StreamStep
     from app.settings import get_settings
 
