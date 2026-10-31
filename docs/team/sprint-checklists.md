@@ -58,8 +58,10 @@
 ### S3 · 2–13 พ.ย.
 
 - ~~SymPy service `app/math/`~~ → ย้ายให้ Jam 21 ต.ค. (ทีมตกลง · ใกล้กับ P2) · ดูข้อใน S3 ของ Jam
-- [ ] AI gateway แบบ lite `app/ai/`: `ai.call()`, provider Gemini + fake, อ่าน `config/ai.yaml`, log `ai_calls`
+- [x] AI gateway แบบ lite `app/ai/`: `ai.call()`, provider Gemini + fake, อ่าน `config/ai.yaml`, log `ai_calls`
   - 31 ต.ค. Jam เพิ่ม provider `vertex` (PR #87 · Junior ok) · ยังเหลือ log `ai_calls` ลงตาราง
+  - ทำโดย Jam (31 ต.ค.) ช่วง solo
+  - 31 ต.ค. (PR #95 · `specs/features/ai/ai-calls-log.md`): `AICallLog` ใน `build_default_gateway()` เขียน log JSON ทุก call (logger `app.ai.calls` → Cloud Logging) · call ที่มี tenant (`ai_call_context`) insert ลง `ai_calls` เบื้องหลังด้วย service role ไม่ให้ call รอ DB · ยังไม่มี request ไหนตั้ง tenant จนกว่าจะตรวจ JWT (ข้อ ⚠️ ด้านล่าง) จึงยังมีแค่ log · `cost_usd`, `cached_tokens` เป็น null · รอ Junior: (1) `app/db/` ใช้ supabase-py ไปก่อน เปลี่ยนเป็น psycopg ได้ (2) insert ที่ค้างตอน instance ปิดหายได้ (`AICallLog.flush()` พร้อมให้ lifespan ใช้)
   - ⚠️ 28 ต.ค. ห้ามเปิด AI_PROVIDER=live บน api-staging จนกว่าจะเช็ค Supabase JWT ทุก endpoint · URL เป็น public (--allow-unauthenticated) คนนอกเรียกแล้วกิน credit ได้
 - [x] Endpoint SSE `POST /sessions/{id}/messages` ที่ stream จาก gateway (P4-lite)
   - ทำโดย Jam (31 ต.ค.) ช่วง solo

@@ -6,7 +6,7 @@
 | Requirements | AI-04, SA-06, NFR-P1 |
 | Owner | Jam (item of Junior · solo time 31 ต.ค. 2569) |
 | Reviewer | Jam · Junior (ข้อที่เป็นเรื่อง backend/DB ใน §10) |
-| Status | approved (Jam 2026-10-31 · §10 ข้อ 2–4 ตามข้อเสนอ · ข้อ 1, 5 ใช้ข้อเสนอไปก่อน รอ Junior) |
+| Status | implemented (PR #95) · approved (Jam 2026-10-31 · §10 ข้อ 2–4 ตามข้อเสนอ · ข้อ 1, 5 ใช้ข้อเสนอไปก่อน รอ Junior) |
 | Related system spec | `ai-orchestration.md` §2.11 (`ai_calls`, Monitoring), §2.10 (cost) · `data-model.md` (Logs) · `0001_init.sql` `ai_calls` + policy `tenant_rows` (select อย่างเดียว) · `apps/api/CLAUDE.md` "Database" · `api.md` Conventions (`X-Request-Id`) |
 
 ## 1. Context
@@ -164,5 +164,5 @@ Test unit อยู่ใน `apps/api/tests/unit/test_ai_calls_log.py` · integ
 
 ## 11. Spec changes needed
 
-- `ai-orchestration.md` §2.11 เขียนว่า "`ai_calls` เก็บทุก call" แต่ `tenant_id` เป็น `not null` · call ที่ไม่รู้ tenant (eval, PoC, request ที่ยังไม่ตรวจ JWT) จึงลงตารางไม่ได้ · เสนอเพิ่มประโยค: "call ที่ไม่มี tenant (eval, PoC) เขียนเฉพาะ log ใน Cloud Logging" (ไฟล์ของ Jam)
+- `ai-orchestration.md` §2.11 เขียนว่า "`ai_calls` เก็บทุก call" แต่ `tenant_id` เป็น `not null` · call ที่ไม่รู้ tenant (eval, PoC, request ที่ยังไม่ตรวจ JWT) จึงลงตารางไม่ได้ · เพิ่มแล้วใน `ai-orchestration.md` v1.6 (PR #95)
 - ถ้าเลือกตารางราคาใน §10 ข้อ 2: เพิ่ม `pricing` ใน `config/ai.yaml` (ไฟล์กลาง · บอกกลุ่ม) และอ้างถึงใน §2.10
