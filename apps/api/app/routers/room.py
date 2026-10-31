@@ -3,18 +3,24 @@
 Stubs until P4-lite: they serve fixture data from app/stubs/ and send `X-Stub: true`,
 so May can wire the HTTP transport before the tutor turn exists. Shapes are checked
 by tests/unit/test_room_api_contract.py, which the real endpoints must also pass.
+
+A text message is real since P4-lite: the reply streams from the gateway
+(specs/features/tutor/tutor-reply-stream.md). An image message is still a stub.
 """
 
 from collections.abc import AsyncIterator
 from typing import Annotated, Any
 from uuid import UUID
 
-from fastapi import APIRouter, Path, Response
+from fastapi import APIRouter, Depends, Path, Response
+from fastapi.responses import JSONResponse
 from sse_starlette import EventSourceResponse
 
 from app import stubs
-from app.models.error import ErrorResponse
+from app.ai.gateway import Gateway, get_gateway
+from app.models.error import ErrorBody, ErrorResponse
 from app.models.room import EVENT_MODELS, ActiveSession, Limits, Room, SendMessageRequest
+from app.services.tutor_turn import reply_events
 from app.settings import get_settings
 
 router = APIRouter(tags=["room"])
@@ -100,9 +106,25 @@ async def get_session(session_id: SessionId, response: Response) -> Room:
     response_class=EventSourceResponse,
     responses=_SSE_RESPONSE,
 )
-async def send_message(session_id: SessionId, body: SendMessageRequest) -> EventSourceResponse:
+async def send_message(
+    session_id: SessionId,
+    body: SendMessageRequest,
+    gateway: Annotated[Gateway, Depends(get_gateway)],
+) -> Response:
     """Send `{text}` or `{image_path}`; the reply streams as SSE and ends with done.
 
-    stub — replaced in P4-lite
+    `{text}` streams `tutor_reply` from the gateway (P4-lite). `{image_path}` is a stub.
     """
-    return _stream("tutor_reply")
+    if body.text is None:
+        return _stream("tutor_reply")
+    max_chars = get_settings().ai.guards.max_message_chars
+    if len(body.text) > max_chars:
+        # Code proposed in tutor-reply-stream.md §10 item 3, pending Junior.
+        error = ErrorBody(code="message_too_long", message=f"text is over {max_chars} characters")
+        return JSONResponse(ErrorResponse(error=error).model_dump(), status_code=422)
+
+    async def events() -> AsyncIterator[dict[str, str]]:
+        async for event, payload in reply_events(gateway, body.text):
+            yield {"event": event, "data": payload.model_dump_json()}
+
+    return EventSourceResponse(events())

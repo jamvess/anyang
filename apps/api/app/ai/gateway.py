@@ -7,6 +7,10 @@ provider errors and timeouts after a backoff (§2.10), and reports one ``CallRec
 to listeners (AI-04). Lost LaTeX backslashes are repaired by the output models' field types
 (``app/ai/latex.py``), not here.
 
+``ai.stream(purpose, input)`` (PoC P4-lite, specs/features/tutor/tutor-reply-stream.md) gives
+free text chunk by chunk for purposes with ``stream: true``. It retries only before the first
+chunk, because chunks already sent to the user cannot be taken back.
+
 Not in the lite version yet (Junior, S3): fallback provider, circuit breaker, guards, and
 writing records to the ``ai_calls`` table.
 """
@@ -15,7 +19,7 @@ import asyncio
 import logging
 import re
 import time
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
@@ -30,6 +34,8 @@ from app.ai.providers.base import (
     ProviderRateLimited,
     ProviderRequest,
     ProviderResponse,
+    StreamProvider,
+    StreamUsage,
 )
 from app.settings import AIConfig
 
@@ -41,6 +47,7 @@ __all__ = [
     "CallRecord",
     "Gateway",
     "Image",
+    "get_gateway",
 ]
 
 log = logging.getLogger(__name__)
@@ -237,6 +244,81 @@ class Gateway:
                 )
             )
 
+    async def stream(self, purpose: str, input: dict[str, InputValue]) -> AsyncIterator[str]:
+        """Free-text chunks of ``purpose`` as the model writes them, empty chunks skipped and
+        nothing else changed. ``timeout_s`` of the purpose covers the whole stream. Errors
+        before the first chunk are retried like ``call``; after it they end the stream with
+        ``AIProviderError``. One ``CallRecord`` is sent when the stream ends, also when the
+        caller stops reading early (then ``provider_error``)."""
+        settings = self._config.purposes.get(purpose)
+        if settings is None:
+            raise AIConfigError(f"unknown purpose {purpose!r}; add it to config/ai.yaml")
+        if not settings.stream:
+            raise AIConfigError(f"purpose {purpose!r} has no `stream: true` in config/ai.yaml")
+        prompt = _load_prompt(self._prompts_dir, purpose, settings.prompt)
+        text, images = _render(prompt, input)
+        provider_name, provider, model = self._route(settings.tier)
+        if not hasattr(provider, "stream"):
+            raise AIConfigError(f"provider {provider_name!r} cannot stream")
+        streamer: StreamProvider = provider  # type: ignore[assignment]
+        request = ProviderRequest(
+            purpose=purpose,
+            model=model,
+            prompt=text,
+            temperature=settings.temperature,
+            max_tokens=settings.max_tokens,
+            images=images,
+            thinking=settings.thinking,
+        )
+        loop = asyncio.get_running_loop()
+        usage = StreamUsage()
+
+        async def first_chunk() -> tuple[AsyncIterator[str], float, str | None]:
+            nonlocal usage
+            usage = StreamUsage()  # a retry starts counting again
+            attempt = streamer.stream(request, usage)
+            deadline = loop.time() + settings.timeout_s
+            try:
+                return attempt, deadline, await _next_chunk(attempt)
+            except BaseException:
+                await _close(attempt)
+                raise
+
+        chunks: AsyncIterator[str] | None = None
+        started = time.perf_counter()
+        status: Literal["ok", "schema_error", "provider_error"] = "provider_error"
+        try:
+            chunks, deadline, chunk = await self._with_retries(
+                first_chunk, purpose, settings.timeout_s
+            )
+            while chunk is not None:
+                yield chunk
+                try:
+                    chunk = await asyncio.wait_for(_next_chunk(chunks), deadline - loop.time())
+                except TimeoutError as error:
+                    raise AIProviderError(
+                        f"{purpose}: timeout after {settings.timeout_s}s"
+                    ) from error
+                except Exception as error:  # provider SDKs raise many error types
+                    raise AIProviderError(f"{purpose}: {type(error).__name__}: {error}") from error
+            status = "ok"
+        finally:
+            if chunks is not None:
+                await _close(chunks)
+            self._emit(
+                CallRecord(
+                    purpose=purpose,
+                    provider=provider_name,
+                    model=model,
+                    prompt_version=prompt.version,
+                    status=status,
+                    tokens_in=usage.tokens_in,
+                    tokens_out=usage.tokens_out,
+                    latency_ms=(time.perf_counter() - started) * 1000,
+                    schema_retries=0,
+                )
+            )
+
     async def embed(
         self, texts: list[str], role: Literal["query", "document"]
     ) -> list[list[float]]:
@@ -352,15 +434,40 @@ class Gateway:
                 log.exception("AI call listener failed; the call itself is unaffected")
 
 
+async def _next_chunk(chunks: AsyncIterator[str]) -> str | None:
+    """Next non-empty chunk, or ``None`` at the end of the stream."""
+    async for chunk in chunks:
+        if chunk:
+            return chunk
+    return None
+
+
+async def _close(chunks: AsyncIterator[str]) -> None:
+    """Stop a provider stream so it does not keep reading from the model."""
+    aclose = getattr(chunks, "aclose", None)
+    if aclose is not None:
+        await aclose()
+
+
 def build_default_gateway() -> Gateway:
     """Gateway from settings: fake provider unless AI_PROVIDER=live."""
-    from app.ai.providers.fake import FakeProvider
+    from app.ai.providers.fake import FakeProvider, StreamStep
     from app.settings import get_settings
 
     settings = get_settings()
     env = settings.env
     if env.ai_provider == "fake":
-        return Gateway(settings.ai, env.prompts_dir, FakeProvider({}), env.ai_model_override)
+        # Staging and dev answer every chat message with the tutor text of the room stub
+        # (tutor-reply-stream.md §10 item 4: no buddy in P4-lite's tutor_reply).
+        from app import stubs
+
+        reply: list[StreamStep] = [
+            data["text"]
+            for event, data in stubs.events("tutor_reply")
+            if event == "token" and data["speaker"] == "tutor"
+        ]
+        fake = FakeProvider({}, defaults={"tutor_reply": reply})
+        return Gateway(settings.ai, env.prompts_dir, fake, env.ai_model_override)
 
     from app.ai.providers.gemini import GeminiProvider
 
@@ -381,9 +488,20 @@ def build_default_gateway() -> Gateway:
 _default: Gateway | None = None
 
 
-async def call[T: BaseModel](purpose: str, input: dict[str, Any], schema: type[T]) -> T:
-    """``await ai.call(purpose, input, schema)`` with the gateway built from settings."""
+def get_gateway() -> Gateway:
+    """The gateway built from settings, made once. Routers take it as a FastAPI dependency,
+    so tests can replace it with ``app.dependency_overrides``."""
     global _default
     if _default is None:
         _default = build_default_gateway()
-    return await _default.call(purpose, input, schema)
+    return _default
+
+
+async def call[T: BaseModel](purpose: str, input: dict[str, Any], schema: type[T]) -> T:
+    """``await ai.call(purpose, input, schema)`` with the gateway built from settings."""
+    return await get_gateway().call(purpose, input, schema)
+
+
+def stream(purpose: str, input: dict[str, Any]) -> AsyncIterator[str]:
+    """``async for chunk in ai.stream(purpose, input)`` with the gateway built from settings."""
+    return get_gateway().stream(purpose, input)

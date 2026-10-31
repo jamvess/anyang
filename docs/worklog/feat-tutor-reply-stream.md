@@ -13,7 +13,7 @@
 - [x] 2. 🙋 Jam review spec: อ่าน AC ทุกข้อ + ตัดสินข้อที่เป็นของ Jam · ข้อของ Junior ใช้ทางที่ไม่ล็อกโครงสร้าง backend แล้วจดใน Waiting on
 - [x] 3. 🤖 `/spec-to-tests`: test ที่ fail ก่อน (fake provider, ไม่เรียก model จริง)
 - [x] 4. 🙋 Jam review test (ชื่อ test ตรง AC · ไม่มี test ที่เรียก model จริงใน CI)
-- [ ] 5. 🤖 `/implement-feature`: gateway `stream()` + provider fake/gemini + prompt `tutor_reply/v1` + service + router (สัญญาเดิมของ `test_room_api_contract.py` ต้องผ่าน)
+- [x] 5. 🤖 `/implement-feature`: gateway `stream()` + provider fake/gemini + prompt `tutor_reply/v1` + service + router (สัญญาเดิมของ `test_room_api_contract.py` ต้องผ่าน)
 - [ ] 6. 🙋 Jam smoke test ในเครื่องกับ Vertex: `cd apps/api` → `AI_PROVIDER=live uv run fastapi dev app/main.py` → ส่งข้อความจากหน้าแชท `pnpm dev` (http://localhost:3000) → ต้องเห็นตัวอักษรไหลออกมาและสมการ render · ใช้ ADC + `GOOGLE_CLOUD_PROJECT` ใน `.env` ของ Jam
 - [ ] 7. 🙋 Jam บอกแชทกลุ่ม (solo time · `apps/api/` ของ Junior · `config/ai.yaml` ถ้าแตะ · `api.md` ถ้าต้องแก้)
 
@@ -37,7 +37,10 @@
 
 ## Next step
 
-ขั้น 5 (🤖): `/implement-feature` ให้ test ใน `test_ai_gateway_stream.py` และ `test_tutor_reply_stream_api.py` ผ่าน
+ขั้น 6 (🙋): Jam smoke test กับ Vertex ในเครื่อง · (ก) `cd apps/api` → `uv run pytest tests/integration/test_vertex_live.py -m live -k streams -s` ต้องเห็นบรรทัด `vertex stream: ... ttft_ms=...` และคำตอบภาษาไทยที่มี `$...$` · (ข) `AI_PROVIDER=live uv run fastapi dev app/main.py` + `cd apps/web && pnpm dev` → เปิดห้องที่ http://localhost:3000 แล้วส่ง "แยกตัวประกอบ $x^2-49$ ยังไง" ต้องเห็นตัวอักษรไหลออกมาและสมการ render
+
+- 2026-10-31 · implement: `Gateway.stream` + `get_gateway` (FastAPI dependency) + `ai.stream` · provider protocol `stream(request, usage)` · fake แบ่งข้อความเป็นทีละคำ (เว้นวรรคติดไปกับคำ) และมี `defaults` ให้ตอบซ้ำได้ทุกข้อความใน fake mode · red → green 3 รอบ (gateway + fake · Gemini · endpoint)
+- 2026-10-31 · เพิ่ม live smoke `test_AI01_vertex_streams_tutor_reply` ใน `tests/integration/test_vertex_live.py` (อยู่ใน test plan §8 แต่ตกไปตอน `/spec-to-tests`) · ต้องให้ Jam review
 
 ## Waiting on
 
