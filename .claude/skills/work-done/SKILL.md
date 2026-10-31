@@ -1,6 +1,6 @@
 ---
 name: work-done
-description: Finish a task. Merge the latest main, run all checks, update every doc the change affects and the sprint checklist, turn the worklog into the PR description, mark the PR ready and draft the team messages.
+description: Finish a task. Merge the latest main, run all checks, update every doc the change affects and the sprint checklist, turn the worklog into the PR description, self-review with /code-review, wait for CI and merge after the person confirms, and draft the team messages.
 disable-model-invocation: true
 ---
 
@@ -52,23 +52,24 @@ Write the PR description with `.github/pull_request_template.md`, using the work
 
 Commit `docs: update docs and checklist for <task>` (never `.env*`) and push.
 
-## 8 · Open the PR for review
+## 8 · Self-review
 
-Reviewer for each owner:
+No teammate approval is required (root `CLAUDE.md`, "How we work" 5). Instead:
 
-| Work of | Reviewer |
-|---|---|
-| Junior | Jam (Python code) or May (parts used by the web app) |
-| May | Junior |
-| Jam | Junior |
-| Shared files | both other people |
+1. Run the `code-review` skill at level `high` on this branch against `main`.
+2. Fix every real finding. Never change tests a human already reviewed; if a finding is about such a test, explain it instead. Rerun the checks of section 3, then commit `fix: self-review findings` and push.
+3. Add a **Self-review** section to the PR description file: what was found, what was fixed, and why anything left was not a problem.
 
-- If `gh` exists: `gh pr edit --body-file <file>`, `gh pr ready`, `gh pr edit --add-reviewer <github username from .github/CODEOWNERS>`.
-- Otherwise print the description in a code block and tell them: paste it into the PR, click **Ready for review**, and choose the reviewer.
+## 9 · Open the PR and merge
 
-## 9 · Final report (Thai)
+1. If `gh` exists: `gh pr edit --body-file <file>`, then `gh pr ready`. Otherwise print the description in a code block and tell them to paste it into the PR and click **Ready for review**.
+2. **Risky change?** If the diff touches `supabase/migrations/`, an RLS policy, `CLAUDE.md`, `specs/requirements/requirements.md`, `specs/system/api.md`, `config/*.yaml`, `.env.example`, `infra/` or `.github/`, list those files and ask the person to post the group chat message of section 10 **before** merging. Wait until they say it is posted.
+3. Wait for CI: `gh pr checks <number> --watch`. If a check fails, fix it and push (at most 2 attempts), then explain in Thai if it still fails. Do not merge on red.
+4. Ask "merge เลยไหม (ok / ยัง)". On ok: `gh pr merge <number> --merge --delete-branch`, then `git switch main` and `git pull`. Without `gh`: tell them to click **Merge pull request** and **Delete branch**.
 
-- **🔍 เช็คก่อนส่ง** (3 items): the PR description is correct, the right checklist item is ticked, the docs table makes sense
-- **ข้อความแชทกลุ่ม** ready to copy: "ขอ review PR ___ หน่อย · ทำเรื่อง ___"
+## 10 · Final report (Thai)
+
+- **🔍 เช็คก่อน merge** (3 items): the PR description and its Self-review section are correct, the right checklist item is ticked, the docs table makes sense
+- **ข้อความแชทกลุ่ม** ready to copy: "merge PR ___ แล้ว · ทำเรื่อง ___ · ใครว่างดูย้อนหลังได้ ถ้าเจออะไรเปิด PR แก้ได้เลย" (for a risky change, before merge: "จะ merge PR ___ · แก้ไฟล์ ___ · มีอะไรทักภายใน ___ นะ")
 - **📤 ไฟล์ที่ต้องอัปโหลดใหม่เข้า Claude chat Project:** every changed file under `specs/`, `docs/team/` or `CLAUDE.md`, or "ไม่มี"
-- **ขั้นถัดไป:** "เมื่อเพื่อน Approve และ CI เขียว ให้กด Merge แล้ว Delete branch จากนั้นพิมพ์ `/work-start <ชื่อ>` เพื่อเริ่มงานต่อไป"
+- **ขั้นถัดไป:** "พิมพ์ `/work-start <ชื่อ>` เพื่อเริ่มงานต่อไป" (or, if not merged yet, what is left: CI or the group chat)

@@ -23,7 +23,17 @@ uv run --project apps/api python evals/run_eval.py --purpose check_answer --prom
 uv run --project apps/api pytest evals/test_run_eval.py
 ```
 
-ตอนนี้ `run_eval.py` ให้คะแนนจากไฟล์ prediction ยังไม่ได้เรียก checker เอง (รอ SymPy service ของ P2) · การให้คะแนนลายมือ (`extract_answer`) ยังอยู่ที่ `poc/P1/score.py`
+`run_eval.py` ให้คะแนนจากไฟล์ prediction · ไฟล์ prediction สร้างด้วย `run_checker.py` ซึ่งเรียก checker จริง (`app/services/checker.py`: SymPy → `check_answer` → merge rules · `specs/features/check/check-answer-classifier.md` §2.6) · ใช้ model จริงเมื่อ `AI_PROVIDER=live` เท่านั้น:
+
+```bash
+# Vertex AI (ตั้ง GOOGLE_CLOUD_PROJECT + ADC ตาม docs/team/setup.md A5) · ~5 นาทีสำหรับ 50 ข้อ
+AI_PROVIDER=live uv run --project apps/api python evals/run_checker.py --pause 1
+uv run --project apps/api pytest evals/test_run_checker.py
+```
+
+ผล P2 ล่าสุด (31 ต.ค. · prompt v1 · `vertex:gemini-3.5-flash`) อยู่ที่ `answers/predictions/v1.jsonl` และ `answers/results/v1.json` · ถ้าใช้ API key ของ AI Studio แทน (`AI_MODEL_OVERRIDE=gemini:<model>`) free tier ได้แค่ 20 request/วัน/model รัน 50 ข้อไม่จบในวันเดียว ต้องใช้ `--resume`
+
+การให้คะแนนลายมือ (`extract_answer`) ยังอยู่ที่ `poc/P1/score.py`
 
 ## รูปแบบ label
 
