@@ -3,13 +3,13 @@
 # "vertex:" runs on Vertex AI when GOOGLE_CLOUD_PROJECT is set (specs/features/ai/gemini-vertex.md;
 # AI-07: no free tier for real users). AI_MODEL_OVERRIDE=gemini:<model> still uses the Gemini API key.
 
-version: 1.5
+version: 1.7
 
 tiers:
-  small:  {primary: "vertex:TODO-gemini-small",  fallback: "anthropic:TODO-claude-haiku"}  # not measured (P3 ran A4 on flash only)
+  small:  {primary: "vertex:gemini-3.5-flash",   fallback: "anthropic:TODO-claude-haiku"}  # P3a on Vertex (31 Oct): A4 43/43, A7 34/43 and 30/43 · flash-lite broke JSON with LaTeX (unescaped \\sqrt) on 1 of 2 exams (P3.md §7)
   mid:    {primary: "vertex:gemini-3.5-flash",   fallback: "anthropic:TODO-claude-haiku"}  # P3: A5 on 4/4 sheets, schema ok · flash-lite too coarse (P3.md)
-  main:   {primary: "vertex:gemini-3.5-flash",   fallback: "anthropic:TODO-claude-sonnet"} # interim: P3 A6 never answered on the free tier (0/20) · measure on Vertex (P3.md)
-  vision: {primary: "vertex:gemini-3.5-flash-lite", fallback: "mathpix"}   # P1: line accuracy 95.2% (P1.md) · Mathpix not tested
+  main:   {primary: "vertex:gemini-3.5-flash",   fallback: "anthropic:TODO-claude-sonnet"} # P3a on Vertex (31 Oct): A6 merge_topics v2 valid on the first try, ★★★ 10/12 (P3.md §7)
+  vision: {primary: "vertex:gemini-3.5-flash-lite", fallback: "mathpix"}   # P1: line accuracy 95.2% (P1.md) · P3a: A2b 14 pages in 12-27 s · Mathpix not tested
   embed:  {primary: "vertex:gemini-embedding-2", fallback: null}           # P3b: recall@4 95% at 768 dimensions (P3.md)
 
 purposes:
@@ -20,8 +20,8 @@ purposes:
   vision_extract:         {tier: vision, temperature: 0.0, max_tokens: 4000, timeout_s: 60, prompt: v1, thinking: low}
   vision_extract_pages:   {tier: vision, temperature: 0.0, max_tokens: 16000, timeout_s: 180, prompt: v1, thinking: low}  # PoC P3: whole scanned file in one call
   split_past_exam:        {tier: small,  temperature: 0.0, max_tokens: 16000, timeout_s: 120, prompt: v1, thinking: low}
-  extract_topics_local:   {tier: mid,    temperature: 0.2, max_tokens: 8000, timeout_s: 120, prompt: v1, thinking: low}
-  merge_topics:           {tier: main,   temperature: 0.2, max_tokens: 16000, timeout_s: 180, prompt: v1, thinking: medium}
+  extract_topics_local:   {tier: mid,    temperature: 0.2, max_tokens: 8000, timeout_s: 120, prompt: v2, thinking: low}  # P3a on Vertex: with merge_topics v2, ★★★ 10/12 (v1: 8/12)
+  merge_topics:           {tier: main,   temperature: 0.2, max_tokens: 32000, timeout_s: 180, prompt: v2, thinking: medium}  # P3a on Vertex (2026-10-31): v1 merged 51 topics into 17 and 3 of 4 answers hit 16000 (thinking counts inside) · v2 used 19,390-20,018 · [C] 32000, re-check on a bigger course
   map_questions:          {tier: small,  temperature: 0.0, max_tokens: 8000, timeout_s: 120, prompt: v1, thinking: low}
   scope_edit:             {tier: mid,    temperature: 0.3, max_tokens: 800,  timeout_s: 30, prompt: v1}
   # flow 2.2 / 2.4

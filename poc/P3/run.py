@@ -4,6 +4,7 @@ A5 extract_topics_local per sheet -> A6 merge_topics -> A7 map_questions per exa
 Needs ingest.py first.
 
     cd apps/api && uv run python ../../poc/P3/run.py [--force]
+    cd apps/api && uv run python ../../poc/P3/run.py --provider vertex --small-model vertex:<id>
 
 Writes results/<model>/topics.json, mapping.json and run.json (committed: topic names, page
 ranges, stars and timings only, no course text). A5 results are cached in out/a5/<model>/.
@@ -14,7 +15,7 @@ import asyncio
 import json
 import time
 
-from common import OUT, RESULTS, Run, read_json, write_json
+from common import RESULTS, Run, add_provider_args, read_json, write_json
 from stars import Topic, stars
 
 from app.models.scope_ai import ExtractTopicsLocalResult, MapQuestionsResult, MergeTopicsResult
@@ -30,10 +31,10 @@ def pages_text(pages: list[dict]) -> str:
 
 
 async def extract_local(run: Run, stem: str, model: str, force: bool) -> dict:
-    cache = OUT / "a5" / model / run.prompts["extract_topics_local"] / f"{stem}.json"
+    cache = run.out / "a5" / model / run.prompts["extract_topics_local"] / f"{stem}.json"
     if cache.exists() and not force:
         return read_json(cache)
-    pages = read_json(OUT / "pages" / f"{stem}.json")["pages"]
+    pages = read_json(run.out / "pages" / f"{stem}.json")["pages"]
     result = await run.call(
         f"run:{stem}:a5",
         "extract_topics_local",
@@ -55,15 +56,22 @@ async def extract_local(run: Run, stem: str, model: str, force: bool) -> dict:
     return data
 
 
-def results_name(model: str, a5_prompt: str) -> str:
-    return f"{model}-a5{a5_prompt}"
+def results_name(model: str, a5_prompt: str, a6_prompt: str = "v1") -> str:
+    """results/<model>-a5<v>/ as before; a merge_topics version other than v1 adds -a6<v>."""
+    return f"{model}-a5{a5_prompt}" + ("" if a6_prompt == "v1" else f"-a6{a6_prompt}")
 
 
-async def main(force: bool, a5_prompt: str) -> None:
+async def main(
+    force: bool, a5_prompt: str, a6_prompt: str, provider: str, small_model: str
+) -> None:
     settings = get_settings()
-    run = Run({"extract_topics_local": a5_prompt})
-    model = run.model.partition(":")[2]
-    ingest = read_json(OUT / "ingest.json")
+    run = Run(
+        {"extract_topics_local": a5_prompt, "merge_topics": a6_prompt},
+        provider=provider,
+        small_model=small_model,
+    )
+    model = run.label
+    ingest = read_json(run.out / "ingest.json")
     sheets = [f["file"].removesuffix(".pdf") for f in ingest["files"] if f["kind"] == "lecture"]
     exams = [f["file"].removesuffix(".pdf") for f in ingest["files"] if f["kind"] == "past_exam"]
     print(f"model {run.model} · sheets {sheets} · exams {exams}", flush=True)
@@ -87,7 +95,7 @@ async def main(force: bool, a5_prompt: str) -> None:
 
     mapping: dict[str, dict] = {}
     for stem in exams:
-        questions = read_json(OUT / "questions" / f"{stem}.json")["questions"]
+        questions = read_json(run.out / "questions" / f"{stem}.json")["questions"]
         batch = [{"q_id": f"{stem}:{q['q_no']}", "text": q["text"]} for q in questions]
         result = await run.call(
             f"run:{stem}:a7",
@@ -116,7 +124,7 @@ async def main(force: bool, a5_prompt: str) -> None:
         settings.learning.stars,
     )
 
-    folder = RESULTS / results_name(model, a5_prompt)
+    folder = RESULTS / results_name(model, a5_prompt, a6_prompt)
     write_json(
         folder / "topics.json",
         [
@@ -143,6 +151,7 @@ async def main(force: bool, a5_prompt: str) -> None:
                 "tag": tag,
                 "file": parts[1] if len(parts) == 3 else "",
                 "purpose": r.purpose,
+                "model": r.model,
                 "status": r.status,
                 "latency_ms": round(r.latency_ms),
                 "tokens_in": r.tokens_in,
@@ -187,5 +196,11 @@ if __name__ == "__main__":
         default=get_settings().ai.purposes["extract_topics_local"].prompt,
         help="prompt version of extract_topics_local for this run (default: config/ai.yaml)",
     )
+    parser.add_argument(
+        "--a6-prompt",
+        default=get_settings().ai.purposes["merge_topics"].prompt,
+        help="prompt version of merge_topics for this run (default: config/ai.yaml)",
+    )
+    add_provider_args(parser)
     args = parser.parse_args()
-    asyncio.run(main(args.force, args.a5_prompt))
+    asyncio.run(main(args.force, args.a5_prompt, args.a6_prompt, args.provider, args.small_model))
