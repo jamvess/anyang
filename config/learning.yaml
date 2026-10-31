@@ -9,7 +9,7 @@
 #
 # Changing a value = PR that also updates learning-model.md §"ที่มาของตัวเลข".
 
-version: 1.3
+version: 1.4
 
 bkt:                                   # Bayesian Knowledge Tracing, per topic (learning-model.md §1)
   p_init: 0.3                          # [C] prior P(L0). Fit per skill with pyBKT (EM) after Alpha.
@@ -59,7 +59,7 @@ stars:                                 # topic importance (SM-03, learning-model
   weight_other_instructor: 0.5         # [C] PoC P3 could not measure it (both past exams from one instructor set, specs/poc/reports/P3.md) · measure on the first course with exams from 2 instructors
   three_star_min_r: 0.6                # [calc] midpoint of the stable band 0.51–0.66 (sensitivity analysis) · P3: formula + team question map gives ★★★ 10/12 = 83% (target ≥ 80%) · with 2 past exams r ∈ {0, 0.5, 1}, so P3 only confirms > 0.5
   prerequisite_of_three_star_gets: 2   # [calc] = ★★ by the star rule (ai-orchestration §2.3.5); direct prerequisites only
-  no_past_exam_method: page_terciles   # policy, open question (compute-importance.md §10); decide after P3
+  no_past_exam_method: page_terciles   # policy, decided 2026-10-31 (compute-importance.md §2 step 3, §10): P3 had 2 past exams so never tested it; users edit stars on S12 · signal_r = page share (learning-model §5)
 
 readiness:                             # PM-03: Σ(signal_r × mastery_eff) / Σ(signal_r); no extra constants
   weight: signal_r                     # [calc] expected share of exam content
@@ -77,13 +77,13 @@ planner:                               # TM-18 (learning-model.md §5)
   interleave_every_n_practice: 4       # [C] Rohrer & Taylor 2007 support interleaving; ratio not standardised (Could)
 
 ocr:
-  always_confirm: true                 # PoC P1 (specs/poc/reports/P1.md): self-reported confidence cannot find misread lines (all 6 at 0.85–0.98, no threshold catches ≥ 95%) · S3: try a better signal (2 reads, extract_answer/v2)
+  always_confirm: true                 # PoC P1 (specs/poc/reports/P1.md): self-reported confidence cannot find misread lines (all 6 at 0.85–0.98, no threshold catches ≥ 95%) · term 2: try a better signal (2 reads, extract_answer/v2) · P2 used labelled lines, not OCR
 
 checker:
-  sympy_timeout_seconds: 2             # [calc] budget so the verdict arrives within the TTFT p95 target (2 s)
+  sympy_timeout_seconds: 2             # [calc] budget so the verdict arrives within the TTFT p95 target (2 s) · P2: median 0.14 s, max 0.44 s, no timeout in 50 answers (specs/poc/reports/P2.md)
   sympy_workers: 1                     # [C] warm SymPy worker processes per API instance (a cold start costs ~1.9 s); raise if P4-lite shows checks queueing
-  numeric_rel_tolerance: 0.01          # [C] Should: replace with significant figures from the problem
-  max_generate_retries: 2              # [C] regenerate a problem whose answer fails SymPy; P2/S3: pick retries covering >= 95% of generated problems
+  numeric_rel_tolerance: 0.01          # [C] Should: replace with significant figures from the problem · P2 had no numeric answers: measure when numeric is built
+  max_generate_retries: 2              # [C] regenerate a problem whose answer fails SymPy · P2 could not test it (no generate_problem yet): once it exists, pick retries covering >= 95% of generated problems
 
 buddy:                                 # TM-05 (ai-orchestration §2.1)
   quota_per_topic: {low: 1, med: 2, high: 3}   # [C] validate with mute rate + survey in Alpha

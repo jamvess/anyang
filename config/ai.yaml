@@ -1,9 +1,9 @@
 # AI gateway configuration (ai-orchestration §2.10). Change models here, not in code.
 # Model IDs come from the PoC reports (specs/poc/reports/); a tier not measured yet keeps its TODO.
-# "vertex:" until Beta needs a Vertex AI provider (AI-07: no free tier for real users); the PoC runs
-# with AI_MODEL_OVERRIDE=gemini:<model> on the Gemini API.
+# "vertex:" runs on Vertex AI when GOOGLE_CLOUD_PROJECT is set (specs/features/ai/gemini-vertex.md;
+# AI-07: no free tier for real users). AI_MODEL_OVERRIDE=gemini:<model> still uses the Gemini API key.
 
-version: 1.2
+version: 1.5
 
 tiers:
   small:  {primary: "vertex:TODO-gemini-small",  fallback: "anthropic:TODO-claude-haiku"}  # not measured (P3 ran A4 on flash only)
@@ -14,7 +14,7 @@ tiers:
 
 purposes:
   # thinking: Gemini 3 thinking level; its tokens count inside max_tokens (PoC P3, 2026-10-19)
-  # max_tokens and timeout_s of flow 2.3 raised before the first P3 run (Thai output + thinking); confirm from P3 logs
+  # max_tokens and timeout_s of flow 2.3 raised before the first P3 run (Thai output + thinking) · P3: both free-tier merge_topics answers failed the schema (11,242 and 14,944 output tokens of 16,000), so no valid size yet · vision_extract_pages: 7,943 tokens for 14 pages · re-check both in the P3a re-run on Vertex (S4)
   # flow 2.3
   classify_material:      {tier: small,  temperature: 0.0, max_tokens: 300,  timeout_s: 20, prompt: v1}
   vision_extract:         {tier: vision, temperature: 0.0, max_tokens: 4000, timeout_s: 60, prompt: v1, thinking: low}
@@ -28,9 +28,9 @@ purposes:
   route_intent:           {tier: small,  temperature: 0.0, max_tokens: 100,  timeout_s: 8,  prompt: v1}
   extract_answer:         {tier: vision, temperature: 0.0, max_tokens: 1500, timeout_s: 20, prompt: v1}
   normalize_math:         {tier: small,  temperature: 0.0, max_tokens: 500,  timeout_s: 8,  prompt: v1}
-  check_answer:           {tier: mid,    temperature: 0.0, max_tokens: 600,  timeout_s: 15, prompt: v1}
+  check_answer:           {tier: mid,    temperature: 0.0, max_tokens: 600,  timeout_s: 15, prompt: v1, thinking: low}  # P2 first live run: default thinking timed out at 15 s (2026-10-28)
   generate_problem:       {tier: mid,    temperature: 0.7, max_tokens: 800,  timeout_s: 20, prompt: v1}
-  tutor_reply:            {tier: main,   temperature: 0.6, max_tokens: 700,  timeout_s: 30, prompt: v1, stream: true}
+  tutor_reply:            {tier: main,   temperature: 0.6, max_tokens: 2000, timeout_s: 30, prompt: v1, stream: true, thinking: low}  # P4-lite smoke on Vertex (2026-10-31): default thinking gave TTFT 5.2 s; low still used ~550 thinking tokens and 700 cut the reply (696/700) · [C] 2000 from one smoke message, tune from ai_calls
   dispute_recheck:        {tier: main,   temperature: 0.0, max_tokens: 1000, timeout_s: 30, prompt: v1}
   update_running_summary: {tier: small,  temperature: 0.2, max_tokens: 400,  timeout_s: 20, prompt: v1}
   session_summary:        {tier: small,  temperature: 0.3, max_tokens: 150,  timeout_s: 15, prompt: v1}
@@ -40,7 +40,7 @@ purposes:
   latex_to_speech:        {tier: small,  temperature: 0.0, max_tokens: 300,  timeout_s: 8,  prompt: v1}
 
 embedding:                             # A3 embed (ai-orchestration §2.3.3), tier `embed` · no prompt
-  timeout_s: 60                        # [C] one batch request · PoC P3b: set from measured latency
+  timeout_s: 60                        # [C] one batch request · P3b: 116 chunks in 21.6 s (~1.8 s per batch of 10), so 60 leaves a wide margin · after Alpha: from ai_calls
   batch_size: 10                       # [C] texts per request · gemini-embedding-2 allows 8,192 tokens per request in total and chunks are up to 800
   dimensions: 768                      # = chunks.embedding vector(768) · P3b: gemini-embedding-2 recall@4 95% at 768 vs 90% at 3072 (specs/poc/reports/P3.md)
 

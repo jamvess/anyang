@@ -1,6 +1,6 @@
-# AI Orchestration Design (v1.3)
+# AI Orchestration Design (v1.4)
 
-ฉบับ markdown สำหรับ repo ของเอกสาร AI Orchestration Design v1.0 (30 ก.ย. 2569) พร้อมการแก้ v1.1: เกณฑ์ mastery 0.95, ระดับอ่อน 0.5, ความพร้อม = Σ(r × mastery) ÷ Σr, spaced review ตาม Cepeda/SM-2, เพดาน 10 ข้อ/skill/วัน, จำนวนข้อต่อ skill จำลองจาก BKT, circuit breaker ตาม Resilience4j · v1.2 (26 ต.ค. 2569): ระดับเป้าตามดาวและ mode + เพดาน mastery ตามระดับยากสุดที่ทำถูกเอง (learning-model.md §4) · v1.3 (28 ต.ค. 2569): §2.4.3 กฎเทียบรายบรรทัดของ SymPy service (`specs/features/check/sympy-service.md`)
+ฉบับ markdown สำหรับ repo ของเอกสาร AI Orchestration Design v1.0 (30 ก.ย. 2569) พร้อมการแก้ v1.1: เกณฑ์ mastery 0.95, ระดับอ่อน 0.5, ความพร้อม = Σ(r × mastery) ÷ Σr, spaced review ตาม Cepeda/SM-2, เพดาน 10 ข้อ/skill/วัน, จำนวนข้อต่อ skill จำลองจาก BKT, circuit breaker ตาม Resilience4j · v1.2 (26 ต.ค. 2569): ระดับเป้าตามดาวและ mode + เพดาน mastery ตามระดับยากสุดที่ทำถูกเอง (learning-model.md §4) · v1.3 (28 ต.ค. 2569): §2.4.3 กฎเทียบรายบรรทัดของ SymPy service (`specs/features/check/sympy-service.md`) · v1.4 (31 ต.ค. 2569): ผล PoC P1 P2 P3 ใน §2.3.3, §2.3.7 (A2b แทน A2 สำหรับ PDF สแกน), §2.10 (model ของแต่ละ tier) และ §3.6
 
 **ตัวเลขทุกตัวในเอกสารนี้เป็นค่าอธิบาย ค่าจริงที่โค้ดใช้อยู่ใน `config/learning.yaml` และ `config/ai.yaml` ที่มาของแต่ละตัวอยู่ใน `learning-model.md`**
 
@@ -114,7 +114,7 @@ AI ไม่ได้ตอบจากเอกสารอย่างเด�
 **Extract ตามชนิดไฟล์** (ทุกแบบต้องได้ `page_no` ติดมาด้วย)
 
 - PDF ที่มี text layer ใช้ PyMuPDF **แต่ต้องเช็คคุณภาพของข้อความก่อน** · ไฟล์สแกนมักมี OCR layer ภาษาอังกฤษซ่อนอยู่ ซึ่งดูเหมือนมีข้อความแต่เป็นขยะ · PoC P3 ใช้สัดส่วนตัวอักษรไทยต่อตัวอักษรทั้งหมด < 30% = ไฟล์สแกน (MTH10101: ข้อสอบสแกน 0%, ชีท 48–85%)
-- PDF สแกนหรือไฟล์รูป ส่ง vision model อ่าน (A2 ทีละหน้า หรือ A2b ทั้งไฟล์) · **P3:** A2b อ่านข้อสอบสแกน 14 หน้าใน 40.5 วินาที และ A4 ตัดรายข้อตรง label 43/43 จึงไม่ใช้ Google Document AI (`specs/poc/reports/P3.md`)
+- PDF สแกนหรือไฟล์รูป ส่ง vision model อ่าน (PDF สแกนใช้ A2b ทั้งไฟล์ · ไฟล์รูปเดี่ยวใช้ A2) · **P3:** A2b อ่านข้อสอบสแกน 14 หน้าใน 40.5 วินาที และ A4 ตัดรายข้อตรง label 43/43 จึงไม่ใช้ Google Document AI (`specs/poc/reports/P3.md`)
 - ข้อจำกัดของ PyMuPDF ที่เจอใน P3: สมการจาก Equation Editor ของ Word ออกมาเป็นตัวอักษรกระจายทีละบรรทัด และสัญลักษณ์ ∞ หายไป ข้อความภาษาไทยอ่านได้แต่สระอำแตก (`น ามา`)
 - PPTX อ่านทีละสไลด์, DOCX อ่านทีละหัวข้อ
 
@@ -131,7 +131,7 @@ AI ไม่ได้ตอบจากเอกสารอย่างเด�
 - **ขนาด batch:** embedding-2 รับรวมไม่เกิน 8,192 token ต่อ request และ chunk ยาวได้ถึง 800 → `embedding.batch_size: 10`
 - **ตรวจขนาด:** gateway แจ้ง error ถ้า vector ยาวไม่เท่า `embedding.dimensions` (ไม่ตัดหรือเติมให้เอง)
 - **ค้นด้วย cosine** (`<=>`, HNSW `vector_cosine_ops`) · Gemini ไม่ normalize vector ที่ต่ำกว่า 3,072 มิติ ถ้าเปลี่ยนไปใช้ inner product ต้อง normalize ก่อนเก็บ
-- Gemini API ไม่บอกจำนวน token ของ embedding → `ai_calls.tokens_in` ของ purpose `embed` เป็น 0 จนกว่าจะย้ายไป Vertex AI (AI-04)
+- Gemini API ไม่บอกจำนวน token ของ embedding → `ai_calls.tokens_in` ของ purpose `embed` เป็น 0 · บน Vertex AI (provider `vertex`) นับจาก `statistics.token_count` ของแต่ละ embedding (AI-04 · `specs/features/ai/gemini-vertex.md`)
 
 ### 2.3.4 ขั้น 5 · Topic extraction
 
@@ -182,7 +182,7 @@ LLM ไม่แตะ database โดยตรง แต่คืน JSON ใ�
 | # | Call | Tier | Output schema | ความถี่ |
 |---|---|---|---|---|
 | A1 | `classify_material` | small | `{kind, confidence, relevance_weight, reason}` | 1 ครั้ง/ไฟล์ |
-| A2 | `vision_extract` | vision | `{text, latex_blocks, notes}` | เฉพาะหน้าสแกนหรือรูป |
+| A2 | `vision_extract` | vision | `{text, latex_blocks, notes}` | เฉพาะไฟล์รูป (PDF สแกนใช้ A2b) |
 | A2b | `vision_extract_pages` | vision | `{pages: [{page, text}], notes}` | 1 ครั้ง/ไฟล์สแกน (ทุกหน้าใน call เดียว · เพิ่มใน PoC P3) |
 | A3 | `embed` | embed | vector | 1 ครั้ง/chunk |
 | A4 | `split_past_exam` | small | `{questions: [{q_no, text, page, points}], notes}` | 1 ครั้ง/ข้อสอบเก่า |
@@ -195,7 +195,7 @@ A5: `pages` เป็นช่วง `"start-end"` ตามป้าย `[p.N]`
 
 ทุก output มี `notes` และเป็น object ไม่ใช่ array (structured output เสถียรกว่า) · Pydantic model อยู่ใน `apps/api/app/models/scope_ai.py` และตรวจกฎเหล่านี้ด้วย ถ้าผิดจะถูกส่งกลับให้ model แก้ (AI-05)
 
-- A2b: เพิ่มใน PoC P3 เพราะ free tier ได้ 20 request ต่อวันต่อ model ทำทีละหน้าไม่ไหว · `page` ต้องเรียง 1..n ครบตามจำนวนรูป · จะใช้แทน A2 ในระบบจริงหรือไม่ ตัดสินจากผล P3
+- A2b: เพิ่มใน PoC P3 เพราะ free tier ได้ 20 request ต่อวันต่อ model ทำทีละหน้าไม่ไหว · `page` ต้องเรียง 1..n ครบตามจำนวนรูป · **ใช้แทน A2 สำหรับ PDF สแกน** (ตัดสิน 31 ต.ค. จากผล P3: อ่านข้อสอบสแกน 14 หน้าใน 40.5 วินาที และ A4 ตัดข้อตรง label 43/43 · `specs/poc/reports/P3.md`) · ⚠️ P3 รัน A2b บน `gemini-3.5-flash` ไม่ใช่ flash-lite ของ tier vision · วัด A2b บน flash-lite ในรอบวัด P3a ใหม่บน Vertex (S4) · ไฟล์ 14 หน้าใช้ token out 7,943 (ประมาณ 570 ต่อหน้า) เพดาน `max_tokens` ของ A2b จึงพอประมาณ 25 หน้า · ไฟล์ที่ยาวกว่านั้นต้องแบ่งเป็นชุดหน้า หลาย call (ขนาดชุดตัดสินใน feature spec ของ ingest)
 - A4: `q_no` แบบ `ก1.2` / `ข3` / `3.2` ไม่ซ้ำกัน · ข้อย่อยที่มีคำนำร่วมกันต้องใส่คำนำในทุกข้อย่อย · `points` เป็น `null` ได้
 - A6: `sources` = ช่วงหน้า `<file>:<start>-<end>` ของหัวข้อ ใช้สร้าง `topic_chunks` ในขั้น 5d และแสดงที่มา (SM-04) · `prereqs` ต้องเป็น id ในรายการ ห้ามวน และต้องมาก่อนใน `order` · skill id ขึ้นต้นด้วย id ของหัวข้อ · `error_type` เป็นได้ 5 ค่า (ไม่มี `no_answer`) · `excluded_by_note` จาก note ของ user
 - A7: `topic_id` + `skill_id` เป็น `null` ทั้งคู่ได้เมื่อไม่มีหัวข้อไหนเข้า (พร้อม `note`) · skill ต้องเป็นของหัวข้อที่เลือก
@@ -743,23 +743,23 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 - RLS ตาม `tenant_id` (3.4)
 - Prompt ไม่มีข้อมูลของ user อื่น สถิติ common mistakes ใช้แบบ aggregate เท่านั้น
 - ส่งเฉพาะชื่อเล่นให้ LLM ไม่ส่งอีเมลหรือข้อมูลส่วนตัวอื่น
-- ตั้งแต่ Beta ทุก tier ต้องใช้ provider ที่ไม่นำข้อมูลไป train (Vertex AI แบบเสียเงิน) · free tier ใช้ได้เฉพาะ PoC กับข้อมูลที่เจ้าของให้ consent แล้ว (AI-07)
+- ตั้งแต่ Beta ทุก tier ต้องใช้ provider ที่ไม่นำข้อมูลไป train (Vertex AI · AI-07) · free tier ของ Gemini API ใช้ได้เฉพาะ PoC กับข้อมูลที่เจ้าของให้ consent แล้ว · Vertex ช่วง Free Trial ก็อยู่ใต้ "Training Restriction" ของ Google Cloud (ตรวจ 31 ต.ค. 2569 · `specs/features/ai/gemini-vertex.md` §10 ข้อ 5) แต่ Beta ต้องใช้บัญชีแบบเสียเงิน เพราะ Free Trial ไม่มี SLA และหมดอายุ · เรื่องที่อยู่ของข้อมูล (location / PDPA) ตัดสินตอน Beta
 
 ## 2.10 Model routing, cost และ fallback
 
 | Tier | Purposes | Primary (Vertex AI) | Fallback |
 |---|---|---|---|
 | small | route_intent, classify_material, split_past_exam, map_questions, normalize_math, persona_extract, persona_preview, latex_to_speech, summaries (update_running_summary, session_summary) | Gemini รุ่นเล็ก | Claude Haiku |
-| mid | check_answer, generate_problem, extract_topics_local, scope_edit | Gemini รุ่นกลาง | Claude Haiku |
-| main | tutor_reply (+ buddy scene), merge_topics, dispute re-check | Gemini รุ่นกลางหรือใหญ่ (เลือกจาก spike) | Claude Sonnet |
-| vision | vision_extract, vision_extract_pages, extract_answer | Gemini รุ่นกลาง | Mathpix (ถ้า OCR < 80% ใน PoC P1) |
-| embed | ingest, คำถามอิสระ | เลือกจาก spike ใน PoC P3 (3.6) | — |
+| mid | check_answer, generate_problem, extract_topics_local, scope_edit | `gemini-3.5-flash` (P3: A5 ครบ 4 ชีท · P2: checker ผ่านเป้า) | Claude Haiku |
+| main | tutor_reply (+ buddy scene), merge_topics, dispute re-check | `gemini-3.5-flash` ชั่วคราว · P3 วัด A6 `merge_topics` ไม่ได้ (free tier 0/20) · วัด P3a ใหม่บน Vertex ใน S4 | Claude Sonnet |
+| vision | vision_extract, vision_extract_pages, extract_answer | `gemini-3.5-flash-lite` (P1: 95.2% ของบรรทัด) | Mathpix (ยังไม่ทดสอบ · P1 ผ่านเป้า จึงไม่ต้องใช้เป็นหลัก) |
+| embed | ingest, คำถามอิสระ | `gemini-embedding-2` ที่ 768 มิติ (P3b: recall@4 95%) | — |
 
 - **Config อยู่ใน YAML ใน repo** (purpose → tier, model, temperature, max_tokens, timeout, fallback, prompt_version) เปลี่ยน model ได้โดยไม่แก้ code
 - **Fallback chain:** retry 1 ครั้ง (backoff: รอตามที่ provider ขอ เช่น `retryDelay` ของ Gemini 429 ถ้าไม่บอกรอ `gateway.retry_backoff_seconds` · ถ้าต้องรอเกิน `gateway.max_retry_wait_seconds` ไม่ retry เพราะรอนานกลาง turn แย่กว่าล้มทันที) → provider สำรองใน tier เดียวกัน → degrade (checker: ใช้ผล SymPy อย่างเดียวไม่มี error_type, tutor: ข้อความ template "ระบบช้า ลองส่งอีกทีนะ", STT: ให้พิมพ์แทน)
 - **Circuit breaker:** ใช้ค่า default ของ Resilience4j คือ error ≥ 50% จากอย่างน้อย 10 calls ให้ route ไป fallback 60 วินาที แล้วลองกลับ
 - **ควบคุมต้นทุน:** quota token ต่อ user/วัน และต่อ tenant (ผูกกับ plan), prompt caching, ข้าม router เมื่อส่งรูป, cache TTS, embed เฉพาะตอน ingest
-- **เป้าหมาย:** ต้นทุน ≤ 5 บาทต่อ session 45 นาที และ TTFT p95 < 2 วินาที (ตัวเลขประมาณการ วัดจริงใน PoC)
+- **เป้าหมาย:** ต้นทุน ≤ 5 บาทต่อ session 45 นาที และ TTFT p95 < 2 วินาที (ตัวเลขประมาณการ วัดจริงใน PoC P4-lite · S3)
 
 ## 2.11 Observability และ evaluation
 
@@ -781,7 +781,7 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 | ID | Call | Flow | Tier | Output |
 |---|---|---|---|---|
 | A1 | `classify_material` | 2.3 | small | kind, confidence, relevance_weight, reason |
-| A2 | `vision_extract` | 2.3 | vision | text, latex_blocks ต่อหน้า |
+| A2 | `vision_extract` | 2.3 | vision | text, latex_blocks ของไฟล์รูปเดี่ยว (PDF สแกนใช้ A2b) |
 | A2b | `vision_extract_pages` | 2.3 | vision | text ทุกหน้าของไฟล์สแกนใน call เดียว (PoC P3) |
 | A3 | `embed` | 2.3 | embed | vector |
 | A4 | `split_past_exam` | 2.3 | small | ข้อสอบรายข้อ + เลขหน้า |
@@ -885,10 +885,10 @@ Target user ของ v1 คือนักเรียนรายคน แต
 |---|---|---|
 | Vision LLM อ่านลายมือคณิตได้แม่นพอ | ≥ 80% ของบรรทัด | P1 ✅ **95.2%** (30 รูป 125 บรรทัด · `gemini-3.5-flash-lite` · ไม่ได้ทดสอบ Claude/Mathpix เพราะงบ) |
 | OCR confidence ใช้แยกบรรทัดที่อ่านผิดได้ | threshold 0.8 | P1 ❌ ไม่มี threshold ที่จับได้ ≥ 95% → ยืนยันทุกครั้ง (`specs/poc/reports/P1.md`) |
-| Topic extraction ตรงกับที่คนทำ | หัวข้อ ≥ 80%, ★★★ ≥ 80%, ≤ 3 นาที/ไฟล์ | P3 เอกสาร → หัวข้อ + ดาว |
-| Embedding model สำหรับภาษาไทย | ยังไม่เลือก | P3 (ลอง 2–3 ตัวกับคำถาม 20 ข้อ) |
-| Checker แม่นตามเป้า | verdict ≥ 95%, error_type ≥ 80% | P2 Answer checker |
-| TTFT และต้นทุน | < 2 วินาที, ≤ 5 บาท/session | P4 Tutor loop + P7 AI gateway |
+| Topic extraction ตรงกับที่คนทำ | หัวข้อ ≥ 80%, ★★★ ≥ 80%, ≤ 3 นาที/ไฟล์ | P3a ❌ หัวข้อตรง 1/27 (flash-lite) · A5 ของ flash 15/27 = 56% · A6 วัดไม่ได้บน free tier · ★★★ ทั้ง pipeline ❌ 1/12 (เพราะหัวข้อไม่ตรง) · สูตรดาวกับ map ของทีม (ไม่ใช้ AI) ✅ 10/12 = 83% · ≤ 3 นาที ✅ เฉพาะ flash-lite (1.34) ซึ่งไม่ใช้แล้ว · flash วัดไม่ครบ · ใช้ fallback ปรับ prompt A5/A6 แล้ววัดทุกเกณฑ์ใหม่บน Vertex ใน S4 (`specs/poc/reports/P3.md`) |
+| Embedding model สำหรับภาษาไทย | ยังไม่เลือก | P3b ✅ `gemini-embedding-2` ที่ 768 มิติ recall@4 95% (`bge-m3` 45%) |
+| Checker แม่นตามเป้า | verdict ≥ 95%, error_type ≥ 80%, first_wrong_line ≥ 85% | P2 ✅ 100%, 96.4%, 100% (50 ข้อ · `vertex:gemini-3.5-flash` · `specs/poc/reports/P2.md`) |
+| TTFT และต้นทุน | < 2 วินาที, ≤ 5 บาท/session | P4-lite (S3) · ต้นทุนดูจาก log `ai_calls` ของ gateway (P7) |
 | Fallback ทำงาน | สลับอัตโนมัติ, log ครบ | P7 |
 | STT ภาษาไทยปนคณิต | word error rate ≤ 15% เมื่อใช้ phrase hints | P5 Voice |
 | BKT params, ratio ของ planner, quota buddy | ตามเอกสารนี้ | ปรับตอน Alpha/Beta |

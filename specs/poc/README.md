@@ -48,6 +48,7 @@ PoC คือการลองทำส่วนที่ยากที่ส�
 - **ทำ:** SymPy service (`apps/api/app/math/`) + merge rules + LLM classifier (`prompts/check_answer/v1.md`) ตาม ai-orchestration §2.4
 - **ผ่านเมื่อ:** verdict ≥ 95% (47/50), error_type ≥ 80%, first_wrong_line ≥ 85%
 - **ถ้าไม่ผ่าน:** ลด error types เหลือ 4 (รวม calculation+sign, รวม concept+prerequisite)
+- **ผล (31 ต.ค. · `specs/poc/reports/P2.md`):** ผ่านทั้ง 3 เป้าบน Vertex (`gemini-3.5-flash`, prompt v1): verdict 50/50 = 100%, error_type 27/28 = 96.4%, first_wrong_line 24/24 = 100% · SymPy ตัดสิน verdict 45 ข้อ LLM 5 · ใช้ 6 error types ตามเดิม ไม่ต้องทำ prompt v2 · ข้อควรระวัง: label ร่างโดย AI (May ยืนยัน), ตัวอย่าง 50 ข้อจากวิชาเดียว
 
 ## P4-lite · Chat AI ที่ stream ได้ · May (web) + Junior (api) · S3
 
@@ -61,5 +62,6 @@ PoC คือการลองทำส่วนที่ยากที่ส�
 
 - **คำถาม:** pipeline spec → test → code ใช้ได้จริงไหม
 - **ทำ:** ใช้ `specs/features/scope/compute-importance.md` ผ่านครบ: `/spec-feature` (มีร่างให้แล้ว แค่ review) → `/spec-to-tests` → ทีม review test → `/implement-feature` → CI → PR review
-- **Metrics:** % โค้ดที่ agent เขียน (นับบรรทัดใน PR), จำนวนรอบ red → green, บั๊กที่ test จับได้ก่อน merge, เวลาที่คนใช้ review
+- **Metrics:** % โค้ดที่ agent เขียน (นับบรรทัดใน PR), จำนวนรอบ red → green, บั๊กที่ test จับได้ก่อน merge, เวลาที่คนใช้ review · กรอกใน `poc/P8-lite/metrics.md` ระหว่างทำ (นับบรรทัดด้วย `poc/P8-lite/agent_lines.sh`)
+- **เตรียมแล้ว (31 ต.ค. · PR #89):** spec approved · 27 AC · test plan 19 ชื่อ
 - **ผ่านเมื่อ:** merge ได้โดย CI เขียว และเก็บ metrics ครบ (ใช้ใน Self-Assessment)

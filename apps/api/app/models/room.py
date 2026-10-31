@@ -75,6 +75,9 @@ class SendMessageRequest(_Api):
     def _exactly_one(self) -> Self:
         if (self.text is None) == (self.image_path is None):
             raise ValueError("send exactly one of text or image_path")
+        if self.text is not None and not self.text.strip():
+            # Blank text is no message: never a billed tutor_reply call (tutor-reply-stream AC-21).
+            raise ValueError("text is empty")
         return self
 
 
