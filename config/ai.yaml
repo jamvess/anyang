@@ -1,7 +1,7 @@
 # AI gateway configuration (ai-orchestration §2.10). Change models here, not in code.
 # Model IDs come from the PoC reports (specs/poc/reports/); a tier not measured yet keeps its TODO.
-# "vertex:" until Beta needs a Vertex AI provider (AI-07: no free tier for real users); the PoC runs
-# with AI_MODEL_OVERRIDE=gemini:<model> on the Gemini API.
+# "vertex:" runs on Vertex AI when GOOGLE_CLOUD_PROJECT is set (specs/features/ai/gemini-vertex.md;
+# AI-07: no free tier for real users). AI_MODEL_OVERRIDE=gemini:<model> still uses the Gemini API key.
 
 version: 1.2
 

@@ -18,7 +18,7 @@
 | ประเภท | **Free Trial** · $300 ภายใน 90 วัน · Jam สร้างและถือ billing · Junior เป็น Owner |
 | ⚠️ ห้าม | กด **Activate** / **Upgrade** เป็น paid account · ถ้า credit หรือ 90 วันหมด resource จะหยุดเอง ไม่ตัดบัตร |
 | Budget alert | $50 (Jam ตั้ง) · ไม่นับ promotional credits จึงเตือนเมื่อเริ่มจ่ายเงินจริง |
-| Gemini | ใช้ผ่าน **Vertex AI เท่านั้น** · credit ของ trial ไม่ครอบคลุม API key ของ AI Studio (`GEMINI_API_KEY`) · `GeminiProvider` ตอนนี้ยังใช้ API key ต้องเพิ่มทาง Vertex ก่อนเปิด live (งาน AI gateway ใน S3) |
+| Gemini | ใช้ผ่าน **Vertex AI เท่านั้น** · credit ของ trial ไม่ครอบคลุม API key ของ AI Studio (`GEMINI_API_KEY`) · gateway มี provider `vertex` แล้ว (31 ต.ค. · `specs/features/ai/gemini-vertex.md`): ตั้ง `GOOGLE_CLOUD_PROJECT` + `GOOGLE_CLOUD_LOCATION=global` · credential จาก ADC ไม่ใช้ key file · เปิด live บน `api-staging` ต้องให้ service account ของ Cloud Run มี `roles/aiplatform.user` ก่อน (ยังไม่ได้ทำ) |
 
 ```bash
 gcloud auth login

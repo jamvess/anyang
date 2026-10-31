@@ -109,13 +109,22 @@ code .env
 
 บรรทัดอื่น (`AI_PROVIDER=fake`, GCP, Anthropic, Sentry) ปล่อยไว้ตามเดิมก่อน
 
-**เฉพาะคนที่รัน PoC กับ Gemini จริง** (ตอนนี้คือ Jam ใน P3) ให้ใส่ 2 ค่านี้ ส่วนคนอื่นปล่อยว่างไว้ได้ · ไม่ต้องเปลี่ยน `AI_PROVIDER` เพราะ script ของ PoC สร้าง gateway แบบ live เอง · ส่วน test ใช้ fake provider เสมอ
+**เฉพาะคนที่รัน PoC กับ Gemini จริง** (ตอนนี้คือ Jam) ให้ใส่ค่าในตารางนี้ ส่วนคนอื่นปล่อยว่างไว้ได้ · ไม่ต้องเปลี่ยน `AI_PROVIDER` เพราะ script ของ PoC สร้าง gateway แบบ live เอง · ส่วน test ใช้ fake provider เสมอ
 
 | ตัวแปร | ค่า |
 |---|---|
-| `GEMINI_API_KEY` | https://aistudio.google.com/apikey → **Create API key** → Copy · ⚠️ ถ้าเป็น free tier Google อาจเอาข้อมูลไปใช้ train ได้ จึงห้ามส่งข้อมูลของ user จริงหรือรูปลายมือของเพื่อนถ้ายังไม่ได้เปิด billing (AI-07) |
-| `GOOGLE_CLOUD_PROJECT` | `anyang-513006` (ใช้กับ Vertex AI · ตั้งแต่ 28 ต.ค. Gemini ใช้ผ่าน Vertex เท่านั้น เพราะ Free Trial ไม่ครอบคลุม key ของ AI Studio · ดู `infra/README.md`) |
-| `AI_MODEL_OVERRIDE` | model ที่จะใช้แทน `TODO-...` ใน `config/ai.yaml` เช่น `gemini:gemini-3.8-flash` |
+| `GOOGLE_CLOUD_PROJECT` | `anyang-513006` → gateway ได้ provider `vertex` (ค่า default ของ `config/ai.yaml`) · ใช้ credit ของ Free Trial · ต้องทำ ADC ข้างล่างก่อน |
+| `GOOGLE_CLOUD_LOCATION` | `global` (ค่าใน `.env.example` · Gemini 3 บน Vertex) |
+| `GEMINI_API_KEY` | ไม่ต้องใส่ถ้าใช้ Vertex · ใส่เมื่ออยากลอง model ผ่าน AI Studio: https://aistudio.google.com/apikey → **Create API key** → Copy แล้วใช้ `AI_MODEL_OVERRIDE=gemini:<model>` · ⚠️ free tier ได้ 20 request/วัน/model และ Google อาจเอาข้อมูลไป train จึงห้ามส่งข้อมูลของ user จริงหรือรูปลายมือของเพื่อน (AI-07) |
+| `AI_MODEL_OVERRIDE` | ปกติปล่อยว่าง · ใส่เมื่ออยากลอง model อื่นแทนทุก tier เช่น `vertex:gemini-3.8-flash` |
+
+**ADC (Application Default Credentials) สำหรับ Vertex** · ทำครั้งเดียวต่อเครื่อง ไม่มี key file
+
+1. ติดตั้ง Google Cloud CLI: https://cloud.google.com/sdk/docs/install → Windows → ดาวน์โหลด installer แล้วกด Next จนจบ (ติ๊ก "Run gcloud init" ออกได้) · ปิดแล้วเปิด Git Bash ใหม่ · `gcloud --version` ต้องขึ้นเลขเวอร์ชัน
+2. `gcloud auth application-default login` → browser เปิดขึ้นมา → login ด้วยบัญชีที่อยู่ใน project `anyang-513006` → **Allow**
+3. `gcloud auth application-default set-quota-project anyang-513006`
+4. ทดสอบ (เรียก Vertex จริง 1 ครั้ง): `cd apps/api && uv run pytest tests/integration/test_vertex_live.py -m live -s` ต้องขึ้น `1 passed` และบรรทัด `vertex smoke: model=...`
+5. ถ้าขึ้น `PERMISSION_DENIED` ให้เจ้าของ project ให้สิทธิ์ **Vertex AI User** กับบัญชีของคุณ (IAM & Admin → IAM → Grant access)
 
 **2) `apps/web/.env.local` ใช้กับ frontend**
 
