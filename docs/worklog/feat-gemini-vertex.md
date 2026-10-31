@@ -15,8 +15,8 @@
 - [x] 4. 🤖 `/spec-to-tests` → test ใช้ client ปลอม ไม่เรียก network (ต้องแดง)
 - [x] 5. 🙋 Jam review test
 - [x] 6. 🤖 `/implement-feature` → test เขียว + ruff ผ่าน · อัปเดต `.env.example` และวิธีตั้งเครื่องใน `docs/team/setup.md` / `infra/README.md` (ไฟล์ของ Junior · ถามก่อน)
-- [ ] 7. 🙋 Jam ตั้งเครื่อง: ติดตั้ง Google Cloud CLI → `gcloud auth application-default login` → ตั้ง `GOOGLE_CLOUD_PROJECT` / `GOOGLE_CLOUD_LOCATION` ใน `.env` → รัน smoke 1 call บน Vertex · คำสั่งทีละคลิกจะเขียนให้ตอนถึงขั้นนี้
-- [ ] 8. 🤖 จดผล smoke (model ที่ตอบจริง, token, เวลา) ใน worklog และ PR · ให้ Junior review
+- [x] 7. 🙋 Jam ตั้งเครื่อง: ติดตั้ง Google Cloud CLI → `gcloud auth application-default login` → ตั้ง `GOOGLE_CLOUD_PROJECT` / `GOOGLE_CLOUD_LOCATION` ใน `.env` → รัน smoke 1 call บน Vertex · คำสั่งทีละคลิกจะเขียนให้ตอนถึงขั้นนี้
+- [x] 8. 🤖 จดผล smoke (model ที่ตอบจริง, token, เวลา) ใน worklog และ PR · ให้ Junior review
 
 ## Definition of done
 
@@ -29,6 +29,8 @@
 
 ## Decisions
 
+- 2026-10-31 · smoke บน Vertex ผ่าน (AC-16): `extract_topics_local` · model `gemini-3.5-flash` · location `global` · tokens 739 in / 266 out · 4,771 ms · ~$0.0035 จากเครดิต Free Trial · ไม่ต้องกด Activate · `gcloud` ใน terminal ของ VS Code ไม่เจอจนกว่าจะปิดเปิด VS Code ใหม่ (Git Bash ข้างนอกใช้ได้)
+- 2026-10-31 · Jam ok ให้แก้ `config/ai.yaml` (comment), `infra/README.md`, `docs/team/setup.md` (A5 + ขั้น ADC) ใน PR นี้ · Jam บอกแชทกลุ่ม
 - 2026-10-31 · implement: red → green 3 รอบ (client Vertex + `vertexai` ทุกครั้ง · token ของ embed · `build_default_gateway`) · ไม่ได้แก้ test · `embed` ใช้ `getattr(embedding, "statistics", None)` เพราะ stub ของ test embed เดิม (review แล้ว) ไม่มี field นี้ · ลบ `GOOGLE_APPLICATION_CREDENTIALS` จาก `.env.example` + `EnvSettings` (§10 ข้อ 2) · `GOOGLE_CLOUD_LOCATION=global` · แก้ ai-orchestration §2.3.3 · ยังไม่แก้ `config/ai.yaml` comment, `infra/README.md`, `docs/team/setup.md` (ไฟล์ร่วม / ของ Junior · รอ Jam ถาม)
 - 2026-10-31 · test 17 ตัว + smoke `live` 1 ตัว: 12 แดงด้วยเหตุผลที่ถูก (ยังไม่มี `GeminiProvider.vertex`, ยังไม่ส่ง `vertexai`, build ยังไม่ลงทะเบียน `vertex`) · 5 เขียวอยู่แล้วเพราะเป็นพฤติกรรมเดิมที่ต้องคงไว้ (AC-4, 6, 9, 10, 11) · AC-10 และ smoke ใช้ `extract_topics_local` (tier `mid` เหมือน `check_answer`) แทน `check_answer` เพราะ prompt `check_answer/v1` ยังอยู่ใน PR #80 ยังไม่อยู่ใน `main` (ต่างจาก spec §10 ข้อ 6 · Jam ok ตอน review test · แก้ spec ตามแล้ว) · smoke อยู่ที่ `tests/integration/test_vertex_live.py` สร้าง gateway จาก config ตรงๆ ไม่ขึ้นกับ `AI_PROVIDER`
 - 2026-10-31 · Junior ok ให้ Jam แก้ `apps/api/app/ai/` (Jam แจ้งในแชทกลุ่ม)
@@ -39,7 +41,7 @@
 
 ## Next step
 
-ขั้น 7 (🙋 Jam): ติดตั้ง Google Cloud CLI → `gcloud auth application-default login` → `gcloud auth application-default set-quota-project anyang-513006` → ใส่ `GOOGLE_CLOUD_PROJECT=anyang-513006` และ `GOOGLE_CLOUD_LOCATION=global` ใน `.env` → `cd apps/api && uv run pytest tests/integration/test_vertex_live.py -m live -s` แล้วส่งผลในแชท
+ครบทุกขั้นแล้ว · Jam พิมพ์ `/work-done` เพื่อปิดงานและขอ Junior review PR #87 · ระหว่างรอ merge: กลับไป `feat/check-answer-classifier` ขั้น 6 ได้เลย เพราะ `.env` ของ Jam ตั้ง Vertex ไว้แล้ว แต่ต้อง `git merge origin/feat/gemini-vertex` (หรือรอ merge เข้า `main`) ก่อนรัน P2
 
 ## Waiting on
 
