@@ -3,7 +3,7 @@
 # "vertex:" runs on Vertex AI when GOOGLE_CLOUD_PROJECT is set (specs/features/ai/gemini-vertex.md;
 # AI-07: no free tier for real users). AI_MODEL_OVERRIDE=gemini:<model> still uses the Gemini API key.
 
-version: 1.3
+version: 1.4
 
 tiers:
   small:  {primary: "vertex:TODO-gemini-small",  fallback: "anthropic:TODO-claude-haiku"}  # not measured (P3 ran A4 on flash only)
@@ -14,7 +14,7 @@ tiers:
 
 purposes:
   # thinking: Gemini 3 thinking level; its tokens count inside max_tokens (PoC P3, 2026-10-19)
-  # max_tokens and timeout_s of flow 2.3 raised before the first P3 run (Thai output + thinking); confirm from P3 logs
+  # max_tokens and timeout_s of flow 2.3 raised before the first P3 run (Thai output + thinking) · P3: merge_topics used 14,944 of 16,000 output tokens (93%), a larger course may hit the cap · re-check in the P3a re-run on Vertex (S4)
   # flow 2.3
   classify_material:      {tier: small,  temperature: 0.0, max_tokens: 300,  timeout_s: 20, prompt: v1}
   vision_extract:         {tier: vision, temperature: 0.0, max_tokens: 4000, timeout_s: 60, prompt: v1, thinking: low}
@@ -40,7 +40,7 @@ purposes:
   latex_to_speech:        {tier: small,  temperature: 0.0, max_tokens: 300,  timeout_s: 8,  prompt: v1}
 
 embedding:                             # A3 embed (ai-orchestration §2.3.3), tier `embed` · no prompt
-  timeout_s: 60                        # [C] one batch request · PoC P3b: set from measured latency
+  timeout_s: 60                        # [C] one batch request · P3b: 116 chunks in 21.6 s (~1.8 s per batch of 10), so 60 leaves a wide margin · after Alpha: from ai_calls
   batch_size: 10                       # [C] texts per request · gemini-embedding-2 allows 8,192 tokens per request in total and chunks are up to 800
   dimensions: 768                      # = chunks.embedding vector(768) · P3b: gemini-embedding-2 recall@4 95% at 768 vs 90% at 3072 (specs/poc/reports/P3.md)
 
