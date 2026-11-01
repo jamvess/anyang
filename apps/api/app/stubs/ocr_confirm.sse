@@ -1,0 +1,12 @@
+event: verdict
+data: {"verdict": "incorrect", "first_wrong_line": 2, "error_type": "sign"}
+
+event: token
+data: {"speaker": "tutor", "text": "บรรทัด 2 เครื่องหมายสลับกัน "}
+
+event: token
+data: {"speaker": "tutor", "text": "ลองคูณ $(x - 2)(x + 3)$ กลับดูนะ ได้ $x^2 + x - 6$ ไม่ใช่ $x^2 - 5x + 6$"}
+
+event: done
+data: {}
+

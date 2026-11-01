@@ -1,4 +1,5 @@
-"""API models of the tutor room (specs/system/api.md v1.2 "ห้องติว" and "SSE events").
+"""API models of the tutor room (specs/system/api.md "ห้องติว" v1.2, uploads / transcribe /
+ocr/confirm v1.7, and "SSE events").
 
 Field names follow api.md, not the database columns: the router maps
 `exam_preps.title` to `prep_name`, `profiles.nickname` to `user_name` and so on.
@@ -8,7 +9,7 @@ Difficulty 1-3 and the problem purposes repeat the check constraints of
 `problems` in 0001_init.sql; they are schema rules, not learning-model thresholds.
 The same holds for the progress card topics: stars 0-3 (`topics.importance`), level
 (`topic_progress.level`, also `levels.show` in config/learning.yaml) and origin
-(`topics.origin`). Tests keep them in sync.
+(`topics.origin`). Verdict and error types come from app.domain.checker. Tests keep them in sync.
 """
 
 from datetime import datetime
@@ -17,6 +18,7 @@ from uuid import UUID
 
 from pydantic import Field, model_validator
 
+from app.domain.checker import ErrorType, Verdict
 from app.models.base import ApiModel
 
 # --- REST ----------------------------------------------------------------------
@@ -78,6 +80,46 @@ class SendMessageRequest(ApiModel):
         return self
 
 
+class UploadRequest(ApiModel):
+    """Body of POST /sessions/{id}/uploads (api.md v1.7). The router checks `content_type`
+    against UPLOAD_CONTENT_TYPES and the image size against config/ai.yaml → guards."""
+
+    kind: Literal["image", "audio"]
+    content_type: str
+    file_name: str = Field(min_length=1)  # display only (messages.attachment_name), never a path
+    size_bytes: int = Field(ge=1)
+
+
+# File types each kind accepts (api.md v1.7). audio/mp4 is what Safari on iOS records.
+UPLOAD_CONTENT_TYPES: dict[str, frozenset[str]] = {
+    "image": frozenset({"image/jpeg", "image/png", "image/webp", "image/heic"}),
+    "audio": frozenset({"audio/webm", "audio/ogg", "audio/mp4"}),
+}
+
+
+class UploadTicket(ApiModel):
+    """Response of POST /sessions/{id}/uploads: PUT the file to `upload_url`, then send `path`."""
+
+    upload_url: str
+    path: str
+
+
+class TranscribeRequest(ApiModel):
+    audio_path: str
+
+
+class Transcript(ApiModel):
+    """Response of POST /sessions/{id}/transcribe. Goes into the input box, never sent (TM-07)."""
+
+    text: str
+
+
+class OcrConfirmRequest(ApiModel):
+    """Body of POST /sessions/{id}/ocr/confirm: every line in order, as many as the preview."""
+
+    lines: list[str] = Field(min_length=1)
+
+
 # --- SSE event payloads ----------------------------------------------------------
 
 
@@ -135,11 +177,32 @@ class ErrorEvent(ApiModel):
     message: str
 
 
+class OcrLine(ApiModel):
+    latex: str  # plain LaTeX without $ delimiters, like problem.text_latex
+    confidence: float = Field(ge=0, le=1)
+
+
+class OcrPreviewEvent(ApiModel):
+    """An unreadable photo is a tutor token instead, so lines is never empty (AM-02)."""
+
+    lines: list[OcrLine] = Field(min_length=1)
+
+
+class VerdictEvent(ApiModel):
+    """Merged checker result (specs/features/check/merge-rules.md)."""
+
+    verdict: Verdict
+    first_wrong_line: int | None = Field(ge=1)
+    error_type: ErrorType | None
+
+
 EVENT_MODELS: dict[str, type[ApiModel]] = {
     "session": SessionEvent,
     "token": TokenEvent,
     "progress_card": ProgressCardEvent,
     "problem": ProblemEvent,
+    "ocr_preview": OcrPreviewEvent,
+    "verdict": VerdictEvent,
     "buddy": BuddyEvent,
     "done": DoneEvent,
     "error": ErrorEvent,

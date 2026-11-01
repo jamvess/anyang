@@ -15,9 +15,9 @@
 - [x] 2. 🙋 Jam อ่านร่าง ตอบ ok · ส่งข้อความในแชทกลุ่มว่าจะแก้ `api.md` (ไฟล์ร่วม)
 - [x] 3. 🤖 ใส่ร่างลง `api.md` v1.7 + "รอตัดสิน (v1.7 · Junior)"
 - [x] 4. 🤖 test contract + stub (`test_apimd_room_media_…` / requirement ID สำหรับพฤติกรรม) · แดงก่อน
-- [ ] 5. 🙋 Jam review test
-- [ ] 6. 🤖 models + stub 3 endpoint (`X-Stub: true`) · `OcrPreviewEvent`, `VerdictEvent` ใน `EVENT_MODELS` · ข้อความรูปใน stub stream `ocr_preview` · test เขียว + ruff
-- [ ] 7. 🤖 `pnpm gen:api` (ลง `apps/web/lib/api-schema.ts`) + บรรทัดความคืบหน้าใน checklist
+- [x] 5. 🙋 Jam review test
+- [x] 6. 🤖 models + stub 3 endpoint (`X-Stub: true`) · `OcrPreviewEvent`, `VerdictEvent` ใน `EVENT_MODELS` · ข้อความรูปใน stub stream `ocr_preview` · test เขียว + ruff
+- [x] 7. 🤖 `pnpm gen:api` (ลง `apps/web/lib/api-schema.ts`) + บรรทัดความคืบหน้าใน checklist
 
 ## Definition of done
 
@@ -32,7 +32,7 @@
 
 ## Next step
 
-ขั้น 5: Jam review `tests/unit/test_room_media_api_contract.py` + `test_room_media_stubs.py` · แล้วขั้น 6 เขียน models + stub
+ทุกขั้นเสร็จแล้ว · `/work-done` (บอกแชทกลุ่มก่อน merge เพราะแก้ api.md)
 
 ## Waiting on
 
