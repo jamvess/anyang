@@ -1,0 +1,46 @@
+# Contract + stub ของ API กลุ่ม scope (D5 · ส่วนแรก)
+
+| | |
+|---|---|
+| Owner | Jam (item of Junior) |
+| Branch | `feat/scope-api-stubs` |
+| Checklist item | เขียน router หัวฟังก์ชันของทุก API ใน `specs/system/api.md` ให้หน้า `/docs` ครบ (D5) |
+| Status | in progress · 2026-11-01 |
+
+## Plan
+
+ทำเฉพาะ 4 endpoint ที่หน้า scope ของ May (`specs/features/scope/scope-review.md`) ใช้: `GET /exam-preps/{id}/scope`, `GET /topics/{id}/sources`, `POST /exam-preps/{id}/scope/confirm`, `GET /exam-preps/{id}/scope/changes` · กลุ่มอื่น (upload/materials, persona, บัญชี) ทำใน branch ถัดไป
+
+- [ ] 1. 🤖 อ่าน `scope-review.md` §3 + §10 (OQ 5–8), ai-orchestration §2.3, data-model (`topics`, `topic_sources`, `past_exam_questions.map_note`, `scope_changes`), UC-02 · ร่าง request/response ของ 4 endpoint พร้อมบอกที่มาของแต่ละ field (ข้อเสนอของ May / data-model / Claude เสนอเอง)
+- [ ] 2. 🙋 Jam อ่านร่าง ตอบ ok · ส่งข้อความในแชทกลุ่มว่าจะแก้ `api.md` (ไฟล์ร่วม) โดยเขียนเป็นข้อเสนอที่รอ Junior ตัดสิน
+- [ ] 3. 🤖 ใส่ร่างลง `specs/system/api.md` (v1.6) ในหัวข้อ "Exam prep และ scope" · OQ 5–8 เป็น "รอตัดสิน (Junior)"
+- [ ] 4. 🤖 เขียน test `tests/unit/test_scope_api_contract.py` (สิ่งที่ endpoint จริงต้องผ่าน) + `test_scope_stubs.py` (`X-Stub`) · ชื่อ `test_apimd_scope_…` · ต้องแดงก่อน
+- [ ] 5. 🙋 Jam review test
+- [ ] 6. 🤖 `app/models/scope.py` + `app/routers/scope.py` ที่คืน fixture (copy จาก `apps/web/tests/fixtures/scope/` ไป `app/stubs/`) พร้อม `X-Stub: true` · error envelope แบบเดียวกับห้องติว · test เขียว + ruff
+- [ ] 7. 🤖 ตรวจ `/openapi.json` ว่ามี schema ครบ (ให้ May `pnpm gen:api` ได้) · อัปเดตหมายเหตุใน `sprint-checklists.md`
+
+## Definition of done
+
+- `api.md` มีรูปร่าง request/response ของ 4 endpoint ข้างบน · ทุกข้อที่ยังไม่ตัดสินเขียนไว้ใน "รอตัดสิน" ระบุว่ารอ Junior
+- `/docs` แสดง 4 endpoint พร้อม schema และ `ErrorResponse` · stub คืน fixture ที่ตรงกับ fixture ของ May
+- test contract + stub ผ่าน · CI เขียว
+- ข้อ D5 ยังไม่ติ๊ก (ยังเหลือกลุ่มอื่น) · เพิ่มบรรทัดความคืบหน้าใต้ข้อนั้น
+
+## Decisions
+
+- 2026-11-01 · เริ่มจากกลุ่ม scope · หน้า scope ของ May (spec approved 28 ต.ค.) รอ OQ 5–8 และ stub อยู่ · demo รวมต้องแสดง upload → scope
+- 2026-11-01 · contract เป็นเรื่องที่ Junior ตัดสิน (`roles.md`) · ช่วง solo จึงเขียนเป็นข้อเสนอใน `api.md` แล้ว stub ตามข้อเสนอ · Junior เปลี่ยนได้ทีหลังใน PR ใหม่
+- 2026-11-01 · spec กับ stub อยู่ PR เดียวกัน (ต่างจาก #35/#38) · ไม่ต้องรอ approve แล้ว (ทีมตกลง 31 ต.ค.) แต่ต้องบอกแชทกลุ่มก่อน merge เพราะแก้ `api.md`
+
+## Next step
+
+ขั้น 1: ร่าง contract ของ 4 endpoint จาก `scope-review.md` §3 และ data-model
+
+## Waiting on
+
+- Junior: ตัดสิน contract (OQ 5–8 ของ `scope-review.md` และรายการรอตัดสินใหม่ใน `api.md`) · ทำหลังจาก merge ได้ ถ้าแก้ให้เปิด PR ใหม่
+- May: รัน `pnpm gen:api` ฝั่งเว็บหลัง merge (`apps/web/lib/api-schema.ts` เป็นไฟล์ของ May)
+
+## Notes for next time
+
+- แบบของ stub ห้องติว: `app/routers/room.py`, `app/stubs/`, `tests/unit/test_room_api_contract.py`, `test_room_stubs.py` (PR #38)
