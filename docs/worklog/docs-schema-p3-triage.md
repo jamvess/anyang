@@ -2,10 +2,10 @@
 
 | | |
 |---|---|
-| Owner | Junior |
+| Owner | Junior · ทำต่อโดย Jam (2026-11-01) |
 | Branch | `docs/schema-p3-triage` |
 | Checklist item | ปรับ `schema.sql` ตามที่เจอระหว่าง P3 + วาด ERD (D3) |
-| Status | paused · 2026-10-28 |
+| Status | in progress · 2026-11-01 |
 
 ## Plan
 
