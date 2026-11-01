@@ -7,7 +7,7 @@
 | Owner | Jam |
 | Reviewer | Junior |
 | Status | approved (Jam · 28 ต.ค. · §11 Junior OK 28 ต.ค.) |
-| Related system spec | ai-orchestration.md §2.4.1, §2.4.2, §2.4.3 · `specs/features/check/merge-rules.md` §3 · architecture.md (Math: subprocess + timeout) · `evals/README.md` "คู่มือ label ลายมือ · P1" |
+| Related system spec | ai-orchestration.md §2.4.1, §2.4.2, §2.4.3 · `specs/features/check/merge-rules.md` §3 · architecture.md v1.2 (Math: worker pool + timeout) · `evals/README.md` "คู่มือ label ลายมือ · P1" |
 
 ## 1. Context
 
