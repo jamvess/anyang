@@ -100,7 +100,7 @@ export interface paths {
          * Send Message
          * @description Send `{text}` or `{image_path}`; the reply streams as SSE and ends with done.
          *
-         *     stub — replaced in P4-lite
+         *     `{text}` streams `tutor_reply` from the gateway (P4-lite). `{image_path}` is a stub.
          */
         post: operations["send_message_sessions__id__messages_post"];
         delete?: never;
@@ -353,6 +353,15 @@ export interface operations {
                     "application/json": components["schemas"]["ActiveSession"];
                 };
             };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             /** @description Not found */
             404: {
                 headers: {
@@ -393,6 +402,15 @@ export interface operations {
                     "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
                 };
             };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             /** @description Not found */
             404: {
                 headers: {
@@ -431,6 +449,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Room"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
             /** @description Not found */
@@ -475,6 +502,15 @@ export interface operations {
                 };
                 content: {
                     "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
             /** @description Not found */

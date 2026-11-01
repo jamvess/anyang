@@ -187,8 +187,10 @@
 - [x] Provider `vertex` ใน gateway ใช้เครดิต Free Trial ของ `anyang-513006` (เพิ่ม 31 ต.ค. · `infra/README.md` "งาน AI gateway ใน S3") · PR #87 · spec `specs/features/ai/gemini-vertex.md` · ADC ไม่มี key file · smoke บน Vertex ผ่าน (`gemini-3.5-flash`, `global`, 4.8 วินาที) · เหตุผล: free tier ของ AI Studio ได้ 20 request/วัน/model รัน P2 ได้แค่ 23/50 · Junior ok ให้แก้ `apps/api/app/ai/`
 - [x] Report P2
   - 31 ต.ค. (PR #82): `specs/poc/reports/P2.md` · **ผ่าน** (Jam ตัดสิน): 6 error types, prompt v1, Vertex · ไม่ต้อง fallback 4 แบบ · บรรทัดผลใน `specs/poc/README.md` · งานต่อก่อนเข้าห้องแชท: hint sign flip ใน job เดียวกับ SymPy, กติกา §2.5 ของ `CheckAnswerResult`
-- [ ] ⭐ API ตรวจ Supabase JWT ทุก endpoint: อ่าน `Authorization: Bearer <jwt>` (api.md "Auth") → ได้ `tenant_id`, `user_id` → ตั้ง `ai_call_context` และส่ง JWT ต่อให้ Supabase ให้ RLS ทำงาน · ไม่มีหรือผิด → 401
+- [x] ⭐ API ตรวจ Supabase JWT ทุก endpoint: อ่าน `Authorization: Bearer <jwt>` (api.md "Auth") → ได้ `tenant_id`, `user_id` → ตั้ง `ai_call_context` และส่ง JWT ต่อให้ Supabase ให้ RLS ทำงาน · ไม่มีหรือผิด → 401
   - เพิ่ม 1 พ.ย. (Jam รับเอง · งาน backend จึงชวน Junior ดูย้อนหลัง) · ⭐ เพราะขวาง 3 อย่าง: แถวใน `ai_calls` (`ai-calls-log.md`), การบันทึก `messages` (`tutor-reply-stream.md` §9) และการเปิด `AI_PROVIDER=live` บน api-staging (⚠️ ใน `infra/README.md` · ต้องเปลี่ยน runtime SA ด้วย)
+  - 1 พ.ย. เสร็จ (PR #98 · `specs/features/platform/api-auth.md`): `app/auth.py` ตรวจด้วย `get_claims` ของ Supabase Auth (ES256 กับ JWKS ที่ cache ไว้ · HS256 ของ Supabase ในเครื่องถาม Auth server) · `tenant_id` จาก claim ของ hook + `user_id` จาก `sub` · 401 `missing_token` / `invalid_token` · router ห้องติวทั้งหมดผ่าน `get_auth` (test ไล่ทุก endpoint) · แชทที่มี token ได้แถวใน `ai_calls` · `get_user_db` ส่ง JWT ของ user ให้ RLS · env ใหม่ `AUTH_REQUIRED` (staging และ `.env.example` = `false`) · `api.md` v1.5
+  - เหลือก่อนบังคับบน staging: หน้าเว็บ login + ส่ง token (May) · `api-staging` ใส่ `SUPABASE_URL` / `SUPABASE_ANON_KEY` แล้วตั้ง `AUTH_REQUIRED: "true"` (Junior · `anyang-staging` ต่อไม่ได้ 1 พ.ย.)
 
 **Done เมื่อ:** มีตัวเลข 3 ตัวของ P2 เทียบกับเป้า
 
