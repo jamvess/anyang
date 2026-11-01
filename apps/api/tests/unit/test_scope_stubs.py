@@ -24,7 +24,7 @@ SCOPE_ENDPOINTS = [
 ]
 
 # May's fixtures, which the scope page tests use (specs/features/scope/scope-review.md §4).
-WEB_FIXTURES = Path(__file__).resolve().parents[3] / "apps" / "web" / "tests" / "fixtures" / "scope"
+WEB_FIXTURES = Path(__file__).resolve().parents[3] / "web" / "tests" / "fixtures" / "scope"
 
 
 @pytest.fixture

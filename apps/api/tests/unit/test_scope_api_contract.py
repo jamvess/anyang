@@ -103,7 +103,7 @@ TOPIC = {
     "name": "ผลต่างกำลังสอง",
     "stars": 3,
     "reason": "ออกทุกชุด",
-    "source_label": "ch3 น.5–6",
+    "source_label": "ch3 น.5",
     "origin": "doc",
 }
 
@@ -133,7 +133,9 @@ def test_apimd_scope_topic_rules(change: dict[str, Any], ok: bool) -> None:
             ScopeTopic.model_validate(data)
 
 
-@pytest.mark.parametrize(("status", "ok"), [("draft", True), ("confirmed", True), ("locked", False)])
+@pytest.mark.parametrize(
+    ("status", "ok"), [("draft", True), ("confirmed", True), ("locked", False)]
+)
 def test_apimd_scope_status_enum(status: str, ok: bool) -> None:
     data = {
         "prep_name": "Factorization",

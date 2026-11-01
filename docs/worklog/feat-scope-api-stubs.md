@@ -14,10 +14,10 @@
 - [x] 1. 🤖 อ่าน `scope-review.md` §3 + §10 (OQ 5–8), ai-orchestration §2.3, data-model (`topics`, `topic_sources`, `past_exam_questions.map_note`, `scope_changes`), UC-02 · ร่าง request/response ของ 3 endpoint พร้อมบอกที่มาของแต่ละ field (ข้อเสนอของ May / data-model / Claude เสนอเอง)
 - [x] 2. 🙋 Jam อ่านร่าง ตอบ ok · ส่งข้อความในแชทกลุ่มว่าจะแก้ `api.md` (ไฟล์ร่วม) โดยเขียนเป็นข้อเสนอที่รอ Junior ตัดสิน
 - [x] 3. 🤖 ใส่ร่างลง `specs/system/api.md` (v1.6) ในหัวข้อ "Exam prep และ scope" · OQ 5–8 เป็น "รอตัดสิน (Junior)"
-- [ ] 4. 🤖 เขียน test `tests/unit/test_scope_api_contract.py` (สิ่งที่ endpoint จริงต้องผ่าน) + `test_scope_stubs.py` (`X-Stub`) · ชื่อ `test_apimd_scope_…` · ต้องแดงก่อน
-- [ ] 5. 🙋 Jam review test
-- [ ] 6. 🤖 `app/models/scope.py` + `app/routers/scope.py` ที่คืน fixture (copy จาก `apps/web/tests/fixtures/scope/` ไป `app/stubs/`) พร้อม `X-Stub: true` · error envelope แบบเดียวกับห้องติว · test เขียว + ruff
-- [ ] 7. 🤖 ตรวจ `/openapi.json` ว่ามี schema ครบ (ให้ May `pnpm gen:api` ได้) · อัปเดตหมายเหตุใน `sprint-checklists.md`
+- [x] 4. 🤖 เขียน test `tests/unit/test_scope_api_contract.py` (สิ่งที่ endpoint จริงต้องผ่าน) + `test_scope_stubs.py` (`X-Stub`) · ชื่อ `test_apimd_scope_…` · ต้องแดงก่อน
+- [x] 5. 🙋 Jam review test
+- [x] 6. 🤖 `app/models/scope.py` + `app/routers/scope.py` ที่คืน fixture (copy จาก `apps/web/tests/fixtures/scope/` ไป `app/stubs/`) พร้อม `X-Stub: true` · error envelope แบบเดียวกับห้องติว · test เขียว + ruff
+- [x] 7. 🤖 ตรวจ `/openapi.json` ว่ามี schema ครบ (ให้ May `pnpm gen:api` ได้) · อัปเดตหมายเหตุใน `sprint-checklists.md`
 
 ## Definition of done
 
@@ -37,7 +37,7 @@
 
 ## Next step
 
-ขั้น 4: เขียน test contract + stub ของ scope (แบบเดียวกับ `test_room_api_contract.py`)
+ทุกขั้นเสร็จแล้ว · Jam อ่าน diff (api.md v1.6 + test) แล้วพิมพ์ `/work-done` · ส่งข้อความในแชทกลุ่มก่อน merge เพราะแก้ api.md
 
 ## Waiting on
 
@@ -47,6 +47,8 @@
 ## Done today
 
 - 2026-11-01 · ขั้น 1–3: api.md v1.6 หน้าตรวจขอบเขต (`Scope`, `ScopeTopic`, `PastQuestion`, `TopicSources`, `ScopeConfirmed`) + รอตัดสิน 5 ข้อ
+- 2026-11-01 · ขั้น 4–5: `test_scope_api_contract.py` (24 กรณี) + `test_scope_stubs.py` (stub ตรงกับ fixture ของ May ทุกค่ายกเว้น id) · แดงก่อน (`app.models.scope` ไม่มี) · ไม่มีคน review ทีละขั้น (ดู Decisions)
+- 2026-11-01 · ขั้น 6–7: `app/models/scope.py`, `app/routers/scope.py` (อยู่หลัง `get_auth`), `app/stubs/scope.json` + `topic_sources.json` · unit 480 ผ่าน · ruff ผ่าน · ลอง `openapi-typescript` ลง scratchpad แล้ว type ตรงกับ type ที่ May เขียนเองใน `ScopeReview.tsx` · ไม่ได้ commit `apps/web/lib/api-schema.ts` (ไฟล์ของ May)
 
 ## Notes for next time
 
