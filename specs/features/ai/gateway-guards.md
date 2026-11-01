@@ -6,7 +6,7 @@
 | Requirements | TM-21 (ขีดจำกัดมาจาก `config/ai.yaml` → `guards`) · NFR-R1 (provider หลักล่ม ระบบยังตอบได้) · NFR-P2 (ต้นทุน AI ต่อ session) |
 | Owner | Jam (item of Junior · ช่วง solo 2026-11-01) |
 | Reviewer | Jam · Junior ดูย้อนหลัง (โครงสร้าง backend · §10) |
-| Status | draft |
+| Status | approved by Jam 2026-11-01 (OQ 1–6 ตามข้อเสนอ · Junior ดูข้อ 1–4 ย้อนหลังได้) |
 | Related system spec | ai-orchestration.md §2.9 (Limits: 20 ข้อความ/นาที), §2.10 (Fallback chain, Circuit breaker) · api.md Conventions (Error), "ห้องติว", v1.7 "รูป เสียง และยืนยันลายมือ" · architecture.md v1.2 "สร้างแล้วหรือยัง" · `config/ai.yaml` → `guards.rate_limit_messages_per_minute`, `gateway.circuit_breaker.*` |
 
 ## 1. Context
@@ -145,7 +145,7 @@
 
 ## 10. Open questions
 
-ข้อเสนอของ Claude อยู่ใน §2 แล้ว · ข้อ 1–4 เป็นโครงสร้าง backend (Junior ตัดสิน · ทำตามข้อเสนอไปก่อนได้) · ข้อ 5–6 เป็นรายละเอียดของ threshold และ log (Jam)
+**ตัดสินแล้ว (Jam 2026-11-01): ตามข้อเสนอทั้ง 6 ข้อ** (§2 เขียนตามนั้นแล้ว) · ข้อ 1–4 เป็นโครงสร้าง backend จึงเป็นข้อเสนอที่ Junior เปลี่ยนได้ทีหลังใน PR ใหม่ · ข้อ 1 ทำแบบนับต่อ IP ไว้ก่อน และถือว่าห้ามเปิด `AI_PROVIDER=live` บน staging ขณะที่ `AUTH_REQUIRED=false`
 
 1. **ไม่มี token นับต่อ IP:** ข้อเสนอคือใช้ค่าแรกของ `X-Forwarded-For` · ค่านี้ client ปลอมได้ถ้ายิงตรงไม่ผ่าน load balancer · บน Cloud Run ค่าแรกมาจาก client จึงปลอมได้เช่นกัน · ทางเลือก: (ก) ใช้ค่าสุดท้ายที่ Google ใส่ (ข) ไม่นับคนที่ไม่มี token เลย แล้วบังคับว่าห้ามเปิด live ถ้า `AUTH_REQUIRED=false` · Claude เอนไปทาง (ข) + ข้อเสนอนี้เป็นทางกันชั่วคราว
 2. **`POST /exam-preps/{id}/sessions` ควรนับไหม:** endpoint นี้เรียก AI ทำข้อความเปิด (ตอนนี้ยังเป็น stub) · §2.9 พูดแค่ "ข้อความ" · ข้อเสนอคือยังไม่นับ
