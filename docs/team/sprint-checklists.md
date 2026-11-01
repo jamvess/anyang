@@ -72,6 +72,8 @@
   - รอ Junior: (1) P4-lite ยังไม่ตรวจ JWT และไม่บันทึก `messages` ใช่ไหม (spec §10 ข้อ 1) (2) `error.code` `message_too_long`, `ai_unavailable` (ข้อ 3 · ยังไม่แก้ `api.md`) · staging ยังเป็น fake (ตอบด้วยข้อความ tutor ของ stub ไม่มี buddy)
 - [ ] เขียน router หัวฟังก์ชันของทุก API ใน `specs/system/api.md` ให้หน้า `/docs` ครบ (D5)
   - 20 ต.ค. api.md v1.2 ห้องติว (PR #35) + stub 4 endpoint ของห้องติวที่คืน fixture ของ May พร้อม `X-Stub: true` (PR #38) · `/docs` แสดง schema ของ `Room`, `Message`, event SSE และ `ErrorResponse` · เหลือ endpoint กลุ่มอื่นใน api.md
+  - ทำโดย Jam (1 พ.ย.) ช่วง solo · ทำได้บางส่วน
+  - 1 พ.ย. (PR #100): api.md v1.6 หน้าตรวจขอบเขต (เป็นข้อเสนอ รอ Junior ตัดสิน 5 ข้อใน "รอตัดสิน (v1.6 · Junior)") + stub 3 endpoint ที่คืน fixture ของ May พร้อม `X-Stub: true`: `GET /exam-preps/{id}/scope`, `GET /topics/{id}/sources`, `POST /exam-preps/{id}/scope/confirm` · May รัน `pnpm gen:api` แล้วใช้ type `Scope`, `TopicSources` แทน type ที่เขียนเองได้ · เหลือ upload/materials, ingestion, `scope/chat`, `scope/changes`, persona, บัญชี และอีก 6 endpoint ของห้องติว
 - [ ] วัด TTFT และต้นทุนบน staging ร่วมกับ May (P4-lite)
   - ทำโดย Jam (1 พ.ย.) ช่วง solo · ทำได้บางส่วน
   - 1 พ.ย. (PR #99 · `specs/poc/reports/P4-lite.md`): วัดกับ Gemini จริงบน Vertex จากเครื่อง Jam (staging ยังเปิด live ไม่ได้) · `thinking: low` p95 3.87 s → `minimal` p95 1.20 s · 0.039 บาท/ข้อความ (`poc/P4-lite/cost.py` จาก log `ai_calls`) · `ai.yaml` 1.8 · เหลือ: วัดซ้ำบน staging `ttft.py --label staging-gemini` เมื่อหน้าเว็บส่ง token + `AUTH_REQUIRED=true` + env Supabase ของ api-staging
