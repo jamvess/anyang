@@ -384,7 +384,7 @@ Golden sets ของการวัดผล AI ไม่อยู่ใน DB 
 
 ประเภท: **ยืนยันแล้วจาก P3** · **ตัดสินด้วย design** (Junior + Jam, ข้อ 3 + May) · **รอ A6/A7 บน Vertex** (ไม่มีข้อไหน)
 
-| # | ที่มาใน P3 | schema ตอนนี้ | ประเภท + หลักฐาน | ข้อเสนอ (รอ Jam ตอบ) |
+| # | ที่มาใน P3 | schema ตอนนี้ | ประเภท + หลักฐาน | ข้อเสนอ (Jam ตอบแล้ว 2026-10-28 · ผลในตารางถัดไป) |
 |---|---|---|---|---|
 | 1 | A6 `merge_topics` คืน `sources` (ช่วงหน้าของแต่ละหัวข้อ) เพราะขั้น 5d ต้องใช้สร้าง `topic_chunks` และ SM-04 ต้องแสดงเลขหน้า | `topics` ไม่มีที่เก็บช่วงหน้า | **ยืนยันแล้วว่าต้องเก็บ** · หัวข้อเดียวมีหลายช่วงและข้ามไฟล์ได้ เช่น `t02` → `sheet-01:2-26`, `sheet-03:1-1`, `sheet-03:1-2` · ตารางหรือ jsonb = **design** | ตาราง `topic_sources (tenant_id, topic_id, material_id, page_from, page_to)` ไม่ใช้ jsonb · ขั้น 5d join ช่วงหน้ากับ `chunks` ด้วย `material_id` + `page_from/page_to` และเมื่อลบไฟล์ (CM-10) FK `on delete cascade` จะลบช่วงหน้าตามไปด้วย ถ้าเป็น jsonb จะเหลือ id ของไฟล์ที่ลบไปแล้วค้างอยู่ · ต้องมี `tenant_id` + RLS + เพิ่มใน `test_SA06_tenant_isolation` |
 | 2 | A4 `split_past_exam` คืน `points` (คะแนนของข้อ) | `past_exam_questions` ไม่มี column คะแนน | **design** · A4 ตรงกับ label 43/43 และคืน `points` จริง แต่ `poc/P3/stars.py` ไม่ใช้ | เลื่อนไปตัดสินตอนทำ `compute_importance` (P8-lite, S4) · ตอนนี้ยังไม่มี ingest จริงที่ทิ้งค่านี้ไป |

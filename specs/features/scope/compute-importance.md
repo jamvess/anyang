@@ -118,7 +118,7 @@
 | `topics` | `importance smallint (0–3)`, `signal_r numeric`, `importance_reason text`, `importance_source ('computed','user')`, `prereq_ids uuid[]`, `order_index`, `status ('draft','confirmed','excluded')` | output และ input |
 | `materials` | `relevance_weight numeric default 1.0` | น้ำหนักข้อสอบ |
 | `past_exam_questions` | `topic_id` | appearances |
-| (ยังไม่มี) `topic_sources` หรือ `topics.sources` | ช่วงหน้าที่ A6 คืน | จำนวนหน้าของหัวข้อ (ผู้เรียกนับ) · data-model.md "สิ่งที่อาจต้องแก้ใน schema จาก P3a" ข้อ 1 (Junior · PR #67) |
+| `topic_sources` (`page_from`, `page_to` ต่อไฟล์) | ช่วงหน้าที่ A6 คืน | จำนวนหน้าของหัวข้อ (ผู้เรียกนับ) · migration `0003` (PR #67) |
 
 ## 6. API / SSE changes
 
@@ -186,6 +186,6 @@ AC-pure ตรวจจากการที่ test ทั้งหมดรั
 | `config/learning.yaml` → `stars.no_past_exam_method` | comment จาก "open question … decide after P3" เป็นนโยบายที่ตัดสินแล้ว (ค่าไม่เปลี่ยน) | Jam · PR นี้ |
 | `specs/system/learning-model.md` §2 | บรรทัด "ไม่มีข้อสอบเก่าเลย … open question" เป็นตัดสินแล้ว พร้อมกฎหน้าเท่ากัน | Jam · PR นี้ |
 | `apps/api/app/settings.py` → `StarsConfig.no_past_exam_method` | `str` → `Literal["page_terciles"]` (AC-19) | ทำใน S4 พร้อม implement |
-| schema: ที่เก็บช่วงหน้าของหัวข้อ (`topic_sources` หรือ `topics.sources`) | ต้องมีก่อน ingestion 5d เรียกฟังก์ชันนี้ได้ · ฟังก์ชันเองรับ `page_count` จึงไม่บล็อก P8-lite | Junior · data-model "สิ่งที่อาจต้องแก้ใน schema จาก P3a" ข้อ 1 (PR #67) |
+| ~~schema: ที่เก็บช่วงหน้าของหัวข้อ~~ | ตาราง `topic_sources` ใน migration `0003` (PR #67 · 2026-11-01) | เสร็จแล้ว |
 
 ข้อ 10.4 เพิ่มรายละเอียดที่ ai-orchestration §2.3.5 ไม่ได้พูดถึง (ไม่ขัดกัน)

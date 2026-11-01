@@ -167,6 +167,27 @@ def test_CM10_deleting_a_topic_removes_its_page_ranges(prep: Prep) -> None:
     assert _sources(prep, topic) == []
 
 
+def test_CM10_deleting_an_exam_prep_removes_its_page_ranges_and_map_notes(prep: Prep) -> None:
+    # CM-10 "ลบ exam prep ทั้งรายการ": exam_preps -> topics / materials -> topic_sources and
+    # past_exam_questions all go with it.
+    sheet, exam = prep.material("sheet.pdf"), prep.material("midterm.pdf")
+    topic = prep.topic("t01")
+    prep.insert(
+        "topic_sources",
+        {"topic_id": topic, "material_id": sheet, "page_from": 1, "page_to": 2},
+    )
+    question = prep.insert(
+        "past_exam_questions",
+        {"material_id": exam, "q_no": "1", "text": "x", "topic_id": topic, "map_note": "n"},
+    )
+
+    prep.admin.table("exam_preps").delete().eq("id", prep.exam_prep_id).execute()
+
+    assert _sources(prep, topic) == []
+    left = prep.admin.table("past_exam_questions").select("id").eq("id", question).execute()
+    assert left.data == []
+
+
 @pytest.mark.parametrize(
     ("mapped", "note"),
     [
