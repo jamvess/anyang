@@ -14,8 +14,8 @@
 - [x] 3. 🙋 Jam ดูผลแล้วตัดสิน: ถ้า TTFT p95 ≥ 2 s ลองตัวไหนต่อ (เช่น ไม่ตั้ง max เดิม, `thinking` ระดับต่ำกว่า low ถ้า model รองรับ · ต้องแก้ `Literal` ใน settings · หรือ prompt สั้นลง) · ทดลองผ่าน `CONFIG_DIR` ชี้ไป copy ของ `config/` ใน scratchpad จึงไม่แตะ `config/ai.yaml` ระหว่างทดลอง
 - [x] 4. 🤖 รันรอบทดลองตามที่ Jam เลือก (ถ้ามี) · label แยก
 - [x] 5. 🙋 Jam ตัดสินค่าใน `config/ai.yaml` (ไฟล์กลาง · บอกกลุ่ม) ถ้าจะเปลี่ยน
-- [ ] 6. 🤖 อัปเดต `poc/P4-lite/README.md` + ร่าง `/poc-report P4-lite` (report ของ May + Junior · Jam ร่างช่วง solo) · เกณฑ์: TTFT p95 < 2 s · สลับ provider ด้วย config · มีตัวเลขต้นทุน
-- [ ] 7. 🙋 Jam review report
+- [x] 6. 🤖 อัปเดต `poc/P4-lite/README.md` + ร่าง `/poc-report P4-lite` (report ของ May + Junior · Jam ร่างช่วง solo) · เกณฑ์: TTFT p95 < 2 s · สลับ provider ด้วย config · มีตัวเลขต้นทุน
+- [x] 7. 🙋 Jam review report
 - [ ] 8. 🤖 `/work-done`
 
 ## Definition of done
@@ -34,7 +34,7 @@
 
 ## Next step
 
-ขั้น 6: อัปเดต `poc/P4-lite/README.md` (ผล Gemini 2 รอบ + ต้นทุน + คำสั่งรัน) แล้ว `/poc-report P4-lite` → `specs/poc/reports/P4-lite.md` + บรรทัดผลใน `specs/poc/README.md` + `ai-orchestration.md` §3.6 แถว "TTFT และต้นทุน"
+ขั้น 8: `/work-done` · ไฟล์กลางที่ต้องบอกกลุ่มก่อน merge: `config/ai.yaml` (1.8)
 
 ## Waiting on
 
