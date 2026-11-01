@@ -9,7 +9,7 @@
 
 ## Plan
 
-- [ ] 1. 🤖 เช็คของที่ต้องมี: ADC ของ Vertex (ok 1 พ.ย.) · `GOOGLE_CLOUD_PROJECT=anyang-513006`, location `global` (ok) · หาราคา `gemini-3.5-flash` บน Vertex (input/output ต่อ 1M token) จากหน้า pricing ของ Google พร้อม URL และวันที่ดู
+- [x] 1. 🤖 เช็คของที่ต้องมี: ADC ของ Vertex (ok 1 พ.ย.) · `GOOGLE_CLOUD_PROJECT=anyang-513006`, location `global` (ok) · หาราคา `gemini-3.5-flash` บน Vertex (input/output ต่อ 1M token) จากหน้า pricing ของ Google พร้อม URL และวันที่ดู
 - [ ] 2. 🤖 รัน API ในเครื่อง `AI_PROVIDER=live AUTH_REQUIRED=false` (override env ไม่แก้ `.env`) เก็บ log `app.ai.calls` ลงไฟล์ · ยิง `poc/P4-lite/ttft.py --base http://127.0.0.1:8000 --n 50 --label local-vertex-low` (config ปัจจุบัน `thinking: low`) · เพิ่ม `poc/P4-lite/cost.py` อ่าน log → token ต่อข้อความ + ต้นทุน (บาท) + test ส่วน pure · ใช้ credit trial ราว 50 call
 - [ ] 3. 🙋 Jam ดูผลแล้วตัดสิน: ถ้า TTFT p95 ≥ 2 s ลองตัวไหนต่อ (เช่น ไม่ตั้ง max เดิม, `thinking` ระดับต่ำกว่า low ถ้า model รองรับ · ต้องแก้ `Literal` ใน settings · หรือ prompt สั้นลง) · ทดลองผ่าน `CONFIG_DIR` ชี้ไป copy ของ `config/` ใน scratchpad จึงไม่แตะ `config/ai.yaml` ระหว่างทดลอง
 - [ ] 4. 🤖 รันรอบทดลองตามที่ Jam เลือก (ถ้ามี) · label แยก
@@ -30,13 +30,15 @@
 
 ## Next step
 
-ขั้น 1: หาราคา `gemini-3.5-flash` บน Vertex AI (ต่อ 1M input/output token) จากหน้า pricing ทางการ จด URL + วันที่ + อัตราแลกเปลี่ยนที่ใช้
+ขั้น 2: รัน API ในเครื่องด้วย `AI_PROVIDER=live AUTH_REQUIRED=false` (log ลงไฟล์ใน scratchpad) แล้ว `ttft.py --base http://127.0.0.1:8000 --n 50 --label local-vertex-low` + เขียน `poc/P4-lite/cost.py`
 
 ## Waiting on
 
 - Junior + May: report P4-lite เป็นของทั้งคู่ · Jam ร่างให้ · ตัวเลขบน staging จริงวัดซ้ำได้ด้วยคำสั่งเดิมเมื่อเปิด live
 
 ## Notes for next time
+
+- 1 พ.ย. ราคาที่ใช้ (list price · ประมาณการ): `gemini-3.5-flash` Vertex global input **$1.50** / 1M (cached $0.15) จากหน้า pricing ของ Vertex (search 1 พ.ย. · https://docs.cloud.google.com/vertex-ai/generative-ai/pricing · WebFetch เปิดหน้าไม่ได้) · output **$9.00** / 1M (รวม thinking) จากตาราง CodeMender/AlphaEvolve บนหน้า Vertex pricing เดิม · ยังไม่เห็นในตารางหลัก → ยืนยันกับ Cloud Billing report (SKU) หลังรัน · อัตรา **33 บาท/USD** (ปัดจาก 32.65–33.78 ในช่วง ก.ค.–ส.ค. 2569 · ไม่มีค่าล่าสุดที่เชื่อได้) · เป้า 5 บาท/session ≈ $0.15
 
 - `tokens_out` ใน `ai_calls` รวม thinking token แล้ว (`gemini.py` `_usage`) · thinking คิดเงินแบบ output
 - smoke 31 ต.ค. (ค่า `ai.yaml` 1.5): TTFT 3.7 s ด้วย `thinking: low` · default thinking 5.2 s
