@@ -13,10 +13,10 @@ The same holds for the progress card topics: stars 0-3 (`topics.importance`), le
 """
 
 from datetime import datetime
-from typing import Any, Literal, Self
+from typing import Annotated, Any, Literal, Self
 from uuid import UUID
 
-from pydantic import Field, model_validator
+from pydantic import Field, StringConstraints, model_validator
 
 from app.domain.checker import ErrorType, Verdict
 from app.models.base import ApiModel
@@ -117,7 +117,10 @@ class Transcript(ApiModel):
 class OcrConfirmRequest(ApiModel):
     """Body of POST /sessions/{id}/ocr/confirm: every line in order, as many as the preview."""
 
-    lines: list[str] = Field(min_length=1)
+    # A blank line cancels an edit on the card (ocr-confirm-card OQ 2), so none arrive here.
+    lines: list[Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]] = Field(
+        min_length=1
+    )
 
 
 # --- SSE event payloads ----------------------------------------------------------
@@ -194,6 +197,22 @@ class VerdictEvent(ApiModel):
     verdict: Verdict
     first_wrong_line: int | None = Field(ge=1)
     error_type: ErrorType | None
+
+    @model_validator(mode="after")
+    def _merge_rules(self) -> Self:
+        # merge-rules.md §2: the combinations the checker can produce.
+        line, error = self.first_wrong_line, self.error_type
+        if self.verdict == "correct":
+            ok = line is None and error is None  # rule 3
+        elif self.verdict == "incomplete":
+            ok = line is None and error == "concept"  # rule 5
+        elif error == "no_answer":
+            ok = self.verdict == "incorrect" and line is None  # rule 1
+        else:
+            ok = line is not None and error is not None  # rules 4 and 6
+        if not ok:
+            raise ValueError(f"{self.verdict} with line {line} and {error} breaks merge-rules.md")
+        return self
 
 
 EVENT_MODELS: dict[str, type[ApiModel]] = {

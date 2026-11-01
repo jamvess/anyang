@@ -983,7 +983,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description stt_unavailable */
+            /** @description stt_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;

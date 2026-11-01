@@ -22,7 +22,7 @@ from app import stubs
 from app.ai.call_context import AICallContext
 from app.ai.gateway import Gateway, get_gateway
 from app.auth import AuthContext, get_auth
-from app.models.error import ErrorBody, ErrorResponse
+from app.models.error import ErrorResponse, error_response
 from app.models.room import (
     EVENT_MODELS,
     UPLOAD_CONTENT_TYPES,
@@ -136,8 +136,7 @@ async def send_message(
     max_chars = get_settings().ai.guards.max_message_chars
     if len(body.text) > max_chars:
         # Code proposed in tutor-reply-stream.md §10 item 3, pending Junior.
-        error = ErrorBody(code="message_too_long", message=f"text is over {max_chars} characters")
-        return JSONResponse(ErrorResponse(error=error).model_dump(), status_code=422)
+        return error_response(422, "message_too_long", f"text is over {max_chars} characters")
 
     # No session_id yet: the session is a stub with no tutor_sessions row (api-auth.md §2.5).
     call_context = AICallContext(auth.tenant_id, auth.user_id) if auth else None
@@ -158,9 +157,16 @@ _STUB_TENANT = "00000000-0000-4000-8000-0000000000aa"
 _STUB_TRANSCRIPT = "สองเอ็กซ์ลบห้า คูณ สองเอ็กซ์บวกห้า"  # voice-input.md §3 example
 
 
-def _error(status: int, code: str, message: str) -> JSONResponse:
-    error = ErrorBody(code=code, message=message)
-    return JSONResponse(ErrorResponse(error=error).model_dump(), status_code=status)
+def _stub_error(status: int, code: str, message: str) -> JSONResponse:
+    response = error_response(status, code, message)
+    response.headers.update(stubs.HEADERS)
+    return response
+
+
+def _bare_type(content_type: str) -> str:
+    """`audio/webm;codecs=opus` → `audio/webm`: browsers add codec parameters to MediaRecorder
+    types and may use upper case (voice-input.md OQ 8)."""
+    return content_type.split(";", 1)[0].strip().lower()
 
 
 @router.post(
@@ -174,21 +180,30 @@ def _error(status: int, code: str, message: str) -> JSONResponse:
         },
     },
 )
-async def create_upload(session_id: SessionId, body: UploadRequest, response: Response) -> Any:
+async def create_upload(
+    session_id: SessionId,
+    body: UploadRequest,
+    response: Response,
+    auth: Annotated[AuthContext | None, Depends(get_auth)],
+) -> Any:
     """Signed upload URL for one image or audio file (TM-06, TM-07, TM-21).
 
     stub — the URL is not a real Storage URL until the endpoint talks to Supabase Storage
     """
-    if body.content_type not in UPLOAD_CONTENT_TYPES[body.kind]:
-        return _error(
+    content_type = _bare_type(body.content_type)
+    if content_type not in UPLOAD_CONTENT_TYPES[body.kind]:
+        return _stub_error(
             422, "unsupported_type", f"{body.content_type} is not an accepted {body.kind}"
         )
     max_mb = get_settings().ai.guards.max_image_mb
     if body.kind == "image" and body.size_bytes > max_mb * _BYTES_PER_MB:
-        return _error(422, "file_too_large", f"image is over {max_mb} MB")
+        return _stub_error(422, "file_too_large", f"image is over {max_mb} MB")
     response.headers.update(stubs.HEADERS)
-    ext = body.content_type.split("/", 1)[1]
-    path = f"{_STUB_TENANT}/sessions/{session_id}/{uuid4()}.{ext}"
+    # Storage paths start with the tenant (data-model.md); anonymous requests (AUTH_REQUIRED=false)
+    # have none, so the stub uses a fixed one.
+    tenant = auth.tenant_id if auth else _STUB_TENANT
+    ext = content_type.split("/", 1)[1]
+    path = f"{tenant}/sessions/{session_id}/{uuid4()}.{ext}"
     return UploadTicket(upload_url=f"https://stub.invalid/storage/{path}", path=path)
 
 
@@ -197,7 +212,11 @@ async def create_upload(session_id: SessionId, body: UploadRequest, response: Re
     responses={
         **_ERRORS,
         422: {"model": ErrorResponse, "description": "Invalid body or audio_too_long"},
-        503: {"model": ErrorResponse, "description": "stt_unavailable"},
+        # Replaces the 503 of AUTH_ERRORS on this route, so it names both causes.
+        503: {
+            "model": ErrorResponse,
+            "description": "stt_unavailable, or auth_unavailable (Supabase Auth unreachable)",
+        },
     },
 )
 async def transcribe(
@@ -227,5 +246,5 @@ async def confirm_ocr(session_id: SessionId, body: OcrConfirmRequest) -> Respons
     """
     preview = dict(stubs.events("image_reply"))["ocr_preview"]
     if len(body.lines) != len(preview["lines"]):
-        return _error(422, "ocr_lines_mismatch", f"send {len(preview['lines'])} lines")
+        return _stub_error(422, "ocr_lines_mismatch", f"send {len(preview['lines'])} lines")
     return _stream("ocr_confirm")

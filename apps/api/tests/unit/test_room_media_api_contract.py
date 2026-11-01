@@ -6,7 +6,6 @@ request rules, not fixture values, so the real endpoints must pass them unchange
 Stub-only checks live in test_room_media_stubs.py.
 """
 
-import json
 from collections.abc import Iterator
 from typing import Any
 
@@ -15,6 +14,7 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.models.room import (
+    EVENT_MODELS,
     OcrConfirmRequest,
     OcrPreviewEvent,
     Transcript,
@@ -23,6 +23,7 @@ from app.models.room import (
     VerdictEvent,
 )
 from app.settings import get_settings
+from tests.unit.test_room_api_contract import assert_stream
 
 SESSION_ID = "00000000-0000-4000-8000-000000000002"
 MB = 1_048_576  # api.md: 1 MB = 1,048,576 bytes
@@ -48,22 +49,10 @@ def openapi(client: TestClient) -> dict[str, Any]:
     return client.get("/openapi.json").json()
 
 
-def parse_sse(body: str) -> list[tuple[str, Any]]:
-    events = []
-    for block in body.replace("\r\n", "\n").split("\n\n"):
-        name, data = "message", []
-        for line in block.split("\n"):
-            if not line or line.startswith(":"):
-                continue
-            field, _, value = line.partition(":")
-            value = value.removeprefix(" ")
-            if field == "event":
-                name = value
-            elif field == "data":
-                data.append(value)
-        if data:
-            events.append((name, json.loads("\n".join(data))))
-    return events
+def assert_events_valid(events: list[tuple[str, Any]]) -> None:
+    """Every payload matches its api.md model, the new ocr_preview and verdict included."""
+    for name, data in events:
+        EVENT_MODELS[name].model_validate(data)
 
 
 def upload(**change: Any) -> dict[str, Any]:
@@ -127,6 +116,15 @@ def test_apimd_room_media_schemas_have_exact_required_fields(openapi: dict[str, 
         ({"verdict": "maybe", "first_wrong_line": None, "error_type": None}, False),
         ({"verdict": "incorrect", "first_wrong_line": 0, "error_type": "sign"}, False),
         ({"verdict": "incorrect", "first_wrong_line": 1, "error_type": "typo"}, False),
+        ({"verdict": "correct_with_flaw", "first_wrong_line": 3, "error_type": "sign"}, True),
+        ({"verdict": "incomplete", "first_wrong_line": None, "error_type": "concept"}, True),
+        # combinations merge-rules.md never produces
+        ({"verdict": "correct", "first_wrong_line": 2, "error_type": "sign"}, False),
+        ({"verdict": "correct", "first_wrong_line": None, "error_type": "no_answer"}, False),
+        ({"verdict": "incomplete", "first_wrong_line": None, "error_type": "sign"}, False),
+        ({"verdict": "incorrect", "first_wrong_line": 2, "error_type": "no_answer"}, False),
+        ({"verdict": "incorrect", "first_wrong_line": None, "error_type": "sign"}, False),
+        ({"verdict": "correct_with_flaw", "first_wrong_line": 2, "error_type": None}, False),
     ],
 )
 def test_AM05_verdict_payload_rules(data: dict[str, Any], ok: bool) -> None:
@@ -165,6 +163,10 @@ def test_AM02_ocr_preview_payload_rules(lines: list[dict[str, Any]], ok: bool) -
         upload(content_type="image/png"),
         upload(content_type="image/heic"),
         upload(kind="audio", content_type="audio/webm", file_name="เสียง.webm", size_bytes=900_000),
+        upload(content_type="image/JPEG"),
+        # MediaRecorder.mimeType of Chrome and Firefox (voice-input.md OQ 8)
+        upload(kind="audio", content_type="audio/webm;codecs=opus", file_name="เสียง", size_bytes=9),
+        upload(kind="audio", content_type="audio/ogg; codecs=opus", file_name="เสียง", size_bytes=9),
     ],
 )
 def test_TM06_upload_gives_url_and_path(client: TestClient, body: dict[str, Any]) -> None:
@@ -175,6 +177,7 @@ def test_TM06_upload_gives_url_and_path(client: TestClient, body: dict[str, Any]
     assert ticket.upload_url
     assert f"/sessions/{SESSION_ID}/" in ticket.path
     assert body["file_name"] not in ticket.path  # names never build Storage paths
+    assert ";" not in ticket.path and " " not in ticket.path
 
 
 @pytest.mark.parametrize(
@@ -205,14 +208,14 @@ def test_TM21_image_size_limit_comes_from_config(client: TestClient) -> None:
 
 
 @pytest.mark.parametrize("change", [{"size_bytes": 0}, {"kind": "video"}, {"file_name": ""}])
-def test_apimd_room_upload_body_validation(client: TestClient, change: dict[str, Any]) -> None:
+def test_TM06_upload_body_validation(client: TestClient, change: dict[str, Any]) -> None:
     response = client.post(f"/sessions/{SESSION_ID}/uploads", json=upload(**change))
 
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "validation_error"
 
 
-def test_apimd_room_upload_request_rejects_extra_fields() -> None:
+def test_TM06_upload_request_rejects_extra_fields() -> None:
     with pytest.raises(ValueError):
         UploadRequest.model_validate(upload(path="x"))
 
@@ -243,20 +246,25 @@ def test_AM02_ocr_confirm_streams_verdict_before_tutor(client: TestClient) -> No
 
     response = client.post(f"/sessions/{SESSION_ID}/ocr/confirm", json=body)
 
-    assert response.status_code == 200
-    assert response.headers["content-type"].startswith("text/event-stream")
-    events = parse_sse(response.text)
+    events = assert_stream(response)  # 200, event-stream, known events, one done at the end
+    assert_events_valid(events)
     names = [name for name, _ in events]
-    assert names[-1] == "done"
     assert "verdict" in names
     first_token = names.index("token") if "token" in names else len(names)
     assert names.index("verdict") < first_token  # ai-orchestration §2.4.5
-    for name, data in events:
-        if name == "verdict":
-            VerdictEvent.model_validate(data)
 
 
-@pytest.mark.parametrize("body", [{}, {"lines": []}, {"lines": "x^2"}])
+def test_AM02_image_message_stream_payloads_are_valid(client: TestClient) -> None:
+    body = {"image_path": f"t1/sessions/{SESSION_ID}/x.jpg"}
+
+    events = assert_stream(client.post(f"/sessions/{SESSION_ID}/messages", json=body))
+
+    assert_events_valid(events)
+
+
+@pytest.mark.parametrize(
+    "body", [{}, {"lines": []}, {"lines": "x^2"}, {"lines": ["x", "  "]}, {"lines": [""]}]
+)
 def test_AM02_ocr_confirm_body_validation(client: TestClient, body: dict[str, Any]) -> None:
     response = client.post(f"/sessions/{SESSION_ID}/ocr/confirm", json=body)
 

@@ -13,6 +13,7 @@ from starlette.exceptions import HTTPException
 
 from app.auth import AUTH_ERRORS, get_auth, install_auth_errors
 from app.middleware import install_middleware
+from app.models.error import error_response
 from app.models.room import EVENT_MODELS
 from app.routers import health, room, scope
 from app.settings import get_settings
@@ -66,19 +67,16 @@ app.include_router(scope.router, dependencies=[Depends(get_auth)], responses=AUT
 _HTTP_CODES = {404: "not_found", 405: "method_not_allowed"}
 
 
-def _error(status: int, code: str, message: str) -> JSONResponse:
-    return JSONResponse({"error": {"code": code, "message": message}}, status_code=status)
-
-
 @app.exception_handler(HTTPException)
 async def _http_error(_: Request, exc: HTTPException) -> JSONResponse:
-    return _error(exc.status_code, _HTTP_CODES.get(exc.status_code, "http_error"), str(exc.detail))
+    code = _HTTP_CODES.get(exc.status_code, "http_error")
+    return error_response(exc.status_code, code, str(exc.detail))
 
 
 @app.exception_handler(RequestValidationError)
 async def _validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
     message = "; ".join(f"{'.'.join(str(p) for p in e['loc'])}: {e['msg']}" for e in exc.errors())
-    return _error(422, "validation_error", message)
+    return error_response(422, "validation_error", message)
 
 
 # --- OpenAPI: SSE event payloads as components so `pnpm gen:api` types them ------

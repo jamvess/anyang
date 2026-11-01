@@ -144,7 +144,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | | Field | Type | หมายเหตุ |
 |---|---|---|---|
 | Request | `kind` | `"image"` \| `"audio"` | รูปวิธีทำ (TM-06) หรือเสียงพูด (TM-07) |
-| | `content_type` | string | image: `image/jpeg`, `image/png`, `image/webp`, `image/heic` · audio: `audio/webm`, `audio/ogg`, `audio/mp4` · นอกนั้น `422 unsupported_type` |
+| | `content_type` | string | image: `image/jpeg`, `image/png`, `image/webp`, `image/heic` · audio: `audio/webm`, `audio/ogg`, `audio/mp4` · ไม่สนตัวพิมพ์ และตัด parameter หลัง `;` ก่อนเทียบ (`audio/webm;codecs=opus` ของ Chrome ใช้ได้) · นอกนั้น `422 unsupported_type` |
 | | `file_name` | string | ชื่อไฟล์เดิม · backend เก็บเป็น `messages.attachment_name` ตอนส่งข้อความ (ตัดตาม `guards.max_attachment_name_chars` · data-model.md) · ไม่ใช้ประกอบ path |
 | | `size_bytes` | integer ≥ 1 | image เกิน `guards.max_image_mb` (1 MB = 1,048,576 bytes) → `422 file_too_large` |
 | Response | `upload_url` | string | signed upload URL ของ Supabase Storage · ใช้ได้ครั้งเดียวและหมดอายุ |
@@ -157,7 +157,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 **`POST /sessions/{id}/ocr/confirm`** · ยืนยันหรือแก้บรรทัดที่อ่านจากรูป แล้ว stream ผลตรวจ
 
-- Request `{lines: string[]}` · ทุกบรรทัดตามลำดับ จำนวนเท่ากับ `ocr_preview.lines` ใบล่าสุด (หน้าเว็บแก้ได้แต่เพิ่มหรือลบบรรทัดไม่ได้ · ocr-confirm-card OQ 3) · backend เทียบกับ preview เองเพื่อ log บรรทัดที่แก้ (AM-03)
+- Request `{lines: string[]}` · ทุกบรรทัดตามลำดับ แต่ละบรรทัดไม่ว่าง (ช่องว่างล้วนบนการ์ดคือยกเลิกการแก้ · ocr-confirm-card OQ 2) จำนวนเท่ากับ `ocr_preview.lines` ใบล่าสุด (หน้าเว็บแก้ได้แต่เพิ่มหรือลบบรรทัดไม่ได้ · ocr-confirm-card OQ 3) · backend เทียบกับ preview เองเพื่อ log บรรทัดที่แก้ (AM-03)
 - Response: SSE แบบเดียวกับ `POST /sessions/{id}/messages`: `verdict` → `token`… → `done` (verdict มาก่อน tutor เริ่มพิมพ์ · §2.4.5)
 - error: `409 no_pending_ocr` (ไม่มี preview ที่รอยืนยัน) · `422 ocr_lines_mismatch` (จำนวนบรรทัดไม่เท่า)
 
@@ -188,7 +188,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | `progress_card` | `{days_left, passed, total, readiness, topics: [{id, name, stars, level, review_due, origin}]}` · type ของ `topics[]` ดูด้านล่าง | 2.2 |
 | `problem` | `{problem_id, text_latex, difficulty, purpose}` (ไม่มีเฉลย) | 2.2 |
 | `ocr_preview` | `{lines: [{latex, confidence}]}` · `latex` เป็น LaTeX ล้วนไม่มี `$` · `confidence` 0–1 (หน้าเว็บไม่แสดง · ยืนยันทุกครั้ง AM-02) · `lines` ไม่ว่าง (รูปที่อ่านไม่ได้ส่งเป็น `token` แทน) · v1.7 | 2.2 |
-| `verdict` | `{verdict, first_wrong_line, error_type}` · `verdict`: `correct` \| `correct_with_flaw` \| `incomplete` \| `incorrect` · `first_wrong_line`: integer ≥ 1 หรือ null · `error_type`: `calculation` \| `sign` \| `wrong_method` \| `concept` \| `prerequisite` \| `no_answer` หรือ null · ค่าตาม `merge-rules.md` · v1.7 | 2.4 |
+| `verdict` | `{verdict, first_wrong_line, error_type}` · `verdict`: `correct` \| `correct_with_flaw` \| `incomplete` \| `incorrect` · `first_wrong_line`: integer ≥ 1 หรือ null · `error_type`: `calculation` \| `sign` \| `wrong_method` \| `concept` \| `prerequisite` \| `no_answer` หรือ null · ชุดค่าตาม `merge-rules.md` §2: `correct` → ทั้งสองเป็น null · `incomplete` → `concept` + line null · `no_answer` → `incorrect` + line null · นอกนั้นมีทั้ง line และ error_type · v1.7 | 2.4 |
 | `buddy` | `{text}` (ใช้เมื่อ buddy ตอบนอกจังหวะ 2.1.7) | 2.1 |
 | `session_end` | `{summary_lines: [..2]}` | 2.2 |
 | `done` | `{}` · ห้องติว: `{message_ids: [...]}` id ของข้อความ tutor และ buddy ที่ stream นี้บันทึกลง `messages` เรียงตามลำดับที่ stream (ใช้แทน id ในเครื่องของ UI เช่น เรียก `GET /messages/{id}/tts`) · v1.3 | ทั้งหมด |
