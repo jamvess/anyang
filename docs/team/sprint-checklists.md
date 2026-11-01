@@ -73,6 +73,8 @@
 - [ ] เขียน router หัวฟังก์ชันของทุก API ใน `specs/system/api.md` ให้หน้า `/docs` ครบ (D5)
   - 20 ต.ค. api.md v1.2 ห้องติว (PR #35) + stub 4 endpoint ของห้องติวที่คืน fixture ของ May พร้อม `X-Stub: true` (PR #38) · `/docs` แสดง schema ของ `Room`, `Message`, event SSE และ `ErrorResponse` · เหลือ endpoint กลุ่มอื่นใน api.md
 - [ ] วัด TTFT และต้นทุนบน staging ร่วมกับ May (P4-lite)
+  - ทำโดย Jam (1 พ.ย.) ช่วง solo · ทำได้บางส่วน
+  - 1 พ.ย. (PR #99 · `specs/poc/reports/P4-lite.md`): วัดกับ Gemini จริงบน Vertex จากเครื่อง Jam (staging ยังเปิด live ไม่ได้) · `thinking: low` p95 3.87 s → `minimal` p95 1.20 s (≈ 1.35 s รวม Cloud Run) · 0.039 บาท/ข้อความ (`poc/P4-lite/cost.py` จาก log `ai_calls`) · `ai.yaml` 1.8 · เหลือ: วัดซ้ำบน staging `ttft.py --label staging-gemini` เมื่อหน้าเว็บส่ง token + `AUTH_REQUIRED=true` + env Supabase ของ api-staging
 
 **Done เมื่อ:** หน้า `/docs` แสดงครบทุก API และหน้าแชทของ May คุยกับ Gemini ผ่าน staging ได้
 
@@ -122,7 +124,9 @@
 - [x] Generate type จาก `/openapi.json` (`pnpm gen:api`)
   - 21 ต.ค. (PR #41) · generate จาก stub ห้องติว api.md v1.2 · รัน `pnpm gen:api` ใหม่เมื่อ Junior เพิ่ม endpoint หรือทำตาม v1.3
 - [x] Use case UC สมัคร และ UC upload → scope (D7)
-- [ ] เขียน report P4-lite ร่วมกับ Junior
+- [x] เขียน report P4-lite ร่วมกับ Junior
+  - ทำโดย Jam (1 พ.ย.) ช่วง solo · May + Junior ดูย้อนหลังได้ (report ของทั้งคู่)
+  - 1 พ.ย. (PR #99): `specs/poc/reports/P4-lite.md` **ผ่าน (ประมาณการ)** ทั้ง 3 เกณฑ์ · ใช้ผล AI จำลองของ May (#85) + Gemini จริงของ Jam · ยังต้องวัดซ้ำบน staging (ดูข้อ "วัด TTFT และต้นทุน" ของ Junior)
   - 31 ต.ค. วัด TTFT พื้นฐานบน `api-staging` ด้วย AI จำลองแล้ว (PR #85 · `poc/P4-lite/`): p95 0.15 s (ทั้ง stub และผ่าน gateway หลัง #93) · cold start 6.06 s · ในเบราว์เซอร์ข้อความแรกมี CORS preflight +0.17 s · เหลือ: วัดกับ Gemini จริงเมื่อ staging เปิด live, ต้นทุนต่อข้อความ, สลับ provider ด้วย config, `/poc-report P4-lite`
 
 **Done เมื่อ:** คุยกับ AI บน staging แล้วเห็นตัวอักษรไหลออกมาและสมการ render ถูก
