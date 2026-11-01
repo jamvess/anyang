@@ -33,6 +33,7 @@ class RateLimiter:
         self._window = window_seconds
         self._clock = clock
         self._hits: dict[str, deque[float]] = {}
+        self._last_sweep = clock()
         self._lock = threading.Lock()
 
     def hit(self, key: str) -> int | None:
@@ -41,6 +42,7 @@ class RateLimiter:
         message is not counted (spec AC-4)."""
         now = self._clock()
         with self._lock:
+            self._sweep(now)
             hits = self._hits.setdefault(key, deque())
             while hits and hits[0] <= now - self._window:
                 hits.popleft()
@@ -48,6 +50,20 @@ class RateLimiter:
                 return max(1, math.ceil(hits[0] + self._window - now))
             hits.append(now)
             return None
+
+    def _sweep(self, now: float) -> None:
+        """Once a window, forget keys with no message in the window, so keys that are
+        seen once (an anonymous client with a new IP each time) do not pile up."""
+        if now - self._last_sweep < self._window:
+            return
+        self._last_sweep = now
+        cutoff = now - self._window
+        for key in [k for k, hits in self._hits.items() if not hits or hits[-1] <= cutoff]:
+            del self._hits[key]
+
+    def keys(self) -> int:
+        """How many keys are held (for tests and logs)."""
+        return len(self._hits)
 
 
 @cache
@@ -57,8 +73,9 @@ def get_rate_limiter() -> RateLimiter:
 
 
 def _client_ip(request: Request) -> str:
-    # Cloud Run puts the client first in X-Forwarded-For. A client can forge it, which is why
-    # live AI stays off while AUTH_REQUIRED=false (spec §10 item 1).
+    # A client can send its own X-Forwarded-For and Google keeps it in front of the address it
+    # adds, so the first value is the client's word. Good enough as a stop-gap: live AI stays off
+    # while AUTH_REQUIRED=false (spec §10 item 1).
     forwarded = request.headers.get("x-forwarded-for", "")
     first = forwarded.split(",", 1)[0].strip()
     if first:
@@ -72,8 +89,9 @@ async def chat_rate_limit(
     limiter: Annotated[RateLimiter, Depends(get_rate_limiter)],
 ) -> None:
     """Dependency of the room endpoints that send a user message: 429 ``rate_limited`` with
-    ``Retry-After`` over the limit. It runs before the body is checked, so a bad body counts
-    too (spec §10 item 3)."""
+    ``Retry-After`` over the limit. It runs before the body's fields are checked, so a body
+    that fails validation counts too (spec §10 item 3). A body that is not JSON at all is
+    refused by FastAPI before dependencies run, so it is not counted; it never reaches the AI."""
     key = f"user:{auth.user_id}" if auth else f"ip:{_client_ip(request)}"
     retry_after = limiter.hit(key)
     if retry_after is not None:

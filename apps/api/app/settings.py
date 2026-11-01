@@ -9,7 +9,7 @@ silently ignored.
 import re
 from functools import lru_cache
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
@@ -163,6 +163,13 @@ class CircuitBreakerConfig(_Strict):
     minimum_calls: int = Field(ge=1)
     sliding_window_calls: int = Field(ge=1)
     open_seconds: float = Field(gt=0)
+
+    @model_validator(mode="after")
+    def _window_holds_minimum(self) -> Self:
+        # The window keeps sliding_window_calls results, so a larger minimum could never be met.
+        if self.minimum_calls > self.sliding_window_calls:
+            raise ValueError("minimum_calls must not exceed sliding_window_calls")
+        return self
 
 
 class GatewayConfig(_Strict):

@@ -32,11 +32,12 @@
 - **ถึง limit แล้ว:** มีครบ `limit` แล้ว → ตอบ `429` + body `{"error": {"code": "rate_limited", "message": …}}` + header `Retry-After` (จำนวนวินาทีเต็มที่ต้องรอจนแถวเก่าสุดหลุดหน้าต่าง ปัดขึ้น ≥ 1)
   - ตอบก่อนเริ่ม SSE · เป็น HTTP 429 ธรรมดา ไม่ใช่ event `error`
   - ไม่เรียก AI · request ที่ถูกปฏิเสธไม่นับเพิ่ม
-- **นับก่อนตรวจ body:** request ที่ body ผิด (422) ก็นับ · กันคนยิง body เสียรัวๆ (§10 ข้อ 3)
+- **นับก่อนตรวจ body:** request ที่ body ผิด (422) ก็นับ · กันคนยิง body เสียรัวๆ (§10 ข้อ 3) · ยกเว้น body ที่ไม่ใช่ JSON เลย: FastAPI ปฏิเสธก่อนถึงตัวนับ จึงไม่นับ (ไม่ถึง AI อยู่แล้ว · self-review #103)
 - **นับต่อใคร:**
   - มี token (`get_auth` ได้ `AuthContext`): นับต่อ `user_id` · user คนละคน (tenant เดียวกันหรือคนละ tenant) ไม่กระทบกัน
   - ไม่มี token (`AUTH_REQUIRED=false`): นับต่อ IP ของ client (ค่าแรกของ `X-Forwarded-For` ที่ Cloud Run ใส่ · ไม่มีก็ใช้ IP ของ connection) (§10 ข้อ 1)
-- **ที่เก็บ:** ในหน่วยความจำของ process (แต่ละ instance ของ Cloud Run นับแยกกัน) · restart แล้วเริ่มนับใหม่ (§10 ข้อ 4)
+- **ที่เก็บ:** ในหน่วยความจำของ process (แต่ละ instance ของ Cloud Run นับแยกกัน) · restart แล้วเริ่มนับใหม่ (§10 ข้อ 4) · ทุก 60 วินาทีลบ key ที่ไม่มีข้อความในหน้าต่าง กันหน่วยความจำโตจาก IP ใหม่ทุก request
+- **header:** `Retry-After` อยู่ใน `Access-Control-Expose-Headers` ให้หน้าเว็บอ่านได้
 
 ### 2.2 Circuit breaker (ข)
 
@@ -53,11 +54,14 @@
 - **นับอะไร:** 1 call ของ `ai.call` / `ai.stream` / `embed` ที่จบแล้ว = 1 ผล:
   - ล้ม = จบด้วย `AIProviderError` หลัง retry ครบแล้ว (timeout, error ของ provider, rate limit ของ provider, stream ที่ไม่มีข้อความ, stream ที่ขาดกลางทาง)
   - สำเร็จ = provider ตอบแล้ว รวม `AISchemaError` (model ตอบแต่ผิด schema ไม่ใช่ provider ล่ม) และ stream ที่ผู้เรียกหยุดอ่านเองก่อนจบ
-  - ไม่นับ: `AIConfigError`, `AIInputError` (เกิดก่อนเรียก provider)
+  - ไม่นับ: `AIConfigError`, `AIInputError` (เกิดก่อนเรียก provider) · call ที่ผู้เรียก cancel ก่อน provider ตอบ (ไม่ได้บอกอะไรเกี่ยวกับ provider · ถ้าเป็น call ทดลองตอน half-open ก็ปล่อยช่องให้ call ถัดไปทดลองแทน)
 - **สถานะ:**
   - **closed** (เริ่มต้น): เรียก provider ตามปกติ · หลังแต่ละ call ถ้ามี ≥ `minimum_calls` ผลในหน้าต่าง และสัดส่วนที่ล้ม ≥ `failure_rate_threshold` → **open**
   - **open:** ทุก call ที่ route ไป provider นี้ล้มทันทีด้วย `AIProviderError` ("circuit open") ไม่เรียก provider ไม่ retry · เมื่อเปิดครบ `open_seconds` → **half-open**
   - **half-open:** ปล่อย call ถัดไป 1 call ไปที่ provider (call อื่นที่มาพร้อมกันล้มทันทีเหมือน open) · สำเร็จ → **closed** และล้างหน้าต่าง · ล้ม → **open** อีก `open_seconds` (§10 ข้อ 5)
+- **ผลของ call ที่เริ่มก่อนเปลี่ยนสถานะไม่นับ:** ทุกครั้งที่เปลี่ยนสถานะเริ่มรุ่นใหม่ (generation) · call ช้าที่เริ่มตอน closed แล้วจบหลัง breaker เปิด จะไม่ถูกนับเป็นผลของ call ทดลอง
+- **call ทดลองที่ไม่รายงานผล** (เช่น stream ที่ถูกทิ้งโดยไม่ปิด) หมดอายุหลัง `open_seconds` แล้ว call ถัดไปเป็นตัวทดลองแทน · ผลที่มาช้าของตัวเก่าไม่นับ
+- **config:** `minimum_calls` ต้องไม่เกิน `sliding_window_calls` (ไม่งั้นไม่มีทางเปิด) · โหลด config ไม่ผ่านถ้าเกิน
 - **ผู้เรียกไม่ต้องรู้จัก breaker:** เห็นแค่ `AIProviderError` แบบเดิม · `tutor_turn` จึง degrade เป็น `token` "ระบบช้า ลองส่งอีกทีนะ" → `done` ตามเดิม (tutor-reply-stream.md)
 - **log:** call ที่ล้มเพราะ breaker เปิด ไม่ได้เรียก AI จึงไม่ส่ง `CallRecord` (ไม่มี token, ไม่มีแถวใน `ai_calls`) · เขียน log `warning` 1 บรรทัดต่อการเปลี่ยนสถานะ (closed→open, open→half-open, half-open→closed/open) พร้อมชื่อ provider (§10 ข้อ 6)
 - **ที่เก็บ:** ใน `Gateway` ตัวที่ process ใช้ (`get_gateway()` สร้างครั้งเดียว) · แต่ละ instance ของ Cloud Run มี breaker ของตัวเอง
@@ -133,6 +137,7 @@
 | `tests/unit/test_rate_limit.py` (ใหม่): ตัวนับกับนาฬิกาที่ควบคุมได้ + endpoint ผ่าน `TestClient` | unit | AC-1 ถึง AC-11, AC-tenant |
 | `tests/unit/test_circuit_breaker.py` (ใหม่): breaker กับนาฬิกาที่ควบคุมได้ + `Gateway` กับ `FakeProvider` | unit | AC-12 ถึง AC-22, AC-24, AC-25 |
 | `tests/unit/test_circuit_breaker.py`: `POST /messages` ตอน breaker open | unit | AC-23 |
+| `tests/unit/test_gateway_guards_review.py` (self-review #103): ผลจากรุ่นเก่า, cancel, call ทดลองหมดอายุ, config, ล้าง key, CORS | unit | §2.1, §2.2 ส่วนที่เพิ่มหลัง review |
 
 ## 9. Out of scope
 

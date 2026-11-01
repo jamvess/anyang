@@ -206,11 +206,13 @@ class Gateway:
             )
         return self._breakers[provider_name]
 
-    def _acquire(self, provider_name: str, purpose: str) -> CircuitBreaker:
+    def _acquire(self, provider_name: str, purpose: str) -> tuple[CircuitBreaker, int]:
+        """The provider's breaker and the generation to record the result with, or
+        ``AIProviderError`` at once while it is open."""
         breaker = self.breaker(provider_name)
         if not breaker.acquire():
             raise AIProviderError(f"{purpose}: circuit open for provider {provider_name!r}")
-        return breaker
+        return breaker, breaker.generation
 
     def add_listener(self, listener: Callable[[CallRecord], None]) -> None:
         self._listeners.append(listener)
@@ -224,12 +226,13 @@ class Gateway:
         prompt = _load_prompt(self._prompts_dir, purpose, settings.prompt)
         text, images = _render(prompt, input)
         provider_name, provider, model = self._route(settings.tier)
-        breaker = self._acquire(provider_name, purpose)
+        breaker, generation = self._acquire(provider_name, purpose)
 
         started = time.perf_counter()
         tokens_in = tokens_out = 0
         attempt_prompt = text
         status: Literal["ok", "schema_error", "provider_error"] = "provider_error"
+        provider_failed = False
         schema_retries = 0
         try:
             for schema_retries in range(self._config.gateway.schema_retries + 1):  # noqa: B007
@@ -257,8 +260,11 @@ class Gateway:
                 f"{purpose}: output did not match {schema.__name__} after "
                 f"{self._config.gateway.schema_retries} schema retries"
             )
+        except AIProviderError:
+            provider_failed = True
+            raise
         finally:
-            breaker.record(ok=status != "provider_error")
+            breaker.record(_outcome(status != "provider_error", provider_failed), generation)
             self._emit(
                 CallRecord(
                     purpose=purpose,
@@ -291,7 +297,6 @@ class Gateway:
         if not hasattr(provider, "stream"):
             raise AIConfigError(f"provider {provider_name!r} cannot stream")
         streamer: StreamProvider = provider  # type: ignore[assignment]
-        breaker = self._acquire(provider_name, purpose)
         request = ProviderRequest(
             purpose=purpose,
             model=model,
@@ -321,11 +326,14 @@ class Gateway:
         chunks: AsyncIterator[str] | None = None
         started = time.perf_counter()
         status: Literal["ok", "schema_error", "provider_error"] = "provider_error"
-        provider_failed = False  # a caller that stops reading early is not a provider failure
+        provider_failed = False
+        answered = False  # a caller that stops reading after a chunk is not a provider failure
+        breaker, generation = self._acquire(provider_name, purpose)
         try:
             chunks, deadline, chunk = await self._with_retries(
                 first_chunk, purpose, settings.timeout_s
             )
+            answered = True
             while chunk is not None:
                 yield chunk
                 try:
@@ -341,7 +349,7 @@ class Gateway:
             provider_failed = True
             raise
         finally:
-            breaker.record(ok=not provider_failed)
+            breaker.record(_outcome(answered, provider_failed), generation)
             if chunks is not None:
                 await _close(chunks)
             self._emit(
@@ -368,11 +376,12 @@ class Gateway:
         provider_name, provider, model = self._route("embed")
         if not hasattr(provider, "embed"):
             raise AIConfigError(f"provider {provider_name!r} cannot embed")
-        breaker = self._acquire(provider_name, "embed")
+        breaker, generation = self._acquire(provider_name, "embed")
         settings = self._config.embedding
         started = time.perf_counter()
         tokens_in = 0
         status: Literal["ok", "schema_error", "provider_error"] = "provider_error"
+        provider_failed = False
         vectors: list[list[float]] = []
         try:
             for start in range(0, len(texts), settings.batch_size):
@@ -401,8 +410,11 @@ class Gateway:
                 tokens_in += response.tokens_in
             status = "ok"
             return vectors
+        except AIProviderError:
+            provider_failed = True
+            raise
         finally:
-            breaker.record(ok=status == "ok")
+            breaker.record(_outcome(status == "ok", provider_failed), generation)
             self._emit(
                 CallRecord(
                     purpose="embed",
@@ -473,6 +485,14 @@ class Gateway:
                 listener(record)
             except Exception:
                 log.exception("AI call listener failed; the call itself is unaffected")
+
+
+def _outcome(answered: bool, provider_failed: bool) -> bool | None:
+    """What a finished call tells the breaker: the provider failed, it answered, or neither
+    (the caller was cancelled first, which says nothing about the provider)."""
+    if provider_failed:
+        return False
+    return True if answered else None
 
 
 async def _next_chunk(chunks: AsyncIterator[str]) -> str | None:
