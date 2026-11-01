@@ -11,10 +11,10 @@
 
 3 endpoint ของห้องติวที่งานรูปและเสียงของ May รออยู่ (`room-http.md`, `chat-streaming.md` §11, `voice-input.md` OQ 6, `ocr-confirm-card.md` OQ 5–6) + schema ของ event `ocr_preview` และ `verdict` ใน OpenAPI
 
-- [ ] 1. 🤖 ร่าง contract (ข้อเสนอรอ Junior): `POST /sessions/{id}/uploads`, `POST /sessions/{id}/transcribe`, `POST /sessions/{id}/ocr/confirm` + payload ของ `ocr_preview` / `verdict` · ใช้ข้อเสนอของ May เป็นหลัก · ค่าจำกัดอ่านจาก `config/ai.yaml` → `guards`
-- [ ] 2. 🙋 Jam อ่านร่าง ตอบ ok · ส่งข้อความในแชทกลุ่มว่าจะแก้ `api.md` (ไฟล์ร่วม)
-- [ ] 3. 🤖 ใส่ร่างลง `api.md` v1.7 + "รอตัดสิน (v1.7 · Junior)"
-- [ ] 4. 🤖 test contract + stub (`test_apimd_room_media_…` / requirement ID สำหรับพฤติกรรม) · แดงก่อน
+- [x] 1. 🤖 ร่าง contract (ข้อเสนอรอ Junior): `POST /sessions/{id}/uploads`, `POST /sessions/{id}/transcribe`, `POST /sessions/{id}/ocr/confirm` + payload ของ `ocr_preview` / `verdict` · ใช้ข้อเสนอของ May เป็นหลัก · ค่าจำกัดอ่านจาก `config/ai.yaml` → `guards`
+- [x] 2. 🙋 Jam อ่านร่าง ตอบ ok · ส่งข้อความในแชทกลุ่มว่าจะแก้ `api.md` (ไฟล์ร่วม)
+- [x] 3. 🤖 ใส่ร่างลง `api.md` v1.7 + "รอตัดสิน (v1.7 · Junior)"
+- [x] 4. 🤖 test contract + stub (`test_apimd_room_media_…` / requirement ID สำหรับพฤติกรรม) · แดงก่อน
 - [ ] 5. 🙋 Jam review test
 - [ ] 6. 🤖 models + stub 3 endpoint (`X-Stub: true`) · `OcrPreviewEvent`, `VerdictEvent` ใน `EVENT_MODELS` · ข้อความรูปใน stub stream `ocr_preview` · test เขียว + ruff
 - [ ] 7. 🤖 `pnpm gen:api` (ลง `apps/web/lib/api-schema.ts`) + บรรทัดความคืบหน้าใน checklist
@@ -32,7 +32,7 @@
 
 ## Next step
 
-ขั้น 1: ร่าง contract
+ขั้น 5: Jam review `tests/unit/test_room_media_api_contract.py` + `test_room_media_stubs.py` · แล้วขั้น 6 เขียน models + stub
 
 ## Waiting on
 
