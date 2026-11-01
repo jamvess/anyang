@@ -86,6 +86,7 @@
 
 - [ ] P8-lite ร่วมกับทีม (review test ของ `compute_importance`)
 - [ ] อัปเดต architecture และ data model ตามผล PoC (D2, D3)
+  - 1 พ.ย. (PR #101 · Jam ช่วง solo): `architecture.md` v1.2 ใส่ผล P1, P2, P3b, P4-lite แล้ว (model ของแต่ละ tier, embedding 768 มิติ, SymPy worker pool) · data model ได้ `0003` จาก P3 (PR #67) · เหลือ: อัปเดตอีกรอบหลัง P8-lite และ P2 ต่อเข้าห้องแชท
 - [ ] (ถ้ามีเวลา) ต่อ P1 + P2 เข้าหน้าแชท: ส่งรูปแล้วได้ verdict
 - [ ] เตรียม staging สำหรับ demo รวม
 
