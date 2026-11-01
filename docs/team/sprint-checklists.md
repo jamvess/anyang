@@ -33,7 +33,9 @@
   - 28 ต.ค. ส่วน GCP ไม่ต้องทำ: Jam สร้าง project เองจึงเป็น Owner อยู่แล้ว
 - [x] แก้ `.github/CODEOWNERS` เป็น username จริง · + เพิ่ม `/.github/` ให้ Junior ตาม `roles.md` (19 ต.ค.)
 - [x] ตั้งเครื่องตัวเองตาม `setup.md` Part A · ผ่านเช็คลิสต์ A6 ครบ 5 ข้อ (19 ต.ค.)
-- [ ] ตรวจ `specs/system/architecture.md` ให้ตรงกับที่ตั้งจริง (D2)
+- [x] ตรวจ `specs/system/architecture.md` ให้ตรงกับที่ตั้งจริง (D2)
+  - ทำโดย Jam (1 พ.ย.) ช่วง solo
+  - 1 พ.ย. (PR #101): `architecture.md` v1.2 ตรงกับ `infra/README.md`, `config/ai.yaml`, workflow และ report PoC · Claude/Mathpix fallback, STT/TTS, Storage, Sentry, PWA และ prod เขียนว่าเป็นแผน · เพิ่มตาราง "สร้างแล้วหรือยัง"
 - ~~ร่วม review `specs/requirements/requirements.md` (D1)~~ → ไม่ต้องทำแล้ว (Jam ตัดสิน 1 พ.ย.) · review D1 จบไปแล้วใน `requirements.md` v1.2–v1.3 (May ติ๊กข้อของตัวเองแล้ว) · ถ้า Junior มีข้อแก้ ให้เปิด PR แก้ requirement ตรงๆ
 - ~~รูปลายมือ 10 รูป (D8)~~ → ไม่ต้องทำแล้ว (Jam ตัดสิน 1 พ.ย.) · แผนเปลี่ยนเป็นคนละ 6 ใบ (PR #11) และได้ครบ 30 รูปจาก 5 คนแล้ว (ข้อ D8 ของ Jam ใน S1)
 
