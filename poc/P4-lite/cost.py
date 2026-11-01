@@ -10,16 +10,23 @@ Reads the JSON lines of the ``app.ai.calls`` logger (one per AI call, app/db/ai_
 as output (app/ai/providers/gemini.py). Writes poc/P4-lite/results/<label>-cost.json.
 
 Prices are list prices, so the result is an estimate; check it against Cloud Billing (SKU).
+The session figure counts ``tutor_reply`` only; the full turn design has 2-4 AI calls per turn
+(ai-orchestration.md §2.2), so it is a lower bound of the NFR-P2 session cost.
 """
 
 import argparse
 import json
+import os
 import statistics
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+import yaml
+
 HERE = Path(__file__).resolve().parent
+REPO = HERE.parents[1]
+# Calls that reached the user as a reply; other statuses are billed too, reported apart.
+REPLY_STATUSES = {"ok", "schema_retry"}
 
 # Vertex AI list price of gemini-3.5-flash, global endpoint, USD per 1M tokens, seen 2026-11-01:
 # input from the Vertex pricing table (docs.cloud.google.com/vertex-ai/generative-ai/pricing);
@@ -52,7 +59,12 @@ def parse_log(lines: list[str]) -> list[Call]:
             continue
         if not isinstance(entry, dict) or entry.get("logger") != "app.ai.calls":
             continue
-        row = json.loads(entry["message"])
+        try:
+            row = json.loads(entry["message"])
+        except (json.JSONDecodeError, TypeError):
+            continue  # same logger, plain text: "ai_calls insert failed (...)" warnings
+        if not isinstance(row, dict) or "purpose" not in row:
+            continue
         calls.append(
             Call(
                 purpose=row["purpose"],
@@ -78,7 +90,9 @@ def summary(
     messages_per_session: int = MESSAGES_PER_SESSION,
     target_thb: float | None = None,
 ) -> dict:
-    replies = [c for c in calls if c.purpose == "tutor_reply" and c.status == "ok"]
+    tutor = [c for c in calls if c.purpose == "tutor_reply"]
+    replies = [c for c in tutor if c.status in REPLY_STATUSES]
+    failed = [c for c in tutor if c.status not in REPLY_STATUSES]
     if not replies:
         raise ValueError("no successful tutor_reply calls in the log")
     costs = [usd(c, input_usd_per_m, output_usd_per_m) for c in replies]
@@ -95,7 +109,13 @@ def summary(
         },
         "usd_per_message": {"mean": round(mean_usd, 6), "max": round(max(costs), 6)},
         "thb_per_message": round(mean_usd * thb_per_usd, 4),
+        # Failed or stopped streams still use (and bill) tokens; not in the per-message mean.
+        "failed_calls": {
+            "count": len(failed),
+            "usd": round(sum(usd(c, input_usd_per_m, output_usd_per_m) for c in failed), 6),
+        },
         "session": {
+            "counts": "tutor_reply only (lower bound: the full turn has 2-4 AI calls)",
             "messages_per_session": messages_per_session,
             "thb": round(session_thb, 2),
             "target_thb": target_thb,
@@ -121,10 +141,10 @@ def main() -> None:
     parser.add_argument("--messages-per-session", type=int, default=MESSAGES_PER_SESSION)
     args = parser.parse_args()
 
-    sys.path.insert(0, str(HERE.parents[1] / "apps" / "api"))  # same as poc/P3/common.py
-    from app.settings import get_settings
-
-    target = get_settings().ai.targets.cost_per_session_thb
+    # The same config folder as the API run (CONFIG_DIR), read directly: no env validation needed.
+    config_dir = Path(os.environ.get("CONFIG_DIR") or REPO / "config")
+    ai = yaml.safe_load((config_dir / "ai.yaml").read_text(encoding="utf-8"))
+    target = ai["targets"]["cost_per_session_thb"]
     calls = parse_log(args.log.read_text(encoding="utf-8").splitlines())
     result = summary(
         calls, args.input_usd, args.output_usd, args.thb_per_usd, args.messages_per_session, target
@@ -132,7 +152,7 @@ def main() -> None:
     out = HERE / "results" / f"{args.label}-cost.json"
     out.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps(result, indent=2, ensure_ascii=False))
-    print(f"wrote {out.relative_to(HERE.parents[1])}")
+    print(f"wrote {out.relative_to(REPO)}")
 
 
 if __name__ == "__main__":

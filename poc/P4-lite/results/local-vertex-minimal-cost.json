@@ -16,10 +16,15 @@
     "max": 0.00151
   },
   "thb_per_message": 0.0385,
+  "failed_calls": {
+    "count": 0,
+    "usd": 0
+  },
   "session": {
+    "counts": "tutor_reply only (lower bound: the full turn has 2-4 AI calls)",
     "messages_per_session": 45,
     "thb": 1.73,
-    "target_thb": 5.0,
+    "target_thb": 5,
     "within_target": true
   },
   "prices": {
