@@ -1,0 +1,28 @@
+measured_at 2026-11-01T10:07:48+07:00
+
+## 2 · api-integration job (tests/integration, includes test_SA06_*) on every push to main
+runs: 89 · first: 2026-10-12T04:57:34Z
+      5 failure
+     84 success
+not success (read the log with: gh run list --workflow ci.yml --branch main, then gh run view <id> --log-failed):
+2026-10-28T09:21:53Z 861bfca failure
+2026-10-21T08:52:44Z ce93a93 failure
+2026-10-21T05:58:46Z f195d25 failure
+2026-10-21T04:22:13Z 543e2f5 failure
+2026-10-12T04:57:34Z 1346e9b failure
+
+## 3 · secrets
+github secret scanning: enabled · push protection: enabled · open alerts: 0
+commits scanned (all refs): 709
+pattern google_api_key: 0
+pattern anthropic_key: 0
+pattern openai_key: 0
+pattern private_key_pem: 0
+pattern gcp_service_account_json: 0
+pattern supabase_secret_key: 0
+pattern supabase_publishable_key: 0
+pattern jwt: 0
+pattern github_token: 0
+pattern mathpix_key: 0
+env or key files ever added: 0
+secret manager secrets: 0
