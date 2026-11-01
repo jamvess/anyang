@@ -10,7 +10,8 @@ from app.settings import EnvSettings
 
 ALLOW_METHODS = ["GET", "POST", "PUT", "DELETE"]
 ALLOW_HEADERS = ["Authorization", "Content-Type"]
-EXPOSE_HEADERS = ["X-Request-Id", "X-Stub"]
+# Retry-After of 429 rate_limited (specs/features/ai/gateway-guards.md): not safelisted by CORS.
+EXPOSE_HEADERS = ["X-Request-Id", "X-Stub", "Retry-After"]
 
 
 def add_cors(app: FastAPI, env: EnvSettings) -> None:

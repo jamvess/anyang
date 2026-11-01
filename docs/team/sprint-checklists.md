@@ -82,6 +82,7 @@
 - [ ] วัด TTFT และต้นทุนบน staging ร่วมกับ May (P4-lite)
   - ทำโดย Jam (1 พ.ย.) ช่วง solo · ทำได้บางส่วน
   - 1 พ.ย. (PR #99 · `specs/poc/reports/P4-lite.md`): วัดกับ Gemini จริงบน Vertex จากเครื่อง Jam (staging ยังเปิด live ไม่ได้) · `thinking: low` p95 3.87 s → `minimal` p95 1.20 s · 0.039 บาท/ข้อความ (`poc/P4-lite/cost.py` จาก log `ai_calls`) · `ai.yaml` 1.8 · เหลือ: วัดซ้ำบน staging `ttft.py --label staging-gemini` เมื่อหน้าเว็บส่ง token + `AUTH_REQUIRED=true` + env Supabase ของ api-staging
+  - 1 พ.ย. (PR #103 · Jam ช่วง solo): rate limit ข้อความในห้องติว (`guards.rate_limit_messages_per_minute` · 429 `rate_limited`) + circuit breaker ต่อ provider ใน gateway (`gateway.circuit_breaker`) · `specs/features/ai/gateway-guards.md` · ก่อนเปิด live บน staging ยังเหลือ: `api-staging` ตรวจ token (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `AUTH_REQUIRED: "true"` · Junior), runtime SA (Junior), หน้า login (May)
 
 **Done เมื่อ:** หน้า `/docs` แสดงครบทุก API และหน้าแชทของ May คุยกับ Gemini ผ่าน staging ได้
 

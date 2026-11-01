@@ -859,6 +859,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            /** @description rate_limited; Retry-After gives the seconds */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             /** @description Supabase Auth could not be reached */
             503: {
                 headers: {
@@ -1047,6 +1056,15 @@ export interface operations {
             };
             /** @description Invalid body or ocr_lines_mismatch */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description rate_limited; Retry-After gives the seconds */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

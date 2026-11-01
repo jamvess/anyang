@@ -64,13 +64,15 @@ app.include_router(scope.router, dependencies=[Depends(get_auth)], responses=AUT
 
 # --- error envelope (api.md Conventions): {"error": {"code", "message"}} ---------
 
-_HTTP_CODES = {404: "not_found", 405: "method_not_allowed"}
+_HTTP_CODES = {404: "not_found", 405: "method_not_allowed", 429: "rate_limited"}
 
 
 @app.exception_handler(HTTPException)
 async def _http_error(_: Request, exc: HTTPException) -> JSONResponse:
     code = _HTTP_CODES.get(exc.status_code, "http_error")
-    return error_response(exc.status_code, code, str(exc.detail))
+    response = error_response(exc.status_code, code, str(exc.detail))
+    response.headers.update(exc.headers or {})  # e.g. Retry-After of rate_limited
+    return response
 
 
 @app.exception_handler(RequestValidationError)
