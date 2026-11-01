@@ -11,7 +11,7 @@
 
 ส่วนที่ทำได้ของ checklist item: กัน 2 อย่างที่ทำให้เปิด `AI_PROVIDER=live` บน `api-staging` ไม่ได้ (architecture.md v1.2 "สร้างแล้วหรือยัง") · ยังไม่ได้วัด TTFT บน staging ในงานนี้
 
-- [ ] 1. 🤖 `/spec-feature ai/gateway-guards TM-21 NFR-R1 NFR-P2`: (ก) จำกัด `guards.rate_limit_messages_per_minute` ต่อ user บน endpoint ที่เรียก AI ของห้องติว (ai-orchestration §2.9 Limits) (ข) circuit breaker ใน gateway (§2.10: error ≥ 50% จากอย่างน้อย 10 calls → พัก 60 วินาที) · ไม่มี provider สำรอง จึงล้มทันทีแล้ว degrade
+- [x] 1. 🤖 `/spec-feature ai/gateway-guards TM-21 NFR-R1 NFR-P2`: (ก) จำกัด `guards.rate_limit_messages_per_minute` ต่อ user บน endpoint ที่เรียก AI ของห้องติว (ai-orchestration §2.9 Limits) (ข) circuit breaker ใน gateway (§2.10: error ≥ 50% จากอย่างน้อย 10 calls → พัก 60 วินาที) · ไม่มี provider สำรอง จึงล้มทันทีแล้ว degrade
 - [ ] 2. 🙋 Jam review spec + ตอบ open questions (threshold เป็นเรื่องของ Jam · โครงสร้าง backend เป็นของ Junior → เขียนเป็นข้อเสนอ)
 - [ ] 3. 🙋 ถ้าต้องเพิ่มค่าใน `config/ai.yaml` (ไฟล์ร่วม) บอกแชทกลุ่ม
 - [ ] 4. 🤖 `/spec-to-tests` · แดงก่อน
@@ -27,11 +27,12 @@
 
 ## Decisions
 
+- 2026-11-01 · ไม่ต้องแก้ `config/ai.yaml`: `gateway.circuit_breaker` (4 ค่า · [B] Resilience4j) และ `guards.rate_limit_messages_per_minute` มีอยู่แล้ว · ขั้น 3 จึงข้าม
 - 2026-11-01 · ทำ rate limit + circuit breaker ก่อน answer-leak check (AM-13) เพราะ leak check ต้องมีโจทย์ที่ค้างอยู่ ซึ่งยังไม่มีใน flow จริง
 
 ## Next step
 
-ขั้น 1: ร่าง spec
+ขั้น 2: Jam review `specs/features/ai/gateway-guards.md` + ตอบ open questions §10 · แล้วเปลี่ยน Status ของ spec เป็น approved
 
 ## Waiting on
 
