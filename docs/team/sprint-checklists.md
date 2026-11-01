@@ -52,7 +52,9 @@
   - 20 ต.ค. วาด ERD ใหม่แล้ว 3 รูป ครบ 27 ตาราง (+ `auth.users` วาดไว้ให้ดูความสัมพันธ์) และ FK ทั้ง 45 ตัว (PR #30) · เหลือแก้ schema ตามผล P3 (จดไว้ 5 ข้อใน `data-model.md`)
   - 21 ต.ค. migration `0002` เพิ่ม `messages.attachment_name` (api.md v1.3) + ERD รูป 3 (PR #43) · ตรวจ 5 ข้อของ P3 แล้ว ยังยืนยันไม่ได้สักข้อเพราะ A6/A7 ยังไม่เคยรันผ่าน (สถานะอยู่ใน `data-model.md`) · เหลือแก้ schema หลังมี report P3a
 - [ ] ช่วย Jam ทำ ingest pipeline ของ P3: อ่าน PDF (PyMuPDF), ตัด chunk, เก็บลง DB
-- [ ] เขียน report P6-lite ด้วย `/poc-report P6-lite`
+- [x] เขียน report P6-lite ด้วย `/poc-report P6-lite`
+  - ทำโดย Jam (1 พ.ย.) ช่วง solo
+  - 1 พ.ย. (PR #96 · `specs/poc/reports/P6-lite.md`): **ผ่านครบ 3 เกณฑ์** · merge แล้ว staging อัปเดตเอง 8/8 ภายใน 3.40–4.58 นาที (เป้า 10) · `api-integration` (isolation) รันทุก push เข้า `main` 84/89 ผ่าน อีก 5 ล้มเพราะ CI ดึง image/CLI ไม่ได้ ไม่ใช่ test · secret 0 (scanning + push protection + grep 705 commit) · วัดซ้ำได้ด้วย `poc/P6-lite/` · Junior ให้ Claude แนะนำ, Jam ยืนยัน: ใช้ Cloud Build ต่อ + pin `supabase/setup-cli` เป็น `2.122.0` ใน `ci.yml`
 
 **Done เมื่อ:** merge PR แล้ว staging อัปเดตเองภายใน 10 นาที และ isolation test ผ่าน
 
