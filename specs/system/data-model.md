@@ -1,10 +1,11 @@
-# Data model (v1.2)
+# Data model (v1.3)
 
 SQL จริงอยู่ที่ `supabase/migrations/` เริ่มจาก `0001_init.sql` (ทดสอบรันบน PostgreSQL + pgvector แล้ว และทดสอบ RLS ว่า user A มองไม่เห็นข้อมูลของ user B) แล้วแก้ต่อด้วย migration ใหม่ทีละไฟล์ ไม่แก้ไฟล์เดิม ไฟล์นี้อธิบายภาพรวมและเหตุผล
 
 | Migration | เปลี่ยนอะไร |
 |---|---|
 | `0002_messages_attachment_name.sql` | เพิ่ม `messages.attachment_name` (api.md v1.3 · 2026-10-21) |
+| `0003_topic_sources.sql` | ตารางใหม่ `topic_sources` (ช่วงหน้าของหัวข้อ) + `past_exam_questions.map_note` · ผลจาก P3 ข้อ 1 และ 3 (2026-11-01) |
 
 ## กฎทั่วไป
 
@@ -19,12 +20,12 @@ SQL จริงอยู่ที่ `supabase/migrations/` เริ่มจ�
 
 ## ERD
 
-ครบทุกตาราง (27 ตารางใน `public`) และทุก foreign key ใน `0001_init.sql` แบ่งเป็น 3 รูปตามกลุ่ม
+ครบทุกตาราง (28 ตารางใน `public`) และทุก foreign key ใน `0001_init.sql`–`0003_topic_sources.sql` แบ่งเป็น 3 รูปตามกลุ่ม
 
 วิธีอ่าน:
 
 - `users` ในรูปคือ `auth.users` ของ Supabase (ไม่ได้อยู่ใน `public`)
-- **ไม่ได้ลากเส้น `tenant_id`** · ทุกตารางยกเว้น `tenants` มี `tenant_id → tenants(id) on delete cascade` (26 ตาราง) รูป 1 ลากให้ดูแค่ `org_units` กับ `memberships` และรูป 2–3 ไม่ได้ใส่ `tenant_id` ใน column
+- **ไม่ได้ลากเส้น `tenant_id`** · ทุกตารางยกเว้น `tenants` มี `tenant_id → tenants(id) on delete cascade` (27 ตาราง) รูป 1 ลากให้ดูแค่ `org_units` กับ `memberships` และรูป 2–3 ไม่ได้ใส่ `tenant_id` ใน column
 - ข้อความบนเส้นคือชื่อ FK column ฝั่งลูก
 - `||` = มี 1 แถวเสมอ · `|o` = มี 0 หรือ 1 แถว (FK เป็น null ได้) · `o{` = 0 แถวขึ้นไป · `o|` ฝั่งลูก = ไม่เกิน 1 แถว
 - ตารางที่มี column แค่ `id` เป็นตารางจากรูปอื่น ใส่ไว้ให้เห็นว่าเส้นเชื่อมไปไหน
@@ -106,6 +107,8 @@ erDiagram
   topics |o--o{ past_exam_questions : "topic_id"
   topic_skills |o--o{ past_exam_questions : "skill_id"
   topics |o--o{ scope_changes : "topic_id"
+  topics ||--o{ topic_sources : "topic_id"
+  materials ||--o{ topic_sources : "material_id"
 
   users {
     uuid id PK "auth.users"
@@ -173,6 +176,14 @@ erDiagram
     uuid skill_id FK
     text q_no
     text reference_answer
+    text map_note "A7 note, every question"
+  }
+  topic_sources {
+    uuid id PK
+    uuid topic_id FK
+    uuid material_id FK
+    int page_from ">= 1"
+    int page_to ">= page_from"
   }
   topic_chunks {
     uuid topic_id PK, FK
@@ -362,7 +373,7 @@ Golden sets ของการวัดผล AI ไม่อยู่ใน DB 
 - มิติของ chunks.embedding ยืนยันแล้ว vector(768) ไม่ต้องทำ migration · P3b (PR #39): gemini-embedding-2 ที่ 768 มิติ (output_dimensionality) ได้ recall@4 95%
 - index แบบ HNSW ใช้ cosine distance (vector_cosine_ops) ยืนยันแล้ว · Gemini ไม่ normalize vector ที่ 768 มิติ จึงใช้ cosine ไม่ใช่ inner product (Junior + Jam ตกลง 21 ต.ค.)
   
-### สิ่งที่อาจต้องแก้ใน schema จาก P3a (จดไว้ 2026-10-20 · แยกประเภท 2026-10-21 · ยังไม่เขียน migration)
+### สิ่งที่อาจต้องแก้ใน schema จาก P3a (จดไว้ 2026-10-20 · แยกประเภท 2026-10-21 · migration `0003` 2026-11-01)
 
 อ่านจาก branch `poc/P3` (`apps/api/app/models/scope_ai.py`, `poc/P3/results/gemini-3.5-flash-lite-a5v1/`, report `specs/poc/reports/P3.md` ใน PR #37)
 
@@ -385,9 +396,9 @@ Golden sets ของการวัดผล AI ไม่อยู่ใน DB 
 
 | # | ผล | ทำที่ไหน |
 |---|---|---|
-| 1 | แก้ · เพิ่มตาราง `topic_sources` ตามข้อเสนอ | migration `0003` |
+| 1 | แก้ · เพิ่มตาราง `topic_sources` ตามข้อเสนอ · มี `check (page_from >= 1 and page_to >= page_from)` (Jam ตัดสินช่วง solo 2026-11-01 · รอ Junior ยืนยัน) | migration `0003` ✅ |
 | 2 | ไม่แก้ตอนนี้ · เลื่อนไปตัดสินตอนทำ `compute_importance` (P8-lite, S4) | - |
-| 3 | แก้ · หน้า scope แสดงเหตุผลของการ map · เพิ่ม `past_exam_questions.map_note text` เก็บ `note` ของ A7 ทุกข้อ ไม่ใช่เฉพาะข้อที่ `topic_id` เป็น null | migration `0003` |
+| 3 | แก้ · หน้า scope แสดงเหตุผลของการ map · เพิ่ม `past_exam_questions.map_note text` เก็บ `note` ของ A7 ทุกข้อ ไม่ใช่เฉพาะข้อที่ `topic_id` เป็น null | migration `0003` ✅ |
 | 4 | ไม่แก้ · ใช้ `topics.status = 'excluded'` + 1 แถวใน `scope_changes` (`op = 'exclude'`, `actor = 'ai'`) · ตรวจแล้ว check ของ `op` และ `actor` ใน `0001_init.sql` รับทั้งสองค่าอยู่แล้ว ไม่ต้องแก้ constraint | - |
 | 5 | ไม่แก้ · ไม่เก็บ `text_quality` · debug จาก log ของ ingest | - |
 

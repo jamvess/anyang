@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from datetime import date
 
 import pytest
+from postgrest.exceptions import APIError
 from supabase import Client, ClientOptions, create_client
 
 from app.settings import EnvSettings
@@ -112,6 +113,31 @@ def test_SM04_topic_keeps_page_ranges_across_files(prep: Prep) -> None:
 
     got = sorted((r["material_id"], r["page_from"], r["page_to"]) for r in _sources(prep, topic))
     assert got == sorted([(sheet1, 2, 26), (sheet3, 1, 1), (sheet3, 1, 2)])
+
+
+@pytest.mark.parametrize(
+    ("page_from", "page_to"),
+    [
+        (3, 2),  # reversed range
+        (0, 1),  # PDF pages count from 1
+    ],
+)
+def test_SM04_bad_page_range_is_rejected(prep: Prep, page_from: int, page_to: int) -> None:
+    material = prep.material("sheet.pdf")
+    topic = prep.topic("t01")
+
+    with pytest.raises(APIError) as exc:
+        prep.insert(
+            "topic_sources",
+            {
+                "topic_id": topic,
+                "material_id": material,
+                "page_from": page_from,
+                "page_to": page_to,
+            },
+        )
+
+    assert exc.value.code == "23514"  # check_violation
 
 
 def test_CM10_deleting_a_file_removes_its_page_ranges(prep: Prep) -> None:
