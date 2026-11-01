@@ -1,0 +1,30 @@
+{
+  "messages": 50,
+  "models": [
+    "gemini-3.5-flash"
+  ],
+  "tokens_in": {
+    "mean": 310.82
+  },
+  "tokens_out": {
+    "mean": 434.98,
+    "median": 465.0,
+    "max": 639
+  },
+  "usd_per_message": {
+    "mean": 0.004381,
+    "max": 0.006217
+  },
+  "thb_per_message": 0.1446,
+  "session": {
+    "messages_per_session": 45,
+    "thb": 6.51,
+    "target_thb": 5.0,
+    "within_target": false
+  },
+  "prices": {
+    "input_usd_per_m": 1.5,
+    "output_usd_per_m": 9.0,
+    "thb_per_usd": 33.0
+  }
+}
