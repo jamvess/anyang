@@ -34,8 +34,8 @@
 - [x] แก้ `.github/CODEOWNERS` เป็น username จริง · + เพิ่ม `/.github/` ให้ Junior ตาม `roles.md` (19 ต.ค.)
 - [x] ตั้งเครื่องตัวเองตาม `setup.md` Part A · ผ่านเช็คลิสต์ A6 ครบ 5 ข้อ (19 ต.ค.)
 - [ ] ตรวจ `specs/system/architecture.md` ให้ตรงกับที่ตั้งจริง (D2)
-- [ ] ร่วม review `specs/requirements/requirements.md` (D1)
-- [ ] รูปลายมือ 10 รูป (D8)
+- ~~ร่วม review `specs/requirements/requirements.md` (D1)~~ → ไม่ต้องทำแล้ว (Jam ตัดสิน 1 พ.ย.) · review D1 จบไปแล้วใน `requirements.md` v1.2–v1.3 (May ติ๊กข้อของตัวเองแล้ว) · ถ้า Junior มีข้อแก้ ให้เปิด PR แก้ requirement ตรงๆ
+- ~~รูปลายมือ 10 รูป (D8)~~ → ไม่ต้องทำแล้ว (Jam ตัดสิน 1 พ.ย.) · แผนเปลี่ยนเป็นคนละ 6 ใบ (PR #11) และได้ครบ 30 รูปจาก 5 คนแล้ว (ข้อ D8 ของ Jam ใน S1)
 
 **Done เมื่อ:** ทุกคน clone แล้วรันได้ตาม `setup.md` A6 และ CI เขียวบน `main`
 
@@ -51,7 +51,7 @@
 - [ ] ปรับ `schema.sql` ตามที่เจอระหว่าง P3 + วาด ERD (D3)
   - 20 ต.ค. วาด ERD ใหม่แล้ว 3 รูป ครบ 27 ตาราง (+ `auth.users` วาดไว้ให้ดูความสัมพันธ์) และ FK ทั้ง 45 ตัว (PR #30) · เหลือแก้ schema ตามผล P3 (จดไว้ 5 ข้อใน `data-model.md`)
   - 21 ต.ค. migration `0002` เพิ่ม `messages.attachment_name` (api.md v1.3) + ERD รูป 3 (PR #43) · ตรวจ 5 ข้อของ P3 แล้ว ยังยืนยันไม่ได้สักข้อเพราะ A6/A7 ยังไม่เคยรันผ่าน (สถานะอยู่ใน `data-model.md`) · เหลือแก้ schema หลังมี report P3a
-- [ ] ช่วย Jam ทำ ingest pipeline ของ P3: อ่าน PDF (PyMuPDF), ตัด chunk, เก็บลง DB
+- ~~ช่วย Jam ทำ ingest pipeline ของ P3: อ่าน PDF (PyMuPDF), ตัด chunk, เก็บลง DB~~ → ไม่ต้องทำแล้ว (Jam ตัดสิน 1 พ.ย.) · P3 ปิดแล้ว (report `P3.md` · #37, #94) · Jam เขียน ingest ของ PoC เองใน `poc/P3/ingest.py` · ingest จริงของแอป (เก็บลง DB) เป็นงานใหม่ ยังไม่มีใน checklist
 - [x] เขียน report P6-lite ด้วย `/poc-report P6-lite`
   - ทำโดย Jam (1 พ.ย.) ช่วง solo
   - 1 พ.ย. (PR #96 · `specs/poc/reports/P6-lite.md`): **ผ่านครบ 3 เกณฑ์** · merge แล้ว staging อัปเดตเอง 8/8 ภายใน 3.40–4.58 นาที (เป้า 10) · `api-integration` (isolation) รันทุก push เข้า `main` 84/89 ผ่าน อีก 5 ล้มเพราะ CI ดึง image/CLI ไม่ได้ ไม่ใช่ test · secret 0 (scanning + push protection + grep 709 commit) · วัดซ้ำได้ด้วย `poc/P6-lite/` · Junior ให้ Claude แนะนำ, Jam ยืนยัน: ใช้ Cloud Build ต่อ + pin `supabase/setup-cli` เป็น `2.122.0` ใน `ci.yml`
@@ -186,6 +186,8 @@
 - [x] Provider `vertex` ใน gateway ใช้เครดิต Free Trial ของ `anyang-513006` (เพิ่ม 31 ต.ค. · `infra/README.md` "งาน AI gateway ใน S3") · PR #87 · spec `specs/features/ai/gemini-vertex.md` · ADC ไม่มี key file · smoke บน Vertex ผ่าน (`gemini-3.5-flash`, `global`, 4.8 วินาที) · เหตุผล: free tier ของ AI Studio ได้ 20 request/วัน/model รัน P2 ได้แค่ 23/50 · Junior ok ให้แก้ `apps/api/app/ai/`
 - [x] Report P2
   - 31 ต.ค. (PR #82): `specs/poc/reports/P2.md` · **ผ่าน** (Jam ตัดสิน): 6 error types, prompt v1, Vertex · ไม่ต้อง fallback 4 แบบ · บรรทัดผลใน `specs/poc/README.md` · งานต่อก่อนเข้าห้องแชท: hint sign flip ใน job เดียวกับ SymPy, กติกา §2.5 ของ `CheckAnswerResult`
+- [ ] ⭐ API ตรวจ Supabase JWT ทุก endpoint: อ่าน `Authorization: Bearer <jwt>` (api.md "Auth") → ได้ `tenant_id`, `user_id` → ตั้ง `ai_call_context` และส่ง JWT ต่อให้ Supabase ให้ RLS ทำงาน · ไม่มีหรือผิด → 401
+  - เพิ่ม 1 พ.ย. (Jam รับเอง · งาน backend จึงชวน Junior ดูย้อนหลัง) · ⭐ เพราะขวาง 3 อย่าง: แถวใน `ai_calls` (`ai-calls-log.md`), การบันทึก `messages` (`tutor-reply-stream.md` §9) และการเปิด `AI_PROVIDER=live` บน api-staging (⚠️ ใน `infra/README.md` · ต้องเปลี่ยน runtime SA ด้วย)
 
 **Done เมื่อ:** มีตัวเลข 3 ตัวของ P2 เทียบกับเป้า
 
