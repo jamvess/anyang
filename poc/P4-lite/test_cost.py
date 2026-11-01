@@ -21,7 +21,7 @@ def log_line(**row) -> str:
     return json.dumps({"severity": "INFO", "logger": "app.ai.calls", "message": json.dumps(values)})
 
 
-def test_P4_parse_keeps_only_ai_call_lines():
+def test_NFRP2_parse_keeps_only_ai_call_lines():
     lines = [
         "INFO:     Started server process [1]",
         log_line(),
@@ -35,13 +35,13 @@ def test_P4_parse_keeps_only_ai_call_lines():
     assert [c.tokens_out for c in calls] == [500, 0]
 
 
-def test_P4_usd_prices_input_and_output_per_million():
+def test_NFRP2_usd_prices_input_and_output_per_million():
     call = Call("tutor_reply", "m", "ok", tokens_in=1_000_000, tokens_out=2_000_000, latency_ms=0)
 
     assert usd(call, input_usd_per_m=1.5, output_usd_per_m=9.0) == pytest.approx(19.5)
 
 
-def test_P4_summary_prices_only_successful_tutor_replies_and_the_session():
+def test_NFRP2_summary_prices_only_successful_tutor_replies_and_the_session():
     calls = parse_log(
         [
             log_line(tokens_in=1000, tokens_out=1000),
@@ -64,6 +64,6 @@ def test_P4_summary_prices_only_successful_tutor_replies_and_the_session():
     assert result["session"]["within_target"] is False
 
 
-def test_P4_summary_needs_at_least_one_reply():
+def test_NFRP2_summary_needs_at_least_one_reply():
     with pytest.raises(ValueError):
         summary(parse_log([log_line(status="error")]))

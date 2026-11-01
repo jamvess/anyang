@@ -22,7 +22,7 @@ stream คำตอบผ่าน SSE บน Cloud Run เร็วพอไห
 
 | Metric | เกณฑ์ผ่าน | ผล | PASS / FAIL |
 |---|---|---|---|
-| TTFT p95 (`targets.ttft_p95_seconds`) | < 2 s | `minimal`: **1.20 s** ในเครื่อง (49 ข้อความ) + overhead Cloud Run ~0.15 s (ส่วนแรก) ≈ **1.35 s** โดยประมาณ · `low`: 3.87 s ❌ | **PASS (ประมาณการ)** ด้วย `thinking: minimal` · ต้องวัดซ้ำบน staging |
+| TTFT p95 (`targets.ttft_p95_seconds`) · วัดบน staging | < 2 s | `minimal`: **1.20 s** ในเครื่อง Jam (49 ข้อความ) · `low`: 3.87 s ❌ · overhead ของ Cloud Run (p95 0.15 s จากส่วนแรก) บวกกับ p95 ในเครื่องตรงๆ ไม่ได้ทางสถิติ ใช้ได้แค่บอกว่ามีที่เหลือก่อนถึง 2 s | **รอวัดบน staging** · ในเครื่องผ่านด้วย `thinking: minimal` |
 | สลับ provider ด้วย config | ไม่แก้โค้ด | CI ทุก run ใช้ `fake` · Gemini จริงด้วย env `AI_PROVIDER=live` อย่างเดียว · ค่า `minimal` เพิ่มใน `Literal` ของ settings 1 บรรทัด (เป็นค่าใหม่ของ config ไม่ใช่การสลับ provider) | **PASS** |
 | มีตัวเลขต้นทุน (`targets.cost_per_session_thb` 5 บาท) | มีตัวเลข | `minimal`: **0.039 บาท/ข้อความ** → 1.73 บาท/session ถ้า 45 ข้อความ · `low`: 0.145 → 6.51 | **PASS** (มีตัวเลข · ต่ำกว่าเป้าด้วย `minimal`) |
 
@@ -40,12 +40,12 @@ stream คำตอบผ่าน SSE บน Cloud Run เร็วพอไห
 
 ## 4. การตัดสินใจ
 
-**ผ่าน (ประมาณการ)** · ใช้ `thinking: minimal` กับ `tutor_reply` (Jam ตัดสิน 1 พ.ย. · `config/ai.yaml` 1.8 · prompt/model เป็นเรื่องที่ Jam ตัดสินตาม `roles.md`)
+**ผ่านบางส่วน** (TTFT ยังไม่ได้วัดบน staging) · ใช้ `thinking: minimal` กับ `tutor_reply` (Jam ตัดสิน 1 พ.ย. · `config/ai.yaml` 1.8 · prompt/model เป็นเรื่องที่ Jam ตัดสินตาม `roles.md`)
 
 - `low` ไม่ผ่านทั้ง TTFT (3.87 s) และต้นทุน (6.51 บาท/session) · thinking token เป็นส่วนใหญ่ของทั้งเวลาก่อน token แรกและเงิน
 - `minimal` เร็วขึ้น 3 เท่าที่ p95 และถูกลง 3.8 เท่า · คำตอบ 3 ข้อที่อ่านไม่แย่ลง
 - ไม่ต้องย้าย model หรือย่อ prompt · stage machine, planner, buddy ยังอยู่เทอม 2 ตาม spec
-- เป็นผลประมาณการเพราะยังไม่ได้วัด Gemini บน staging · วัดซ้ำด้วย `ttft.py --label staging-gemini` เมื่อเปิด live
+- เกณฑ์ TTFT กำหนดให้วัดบน staging ซึ่งยังเปิด live ไม่ได้ · `minimal` ยังเป็นค่าที่ใช้ไม่ว่าผลบน staging จะเป็นอย่างไร เพราะเร็วกว่าและถูกกว่า `low` · วัดด้วย `ttft.py --label staging-gemini` เมื่อเปิด live
 
 ## 5. สิ่งที่ต้องแก้ใน spec / config
 

@@ -73,7 +73,7 @@ uv run python ../../poc/P4-lite/ask_samples.py http://127.0.0.1:8000 a.json  # �
 - เครื่อง Jam ในไทย → Vertex `global` · `gemini-3.5-flash` · prompt `tutor_reply/v1` · ข้อความ `P4-lite ttft N` (แบบเดียวกับส่วนแรก)
 - ราคา (list price · ประมาณการ): input $1.50 / output $9.00 ต่อ 1M token · 33 บาท/USD · ที่มาอยู่ใน `cost.py` · output ยังไม่เห็นในตารางหลักของหน้า Vertex pricing → เทียบกับ Cloud Billing (SKU) อีกที
 - **คุณภาพคำตอบ** (`results/quality-low-vs-minimal.json` · คำถามจริง 3 ข้อ · Jam อ่าน): minimal ถูกทั้ง 3 ข้อ สอนโดยไม่เฉลย LaTeX ถูก · low ข้อ lim sin x/x ใช้ L'Hôpital (วนเหตุผล) และเฉลยเลย · 3 ข้อน้อยเกินจะบอกว่าดีกว่า บอกได้แค่ไม่เห็นว่าแย่ลง
-- **TTFT บน staging โดยประมาณ** = p95 ในเครื่อง + overhead ของ Cloud Run จากส่วนแรก (~0.15 s) ≈ 1.35 s (minimal) · ยังไม่ได้วัดจริงบน staging
+- **TTFT บน staging ยังไม่ได้วัด** · overhead ของ Cloud Run จากส่วนแรก (p95 ~0.15 s) บวกกับ p95 ในเครื่องตรงๆ ไม่ได้ทางสถิติ แต่บอกได้ว่า `minimal` (1.20 s) ยังมีที่เหลือก่อนถึง 2 s
 
 ## ยังต้องทำต่อ
 

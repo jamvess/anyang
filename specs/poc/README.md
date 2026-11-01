@@ -59,7 +59,7 @@ PoC คือการลองทำส่วนที่ยากที่ส�
 - **Metrics:** TTFT p50/p95 จาก 50 ข้อความบน staging, ต้นทุนต่อข้อความ, เปลี่ยน `AI_PROVIDER=fake` แล้ว test ผ่านโดยไม่แก้โค้ด
 - **ผ่านเมื่อ:** TTFT p95 < 2 วินาที, สลับ provider ได้ด้วย config, มีตัวเลขต้นทุน
 - **ย้ายไปเทอม 2:** stage machine, planner, buddy scene, fallback ไป Claude, circuit breaker
-- **ผล (1 พ.ย. · `specs/poc/reports/P4-lite.md`):** **ผ่าน (ประมาณการ)** · AI จำลองบน staging TTFT p95 0.15 s (May) · Gemini จริงบน Vertex จากเครื่อง Jam: `thinking: low` p95 3.87 s ไม่ผ่าน → `minimal` p95 1.20 s (+ Cloud Run ~0.15 s ≈ 1.35 s) · 0.039 บาท/ข้อความ (1.73 บาท/session ถ้า 45 ข้อความ) · สลับ fake ↔ live ด้วย env · `ai.yaml` 1.8 `tutor_reply` `thinking: minimal` (Jam ตัดสิน) · ยังต้องวัดซ้ำบน staging เมื่อเปิด live
+- **ผล (1 พ.ย. · `specs/poc/reports/P4-lite.md`):** **ผ่านบางส่วน** (TTFT ยังไม่ได้วัดบน staging) · AI จำลองบน staging TTFT p95 0.15 s (May) · Gemini จริงบน Vertex จากเครื่อง Jam: `thinking: low` p95 3.87 s ไม่ผ่าน → `minimal` p95 1.20 s · 0.039 บาท/ข้อความ (1.73 บาท/session ถ้า 45 ข้อความ) · สลับ fake ↔ live ด้วย env · `ai.yaml` 1.8 `tutor_reply` `thinking: minimal` (Jam ตัดสิน) · ยังต้องวัดซ้ำบน staging เมื่อเปิด live
 
 ## P8-lite · SDD/TDD ด้วย Claude Code · ทั้งทีม · S4
 
