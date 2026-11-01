@@ -1,6 +1,6 @@
-# PoC P4-lite · TTFT ของห้องติวผ่าน SSE (ส่วนแรก · AI จำลอง)
+# PoC P4-lite · TTFT และต้นทุนของห้องติวผ่าน SSE
 
-spec: `specs/poc/README.md` P4-lite · เป้า NFR-P1: TTFT p95 < 2 วินาที (`config/ai.yaml` → `targets.ttft_p95_seconds`) · worklog: `docs/worklog/poc-P4-lite-ttft.md`
+spec: `specs/poc/README.md` P4-lite · เป้า NFR-P1: TTFT p95 < 2 วินาที (`config/ai.yaml` → `targets.ttft_p95_seconds`) · report: `specs/poc/reports/P4-lite.md`
 
 ## รัน
 
@@ -19,7 +19,7 @@ uv run python ../../poc/P4-lite/ttft.py \
 - ผลอยู่ใน `results/<label>.json` (ตัวเลขและเวลาทุกข้อความ ไม่มีข้อมูลผู้ใช้)
 - **เมื่อเปิด Gemini บน staging แล้ว** รันคำสั่งเดิมด้วย `--label staging-gemini` เพื่อเทียบ
 
-## ผล (จากเครื่องของ May ในไทย → Cloud Run `asia-southeast1` · AI จำลอง)
+## ส่วนแรก · AI จำลองบน staging (May · จากเครื่องในไทย → Cloud Run `asia-southeast1`)
 
 | | 28 ต.ค. · stub (`staging-fake`) | 31 ต.ค. · หลัง #93 ผ่าน gateway (`staging-fake-gateway`) |
 |---|---|---|
@@ -43,12 +43,42 @@ uv run python ../../poc/P4-lite/ttft.py \
 - วัดจากเครื่องเดียว เน็ตบ้านเดียว · ส่งทีละข้อความ ไม่ได้วัดตอนหลายคนใช้พร้อมกัน
 - สคริปต์วัดที่ client (Python `httpx`) ซึ่งไม่มี CORS preflight · ในเบราว์เซอร์ข้อความแรกมี preflight เพิ่ม 1 รอบ (ดู "ในเบราว์เซอร์" ด้านบน · วัดครั้งเดียวจาก DevTools)
 
-## ยังต้องทำต่อ (report P4-lite · ร่วมกับ Junior)
+## ส่วนที่สอง · Gemini จริงบน Vertex (1 พ.ย. · Jam ช่วง solo)
 
-- TTFT p50/p95 กับ Gemini จริงบน staging (Junior ต้องเช็ค JWT ทุก endpoint ก่อนเปิด `AI_PROVIDER=live`)
-- ต้นทุนต่อข้อความจาก `ai_calls` (เป้า `targets.cost_per_session_thb`)
-- สลับ `AI_PROVIDER=fake` ↔ จริงด้วย config แล้ว test ผ่านโดยไม่แก้โค้ด
-- เขียน report ด้วย `/poc-report P4-lite`
+staging ยังเปิด live ไม่ได้ (`infra/README.md` ⚠️ · `AUTH_REQUIRED=false`) จึงรัน API ในเครื่อง Jam ด้วย Gemini จริง · ต้องมี ADC + `GOOGLE_CLOUD_PROJECT` (`docs/team/setup.md` A5) · ใช้ trial credit
+
+```bash
+cd apps/api
+# terminal 1: API ด้วย Gemini จริง · stderr คือ log JSON (บรรทัด app.ai.calls ทุก AI call)
+AI_PROVIDER=live AUTH_REQUIRED=false uv run fastapi run app/main.py --port 8000 2> api.log
+# terminal 2
+uv run python ../../poc/P4-lite/ttft.py --base http://127.0.0.1:8000 --n 50 --label <label>
+uv run python ../../poc/P4-lite/cost.py api.log --label <label>              # ต้นทุนจาก log
+uv run python ../../poc/P4-lite/ask_samples.py http://127.0.0.1:8000 a.json  # คำตอบ 3 ข้อไว้อ่าน
+```
+
+ลองค่าอื่นของ config โดยไม่แก้ `config/`: copy โฟลเดอร์ `config/` ไปที่อื่น แก้ `ai.yaml` ใน copy แล้วรัน API ด้วย `CONFIG_DIR=<copy>`
+
+| | `local-vertex-low` (`ai.yaml` 1.7 · `thinking: low`) | `local-vertex-minimal` (`thinking: minimal` · ใช้ใน 1.8) |
+|---|---|---|
+| ข้อความ | 50 · ล้ม 0 | 50 · ล้ม 0 |
+| ข้อความแรก (สร้าง client + ADC) | 8.67 s | 7.43 s |
+| **TTFT p50 / p95** (49) | 2.65 s / **3.87 s** | 0.86 s / **1.20 s** |
+| TTFT ต่ำสุด / สูงสุด | 1.34 / 4.37 s | 0.46 / 1.44 s |
+| total p95 | 4.22 s | 2.01 s |
+| token in / out เฉลี่ย (out รวม thinking) | 311 / 435 (max 639) | 311 / 78 (max 116) |
+| **บาท/ข้อความ** | 0.145 | **0.039** |
+| บาท/session (สมมติ 45 ข้อความ) | 6.51 | **1.73** |
+
+- เครื่อง Jam ในไทย → Vertex `global` · `gemini-3.5-flash` · prompt `tutor_reply/v1` · ข้อความ `P4-lite ttft N` (แบบเดียวกับส่วนแรก)
+- ราคา (list price · ประมาณการ): input $1.50 / output $9.00 ต่อ 1M token · 33 บาท/USD · ที่มาอยู่ใน `cost.py` · output ยังไม่เห็นในตารางหลักของหน้า Vertex pricing → เทียบกับ Cloud Billing (SKU) อีกที
+- **คุณภาพคำตอบ** (`results/quality-low-vs-minimal.json` · คำถามจริง 3 ข้อ · Jam อ่าน): minimal ถูกทั้ง 3 ข้อ สอนโดยไม่เฉลย LaTeX ถูก · low ข้อ lim sin x/x ใช้ L'Hôpital (วนเหตุผล) และเฉลยเลย · 3 ข้อน้อยเกินจะบอกว่าดีกว่า บอกได้แค่ไม่เห็นว่าแย่ลง
+- **TTFT บน staging ยังไม่ได้วัด** · overhead ของ Cloud Run จากส่วนแรก (p95 ~0.15 s) บวกกับ p95 ในเครื่องตรงๆ ไม่ได้ทางสถิติ แต่บอกได้ว่า `minimal` (1.20 s) ยังมีที่เหลือก่อนถึง 2 s
+
+## ยังต้องทำต่อ
+
+- วัดซ้ำบน staging ด้วย `--label staging-gemini` เมื่อเปิด live ได้ (หลังหน้าเว็บส่ง token + `AUTH_REQUIRED=true` · `infra/README.md`)
+- เทียบต้นทุนกับ Cloud Billing report
 
 ## Test
 
@@ -56,4 +86,4 @@ uv run python ../../poc/P4-lite/ttft.py \
 cd apps/api && uv run pytest ../../poc/P4-lite -q
 ```
 
-ทดสอบเฉพาะส่วนที่ไม่ใช้เน็ต: หา event ใน SSE และ percentile แบบ nearest-rank
+ทดสอบเฉพาะส่วนที่ไม่ใช้เน็ต: หา event ใน SSE, percentile แบบ nearest-rank, อ่าน log และคิดต้นทุน (`test_cost.py`)
