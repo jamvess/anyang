@@ -9,8 +9,8 @@
 
 ## Plan
 
-- [ ] 1. 🤖 เทียบ `architecture.md` v1.1 (12 ต.ค.) กับของจริง: `infra/README.md`, `infra/*.yaml`, `.github/workflows/`, `config/ai.yaml`, `apps/api/app/` (gateway, providers, auth), `docs/team/setup.md`, report PoC · จดทุกจุดที่ไม่ตรงพร้อมหลักฐาน
-- [ ] 2. 🤖 แก้ `architecture.md` เป็น v1.2: แผนภาพ (provider `vertex`/`gemini`/`fake`, Claude เป็นแผน, API ตรวจ JWT กับ Supabase Auth, `ai_calls` + Cloud Logging), tech stack ที่ PoC ตัดสินแล้ว, environments จริง (`anyang-dev`, `anyang-staging`, `api-staging`, Vercel), flow deploy จริง, ตาราง "สร้างแล้ว / ยังเป็นแผน"
+- [x] 1. 🤖 เทียบ `architecture.md` v1.1 (12 ต.ค.) กับของจริง: `infra/README.md`, `infra/*.yaml`, `.github/workflows/`, `config/ai.yaml`, `apps/api/app/` (gateway, providers, auth), `docs/team/setup.md`, report PoC · จดทุกจุดที่ไม่ตรงพร้อมหลักฐาน
+- [x] 2. 🤖 แก้ `architecture.md` เป็น v1.2: แผนภาพ (provider `vertex`/`gemini`/`fake`, Claude เป็นแผน, API ตรวจ JWT กับ Supabase Auth, `ai_calls` + Cloud Logging), tech stack ที่ PoC ตัดสินแล้ว, environments จริง (`anyang-dev`, `anyang-staging`, `api-staging`, Vercel), flow deploy จริง, ตาราง "สร้างแล้ว / ยังเป็นแผน"
 - [ ] 3. 🙋 Jam อ่านทวน (Junior ดูย้อนหลังได้)
 - [ ] 4. 🤖 checklist: เพิ่มบรรทัดความคืบหน้าใต้ข้อ S4 "อัปเดต architecture และ data model ตามผล PoC (D2, D3)"
 
@@ -25,7 +25,7 @@
 
 ## Next step
 
-ขั้น 1: จดจุดที่ไม่ตรงพร้อมหลักฐาน
+ขั้น 3: Jam อ่าน `specs/system/architecture.md` v1.2 แล้วตอบ ok หรือบอกจุดที่ผิด
 
 ## Waiting on
 
@@ -34,3 +34,4 @@
 ## Notes for next time
 
 - 
+- 2026-11-01 · `anyang-fig-architecture.png` ที่ v1.1 อ้างไม่มีใน repo · v1.2 ลบประโยคนั้นออก · ถ้ามีรูปจริงอยู่ที่อื่น (Figma/Drive) ให้ใส่ path ใหม่
