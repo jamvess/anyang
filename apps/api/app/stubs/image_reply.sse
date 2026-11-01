@@ -1,0 +1,12 @@
+event: token
+data: {"speaker": "tutor", "text": "ขอดูก่อนนะ"}
+
+event: ocr_preview
+data: {"lines": [{"latex": "x^2 - 5x + 6", "confidence": 0.97}, {"latex": "= (x - 2)(x + 3)", "confidence": 0.91}, {"latex": "= x^2 + x - 6", "confidence": 0.95}]}
+
+event: token
+data: {"speaker": "tutor", "text": "เช็คให้หน่อยว่าอ่านถูกไหม"}
+
+event: done
+data: {}
+

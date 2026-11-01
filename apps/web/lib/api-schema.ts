@@ -100,9 +100,76 @@ export interface paths {
          * Send Message
          * @description Send `{text}` or `{image_path}`; the reply streams as SSE and ends with done.
          *
-         *     `{text}` streams `tutor_reply` from the gateway (P4-lite). `{image_path}` is a stub.
+         *     `{text}` streams `tutor_reply` from the gateway (P4-lite). `{image_path}` is a stub that
+         *     streams an `ocr_preview` to confirm with POST /sessions/{id}/ocr/confirm (api.md v1.7).
          */
         post: operations["send_message_sessions__id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Upload
+         * @description Signed upload URL for one image or audio file (TM-06, TM-07, TM-21).
+         *
+         *     stub — the URL is not a real Storage URL until the endpoint talks to Supabase Storage
+         */
+        post: operations["create_upload_sessions__id__uploads_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/transcribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Transcribe
+         * @description Speech to text for the input box; the client sends it itself (TM-07).
+         *
+         *     stub — always the same Thai sentence
+         */
+        post: operations["transcribe_sessions__id__transcribe_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/ocr/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm Ocr
+         * @description Confirmed or edited lines of the last ocr_preview. SSE: verdict → token → done (AM-02).
+         *
+         *     stub — checks the line count against the preview of the image message stub
+         */
+        post: operations["confirm_ocr_sessions__id__ocr_confirm_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -247,6 +314,14 @@ export interface components {
              */
             created_at: string;
         };
+        /**
+         * OcrConfirmRequest
+         * @description Body of POST /sessions/{id}/ocr/confirm: every line in order, as many as the preview.
+         */
+        OcrConfirmRequest: {
+            /** Lines */
+            lines: string[];
+        };
         /** PastQuestion */
         PastQuestion: {
             /**
@@ -371,6 +446,47 @@ export interface components {
             /** Questions */
             questions: components["schemas"]["PastQuestion"][];
         };
+        /** TranscribeRequest */
+        TranscribeRequest: {
+            /** Audio Path */
+            audio_path: string;
+        };
+        /**
+         * Transcript
+         * @description Response of POST /sessions/{id}/transcribe. Goes into the input box, never sent (TM-07).
+         */
+        Transcript: {
+            /** Text */
+            text: string;
+        };
+        /**
+         * UploadRequest
+         * @description Body of POST /sessions/{id}/uploads (api.md v1.7). The router checks `content_type`
+         *     against UPLOAD_CONTENT_TYPES and the image size against config/ai.yaml → guards.
+         */
+        UploadRequest: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "image" | "audio";
+            /** Content Type */
+            content_type: string;
+            /** File Name */
+            file_name: string;
+            /** Size Bytes */
+            size_bytes: number;
+        };
+        /**
+         * UploadTicket
+         * @description Response of POST /sessions/{id}/uploads: PUT the file to `upload_url`, then send `path`.
+         */
+        UploadTicket: {
+            /** Upload Url */
+            upload_url: string;
+            /** Path */
+            path: string;
+        };
         /** BuddyEvent */
         BuddyEvent: {
             /** Text */
@@ -384,6 +500,21 @@ export interface components {
             code: string;
             /** Message */
             message: string;
+        };
+        /** OcrLine */
+        OcrLine: {
+            /** Latex */
+            latex: string;
+            /** Confidence */
+            confidence: number;
+        };
+        /**
+         * OcrPreviewEvent
+         * @description An unreadable photo is a tutor token instead, so lines is never empty (AM-02).
+         */
+        OcrPreviewEvent: {
+            /** Lines */
+            lines: components["schemas"]["OcrLine"][];
         };
         /**
          * ProblemEvent
@@ -458,6 +589,21 @@ export interface components {
             speaker: "tutor" | "buddy";
             /** Text */
             text: string;
+        };
+        /**
+         * VerdictEvent
+         * @description Merged checker result (specs/features/check/merge-rules.md).
+         */
+        VerdictEvent: {
+            /**
+             * Verdict
+             * @enum {string}
+             */
+            verdict: "correct" | "correct_with_flaw" | "incomplete" | "incorrect";
+            /** First Wrong Line */
+            first_wrong_line: number | null;
+            /** Error Type */
+            error_type: ("calculation" | "sign" | "wrong_method" | "concept" | "prerequisite" | "no_answer") | null;
         };
     };
     responses: never;
@@ -563,7 +709,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
+                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["OcrPreviewEvent"] | components["schemas"]["VerdictEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
                 };
             };
             /** @description Missing or invalid Supabase token */
@@ -683,7 +829,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
+                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["OcrPreviewEvent"] | components["schemas"]["VerdictEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
                 };
             };
             /** @description Missing or invalid Supabase token */
@@ -705,6 +851,201 @@ export interface operations {
                 };
             };
             /** @description Invalid path or body */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_upload_sessions__id__uploads_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UploadRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadTicket"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid body, unsupported_type or file_too_large */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    transcribe_sessions__id__transcribe_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TranscribeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transcript"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid body or audio_too_long */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description stt_unavailable, or auth_unavailable (Supabase Auth unreachable) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    confirm_ocr_sessions__id__ocr_confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OcrConfirmRequest"];
+            };
+        };
+        responses: {
+            /** @description SSE stream; event names and payloads per api.md "SSE events" */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["OcrPreviewEvent"] | components["schemas"]["VerdictEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description no_pending_ocr */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid body or ocr_lines_mismatch */
             422: {
                 headers: {
                     [name: string]: unknown;

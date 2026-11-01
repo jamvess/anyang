@@ -1,4 +1,4 @@
-# API (v1.6)
+# API (v1.7)
 
 Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้างอัตโนมัติที่ `/docs` · frontend generate types จาก `/openapi.json`
 
@@ -137,6 +137,40 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 ตัดสินแล้วใน v1.3 (May 2026-10-21 · ข้อ 5, 6 รอ Junior ยืนยันใน PR): สมการในข้อความ → Conventions · id ของข้อความที่ stream → `done.message_ids` · ชื่อไฟล์ → `Message.attachment_name`
 
+**รูป เสียง และยืนยันลายมือ (v1.7 · ข้อเสนอ รอ Junior ตัดสิน):** ตอบ `voice-input.md` OQ 6 และ `ocr-confirm-card.md` OQ 5–6 ของ May · ทุก field ต้องมี และไม่มี field อื่น · session ที่ไม่มีหรือเป็นของ tenant อื่น → `404 not_found`
+
+**`POST /sessions/{id}/uploads`** · ขอที่อัปโหลดไฟล์ 1 ไฟล์ แล้ว browser `PUT` ไฟล์เข้า Storage เอง (แบบเดียวกับ `materials` · flow 2.3.8 ข้อ 2)
+
+| | Field | Type | หมายเหตุ |
+|---|---|---|---|
+| Request | `kind` | `"image"` \| `"audio"` | รูปวิธีทำ (TM-06) หรือเสียงพูด (TM-07) |
+| | `content_type` | string | image: `image/jpeg`, `image/png`, `image/webp`, `image/heic` · audio: `audio/webm`, `audio/ogg`, `audio/mp4` · ไม่สนตัวพิมพ์ และตัด parameter หลัง `;` ก่อนเทียบ (`audio/webm;codecs=opus` ของ Chrome ใช้ได้) · นอกนั้น `422 unsupported_type` |
+| | `file_name` | string | ชื่อไฟล์เดิม · backend เก็บเป็น `messages.attachment_name` ตอนส่งข้อความ (ตัดตาม `guards.max_attachment_name_chars` · data-model.md) · ไม่ใช้ประกอบ path |
+| | `size_bytes` | integer ≥ 1 | image เกิน `guards.max_image_mb` (1 MB = 1,048,576 bytes) → `422 file_too_large` |
+| Response | `upload_url` | string | signed upload URL ของ Supabase Storage · ใช้ได้ครั้งเดียวและหมดอายุ |
+| | `path` | string | `{tenant_id}/sessions/{session_id}/{uuid}.{ext}` · ส่งต่อเป็น `image_path` ของ `POST /sessions/{id}/messages` หรือ `audio_path` ของ `/transcribe` |
+
+**`POST /sessions/{id}/transcribe`** · เสียง → ข้อความ ใส่ช่องพิมพ์ **ไม่ส่งเอง** (ai-orchestration §2.2.5)
+
+- Request `{audio_path: string}` (path จาก `/uploads` ของ session นี้ · path ของ session อื่น → `404 not_found`) · Response `{text: string}` · ไม่ได้ยินเสียงได้ `{text: ""}` (หน้าเว็บแสดงข้อความเอง · voice-input AC-12)
+- error: `422 audio_too_long` (ยาวเกิน `guards.max_audio_seconds`) · `503 stt_unavailable` (STT ล่มหลัง retry · §2.10)
+
+**`POST /sessions/{id}/ocr/confirm`** · ยืนยันหรือแก้บรรทัดที่อ่านจากรูป แล้ว stream ผลตรวจ
+
+- Request `{lines: string[]}` · ทุกบรรทัดตามลำดับ แต่ละบรรทัดไม่ว่าง (ช่องว่างล้วนบนการ์ดคือยกเลิกการแก้ · ocr-confirm-card OQ 2) จำนวนเท่ากับ `ocr_preview.lines` ใบล่าสุด (หน้าเว็บแก้ได้แต่เพิ่มหรือลบบรรทัดไม่ได้ · ocr-confirm-card OQ 3) · backend เทียบกับ preview เองเพื่อ log บรรทัดที่แก้ (AM-03)
+- Response: SSE แบบเดียวกับ `POST /sessions/{id}/messages`: `verdict` → `token`… → `done` (verdict มาก่อน tutor เริ่มพิมพ์ · §2.4.5)
+- error: `409 no_pending_ocr` (ไม่มี preview ที่รอยืนยัน) · `422 ocr_lines_mismatch` (จำนวนบรรทัดไม่เท่า)
+
+**preview ที่ค้าง (ocr-confirm-card OQ 5, 7):** ไม่มี endpoint ยกเลิก · ส่งรูปใหม่ → preview ใหม่แทนใบเดิม · พิมพ์ข้อความระหว่างที่ preview ค้าง → เป็นข้อความปกติ (ตอบคำถามได้) และ preview ยังรอยืนยัน
+
+**รอตัดสิน (v1.7 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-01 (PR #102) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
+
+1. **body และ response ของ `/uploads`** (voice-input OQ 6): เพิ่ม `file_name` และ `size_bytes` จากข้อเสนอของ May (`{kind, content_type}`) เพื่อเก็บ `attachment_name` และปฏิเสธไฟล์ใหญ่ก่อนอัปโหลด · ขนาดจริงต้องตรวจซ้ำตอนใช้ไฟล์ เพราะ browser ส่งค่านี้เอง · เสียงไม่มีเพดานขนาด ตรวจความยาวตอน `/transcribe` แทน
+2. **path ใน Storage:** `{tenant_id}/sessions/{session_id}/{uuid}.{ext}` ตามกฎ prefix ของ tenant (data-model.md) · ต้องสร้าง bucket + storage policy
+3. **ทาง "ถ่ายใหม่" และข้อความระหว่าง preview ค้าง** (ocr-confirm-card OQ 5): เลือกทาง (ข) ไม่มี endpoint · ข้อความที่พิมพ์เป็นข้อความปกติ
+4. **`ocr_preview.lines[].latex` เป็น LaTeX ล้วนไม่มี `$`** (ocr-confirm-card OQ 6) เหมือน `problem.text_latex` · Jam ตกลง (เจ้าของ prompt `extract_answer`)
+5. **error code ใหม่:** `unsupported_type`, `file_too_large`, `audio_too_long`, `stt_unavailable`, `no_pending_ocr`, `ocr_lines_mismatch`
+
 ### บัญชี
 
 | Method | Path | ทำอะไร |
@@ -153,8 +187,8 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | `scope_patch` | `{topic_id, changes}` | 2.3 |
 | `progress_card` | `{days_left, passed, total, readiness, topics: [{id, name, stars, level, review_due, origin}]}` · type ของ `topics[]` ดูด้านล่าง | 2.2 |
 | `problem` | `{problem_id, text_latex, difficulty, purpose}` (ไม่มีเฉลย) | 2.2 |
-| `ocr_preview` | `{lines: [{latex, confidence}]}` | 2.2 |
-| `verdict` | `{verdict, first_wrong_line, error_type}` | 2.4 |
+| `ocr_preview` | `{lines: [{latex, confidence}]}` · `latex` เป็น LaTeX ล้วนไม่มี `$` · `confidence` 0–1 (หน้าเว็บไม่แสดง · ยืนยันทุกครั้ง AM-02) · `lines` ไม่ว่าง (รูปที่อ่านไม่ได้ส่งเป็น `token` แทน) · v1.7 | 2.2 |
+| `verdict` | `{verdict, first_wrong_line, error_type}` · `verdict`: `correct` \| `correct_with_flaw` \| `incomplete` \| `incorrect` · `first_wrong_line`: integer ≥ 1 หรือ null · `error_type`: `calculation` \| `sign` \| `wrong_method` \| `concept` \| `prerequisite` \| `no_answer` หรือ null · ชุดค่าตาม `merge-rules.md` §2: `correct` → ทั้งสองเป็น null · `incomplete` → `concept` + line null · `no_answer` → `incorrect` + line null · นอกนั้นมีทั้ง line และ error_type · v1.7 | 2.4 |
 | `buddy` | `{text}` (ใช้เมื่อ buddy ตอบนอกจังหวะ 2.1.7) | 2.1 |
 | `session_end` | `{summary_lines: [..2]}` | 2.2 |
 | `done` | `{}` · ห้องติว: `{message_ids: [...]}` id ของข้อความ tutor และ buddy ที่ stream นี้บันทึกลง `messages` เรียงตามลำดับที่ stream (ใช้แทน id ในเครื่องของ UI เช่น เรียก `GET /messages/{id}/tts`) · v1.3 | ทั้งหมด |

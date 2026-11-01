@@ -7,6 +7,8 @@ Docker image only contains apps/api/app/. Differences from the web copies:
 session_start.sse starts with a `session` event, and problem.purpose is `probe`
 (the web copy's `check` is not a valid purpose). The scope files use uuid ids instead
 of `t3` and so on; everything else matches (tests/unit/test_scope_stubs.py).
+image_reply.sse and ocr_confirm.sse have no web copy: they use the OCR3 example of
+specs/features/check/ocr-confirm-card.md §3 and the verdict example of verdict-mark.md §3.
 """
 
 import json
