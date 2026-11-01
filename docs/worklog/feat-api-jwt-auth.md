@@ -11,8 +11,8 @@
 
 - [x] 1. 🤖 `/spec-feature` → `specs/features/platform/api-auth.md` (SA-06, AI-04 · api.md Conventions "Auth"): FastAPI dependency อ่าน Bearer → ตรวจด้วย `supabase.auth.get_claims(jwt)` (ES256 ตรวจกับ JWKS ที่ cache ไว้ ไม่ยิง network ทุก request · HS256 ของ Supabase ในเครื่อง/CI fallback เป็น `get_user`) → `tenant_id` จาก claim ของ custom access token hook + `user_id` จาก `sub` → `ai_call_context` · Supabase client ต่อ request ที่ส่ง JWT ของ user (RLS) · error 401 แบบ `ErrorResponse` · `/health`, `/docs`, `/openapi.json` ไม่ต้องมี token · จดคำถามที่เปิดอยู่
 - [x] 2. 🙋 Jam review spec + ตัดสินข้อ "เปิดบังคับเมื่อไหร่" (หน้าเว็บยังไม่ส่ง token · ดู Notes)
-- [ ] 3. 🤖 `/spec-to-tests`: unit (token ปลอมที่เซ็นด้วย key ES256 ที่สร้างใน test + JWKS ปลอม · ไม่ต่อ network) · integration (user จริงจาก Supabase ในเครื่อง/CI: มี token → 200 · ไม่มี/ผิด/หมดอายุ → 401 · client ต่อ request เห็นแค่แถวของ tenant ตัวเอง)
-- [ ] 4. 🙋 Jam review test
+- [x] 3. 🤖 `/spec-to-tests`: unit (token ปลอมที่เซ็นด้วย key ES256 ที่สร้างใน test + JWKS ปลอม · ไม่ต่อ network) · integration (user จริงจาก Supabase ในเครื่อง/CI: มี token → 200 · ไม่มี/ผิด/หมดอายุ → 401 · client ต่อ request เห็นแค่แถวของ tenant ตัวเอง)
+- [x] 4. 🙋 Jam review test
 - [ ] 5. 🤖 `/implement-feature` (`app/auth.py` หรือ `app/db/` · ต่อ dependency กับ router ห้องติว · `tutor_turn.reply_events` ตั้ง `ai_call_context` ข้างใน generator ตาม `call_context.py`)
 - [ ] 6. 🤖 ruff + pytest + integration (🙋 เปิด Docker Desktop ถ้าจะรันกับ Supabase ในเครื่อง · ไม่งั้นรันกับ `anyang-dev` เหมือน #95)
 - [ ] 7. 🤖 `/work-done`
@@ -33,9 +33,11 @@
 
 - 2026-11-01 · spec approved (Jam · "ใช้ตามที่แนะนำ"): `.env.example` `AUTH_REQUIRED=false` + comment · `tests/conftest.py` setdefault `AUTH_REQUIRED=false` ให้ test เดิม · `get_claims` · code `missing_token` / `invalid_token` · Jam อนุญาตแก้ไฟล์กลาง `api.md`, `.env.example` และไฟล์เสี่ยง `infra/env/api-staging.yaml` ตาม §11 (บอกกลุ่มก่อน merge)
 
+- 2026-11-01 · test ของ AC-1 ถึง AC-15 + AC-tenant reviewed (Jam) · ห้ามแก้ test เหล่านี้
+
 ## Next step
 
-ขั้น 3: `/spec-to-tests specs/features/platform/api-auth.md` → `tests/unit/test_api_auth.py` (AC-1 ถึง AC-14) + `tests/integration/test_api_auth_db.py` (AC-15, AC-tenant)
+ขั้น 5: `/implement-feature specs/features/platform/api-auth.md` · `app/auth.py` + `EnvSettings.auth_required` (+ validator) + router dependency + 401 ใน OpenAPI + `reply_events` รับ `AuthContext` · แล้วไฟล์กลาง/เสี่ยงตาม spec §11 (`.env.example`, `setup.md` A5, `infra/env/api-staging.yaml`, `api.md` Auth, `infra/README.md` ⚠️)
 
 ## Waiting on
 
