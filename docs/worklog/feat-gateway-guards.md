@@ -15,9 +15,9 @@
 - [x] 2. 🙋 Jam review spec + ตอบ open questions (threshold เป็นเรื่องของ Jam · โครงสร้าง backend เป็นของ Junior → เขียนเป็นข้อเสนอ)
 - [x] 3. 🙋 ถ้าต้องเพิ่มค่าใน `config/ai.yaml` (ไฟล์ร่วม) บอกแชทกลุ่ม
 - [x] 4. 🤖 `/spec-to-tests` · แดงก่อน
-- [ ] 5. 🙋 Jam review test
-- [ ] 6. 🤖 `/implement-feature` · test เขียว + ruff
-- [ ] 7. 🤖 อัปเดตแถว gateway ใน `architecture.md` + บรรทัดความคืบหน้าใน checklist
+- [x] 5. 🙋 Jam review test
+- [x] 6. 🤖 `/implement-feature` · test เขียว + ruff
+- [x] 7. 🤖 อัปเดตแถว gateway ใน `architecture.md` + บรรทัดความคืบหน้าใน checklist
 
 ## Definition of done
 
@@ -33,7 +33,13 @@
 
 ## Next step
 
-ขั้น 5: Jam review `tests/unit/test_rate_limit.py` + `test_circuit_breaker.py` + fixture ใหม่ใน `tests/conftest.py` · แล้วขั้น 6 `/implement-feature ai/gateway-guards`
+ทุกขั้นเสร็จแล้ว · `/work-done` (บอกแชทกลุ่มก่อน merge เพราะแก้ api.md)
+
+## Done today
+
+- 2026-11-01 · ขั้น 4: test 42 ตัว (`test_rate_limit.py`, `test_circuit_breaker.py`) + fixture ล้างตัวนับใน `tests/conftest.py` · แดงก่อน (`ModuleNotFoundError`)
+- 2026-11-01 · ขั้น 6: `app/rate_limit.py` (dependency `chat_rate_limit` บน `/messages` และ `/ocr/confirm`), `app/ai/circuit_breaker.py`, `Gateway(clock=)` + `gateway.breaker()` · 4 รอบ red → green · unit 576 ผ่าน
+- 2026-11-01 · test ที่ review แล้วล้ม 1 ตัว (`test_apimd_room_media_endpoints_and_errors_in_openapi` ของ `/ocr/confirm` ตรวจชุด error พอดี) · Jam อนุญาตให้เพิ่ม `429` · api.md v1.8 + architecture.md (Jam อนุญาตแก้ไฟล์ร่วม)
 
 ## Waiting on
 

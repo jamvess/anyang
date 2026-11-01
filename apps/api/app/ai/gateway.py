@@ -14,7 +14,10 @@ chunk, because chunks already sent to the user cannot be taken back.
 ``build_default_gateway()`` adds ``app.db.ai_calls.AICallLog``, which logs every record and
 writes the ones with a tenant to ``ai_calls`` (specs/features/ai/ai-calls-log.md).
 
-Not in the lite version yet (Junior, S3): fallback provider, circuit breaker, guards.
+Each provider has a circuit breaker (specs/features/ai/gateway-guards.md §2.2): while it is
+open, calls to that provider fail fast with ``AIProviderError`` and no ``CallRecord``.
+
+Not in the lite version yet: fallback provider, answer-leak check.
 """
 
 import asyncio
@@ -30,6 +33,7 @@ from typing import Any, Literal
 import yaml
 from pydantic import BaseModel, ValidationError
 
+from app.ai.circuit_breaker import CircuitBreaker
 from app.ai.providers.base import (
     EmbedRequest,
     Image,
@@ -167,10 +171,13 @@ class Gateway:
         provider: Provider | None = None,
         model_override: str | None = None,
         providers: dict[str, Provider] | None = None,
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         """``provider`` answers every model (fake mode and tests). Use ``Gateway.live`` for
-        real providers."""
+        real providers. ``clock`` times the circuit breakers (tests pass a fake one)."""
         self._config = config
+        self._clock = clock
+        self._breakers: dict[str, CircuitBreaker] = {}
         self._prompts_dir = prompts_dir
         self._single = provider
         self._providers = providers or {}
@@ -184,9 +191,26 @@ class Gateway:
         prompts_dir: Path,
         providers: dict[str, Provider],
         model_override: str | None = None,
+        clock: Callable[[], float] = time.monotonic,
     ) -> "Gateway":
         """Real providers, chosen by the model id prefix (``gemini:gemini-...``)."""
-        return cls(config, prompts_dir, model_override=model_override, providers=providers)
+        return cls(
+            config, prompts_dir, model_override=model_override, providers=providers, clock=clock
+        )
+
+    def breaker(self, provider_name: str) -> CircuitBreaker:
+        """The circuit breaker of one provider, made on first use."""
+        if provider_name not in self._breakers:
+            self._breakers[provider_name] = CircuitBreaker(
+                self._config.gateway.circuit_breaker, clock=self._clock, name=provider_name
+            )
+        return self._breakers[provider_name]
+
+    def _acquire(self, provider_name: str, purpose: str) -> CircuitBreaker:
+        breaker = self.breaker(provider_name)
+        if not breaker.acquire():
+            raise AIProviderError(f"{purpose}: circuit open for provider {provider_name!r}")
+        return breaker
 
     def add_listener(self, listener: Callable[[CallRecord], None]) -> None:
         self._listeners.append(listener)
@@ -200,6 +224,7 @@ class Gateway:
         prompt = _load_prompt(self._prompts_dir, purpose, settings.prompt)
         text, images = _render(prompt, input)
         provider_name, provider, model = self._route(settings.tier)
+        breaker = self._acquire(provider_name, purpose)
 
         started = time.perf_counter()
         tokens_in = tokens_out = 0
@@ -227,12 +252,13 @@ class Gateway:
                     continue
                 status = "ok"
                 return result
-            status = "schema_error"
+            status = "schema_error"  # the model answered: not a provider failure
             raise AISchemaError(
                 f"{purpose}: output did not match {schema.__name__} after "
                 f"{self._config.gateway.schema_retries} schema retries"
             )
         finally:
+            breaker.record(ok=status != "provider_error")
             self._emit(
                 CallRecord(
                     purpose=purpose,
@@ -265,6 +291,7 @@ class Gateway:
         if not hasattr(provider, "stream"):
             raise AIConfigError(f"provider {provider_name!r} cannot stream")
         streamer: StreamProvider = provider  # type: ignore[assignment]
+        breaker = self._acquire(provider_name, purpose)
         request = ProviderRequest(
             purpose=purpose,
             model=model,
@@ -294,6 +321,7 @@ class Gateway:
         chunks: AsyncIterator[str] | None = None
         started = time.perf_counter()
         status: Literal["ok", "schema_error", "provider_error"] = "provider_error"
+        provider_failed = False  # a caller that stops reading early is not a provider failure
         try:
             chunks, deadline, chunk = await self._with_retries(
                 first_chunk, purpose, settings.timeout_s
@@ -309,7 +337,11 @@ class Gateway:
                 except Exception as error:  # provider SDKs raise many error types
                     raise AIProviderError(f"{purpose}: {type(error).__name__}: {error}") from error
             status = "ok"
+        except AIProviderError:
+            provider_failed = True
+            raise
         finally:
+            breaker.record(ok=not provider_failed)
             if chunks is not None:
                 await _close(chunks)
             self._emit(
@@ -336,6 +368,7 @@ class Gateway:
         provider_name, provider, model = self._route("embed")
         if not hasattr(provider, "embed"):
             raise AIConfigError(f"provider {provider_name!r} cannot embed")
+        breaker = self._acquire(provider_name, "embed")
         settings = self._config.embedding
         started = time.perf_counter()
         tokens_in = 0
@@ -369,6 +402,7 @@ class Gateway:
             status = "ok"
             return vectors
         finally:
+            breaker.record(ok=status == "ok")
             self._emit(
                 CallRecord(
                     purpose="embed",

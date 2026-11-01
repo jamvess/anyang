@@ -36,6 +36,7 @@ from app.models.room import (
     UploadRequest,
     UploadTicket,
 )
+from app.rate_limit import chat_rate_limit
 from app.services.tutor_turn import reply_events
 from app.settings import get_settings
 
@@ -68,6 +69,12 @@ _SSE_RESPONSE: dict[int | str, dict[str, Any]] = {
         },
     },
     **_ERRORS,
+}
+
+
+# The user-message endpoints share one counter (specs/features/ai/gateway-guards.md §2.1).
+_RATE_LIMITED: dict[int | str, dict[str, Any]] = {
+    429: {"model": ErrorResponse, "description": "rate_limited; Retry-After gives the seconds"},
 }
 
 
@@ -118,7 +125,8 @@ async def get_session(session_id: SessionId, response: Response) -> Room:
 @router.post(
     "/sessions/{id}/messages",
     response_class=EventSourceResponse,
-    responses=_SSE_RESPONSE,
+    responses={**_SSE_RESPONSE, **_RATE_LIMITED},
+    dependencies=[Depends(chat_rate_limit)],
 )
 async def send_message(
     session_id: SessionId,
@@ -237,7 +245,9 @@ async def transcribe(
         **_SSE_RESPONSE,
         409: {"model": ErrorResponse, "description": "no_pending_ocr"},
         422: {"model": ErrorResponse, "description": "Invalid body or ocr_lines_mismatch"},
+        **_RATE_LIMITED,
     },
+    dependencies=[Depends(chat_rate_limit)],
 )
 async def confirm_ocr(session_id: SessionId, body: OcrConfirmRequest) -> Response:
     """Confirmed or edited lines of the last ocr_preview. SSE: verdict → token → done (AM-02).

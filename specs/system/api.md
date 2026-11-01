@@ -1,4 +1,4 @@
-# API (v1.7)
+# API (v1.8)
 
 Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้างอัตโนมัติที่ `/docs` · frontend generate types จาก `/openapi.json`
 
@@ -6,6 +6,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 - **Auth:** ส่ง Supabase access token ใน `Authorization: Bearer <jwt>` ทุก request backend ส่ง token นี้ต่อให้ Supabase เพื่อให้ RLS ทำงาน · ไม่มี token หรือ token ผิด/หมดอายุ/ไม่มี `tenant_id` → `401` + `WWW-Authenticate: Bearer` code `missing_token` / `invalid_token` · ไม่ต้องมี token: `/health`, `/docs`, `/openapi.json` · Supabase Auth ติดต่อไม่ได้ → `503` code `auth_unavailable` (ไม่ใช่ 401 จะได้ไม่ไล่ทุกคนให้ login ใหม่) · ระหว่างที่หน้าเว็บยังไม่ส่ง token env `AUTH_REQUIRED=false` ให้ request ที่ไม่มี token ผ่านได้แต่ไม่มี tenant (token ที่ผิดยังได้ 401 · ยกเว้น API ที่ไม่มี `SUPABASE_URL`/`SUPABASE_ANON_KEY` เช่น api-staging ตอนนี้ จะไม่ตรวจ token เลย) · `specs/features/platform/api-auth.md` (v1.5)
 - **Error:** `{"error": {"code": "scope_not_confirmed", "message": "..."}}` พร้อม HTTP status ที่ตรงความหมาย
+- **Rate limit (v1.8):** ข้อความที่ผู้ใช้ส่งในห้องติว (`POST /sessions/{id}/messages` และ `POST /sessions/{id}/ocr/confirm` นับรวมกัน) ไม่เกิน `config/ai.yaml` → `guards.rate_limit_messages_per_minute` ใน 60 วินาทีล่าสุด ต่อ user (ไม่มี token นับต่อ IP) · เกินแล้ว `429` code `rate_limited` + header `Retry-After` (วินาที) ก่อนเริ่ม SSE · `specs/features/ai/gateway-guards.md`
 - **Long-running jobs:** ตอบ `202 Accepted` แล้วให้ client poll endpoint ความคืบหน้า
 - **Streaming:** SSE ผ่าน `POST` (client ใช้ `fetch` + `ReadableStream`) ทุก stream จบด้วย event `done`
 - **Request ID:** ทุก response มี header `X-Request-Id` ใช้ไล่ log ข้าม AI call และ DB
@@ -104,7 +105,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | GET | `/sessions/{id}` | ข้อมูลห้อง `Room` (หัวห้อง + `limits` + ข้อความ) · ใช้ตอนเปิดห้องและกลับมาต่อ (TM-13) |
 | POST | `/sessions/{id}/uploads` | signed URL สำหรับรูปหรือเสียง |
 | POST | `/sessions/{id}/transcribe` | เสียง → text (ใส่ช่องพิมพ์ ไม่ส่งเอง) |
-| POST | `/sessions/{id}/messages` | **SSE:** body `{text?, image_path?}` อย่างน้อยหนึ่งค่า · ถ้ามีทั้งคู่ `text` เป็นคำบรรยายของรูป (ดูด้านล่าง) |
+| POST | `/sessions/{id}/messages` | **SSE:** body `{text?, image_path?}` อย่างน้อยหนึ่งค่า · ถ้ามีทั้งคู่ `text` เป็นคำบรรยายของรูป (ดูด้านล่าง) · `429 rate_limited` (Conventions · v1.8) |
 | POST | `/sessions/{id}/ocr/confirm` | ยืนยันหรือแก้ข้อความที่อ่านจากรูป แล้ว stream ผลต่อ |
 | POST | `/sessions/{id}/end` | จบ session → `session_end` |
 | GET | `/sessions/{id}/messages` | รายการ `Message[]` อย่างเดียว เรียงตาม `created_at` เก่าไปใหม่ (แบ่งหน้าได้ภายหลัง) |
@@ -159,7 +160,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 - Request `{lines: string[]}` · ทุกบรรทัดตามลำดับ แต่ละบรรทัดไม่ว่าง (ช่องว่างล้วนบนการ์ดคือยกเลิกการแก้ · ocr-confirm-card OQ 2) จำนวนเท่ากับ `ocr_preview.lines` ใบล่าสุด (หน้าเว็บแก้ได้แต่เพิ่มหรือลบบรรทัดไม่ได้ · ocr-confirm-card OQ 3) · backend เทียบกับ preview เองเพื่อ log บรรทัดที่แก้ (AM-03)
 - Response: SSE แบบเดียวกับ `POST /sessions/{id}/messages`: `verdict` → `token`… → `done` (verdict มาก่อน tutor เริ่มพิมพ์ · §2.4.5)
-- error: `409 no_pending_ocr` (ไม่มี preview ที่รอยืนยัน) · `422 ocr_lines_mismatch` (จำนวนบรรทัดไม่เท่า)
+- error: `409 no_pending_ocr` (ไม่มี preview ที่รอยืนยัน) · `422 ocr_lines_mismatch` (จำนวนบรรทัดไม่เท่า) · `429 rate_limited` (Conventions · v1.8)
 
 **preview ที่ค้าง (ocr-confirm-card OQ 5, 7):** ไม่มี endpoint ยกเลิก · ส่งรูปใหม่ → preview ใหม่แทนใบเดิม · พิมพ์ข้อความระหว่างที่ preview ค้าง → เป็นข้อความปกติ (ตอบคำถามได้) และ preview ยังรอยืนยัน
 

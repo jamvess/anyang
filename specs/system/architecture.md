@@ -18,8 +18,8 @@ flowchart TB
     A -.-> DP[domain: stars · bkt · planner · stage machine · buddy · spacing]
     A --> S[services: checker · tutor turn]
     A -.-> SP[services: ingestion · scope edit]
-    S --> G[AI gateway: routing · retry · log]
-    G -.-> GP[guards · circuit breaker · fallback]
+    S --> G[AI gateway: routing · retry · circuit breaker · log]
+    G -.-> GP[answer-leak check · fallback]
     S --> M[SymPy service · worker pool + timeout]
   end
   G -->|primary · ADC| V[Gemini · Vertex AI]
@@ -89,7 +89,8 @@ flowchart TB
 
 | ส่วน | สถานะ | ที่มา |
 |---|---|---|
-| AI gateway: `ai.call`, `ai.stream`, routing, retry, log `ai_calls` | สร้างแล้ว · **guards (rate limit, answer leak), circuit breaker และ fallback ยังไม่มี** (`gateway.py`) · ตอนนี้ตรวจแค่ `max_message_chars` ใน router ของห้องติว | `ai-calls-log.md`, `gemini-vertex.md` |
+| AI gateway: `ai.call`, `ai.stream`, routing, retry, log `ai_calls`, circuit breaker ต่อ provider | สร้างแล้ว · **answer-leak check และ fallback ยังไม่มี** (`gateway.py`) · breaker เปิดแล้วล้มทันทีแล้ว degrade | `ai-calls-log.md`, `gemini-vertex.md`, `gateway-guards.md` |
+| Rate limit ข้อความในห้องติว (`guards.rate_limit_messages_per_minute`) | สร้างแล้ว · นับในหน่วยความจำต่อ instance · ไม่มี token นับต่อ IP (ปลอมได้ · ห้ามเปิด live ขณะ `AUTH_REQUIRED=false`) | `gateway-guards.md` |
 | ตรวจ JWT ทุก endpoint | สร้างแล้ว · `api-staging` ยังไม่ตรวจเลย (ไม่มี `SUPABASE_URL` / `SUPABASE_ANON_KEY`) รอหน้าเว็บ login | `api-auth.md` |
 | ห้องติว: ข้อความ text stream จาก gateway | สร้างแล้ว (P4-lite) · ยังไม่บันทึก `messages` · endpoint อื่นของห้องเป็น stub (`X-Stub: true`) | `tutor-reply-stream.md` |
 | หน้าตรวจขอบเขต | stub 3 endpoint (api.md v1.6) | PR #100 |

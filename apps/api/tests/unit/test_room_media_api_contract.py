@@ -34,7 +34,9 @@ ERROR_REF = "#/components/schemas/ErrorResponse"
 DOCUMENTED_ERRORS = [
     ("/sessions/{id}/uploads", ["404", "422"]),
     ("/sessions/{id}/transcribe", ["404", "422", "503"]),
-    ("/sessions/{id}/ocr/confirm", ["404", "409", "422"]),
+    # 429 rate_limited from specs/features/ai/gateway-guards.md AC-11 (Jam allowed this edit
+    # of a reviewed test, 2026-11-01)
+    ("/sessions/{id}/ocr/confirm", ["404", "409", "422", "429"]),
 ]
 
 
