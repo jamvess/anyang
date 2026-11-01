@@ -7,13 +7,12 @@ event. Not in P4-lite: stage machine, planner, buddy, context layers 2-9 and sav
 
 import logging
 from collections.abc import AsyncIterator
-from contextlib import aclosing
+from contextlib import aclosing, nullcontext
 
 from pydantic import BaseModel
 
-from app.ai.call_context import ai_call_context
+from app.ai.call_context import AICallContext, ai_call_context
 from app.ai.gateway import AIProviderError, Gateway
-from app.auth import AuthContext
 from app.models.room import DoneEvent, ErrorEvent, TokenEvent
 
 log = logging.getLogger(__name__)
@@ -27,22 +26,33 @@ INTERNAL_ERROR = ErrorEvent(code="internal_error", message="Internal server erro
 
 
 async def reply_events(
-    gateway: Gateway, text: str, auth: AuthContext | None = None
+    gateway: Gateway, text: str, call_context: AICallContext | None = None
 ) -> AsyncIterator[tuple[str, BaseModel]]:
     """(event name, payload) pairs of the reply stream, in api.md "SSE events" names.
 
     Errors become events, because the SSE headers (200) are already sent when the first one
     can happen. The client never sees exception text (spec §2 Endpoint 4-5, AC-19).
 
-    With ``auth`` the call is logged to ``ai_calls`` under the user's tenant. The context is set
-    here, inside the generator that reads the stream, because the gateway reports the call when
-    the stream ends (api-auth.md §2.5)."""
+    With ``call_context`` the call is logged to ``ai_calls`` under that tenant. It is set here,
+    inside the generator that reads the stream, and around ``aclosing``: the gateway reports the
+    call when the stream ends, which for a client that leaves early is when ``aclosing`` closes
+    it (api-auth.md §2.5)."""
+    context = (
+        ai_call_context(
+            tenant_id=call_context.tenant_id,
+            user_id=call_context.user_id,
+            session_id=call_context.session_id,
+        )
+        if call_context is not None
+        else nullcontext()
+    )
     sent = False
     try:
-        async with aclosing(_stream_reply(gateway, text, auth)) as chunks:
-            async for chunk in chunks:
-                sent = True
-                yield "token", TokenEvent(speaker="tutor", text=chunk)
+        with context:
+            async with aclosing(gateway.stream("tutor_reply", {"message": text})) as chunks:
+                async for chunk in chunks:
+                    sent = True
+                    yield "token", TokenEvent(speaker="tutor", text=chunk)
     except AIProviderError:
         log.warning("tutor_reply failed after %s", "a partial reply" if sent else "no reply")
         if sent:
@@ -55,16 +65,3 @@ async def reply_events(
         yield "error", INTERNAL_ERROR
         return
     yield "done", DoneEvent()
-
-
-async def _stream_reply(
-    gateway: Gateway, text: str, auth: AuthContext | None
-) -> AsyncIterator[str]:
-    async with aclosing(gateway.stream("tutor_reply", {"message": text})) as chunks:
-        if auth is None:
-            async for chunk in chunks:
-                yield chunk
-            return
-        with ai_call_context(tenant_id=auth.tenant_id, user_id=auth.user_id):
-            async for chunk in chunks:
-                yield chunk

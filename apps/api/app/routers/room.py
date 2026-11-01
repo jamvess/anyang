@@ -18,6 +18,7 @@ from fastapi.responses import JSONResponse
 from sse_starlette import EventSourceResponse
 
 from app import stubs
+from app.ai.call_context import AICallContext
 from app.ai.gateway import Gateway, get_gateway
 from app.auth import AuthContext, get_auth
 from app.models.error import ErrorBody, ErrorResponse
@@ -126,9 +127,12 @@ async def send_message(
         error = ErrorBody(code="message_too_long", message=f"text is over {max_chars} characters")
         return JSONResponse(ErrorResponse(error=error).model_dump(), status_code=422)
 
+    # No session_id yet: the session is a stub with no tutor_sessions row (api-auth.md §2.5).
+    call_context = AICallContext(auth.tenant_id, auth.user_id) if auth else None
+
     async def events() -> AsyncIterator[dict[str, str]]:
         # aclosing: a client that leaves closes the provider stream now (spec §2 Endpoint 8).
-        async with aclosing(reply_events(gateway, body.text, auth)) as replies:
+        async with aclosing(reply_events(gateway, body.text, call_context)) as replies:
             async for event, payload in replies:
                 yield {"event": event, "data": payload.model_dump_json()}
 

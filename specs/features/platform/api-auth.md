@@ -30,6 +30,7 @@
 | ไม่มี token (และ `AUTH_REQUIRED=true`) | `missing_token` |
 | ลายเซ็นผิด, รูปแบบผิด, หมดอายุ, `role` ไม่ใช่ `authenticated` | `invalid_token` |
 | ไม่มี `sub` หรือ `tenant_id` หรือไม่ใช่ UUID | `invalid_token` |
+| Supabase Auth ติดต่อไม่ได้ (network, timeout, 429, 5xx) · **`503`** ไม่มี `WWW-Authenticate` · เพิ่มจาก self-review ของ #98 เพราะ 401 จะทำให้ supabase-js ไล่ทุกคนไป login ใหม่ตอน Supabase ล่ม | `auth_unavailable` |
 
 `message` เป็นข้อความคงที่ ไม่มีรายละเอียดจาก exception (รายละเอียดอยู่ใน log ระดับ INFO พร้อม `request_id` · ไม่ log ตัว token)
 
@@ -91,6 +92,8 @@ Unit test ไม่ต่อ network: token เซ็นด้วย key ES256 �
 
 - **AC-12 (AI-04, SA-03)** Given token ที่ถูกของ tenant T, user U และ gateway ปลอมที่มี `AICallLog` กับ writer ปลอม When `POST /sessions/{id}/messages` ด้วย `{text}` แล้วอ่าน stream จนจบ Then writer ได้ 1 แถว `tenant_id = T`, `user_id = U`, `purpose = tutor_reply`, `session_id = null`
 - **AC-13 (AI-04)** Given `AUTH_REQUIRED=false` และไม่มี token When ส่งข้อความเดียวกัน Then stream ได้เหมือนเดิม (`token` … `done`) และ writer ไม่ได้แถว (log อย่างเดียว)
+- **AC-16 (SA-06)** (self-review #98) Given Supabase Auth ตอบไม่ได้ (เช่น JWKS ตอบ 503) When เรียกด้วย token Then `503 auth_unavailable` ไม่ใช่ 401 · และไม่มี `WWW-Authenticate`
+- **AC-17 (AI-04)** (self-review #98) Given token ที่ถูก When client ปิด stream กลางทาง Then writer ยังได้ 1 แถวที่มี `tenant_id` (`status = error`)
 - **AC-14 (NFR-P1)** Given token ES256 ที่ถูก When เรียก 2 ครั้งติดกัน Then ตัวตรวจขอ JWKS ไม่เกิน 1 ครั้ง (cache) และไม่ยิง Auth server (`get_user`)
 
 **Integration (Supabase ในเครื่อง/CI)**
