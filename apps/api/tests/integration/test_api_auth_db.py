@@ -122,8 +122,11 @@ def test_SA06_real_supabase_token_passes_and_tampered_fails(
     client, seen = _probe()
 
     ok = client.get("/probe", headers={"Authorization": f"Bearer {a.token}"})
-    last = a.token[-1]
-    tampered = a.token[:-1] + ("A" if last != "A" else "B")
+    # Change the first signature character: the last one has spare base64 bits, so changing it
+    # sometimes leaves the same signature bytes (CI flake on #98 · Jam ok 2026-11-01).
+    head, payload, signature = a.token.split(".")
+    flipped = ("A" if signature[0] != "A" else "B") + signature[1:]
+    tampered = ".".join([head, payload, flipped])
     bad = client.get("/probe", headers={"Authorization": f"Bearer {tampered}"})
 
     assert ok.status_code == 200
