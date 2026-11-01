@@ -109,6 +109,72 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/exam-preps/{id}/scope": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Scope
+         * @description Draft topics with stars and reasons, in API order (SM-02, SM-03), excluded topics included.
+         *
+         *     stub — replaced when ingestion and compute_importance exist
+         */
+        get: operations["get_scope_exam_preps__id__scope_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/topics/{id}/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Topic Sources
+         * @description Source pages and past exam questions of one topic (SM-04).
+         *
+         *     stub — replaced when ingestion exists
+         */
+        get: operations["get_topic_sources_topics__id__sources_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/exam-preps/{id}/scope/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm Scope
+         * @description Lock the draft scope as a scope version (SM-09).
+         *
+         *     stub — replaced when scope_versions are written
+         */
+        post: operations["confirm_scope_exam_preps__id__scope_confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -180,6 +246,20 @@ export interface components {
              */
             created_at: string;
         };
+        /** PastQuestion */
+        PastQuestion: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string;
+            /** Text */
+            text: string;
+            /** Map Note */
+            map_note: string | null;
+        };
         /**
          * Room
          * @description Response of GET /sessions/{id}.
@@ -205,6 +285,61 @@ export interface components {
             messages: components["schemas"]["Message"][];
         };
         /**
+         * Scope
+         * @description Response of GET /exam-preps/{id}/scope.
+         */
+        Scope: {
+            /** Prep Name */
+            prep_name: string;
+            /** Days Left */
+            days_left: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "confirmed";
+            /** Topics */
+            topics: components["schemas"]["ScopeTopic"][];
+            /** Unmapped Questions */
+            unmapped_questions: components["schemas"]["PastQuestion"][];
+        };
+        /**
+         * ScopeConfirmed
+         * @description Response of POST /exam-preps/{id}/scope/confirm.
+         */
+        ScopeConfirmed: {
+            /**
+             * Scope Version Id
+             * Format: uuid
+             */
+            scope_version_id: string;
+            /** Version */
+            version: number;
+        };
+        /** ScopeTopic */
+        ScopeTopic: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Order */
+            order: number;
+            /** Name */
+            name: string;
+            /** Stars */
+            stars: number;
+            /** Reason */
+            reason: string;
+            /** Source Label */
+            source_label: string;
+            /**
+             * Origin
+             * @enum {string}
+             */
+            origin: "doc" | "user";
+        };
+        /**
          * SendMessageRequest
          * @description Body of POST /sessions/{id}/messages: exactly one of `text` or `image_path`.
          *
@@ -215,6 +350,25 @@ export interface components {
             text?: string | null;
             /** Image Path */
             image_path?: string | null;
+        };
+        /** SourceExcerpt */
+        SourceExcerpt: {
+            /** Material Name */
+            material_name: string;
+            /** Page */
+            page: number;
+            /** Text */
+            text: string;
+        };
+        /**
+         * TopicSources
+         * @description Response of GET /topics/{id}/sources.
+         */
+        TopicSources: {
+            /** Excerpts */
+            excerpts: components["schemas"]["SourceExcerpt"][];
+            /** Questions */
+            questions: components["schemas"]["PastQuestion"][];
         };
         /** BuddyEvent */
         BuddyEvent: {
@@ -380,6 +534,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
         };
     };
     create_session_exam_preps__id__sessions_post: {
@@ -422,6 +585,15 @@ export interface operations {
             };
             /** @description Invalid path or body */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -478,6 +650,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
         };
     };
     send_message_sessions__id__messages_post: {
@@ -524,6 +705,216 @@ export interface operations {
             };
             /** @description Invalid path or body */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_scope_exam_preps__id__scope_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Scope"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Scope not ready, already confirmed or empty */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_topic_sources_topics__id__sources_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TopicSources"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Scope not ready, already confirmed or empty */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    confirm_scope_exam_preps__id__scope_confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScopeConfirmed"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Scope not ready, already confirmed or empty */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
