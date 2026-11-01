@@ -1,0 +1,43 @@
+# Rate limit ของห้องติว + circuit breaker ของ gateway
+
+| | |
+|---|---|
+| Owner | Jam (item of Junior) |
+| Branch | `feat/gateway-guards` |
+| Checklist item | วัด TTFT และต้นทุนบน staging ร่วมกับ May (P4-lite) |
+| Status | in progress · 2026-11-01 |
+
+## Plan
+
+ส่วนที่ทำได้ของ checklist item: กัน 2 อย่างที่ทำให้เปิด `AI_PROVIDER=live` บน `api-staging` ไม่ได้ (architecture.md v1.2 "สร้างแล้วหรือยัง") · ยังไม่ได้วัด TTFT บน staging ในงานนี้
+
+- [ ] 1. 🤖 `/spec-feature ai/gateway-guards TM-21 NFR-R1 NFR-P2`: (ก) จำกัด `guards.rate_limit_messages_per_minute` ต่อ user บน endpoint ที่เรียก AI ของห้องติว (ai-orchestration §2.9 Limits) (ข) circuit breaker ใน gateway (§2.10: error ≥ 50% จากอย่างน้อย 10 calls → พัก 60 วินาที) · ไม่มี provider สำรอง จึงล้มทันทีแล้ว degrade
+- [ ] 2. 🙋 Jam review spec + ตอบ open questions (threshold เป็นเรื่องของ Jam · โครงสร้าง backend เป็นของ Junior → เขียนเป็นข้อเสนอ)
+- [ ] 3. 🙋 ถ้าต้องเพิ่มค่าใน `config/ai.yaml` (ไฟล์ร่วม) บอกแชทกลุ่ม
+- [ ] 4. 🤖 `/spec-to-tests` · แดงก่อน
+- [ ] 5. 🙋 Jam review test
+- [ ] 6. 🤖 `/implement-feature` · test เขียว + ruff
+- [ ] 7. 🤖 อัปเดตแถว gateway ใน `architecture.md` + บรรทัดความคืบหน้าใน checklist
+
+## Definition of done
+
+- spec `specs/features/ai/gateway-guards.md` approved · AC ทุกข้อมี test ที่ผ่าน
+- ค่าทุกตัวอ่านจาก `config/ai.yaml` พร้อมป้ายที่มา (ไม่มี magic number)
+- CI เขียว · checklist item ยังไม่ติ๊ก (ยังไม่ได้วัดบน staging)
+
+## Decisions
+
+- 2026-11-01 · ทำ rate limit + circuit breaker ก่อน answer-leak check (AM-13) เพราะ leak check ต้องมีโจทย์ที่ค้างอยู่ ซึ่งยังไม่มีใน flow จริง
+
+## Next step
+
+ขั้น 1: ร่าง spec
+
+## Waiting on
+
+- Junior: ยืนยันโครงสร้าง backend ของ rate limit (เก็บในหน่วยความจำต่อ instance หรือใน DB) · ตั้ง env ของ `api-staging` (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `AUTH_REQUIRED`) + runtime SA ก่อนเปิด live
+- May: หน้าเว็บ login + ส่ง token (ไม่งั้น rate limit นับต่อ user ไม่ได้)
+
+## Notes for next time
+
+- 
