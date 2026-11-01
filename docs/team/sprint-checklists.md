@@ -41,7 +41,8 @@
 
 ### S2 · 19–30 ต.ค.
 
-- [ ] Cloud Build trigger: merge → deploy `api-staging` อัตโนมัติ (P6-lite)
+- [x] Cloud Build trigger: merge → deploy `api-staging` อัตโนมัติ (P6-lite)
+  - ทำแล้ว 28 ต.ค. (PR #83): trigger `api-staging-deploy` (`infra/trigger-api-staging.yaml`) + `cloudbuild.yaml` ใช้ `AI_PROVIDER=fake` และ `env/api-staging.yaml` ไม่มี secret · SA `cloudbuild-deployer` (`infra/README.md` "Deploy อัตโนมัติ") · ติ๊กโดย Jam (1 พ.ย.) ช่วง solo · ผลวัดเวลาอยู่ใน report P6-lite
   - 28 ต.ค. ทางสำรองพร้อมแล้ว (PR #20): `infra/deploy-staging.ps1` deploy มือ · `api-staging` ขึ้นแล้วที่ https://api-staging-659706857266.asia-southeast1.run.app (`AI_PROVIDER=fake`, CORS ครบ) · env อยู่ใน `infra/env/api-staging.yaml` ใช้ไฟล์เดียวกันตอนทำ trigger · เหลือ trigger + แก้ `cloudbuild.yaml` (ยังตั้ง `AI_PROVIDER=live` และใช้ secret `anthropic-api-key`)
   - ⏰ Demo S2: เย็นพฤหัส 29 ต.ค. `gcloud run services update api-staging --region=asia-southeast1 --min-instances=1` กัน cold start · หลัง demo ศ. 30 ต.ค. ตั้งกลับเป็น `--min-instances=0` ทันที (instance ที่เปิดค้างกิน trial credit) · คำสั่งอยู่ใน `infra/README.md` "Demo-day"
   - env ของ api-staging อยู่ใน infra/env/api-staging.yaml (--env-vars-file) · บน Windows ห้ามส่งค่าที่มี ^ ผ่าน flag ของ gcloud (cmd.exe กิน ^) ให้ใช้ไฟล์แทน
