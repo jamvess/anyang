@@ -10,6 +10,7 @@ spec: `specs/poc/README.md` P6-lite · report: `specs/poc/reports/P6-lite.md` ·
 cd apps/api
 uv run python ../../poc/P6-lite/deploy_latency.py
 uv run pytest ../../poc/P6-lite -q     # test ส่วนที่คิดตัวเลข
+cd ../.. && bash poc/P6-lite/evidence.sh > poc/P6-lite/results/evidence.txt   # เกณฑ์ข้อ 2, 3
 ```
 
 ## วัดอะไร
@@ -27,3 +28,9 @@ uv run pytest ../../poc/P6-lite -q     # test ส่วนที่คิดต�
 `summary.serving_newest_deploy` เช็คว่า revision ที่รับ traffic อยู่ตอนวัด รัน image ของ PR ล่าสุดที่ควร deploy
 
 ผลอยู่ที่ `results/deploy-latency.json` (commit ได้ · มีแค่เลข PR, ชื่อ PR, commit, build id และเวลา)
+
+## เกณฑ์ข้อ 2, 3 (`evidence.sh`)
+
+- **isolation test ใน CI:** ผลของ job `api-integration` (รัน `tests/integration` ซึ่งมี `test_SA06_*`) ในทุก run ของ `ci.yml` ที่ push เข้า `main` · run ที่ไม่ผ่านต้องเปิด log ดูเองว่าล้มเพราะ test หรือเพราะ CI (`gh run view <id> --log-failed`)
+- **secret:** สถานะ GitHub secret scanning + push protection + จำนวน alert · นับ pattern ของ key ที่รู้จักใน `git log -p --all` (พิมพ์แค่จำนวน ไม่พิมพ์ข้อความที่เจอ) · ไฟล์ `.env*` หรือ key file ที่เคยถูก add · จำนวน secret ใน Secret Manager
+- ผลอยู่ที่ `results/evidence.txt`

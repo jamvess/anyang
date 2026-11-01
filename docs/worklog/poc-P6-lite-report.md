@@ -12,7 +12,7 @@
 - [x] 1. 🤖 ติ๊ก checklist "Cloud Build trigger: merge → deploy `api-staging` อัตโนมัติ (P6-lite)" ที่เสร็จใน PR #83 (28 ต.ค.) พร้อมหมายเหตุ
 - [x] 2. 🙋 Jam `gcloud auth login` (บัญชีที่เป็น Owner ของ `anyang-513006`) · ใน terminal: `gcloud auth login` → browser เปิด → เลือกบัญชี → Allow → กลับมา terminal เห็น "You are now logged in as …" · แล้ว `gcloud config set project anyang-513006`
 - [x] 3. 🤖 `poc/P6-lite/deploy_latency.py` + `README.md`: ทุก PR ที่ merge เข้า `main` หลังตั้ง trigger และแก้ path ที่ trigger ดู (`apps/api/**`, `config/**`, `prompts/**`, `infra/**`) → หา build ของ commit นั้น (`gcloud builds list`) → เวลาจาก merge ถึง build (deploy) เสร็จ · เช็คว่า image ที่ `api-staging` รันอยู่ = commit ล่าสุดที่ควร deploy · ผลลง `poc/P6-lite/results/deploy-latency.json` · รันซ้ำได้คำสั่งเดียว
-- [ ] 4. 🤖 เก็บหลักฐานข้อ isolation และ secret: run ของ CI job `api-integration` บน `main` (`test_SA06_*`) · GitHub secret scanning alerts (ตอนนี้ 0) · grep pattern ของ key ที่รู้จักทั้ง `git log -p` · Secret Manager ยังไม่มี secret เพราะ staging ใช้ fake (ไม่มีอะไรต้องเก็บ)
+- [x] 4. 🤖 เก็บหลักฐานข้อ isolation และ secret: run ของ CI job `api-integration` บน `main` (`test_SA06_*`) · GitHub secret scanning alerts (ตอนนี้ 0) · grep pattern ของ key ที่รู้จักทั้ง `git log -p` · Secret Manager ยังไม่มี secret เพราะ staging ใช้ fake (ไม่มีอะไรต้องเก็บ)
 - [ ] 5. 🤖 `/poc-report P6-lite` → `specs/poc/reports/P6-lite.md` + บรรทัด "ผล" ใน `specs/poc/README.md` §P6-lite
 - [ ] 6. 🙋 Jam review report · การตัดสิน PASS/FAIL ใช้เกณฑ์ใน spec · ข้อเสนอต่อ deploy (Cloud Build ต่อ หรือ fallback script) จดให้ Junior ยืนยัน
 - [ ] 7. 🤖 `/work-done`
@@ -29,13 +29,15 @@
 
 ## Next step
 
-ขั้น 4: เก็บหลักฐาน isolation (CI `api-integration` บน `main`) และ secret (GitHub secret scanning + grep pattern key ใน `git log -p --all`)
+ขั้น 5: `/poc-report P6-lite` จาก `poc/P6-lite/results/deploy-latency.json` + `results/evidence.txt` → `specs/poc/reports/P6-lite.md` + บรรทัด "ผล" ใน `specs/poc/README.md` §P6-lite
 
 ## Waiting on
 
 - Junior: ยืนยันการตัดสินใน report ข้อ 4 (เรื่อง deploy เป็นของ Junior ตาม `roles.md`)
 
 ## Notes for next time
+
+- 1 พ.ย. ผลขั้น 4: `api-integration` บน `main` 84/89 success · 5 failure เป็น CI ทั้งหมด ไม่ใช่ test: 1346e9b `toomanyrequests` (Docker Hub) · 543e2f5, ce93a93 `Data limit exceeded` (registry) · f195d25 `Failed to resolve latest Supabase CLI release: rate limit exceeded` · 861bfca port 54322 ถูกใช้อยู่ · secret: scanning + push protection enabled, alert 0, pattern 10 ตัว = 0 ใน 705 commit, ไฟล์ `.env`/key = 0, Secret Manager 0
 
 - 1 พ.ย. ผลขั้น 3 (วัด 2026-11-01): merge 14 ครั้งตั้งแต่สร้าง trigger · ควร deploy 8 · deploy เองครบ 8 · 3.40–4.58 นาที (median 4.02) · staging รัน #95 (ล่าสุด) · ไม่มี build ที่ไม่ควรเกิด
 
