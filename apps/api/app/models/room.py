@@ -15,24 +15,21 @@ from datetime import datetime
 from typing import Any, Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import Field, model_validator
 
-
-class _Api(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
+from app.models.base import ApiModel
 
 # --- REST ----------------------------------------------------------------------
 
 
-class Limits(_Api):
+class Limits(ApiModel):
     """Input limits from config/ai.yaml → guards. 1 MB = 1,048,576 bytes."""
 
     max_message_chars: int
     max_image_mb: int
 
 
-class Message(_Api):
+class Message(ApiModel):
     id: str
     role: Literal["user", "tutor", "buddy", "card", "system"]
     content: str | None
@@ -43,7 +40,7 @@ class Message(_Api):
     created_at: datetime
 
 
-class Room(_Api):
+class Room(ApiModel):
     """Response of GET /sessions/{id}."""
 
     session_id: UUID
@@ -56,13 +53,13 @@ class Room(_Api):
     messages: list[Message]
 
 
-class ActiveSession(_Api):
+class ActiveSession(ApiModel):
     """Response of GET /exam-preps/{id}/sessions/active."""
 
     session_id: UUID
 
 
-class SendMessageRequest(_Api):
+class SendMessageRequest(ApiModel):
     """Body of POST /sessions/{id}/messages: exactly one of `text` or `image_path`.
 
     api.md "รอตัดสิน" item 1 (Jam) may allow both; change this with the spec.
@@ -75,22 +72,25 @@ class SendMessageRequest(_Api):
     def _exactly_one(self) -> Self:
         if (self.text is None) == (self.image_path is None):
             raise ValueError("send exactly one of text or image_path")
+        if self.text is not None and not self.text.strip():
+            # Blank text is no message: never a billed tutor_reply call (tutor-reply-stream AC-21).
+            raise ValueError("text is empty")
         return self
 
 
 # --- SSE event payloads ----------------------------------------------------------
 
 
-class SessionEvent(_Api):
+class SessionEvent(ApiModel):
     session_id: UUID
 
 
-class TokenEvent(_Api):
+class TokenEvent(ApiModel):
     speaker: Literal["tutor", "buddy"]
     text: str
 
 
-class ProgressTopic(_Api):
+class ProgressTopic(ApiModel):
     """One row of progress_card.topics (api.md v1.4).
 
     `stars` is never null: topics whose importance is not computed yet are left out.
@@ -105,7 +105,7 @@ class ProgressTopic(_Api):
     origin: Literal["doc", "user"]
 
 
-class ProgressCardEvent(_Api):
+class ProgressCardEvent(ApiModel):
     days_left: int
     passed: int
     total: int
@@ -113,7 +113,7 @@ class ProgressCardEvent(_Api):
     topics: list[ProgressTopic]
 
 
-class ProblemEvent(_Api):
+class ProblemEvent(ApiModel):
     """No reference answer: extra fields are rejected."""
 
     problem_id: str
@@ -122,20 +122,20 @@ class ProblemEvent(_Api):
     purpose: Literal["probe", "verify", "practice", "review"]
 
 
-class BuddyEvent(_Api):
+class BuddyEvent(ApiModel):
     text: str
 
 
-class DoneEvent(_Api):
+class DoneEvent(ApiModel):
     pass
 
 
-class ErrorEvent(_Api):
+class ErrorEvent(ApiModel):
     code: str
     message: str
 
 
-EVENT_MODELS: dict[str, type[_Api]] = {
+EVENT_MODELS: dict[str, type[ApiModel]] = {
     "session": SessionEvent,
     "token": TokenEvent,
     "progress_card": ProgressCardEvent,

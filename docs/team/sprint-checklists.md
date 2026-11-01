@@ -21,43 +21,62 @@
 ### S1 · 5–16 ต.ค.
 
 - [x] ⭐ สร้าง repo, วาง starter files · branch protection เปิดแล้ว 20 ต.ค. (ruleset `main` id 25374094 · ต้อง approve 1 คน + CI `api`, `api-integration`, `web` ผ่าน · ห้าม force push และลบ branch · ไม่มี bypass) · repo เป็น public
+  - 31 ต.ค. ทีมตกลงเลิกบังคับ approve (อยู่คนละ time zone · การรอ review ทำให้งานติด) · ruleset เปลี่ยนเป็น approve 0 คน ยังต้องเปิด PR + CI 3 ตัวผ่าน · แทนด้วย self-review `/code-review` ใน `/work-done` + บอกกลุ่มก่อน merge งานเสี่ยง (`CLAUDE.md` "How we work" 5)
 - [x] ⭐ ให้ Claude Code scaffold `apps/api` และตรวจผล
 - [x] ⭐ `npx supabase init` + `db push` `0001_init.sql` ขึ้น Supabase cloud `anyang-dev` + เปิด custom access token hook
 - [x] GitHub Actions รันครบ 3 job และเขียวบน `main`
-- [ ] สร้าง GCP project, เปิด API, Artifact Registry, Secret Manager (`infra/README.md`)
+- [x] สร้าง GCP project, เปิด API, Artifact Registry, Secret Manager (`infra/README.md`)
+  - 28 ต.ค. (PR #20): Jam สร้าง Free Trial `anyang-513006` (ถือ billing, budget alert $50) · Junior เป็น Owner · เปิด API 5 ตัว + Artifact Registry `anyang` · Secret Manager เปิดแล้วแต่ยังไม่สร้าง secret เพราะ `api-staging` ยังไม่ใช้ · ⚠️ ห้ามกด Activate/Upgrade · Gemini ใช้ผ่าน Vertex เท่านั้น
 - [x] สร้าง Supabase project `anyang-staging` · ref `sfapuygntxuelsxsgkay` Singapore (21 ต.ค., PR #28)
   - 21 ต.ค. Jam ตั้ง Vercel env ทั้ง **Production** และ **Preview** (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) ให้ชี้ `anyang-staging` (`sfapuygntxuelsxsgkay`) แบบ Config แล้ว redeploy production · มีผลเมื่อมีหน้าที่ import `lib/supabase.ts` (ตอนนี้ยังไม่มี production จึงไม่เคยพังจริง)
 - [ ] ให้สิทธิ์ทีม: GitHub collaborator + Supabase org (เจ้าของ repo ทำ, `setup.md` A0), GCP (Jam: Vertex AI User)
+  - 28 ต.ค. ส่วน GCP ไม่ต้องทำ: Jam สร้าง project เองจึงเป็น Owner อยู่แล้ว
 - [x] แก้ `.github/CODEOWNERS` เป็น username จริง · + เพิ่ม `/.github/` ให้ Junior ตาม `roles.md` (19 ต.ค.)
 - [x] ตั้งเครื่องตัวเองตาม `setup.md` Part A · ผ่านเช็คลิสต์ A6 ครบ 5 ข้อ (19 ต.ค.)
 - [ ] ตรวจ `specs/system/architecture.md` ให้ตรงกับที่ตั้งจริง (D2)
-- [ ] ร่วม review `specs/requirements/requirements.md` (D1)
-- [ ] รูปลายมือ 10 รูป (D8)
+- ~~ร่วม review `specs/requirements/requirements.md` (D1)~~ → ไม่ต้องทำแล้ว (Jam ตัดสิน 1 พ.ย.) · review D1 จบไปแล้วใน `requirements.md` v1.2–v1.3 (May ติ๊กข้อของตัวเองแล้ว) · ถ้า Junior มีข้อแก้ ให้เปิด PR แก้ requirement ตรงๆ
+- ~~รูปลายมือ 10 รูป (D8)~~ → ไม่ต้องทำแล้ว (Jam ตัดสิน 1 พ.ย.) · แผนเปลี่ยนเป็นคนละ 6 ใบ (PR #11) และได้ครบ 30 รูปจาก 5 คนแล้ว (ข้อ D8 ของ Jam ใน S1)
 
 **Done เมื่อ:** ทุกคน clone แล้วรันได้ตาม `setup.md` A6 และ CI เขียวบน `main`
 
 ### S2 · 19–30 ต.ค.
 
-- [ ] Cloud Build trigger: merge → deploy `api-staging` อัตโนมัติ (P6-lite)
-  - ⚠️ ต้องตั้ง `CORS_ALLOW_ORIGINS` และ `CORS_ALLOW_ORIGIN_REGEX` ใน env ของ `api-staging` (`--set-env-vars` ใน `infra/cloudbuild.yaml`) ไม่งั้น Vercel preview เรียก staging ไม่ได้ (ค่าดู `.env.example` · PR #49) · ใน `cloudbuild.yaml` ต้องเขียน `$` ของ regex เป็น `$$` เพราะ Cloud Build ใช้ `$` แทนค่าตัวแปร · `--set-env-vars` แยกตัวแปรด้วย `,` แต่ `CORS_ALLOW_ORIGINS` ก็คั่นด้วย `,` เหมือนกัน ถ้ามีมากกว่า 1 origin ให้ใช้ตัวคั่นแบบกำหนดเองของ gcloud เช่น `--set-env-vars="^@^CORS_ALLOW_ORIGINS=a,b@CORS_ALLOW_ORIGIN_REGEX=..."` หรือตั้งผ่าน `--env-vars-file`
+- [x] Cloud Build trigger: merge → deploy `api-staging` อัตโนมัติ (P6-lite)
+  - ทำแล้ว 28 ต.ค. (PR #83): trigger `api-staging-deploy` (`infra/trigger-api-staging.yaml`) + `cloudbuild.yaml` ใช้ `AI_PROVIDER=fake` และ `env/api-staging.yaml` ไม่มี secret · SA `cloudbuild-deployer` (`infra/README.md` "Deploy อัตโนมัติ") · ติ๊กโดย Jam (1 พ.ย.) ช่วง solo · ผลวัดเวลาอยู่ใน report P6-lite
+  - 28 ต.ค. ทางสำรองพร้อมแล้ว (PR #20): `infra/deploy-staging.ps1` deploy มือ · `api-staging` ขึ้นแล้วที่ https://api-staging-659706857266.asia-southeast1.run.app (`AI_PROVIDER=fake`, CORS ครบ) · env อยู่ใน `infra/env/api-staging.yaml` ใช้ไฟล์เดียวกันตอนทำ trigger · เหลือ trigger + แก้ `cloudbuild.yaml` (ยังตั้ง `AI_PROVIDER=live` และใช้ secret `anthropic-api-key`)
+  - ⏰ Demo S2: เย็นพฤหัส 29 ต.ค. `gcloud run services update api-staging --region=asia-southeast1 --min-instances=1` กัน cold start · หลัง demo ศ. 30 ต.ค. ตั้งกลับเป็น `--min-instances=0` ทันที (instance ที่เปิดค้างกิน trial credit) · คำสั่งอยู่ใน `infra/README.md` "Demo-day"
+  - env ของ api-staging อยู่ใน infra/env/api-staging.yaml (--env-vars-file) · บน Windows ห้ามส่งค่าที่มี ^ ผ่าน flag ของ gcloud (cmd.exe กิน ^) ให้ใช้ไฟล์แทน
 - [x] `test_SA06_tenant_isolation` รันใน CI (P6-lite) · เสร็จก่อนกำหนดใน S1
 - [x] ตรวจว่าไม่มี secret ใน git history · เสร็จก่อนกำหนดใน S1 (15 ต.ค.)
 - [ ] ปรับ `schema.sql` ตามที่เจอระหว่าง P3 + วาด ERD (D3)
   - 20 ต.ค. วาด ERD ใหม่แล้ว 3 รูป ครบ 27 ตาราง (+ `auth.users` วาดไว้ให้ดูความสัมพันธ์) และ FK ทั้ง 45 ตัว (PR #30) · เหลือแก้ schema ตามผล P3 (จดไว้ 5 ข้อใน `data-model.md`)
   - 21 ต.ค. migration `0002` เพิ่ม `messages.attachment_name` (api.md v1.3) + ERD รูป 3 (PR #43) · ตรวจ 5 ข้อของ P3 แล้ว ยังยืนยันไม่ได้สักข้อเพราะ A6/A7 ยังไม่เคยรันผ่าน (สถานะอยู่ใน `data-model.md`) · เหลือแก้ schema หลังมี report P3a
-- [ ] ช่วย Jam ทำ ingest pipeline ของ P3: อ่าน PDF (PyMuPDF), ตัด chunk, เก็บลง DB
-- [ ] เขียน report P6-lite ด้วย `/poc-report P6-lite`
+- ~~ช่วย Jam ทำ ingest pipeline ของ P3: อ่าน PDF (PyMuPDF), ตัด chunk, เก็บลง DB~~ → ไม่ต้องทำแล้ว (Jam ตัดสิน 1 พ.ย.) · P3 ปิดแล้ว (report `P3.md` · #37, #94) · Jam เขียน ingest ของ PoC เองใน `poc/P3/ingest.py` · ingest จริงของแอป (เก็บลง DB) เป็นงานใหม่ ยังไม่มีใน checklist
+- [x] เขียน report P6-lite ด้วย `/poc-report P6-lite`
+  - ทำโดย Jam (1 พ.ย.) ช่วง solo
+  - 1 พ.ย. (PR #96 · `specs/poc/reports/P6-lite.md`): **ผ่านครบ 3 เกณฑ์** · merge แล้ว staging อัปเดตเอง 8/8 ภายใน 3.40–4.58 นาที (เป้า 10) · `api-integration` (isolation) รันทุก push เข้า `main` 84/89 ผ่าน อีก 5 ล้มเพราะ CI ดึง image/CLI ไม่ได้ ไม่ใช่ test · secret 0 (scanning + push protection + grep 709 commit) · วัดซ้ำได้ด้วย `poc/P6-lite/` · Junior ให้ Claude แนะนำ, Jam ยืนยัน: ใช้ Cloud Build ต่อ + pin `supabase/setup-cli` เป็น `2.122.0` ใน `ci.yml`
 
 **Done เมื่อ:** merge PR แล้ว staging อัปเดตเองภายใน 10 นาที และ isolation test ผ่าน
 
 ### S3 · 2–13 พ.ย.
 
 - ~~SymPy service `app/math/`~~ → ย้ายให้ Jam 21 ต.ค. (ทีมตกลง · ใกล้กับ P2) · ดูข้อใน S3 ของ Jam
-- [ ] AI gateway แบบ lite `app/ai/`: `ai.call()`, provider Gemini + fake, อ่าน `config/ai.yaml`, log `ai_calls`
-- [ ] Endpoint SSE `POST /sessions/{id}/messages` ที่ stream จาก gateway (P4-lite)
+- [x] AI gateway แบบ lite `app/ai/`: `ai.call()`, provider Gemini + fake, อ่าน `config/ai.yaml`, log `ai_calls`
+  - 31 ต.ค. Jam เพิ่ม provider `vertex` (PR #87 · Junior ok) · ยังเหลือ log `ai_calls` ลงตาราง
+  - ทำโดย Jam (31 ต.ค.) ช่วง solo
+  - 31 ต.ค. (PR #95 · `specs/features/ai/ai-calls-log.md`): `AICallLog` ใน `build_default_gateway()` เขียน log JSON ทุก call (logger `app.ai.calls` → Cloud Logging) · call ที่มี tenant (`ai_call_context`) insert ลง `ai_calls` เบื้องหลังด้วย service role ไม่ให้ call รอ DB · ยังไม่มี request ไหนตั้ง tenant จนกว่าจะตรวจ JWT (ข้อ ⚠️ ด้านล่าง) จึงยังมีแค่ log · `cost_usd`, `cached_tokens` เป็น null · รอ Junior: (1) `app/db/` ใช้ supabase-py ไปก่อน เปลี่ยนเป็น psycopg ได้ (2) insert ที่ค้างตอน instance ปิดหายได้ (`AICallLog.flush()` พร้อมให้ lifespan ใช้)
+  - ⚠️ 28 ต.ค. ห้ามเปิด AI_PROVIDER=live บน api-staging จนกว่าจะเช็ค Supabase JWT ทุก endpoint · URL เป็น public (--allow-unauthenticated) คนนอกเรียกแล้วกิน credit ได้
+- [x] Endpoint SSE `POST /sessions/{id}/messages` ที่ stream จาก gateway (P4-lite)
+  - ทำโดย Jam (31 ต.ค.) ช่วง solo
+  - 31 ต.ค. (PR #93 · `specs/features/tutor/tutor-reply-stream.md`): ข้อความ text → `ai.stream("tutor_reply")` (ของใหม่ใน gateway · retry เฉพาะก่อนชิ้นแรก) → `token` → `done` · ล้มก่อนชิ้นแรกส่ง "ระบบช้า ลองส่งอีกทีนะ" · ล้มกลางทางส่ง `error` · รูปยังเป็น stub · prompt `tutor_reply/v1` · `ai.yaml` 1.5 `thinking: low`, `max_tokens` 2000 · smoke บน Vertex ในเครื่อง TTFT 3.7 วินาที (เป้า 2 วินาที · ให้ report P4-lite ตัดสิน)
+  - รอ Junior: (1) P4-lite ยังไม่ตรวจ JWT และไม่บันทึก `messages` ใช่ไหม (spec §10 ข้อ 1) (2) `error.code` `message_too_long`, `ai_unavailable` (ข้อ 3 · ยังไม่แก้ `api.md`) · staging ยังเป็น fake (ตอบด้วยข้อความ tutor ของ stub ไม่มี buddy)
 - [ ] เขียน router หัวฟังก์ชันของทุก API ใน `specs/system/api.md` ให้หน้า `/docs` ครบ (D5)
   - 20 ต.ค. api.md v1.2 ห้องติว (PR #35) + stub 4 endpoint ของห้องติวที่คืน fixture ของ May พร้อม `X-Stub: true` (PR #38) · `/docs` แสดง schema ของ `Room`, `Message`, event SSE และ `ErrorResponse` · เหลือ endpoint กลุ่มอื่นใน api.md
+  - ทำโดย Jam (1 พ.ย.) ช่วง solo · ทำได้บางส่วน
+  - 1 พ.ย. (PR #100): api.md v1.6 หน้าตรวจขอบเขต (เป็นข้อเสนอ รอ Junior ตัดสิน 5 ข้อใน "รอตัดสิน (v1.6 · Junior)") + stub 3 endpoint ที่คืน fixture ของ May พร้อม `X-Stub: true`: `GET /exam-preps/{id}/scope`, `GET /topics/{id}/sources`, `POST /exam-preps/{id}/scope/confirm` · May รัน `pnpm gen:api` แล้วใช้ type `Scope`, `TopicSources` แทน type ที่เขียนเองได้ · เหลือ upload/materials, ingestion, `scope/chat`, `scope/changes`, persona, บัญชี และอีก 6 endpoint ของห้องติว
 - [ ] วัด TTFT และต้นทุนบน staging ร่วมกับ May (P4-lite)
+  - ทำโดย Jam (1 พ.ย.) ช่วง solo · ทำได้บางส่วน
+  - 1 พ.ย. (PR #99 · `specs/poc/reports/P4-lite.md`): วัดกับ Gemini จริงบน Vertex จากเครื่อง Jam (staging ยังเปิด live ไม่ได้) · `thinking: low` p95 3.87 s → `minimal` p95 1.20 s · 0.039 บาท/ข้อความ (`poc/P4-lite/cost.py` จาก log `ai_calls`) · `ai.yaml` 1.8 · เหลือ: วัดซ้ำบน staging `ttft.py --label staging-gemini` เมื่อหน้าเว็บส่ง token + `AUTH_REQUIRED=true` + env Supabase ของ api-staging
 
 **Done เมื่อ:** หน้า `/docs` แสดงครบทุก API และหน้าแชทของ May คุยกับ Gemini ผ่าน staging ได้
 
@@ -107,7 +126,10 @@
 - [x] Generate type จาก `/openapi.json` (`pnpm gen:api`)
   - 21 ต.ค. (PR #41) · generate จาก stub ห้องติว api.md v1.2 · รัน `pnpm gen:api` ใหม่เมื่อ Junior เพิ่ม endpoint หรือทำตาม v1.3
 - [x] Use case UC สมัคร และ UC upload → scope (D7)
-- [ ] เขียน report P4-lite ร่วมกับ Junior
+- [x] เขียน report P4-lite ร่วมกับ Junior
+  - ทำโดย Jam (1 พ.ย.) ช่วง solo · May + Junior ดูย้อนหลังได้ (report ของทั้งคู่)
+  - 1 พ.ย. (PR #99): `specs/poc/reports/P4-lite.md` **ผ่านบางส่วน**: ต้นทุนและการสลับ provider ผ่าน · TTFT ในเครื่องผ่าน รอวัดบน staging · ใช้ผล AI จำลองของ May (#85) + Gemini จริงของ Jam · ยังต้องวัดซ้ำบน staging (ดูข้อ "วัด TTFT และต้นทุน" ของ Junior)
+  - 31 ต.ค. วัด TTFT พื้นฐานบน `api-staging` ด้วย AI จำลองแล้ว (PR #85 · `poc/P4-lite/`): p95 0.15 s (ทั้ง stub และผ่าน gateway หลัง #93) · cold start 6.06 s · ในเบราว์เซอร์ข้อความแรกมี CORS preflight +0.17 s · เหลือ: วัดกับ Gemini จริงเมื่อ staging เปิด live, ต้นทุนต่อข้อความ, สลับ provider ด้วย config, `/poc-report P4-lite`
 
 **Done เมื่อ:** คุยกับ AI บน staging แล้วเห็นตัวอักษรไหลออกมาและสมการ render ถูก
 
@@ -160,24 +182,41 @@
 - [x] Label golden set คำตอบ 50 ข้อ (D8)
   - ทีมตกลง 21 ต.ค. (PR #51): คน label คือ May หรือ Junior ไม่ใช่ Jam เพราะ Jam ทำ P2 (`evals/README.md` "กฎ") · Jam เตรียมใบงาน `evals/answers/worksheet.md` แล้ว (รูป 30 ข้อ + ช่องคำตอบพิมพ์ 20 ข้อ) · เหลือ: เขียนคำตอบพิมพ์ 20 ข้อตามโควตาใน `evals/README.md` "ใบงาน" และ label ครบ 50 ข้อ
   - 21 ต.ค. เสร็จ 50/50 (PR #52) · ทีม (May + Jam) ตกลงให้ AI ร่าง label และคำตอบพิมพ์ ans_031–050 (writer `w06`) · หมายเหตุอยู่หัว `worksheet.md` · ตอนอ่านผล P2 ต้องคำนึงว่า label อาจเอนไปทางเดียวกับ checker ที่เป็น LLM · แก้ `handwriting/labels.jsonl` hw_018 ตามรูป (Jam อนุญาต)
-- [ ] SymPy service `app/math/`: parse LaTeX, เทียบทีละบรรทัด, expression / factored / equation, subprocess + timeout จาก config · ย้ายให้ Jam 21 ต.ค. (ทีมตกลง · ใกล้กับ P2) · รูปแบบผลตกลงไว้ใน `specs/features/check/merge-rules.md` §3 · Junior review เพราะอยู่ใน `apps/api/`
-- [ ] P2: merge rules + LLM classifier (`prompts/check_answer/v1`) ใช้ SymPy service
+- [x] SymPy service `app/math/`: parse LaTeX, เทียบทีละบรรทัด, expression / factored / equation, subprocess + timeout จาก config · ย้ายให้ Jam 21 ต.ค. (ทีมตกลง · ใกล้กับ P2) · รูปแบบผลตกลงไว้ใน `specs/features/check/merge-rules.md` §3 · Junior review เพราะอยู่ใน `apps/api/`
+  - 28 ต.ค. (PR #75 · ทำก่อนกำหนด): spec `specs/features/check/sympy-service.md` + `app/math/sympy_service.py` · worker ที่เปิดค้างไว้ (`checker.sympy_workers`) + timeout จาก config · golden set 50 ข้อ: SymPy ตัดสินได้ 45 ข้อ ตรงกับ label 45/45 · อีก 5 ข้อ (implicit dy/dx 3, จบไม่ครบ 1, solveset แก้ไม่ได้ 1) ส่งให้ LLM
+- [x] P2: merge rules + LLM classifier (`prompts/check_answer/v1`) ใช้ SymPy service
   - 21 ต.ค. merge rules เสร็จ (PR #68): spec `specs/features/check/merge-rules.md` + `app/domain/checker.py` · รูปแบบผลของ SymPy service ตกลงกับ Junior แล้ว · เหลือ prompt `check_answer/v1` และต่อกับ SymPy service
+  - 28 ต.ค. SymPy service เสร็จ (PR #75) · เหลือ prompt `check_answer/v1` (ต้องทำเรื่อง `first_wrong_line` ของข้อ wrong_method ที่ SymPy มองว่าทุกบรรทัดถูก เช่น ans_037, ans_038) และ checker service ที่ต่อ SymPy + LLM + merge
+  - 31 ต.ค. eval ของ PR #80 บน free tier ได้ 23/50 แล้วติด quota รายวัน · จะรันใหม่ครบ 50 ข้อบน Vertex หลัง PR #87
+  - 31 ต.ค. เสร็จ (PR #80): spec `specs/features/check/check-answer-classifier.md` + prompt `check_answer/v1` + `app/services/checker.py` + `evals/run_checker.py` · รันบน Vertex 50 ข้อ: **verdict 100%, error_type 96.4% (27/28), first_wrong_line 100% (24/24) ผ่านเป้าทั้ง 3** · SymPy ตัดสิน verdict 45 ข้อ LLM 5 · พลาดข้อเดียว ans_039 (`wrong_method` → `prerequisite`) · `ai.yaml` 1.3 `thinking: low` · ผลอยู่ที่ `evals/answers/results/v1.json` · เหลือ Report P2 (PR #82)
 - [x] Script `evals/run_eval.py` ออกคะแนน verdict, error type, บรรทัดผิด · เสร็จก่อนกำหนด (21 ต.ค. · PR #47) · ให้คะแนนจากไฟล์ prediction (`--predictions`) · นิยาม metric ใน `evals/README.md` "การให้คะแนน" · ต่อกับ checker จริงตอนทำ P2 · การรันใน CI เมื่อ prompt เปลี่ยน (§2.11) รอ Junior
-- [ ] Report P2
+- [x] Provider `vertex` ใน gateway ใช้เครดิต Free Trial ของ `anyang-513006` (เพิ่ม 31 ต.ค. · `infra/README.md` "งาน AI gateway ใน S3") · PR #87 · spec `specs/features/ai/gemini-vertex.md` · ADC ไม่มี key file · smoke บน Vertex ผ่าน (`gemini-3.5-flash`, `global`, 4.8 วินาที) · เหตุผล: free tier ของ AI Studio ได้ 20 request/วัน/model รัน P2 ได้แค่ 23/50 · Junior ok ให้แก้ `apps/api/app/ai/`
+- [x] Report P2
+  - 31 ต.ค. (PR #82): `specs/poc/reports/P2.md` · **ผ่าน** (Jam ตัดสิน): 6 error types, prompt v1, Vertex · ไม่ต้อง fallback 4 แบบ · บรรทัดผลใน `specs/poc/README.md` · งานต่อก่อนเข้าห้องแชท: hint sign flip ใน job เดียวกับ SymPy, กติกา §2.5 ของ `CheckAnswerResult`
+- [x] ⭐ API ตรวจ Supabase JWT ทุก endpoint: อ่าน `Authorization: Bearer <jwt>` (api.md "Auth") → ได้ `tenant_id`, `user_id` → ตั้ง `ai_call_context` และส่ง JWT ต่อให้ Supabase ให้ RLS ทำงาน · ไม่มีหรือผิด → 401
+  - เพิ่ม 1 พ.ย. (Jam รับเอง · งาน backend จึงชวน Junior ดูย้อนหลัง) · ⭐ เพราะขวาง 3 อย่าง: แถวใน `ai_calls` (`ai-calls-log.md`), การบันทึก `messages` (`tutor-reply-stream.md` §9) และการเปิด `AI_PROVIDER=live` บน api-staging (⚠️ ใน `infra/README.md` · ต้องเปลี่ยน runtime SA ด้วย)
+  - 1 พ.ย. เสร็จ (PR #98 · `specs/features/platform/api-auth.md`): `app/auth.py` ตรวจด้วย `get_claims` ของ Supabase Auth (ES256 กับ JWKS ที่ cache ไว้ · HS256 ของ Supabase ในเครื่องถาม Auth server) · `tenant_id` จาก claim ของ hook + `user_id` จาก `sub` · 401 `missing_token` / `invalid_token` · router ห้องติวทั้งหมดผ่าน `get_auth` (test ไล่ทุก endpoint) · แชทที่มี token ได้แถวใน `ai_calls` · `get_user_db` ส่ง JWT ของ user ให้ RLS · env ใหม่ `AUTH_REQUIRED` (staging และ `.env.example` = `false`) · `api.md` v1.5
+  - เหลือก่อนบังคับบน staging: หน้าเว็บ login + ส่ง token (May) · `api-staging` ใส่ `SUPABASE_URL` / `SUPABASE_ANON_KEY` แล้วตั้ง `AUTH_REQUIRED: "true"` (Junior · `anyang-staging` ต่อไม่ได้ 1 พ.ย.)
 
 **Done เมื่อ:** มีตัวเลข 3 ตัวของ P2 เทียบกับเป้า
 
 ### S4 · 16–27 พ.ย.
 
 - [ ] P8-lite ร่วมกับทีม (เป็นเจ้าของ spec `compute_importance`)
-- [ ] อัปเดต threshold ใน AI flow specs และ `learning-model.md` ตามผล P1 P2 P3 (D2)
+  - 31 ต.ค. ส่วน spec เสร็จก่อนกำหนด (PR #89): `specs/features/scope/compute-importance.md` approved หลังเทียบกับผล P3 · AC 13 → 27 · test plan 19 ชื่อ · ใบเก็บ metrics `poc/P8-lite/metrics.md` · เหลือทำด้วยกันใน S4: `/spec-to-tests` → review test → `/implement-feature` → merge
+- [x] อัปเดต threshold ใน AI flow specs และ `learning-model.md` ตามผล P1 P2 P3 (D2)
   - 28 ต.ค. (PR #73 · ไม่ได้มาจากผล PoC แต่มาจากการทบทวน design): `learning-model.md` v1.2 เพิ่มระดับเป้าตามดาวและเพดาน mastery (`mastery_eff`) · `learning.yaml` 1.2 · `ai-orchestration.md` v1.2 · TM-16, PM-03 ใน `requirements.md` v1.3 · เหลือปรับค่าตามผล P1 P2 P3
+  - 31 ต.ค. เสร็จ (PR #91): งานนี้ไม่เปลี่ยนค่าไหน (ค่าเดียวที่ PoC เปลี่ยนคือ `ocr.always_confirm` จาก P1 ทำไปแล้วใน PR #45) · แก้ป้ายที่มาใน `learning.yaml` 1.4, `ai.yaml` 1.4, `learning-model.md` v1.3 §8–9 · `ai-orchestration.md` v1.4 ใส่ model ที่วัดแล้วของ tier mid, main (ชั่วคราว), vision, embed ใน §2.10 (small ยัง TODO เพราะยังไม่ได้วัด) และผล PoC (§3.6) · PDF สแกนใช้ A2b ทั้งไฟล์ (§2.3.7) · ที่วัดไม่ได้ระบุว่าจะวัดเมื่อไหร่: P3a บน Vertex ใน S4 (ข้อถัดไป) · สัญญาณแยกบรรทัดที่ OCR อ่านผิด เทอม 2 · `numeric_rel_tolerance` และ `max_generate_retries` วัดตอนมี feature
+- [x] วัด P3a ใหม่บน Vertex: prompt A5/A6 ที่ปรับแล้ว (fallback ของ P3) · ตัดสิน model ของ tier `main` · เช็ค token out ของ `merge_topics` (คำตอบบน free tier ไม่ผ่าน schema ทั้งคู่) · วัด A2b `vision_extract_pages` บน flash-lite (P3 รันบน flash) · เติมผลใน `P3.md`, `ai-orchestration.md` §2.10 และ §3.6, `docs/report/ai-evaluation.md` §3
+  - เพิ่ม 31 ต.ค. (PR #91): ทำก่อน demo รวม เพราะ demo ต้องแสดง upload → scope
+  - 31 ต.ค. เสร็จ (PR #94 · `specs/poc/reports/P3.md` §7): **ผ่านบางส่วน** (Jam ตัดสิน) · `extract_topics_local/v2` + `merge_topics/v2` บน Vertex: ★★★ ทั้ง pipeline 10/12 = 83% ผ่าน · ≤ 3 นาที/ไฟล์ ผ่าน (A6 รวมทั้งวิชา 87 วินาที · A5 ต่อชีทไม่เกิน 15 วินาที) · หัวข้อตรง 20/27 = 74% (เป้า 80%) · A6 v1 รวมหัวข้อเกิน (51 → 17) และชนเพดาน 16,000 token → `merge_topics` `max_tokens` 32,000 · tier main และ small = `gemini-3.5-flash` · A2b บน flash-lite 14 หน้า 12–27 วินาที · flash-lite ไม่เหมาะกับ A4 (JSON ที่มี LaTeX พัง) · `ai.yaml` 1.7 · วัดรอบละครั้ง วิชาเดียว
 - [x] Test strategy 1 หน้าใน `specs/system/` · ทำก่อนกำหนด 21 ต.ค. (PR #55) · `specs/system/test-strategy.md` · §5 มีงานเสนอให้ Junior 2 ข้อ (`evals/` เข้า CI ใน S3, isolation test ทุกตารางใน S4) · Junior ตกลงแล้ว 21 ต.ค.
+  - 31 ต.ค. v1.1 (PR #86): อัปเดตจำนวน test ต่อชั้นตาม `main` (`tests/unit/` 346 · web 242 · `evals/` 69 · isolation 3/27 ตาราง เท่ากับ v1.0 · ตัวเลข 6/27 ของร่าง 28 ต.ค. นับแถว seed ผิด) · หลักการไม่เปลี่ยน
 
 ### Buffer · 30 พ.ย.–4 ธ.ค.
 
-- [ ] ส่วน AI, การวัดผล และงานวิจัยรองรับในรายงาน
+- [x] ส่วน AI, การวัดผล และงานวิจัยรองรับในรายงาน
+  - ทำก่อนกำหนด 28–31 ต.ค. (PR #84): `docs/report/ai-evaluation.md` 4 หัวข้อ (สถาปัตยกรรม AI · วิธีวัดผล · ผล PoC P1 P2 P3 · งานวิจัยรองรับ learning model) · เหลือย้ายเข้า template รายงานของภาควิชาตอน Buffer (path ใน repo อาจต้องเป็นภาคผนวกหรือลิงก์) · ถ้ามีผล P8-lite หรือ P3a วัดใหม่บน Vertex ต้องเติม §3
 - [ ] สรุปตัวเลขของ P8-lite สำหรับ Self-Assessment
 
 ---

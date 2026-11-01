@@ -1,0 +1,70 @@
+{
+  "model": "vertex (config/ai.yaml tiers, small = vertex:gemini-3.5-flash)",
+  "wall_seconds": 103.6,
+  "tokens_in": 71583,
+  "tokens_out": 39941,
+  "calls": [
+    {
+      "tag": "run:merge",
+      "file": "",
+      "purpose": "merge_topics",
+      "model": "gemini-3.5-flash",
+      "status": "ok",
+      "latency_ms": 86881,
+      "tokens_in": 4974,
+      "tokens_out": 19390,
+      "schema_retries": 0
+    },
+    {
+      "tag": "run:midterm-2559-1:a7",
+      "file": "midterm-2559-1",
+      "purpose": "map_questions",
+      "model": "gemini-3.5-flash",
+      "status": "ok",
+      "latency_ms": 7191,
+      "tokens_in": 6931,
+      "tokens_out": 2129,
+      "schema_retries": 0
+    },
+    {
+      "tag": "run:midterm-2561-1:a7",
+      "file": "midterm-2561-1",
+      "purpose": "map_questions",
+      "model": "gemini-3.5-flash",
+      "status": "ok",
+      "latency_ms": 9514,
+      "tokens_in": 6294,
+      "tokens_out": 1876,
+      "schema_retries": 0
+    },
+    {
+      "tag": "ingest:midterm-2559-1",
+      "file": "midterm-2559-1",
+      "purpose": "ingest",
+      "status": "ok",
+      "latency_ms": 36400,
+      "tokens_in": 36310,
+      "tokens_out": 10810,
+      "schema_retries": 0
+    },
+    {
+      "tag": "ingest:midterm-2561-1",
+      "file": "midterm-2561-1",
+      "purpose": "ingest",
+      "status": "ok",
+      "latency_ms": 14800,
+      "tokens_in": 17074,
+      "tokens_out": 5736,
+      "schema_retries": 0
+    }
+  ],
+  "notes": {
+    "a5": {
+      "sheet-01": "Page 1 is a cover page. Pages 26-28, 66-80, 83, 86, 90, 117-119, and 138-140 contain exercises and answers, which are excluded from the page ranges of the topics.",
+      "sheet-02": "",
+      "sheet-03": "This is an exercise sheet covering limits, continuity, derivatives, and their applications (Module 1 Part 1).",
+      "sheet-04": "This is an exercise sheet covering Calculus topics in Module 1 Part 2, including single-variable calculus applications (L'Hopital, differentials, optimization, related rates) and multivariable calculus (limits, continuity, 3D surfaces, partial derivatives, chain rule, implicit differentiation, Jacobian, total differentials, and local extrema)."
+    },
+    "a6": ""
+  }
+}

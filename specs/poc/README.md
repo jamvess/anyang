@@ -19,6 +19,7 @@ PoC คือการลองทำส่วนที่ยากที่ส�
 - **ผ่านเมื่อ:** merge แล้ว staging อัปเดตเองภายใน 10 นาที, isolation test ผ่านใน CI, ไม่มี secret ใน git history
 - **ถ้าไม่ผ่าน:** deploy ด้วย `gcloud run deploy` script แทน Cloud Build
 - **ย้ายไปเทอม 2:** Terraform, load test 50 SSE streams, API สร้าง organization tenant
+- **ผล (1 พ.ย. · `specs/poc/reports/P6-lite.md`):** **ผ่านครบ** · merge แล้ว staging อัปเดตเอง 8/8 ภายใน 3.40–4.58 นาที · `api-integration` (isolation) 84/89 run ผ่าน อีก 5 ล้มเพราะ CI ดึง image/CLI ไม่ได้ ไม่ใช่ test · secret 0 (scanning + grep 709 commit) · ใช้ Cloud Build ต่อ + pin Supabase CLI ใน CI (Junior ให้ Claude แนะนำ, Jam ยืนยัน) · วัดโดย Jam ช่วง solo
 
 ## P1 · อ่านลายมือคณิต · Jam · S2
 
@@ -40,6 +41,7 @@ PoC คือการลองทำส่วนที่ยากที่ส�
 - **ผ่านเมื่อ:** หัวข้อตรง ≥ 80%, ★★★ ตรง ≥ 80%, ≤ 3 นาที/ไฟล์
 - **ผลที่ต้องได้:** embedding model + มิติ vector, ขนาด chunk, ค่า `stars.*` ที่ยืนยันแล้ว
 - **ถ้าไม่ผ่าน:** ใช้ Google Document AI กับไฟล์สแกน และปรับ prompt A5/A6
+- **ผล (21 ต.ค. free tier + 31 ต.ค. Vertex · `specs/poc/reports/P3.md`):** P3b ผ่าน: `gemini-embedding-2` 768 มิติ recall@4 19/20 · P3a รอบแรกไม่ผ่าน (หัวข้อ 1/27) · ใช้ fallback ปรับ prompt แล้ววัดบน Vertex: **ผ่านบางส่วน** (Jam ตัดสิน) · `extract_topics_local/v2` + `merge_topics/v2`: ★★★ ทั้ง pipeline 10/12 = 83% ผ่าน · ≤ 3 นาที/ไฟล์ ผ่าน (A6 รวมทั้งวิชา 87 วินาที · A5 ต่อชีทไม่เกิน 15 วินาที) · หัวข้อตรง 20/27 = 74% ยังไม่ถึง 80% (ผู้ใช้แก้ได้ใน S12) · ไม่ใช้ Document AI · วัดรอบละครั้งเดียว วิชาเดียว
 
 ## P2 · ตรวจคำตอบ · Jam (รวม SymPy service · ย้ายจาก Junior 21 ต.ค.) · S3
 
@@ -48,6 +50,7 @@ PoC คือการลองทำส่วนที่ยากที่ส�
 - **ทำ:** SymPy service (`apps/api/app/math/`) + merge rules + LLM classifier (`prompts/check_answer/v1.md`) ตาม ai-orchestration §2.4
 - **ผ่านเมื่อ:** verdict ≥ 95% (47/50), error_type ≥ 80%, first_wrong_line ≥ 85%
 - **ถ้าไม่ผ่าน:** ลด error types เหลือ 4 (รวม calculation+sign, รวม concept+prerequisite)
+- **ผล (31 ต.ค. · `specs/poc/reports/P2.md`):** ผ่านทั้ง 3 เป้าบน Vertex (`gemini-3.5-flash`, prompt v1): verdict 50/50 = 100%, error_type 27/28 = 96.4%, first_wrong_line 24/24 = 100% · SymPy ตัดสิน verdict 45 ข้อ LLM 5 · ใช้ 6 error types ตามเดิม ไม่ต้องทำ prompt v2 · ข้อควรระวัง: label ร่างโดย AI (May ยืนยัน), ตัวอย่าง 50 ข้อจากวิชาเดียว
 
 ## P4-lite · Chat AI ที่ stream ได้ · May (web) + Junior (api) · S3
 
@@ -56,10 +59,12 @@ PoC คือการลองทำส่วนที่ยากที่ส�
 - **Metrics:** TTFT p50/p95 จาก 50 ข้อความบน staging, ต้นทุนต่อข้อความ, เปลี่ยน `AI_PROVIDER=fake` แล้ว test ผ่านโดยไม่แก้โค้ด
 - **ผ่านเมื่อ:** TTFT p95 < 2 วินาที, สลับ provider ได้ด้วย config, มีตัวเลขต้นทุน
 - **ย้ายไปเทอม 2:** stage machine, planner, buddy scene, fallback ไป Claude, circuit breaker
+- **ผล (1 พ.ย. · `specs/poc/reports/P4-lite.md`):** **ผ่านบางส่วน** (TTFT ยังไม่ได้วัดบน staging) · AI จำลองบน staging TTFT p95 0.15 s (May) · Gemini จริงบน Vertex จากเครื่อง Jam: `thinking: low` p95 3.87 s ไม่ผ่าน → `minimal` p95 1.20 s · 0.039 บาท/ข้อความ (1.73 บาท/session ถ้า 45 ข้อความ) · สลับ fake ↔ live ด้วย env · `ai.yaml` 1.8 `tutor_reply` `thinking: minimal` (Jam ตัดสิน) · ยังต้องวัดซ้ำบน staging เมื่อเปิด live
 
 ## P8-lite · SDD/TDD ด้วย Claude Code · ทั้งทีม · S4
 
 - **คำถาม:** pipeline spec → test → code ใช้ได้จริงไหม
 - **ทำ:** ใช้ `specs/features/scope/compute-importance.md` ผ่านครบ: `/spec-feature` (มีร่างให้แล้ว แค่ review) → `/spec-to-tests` → ทีม review test → `/implement-feature` → CI → PR review
-- **Metrics:** % โค้ดที่ agent เขียน (นับบรรทัดใน PR), จำนวนรอบ red → green, บั๊กที่ test จับได้ก่อน merge, เวลาที่คนใช้ review
+- **Metrics:** % โค้ดที่ agent เขียน (นับบรรทัดใน PR), จำนวนรอบ red → green, บั๊กที่ test จับได้ก่อน merge, เวลาที่คนใช้ review · กรอกใน `poc/P8-lite/metrics.md` ระหว่างทำ (นับบรรทัดด้วย `poc/P8-lite/agent_lines.sh`)
+- **เตรียมแล้ว (31 ต.ค. · PR #89):** spec approved · 27 AC · test plan 19 ชื่อ
 - **ผ่านเมื่อ:** merge ได้โดย CI เขียว และเก็บ metrics ครบ (ใช้ใน Self-Assessment)

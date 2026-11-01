@@ -2,9 +2,13 @@
 gateway can back off (ai-orchestration.md §2.10, review of PR #15). No network: the SDK client
 is replaced by a stub that raises the SDK's own error."""
 
+import re
+from pathlib import Path
+
 import pytest
 from google.genai import errors
 
+import app.ai.providers.gemini as gemini_module
 from app.ai.providers.base import EmbedRequest, ProviderRateLimited, ProviderRequest
 from app.ai.providers.gemini import GeminiProvider, embed_contents, retry_after_seconds
 
@@ -162,3 +166,157 @@ async def test_AI01_gemini_embed_without_dimensions_keeps_the_model_default():
     await provider.embed(EmbedRequest(model="gemini-embedding-2", texts=["a"], role="query"))
 
     assert models.calls[0]["config"].output_dimensionality is None
+
+
+# --- Vertex AI (specs/features/ai/gemini-vertex.md) --------------------------------------------
+# The SDK client is replaced by a recorder, so no test needs ADC or the network.
+
+
+@pytest.fixture
+def built_clients(monkeypatch: pytest.MonkeyPatch) -> list[dict]:
+    """genai.Client is replaced by a recorder of the keyword arguments it was built with."""
+    built: list[dict] = []
+
+    def recording_client(**kwargs):
+        built.append(kwargs)
+        return object()
+
+    monkeypatch.setattr(gemini_module.genai, "Client", recording_client)
+    return built
+
+
+def test_AI01_vertex_client_uses_project_and_location_without_api_key(built_clients):
+    GeminiProvider.vertex(project="p-test", location="global")
+
+    assert len(built_clients) == 1
+    kwargs = built_clients[0]
+    assert kwargs["vertexai"] is True
+    assert kwargs["project"] == "p-test"
+    assert kwargs["location"] == "global"
+    assert kwargs.get("api_key") is None
+
+
+def test_AI01_api_key_client_says_vertexai_false_even_when_env_asks_for_vertex(
+    built_clients, monkeypatch: pytest.MonkeyPatch
+):
+    # The SDK reads GOOGLE_GENAI_USE_VERTEXAI when vertexai is not passed (spec §2.1).
+    monkeypatch.setenv("GOOGLE_GENAI_USE_VERTEXAI", "true")
+
+    GeminiProvider(api_key="k")
+
+    assert built_clients[0]["api_key"] == "k"
+    assert built_clients[0]["vertexai"] is False
+
+
+@pytest.mark.parametrize(
+    ("project", "location", "missing"),
+    [("", "global", "GOOGLE_CLOUD_PROJECT"), ("p-test", "", "GOOGLE_CLOUD_LOCATION")],
+)
+def test_AI01_vertex_without_project_or_location_names_the_missing_variable(
+    built_clients, project: str, location: str, missing: str
+):
+    with pytest.raises(ValueError, match=missing):
+        GeminiProvider.vertex(project=project, location=location)
+    assert built_clients == []
+
+
+def test_AI01_only_the_gemini_provider_imports_the_google_sdk():
+    app_dir = Path(gemini_module.__file__).parents[2]
+    allowed = Path(gemini_module.__file__).resolve()
+    importers = [
+        path.relative_to(app_dir).as_posix()
+        for path in app_dir.rglob("*.py")
+        if path.resolve() != allowed
+        and re.search(
+            r"^\s*(from google import genai|import google\.genai|from google\.genai)",
+            path.read_text(encoding="utf-8"),
+            re.MULTILINE,
+        )
+    ]
+
+    assert importers == []
+
+
+def vertex_provider_with(models) -> GeminiProvider:
+    provider = GeminiProvider.vertex(project="p-test", location="global")
+    provider._client = type("C", (), {"aio": type("A", (), {"models": models})()})()
+    return provider
+
+
+class StatisticsModels:
+    """embed_content answers like Vertex: each embedding may carry statistics.token_count."""
+
+    def __init__(self, token_counts: list[int | None]) -> None:
+        self._token_counts = token_counts
+
+    async def embed_content(self, **_kwargs):
+        embeddings = [
+            type(
+                "E",
+                (),
+                {
+                    "values": [float(i)],
+                    "statistics": None
+                    if count is None
+                    else type("S", (), {"token_count": count, "truncated": False})(),
+                },
+            )()
+            for i, count in enumerate(self._token_counts)
+        ]
+        return type("R", (), {"embeddings": embeddings, "metadata": None})()
+
+
+EMBED_REQUEST = EmbedRequest(model="gemini-embedding-2", texts=["a", "b"], role="document")
+
+
+async def test_AI04_vertex_embed_tokens_are_the_sum_of_token_counts(built_clients):
+    provider = vertex_provider_with(StatisticsModels([12, 30]))
+
+    response = await provider.embed(EMBED_REQUEST)
+
+    assert response.tokens_in == 42
+    assert response.vectors == [[0.0], [1.0]]
+
+
+@pytest.mark.parametrize(("token_counts", "tokens_in"), [([None, None], 0), ([7, None], 7)])
+async def test_AI04_embedding_without_statistics_counts_as_zero_tokens(
+    built_clients, token_counts: list[int | None], tokens_in: int
+):
+    provider = vertex_provider_with(StatisticsModels(token_counts))
+
+    response = await provider.embed(EMBED_REQUEST)
+
+    assert response.tokens_in == tokens_in
+
+
+class UsageModels:
+    async def generate_content(self, **_kwargs):
+        usage = type(
+            "U",
+            (),
+            {"prompt_token_count": 100, "candidates_token_count": 20, "thoughts_token_count": 50},
+        )()
+        return type("R", (), {"text": "{}", "usage_metadata": usage})()
+
+
+async def test_AI04_vertex_generate_counts_thinking_as_output_tokens(built_clients):
+    provider = vertex_provider_with(UsageModels())
+
+    response = await provider.generate(REQUEST)
+
+    assert (response.tokens_in, response.tokens_out) == (100, 70)
+
+
+async def test_AI02_vertex_429_without_retry_info_has_no_retry_after(built_clients):
+    vertex_429 = {
+        "error": {
+            "code": 429,
+            "message": "Resource exhausted. Please try again later.",
+            "status": "RESOURCE_EXHAUSTED",
+        }
+    }
+    provider = vertex_provider_with(RaisingModels(errors.ClientError(429, vertex_429)))
+
+    with pytest.raises(ProviderRateLimited) as raised:
+        await provider.generate(REQUEST)
+    assert raised.value.retry_after is None

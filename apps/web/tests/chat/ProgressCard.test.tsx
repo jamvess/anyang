@@ -1,11 +1,11 @@
 import { cleanup, fireEvent, render, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { MessageList } from "@/components/chat/MessageList";
-import { PROGRESS_CARD_VISIBLE_TOPICS, ProgressCard } from "@/components/chat/ProgressCard";
+import { PROGRESS_CARD_VISIBLE_TOPICS, ProgressCard, type ProgressCardData } from "@/components/chat/ProgressCard";
 import type { ChatMessage } from "@/components/chat/types";
 
 // Spec: specs/features/tutor/progress-card.md · card data from apps/api/app/stubs/room.json (m0)
-const STUB_CARD = {
+const STUB_CARD: ProgressCardData = {
   days_left: 5,
   passed: 1,
   total: 4,
@@ -19,7 +19,7 @@ const STUB_CARD = {
 };
 const EXPLAIN = "ความพร้อม = สัดส่วนของเนื้อหาข้อสอบที่คาดว่าทำได้ ไม่ใช่คะแนนสอบ";
 
-const topics = (n: number) =>
+const topics = (n: number): ProgressCardData["topics"] =>
   Array.from({ length: n }, (_, i) => ({
     id: `t${i + 1}`,
     name: `หัวข้อ ${i + 1}`,
@@ -76,7 +76,7 @@ describe("ProgressCard", () => {
   });
 
   it("TM15 review_due and user-added topics get small tags; others do not", () => {
-    const card = {
+    const card: ProgressCardData = {
       ...STUB_CARD,
       topics: [...STUB_CARD.topics, { ...topics(1)[0], id: "u1", name: "สมการกำลังสอง", origin: "user" }],
     };
@@ -90,7 +90,9 @@ describe("ProgressCard", () => {
   });
 
   it("TM15 an unknown level shows a dash", () => {
-    const card = { ...STUB_CARD, topics: [{ ...STUB_CARD.topics[0], level: "mystery" }] };
+    // API v1.4 never sends this; the test feeds an unknown value on purpose (AC-4).
+    const level = "mystery" as ProgressCardData["topics"][number]["level"];
+    const card = { ...STUB_CARD, topics: [{ ...STUB_CARD.topics[0], level }] };
     const { getByRole } = render(<ProgressCard card={card} />);
 
     expect(rows(getByRole("group"))[0].level).toBe("—");

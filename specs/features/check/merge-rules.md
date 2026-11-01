@@ -46,7 +46,7 @@ checker มี 3 ส่วน: SymPy ตัดสินถูก/ผิดแล
 |---|---|---|
 | Input `answer_format` | `expression` \| `factored` \| `equation` | `factored` |
 | Input `lines` | `list[str]` (LaTeX ที่ user ยืนยันแล้ว) | `["x^{3}-x", "x(x^{2}-1)"]` |
-| Input `sympy` (ตกลงกับ Junior 21 ต.ค. · ผลของ SymPy service `app/math/`) | `parsed: bool` · `timed_out: bool` · `final_equal: bool \| None` · `final_in_form: bool \| None` · `line_ok: list[bool]` ยาวเท่า `lines` (บรรทัด i เท่าบรรทัด i − 1 · บรรทัด 1 เทียบกับโจทย์) | `parsed=True, timed_out=False, final_equal=True, final_in_form=False, line_ok=[True, True]` |
+| Input `sympy` (ตกลงกับ Junior 21 ต.ค. · ผลของ SymPy service `app/math/`) | `parsed: bool` · `timed_out: bool` · `final_equal: bool \| None` · `final_in_form: bool \| None` · `line_ok: list[bool]` ยาวเท่า `lines` เมื่อ SymPy ตัดสินได้ และเป็น `[]` เมื่อ parse ไม่ได้, timeout หรือ `final_equal = null` (Junior OK 28 ต.ค. · `sympy-service.md` §10 ข้อ 5) (บรรทัด i เท่าบรรทัด i − 1 · บรรทัด 1 เทียบกับเฉลย ซึ่งมีค่าเท่าโจทย์ตาม AM-11 · `sympy-service.md` §2.4) | `parsed=True, timed_out=False, final_equal=True, final_in_form=False, line_ok=[True, True]` |
 | Input `llm` (output ของ `check_answer`) | `error_type: ErrorType \| None` · `evidence: str` · `method: "doc" \| "other"` · `verdict: Verdict \| None` · `first_wrong_line: int \| None` · `confidence: float` | `error_type="sign", evidence="บรรทัด 2: −3 กลายเป็น +3", method="doc", verdict=None, confidence=0.9` |
 | Output `CheckResult` | `verdict` · `final_answer_correct: bool` · `first_wrong_line: int \| None` (นับจาก 1) · `error_type` · `evidence` · `method` · `decided_by: "sympy" \| "llm"` · `confidence: float` · `is_correct: bool` · `disagreement: bool` | ตาม §2.4.5 + `is_correct`, `disagreement` |
 

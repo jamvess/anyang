@@ -1,0 +1,16 @@
+{
+  "prep_name": "Factorization",
+  "days_left": 5,
+  "status": "draft",
+  "topics": [
+    { "id": "t1", "order": 1, "name": "คูณพหุนาม", "stars": 2, "reason": "พื้นฐานของหัวข้อสามดาว", "source_label": "ch3 น.2–3", "origin": "doc" },
+    { "id": "t2", "order": 2, "name": "ดึงตัวประกอบร่วม", "stars": 3, "reason": "ออกทุกชุด", "source_label": "ch3 น.4", "origin": "doc" },
+    { "id": "t3", "order": 3, "name": "ผลต่างกำลังสอง", "stars": 3, "reason": "ออกทุกชุด", "source_label": "ch3 น.5–6", "origin": "doc" },
+    { "id": "t5", "order": 5, "name": "แยก x²+bx+c", "stars": 3, "reason": "ออกทุกชุด", "source_label": "ch3 น.8–10", "origin": "doc" },
+    { "id": "t7", "order": 7, "name": "การจัดกลุ่ม", "stars": 2, "reason": "เจอแค่ในชุดของอีกอาจารย์", "source_label": "ch3 น.14", "origin": "doc" },
+    { "id": "t9", "order": 9, "name": "กำลังสาม", "stars": 1, "reason": "ไม่เคยออก", "source_label": "ch3 น.14 เชิงอรรถ", "origin": "doc" }
+  ],
+  "unmapped_questions": [
+    { "id": "q11", "label": "midterm-2567 ข้อ 11", "text": "แก้สมการ $x^2 - 5x + 6 = 0$", "map_note": "เป็นเรื่องสมการกำลังสอง ไม่มีในชีทที่ใส่มา" }
+  ]
+}

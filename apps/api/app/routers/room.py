@@ -3,23 +3,30 @@
 Stubs until P4-lite: they serve fixture data from app/stubs/ and send `X-Stub: true`,
 so May can wire the HTTP transport before the tutor turn exists. Shapes are checked
 by tests/unit/test_room_api_contract.py, which the real endpoints must also pass.
+
+A text message is real since P4-lite: the reply streams from the gateway
+(specs/features/tutor/tutor-reply-stream.md). An image message is still a stub.
 """
 
 from collections.abc import AsyncIterator
+from contextlib import aclosing
 from typing import Annotated, Any
 from uuid import UUID
 
-from fastapi import APIRouter, Path, Response
+from fastapi import APIRouter, Depends, Path, Response
+from fastapi.responses import JSONResponse
 from sse_starlette import EventSourceResponse
 
 from app import stubs
-from app.models.error import ErrorResponse
+from app.ai.call_context import AICallContext
+from app.ai.gateway import Gateway, get_gateway
+from app.auth import AuthContext, get_auth
+from app.models.error import ErrorBody, ErrorResponse
 from app.models.room import EVENT_MODELS, ActiveSession, Limits, Room, SendMessageRequest
+from app.services.tutor_turn import reply_events
 from app.settings import get_settings
 
 router = APIRouter(tags=["room"])
-
-STUB_HEADERS = {"X-Stub": "true"}
 
 # api.md writes every path parameter as {id}.
 PrepId = Annotated[UUID, Path(alias="id")]
@@ -57,7 +64,7 @@ def _stream(name: str) -> EventSourceResponse:
             payload = EVENT_MODELS[event].model_validate(data)
             yield {"event": event, "data": payload.model_dump_json()}
 
-    return EventSourceResponse(events(), headers=STUB_HEADERS)
+    return EventSourceResponse(events(), headers=stubs.HEADERS)
 
 
 @router.get("/exam-preps/{id}/sessions/active", responses=_ERRORS)
@@ -66,7 +73,7 @@ async def get_active_session(prep_id: PrepId, response: Response) -> ActiveSessi
 
     stub — replaced in P4-lite
     """
-    response.headers.update(STUB_HEADERS)
+    response.headers.update(stubs.HEADERS)
     return ActiveSession(session_id=stubs.room()["session_id"])
 
 
@@ -89,7 +96,7 @@ async def get_session(session_id: SessionId, response: Response) -> Room:
 
     stub — replaced in P4-lite
     """
-    response.headers.update(STUB_HEADERS)
+    response.headers.update(stubs.HEADERS)
     guards = get_settings().ai.guards
     limits = Limits(max_message_chars=guards.max_message_chars, max_image_mb=guards.max_image_mb)
     return Room.model_validate({**stubs.room(), "session_id": session_id, "limits": limits})
@@ -100,9 +107,31 @@ async def get_session(session_id: SessionId, response: Response) -> Room:
     response_class=EventSourceResponse,
     responses=_SSE_RESPONSE,
 )
-async def send_message(session_id: SessionId, body: SendMessageRequest) -> EventSourceResponse:
+async def send_message(
+    session_id: SessionId,
+    body: SendMessageRequest,
+    gateway: Annotated[Gateway, Depends(get_gateway)],
+    auth: Annotated[AuthContext | None, Depends(get_auth)],
+) -> Response:
     """Send `{text}` or `{image_path}`; the reply streams as SSE and ends with done.
 
-    stub — replaced in P4-lite
+    `{text}` streams `tutor_reply` from the gateway (P4-lite). `{image_path}` is a stub.
     """
-    return _stream("tutor_reply")
+    if body.text is None:
+        return _stream("tutor_reply")
+    max_chars = get_settings().ai.guards.max_message_chars
+    if len(body.text) > max_chars:
+        # Code proposed in tutor-reply-stream.md §10 item 3, pending Junior.
+        error = ErrorBody(code="message_too_long", message=f"text is over {max_chars} characters")
+        return JSONResponse(ErrorResponse(error=error).model_dump(), status_code=422)
+
+    # No session_id yet: the session is a stub with no tutor_sessions row (api-auth.md §2.5).
+    call_context = AICallContext(auth.tenant_id, auth.user_id) if auth else None
+
+    async def events() -> AsyncIterator[dict[str, str]]:
+        # aclosing: a client that leaves closes the provider stream now (spec §2 Endpoint 8).
+        async with aclosing(reply_events(gateway, body.text, call_context)) as replies:
+            async for event, payload in replies:
+                yield {"event": event, "data": payload.model_dump_json()}
+
+    return EventSourceResponse(events())

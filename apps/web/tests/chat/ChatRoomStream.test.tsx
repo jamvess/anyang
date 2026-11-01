@@ -193,9 +193,8 @@ describe("ChatRoom streaming", () => {
 
     await send("ตอบ");
     await t.token("tutor", "ถูก");
-    // progress_card and problem are shown since progress-card.md and problem-card.md (they split the bubble)
-    // · removed here with May's approval
-    await t.event("verdict", { verdict: "correct", first_wrong_line: null, error_type: null });
+    // progress_card, problem and verdict are shown since progress-card.md, problem-card.md and
+    // verdict-mark.md (they split the bubble) · removed here with May's approval (verdict: 2026-10-28)
     await t.event("unknown_event", { anything: true });
     await t.token("tutor", "แล้ว");
     await t.done();

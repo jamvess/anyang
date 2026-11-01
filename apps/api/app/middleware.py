@@ -10,7 +10,6 @@ Both are pure ASGI middleware, not ``BaseHTTPMiddleware``, so SSE streams pass t
 """
 
 import logging
-from contextvars import ContextVar
 from uuid import UUID, uuid4
 
 from fastapi import FastAPI
@@ -22,6 +21,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from app.cors import add_cors
 from app.models.error import ErrorBody, ErrorResponse
 from app.models.room import DoneEvent, ErrorEvent
+from app.request_context import get_request_id, request_id_var
 from app.settings import EnvSettings
 
 log = logging.getLogger(__name__)
@@ -30,13 +30,6 @@ REQUEST_ID_HEADER = "X-Request-Id"
 
 # The client never sees the exception text; the log keeps it, under the same request id.
 INTERNAL_ERROR = ErrorBody(code="internal_error", message="Internal server error")
-
-_request_id: ContextVar[str | None] = ContextVar("request_id", default=None)
-
-
-def get_request_id() -> str | None:
-    """Id of the current request, for logs and ai_calls.request_id; None outside a request."""
-    return _request_id.get()
 
 
 def _client_request_id(scope: Scope) -> str | None:
@@ -64,11 +57,11 @@ class RequestIdMiddleware:
                 MutableHeaders(scope=message)[REQUEST_ID_HEADER] = request_id
             await send(message)
 
-        token = _request_id.set(request_id)
+        token = request_id_var.set(request_id)
         try:
             await self.app(scope, receive, send_with_id)
         finally:
-            _request_id.reset(token)
+            request_id_var.reset(token)
 
 
 def _sse_tail() -> bytes:

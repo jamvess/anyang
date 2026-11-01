@@ -13,7 +13,7 @@ apps/api/
 │  ├─ services/            # orchestration: ingestion, tutor turn, scope edit
 │  ├─ domain/              # PURE logic, no I/O: bkt.py, stars.py, planner.py,
 │  │                       #   stage_machine.py, buddy.py, readiness.py, spacing.py
-│  ├─ ai/                  # gateway.py (ai.call), providers/{gemini,claude,fake}.py,
+│  ├─ ai/                  # gateway.py (ai.call, ai.stream), providers/{gemini,claude,fake}.py,
 │  │                       #   guards.py, context_builder.py
 │  ├─ math/                # sympy_service.py (parse, equivalence, timeout)
 │  ├─ db/                  # Supabase/Postgres access, typed repositories
@@ -30,7 +30,7 @@ apps/api/
 - `domain/` modules are pure functions over dataclasses. They are the most tested code in the repo. They read thresholds from a `LearningConfig` object loaded from `config/learning.yaml`, never literals.
 - Routers stay thin: validate input → call a service → return a Pydantic model or an SSE stream.
 - SSE: use `sse-starlette` (`EventSourceResponse`). Event names are fixed in `specs/system/api.md` (`token`, `verdict`, `problem`, `progress_card`, `buddy`, `ocr_preview`, `scope_patch`, `session_end`, `done`).
-- AI: call only `await ai.call(purpose="check_answer", input=..., schema=CheckResult)`. The gateway handles prompts, routing (`config/ai.yaml`), retries, fallback, guards and logging to `ai_calls`.
+- AI: call only `await ai.call(purpose="check_answer", input=..., schema=CheckResult)`, or `async for chunk in ai.stream(purpose="tutor_reply", input=...)` for free text streamed to the chat (purposes with `stream: true`; retried only before the first chunk). The gateway handles prompts, routing (`config/ai.yaml`), retries, fallback, guards and logging to `ai_calls`. Routers take the gateway as the `get_gateway` dependency so tests can swap in the fake.
 - Tests use the fake provider by default (`AI_PROVIDER=fake`). A test that needs a real model is marked `@pytest.mark.live` and is excluded from CI.
 - SymPy runs in a subprocess with a timeout (value from config). Never call `simplify` in the request thread directly.
 - Database: always pass the user JWT to Supabase so RLS applies. The service-role key is used only by background ingestion jobs and must still set `tenant_id` explicitly.

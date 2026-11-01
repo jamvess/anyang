@@ -1,0 +1,206 @@
+# Feature: SymPy service ของ checker (ตัดสินถูก/ผิดรายบรรทัด)
+
+| | |
+|---|---|
+| Area | checker |
+| Requirements | AM-04, AM-05 |
+| Owner | Jam |
+| Reviewer | Junior |
+| Status | approved (Jam · 28 ต.ค. · §11 Junior OK 28 ต.ค.) |
+| Related system spec | ai-orchestration.md §2.4.1, §2.4.2, §2.4.3 · `specs/features/check/merge-rules.md` §3 · architecture.md (Math: subprocess + timeout) · `evals/README.md` "คู่มือ label ลายมือ · P1" |
+
+## 1. Context
+
+checker มี 3 ส่วน (§2.4.1): **SymPy ตัดสินว่าถูกหรือผิด และผิดตั้งแต่บรรทัดไหน** · LLM จำแนก error_type · merge rules (`app/domain/checker.py`) รวมผล
+
+feature นี้คือส่วนแรก อยู่ใน `apps/api/app/math/sympy_service.py` · รับคำตอบรายบรรทัดที่ user ยืนยันแล้ว (LaTeX) กับเฉลยของโจทย์ แล้วคืน `SympyResult` ตามที่ตกลงกับ Junior ใน merge-rules §3 · คนเรียกคือ checker service (ทำทีหลัง) ซึ่งส่งผลต่อให้ `merge_check` และเก็บลง `attempts.sympy_result` · ไม่เรียก AI ไม่อ่านหรือเขียน DB
+
+## 2. Behavior
+
+### 2.1 เตรียมบรรทัด (normalize)
+
+ทำกับทุกบรรทัดและกับเฉลย ก่อน parse
+
+1. ตัด `\left`, `\right`, `\,` `\;` `\:` `\!` `\ ` และ `$` ออก (เหมือน `poc/P1/lines.py`)
+2. ตัด `=` ที่ต้นบรรทัด (กติกาลายมือข้อ 5 ให้พิมพ์ `=` ตามที่เขียน)
+3. แยกส่วนด้วย `,` ระดับบนสุด (ไม่อยู่ในวงเล็บ) เช่น `x=0, x=\ln(2)` เป็น 2 ส่วน
+4. parse ด้วย `sympy.parsing.latex.parse_latex(..., backend="antlr")` · **ไม่ใช้ `lark`** เพราะ P1 พบว่าอ่าน `2x\sin(x)+x^{2}\cos(x)` ผิดโดยไม่แจ้ง
+5. ตัวอักษรตัวเดียวที่ตามด้วย `(` และไม่ได้เป็นส่วนของคำสั่ง (`\sin`, `\ln`) คือการคูณ เช่น `x(x^{2}-1)` → `x\cdot(x^{2}-1)` · parser แบบ `antlr` อ่านเป็นฟังก์ชัน `x(…)` (พบตอน implement 28 ต.ค.)
+6. แทน symbol `e` ด้วยค่าคงที่ `E` (parser อ่าน `e^{x}` เป็นตัวแปร `e` ทำให้แก้ `e^{x}=1` ไม่ได้ · ทดลองแล้ว 28 ต.ค.)
+
+ถ้าบรรทัดใดหรือเฉลย parse ไม่ได้ (เช่น มี `\text{…}` หรือ `\?`) → ทั้งข้อ `parsed = false`
+
+### 2.2 ชนิดของบรรทัด
+
+| ชนิด | รูป | ค่า (value) ที่ใช้เทียบ |
+|---|---|---|
+| expression | นิพจน์ไม่มี `=` (หลังตัด `=` ต้นบรรทัด) | นิพจน์หลัง `.doit()` คือ derivative, limit, integral **ถูกคำนวณ** (ต่างจาก P1 ที่เทียบตามที่เขียน) เพราะบรรทัด 1 มักเป็นตัวโจทย์ และบรรทัดถัดไปเป็นผลที่คำนวณแล้ว |
+| definition | `f(x)=E`, `f'(x)=E`, `f''(x)=E`, `f'''(x)=E` (ชื่อฟังก์ชันตัวเดียว) · อันดับ k = จำนวน `'` | `E` |
+| equation | `A=B` ที่ไม่ใช่ definition หรือหลายส่วนคั่น `,` เช่น `e^{x}=1, e^{x}=2`, `x=0, x=\ln(2)` | solution set บนจำนวนจริง (`solveset(A − B, x, Reals)`) · หลายส่วน = union ของทุกส่วน |
+
+**บรรทัดที่มี `=` หลายตัว** (กติกาลายมือข้อ 5 · §10 ข้อ 3): ใน `expression` และ `factored` แยกด้วย `=` ระดับบนสุดเป็นขั้นย่อย เช่น `=\frac{1^{2}+1}{1+1}=\frac{2}{2}=1` เป็น 3 ขั้น · ขั้นแรกเทียบกับบรรทัดก่อนหน้า ขั้นถัดไปเทียบกับขั้นก่อน · บรรทัดถูกเมื่อทุกขั้นย่อยถูก · ค่าของบรรทัด = ขั้นสุดท้าย · ใน `equation` ถ้าส่วนใด (หลังแยก `,`) มี `=` มากกว่า 1 ตัว เช่น `f'(x)=3x^{2}-6x-9=0` → ไม่รองรับ (`parsed = false`)
+
+ตัวแปร x คือ free symbol ตัวเดียวของเฉลยและทุกบรรทัดรวมกัน (ตัวแปรที่ถูกผูกใน `\lim_{x \to a}` ไม่นับ) · มีมากกว่า 1 ตัว (เช่น x กับ y ใน implicit dy/dx) → `parsed = false` · ไม่มีเลยก็ได้ ถ้าไม่ต้องใช้ตัวแปร (เช่น ลิมิตที่ทุกบรรทัดเป็นตัวเลข · AC-27) · ต้องใช้แต่ไม่มี (อนุพันธ์ของบรรทัด definition, solution set) → `parsed = false` · (แก้ตอน implement 28 ต.ค.: ฉบับ approved บอกว่า "หาไม่ได้ตัวเดียว → parsed = false" ซึ่งขัดกับ AC-27)
+
+### 2.3 คำตอบสุดท้าย (`final_equal`, `final_in_form`)
+
+คำตอบสุดท้าย = บรรทัดสุดท้าย
+
+| answer_format | `final_equal` | `final_in_form` |
+|---|---|---|
+| `expression` | `simplify(value(last) − value(เฉลย)) == 0` (§2.4.3) | `null` |
+| `factored` | เหมือน expression | `true` เมื่อทุกตัวประกอบที่ไม่ใช่ค่าคงที่ของบรรทัดสุดท้าย **ตามที่เขียน** ลดรูปต่อไม่ได้บนจำนวนตรรกยะ (เท่ากับจำนวนตัวประกอบใน `factor_list`) · เช่น `x(x^{2}-1)` → `false`, `3(x+2)` → `true` |
+| `equation` | solution set ของบรรทัดสุดท้าย = solution set ของเฉลย (ลำดับไม่มีผล) | `null` |
+
+### 2.4 รายบรรทัด (`line_ok`)
+
+`line_ok[i]` = บรรทัด i + 1 ถูกเมื่อเทียบกับบรรทัดก่อนหน้า (ยาวเท่า `lines`) · บรรทัดแรกที่เป็น `false` คือ first wrong line ที่ merge rules หาเอง (merge-rules §10 ข้อ 1)
+
+**บรรทัด 1 เทียบกับเฉลย** แทนการเทียบกับตัวโจทย์ · เหตุผล: `problems.text` เป็นข้อความไทยปนคณิต parse ตรงๆ ไม่ได้ และ AM-11 รับประกันว่าค่าของโจทย์ = เฉลยแล้ว จึงให้ผลเหมือนกัน (เช่น `\lim_{x \to 2} \frac{x^{2}-4}{x^{2}-3x+2}` มีค่า 4 = เฉลย)
+
+กฎการเทียบบรรทัดก่อนหน้า P กับบรรทัดปัจจุบัน C
+
+| P | C | `line_ok` เป็น true เมื่อ |
+|---|---|---|
+| (บรรทัด 1) เฉลย | expression | value(C) = value(เฉลย) |
+| (บรรทัด 1) เฉลย | equation (`equation` format) | solution set(C) = solution set(เฉลย) |
+| (บรรทัด 1) — | definition | true เสมอ ถือว่าเขียนโจทย์ซ้ำ (§10 ข้อ 1) · ถ้าลอกโจทย์ผิด คำตอบสุดท้ายจะผิด แล้ว merge rules ใช้ first_wrong_line ของ LLM (merge-rules ข้อ 6) |
+| expression | expression | value(C) = value(P) |
+| definition อันดับ j | definition อันดับ k > j | E_C = d^(k−j)/dx^(k−j) E_P |
+| definition | expression | value(C) = E_P |
+| definition | equation (`equation` format) | solution set(C) = solution set(E_P = 0) · ขั้น "ตั้งอนุพันธ์เท่ากับ 0" เช่น `f'(x)=3x^{2}-6x-9` → `3x^{2}-6x-9=0` |
+| equation | equation | solution set(C) = solution set(P) (§2.4.3 "solution set ของแต่ละบรรทัดต้องเท่าเดิม") |
+| อื่นๆ | | ไม่รองรับ → ทั้งข้อ `parsed = false` (เช่น equation ใน `expression` format แบบ implicit dy/dx · §10 ข้อ 2) |
+
+### 2.5 ตัดสินไม่ได้ และ timeout
+
+- การเทียบใดที่ SymPy ตอบไม่ได้แน่ชัด (เช่น `solveset` คืน `ConditionSet`) → `final_equal = null` และ `line_ok = []` · merge rules ถือว่า SymPy ตัดสินไม่ได้ แล้วใช้ผลของ LLM (merge-rules §2 "final_equal = null")
+- **ตัวอย่างค้านเชิงตัวเลข** (เพิ่มหลังรัน golden set 28 ต.ค. · Jam ok): ถ้า `simplify(a − b)` ไม่เป็น 0 และ `equals(0)` ของ SymPy ตอบ `None` ให้แทนตัวแปรด้วยจุดตัวอย่างบวกที่ไม่ใช่จำนวนเต็ม แล้วคำนวณเป็นตัวเลข (`chop` ตัด round-off) · ได้จำนวนจริงที่ไม่ใช่ 0 ที่จุดใดจุดหนึ่ง → ไม่เท่ากัน · ไม่มีจุดไหนพิสูจน์ได้ → ตัดสินไม่ได้เหมือนเดิม · ใช้พิสูจน์ "ไม่เท่า" เท่านั้น ไม่ใช้พิสูจน์ "เท่า" · golden set: ans_042 (`2e^{x^{2}}` เทียบเฉลย) ตัดสินได้
+- **`line_ok` ยาวเท่า `lines` เฉพาะเมื่อตัดสินได้** (`parsed`, ไม่ `timed_out`, `final_equal` ไม่เป็น `null`) · ตัดสินไม่ได้ → `[]` (§10 ข้อ 5)
+- งานทั้งข้อ (parse + เทียบทุกบรรทัด) รันใน **worker process แยก** พร้อม timeout `checker.sympy_timeout_seconds` จาก `config/learning.yaml` · timeout คิดต่อ 1 คำตอบ เพราะค่านี้ตั้งเป็น budget ให้ verdict มาทัน TTFT p95 · เกินเวลา → `timed_out = true`, `parsed = true`, `final_equal = null`, `final_in_form = null`, `line_ok = []` แล้วหยุด worker ตัวนั้นและเปิดใหม่
+- **ไม่เปิด process ใหม่ทุกครั้ง:** วัดแล้ว (28 ต.ค.) การเปิด Python + import SymPy ใช้ 1.9 วินาที เกือบเท่า budget · จึงใช้ worker ที่เปิดค้างไว้ (pool) จำนวน `checker.sympy_workers` (§10 ข้อ 4)
+- เป็นฟังก์ชัน `async` ไม่บล็อก event loop ของ FastAPI (CLAUDE.md ของ api: "Never call `simplify` in the request thread directly")
+
+### 2.6 ไม่มีคำตอบ
+
+`lines = []` → คืนทันทีโดยไม่เรียก SymPy: `parsed = false`, `timed_out = false`, ค่าอื่น `null`, `line_ok = []` · merge rules จับ no answer จาก `lines` ว่างเองก่อน (merge-rules §2 ข้อ 1)
+
+ค่าจาก config มี 2 ตัว คือ `checker.sympy_timeout_seconds` และ `checker.sympy_workers` (เพิ่มใหม่ · §11)
+
+## 3. Inputs and outputs
+
+| | Type / schema | ตัวอย่าง |
+|---|---|---|
+| Input `answer_format` | `expression` \| `factored` \| `equation` (`AnswerFormat` ใน `app/domain/checker.py`) | `factored` |
+| Input `reference_answer` | `str` LaTeX จาก `problems.reference_answer` | `x(x-1)(x+1)` |
+| Input `lines` | `list[str]` LaTeX ที่ user ยืนยันแล้ว | `["x^{3}-x", "=x(x^{2}-1)"]` |
+| Input `timeout_s` (optional) | `float` · ไม่ส่ง = อ่านจาก settings | `2` |
+| Output `SympyResult` (dataclass เดิมใน `app/domain/checker.py`) | `parsed: bool` · `timed_out: bool` · `final_equal: bool \| None` · `final_in_form: bool \| None` · `line_ok: list[bool]` | `parsed=True, timed_out=False, final_equal=True, final_in_form=False, line_ok=[True, True]` |
+
+ลายเซ็น: `async def check_lines(*, answer_format, reference_answer, lines, timeout_s=None, pool=None) -> SympyResult`
+
+ชื่ออื่นใน `app/math/sympy_service.py` (กำหนดโดย test ที่ Jam review แล้ว): `evaluate_lines(answer_format, reference_answer, lines)` ฟังก์ชันที่ worker รัน · `SympyWorkerPool(workers=n)` มี `await run(fn, *args, timeout_s=)` และ `close()` · `SympyTimeoutError` · `default_pool()` pool ที่ใช้ร่วมกันตามขนาดใน config
+
+## 4. Acceptance criteria
+
+ตัวอย่างมาจาก `evals/answers/labels.jsonl` (ans_xxx) · ไม่มี AI · ทุกข้อ (ยกเว้นที่บอกไว้) คาดว่า `parsed=True, timed_out=False`
+
+**expression**
+
+- **AC-1 (AM-04)** Given ans_003 (limit → ∞, เฉลย `\frac{3}{2}`) When ตรวจ Then `final_equal=True`, `line_ok=[True, True, True, True]`, `final_in_form=None`
+- **AC-2 (AM-04)** Given บรรทัด 1 เป็นตัวโจทย์ `\frac{d}{dx}\left(x^{2}\sin(x)\right)` และเฉลย `2x\sin(x)+x^{2}\cos(x)` When ตรวจ Then `line_ok[0]=True` (derivative ถูกคำนวณ)
+- **AC-3 (AM-05)** Given ans_002 (`\lim_{x \to 2}`, บรรทัด 2 ตัดพจน์ผิด, ตอบ 1, เฉลย 4) When ตรวจ Then `line_ok=[True, False, True, True]`, `final_equal=False`
+- **AC-4 (AM-05)** Given ans_007 (บรรทัด 3 `2x\sin(x)-x^{2}\cos(x)`) When ตรวจ Then `line_ok=[True, True, False]`, `final_equal=False`
+- **AC-5 (AM-04)** Given ans_010 (`e^{x^{2}}\cdot 2x\cdot\ln(x)+e^{x^{2}}\cdot\frac{1}{x}` เทียบ `2xe^{x^{2}}\ln(x)+\frac{e^{x^{2}}}{x}`) When ตรวจ Then `final_equal=True` (เทียบทางคณิตศาสตร์ ไม่ใช่ string)
+- **AC-6 (AM-04)** Given บรรทัดที่มี `\left( \right)`, `\,` และ `=` ต้นบรรทัด When ตรวจ Then ผลเหมือนบรรทัดที่ไม่มีสิ่งเหล่านั้น
+- **AC-27 (AM-05)** Given `expression`, เฉลย `1`, บรรทัด `["\lim_{x \to 1} \frac{x^{2}+1}{x+1}", "=\frac{1^{2}+1}{1+1}=\frac{2}{2}=1"]` When ตรวจ Then `line_ok=[True, True]` · Given บรรทัด 2 เป็น `=\frac{1^{2}+1}{1+1}=\frac{2}{2}=3` Then `line_ok=[True, False]`, `final_equal=False`
+- **AC-7 (AM-04)** Given ans_016 (`3\cdot\frac{\sin(3x)}{3x}` ใต้ `\lim_{x \to 0}`) When ตรวจ Then `final_equal=True` และทุก `line_ok` จริง
+
+**definition (f, f′, f″)**
+
+- **AC-8 (AM-04)** Given ans_017 (`f(x)=…`, `f'(x)=4x^{3}-6x+2`, `f''(x)=12x^{2}-6`, `expression`, เฉลย `12x^{2}-6`) When ตรวจ Then `line_ok=[True, True, True]`, `final_equal=True`
+- **AC-9 (AM-05)** Given ans_019 (บรรทัด 3 `f''(x)=16x^{2}-6`) When ตรวจ Then `line_ok=[True, True, False]`, `final_equal=False`
+
+**factored**
+
+- **AC-10 (AM-04)** Given ans_001 (`factored`, ตอบ `x(x^{2}-1)`, เฉลย `x(x-1)(x+1)`) When ตรวจ Then `final_equal=True`, `final_in_form=False`, `line_ok=[True, True]`
+- **AC-11 (AM-04)** Given ans_006 (`(x-2)(x+2)(x^{2}+4)`) และ ans_015 (`(x-2)^{2}(x+2)`) When ตรวจ Then `final_in_form=True`
+- **AC-12 (AM-04)** Given `factored`, เฉลย `3(x+2)`, ตอบ `3(x+2)` When ตรวจ Then `final_in_form=True` (ค่าคงที่ไม่นับเป็นตัวประกอบ และ parser ต้องไม่กระจาย `3(x+2)` เป็น `3x+6`) · Given ตอบ `3x+6` Then `final_equal=True`, `final_in_form=False`
+- **AC-13 (AM-04)** Given `expression` หรือ `equation` When ตรวจ Then `final_in_form=None`
+
+**equation**
+
+- **AC-14 (AM-04)** Given ans_005 (`e^{2x}-3e^{x}+2=0` → `e^{x}=1, e^{x}=2` → `x=0, x=\ln(2)`) When ตรวจ Then `line_ok` จริงทุกบรรทัด, `final_equal=True` (`e` คือค่าคงที่ และแก้บนจำนวนจริง ไม่ได้ `2πik`)
+- **AC-15 (AM-04)** Given ans_012 (ตอบ `x=1, x=-1`, เฉลย `x=-1, x=1`) When ตรวจ Then `final_equal=True` (ลำดับไม่มีผล)
+- **AC-16 (AM-05)** Given ans_018 (จุดวิกฤต: `f(x)=…`, `f'(x)=3x^{2}-6x-9`, `3x^{2}-6x-9=0`, …, `(x-3)(x+1)=0`, `x=3, x=1`) When ตรวจ Then `line_ok=[True, True, True, True, True, False]`, `final_equal=False`
+- **AC-17 (AM-05)** Given ans_008 (บรรทัด 5 `(x+3)(x-1)=0`, บรรทัด 6 `x=-3, x=1`) When ตรวจ Then `line_ok=[True, True, True, True, False, True]` (บรรทัด 6 เท่าบรรทัด 5 จึงจริง · merge rules ใช้บรรทัดแรกที่ผิด = 5)
+
+**ตัดสินไม่ได้**
+
+- **AC-18 (AM-04)** Given บรรทัดที่ parse ไม่ได้ (`\text{ดังนั้น } x=1` หรือ `x^{\?}`) When ตรวจ Then `parsed=False`, `final_equal=None`, `final_in_form=None`, `line_ok=[]`
+- **AC-19 (AM-04)** Given เฉลย parse ไม่ได้ When ตรวจ Then `parsed=False`
+- **AC-20 (AM-04)** Given ans_004 (implicit dy/dx: บรรทัดเป็นสมการของ x, y ใน `expression` format) When ตรวจ Then `parsed=False` (ไม่รองรับ · §10 ข้อ 2)
+- **AC-28 (AM-04)** Given `equation` และบรรทัด `f'(x)=3x^{2}-6x-9=0` When ตรวจ Then `parsed=False`
+- **AC-21 (AM-04)** Given การเทียบที่ SymPy ตอบไม่ได้แน่ชัด (เช่น solution set เป็น `ConditionSet`) When ตรวจ Then `parsed=True`, `final_equal=None`, `line_ok=[]`
+- **AC-30 (AM-05)** Given ans_042 (`equals` ของ SymPy ตอบ `None` กับ `2e^{x^{2}}`) When ตรวจ Then `final_equal=False`, `line_ok=[True, False, True, True]` · Given ค่าที่เท่ากันจริง (`\ln(2)+\ln(3)` เทียบ `\ln(6)`) Then `final_equal` ไม่เป็น `False`
+- **AC-22 (AM-06 ส่งต่อ)** Given `lines=[]` When ตรวจ Then `parsed=False`, `line_ok=[]` และไม่เรียก worker
+
+**timeout (`checker.sympy_timeout_seconds`)**
+
+- **AC-23 (AM-04)** Given งานใน worker ใช้เวลาเกิน timeout (test ใส่งานที่ค้าง และ timeout เล็ก) When ตรวจ Then คืนภายในเวลา timeout บวกเวลาหยุด worker · `timed_out=True`, `parsed=True`, `final_equal=None`, `line_ok=[]`
+- **AC-24 (AM-04)** Given เพิ่งเกิด timeout ตาม AC-23 When ตรวจคำตอบปกติข้อถัดไป Then ได้ผลถูกต้อง (worker ถูกเปิดใหม่)
+- **AC-boundary (AM-04)** งานที่เสร็จก่อน timeout → `timed_out=False` · งานที่เกิน → `timed_out=True` · ไม่ test ที่ "= timeout พอดี" เพราะเวลาจริงไม่แน่นอน
+- **AC-25 (AM-04)** Given ไม่ส่ง `timeout_s` When ตรวจ Then ใช้ค่า `checker.sympy_timeout_seconds` จาก settings (ไม่มีตัวเลขใน code)
+- **AC-29 (AM-04)** Given settings `checker.sympy_workers = n` When สร้าง pool Then มี worker n ตัว (ไม่มีตัวเลขใน code)
+
+**ต่อกับ merge rules**
+
+- **AC-26 (AM-04)** Given ผลของ ans_001 จาก service ส่งเข้า `merge_check` (LLM ปลอม) When รวมผล Then `verdict=incomplete` ตรงกับ label
+- **AC-tenant (SA-06)** ไม่เกี่ยว: ไม่อ่านหรือเขียนข้อมูล
+
+## 5. Data changes
+
+ไม่มี · `attempts.sympy_result` (jsonb, มีอยู่แล้วใน `data-model.md`) เก็บ `SympyResult` นี้ · คนเรียกเป็นคนเขียน
+
+## 6. API / SSE changes
+
+ไม่มี
+
+## 7. AI calls
+
+ไม่มี
+
+## 8. Test plan
+
+| Test | ระดับ | ครอบคลุม AC |
+|---|---|---|
+| `tests/unit/test_sympy_service.py` แบบ table-driven (`parametrize`) ใช้ ans_xxx จาก golden set เป็น fixture | unit | AC-1 ถึง AC-22, AC-25 ถึง AC-28, AC-30 |
+| `tests/unit/test_sympy_service_timeout.py` งานที่ค้าง + timeout เล็ก | unit | AC-23, AC-24, AC-29, AC-boundary |
+| รัน service กับ 50 ข้อใน `evals/answers/labels.jsonl` นับ parse ได้, timeout, `final_equal` ตรงกับ label (worklog ขั้น 7) | eval | ทั้งหมด (ตัวเลขตั้งต้นให้ P2) |
+
+## 9. Out of scope
+
+- verify เฉลยของโจทย์ที่ AI สร้าง (AM-11, §2.4.6, `checker.max_generate_retries`) · ใช้ worker เดียวกันได้ทีหลัง
+- `numeric`, `short_text`, `sql`, `solution_set` (Should / Could)
+- implicit differentiation (§10 ข้อ 2) · inequality · integral ที่ SymPy คำนวณไม่ได้
+- hint `sign_flip_detected` ให้ LLM (§2.4.4) · ทำตอนต่อ prompt `check_answer`
+- checker service ที่เรียก service นี้ + LLM + merge แล้วเขียน `attempts`
+
+## 10. Open questions
+
+ไม่มีข้อที่ค้าง
+
+**ตัดสินแล้ว (Jam · 28 ต.ค.)**
+
+1. บรรทัด definition บรรทัดแรก (`f(x)=…` ที่เขียนโจทย์ซ้ำ) ถือว่าถูกเสมอ ไม่เพิ่ม input ตัวโจทย์ · golden set 11 ข้อที่มี definition เขียน `f(x)=` ซ้ำในบรรทัด 1 ถูกทุกข้อ · ถ้าลอกผิด merge rules ใช้ first_wrong_line ของ LLM · ไม่เลือกดึงคณิตจาก `problems.text` เพราะข้อความไทยปนทำให้เปราะ
+2. implicit dy/dx ไม่รองรับใน MVP → `parsed=False` → LLM ตัดสิน (merge-rules ข้อ 2) · กระทบเป้า P2 สูงสุด 3/50 ข้อ
+3. บรรทัด `a=b=c` ใน `expression` / `factored` แยกเป็นขั้นย่อย (§2.2) · ใน `equation` ไม่รองรับ · golden set ยังไม่มีบรรทัดแบบนี้ (`=` หลายตัวที่มีอยู่เป็นรายการคั่น `,` ทั้งหมด)
+4. จำนวน worker อ่านจาก `checker.sympy_workers: 1  # [C]` · 1 ตัวต่อ Cloud Run instance พอสำหรับ pilot · วัดใหม่ตอน P4-lite ถ้ามีคิวรอ
+5. `line_ok = []` เมื่อตัดสินไม่ได้ (§2.5) · merge rules ไม่อ่าน `line_ok` ในกรณีนี้อยู่แล้ว
+
+## 11. Spec changes needed
+
+- `apps/api/pyproject.toml` (Junior) · เพิ่ม `antlr4-python3-runtime==4.11` (parser ของ `parse_latex` แบบ `antlr` · ต้องเป็น 4.11 ให้ตรงกับ grammar ของ SymPy) · Junior OK · แก้แล้ว
+- `config/learning.yaml` (Jam + Junior) + `apps/api/app/settings.py` `CheckerConfig` (Junior) · เพิ่ม `checker.sympy_workers` (ข้อ 4) · settings ต้องเพิ่ม field เพราะ loader เป็นแบบ strict · Junior OK · แก้แล้ว (`learning.yaml` 1.3 + แถวใน `learning-model.md` §8)
+- `specs/features/check/merge-rules.md` §3 · `line_ok` ยาวเท่า `lines` เฉพาะเมื่อตัดสินได้ (ข้อ 5) · Junior OK · แก้แล้ว
+- `specs/system/ai-orchestration.md` §2.4.3 (Jam) · บรรทัด 1 เทียบกับเฉลย, บรรทัด definition, `e` คือค่าคงที่, solution set บนจำนวนจริง, worker ที่เปิดค้างไว้ · แก้ใน PR นี้แล้ว

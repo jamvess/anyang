@@ -2,18 +2,20 @@
 
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Composer } from "./Composer";
+import { Composer, type ComposerHandle } from "./Composer";
 import { MessageList } from "./MessageList";
+import type { OcrPreviewData, OcrStatus } from "./OcrConfirmCard";
 import type { ProblemData } from "./ProblemCard";
 import { roomStrings as t } from "./strings";
+import { hasVerdictMark, type VerdictData } from "./VerdictMark";
 import type { SSEEvent } from "@/lib/sse";
-import type { ChatMessage, MessageRole, RoomData, SendMessage, SendPayload } from "./types";
+import type { ChatMessage, ConfirmOcr, MessageRole, RoomData, SendMessage, SendPayload, Transcribe } from "./types";
 
 /** How close to the bottom (px) still counts as "following" the stream. A UI value, not a learning-model one. */
 export const NEAR_BOTTOM_PX = 80;
 
 // Without a transport the room behaves like S2: the message is shown, nobody answers.
-const noReply: SendMessage = async function* () {
+const noReply: SendMessage & ConfirmOcr = async function* () {
   yield { event: "done", data: {} };
 };
 
@@ -26,14 +28,22 @@ type Token = { speaker: "tutor" | "buddy"; text: string };
 export function ChatRoom({
   room,
   sendMessage = noReply,
+  confirmOcr = noReply,
   opening,
   imagesEnabled,
+  transcribe,
+  voiceEnabled,
 }: {
   room: RoomData;
   sendMessage?: SendMessage;
+  /** POST /sessions/{id}/ocr/confirm (ocr-confirm-card.md). */
+  confirmOcr?: ConfirmOcr;
   /** Rest of the POST /exam-preps/{id}/sessions stream: the opening message streams in with no user bubble (room-http.md §2). */
   opening?: AsyncIterable<SSEEvent>;
   imagesEnabled?: boolean;
+  /** POST /sessions/{id}/transcribe; the mic shows only when given (voice-input.md). */
+  transcribe?: Transcribe;
+  voiceEnabled?: boolean;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>(room.messages);
   const [busy, setBusy] = useState(false);
@@ -45,6 +55,8 @@ export function ChatRoom({
   const abort = useRef<AbortController | null>(null);
   const log = useRef<HTMLElement>(null);
   const stick = useRef(true);
+  const composer = useRef<ComposerHandle>(null);
+  const busyRef = useRef(false);
 
   useEffect(() => () => abort.current?.abort(), []);
 
@@ -75,6 +87,10 @@ export function ChatRoom({
     setMessages((prev) => [...prev, message]);
   }
 
+  function setOcrStatus(id: string, status: OcrStatus) {
+    setMessages((prev) => prev.map((m) => (m.id === id && m.ocr ? { ...m, ocr: { ...m.ocr, status } } : m)));
+  }
+
   function appendText(id: string, text: string) {
     setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, content: (m.content ?? "") + text } : m)));
   }
@@ -83,7 +99,7 @@ export function ChatRoom({
     const { text, image } = payload;
     append(
       newMessage("user", text, {
-        input_mode: image ? "image" : "text",
+        input_mode: image ? "image" : payload.voice ? "voice" : "text",
         // Not uploaded yet, so no Storage path (chat-room-ui.md AC-6c).
         attachment_name: image ? image.name : null,
       }),
@@ -94,8 +110,24 @@ export function ChatRoom({
     await play(sendMessage(payload, controller.signal), controller.signal);
   }
 
-  /** Shows one SSE reply as bubbles (chat-streaming.md §2). */
-  async function play(events: AsyncIterable<SSEEvent>, signal: AbortSignal) {
+  /** Sends the confirmed lines; the card locks only when the check reply finishes (ocr-confirm-card.md §2). */
+  async function confirm(id: string, lines: string[]) {
+    if (busyRef.current) return;
+    setOcrStatus(id, "sending");
+    const controller = new AbortController();
+    abort.current = controller;
+    const done = await play(confirmOcr(lines, controller.signal), controller.signal);
+    if (!controller.signal.aborted) setOcrStatus(id, done ? "confirmed" : "pending");
+  }
+
+  function retake(id: string) {
+    setOcrStatus(id, "retaken");
+    composer.current?.pickPhoto();
+  }
+
+  /** Shows one SSE reply as bubbles (chat-streaming.md §2). Resolves true when it ended with `done`. */
+  async function play(events: AsyncIterable<SSEEvent>, signal: AbortSignal): Promise<boolean> {
+    busyRef.current = true;
     setFailed(false);
     setBusy(true);
     setTyping(true);
@@ -105,7 +137,7 @@ export function ChatRoom({
     let done = false;
     try {
       for await (const { event, data } of events) {
-        if (signal.aborted) return;
+        if (signal.aborted) return false;
         if (event === "token") {
           const { speaker, text } = data as Token;
           if (current?.speaker === speaker) {
@@ -127,6 +159,25 @@ export function ChatRoom({
           append(newMessage("card", null, { problem: data as ProblemData }));
           current = null;
           setStreamingId(null);
+        } else if (event === "ocr_preview") {
+          // Only one card waits at a time: a newer photo replaces older unconfirmed ones (AC-20).
+          const preview = data as OcrPreviewData;
+          if (preview.lines.length > 0) {
+            setMessages((prev) => [
+              ...prev.map((m) => (m.ocr?.status === "pending" ? { ...m, ocr: { ...m.ocr, status: "retaken" as const } } : m)),
+              newMessage("card", null, { ocr: { preview, status: "pending" } }),
+            ]);
+          }
+          current = null;
+          setStreamingId(null);
+        } else if (event === "verdict") {
+          // Shown above the tutor's words; a verdict with no mark leaves the bubble whole (verdict-mark.md AC-3, AC-4).
+          const verdict = data as VerdictData;
+          if (hasVerdictMark(verdict)) {
+            append(newMessage("card", null, { verdict }));
+            current = null;
+            setStreamingId(null);
+          }
         } else if (event === "progress_card") {
           // Shown as a card; the tutor's next tokens start a new bubble (progress-card.md AC-9).
           append(newMessage("card", null, { card: data as ChatMessage["card"] }));
@@ -138,16 +189,18 @@ export function ChatRoom({
         } else if (event === "error") {
           break;
         }
-        // Other events (verdict, ...) are separate features.
+        // Other events (session_end, ...) are separate features.
       }
     } catch {
       // A network failure is shown like an error event.
     }
-    if (signal.aborted) return;
+    if (signal.aborted) return false;
+    busyRef.current = false;
     setBusy(false);
     setTyping(false);
     setStreamingId(null);
     setFailed(!done);
+    return done;
   }
 
   // The opening stream can be read only once; the ref keeps a second effect run
@@ -179,6 +232,8 @@ export function ChatRoom({
             userName={room.user_name}
             streamingId={streamingId}
             typing={typing}
+            onOcrConfirm={confirm}
+            onOcrRetake={retake}
           />
         </div>
       </main>
@@ -188,7 +243,15 @@ export function ChatRoom({
             {t.sendFailed}
           </p>
         )}
-        <Composer limits={room.limits} onSend={send} disabled={busy} imagesEnabled={imagesEnabled} />
+        <Composer
+          limits={room.limits}
+          onSend={send}
+          disabled={busy}
+          imagesEnabled={imagesEnabled}
+          handle={composer}
+          transcribe={transcribe}
+          voiceEnabled={voiceEnabled}
+        />
       </div>
     </div>
   );

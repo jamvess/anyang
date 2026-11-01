@@ -1,0 +1,70 @@
+{
+  "model": "vertex (config/ai.yaml tiers, small = vertex:gemini-3.5-flash)",
+  "wall_seconds": 80.5,
+  "tokens_in": 80750,
+  "tokens_out": 42698,
+  "calls": [
+    {
+      "tag": "run:merge",
+      "file": "",
+      "purpose": "merge_topics",
+      "model": "gemini-3.5-flash",
+      "status": "ok",
+      "latency_ms": 58748,
+      "tokens_in": 4530,
+      "tokens_out": 20018,
+      "schema_retries": 0
+    },
+    {
+      "tag": "run:midterm-2559-1:a7",
+      "file": "midterm-2559-1",
+      "purpose": "map_questions",
+      "model": "gemini-3.5-flash",
+      "status": "ok",
+      "latency_ms": 7436,
+      "tokens_in": 7700,
+      "tokens_out": 2080,
+      "schema_retries": 0
+    },
+    {
+      "tag": "run:midterm-2561-1:a7",
+      "file": "midterm-2561-1",
+      "purpose": "map_questions",
+      "model": "gemini-3.5-flash",
+      "status": "ok",
+      "latency_ms": 14313,
+      "tokens_in": 15136,
+      "tokens_out": 4054,
+      "schema_retries": 1
+    },
+    {
+      "tag": "ingest:midterm-2559-1",
+      "file": "midterm-2559-1",
+      "purpose": "ingest",
+      "status": "ok",
+      "latency_ms": 36400,
+      "tokens_in": 36310,
+      "tokens_out": 10810,
+      "schema_retries": 0
+    },
+    {
+      "tag": "ingest:midterm-2561-1",
+      "file": "midterm-2561-1",
+      "purpose": "ingest",
+      "status": "ok",
+      "latency_ms": 14800,
+      "tokens_in": 17074,
+      "tokens_out": 5736,
+      "schema_retries": 0
+    }
+  ],
+  "notes": {
+    "a5": {
+      "sheet-01": "The additional review section on basic functions (pages 120-140) was skipped as it is a review of prerequisite high school material.",
+      "sheet-02": "",
+      "sheet-03": "",
+      "sheet-04": ""
+    },
+    "a6": ""
+  }
+}

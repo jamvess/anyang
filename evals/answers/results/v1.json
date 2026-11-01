@@ -1,0 +1,33 @@
+{
+  "purpose": "check_answer",
+  "prompt": "v1",
+  "n": 50,
+  "missing": [],
+  "verdict": {
+    "matched": 50,
+    "total": 50,
+    "accuracy": 1.0,
+    "target": 0.95,
+    "passed": true
+  },
+  "verdict_binary": {
+    "matched": 50,
+    "total": 50,
+    "accuracy": 1.0
+  },
+  "error_type": {
+    "matched": 27,
+    "total": 28,
+    "accuracy": 0.9642857142857143,
+    "target": 0.8,
+    "passed": true
+  },
+  "first_wrong_line": {
+    "matched": 24,
+    "total": 24,
+    "accuracy": 1.0,
+    "target": 0.85,
+    "passed": true
+  },
+  "passed": true
+}

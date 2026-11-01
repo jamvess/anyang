@@ -1,6 +1,7 @@
 """Provider interface for the AI gateway. Providers only talk to a model; the gateway owns
 prompts, routing, retries, schema validation and logging (ai-orchestration.md §2.10)."""
 
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from typing import Literal, Protocol
 
@@ -59,5 +60,19 @@ class ProviderRateLimited(Exception):
         self.retry_after = retry_after
 
 
+@dataclass
+class StreamUsage:
+    """Token counts of one stream; the provider fills it in while it streams."""
+
+    tokens_in: int = 0
+    tokens_out: int = 0
+
+
 class Provider(Protocol):
     async def generate(self, request: ProviderRequest) -> ProviderResponse: ...
+
+
+class StreamProvider(Protocol):
+    """Free-text output, chunk by chunk as the model writes it (``tutor_reply``)."""
+
+    def stream(self, request: ProviderRequest, usage: StreamUsage) -> AsyncIterator[str]: ...

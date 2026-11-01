@@ -1,0 +1,8 @@
+# Build and push the apps/api image only. Used by infra/deploy-staging.ps1 (manual deploy);
+# the merge trigger uses cloudbuild.yaml. The Dockerfile needs the repo root as context.
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-f", "apps/api/Dockerfile", "-t", "${_IMAGE}", "."]
+
+images:
+  - ${_IMAGE}

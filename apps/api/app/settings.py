@@ -96,6 +96,7 @@ class OcrConfig(_Strict):
 
 class CheckerConfig(_Strict):
     sympy_timeout_seconds: float = Field(gt=0)
+    sympy_workers: int = Field(ge=1)
     numeric_rel_tolerance: float = Field(ge=0)
     max_generate_retries: int = Field(ge=0)
 
@@ -153,7 +154,8 @@ class PurposeConfig(_Strict):
     stream: bool = False
     # Gemini 3 thinking level. Thinking tokens count inside max_tokens, so transcription
     # purposes use "low" (PoC P3: one exam page used ~4,000 tokens by default, 396 on low).
-    thinking: Literal["low", "medium", "high"] | None = None
+    # "minimal" is the lowest level of Gemini 3 Flash (P4-lite: tutor_reply TTFT).
+    thinking: Literal["minimal", "low", "medium", "high"] | None = None
 
 
 class CircuitBreakerConfig(_Strict):
@@ -270,6 +272,20 @@ class EnvSettings(BaseSettings):
     supabase_anon_key: SecretStr = SecretStr("")
     supabase_service_role_key: SecretStr = SecretStr("")
     database_url: SecretStr = SecretStr("")
+    # Every request outside app.auth.PUBLIC_PATHS needs a Supabase JWT (api-auth.md §2.3).
+    # False only until the web sends tokens: then a request without one gets no tenant.
+    auth_required: bool = True
+
+    @model_validator(mode="after")
+    def _auth_needs_supabase(self) -> "EnvSettings":
+        # Fail at boot, not on the first request (api-auth.md AC-8).
+        if self.auth_required and not (
+            self.supabase_url and self.supabase_anon_key.get_secret_value()
+        ):
+            raise ValueError(
+                "AUTH_REQUIRED=true needs SUPABASE_URL and SUPABASE_ANON_KEY to check tokens"
+            )
+        return self
 
     # --- AI providers ---
     ai_provider: Literal["fake", "live"] = "fake"
@@ -277,7 +293,6 @@ class EnvSettings(BaseSettings):
     gemini_api_key: SecretStr = SecretStr("")
     google_cloud_project: str = ""
     google_cloud_location: str = ""
-    google_application_credentials: str = ""
     anthropic_api_key: SecretStr = SecretStr("")
     mathpix_app_id: str = ""
     mathpix_app_key: SecretStr = SecretStr("")

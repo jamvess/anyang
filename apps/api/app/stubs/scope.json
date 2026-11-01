@@ -1,0 +1,69 @@
+{
+  "prep_name": "Factorization",
+  "days_left": 5,
+  "status": "draft",
+  "topics": [
+    {
+      "id": "7f7f5ecb-b010-5135-b014-9f8b23e3ff9b",
+      "order": 1,
+      "name": "คูณพหุนาม",
+      "stars": 2,
+      "reason": "พื้นฐานของหัวข้อสามดาว",
+      "source_label": "ch3 น.2–3",
+      "origin": "doc"
+    },
+    {
+      "id": "5e83eee3-6f17-518a-89e1-6a545657ab45",
+      "order": 2,
+      "name": "ดึงตัวประกอบร่วม",
+      "stars": 3,
+      "reason": "ออกทุกชุด",
+      "source_label": "ch3 น.4",
+      "origin": "doc"
+    },
+    {
+      "id": "fe96b1ef-28a1-5fae-9378-df2519eafdd6",
+      "order": 3,
+      "name": "ผลต่างกำลังสอง",
+      "stars": 3,
+      "reason": "ออกทุกชุด",
+      "source_label": "ch3 น.5–6",
+      "origin": "doc"
+    },
+    {
+      "id": "49a5750e-1e11-53f6-ada7-f10222f79db1",
+      "order": 5,
+      "name": "แยก x²+bx+c",
+      "stars": 3,
+      "reason": "ออกทุกชุด",
+      "source_label": "ch3 น.8–10",
+      "origin": "doc"
+    },
+    {
+      "id": "5f3492ec-65e3-5a5a-85e6-4992d2373271",
+      "order": 7,
+      "name": "การจัดกลุ่ม",
+      "stars": 2,
+      "reason": "เจอแค่ในชุดของอีกอาจารย์",
+      "source_label": "ch3 น.14",
+      "origin": "doc"
+    },
+    {
+      "id": "0ce19b07-96d8-5ea7-9965-f446f7155ac1",
+      "order": 9,
+      "name": "กำลังสาม",
+      "stars": 1,
+      "reason": "ไม่เคยออก",
+      "source_label": "ch3 น.14 เชิงอรรถ",
+      "origin": "doc"
+    }
+  ],
+  "unmapped_questions": [
+    {
+      "id": "0e4acd3a-a8fa-57f6-9a97-7a93fc968f52",
+      "label": "midterm-2567 ข้อ 11",
+      "text": "แก้สมการ $x^2 - 5x + 6 = 0$",
+      "map_note": "เป็นเรื่องสมการกำลังสอง ไม่มีในชีทที่ใส่มา"
+    }
+  ]
+}

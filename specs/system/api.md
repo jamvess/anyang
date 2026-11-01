@@ -1,10 +1,10 @@
-# API (v1.4)
+# API (v1.6)
 
 Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้างอัตโนมัติที่ `/docs` · frontend generate types จาก `/openapi.json`
 
 ## Conventions
 
-- **Auth:** ส่ง Supabase access token ใน `Authorization: Bearer <jwt>` ทุก request backend ส่ง token นี้ต่อให้ Supabase เพื่อให้ RLS ทำงาน
+- **Auth:** ส่ง Supabase access token ใน `Authorization: Bearer <jwt>` ทุก request backend ส่ง token นี้ต่อให้ Supabase เพื่อให้ RLS ทำงาน · ไม่มี token หรือ token ผิด/หมดอายุ/ไม่มี `tenant_id` → `401` + `WWW-Authenticate: Bearer` code `missing_token` / `invalid_token` · ไม่ต้องมี token: `/health`, `/docs`, `/openapi.json` · Supabase Auth ติดต่อไม่ได้ → `503` code `auth_unavailable` (ไม่ใช่ 401 จะได้ไม่ไล่ทุกคนให้ login ใหม่) · ระหว่างที่หน้าเว็บยังไม่ส่ง token env `AUTH_REQUIRED=false` ให้ request ที่ไม่มี token ผ่านได้แต่ไม่มี tenant (token ที่ผิดยังได้ 401 · ยกเว้น API ที่ไม่มี `SUPABASE_URL`/`SUPABASE_ANON_KEY` เช่น api-staging ตอนนี้ จะไม่ตรวจ token เลย) · `specs/features/platform/api-auth.md` (v1.5)
 - **Error:** `{"error": {"code": "scope_not_confirmed", "message": "..."}}` พร้อม HTTP status ที่ตรงความหมาย
 - **Long-running jobs:** ตอบ `202 Accepted` แล้วให้ client poll endpoint ความคืบหน้า
 - **Streaming:** SSE ผ่าน `POST` (client ใช้ `fetch` + `ReadableStream`) ทุก stream จบด้วย event `done`
@@ -39,6 +39,61 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | POST | `/exam-preps/{id}/scope/chat` | **SSE:** `token`, `scope_patch`, `done` |
 | GET | `/exam-preps/{id}/scope/changes` | change log (S14) |
 | POST | `/exam-preps/{id}/scope/confirm` | lock เป็น scope version |
+
+**หน้าตรวจขอบเขต (v1.6 · ข้อเสนอ รอ Junior ตัดสิน):** รูปร่างตามข้อเสนอของ May ใน `specs/features/scope/scope-review.md` §3 (OQ 5–8) · ตัวอย่าง: `apps/web/tests/fixtures/scope/scope-s12.json`, `sources-t3.json` (id ในไฟล์ของเว็บเป็น `t3` ฯลฯ ของจริงเป็น uuid) · ทุก field ต้องมี และไม่มี field อื่น · prep หรือหัวข้อที่ไม่มี หรือเป็นของ tenant อื่น (RLS มองไม่เห็น) → `404` code `not_found`
+
+**`Scope`** (response ของ `GET /exam-preps/{id}/scope`)
+
+| Field | Type | ที่มา |
+|---|---|---|
+| `prep_name` | string | `exam_preps.title` |
+| `days_left` | integer | เหมือน `Room.days_left` |
+| `status` | `"draft"` \| `"confirmed"` | `"confirmed"` เมื่อ `exam_preps.active_scope_version_id` ไม่เป็น null **และ**ไม่มีแถว `scope_changes` ของ prep นี้ที่ `created_at` หลัง `confirmed_at` ของ version นั้น · ไม่งั้น `"draft"` (ยืนยันแล้วแก้ต่อ → กลับเป็น draft และยืนยันเป็น version ใหม่ได้) |
+| `topics` | `ScopeTopic[]` | `topics` ของ prep นี้ เรียงตาม `order_index` · **รวมหัวข้อที่ `status = 'excluded'`** (หน้าเว็บแสดงท้ายรายการ · scope-review OQ 3) |
+| `unmapped_questions` | `PastQuestion[]` | `past_exam_questions` ของไฟล์ใน prep นี้ที่ `topic_id is null` |
+
+ยังสกัดหัวข้อหรือคำนวณดาวไม่เสร็จ (ขั้น 5d ของ ai-orchestration §2.3.4) → `409` code `scope_not_ready` (409 ตัวเดียวของ endpoint นี้ · `GET /topics/{id}/sources` ไม่มี 409) · หน้าเว็บอยู่ที่หน้าความคืบหน้า (S11) จนกว่า `GET /exam-preps/{id}/ingestion` จะบอกว่าเสร็จ
+
+**`ScopeTopic`**
+
+| Field | Type | ที่มา |
+|---|---|---|
+| `id` | string (uuid) | `topics.id` |
+| `order` | integer ≥ 1 | `topics.order_index` (นับจาก 1) · หน้าเว็บแสดงเป็นเลขหน้าชื่อ |
+| `name` | string | `topics.name` |
+| `stars` | integer 0–3 · **ไม่เป็น null** (ถ้ายังมีหัวข้อที่ดาวเป็น null endpoint ตอบ `409 scope_not_ready` ไม่ตัดหัวข้อนั้นทิ้ง) | `topics.importance` · หัวข้อที่ `status = 'excluded'` เป็น `0` เสมอ · 0 ดาว = ตัดออก (ai-orchestration §2.3.5) |
+| `reason` | string | `topics.importance_reason` (template ฝั่ง backend · ai-orchestration §2.3.5) |
+| `source_label` | string | ข้อความพร้อมแสดงที่ backend สร้างจากช่วงหน้าใน `topic_sources` + `materials.file_name` (หน้าเว็บไม่ตัดหรือรวมเอง) |
+| `origin` | `"doc"` \| `"user"` | `topics.origin` |
+
+**`PastQuestion`:** `{id: string (uuid), label: string, text: string, map_note: string | null}`
+- `label` ข้อความพร้อมแสดงจากชื่อไฟล์ + `past_exam_questions.q_no`
+- `text` คือ `past_exam_questions.text` เขียนสมการเป็น `$…$` ตาม Conventions "สมการในข้อความ" (prompt `split_past_exam` รับและคืนสมการแบบนี้อยู่แล้ว)
+- `map_note` คือ `past_exam_questions.map_note` (เหตุผลของ A7 ทุกข้อ ไม่ใช่เฉพาะข้อที่ map ไม่ได้ · data-model.md P3a ข้อ 3 · migration `0003` ใน PR #67)
+
+**`TopicSources`** (response ของ `GET /topics/{id}/sources`)
+
+| Field | Type | ที่มา |
+|---|---|---|
+| `excerpts` | `{material_name: string, page: integer ≥ 1, text: string}[]` | 1 รายการต่อ 1 หน้าในช่วงของ `topic_sources` · `materials.file_name`, `material_pages.page_no`, `material_pages.text` · เรียงตามไฟล์แล้วตามหน้า · หัวข้อ `origin = 'user'` ได้ `[]` |
+| `questions` | `PastQuestion[]` | `past_exam_questions` ที่ `topic_id` = หัวข้อนี้ · เรียงตามไฟล์ (`materials.created_at`) แล้วตามลำดับในข้อสอบ · ไม่มีได้ `[]` |
+
+**`ScopeConfirmed`** (response ของ `POST /exam-preps/{id}/scope/confirm` · ไม่มี body)
+- ผลลัพธ์คือ `{scope_version_id: string (uuid), version: integer ≥ 1}`
+- สิ่งที่ backend ทำ: สร้างแถว `scope_versions` (`status = 'confirmed'`, `snapshot` ของหัวข้อ) · ตั้ง `exam_preps.active_scope_version_id` · เปลี่ยนหัวข้อ `draft` เป็น `confirmed` · ai-orchestration §2.3.2 ขั้น 7
+- หน้าเว็บใช้แค่ว่าได้ 2xx (`scope-review.md` AC-15) แล้วไปห้องติว
+- error:
+  - `409 scope_not_ready` · ยังสกัดหัวข้อไม่เสร็จ
+  - `409 scope_already_confirmed` · `Scope.status` เป็น `"confirmed"` อยู่แล้ว
+  - `409 scope_empty` · ไม่มีหัวข้อที่ไม่ได้ถูกตัดออก
+
+**รอตัดสิน (v1.6 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-01 (PR #100) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
+
+1. **รูปร่างของ `Scope` และ `status`** (scope-review OQ 5): ใช้ข้อเสนอของ May ตามที่เขียนไว้ · `status` ดูจาก `active_scope_version_id` เพราะ scope ที่ยืนยันแล้วคือ version ที่ prep ชี้อยู่ และไม่มีการแก้หลังยืนยัน · ส่งหัวข้อที่ตัดออกเป็น `stars: 0` เพราะ OQ 3 ต้องแสดงหัวข้อที่ถูกตัด · backend ต้องเปลี่ยน `status = 'excluded'` กับ `importance = 0` ไปด้วยกันเสมอ เพราะ 0 ดาว = ตัดออก (§2.3.5) · หัวข้อที่เพิ่มด้วย `add_topic` ต้องได้ดาวตอนเพิ่ม (ยังไม่ได้เขียนใน §2.3.6) ไม่งั้น `GET /scope` จะตอบ `scope_not_ready`
+2. **กฎของ `source_label` และ `label`** (OQ 6): ข้อเสนอคือ `{ชื่อไฟล์ไม่มีนามสกุล} น.{from}–{to}` (หน้าเดียวใช้ `น.{n}`) หลายช่วงคั่นด้วย `, ` · `label` = `{ชื่อไฟล์ไม่มีนามสกุล} ข้อ {q_no}` · ชื่อสั้นอย่าง "ch3" ใน fixture ของ May ต้องมีที่เก็บชื่อย่อ (ยังไม่มีใน schema) · หัวข้อ `origin = 'user'` ไม่มีช่วงหน้า ข้อเสนอคือส่ง `""` และหน้าเว็บไม่แสดงส่วนที่มา (ต้องถาม May ด้วย)
+3. **ข้อความต้นฉบับ** (OQ 6): `excerpts.text` เป็นข้อความทั้งหน้าจาก `material_pages` · ถ้ายาวเกินไปค่อยตัดเฉพาะส่วนที่เกี่ยวข้องภายหลัง
+4. **`text` ของข้อสอบใช้ `$…$`** (OQ 7): Jam ตกลง (เป็นเจ้าของ prompt) · `split_past_exam/v1` รับสมการเป็น LaTeX ใน `$` อยู่แล้ว
+5. **error code ของ scope:** `scope_not_ready` (`GET /scope` และ confirm) · `scope_already_confirmed`, `scope_empty` (confirm อย่างเดียว) · 409 ทั้งหมด
 
 ### ห้องติว (flow 2.2, 2.4, 2.5, 2.1)
 

@@ -59,7 +59,7 @@ Part A ทำครั้งเดียวต่อเครื่อง ใช
 
 - ติดตั้งเสร็จทุกตัวแล้ว **ปิด terminal ทั้งหมดแล้วเปิดใหม่** ถ้าเจอ `not recognized` ให้ดูตารางปัญหาท้ายไฟล์
 - **macOS:** ติดตั้ง Git ด้วย `xcode-select --install` · Node จาก nodejs.org · uv ด้วย `curl -LsSf https://astral.sh/uv/install.sh | sh` · Claude Code ด้วย `curl -fsSL https://claude.ai/install.sh | bash`
-- **ยังไม่ต้องติดตั้ง:** Supabase CLI (ใช้ผ่าน `npx supabase` และ Junior คนเดียวที่ต้องใช้), Google Cloud CLI (ใช้ใน S2), Docker (ไม่ใช้)
+- **ยังไม่ต้องติดตั้ง:** Supabase CLI (ใช้ผ่าน `npx supabase` และ Junior คนเดียวที่ต้องใช้), Google Cloud CLI (เฉพาะ Junior + Jam และคนที่รัน AI จริงบน Vertex: `winget install --id Google.CloudSDK -e` → `gcloud auth login` → `gcloud config set project anyang-513006` · ADC สำหรับ Vertex ดู A5 · ติดตั้งแล้วต้องปิด VS Code ทั้งโปรแกรมแล้วเปิดใหม่ terminal ใน VS Code ถึงจะเจอ `gcloud` · ดู `infra/README.md`), Docker (ไม่ใช้)
 
 ## A3 · ตั้งค่า git (Git Bash)
 
@@ -102,6 +102,7 @@ code .env
 | `SUPABASE_ANON_KEY` | Project Settings → **API Keys** → Publishable key (`sb_publishable_...`) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Project Settings → **API Keys** → Secret key (`sb_secret_...`) ⚠️ เทียบเท่ารหัส admin |
 | `DATABASE_URL` | ปุ่ม **Connect** → แท็บ Direct → **Session pooler** · แทน `[YOUR-PASSWORD]` ด้วย database password ที่ขอจากเจ้าของ repo ต่อหน้า |
+| `AUTH_REQUIRED` | ไม่ต้องแก้ ใช้ `false` ตาม `.env.example` จนกว่าหน้าเว็บจะ login และส่ง token · `true` = API ตอบ 401 ทุก request ที่ไม่มี Supabase JWT (`specs/features/platform/api-auth.md`) และต้องมี `SUPABASE_URL` + `SUPABASE_ANON_KEY` ไม่งั้น API ไม่ start |
 | `NEXT_PUBLIC_SUPABASE_URL` | ใช้ค่าเดียวกับ `SUPABASE_URL` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ใช้ค่าเดียวกับ `SUPABASE_ANON_KEY` |
 | `CORS_ALLOW_ORIGINS` | ไม่ต้องแก้ ใช้ค่าใน `.env.example` (`http://localhost:3000`) · origin ที่ browser เรียก API ได้ ต้องตรงทุกตัวอักษร คั่นด้วย `,` ห้ามมี `*` หรือ `/` ท้าย · ถ้ารันเว็บที่ port อื่นให้เพิ่มที่นี่ |
@@ -109,12 +110,22 @@ code .env
 
 บรรทัดอื่น (`AI_PROVIDER=fake`, GCP, Anthropic, Sentry) ปล่อยไว้ตามเดิมก่อน
 
-**เฉพาะคนที่รัน PoC กับ Gemini จริง** (ตอนนี้คือ Jam ใน P3) ให้ใส่ 2 ค่านี้ ส่วนคนอื่นปล่อยว่างไว้ได้ · ไม่ต้องเปลี่ยน `AI_PROVIDER` เพราะ script ของ PoC สร้าง gateway แบบ live เอง · ส่วน test ใช้ fake provider เสมอ
+**เฉพาะคนที่รัน PoC กับ Gemini จริง** (ตอนนี้คือ Jam) ให้ใส่ค่าในตารางนี้ ส่วนคนอื่นปล่อยว่างไว้ได้ · ไม่ต้องเปลี่ยน `AI_PROVIDER` เพราะ script ของ PoC สร้าง gateway แบบ live เอง · ส่วน test ใช้ fake provider เสมอ
 
 | ตัวแปร | ค่า |
 |---|---|
-| `GEMINI_API_KEY` | https://aistudio.google.com/apikey → **Create API key** → Copy · ⚠️ ถ้าเป็น free tier Google อาจเอาข้อมูลไปใช้ train ได้ จึงห้ามส่งข้อมูลของ user จริงหรือรูปลายมือของเพื่อนถ้ายังไม่ได้เปิด billing (AI-07) |
-| `AI_MODEL_OVERRIDE` | model ที่จะใช้แทน `TODO-...` ใน `config/ai.yaml` เช่น `gemini:gemini-3.8-flash` |
+| `GOOGLE_CLOUD_PROJECT` | `anyang-513006` → gateway ได้ provider `vertex` (ค่า default ของ `config/ai.yaml`) · ใช้ credit ของ Free Trial · ต้องทำ ADC ข้างล่างก่อน |
+| `GOOGLE_CLOUD_LOCATION` | `global` (ค่าใน `.env.example` · Gemini 3 บน Vertex) |
+| `GEMINI_API_KEY` | ไม่ต้องใส่ถ้าใช้ Vertex · ใส่เมื่ออยากลอง model ผ่าน AI Studio: https://aistudio.google.com/apikey → **Create API key** → Copy แล้วใช้ `AI_MODEL_OVERRIDE=gemini:<model>` · ⚠️ free tier ได้ 20 request/วัน/model และ Google ใช้ prompt กับคำตอบไปพัฒนาผลิตภัณฑ์ได้ และอาจมีคนอ่าน ([Gemini API Additional Terms](https://ai.google.dev/gemini-api/terms)) จึงห้ามส่งข้อมูลของ user จริงหรือรูปลายมือของเพื่อน (AI-07) · Vertex ไม่นำข้อมูลไป train แม้ใช้เครดิต Free Trial (`specs/features/ai/gemini-vertex.md` §10 ข้อ 5) |
+| `AI_MODEL_OVERRIDE` | ปกติปล่อยว่าง · ใส่เมื่ออยากลอง model อื่นแทนทุก tier เช่น `vertex:gemini-3.8-flash` |
+
+**ADC (Application Default Credentials) สำหรับ Vertex** · ทำครั้งเดียวต่อเครื่อง ไม่มี key file
+
+1. ติดตั้ง Google Cloud CLI: https://cloud.google.com/sdk/docs/install → Windows → ดาวน์โหลด installer แล้วกด Next จนจบ (ติ๊ก "Run gcloud init" ออกได้) · ปิดแล้วเปิด Git Bash ใหม่ · `gcloud --version` ต้องขึ้นเลขเวอร์ชัน
+2. `gcloud auth application-default login` → browser เปิดขึ้นมา → login ด้วยบัญชีที่อยู่ใน project `anyang-513006` → **Allow**
+3. `gcloud auth application-default set-quota-project anyang-513006`
+4. ทดสอบ (เรียก Vertex จริง 1 ครั้ง): `cd apps/api && uv run pytest tests/integration/test_vertex_live.py -m live -s` ต้องขึ้น `1 passed` และบรรทัด `vertex smoke: model=...`
+5. ถ้าขึ้น `PERMISSION_DENIED` ให้เจ้าของ project ให้สิทธิ์ **Vertex AI User** กับบัญชีของคุณ (IAM & Admin → IAM → Grant access)
 
 **2) `apps/web/.env.local` ใช้กับ frontend**
 
@@ -250,7 +261,7 @@ items this sprint. Do not change any files.
 
 ดูที่ [`daily-workflow.md`](daily-workflow.md) ที่เดียว ทุกวันใช้แค่ 4 คำสั่งใน Claude Code: `/work-start <ชื่อ>` → (`/work-check` หลังทุกขั้น) → `/work-pause` หรือ `/work-done`
 
-ในไฟล์นั้นมีทั้งวิธีดูว่าเพื่อนทำอะไรเสร็จแล้ว, วงจรของ 1 งาน, worklog, การ review PR ของเพื่อน (หัวข้อ D) และคู่มือแบบทำเองถ้าไม่ใช้คำสั่งอัตโนมัติ
+ในไฟล์นั้นมีทั้งวิธีดูว่าเพื่อนทำอะไรเสร็จแล้ว, วงจรของ 1 งาน, worklog, การดู PR ของเพื่อนย้อนหลัง (หัวข้อ D · ไม่บังคับ) และคู่มือแบบทำเองถ้าไม่ใช้คำสั่งอัตโนมัติ
 
 ## B3 · กฎการใช้ Claude Code ของทีม
 
@@ -262,7 +273,7 @@ items this sprint. Do not change any files.
 6. **ใช้ AI coding tool ตัวเดียว** คือ Claude Code ห้ามติดตั้งตัวอื่นที่แก้ repo พร้อมกัน
 7. **กรอกตัวเลขใน PR template** (% โค้ดที่ agent เขียน, จำนวนรอบ red → green) ทีมต้องใช้ตัวเลขนี้ใน Self-Assessment
 8. **ถ้า Claude ทำผิดเรื่องเดิมซ้ำ** ให้เพิ่มกฎใน `CLAUDE.md` ผ่าน PR แทนการบอกซ้ำทุกครั้ง
-9. **ถ้าเจอ usage limit ของ Pro** ให้สลับไปทำงานที่ไม่ใช้ AI ก่อน เช่น review PR, label ข้อมูล, wireframe
+9. **ถ้าเจอ usage limit ของ Pro** ให้สลับไปทำงานที่ไม่ใช้ AI ก่อน เช่น ดู PR ของเพื่อนย้อนหลัง, label ข้อมูล, wireframe
 
 ---
 

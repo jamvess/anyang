@@ -1,17 +1,20 @@
+import json
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from pydantic.json_schema import models_json_schema
 from starlette.exceptions import HTTPException
 
+from app.auth import AUTH_ERRORS, get_auth, install_auth_errors
 from app.middleware import install_middleware
 from app.models.room import EVENT_MODELS
-from app.routers import health, room
+from app.routers import health, room, scope
 from app.settings import get_settings
 
 
@@ -22,11 +25,40 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     yield
 
 
+class _JsonLines(logging.Formatter):
+    """One JSON object per line, so Cloud Logging reads ``severity`` and ``message``."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        entry = {
+            "severity": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+        }
+        if record.exc_info:
+            entry["stack_trace"] = self.formatException(record.exc_info)
+        return json.dumps(entry, ensure_ascii=False)
+
+
+def _configure_logging(level: str) -> None:
+    """Send our ``app.*`` loggers to stderr at LOG_LEVEL. Uvicorn sets up only its own loggers,
+    so without this every INFO line of the app (for example ``app.ai.calls``) is dropped."""
+    logger = logging.getLogger("app")
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setFormatter(_JsonLines())
+        logger.addHandler(handler)
+    logger.setLevel(level.upper())
+
+
+_configure_logging(get_settings().env.log_level)
 app = FastAPI(title="anyang-api", lifespan=lifespan)
 # Middleware must be added before startup, so CORS reads settings here, not in lifespan.
 install_middleware(app, get_settings().env)
-app.include_router(health.router)
-app.include_router(room.router)
+install_auth_errors(app)
+app.include_router(health.router)  # public: app.auth.PUBLIC_PATHS
+# Every other router goes in with the JWT check (api-auth.md §2.4); a test walks app.routes.
+app.include_router(room.router, dependencies=[Depends(get_auth)], responses=AUTH_ERRORS)
+app.include_router(scope.router, dependencies=[Depends(get_auth)], responses=AUTH_ERRORS)
 
 
 # --- error envelope (api.md Conventions): {"error": {"code", "message"}} ---------

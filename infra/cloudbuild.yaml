@@ -1,5 +1,6 @@
-# Triggered on push to main (Cloud Build trigger connected to the GitHub repo).
-# Builds apps/api and deploys to Cloud Run staging. Secrets come from Secret Manager.
+# Triggered on push to main (trigger api-staging-deploy, see infra/README.md) when apps/api/**,
+# config/**, prompts/** or infra/** change. Builds apps/api and deploys Cloud Run api-staging.
+# Keep the deploy flags in sync with infra/deploy-staging.ps1 (manual fallback).
 substitutions:
   _REGION: asia-southeast1
   _SERVICE: api-staging
@@ -18,11 +19,18 @@ steps:
       - ${_SERVICE}
       - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/api:$COMMIT_SHA
       - --region=${_REGION}
+      - --allow-unauthenticated   # the browser calls it directly; no live AI until every endpoint checks the Supabase JWT
       - --min-instances=0
+      - --max-instances=2         # cap spend on trial credit
       - --concurrency=40          # SSE holds connections open; tune with the P6 measurement
       - --timeout=600
-      - --set-secrets=SUPABASE_SERVICE_ROLE_KEY=supabase-service-role:latest,ANTHROPIC_API_KEY=anthropic-api-key:latest
-      - --set-env-vars=AI_PROVIDER=live,GOOGLE_CLOUD_LOCATION=${_REGION}
+      # Non-secret env (AI_PROVIDER=fake, CORS). A file, so "," "^" "$" in the CORS values need no escaping
+      # and Cloud Build does not substitute "$" inside it. No --set-secrets until live AI.
+      - --env-vars-file=infra/env/api-staging.yaml
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/api:$COMMIT_SHA
+
+options:
+  # Required when the trigger runs as a user-managed service account (cloudbuild-deployer).
+  logging: CLOUD_LOGGING_ONLY
