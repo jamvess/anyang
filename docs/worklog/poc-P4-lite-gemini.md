@@ -13,7 +13,7 @@
 - [x] 2. 🤖 รัน API ในเครื่อง `AI_PROVIDER=live AUTH_REQUIRED=false` (override env ไม่แก้ `.env`) เก็บ log `app.ai.calls` ลงไฟล์ · ยิง `poc/P4-lite/ttft.py --base http://127.0.0.1:8000 --n 50 --label local-vertex-low` (config ปัจจุบัน `thinking: low`) · เพิ่ม `poc/P4-lite/cost.py` อ่าน log → token ต่อข้อความ + ต้นทุน (บาท) + test ส่วน pure · ใช้ credit trial ราว 50 call
 - [x] 3. 🙋 Jam ดูผลแล้วตัดสิน: ถ้า TTFT p95 ≥ 2 s ลองตัวไหนต่อ (เช่น ไม่ตั้ง max เดิม, `thinking` ระดับต่ำกว่า low ถ้า model รองรับ · ต้องแก้ `Literal` ใน settings · หรือ prompt สั้นลง) · ทดลองผ่าน `CONFIG_DIR` ชี้ไป copy ของ `config/` ใน scratchpad จึงไม่แตะ `config/ai.yaml` ระหว่างทดลอง
 - [x] 4. 🤖 รันรอบทดลองตามที่ Jam เลือก (ถ้ามี) · label แยก
-- [ ] 5. 🙋 Jam ตัดสินค่าใน `config/ai.yaml` (ไฟล์กลาง · บอกกลุ่ม) ถ้าจะเปลี่ยน
+- [x] 5. 🙋 Jam ตัดสินค่าใน `config/ai.yaml` (ไฟล์กลาง · บอกกลุ่ม) ถ้าจะเปลี่ยน
 - [ ] 6. 🤖 อัปเดต `poc/P4-lite/README.md` + ร่าง `/poc-report P4-lite` (report ของ May + Junior · Jam ร่างช่วง solo) · เกณฑ์: TTFT p95 < 2 s · สลับ provider ด้วย config · มีตัวเลขต้นทุน
 - [ ] 7. 🙋 Jam review report
 - [ ] 8. 🤖 `/work-done`
@@ -30,9 +30,11 @@
 
 - 2026-11-01 · รอบทดลอง: Jam เลือกข้อ 1 (`thinking: minimal` · ตอบ "ok" ตามข้อแนะนำ) · เพิ่ม `minimal` ใน `Literal` ของ `PurposeConfig.thinking` (`app/settings.py`) · ทดลองผ่าน `CONFIG_DIR` ชี้ copy ของ `config/` ใน scratchpad
 
+- 2026-11-01 · Jam ตัดสิน ("ใช้ตามที่แนะนำ"): `config/ai.yaml` 1.8 `tutor_reply` `thinking: low` → `minimal` · `max_tokens` 2000 คงเดิม · ไฟล์กลาง → บอกกลุ่มก่อน merge
+
 ## Next step
 
-ขั้น 5: Jam ตัดสินว่า `config/ai.yaml` `purposes.tutor_reply.thinking` เปลี่ยน `low` → `minimal` ไหม (ไฟล์กลาง · bump version 1.8 · บอกกลุ่ม) · อ่านคำตอบ 3 ข้อใน `poc/P4-lite/results/quality-low-vs-minimal.json` ประกอบ
+ขั้น 6: อัปเดต `poc/P4-lite/README.md` (ผล Gemini 2 รอบ + ต้นทุน + คำสั่งรัน) แล้ว `/poc-report P4-lite` → `specs/poc/reports/P4-lite.md` + บรรทัดผลใน `specs/poc/README.md` + `ai-orchestration.md` §3.6 แถว "TTFT และต้นทุน"
 
 ## Waiting on
 
