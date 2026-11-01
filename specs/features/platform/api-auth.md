@@ -6,7 +6,7 @@
 | Requirements | SA-06, NFR-S1, AI-04, SA-03, NFR-P1 |
 | Owner | Jam (งาน backend · Junior ดูย้อนหลัง) |
 | Reviewer | Jam · Junior (ข้อ backend ใน §10) · May (§10 ข้อ 1 · หน้าเว็บ) |
-| Status | approved (Jam 2026-11-01 · §10 ข้อ 2, 3 ตามข้อเสนอ · ข้อ 1 รอ May · ข้อ 4–6 ใช้ข้อเสนอไปก่อน รอ Junior) |
+| Status | implemented (PR #98) · approved (Jam 2026-11-01 · §10 ข้อ 2, 3 ตามข้อเสนอ · ข้อ 1 รอ May · ข้อ 4–6 ใช้ข้อเสนอไปก่อน รอ Junior) |
 | Related system spec | `api.md` Conventions "Auth", "Error" · `0001_init.sql` `custom_access_token_hook`, `current_tenant_id()`, RLS ทุกตาราง · `apps/api/CLAUDE.md` "Database" · `ai-calls-log.md` §2.1 (`ai_call_context`) · `tutor-reply-stream.md` §9–10 ข้อ 1 · `infra/README.md` ⚠️ "ห้ามเปิด AI_PROVIDER=live …" |
 
 ## 1. Context
