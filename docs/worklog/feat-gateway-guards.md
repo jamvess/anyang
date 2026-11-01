@@ -14,7 +14,7 @@
 - [x] 1. 🤖 `/spec-feature ai/gateway-guards TM-21 NFR-R1 NFR-P2`: (ก) จำกัด `guards.rate_limit_messages_per_minute` ต่อ user บน endpoint ที่เรียก AI ของห้องติว (ai-orchestration §2.9 Limits) (ข) circuit breaker ใน gateway (§2.10: error ≥ 50% จากอย่างน้อย 10 calls → พัก 60 วินาที) · ไม่มี provider สำรอง จึงล้มทันทีแล้ว degrade
 - [x] 2. 🙋 Jam review spec + ตอบ open questions (threshold เป็นเรื่องของ Jam · โครงสร้าง backend เป็นของ Junior → เขียนเป็นข้อเสนอ)
 - [x] 3. 🙋 ถ้าต้องเพิ่มค่าใน `config/ai.yaml` (ไฟล์ร่วม) บอกแชทกลุ่ม
-- [ ] 4. 🤖 `/spec-to-tests` · แดงก่อน
+- [x] 4. 🤖 `/spec-to-tests` · แดงก่อน
 - [ ] 5. 🙋 Jam review test
 - [ ] 6. 🤖 `/implement-feature` · test เขียว + ruff
 - [ ] 7. 🤖 อัปเดตแถว gateway ใน `architecture.md` + บรรทัดความคืบหน้าใน checklist
@@ -33,7 +33,7 @@
 
 ## Next step
 
-ขั้น 4: `/spec-to-tests ai/gateway-guards`
+ขั้น 5: Jam review `tests/unit/test_rate_limit.py` + `test_circuit_breaker.py` + fixture ใหม่ใน `tests/conftest.py` · แล้วขั้น 6 `/implement-feature ai/gateway-guards`
 
 ## Waiting on
 
