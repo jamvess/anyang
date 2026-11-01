@@ -41,7 +41,7 @@ deploy อัตโนมัติและแยกข้อมูลตาม 
 
 ## 4. การตัดสินใจ
 
-**ผ่านครบทุกเกณฑ์** · เสนอใช้ Cloud Build trigger เป็นทางหลักต่อ และเก็บ `infra/deploy-staging.ps1` ไว้เป็นทางสำรองเหมือนเดิม (fallback ของ spec ไม่ต้องใช้) · เรื่อง deploy เป็นการตัดสินใจของ Junior (`roles.md`) **รอ Junior ยืนยัน**
+**ผ่านครบทุกเกณฑ์** · เสนอใช้ Cloud Build trigger เป็นทางหลักต่อ และเก็บ `infra/deploy-staging.ps1` ไว้เป็นทางสำรองเหมือนเดิม (fallback ของ spec ไม่ต้องใช้) · เรื่อง deploy เป็นการตัดสินใจของ Junior (`roles.md`): 1 พ.ย. Junior ให้ Claude แนะนำ · Claude แนะนำใช้ Cloud Build ต่อและ pin Supabase CLI (§5) · Jam ยืนยัน
 
 - เวลาที่ใช้ทั้งหมดคือเวลา build + deploy (~4 นาที) เหลือเวลาจากเป้า 10 นาทีอีกเกินครึ่ง
 - ความเสี่ยงของ CI อยู่ที่การดึง image และ CLI จากภายนอก ไม่ใช่ที่ test (§6)
@@ -49,7 +49,7 @@ deploy อัตโนมัติและแยกข้อมูลตาม 
 ## 5. สิ่งที่ต้องแก้ใน spec / config
 
 - [x] `specs/poc/README.md` §P6-lite: เพิ่มบรรทัด "ผล" (PR นี้)
-- [ ] (เสนอ · Junior ตัดสิน · `.github/` เป็นไฟล์เสี่ยง) `.github/workflows/ci.yml`: ตั้ง `supabase/setup-cli` เป็น version ที่ระบุแทน `latest` เพื่อไม่ต้องถาม GitHub API หา release ล่าสุดทุก run (สาเหตุของ f195d25)
+- [x] `.github/workflows/ci.yml`: `supabase/setup-cli` `version: latest` → `2.122.0` (version ที่ `npx supabase` ติดตั้งในเครื่อง Jam 1 พ.ย.) + step `supabase --version` ให้ log บอก version · ไม่ต้องถาม GitHub API หา release ล่าสุดทุก run (สาเหตุของ f195d25) · แก้ได้ 1 ใน 5 สาเหตุ อีก 4 เป็นการดึง image (§6) · อัปเวอร์ชันเองเมื่อจำเป็น (PR #96 · Junior ให้ Claude แนะนำ, Jam ยืนยัน 1 พ.ย.)
 - ไม่มีค่าใน `config/learning.yaml` หรือ `config/ai.yaml` ที่ต้องเปลี่ยน
 
 ## 6. ความเสี่ยงที่เหลือ

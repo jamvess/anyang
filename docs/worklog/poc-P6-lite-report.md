@@ -29,13 +29,15 @@
 
 - 2026-11-01 · Jam review report P6-lite: ok · ผ่านครบ · ข้อเสนอ §4 (Cloud Build ต่อ) และ §5 (pin Supabase CLI ใน `ci.yml`) รอ Junior
 
+- 2026-11-01 · Junior ให้ Claude แนะนำเรื่อง §4–5 · Claude แนะนำ Cloud Build ต่อ + pin `supabase/setup-cli` เป็น `2.122.0` (+ step `supabase --version`) · Jam ยืนยัน · ใส่ใน PR นี้ (`.github/` เสี่ยง → บอกกลุ่มก่อน merge)
+
 ## Next step
 
 ขั้น 7: `/work-done` (ติ๊ก checklist ข้อ report P6-lite ของ Junior + หมายเหตุ solo)
 
 ## Waiting on
 
-- Junior: ยืนยันการตัดสินใน report §4 (เรื่อง deploy เป็นของ Junior ตาม `roles.md`) · ตัดสินข้อเสนอ §5 pin version ของ `supabase/setup-cli` ใน `.github/workflows/ci.yml`
+ไม่มี (Junior ให้ Claude แนะนำ §4–5 แล้ว 1 พ.ย.)
 
 ## Notes for next time
 
