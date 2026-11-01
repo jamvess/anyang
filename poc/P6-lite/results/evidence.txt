@@ -1,4 +1,4 @@
-measured_at 2026-11-01T09:30:46+07:00
+measured_at 2026-11-01T10:07:48+07:00
 
 ## 2 · api-integration job (tests/integration, includes test_SA06_*) on every push to main
 runs: 89 · first: 2026-10-12T04:57:34Z
@@ -13,7 +13,7 @@ not success (read the log with: gh run list --workflow ci.yml --branch main, the
 
 ## 3 · secrets
 github secret scanning: enabled · push protection: enabled · open alerts: 0
-commits scanned (all refs): 705
+commits scanned (all refs): 709
 pattern google_api_key: 0
 pattern anthropic_key: 0
 pattern openai_key: 0

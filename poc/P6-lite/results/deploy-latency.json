@@ -1,5 +1,5 @@
 {
-  "measured_at": "2026-11-01T09:16:17+07:00",
+  "measured_at": "2026-11-01T10:07:44+07:00",
   "trigger": {
     "id": "6d9a83fa-fe92-426a-b8a6-0754ed370737",
     "created": "2026-10-28T09:14:19.870763129Z",
@@ -19,7 +19,7 @@
     "missed_or_failed": [],
     "deployed_without_matching_files": [],
     "minutes_min": 3.4,
-    "minutes_median": 4.02,
+    "minutes_median": 3.94,
     "minutes_max": 4.58,
     "serving_newest_deploy": true,
     "newest_deploy_pr": 95
@@ -35,7 +35,7 @@
       "build_status": "SUCCESS",
       "minutes_to_deployed": 4.58,
       "revision": "api-staging-00002-n6v",
-      "revision_ready_at": "2026-10-31T06:24:41.680194Z",
+      "revision_created_at": "2026-10-28T09:25:43.361217Z",
       "within_target": true
     },
     {
@@ -48,7 +48,7 @@
       "build_status": "SUCCESS",
       "minutes_to_deployed": 3.79,
       "revision": "api-staging-00003-5k2",
-      "revision_ready_at": "2026-10-31T06:55:18.706704Z",
+      "revision_created_at": "2026-10-31T06:24:18.501023Z",
       "within_target": true
     },
     {
@@ -61,7 +61,7 @@
       "build_status": null,
       "minutes_to_deployed": null,
       "revision": null,
-      "revision_ready_at": null,
+      "revision_created_at": null,
       "within_target": null
     },
     {
@@ -74,7 +74,7 @@
       "build_status": "SUCCESS",
       "minutes_to_deployed": 4.02,
       "revision": "api-staging-00004-86x",
-      "revision_ready_at": "2026-10-31T08:12:32.046064Z",
+      "revision_created_at": "2026-10-31T06:54:52.574927Z",
       "within_target": true
     },
     {
@@ -87,7 +87,7 @@
       "build_status": null,
       "minutes_to_deployed": null,
       "revision": null,
-      "revision_ready_at": null,
+      "revision_created_at": null,
       "within_target": null
     },
     {
@@ -100,7 +100,7 @@
       "build_status": null,
       "minutes_to_deployed": null,
       "revision": null,
-      "revision_ready_at": null,
+      "revision_created_at": null,
       "within_target": null
     },
     {
@@ -113,7 +113,7 @@
       "build_status": null,
       "minutes_to_deployed": null,
       "revision": null,
-      "revision_ready_at": null,
+      "revision_created_at": null,
       "within_target": null
     },
     {
@@ -126,7 +126,7 @@
       "build_status": "SUCCESS",
       "minutes_to_deployed": 3.4,
       "revision": "api-staging-00005-xrg",
-      "revision_ready_at": "2026-10-31T14:46:02.418032Z",
+      "revision_created_at": "2026-10-31T08:12:04.078920Z",
       "within_target": true
     },
     {
@@ -139,7 +139,7 @@
       "build_status": null,
       "minutes_to_deployed": null,
       "revision": null,
-      "revision_ready_at": null,
+      "revision_created_at": null,
       "within_target": null
     },
     {
@@ -152,7 +152,7 @@
       "build_status": null,
       "minutes_to_deployed": null,
       "revision": null,
-      "revision_ready_at": null,
+      "revision_created_at": null,
       "within_target": null
     },
     {
@@ -165,7 +165,7 @@
       "build_status": "SUCCESS",
       "minutes_to_deployed": 4.03,
       "revision": "api-staging-00006-hk9",
-      "revision_ready_at": "2026-10-31T15:27:40.375110Z",
+      "revision_created_at": "2026-10-31T14:45:37.500288Z",
       "within_target": true
     },
     {
@@ -178,7 +178,7 @@
       "build_status": "SUCCESS",
       "minutes_to_deployed": 4.14,
       "revision": "api-staging-00007-plf",
-      "revision_ready_at": "2026-10-31T16:20:07.616742Z",
+      "revision_created_at": "2026-10-31T15:27:06.981802Z",
       "within_target": true
     },
     {
@@ -191,7 +191,7 @@
       "build_status": "SUCCESS",
       "minutes_to_deployed": 3.87,
       "revision": "api-staging-00008-4rt",
-      "revision_ready_at": "2026-10-31T16:51:32.770711Z",
+      "revision_created_at": "2026-10-31T16:19:46.109484Z",
       "within_target": true
     },
     {
@@ -204,7 +204,7 @@
       "build_status": "SUCCESS",
       "minutes_to_deployed": 3.87,
       "revision": "api-staging-00009-pcs",
-      "revision_ready_at": "2026-10-31T16:51:31.275472Z",
+      "revision_created_at": "2026-10-31T16:51:08.025073Z",
       "within_target": true
     }
   ]

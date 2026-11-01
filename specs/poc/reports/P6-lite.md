@@ -13,7 +13,7 @@ deploy อัตโนมัติและแยกข้อมูลตาม 
 
 ## 2. วิธีทดสอบ
 
-- **Data:** ใช้ประวัติจริงของ repo · deploy: ทุก PR ที่ merge เข้า `main` หลังสร้าง trigger `api-staging-deploy` (28 ต.ค. 09:14 UTC) ถึง 1 พ.ย. = 14 PR · CI: ทุก run ของ `ci.yml` ที่ push เข้า `main` ตั้งแต่ commit แรก (12 ต.ค.) = 89 run · secret: ทุก commit ของทุก ref = 705 commit
+- **Data:** ใช้ประวัติจริงของ repo · deploy: ทุก PR ที่ merge เข้า `main` หลังสร้าง trigger `api-staging-deploy` (28 ต.ค. 09:14 UTC) ถึง 1 พ.ย. = 14 PR · CI: ทุก run ของ `ci.yml` ที่ push เข้า `main` ตั้งแต่ commit แรก (12 ต.ค.) = 89 run · secret: ทุก commit ของทุก ref = 709 commit (ไม่นับ `evidence.sh` เพราะไฟล์นั้นมี pattern เป็นข้อความ)
 - **Deploy:** PR ที่ "ควร deploy" คือ PR ที่มีไฟล์ตรงกับ `includedFiles` ของ trigger (`apps/api/**`, `config/**`, `prompts/**`, `infra/**`) · จับคู่กับ build ของ merge commit · เวลา = `mergedAt` ของ PR ถึง `finishTime` ของ build (ขั้นสุดท้ายคือ `gcloud run deploy` ซึ่งจบเมื่อ revision ใหม่รับ traffic) · ยืนยันด้วย image digest ว่า revision ของ `api-staging` รัน image ของ build นั้นจริง
 - **Isolation:** ผลของ job `api-integration` (Supabase ในเครื่องของ CI ด้วย `supabase start` → `pytest tests/integration` ซึ่งมี `test_SA06_tenant_isolation` 3 ตาราง และ `test_SA06_ai_calls_isolated_and_not_insertable_by_users` ตั้งแต่ #95) · test ใน CI ข้ามเองไม่ได้: ถ้าไม่มี key จะ `raise` แทน `skip` · run ที่ไม่ผ่านเปิด log ดูทีละตัว
 - **Secret:** GitHub secret scanning + push protection · grep pattern ของ key 10 แบบใน `git log -p --all` (Google, Anthropic, OpenAI, PEM, service account JSON, Supabase `sb_secret_`/`sb_publishable_`, JWT, GitHub token, Mathpix) · ไฟล์ `.env*` / key file ที่เคยถูก add · จำนวน secret ใน Secret Manager
@@ -23,9 +23,9 @@ deploy อัตโนมัติและแยกข้อมูลตาม 
 
 | Metric | เกณฑ์ผ่าน | ผล | PASS / FAIL |
 |---|---|---|---|
-| merge แล้ว staging อัปเดตเอง | ภายใน 10 นาที | **8/8** PR ที่ควร deploy · 3.40–4.58 นาที (median 4.02) · ตอนวัด `api-staging` รัน image ของ #95 (ล่าสุด) · PR ที่ไม่ควร deploy 6 ตัวไม่มี build | **PASS** |
+| merge แล้ว staging อัปเดตเอง | ภายใน 10 นาที | **8/8** PR ที่ควร deploy · 3.40–4.58 นาที (median 3.94) · ตอนวัด `api-staging` รัน image ของ #95 (ล่าสุด) · PR ที่ไม่ควร deploy 6 ตัวไม่มี build | **PASS** |
 | isolation test ผ่านใน CI | ผ่าน | `api-integration` รันทุก push เข้า `main` · 84/89 success · 5 failure ล้มก่อนถึง test ทั้งหมด (ด้านล่าง) · ไม่มี run ที่ test isolation ล้ม | **PASS** |
-| ไม่มี secret ใน git history | 0 | secret scanning + push protection เปิด · alert 0 · pattern 10 แบบ 0/705 commit · ไฟล์ `.env`/key ที่เคย add 0 | **PASS** |
+| ไม่มี secret ใน git history | 0 | secret scanning + push protection เปิด · alert 0 · pattern 10 แบบ 0/709 commit · ไฟล์ `.env`/key ที่เคย add 0 | **PASS** |
 | secret อยู่ใน Secret Manager (ข้อ "ทำ" 3) | ไม่มีใน repo | Secret Manager 0 secret · staging ยังไม่ใช้ secret (`cloudbuild.yaml` ไม่มี `--set-secrets`) · ไม่มี secret ใน repo | ผ่านโดยปริยาย · วัดใหม่ตอนเปิด live |
 
 **5 run ที่ `api-integration` ล้ม** (ทุกตัวผ่านใน run ถัดไปโดยไม่แก้โค้ด)

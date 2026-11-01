@@ -19,7 +19,7 @@ PoC คือการลองทำส่วนที่ยากที่ส�
 - **ผ่านเมื่อ:** merge แล้ว staging อัปเดตเองภายใน 10 นาที, isolation test ผ่านใน CI, ไม่มี secret ใน git history
 - **ถ้าไม่ผ่าน:** deploy ด้วย `gcloud run deploy` script แทน Cloud Build
 - **ย้ายไปเทอม 2:** Terraform, load test 50 SSE streams, API สร้าง organization tenant
-- **ผล (1 พ.ย. · `specs/poc/reports/P6-lite.md`):** **ผ่านครบ** · merge แล้ว staging อัปเดตเอง 8/8 ภายใน 3.40–4.58 นาที · `api-integration` (isolation) 84/89 run ผ่าน อีก 5 ล้มเพราะ CI ดึง image/CLI ไม่ได้ ไม่ใช่ test · secret 0 (scanning + grep 705 commit) · ใช้ Cloud Build ต่อ + pin Supabase CLI ใน CI (Junior ให้ Claude แนะนำ, Jam ยืนยัน) · วัดโดย Jam ช่วง solo
+- **ผล (1 พ.ย. · `specs/poc/reports/P6-lite.md`):** **ผ่านครบ** · merge แล้ว staging อัปเดตเอง 8/8 ภายใน 3.40–4.58 นาที · `api-integration` (isolation) 84/89 run ผ่าน อีก 5 ล้มเพราะ CI ดึง image/CLI ไม่ได้ ไม่ใช่ test · secret 0 (scanning + grep 709 commit) · ใช้ Cloud Build ต่อ + pin Supabase CLI ใน CI (Junior ให้ Claude แนะนำ, Jam ยืนยัน) · วัดโดย Jam ช่วง solo
 
 ## P1 · อ่านลายมือคณิต · Jam · S2
 

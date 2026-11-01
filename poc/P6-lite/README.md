@@ -10,7 +10,7 @@ spec: `specs/poc/README.md` P6-lite · report: `specs/poc/reports/P6-lite.md` ·
 cd apps/api
 uv run python ../../poc/P6-lite/deploy_latency.py
 uv run pytest ../../poc/P6-lite -q     # test ส่วนที่คิดตัวเลข
-cd ../.. && bash poc/P6-lite/evidence.sh > poc/P6-lite/results/evidence.txt   # เกณฑ์ข้อ 2, 3
+cd ../.. && bash poc/P6-lite/evidence.sh   # เกณฑ์ข้อ 2, 3 · เขียน results/evidence.txt เองเมื่อรันจบ
 ```
 
 ## วัดอะไร
@@ -19,10 +19,10 @@ cd ../.. && bash poc/P6-lite/evidence.sh > poc/P6-lite/results/evidence.txt   # 
 
 | คอลัมน์ | มาจาก |
 |---|---|
-| `should_deploy` | ไฟล์ใน PR ตรงกับ `includedFiles` ของ trigger (`apps/api/**`, `config/**`, `prompts/**`, `infra/**`) |
-| `build_status` | build ของ merge commit (`gcloud builds list --filter=buildTriggerId=...`) · commit เดียวกันที่มีหลาย build ใช้ตัวล่าสุด |
+| `should_deploy` | ไฟล์ใน PR ตรงกับ `includedFiles` ของ trigger (`apps/api/**`, `config/**`, `prompts/**`, `infra/**`) · ใช้ `fnmatch` ซึ่งตรงกับ Cloud Build สำหรับ glob แบบ `<folder>/**` เท่านั้น · `gh` ส่งรายชื่อไฟล์ได้ไม่เกิน 100 ไฟล์ต่อ PR |
+| `build_status` | build ของ merge commit (`gcloud builds list --filter=buildTriggerId=...`) · commit เดียวกันที่มีหลาย build ใช้ตัวแรกที่ SUCCESS (ตอนที่ staging เปลี่ยน) ถ้าไม่มีใช้ตัวล่าสุด |
 | `minutes_to_deployed` | `mergedAt` ของ PR (gh) ถึง `finishTime` ของ build · ขั้นสุดท้ายของ build คือ `gcloud run deploy` ซึ่งจบเมื่อ revision ใหม่รับ traffic แล้ว |
-| `revision`, `revision_ready_at` | revision ของ `api-staging` ที่รัน image digest ของ build นั้น |
+| `revision`, `revision_created_at` | revision แรกของ `api-staging` ที่สร้างจาก image digest ของ build นั้น (revision ที่ตามมาด้วย image เดิม เช่น `services update --min-instances` คือการเปลี่ยน setting ไม่ใช่ deploy) |
 | `within_target` | `minutes_to_deployed` ≤ 10 (เกณฑ์ของ P6-lite) · `null` ถ้า PR นั้นไม่ควร deploy |
 
 `summary.serving_newest_deploy` เช็คว่า revision ที่รับ traffic อยู่ตอนวัด รัน image ของ PR ล่าสุดที่ควร deploy
@@ -32,5 +32,5 @@ cd ../.. && bash poc/P6-lite/evidence.sh > poc/P6-lite/results/evidence.txt   # 
 ## เกณฑ์ข้อ 2, 3 (`evidence.sh`)
 
 - **isolation test ใน CI:** ผลของ job `api-integration` (รัน `tests/integration` ซึ่งมี `test_SA06_*`) ในทุก run ของ `ci.yml` ที่ push เข้า `main` · run ที่ไม่ผ่านต้องเปิด log ดูเองว่าล้มเพราะ test หรือเพราะ CI (`gh run view <id> --log-failed`)
-- **secret:** สถานะ GitHub secret scanning + push protection + จำนวน alert · นับ pattern ของ key ที่รู้จักใน `git log -p --all` (พิมพ์แค่จำนวน ไม่พิมพ์ข้อความที่เจอ) · ไฟล์ `.env*` หรือ key file ที่เคยถูก add · จำนวน secret ใน Secret Manager
+- **secret:** สถานะ GitHub secret scanning + push protection + จำนวน alert ที่ยังเปิด · นับ pattern ของ key ที่รู้จักใน `git log -p --all` ยกเว้น `evidence.sh` เอง (พิมพ์แค่จำนวน ไม่พิมพ์ข้อความที่เจอ · ไฟล์ dump ชั่วคราวถูกลบเสมอแม้ script ล้ม) · ไฟล์ `.env*` หรือ key file ที่เคยถูก add · จำนวน secret ใน Secret Manager
 - ผลอยู่ที่ `results/evidence.txt`

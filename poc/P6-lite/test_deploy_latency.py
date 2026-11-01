@@ -7,7 +7,9 @@ from deploy_latency import (
     TARGET_MINUTES,
     Build,
     Merge,
+    Revision,
     build_rows,
+    first_revision_of_digest,
     matches_trigger,
     minutes_between,
     summary,
@@ -107,3 +109,39 @@ def test_P6_summary_counts_and_checks_serving_revision():
     assert (result["minutes_min"], result["minutes_max"]) == (3.0, 5.0)
     assert result["serving_newest_deploy"] is True
     assert summary(rows, "sha256:aaa", builds)["serving_newest_deploy"] is False
+
+
+# --- self-review of PR #96 ---------------------------------------------------------------------
+
+
+def test_P6_first_successful_build_counts_even_if_a_later_rerun_is_running():
+    merges = [merge(1, "2026-10-31T16:00:00Z", "aaa", ["infra/a"])]
+    done = Build("done", "aaa", "SUCCESS", "2026-10-31T16:00:05Z", "2026-10-31T16:04:00Z", None)
+    rerun = Build("rerun", "aaa", "WORKING", "2026-10-31T16:30:00.5Z", None, None)
+
+    rows = build_rows(merges, [rerun, done], {}, GLOBS)
+
+    assert (rows[0].build_id, rows[0].minutes_to_deployed) == ("done", 4.0)
+
+
+def test_P6_revision_of_a_digest_is_the_first_one_made_from_it():
+    found = [  # newest first, as gcloud lists them
+        Revision("api-staging-00003", "sha256:bbb", "2026-10-31T18:00:00Z"),  # min-instances
+        Revision("api-staging-00002", "sha256:bbb", "2026-10-31T17:04:00Z"),  # the deploy
+        Revision("api-staging-00001", "sha256:aaa", "2026-10-31T16:03:00Z"),
+    ]
+
+    by_digest = first_revision_of_digest(found)
+
+    assert by_digest["sha256:bbb"] == ("api-staging-00002", "2026-10-31T17:04:00Z")
+    assert by_digest["sha256:aaa"][0] == "api-staging-00001"
+
+
+def test_P6_median_of_an_even_count_is_the_mean_of_the_middle_two():
+    merges = [merge(i, f"2026-10-31T1{i}:00:00Z", c, ["infra/x"]) for i, c in enumerate("abcd")]
+    finishes = ["10:03:00", "11:04:00", "12:05:00", "13:09:00"]
+    builds = [build(c, f"2026-10-31T{t}Z") for c, t in zip("abcd", finishes, strict=True)]
+
+    result = summary(build_rows(merges, builds, {}, GLOBS), None, builds)
+
+    assert result["minutes_median"] == 4.5  # (4 + 5) / 2, not the upper middle 5

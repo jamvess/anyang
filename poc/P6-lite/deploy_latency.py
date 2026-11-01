@@ -8,7 +8,7 @@ For every PR merged into main after the Cloud Build trigger was created:
   - the build of its merge commit (``gcloud builds list``), its status, and minutes from the
     merge to the end of the build (the last step is ``gcloud run deploy``, so the new revision
     serves traffic by then).
-  - the Cloud Run revision that runs the image digest of that build, and when it was Ready.
+  - the Cloud Run revision made from the image digest of that build, and when it was created.
 Then: does api-staging serve the newest commit that should have deployed?
 
 Needs ``gh`` (logged in) and ``gcloud`` (logged in, project anyang-513006). Read only.
@@ -17,11 +17,12 @@ Writes poc/P6-lite/results/deploy-latency.json.
 
 import json
 import shutil
+import statistics
 import subprocess
 import sys
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from fnmatch import fnmatch
+from fnmatch import fnmatchcase
 from pathlib import Path
 
 import yaml
@@ -66,7 +67,7 @@ class Row:
     build_status: str | None
     minutes_to_deployed: float | None
     revision: str | None
-    revision_ready_at: str | None
+    revision_created_at: str | None
     within_target: bool | None
 
 
@@ -80,8 +81,21 @@ def minutes_between(start: str, end: str) -> float:
 
 
 def matches_trigger(files: list[str], globs: list[str]) -> bool:
-    """Cloud Build ``includedFiles`` globs, where ``**`` matches any depth (``apps/api/**``)."""
-    return any(fnmatch(path, glob) for path in files for glob in globs)
+    """Cloud Build ``includedFiles`` globs. Right for the ``<folder>/**`` globs the trigger uses;
+    ``fnmatch`` lets ``*`` cross ``/``, so a single-level glob such as ``infra/*.yaml`` would match
+    more than Cloud Build does."""
+    return any(fnmatchcase(path, glob) for path in files for glob in globs)
+
+
+def deploy_of_commit(builds: list[Build]) -> dict[str, Build]:
+    """The build that counts for each commit: the first one that succeeded (that is when staging
+    changed), otherwise the newest one (so a failed or running build shows up)."""
+    chosen: dict[str, Build] = {}
+    for build in sorted(builds, key=lambda b: parse_time(b.create_time)):
+        current = chosen.get(build.commit)
+        if current is None or current.status != "SUCCESS":
+            chosen[build.commit] = build
+    return chosen
 
 
 def build_rows(
@@ -90,10 +104,8 @@ def build_rows(
     revisions: dict[str, tuple[str, str]],
     globs: list[str],
 ) -> list[Row]:
-    """One row per merge. ``revisions`` maps an image digest to (revision name, Ready time)."""
-    by_commit: dict[str, Build] = {}
-    for build in sorted(builds, key=lambda b: b.create_time):
-        by_commit[build.commit] = build  # a re-run of the same commit replaces the older build
+    """One row per merge. ``revisions`` maps an image digest to (revision name, created time)."""
+    by_commit = deploy_of_commit(builds)
     rows = []
     for merge in sorted(merges, key=lambda m: m.merged_at):
         build = by_commit.get(merge.commit)
@@ -113,7 +125,7 @@ def build_rows(
                 build_status=build.status if build else None,
                 minutes_to_deployed=minutes,
                 revision=revision[0] if revision else None,
-                revision_ready_at=revision[1] if revision else None,
+                revision_created_at=revision[1] if revision else None,
                 within_target=(minutes is not None and minutes <= TARGET_MINUTES)
                 if should_deploy
                 else None,
@@ -138,7 +150,7 @@ def summary(rows: list[Row], serving_digest: str | None, builds: list[Build]) ->
             r.pr for r in rows if not r.should_deploy and r.build_id is not None
         ],
         "minutes_min": minutes[0] if minutes else None,
-        "minutes_median": minutes[len(minutes) // 2] if minutes else None,
+        "minutes_median": round(statistics.median(minutes), 2) if minutes else None,
         "minutes_max": minutes[-1] if minutes else None,
         "serving_newest_deploy": bool(
             newest_build and serving_digest and newest_build.digest == serving_digest
@@ -210,40 +222,58 @@ def _digest(image: str) -> str | None:
     return image.split("@", 1)[1] if "@" in image else None
 
 
-def revisions() -> dict[str, tuple[str, str]]:
+@dataclass(frozen=True)
+class Revision:
+    name: str
+    digest: str | None
+    created_at: str
+
+
+def revisions() -> list[Revision]:
+    """Revisions of api-staging, newest first (as gcloud lists them)."""
     data = _run_json(
         "gcloud", "run", "revisions", "list", f"--service={SERVICE}", f"--region={REGION}",
         "--format=json",
     )  # fmt: skip
-    found = {}
-    for r in data:
-        digest = _digest(r["spec"]["containers"][0]["image"])
-        ready = next((c for c in r["status"]["conditions"] if c["type"] == "Ready"), {})
-        if digest:
-            found[digest] = (r["metadata"]["name"], ready.get("lastTransitionTime", ""))
-    return found
+    return [
+        Revision(
+            name=r["metadata"]["name"],
+            digest=_digest(r["spec"]["containers"][0]["image"]),
+            created_at=r["metadata"]["creationTimestamp"],
+        )
+        for r in data
+    ]
 
 
-def serving_digest() -> str | None:
+def first_revision_of_digest(found: list[Revision]) -> dict[str, tuple[str, str]]:
+    """Image digest -> (name, created time) of the first revision made from it, i.e. the deploy.
+    Later revisions of the same image (for example ``services update --min-instances``) are
+    settings changes, not deploys."""
+    by_digest: dict[str, tuple[str, str]] = {}
+    for revision in sorted(found, key=lambda r: parse_time(r.created_at)):
+        if revision.digest and revision.digest not in by_digest:
+            by_digest[revision.digest] = (revision.name, revision.created_at)
+    return by_digest
+
+
+def serving_digest(found: list[Revision]) -> str | None:
+    """Image digest of the revision that takes traffic now."""
     data = _run_json(
         "gcloud", "run", "services", "describe", SERVICE, f"--region={REGION}", "--format=json"
     )
-    serving = [t for t in data["status"]["traffic"] if t.get("percent")]
-    names = {t["revisionName"] for t in serving}
-    for digest, (name, _) in revisions().items():
-        if name in names:
-            return digest
-    return None
+    serving = {t["revisionName"] for t in data["status"]["traffic"] if t.get("percent")}
+    return next((r.digest for r in found if r.name in serving), None)
 
 
 def main() -> None:
     trigger_id, created, globs = trigger()
     builds = trigger_builds(trigger_id)
-    rows = build_rows(merges_since(created), builds, revisions(), globs)
+    found = revisions()  # one snapshot for the rows and the summary
+    rows = build_rows(merges_since(created), builds, first_revision_of_digest(found), globs)
     result = {
         "measured_at": datetime.now().astimezone().isoformat(timespec="seconds"),
         "trigger": {"id": trigger_id, "created": created, "included_files": globs},
-        "summary": summary(rows, serving_digest(), builds),
+        "summary": summary(rows, serving_digest(found), builds),
         "merges": [asdict(r) for r in rows],
     }
     RESULTS.parent.mkdir(parents=True, exist_ok=True)
