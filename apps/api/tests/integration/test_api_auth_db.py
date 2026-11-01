@@ -26,6 +26,7 @@ from app.auth import (
     get_auth_required,
     get_user_db,
     get_verifier,
+    install_auth_errors,
 )
 from app.settings import EnvSettings
 
@@ -101,6 +102,7 @@ def users(admin: Client) -> Iterator[tuple[SignedInUser, SignedInUser]]:
 def _probe() -> tuple[TestClient, list[Any]]:
     seen: list[Any] = []
     probe = FastAPI()
+    install_auth_errors(probe)  # the 401 envelope, as app.main does (Jam ok 2026-11-01)
 
     @probe.get("/probe")
     async def handler(auth: Annotated[AuthContext | None, Depends(get_auth)]) -> dict[str, str]:

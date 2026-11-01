@@ -19,6 +19,7 @@ from sse_starlette import EventSourceResponse
 
 from app import stubs
 from app.ai.gateway import Gateway, get_gateway
+from app.auth import AuthContext, get_auth
 from app.models.error import ErrorBody, ErrorResponse
 from app.models.room import EVENT_MODELS, ActiveSession, Limits, Room, SendMessageRequest
 from app.services.tutor_turn import reply_events
@@ -111,6 +112,7 @@ async def send_message(
     session_id: SessionId,
     body: SendMessageRequest,
     gateway: Annotated[Gateway, Depends(get_gateway)],
+    auth: Annotated[AuthContext | None, Depends(get_auth)],
 ) -> Response:
     """Send `{text}` or `{image_path}`; the reply streams as SSE and ends with done.
 
@@ -126,7 +128,7 @@ async def send_message(
 
     async def events() -> AsyncIterator[dict[str, str]]:
         # aclosing: a client that leaves closes the provider stream now (spec §2 Endpoint 8).
-        async with aclosing(reply_events(gateway, body.text)) as replies:
+        async with aclosing(reply_events(gateway, body.text, auth)) as replies:
             async for event, payload in replies:
                 yield {"event": event, "data": payload.model_dump_json()}
 

@@ -3,5 +3,8 @@
 # "^" and "$", which would need a custom delimiter plus shell escaping. Secrets go in Secret Manager.
 APP_ENV: staging
 AI_PROVIDER: fake   # live needs the Vertex path in the gateway (AI Studio keys are not covered by the trial)
+# The web sends no token yet. true also needs SUPABASE_URL + SUPABASE_ANON_KEY here, or the API
+# does not start (specs/features/platform/api-auth.md §2.3). Turn on before AI_PROVIDER=live.
+AUTH_REQUIRED: "false"
 CORS_ALLOW_ORIGINS: https://anyang-amber.vercel.app,http://localhost:3000
 CORS_ALLOW_ORIGIN_REGEX: '^https://anyang-[a-z0-9]+-anyang4\.vercel\.app$'

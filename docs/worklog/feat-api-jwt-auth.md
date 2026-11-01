@@ -13,8 +13,8 @@
 - [x] 2. 🙋 Jam review spec + ตัดสินข้อ "เปิดบังคับเมื่อไหร่" (หน้าเว็บยังไม่ส่ง token · ดู Notes)
 - [x] 3. 🤖 `/spec-to-tests`: unit (token ปลอมที่เซ็นด้วย key ES256 ที่สร้างใน test + JWKS ปลอม · ไม่ต่อ network) · integration (user จริงจาก Supabase ในเครื่อง/CI: มี token → 200 · ไม่มี/ผิด/หมดอายุ → 401 · client ต่อ request เห็นแค่แถวของ tenant ตัวเอง)
 - [x] 4. 🙋 Jam review test
-- [ ] 5. 🤖 `/implement-feature` (`app/auth.py` หรือ `app/db/` · ต่อ dependency กับ router ห้องติว · `tutor_turn.reply_events` ตั้ง `ai_call_context` ข้างใน generator ตาม `call_context.py`)
-- [ ] 6. 🤖 ruff + pytest + integration (🙋 เปิด Docker Desktop ถ้าจะรันกับ Supabase ในเครื่อง · ไม่งั้นรันกับ `anyang-dev` เหมือน #95)
+- [x] 5. 🤖 `/implement-feature` (`app/auth.py` หรือ `app/db/` · ต่อ dependency กับ router ห้องติว · `tutor_turn.reply_events` ตั้ง `ai_call_context` ข้างใน generator ตาม `call_context.py`)
+- [x] 6. 🤖 ruff + pytest + integration (🙋 เปิด Docker Desktop ถ้าจะรันกับ Supabase ในเครื่อง · ไม่งั้นรันกับ `anyang-dev` เหมือน #95)
 - [ ] 7. 🤖 `/work-done`
 
 ## Definition of done
@@ -35,9 +35,12 @@
 
 - 2026-11-01 · test ของ AC-1 ถึง AC-15 + AC-tenant reviewed (Jam) · ห้ามแก้ test เหล่านี้
 
+- 2026-11-01 · Jam อนุญาตแก้ test ที่ review แล้ว 2 จุด: (1) `probe_app` / `_probe` เพิ่ม `install_auth_errors(probe)` เพราะ `FastAPI()` เปล่ามีแค่ handler ที่ตอบ `{"detail": ...}` (2) AC-9 วนจาก `app.openapi()["paths"]` + `Route` ของ docs เพราะ FastAPI 0.143 เก็บ router ที่ include เป็น `_IncludedRouter` ไม่มี `.path` · assertion เดิมไม่เปลี่ยน · เพิ่ม `len(room_paths) >= 4` กันวนได้ว่าง
+- 2026-11-01 · verifier ส่งแค่ `apikey` ไม่ส่ง `Authorization: Bearer <anon key>` เพราะ anon key เป็น `sb_publishable_` ไม่ใช่ JWT
+
 ## Next step
 
-ขั้น 5: `/implement-feature specs/features/platform/api-auth.md` · `app/auth.py` + `EnvSettings.auth_required` (+ validator) + router dependency + 401 ใน OpenAPI + `reply_events` รับ `AuthContext` · แล้วไฟล์กลาง/เสี่ยงตาม spec §11 (`.env.example`, `setup.md` A5, `infra/env/api-staging.yaml`, `api.md` Auth, `infra/README.md` ⚠️)
+ขั้น 7: `/work-done` · PR body ร่างแล้ว · ไฟล์กลาง/เสี่ยงที่ต้องบอกกลุ่มก่อน merge: `.env.example`, `specs/system/api.md` (v1.5), `infra/env/api-staging.yaml`, `infra/README.md`
 
 ## Waiting on
 
@@ -45,6 +48,9 @@
 - Junior: (1) ยืนยันวิธีตรวจ (`get_claims` + JWKS) และการเพิ่ม `pyjwt` เป็น dependency ตรงถ้าต้องใช้ (2) `api-staging` ยังไม่มี `SUPABASE_URL` / `SUPABASE_ANON_KEY` (`infra/env/api-staging.yaml`) (3) `anyang-staging` (`sfapuygntxuelsxsgkay`) ต่อไม่ได้ตอน 1 พ.ย. (`/auth/v1/.well-known/jwks.json` ไม่ตอบ · อาจถูก pause)
 
 ## Notes for next time
+
+- 1 พ.ย. full suite: รอบแรกมี 1 failed ที่ไม่ได้เก็บชื่อ · รันซ้ำ 5 รอบผ่าน 438/438 ทุกรอบ · น่าจะเป็น integration ที่ต่อ `anyang-dev` ผ่าน network · ถ้าเจออีกให้รัน `-rf` เก็บชื่อ
+- integration รันกับ `anyang-dev` (ES256 จริง) ผ่าน 2/2 · CI จะรันกับ Supabase ในเครื่อง (HS256 → `get_user`)
 
 - `supabase-py` async client cache JWKS ไว้ (`_jwks_ttl`) และ `get_claims(jwt, jwks=...)` รับ JWKS จากผู้เรียกได้ → unit test ป้อน key ของ test เองได้โดยไม่ต่อ network
 - 1 พ.ย. `anyang-dev` เซ็น JWT ด้วย ES256 (JWKS มี key `EC`/`ES256`) · Supabase CLI ในเครื่องเซ็นด้วย HS256 · `supabase-py` 2.32 มี `auth.get_claims(jwt)`: asymmetric ตรวจกับ JWKS, HS256 fallback ไป `get_user`

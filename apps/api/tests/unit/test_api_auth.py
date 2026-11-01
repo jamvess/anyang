@@ -19,9 +19,9 @@ import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric import ec
 from fastapi import Depends, FastAPI
-from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
+from starlette.routing import Route
 
 import app.ai.gateway as gateway_module
 from app.ai.gateway import Gateway, get_gateway
@@ -34,6 +34,7 @@ from app.auth import (
     get_auth,
     get_auth_required,
     get_verifier,
+    install_auth_errors,
 )
 from app.db.ai_calls import AICallLog
 from app.main import app
@@ -101,6 +102,7 @@ def probe_app(verifier: TokenVerifier | None, required: bool) -> tuple[FastAPI, 
     """A one-route app whose handler records the AuthContext it was given."""
     seen: list[Any] = []
     probe = FastAPI()
+    install_auth_errors(probe)  # the 401 envelope, as app.main does (Jam ok 2026-11-01)
 
     @probe.get("/probe")
     async def handler(auth: Annotated[AuthContext | None, Depends(get_auth)]) -> dict[str, str]:
@@ -294,12 +296,18 @@ def _example_path(path: str) -> str:
     return "/".join(parts)
 
 
+def _all_endpoints() -> list[tuple[str, str]]:
+    """(method, path) of every endpoint. FastAPI 0.143 keeps an included router as one
+    ``_IncludedRouter`` entry in ``app.routes`` with no path, so API endpoints come from the
+    OpenAPI schema; the docs routes are plain Starlette routes (Jam ok 2026-11-01)."""
+    endpoints = [(m.upper(), p) for p, ops in app.openapi()["paths"].items() for m in ops]
+    endpoints += [("GET", r.path) for r in app.routes if isinstance(r, Route)]
+    return endpoints
+
+
 def test_SA06_every_route_outside_allowlist_needs_a_token(real_app: TestClient):
     checked = []
-    for route in app.routes:
-        path = getattr(route, "path", "")
-        methods = sorted(getattr(route, "methods", None) or {"GET"})
-        method = next((m for m in methods if m != "HEAD"), "GET")
+    for method, path in _all_endpoints():
         url = _example_path(path)
         body = {"text": "สวัสดี"} if method == "POST" else None
         response = real_app.request(method, url, json=body)
@@ -309,7 +317,8 @@ def test_SA06_every_route_outside_allowlist_needs_a_token(real_app: TestClient):
             assert_401(response, "missing_token")
             checked.append(path)
 
-    room_paths = {r.path for r in app.routes if isinstance(r, APIRoute) and r.path != "/health"}
+    room_paths = {p for p in app.openapi()["paths"] if p != "/health"}
+    assert len(room_paths) >= 4  # the walk must not come back empty
     assert room_paths <= set(checked)  # the 4 room endpoints at least
     assert {"/health", "/openapi.json", "/docs"} <= set(PUBLIC_PATHS)
 

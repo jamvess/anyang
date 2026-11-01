@@ -102,6 +102,7 @@ code .env
 | `SUPABASE_ANON_KEY` | Project Settings → **API Keys** → Publishable key (`sb_publishable_...`) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Project Settings → **API Keys** → Secret key (`sb_secret_...`) ⚠️ เทียบเท่ารหัส admin |
 | `DATABASE_URL` | ปุ่ม **Connect** → แท็บ Direct → **Session pooler** · แทน `[YOUR-PASSWORD]` ด้วย database password ที่ขอจากเจ้าของ repo ต่อหน้า |
+| `AUTH_REQUIRED` | ไม่ต้องแก้ ใช้ `false` ตาม `.env.example` จนกว่าหน้าเว็บจะ login และส่ง token · `true` = API ตอบ 401 ทุก request ที่ไม่มี Supabase JWT (`specs/features/platform/api-auth.md`) และต้องมี `SUPABASE_URL` + `SUPABASE_ANON_KEY` ไม่งั้น API ไม่ start |
 | `NEXT_PUBLIC_SUPABASE_URL` | ใช้ค่าเดียวกับ `SUPABASE_URL` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ใช้ค่าเดียวกับ `SUPABASE_ANON_KEY` |
 | `CORS_ALLOW_ORIGINS` | ไม่ต้องแก้ ใช้ค่าใน `.env.example` (`http://localhost:3000`) · origin ที่ browser เรียก API ได้ ต้องตรงทุกตัวอักษร คั่นด้วย `,` ห้ามมี `*` หรือ `/` ท้าย · ถ้ารันเว็บที่ port อื่นให้เพิ่มที่นี่ |

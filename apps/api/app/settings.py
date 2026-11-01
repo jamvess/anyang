@@ -271,6 +271,20 @@ class EnvSettings(BaseSettings):
     supabase_anon_key: SecretStr = SecretStr("")
     supabase_service_role_key: SecretStr = SecretStr("")
     database_url: SecretStr = SecretStr("")
+    # Every request outside app.auth.PUBLIC_PATHS needs a Supabase JWT (api-auth.md §2.3).
+    # False only until the web sends tokens: then a request without one gets no tenant.
+    auth_required: bool = True
+
+    @model_validator(mode="after")
+    def _auth_needs_supabase(self) -> "EnvSettings":
+        # Fail at boot, not on the first request (api-auth.md AC-8).
+        if self.auth_required and not (
+            self.supabase_url and self.supabase_anon_key.get_secret_value()
+        ):
+            raise ValueError(
+                "AUTH_REQUIRED=true needs SUPABASE_URL and SUPABASE_ANON_KEY to check tokens"
+            )
+        return self
 
     # --- AI providers ---
     ai_provider: Literal["fake", "live"] = "fake"

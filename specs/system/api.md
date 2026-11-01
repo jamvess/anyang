@@ -1,10 +1,10 @@
-# API (v1.4)
+# API (v1.5)
 
 Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้างอัตโนมัติที่ `/docs` · frontend generate types จาก `/openapi.json`
 
 ## Conventions
 
-- **Auth:** ส่ง Supabase access token ใน `Authorization: Bearer <jwt>` ทุก request backend ส่ง token นี้ต่อให้ Supabase เพื่อให้ RLS ทำงาน
+- **Auth:** ส่ง Supabase access token ใน `Authorization: Bearer <jwt>` ทุก request backend ส่ง token นี้ต่อให้ Supabase เพื่อให้ RLS ทำงาน · ไม่มี token หรือ token ผิด/หมดอายุ/ไม่มี `tenant_id` → `401` + `WWW-Authenticate: Bearer` code `missing_token` / `invalid_token` · ไม่ต้องมี token: `/health`, `/docs`, `/openapi.json` · ระหว่างที่หน้าเว็บยังไม่ส่ง token env `AUTH_REQUIRED=false` ให้ request ที่ไม่มี token ผ่านได้แต่ไม่มี tenant (token ที่ผิดยังได้ 401) · `specs/features/platform/api-auth.md` (v1.5)
 - **Error:** `{"error": {"code": "scope_not_confirmed", "message": "..."}}` พร้อม HTTP status ที่ตรงความหมาย
 - **Long-running jobs:** ตอบ `202 Accepted` แล้วให้ client poll endpoint ความคืบหน้า
 - **Streaming:** SSE ผ่าน `POST` (client ใช้ `fetch` + `ReadableStream`) ทุก stream จบด้วย event `done`
