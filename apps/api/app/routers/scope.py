@@ -17,48 +17,55 @@ from app.models.scope import Scope, ScopeConfirmed, TopicSources
 
 router = APIRouter(tags=["scope"])
 
-STUB_HEADERS = {"X-Stub": "true"}
-
 # api.md writes every path parameter as {id}.
 PrepId = Annotated[UUID, Path(alias="id")]
 TopicId = Annotated[UUID, Path(alias="id")]
 
-# Documented error shape, so generated types match the envelope. 409 codes per api.md v1.6:
-# scope_not_ready, scope_already_confirmed, scope_empty.
-_ERRORS: dict[int | str, dict[str, Any]] = {
-    404: {"model": ErrorResponse, "description": "Not found"},
-    409: {"model": ErrorResponse, "description": "Scope not ready, already confirmed or empty"},
-    422: {"model": ErrorResponse, "description": "Invalid path"},
-}
+
+def _errors(conflict: str | None = None) -> dict[int | str, dict[str, Any]]:
+    """Documented error shape, so generated types match the envelope. `conflict` lists the
+    409 codes of that endpoint (api.md v1.6); no 409 is documented without it."""
+    errors: dict[int | str, dict[str, Any]] = {
+        404: {"model": ErrorResponse, "description": "Not found"},
+        422: {"model": ErrorResponse, "description": "Invalid path"},
+    }
+    if conflict:
+        errors[409] = {"model": ErrorResponse, "description": conflict}
+    return errors
+
 
 _STUB_VERSION_ID = UUID("6f1d2c3a-0000-4000-8000-0000000000c1")
 
 
-@router.get("/exam-preps/{id}/scope", responses=_ERRORS)
+@router.get("/exam-preps/{id}/scope", responses=_errors("scope_not_ready"))
 async def get_scope(prep_id: PrepId, response: Response) -> Scope:
     """Draft topics with stars and reasons, in API order (SM-02, SM-03), excluded topics included.
 
     stub — replaced when ingestion and compute_importance exist
     """
-    response.headers.update(STUB_HEADERS)
+    response.headers.update(stubs.HEADERS)
     return Scope.model_validate(stubs.scope())
 
 
-@router.get("/topics/{id}/sources", responses=_ERRORS)
+@router.get("/topics/{id}/sources", responses=_errors())
 async def get_topic_sources(topic_id: TopicId, response: Response) -> TopicSources:
     """Source pages and past exam questions of one topic (SM-04).
 
-    stub — replaced when ingestion exists
+    stub — replaced when ingestion exists; every topic id gets the sources of the
+    difference-of-squares topic (May's sources-t3.json)
     """
-    response.headers.update(STUB_HEADERS)
+    response.headers.update(stubs.HEADERS)
     return TopicSources.model_validate(stubs.topic_sources())
 
 
-@router.post("/exam-preps/{id}/scope/confirm", responses=_ERRORS)
+@router.post(
+    "/exam-preps/{id}/scope/confirm",
+    responses=_errors("scope_not_ready, scope_already_confirmed or scope_empty"),
+)
 async def confirm_scope(prep_id: PrepId, response: Response) -> ScopeConfirmed:
     """Lock the draft scope as a scope version (SM-09).
 
     stub — replaced when scope_versions are written
     """
-    response.headers.update(STUB_HEADERS)
+    response.headers.update(stubs.HEADERS)
     return ScopeConfirmed(scope_version_id=_STUB_VERSION_ID, version=1)

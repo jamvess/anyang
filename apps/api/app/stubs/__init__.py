@@ -16,6 +16,9 @@ from typing import Any
 
 _DIR = Path(__file__).parent
 
+# Sent by every stub endpoint, so the web can tell fixture data from real data.
+HEADERS = {"X-Stub": "true"}
+
 
 @cache
 def room() -> dict[str, Any]:

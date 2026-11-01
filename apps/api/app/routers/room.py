@@ -28,8 +28,6 @@ from app.settings import get_settings
 
 router = APIRouter(tags=["room"])
 
-STUB_HEADERS = {"X-Stub": "true"}
-
 # api.md writes every path parameter as {id}.
 PrepId = Annotated[UUID, Path(alias="id")]
 SessionId = Annotated[UUID, Path(alias="id")]
@@ -66,7 +64,7 @@ def _stream(name: str) -> EventSourceResponse:
             payload = EVENT_MODELS[event].model_validate(data)
             yield {"event": event, "data": payload.model_dump_json()}
 
-    return EventSourceResponse(events(), headers=STUB_HEADERS)
+    return EventSourceResponse(events(), headers=stubs.HEADERS)
 
 
 @router.get("/exam-preps/{id}/sessions/active", responses=_ERRORS)
@@ -75,7 +73,7 @@ async def get_active_session(prep_id: PrepId, response: Response) -> ActiveSessi
 
     stub — replaced in P4-lite
     """
-    response.headers.update(STUB_HEADERS)
+    response.headers.update(stubs.HEADERS)
     return ActiveSession(session_id=stubs.room()["session_id"])
 
 
@@ -98,7 +96,7 @@ async def get_session(session_id: SessionId, response: Response) -> Room:
 
     stub — replaced in P4-lite
     """
-    response.headers.update(STUB_HEADERS)
+    response.headers.update(stubs.HEADERS)
     guards = get_settings().ai.guards
     limits = Limits(max_message_chars=guards.max_message_chars, max_image_mb=guards.max_image_mb)
     return Room.model_validate({**stubs.room(), "session_id": session_id, "limits": limits})

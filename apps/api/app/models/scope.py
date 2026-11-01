@@ -11,32 +11,31 @@ schema rules, not learning-model thresholds. Excluded topics are sent with 0 sta
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
+
+from app.models.base import ApiModel
 
 
-class _Api(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-
-class ScopeTopic(_Api):
+class ScopeTopic(ApiModel):
     id: UUID
     order: int = Field(ge=1)  # topics.order_index, counted from 1
     name: str
-    # Never null: topics whose importance is not computed yet are not sent.
+    # Never null: until every topic has stars the endpoint answers 409 scope_not_ready.
+    # 0 stars means excluded (ai-orchestration §2.3.5).
     stars: int = Field(ge=0, le=3)
     reason: str
     source_label: str  # ready to show; built by the backend from topic_sources
     origin: Literal["doc", "user"]
 
 
-class PastQuestion(_Api):
+class PastQuestion(ApiModel):
     id: UUID
     label: str
     text: str  # math as $…$ (api.md Conventions)
     map_note: str | None
 
 
-class Scope(_Api):
+class Scope(ApiModel):
     """Response of GET /exam-preps/{id}/scope."""
 
     prep_name: str
@@ -46,21 +45,21 @@ class Scope(_Api):
     unmapped_questions: list[PastQuestion]
 
 
-class SourceExcerpt(_Api):
+class SourceExcerpt(ApiModel):
     material_name: str
-    page: int
+    page: int = Field(ge=1)  # material_pages.page_no, the PDF page number
     text: str
 
 
-class TopicSources(_Api):
+class TopicSources(ApiModel):
     """Response of GET /topics/{id}/sources."""
 
     excerpts: list[SourceExcerpt]
     questions: list[PastQuestion]
 
 
-class ScopeConfirmed(_Api):
+class ScopeConfirmed(ApiModel):
     """Response of POST /exam-preps/{id}/scope/confirm."""
 
     scope_version_id: UUID
-    version: int
+    version: int = Field(ge=1)

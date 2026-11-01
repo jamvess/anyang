@@ -142,7 +142,8 @@ export interface paths {
          * Get Topic Sources
          * @description Source pages and past exam questions of one topic (SM-04).
          *
-         *     stub — replaced when ingestion exists
+         *     stub — replaced when ingestion exists; every topic id gets the sources of the
+         *     difference-of-squares topic (May's sources-t3.json)
          */
         get: operations["get_topic_sources_topics__id__sources_get"];
         put?: never;
@@ -761,7 +762,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Scope not ready, already confirmed or empty */
+            /** @description scope_not_ready */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -828,15 +829,6 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Scope not ready, already confirmed or empty */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
             /** @description Invalid path */
             422: {
                 headers: {
@@ -895,7 +887,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Scope not ready, already confirmed or empty */
+            /** @description scope_not_ready, scope_already_confirmed or scope_empty */
             409: {
                 headers: {
                     [name: string]: unknown;

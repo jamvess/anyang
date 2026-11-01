@@ -12,7 +12,14 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.models.scope import PastQuestion, Scope, ScopeConfirmed, ScopeTopic, TopicSources
+from app.models.scope import (
+    PastQuestion,
+    Scope,
+    ScopeConfirmed,
+    ScopeTopic,
+    SourceExcerpt,
+    TopicSources,
+)
 
 PREP_ID = "00000000-0000-4000-8000-000000000001"
 TOPIC_ID = "00000000-0000-4000-8000-000000000003"
@@ -46,14 +53,26 @@ def test_apimd_scope_three_endpoints_in_openapi(openapi: dict[str, Any]) -> None
         assert method in paths.get(path, {}), f"{method.upper()} {path} missing"
 
 
-@pytest.mark.parametrize(("method", "path"), SCOPE_ENDPOINTS)
-@pytest.mark.parametrize("status", ["404", "409", "422"])
-def test_apimd_scope_errors_ref_error_response(
-    openapi: dict[str, Any], method: str, path: str, status: str
-) -> None:
-    response = openapi["paths"][path][method]["responses"][status]
+# api.md v1.6: 409 scope_not_ready on GET /scope; confirm adds scope_already_confirmed and
+# scope_empty; sources has no 409.
+DOCUMENTED_ERRORS = [
+    ("get", "/exam-preps/{id}/scope", ["404", "409", "422"]),
+    ("get", "/topics/{id}/sources", ["404", "422"]),
+    ("post", "/exam-preps/{id}/scope/confirm", ["404", "409", "422"]),
+]
 
-    assert response["content"]["application/json"]["schema"]["$ref"] == ERROR_REF
+
+@pytest.mark.parametrize(("method", "path", "statuses"), DOCUMENTED_ERRORS)
+def test_apimd_scope_errors_ref_error_response(
+    openapi: dict[str, Any], method: str, path: str, statuses: list[str]
+) -> None:
+    responses = openapi["paths"][path][method]["responses"]
+
+    errors = sorted(code for code in responses if code.startswith(("4", "5")))
+    assert errors == sorted([*statuses, "401", "503"])  # 401/503 come from get_auth
+    for status in statuses:
+        schema = responses[status]["content"]["application/json"]["schema"]
+        assert schema["$ref"] == ERROR_REF
 
 
 def test_apimd_scope_schemas_have_exact_fields(openapi: dict[str, Any]) -> None:
@@ -84,7 +103,15 @@ def test_apimd_scope_schemas_have_exact_fields(openapi: dict[str, Any]) -> None:
 def test_apimd_scope_every_field_is_required(openapi: dict[str, Any]) -> None:
     # "ทุก field ต้องมี": generated types must not mark any field optional.
     schemas = openapi["components"]["schemas"]
-    for name in ("Scope", "ScopeTopic", "PastQuestion", "TopicSources", "SourceExcerpt"):
+    names = (
+        "Scope",
+        "ScopeTopic",
+        "PastQuestion",
+        "TopicSources",
+        "SourceExcerpt",
+        "ScopeConfirmed",
+    )
+    for name in names:
         assert set(schemas[name]["required"]) == set(schemas[name]["properties"]), name
 
 
@@ -124,7 +151,7 @@ TOPIC = {
         ({"extra": 1}, False),
     ],
 )
-def test_apimd_scope_topic_rules(change: dict[str, Any], ok: bool) -> None:
+def test_SM03_scope_topic_rules(change: dict[str, Any], ok: bool) -> None:
     data = {**TOPIC, **change}
     if ok:
         ScopeTopic.model_validate(data)
@@ -151,7 +178,27 @@ def test_apimd_scope_status_enum(status: str, ok: bool) -> None:
             Scope.model_validate(data)
 
 
-def test_apimd_scope_map_note_may_be_null() -> None:
+@pytest.mark.parametrize(("page", "ok"), [(1, True), (0, False)])
+def test_SM04_source_page_counts_from_one(page: int, ok: bool) -> None:
+    data = {"material_name": "ch3-factorization.pdf", "page": page, "text": "a^2 - b^2"}
+    if ok:
+        SourceExcerpt.model_validate(data)
+    else:
+        with pytest.raises(ValueError):
+            SourceExcerpt.model_validate(data)
+
+
+@pytest.mark.parametrize(("version", "ok"), [(1, True), (0, False)])
+def test_SM09_confirmed_version_counts_from_one(version: int, ok: bool) -> None:
+    data = {"scope_version_id": TOPIC_ID, "version": version}
+    if ok:
+        ScopeConfirmed.model_validate(data)
+    else:
+        with pytest.raises(ValueError):
+            ScopeConfirmed.model_validate(data)
+
+
+def test_SM04_map_note_may_be_null() -> None:
     PastQuestion.model_validate(
         {"id": TOPIC_ID, "label": "midterm-2566 ข้อ 3", "text": "$x^2 - 49$", "map_note": None}
     )
@@ -168,7 +215,7 @@ def test_apimd_scope_get_scope_validates(client: TestClient) -> None:
     assert scope.topics, "fixture scope should have topics"
 
 
-def test_apimd_scope_topics_keep_api_order(client: TestClient) -> None:
+def test_SM02_scope_topics_keep_api_order(client: TestClient) -> None:
     # SM-02: the web shows topics in the order the API sends, so the API sorts by order.
     topics = client.get(f"/exam-preps/{PREP_ID}/scope").json()["topics"]
 
@@ -176,7 +223,7 @@ def test_apimd_scope_topics_keep_api_order(client: TestClient) -> None:
     assert orders == sorted(orders)
 
 
-def test_apimd_scope_topic_ids_open_their_sources(client: TestClient) -> None:
+def test_SM04_scope_topic_ids_open_their_sources(client: TestClient) -> None:
     # The page fetches /topics/{id}/sources with the id from /scope (scope-review AC-7).
     topic_id = client.get(f"/exam-preps/{PREP_ID}/scope").json()["topics"][0]["id"]
 
@@ -192,7 +239,7 @@ def test_apimd_scope_get_sources_validates(client: TestClient) -> None:
     TopicSources.model_validate(response.json())
 
 
-def test_apimd_scope_confirm_validates(client: TestClient) -> None:
+def test_SM09_scope_confirm_validates(client: TestClient) -> None:
     response = client.post(f"/exam-preps/{PREP_ID}/scope/confirm")
 
     assert response.status_code == 200
