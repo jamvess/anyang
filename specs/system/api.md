@@ -1,4 +1,4 @@
-# API (v1.8)
+# API (v1.9)
 
 Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้างอัตโนมัติที่ `/docs` · frontend generate types จาก `/openapi.json`
 
@@ -172,6 +172,38 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 4. **`ocr_preview.lines[].latex` เป็น LaTeX ล้วนไม่มี `$`** (ocr-confirm-card OQ 6) เหมือน `problem.text_latex` · Jam ตกลง (เจ้าของ prompt `extract_answer`)
 5. **error code ใหม่:** `unsupported_type`, `file_too_large`, `audio_too_long`, `stt_unavailable`, `no_pending_ocr`, `ocr_lines_mismatch`
 
+**จบ session ประวัติแชท progress card และเสียงอ่าน (v1.9 · ข้อเสนอ รอ Junior ตัดสิน):** ทุก field ต้องมี และไม่มี field อื่น · session, prep หรือข้อความที่ไม่มีหรือเป็นของ tenant อื่น → `404 not_found`
+
+**`POST /sessions/{id}/end`** · ผู้ใช้กดจบ session (PM-05 · ai-orchestration §2.2.9) · ไม่มี body
+
+- Response: SSE `session_end` `{summary_lines: string[]}` (1–2 บรรทัด · `session_summary` ทำจาก running summary · บันทึกที่ `tutor_sessions.summary`) → `done`
+- สิ่งที่ backend ทำ: ตั้ง `tutor_sessions.ended_at = now()` และ `end_reason = 'user'` · คำนวณการเปลี่ยนแปลงของ mastery ตาม §2.2.9 (ยังไม่มีใน stub)
+- error: `409 session_already_ended` (`ended_at` ไม่เป็น null) · ตอบก่อนเริ่ม SSE
+- จบแบบอื่น (`time_budget`, `plan_done`, `idle`) เป็นของ backend เอง ไม่ผ่าน endpoint นี้
+
+**`GET /sessions/{id}/messages`** · ประวัติแชท (TM-13)
+
+- Response: `Message[]` เป็น array ตรงๆ เรียงตาม `created_at` เก่าไปใหม่ · รูปร่างเดียวกับ `Room.messages`
+- ยังไม่แบ่งหน้า
+
+**`GET /exam-preps/{id}/progress`** · progress card ตอนผู้ใช้ขอดู (TM-11) · หน้าแรกก่อนเข้าห้อง (TM-15)
+
+- Response: `ProgressCard` รูปร่างเดียวกับ payload ของ event `progress_card` (`{days_left, passed, total, readiness, topics}` · `topics[]` ตาม "`progress_card.topics[]`" ด้านล่าง)
+- error: `409 scope_not_confirmed` (prep ยังไม่มี `active_scope_version_id` · progress นับจาก scope ที่ยืนยันแล้ว)
+
+**`GET /messages/{id}/tts`** · เสียงอ่านข้อความของ tutor (TM-09 · เทอม 2 · ตอนนี้มีแค่ stub)
+
+- Response: `{audio_url: string}` · signed URL ของไฟล์เสียงใน Storage ที่ cache ตาม hash(text + voice) (§2.8)
+- error: `409 tts_unavailable` (ไม่ใช่ข้อความของ tutor หรือ buddy · หรือข้อความว่าง) · `503 tts_unavailable` เมื่อ TTS ล่ม
+
+**รอตัดสิน (v1.9 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-02 (PR #104) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
+
+1. **`/end` ตอบเป็น SSE:** เพราะ `session_end` เป็น event และสรุปมาจาก AI call · ทางเลือกคือตอบ JSON `{summary_lines}` ธรรมดา
+2. **`/end` ไม่นับใน rate limit** (`gateway-guards.md` §2.1 นับเฉพาะข้อความที่ผู้ใช้ส่ง) · ถึงจะเรียก AI แต่จบ session ได้ครั้งเดียว (ครั้งที่สองได้ 409)
+3. **`GET /sessions/{id}/messages` ยังไม่แบ่งหน้า** · ต้องมีก่อน Beta ถ้า session ยาว
+4. **`GET /exam-preps/{id}/progress` ใช้รูปร่างเดียวกับ event** · หน้าเว็บใช้ component เดียวกันทั้งสองที่
+5. **error code ใหม่:** `session_already_ended`, `scope_not_confirmed` (มีในตัวอย่างของ Conventions อยู่แล้ว), `tts_unavailable`
+
 ### บัญชี
 
 | Method | Path | ทำอะไร |
@@ -191,7 +223,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | `ocr_preview` | `{lines: [{latex, confidence}]}` · `latex` เป็น LaTeX ล้วนไม่มี `$` · `confidence` 0–1 (หน้าเว็บไม่แสดง · ยืนยันทุกครั้ง AM-02) · `lines` ไม่ว่าง (รูปที่อ่านไม่ได้ส่งเป็น `token` แทน) · v1.7 | 2.2 |
 | `verdict` | `{verdict, first_wrong_line, error_type}` · `verdict`: `correct` \| `correct_with_flaw` \| `incomplete` \| `incorrect` · `first_wrong_line`: integer ≥ 1 หรือ null · `error_type`: `calculation` \| `sign` \| `wrong_method` \| `concept` \| `prerequisite` \| `no_answer` หรือ null · ชุดค่าตาม `merge-rules.md` §2: `correct` → ทั้งสองเป็น null · `incomplete` → `concept` + line null · `no_answer` → `incorrect` + line null · นอกนั้นมีทั้ง line และ error_type · v1.7 | 2.4 |
 | `buddy` | `{text}` (ใช้เมื่อ buddy ตอบนอกจังหวะ 2.1.7) | 2.1 |
-| `session_end` | `{summary_lines: [..2]}` | 2.2 |
+| `session_end` | `{summary_lines: [..2]}` · 1–2 บรรทัด · มาจาก `POST /sessions/{id}/end` (v1.9) | 2.2 |
 | `done` | `{}` · ห้องติว: `{message_ids: [...]}` id ของข้อความ tutor และ buddy ที่ stream นี้บันทึกลง `messages` เรียงตามลำดับที่ stream (ใช้แทน id ในเครื่องของ UI เช่น เรียก `GET /messages/{id}/tts`) · v1.3 | ทั้งหมด |
 | `error` | `{code, message}` · ใช้เมื่อไม่มีข้อความให้แสดง (degrade ที่มีข้อความ template ส่งเป็น `token`) · รายการ code ยังเปิดอยู่ | ทั้งหมด |
 

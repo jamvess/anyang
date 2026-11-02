@@ -11,9 +11,9 @@
 
 4 endpoint สุดท้ายของห้องติวใน api.md: `POST /sessions/{id}/end`, `GET /sessions/{id}/messages`, `GET /exam-preps/{id}/progress`, `GET /messages/{id}/tts`
 
-- [ ] 1. 🤖 ร่าง contract (ข้อเสนอรอ Junior) จาก api.md (`Message`, `progress_card`, `session_end`), ai-orchestration §2.2.9 และ `tutor_sessions` ใน `0001_init.sql`
-- [ ] 2. 🙋 Jam อ่านร่าง ตอบ ok · บอกแชทกลุ่มว่าจะแก้ `api.md` (ไฟล์ร่วม)
-- [ ] 3. 🤖 ใส่ร่างลง `api.md` v1.9 + "รอตัดสิน (v1.9 · Junior)"
+- [x] 1. 🤖 ร่าง contract (ข้อเสนอรอ Junior) จาก api.md (`Message`, `progress_card`, `session_end`), ai-orchestration §2.2.9 และ `tutor_sessions` ใน `0001_init.sql`
+- [x] 2. 🙋 Jam อ่านร่าง ตอบ ok · บอกแชทกลุ่มว่าจะแก้ `api.md` (ไฟล์ร่วม)
+- [x] 3. 🤖 ใส่ร่างลง `api.md` v1.9 + "รอตัดสิน (v1.9 · Junior)"
 - [ ] 4. 🤖 test contract + stub · แดงก่อน
 - [ ] 5. 🙋 Jam review test
 - [ ] 6. 🤖 models + stub (`X-Stub: true`) · test เขียว + ruff
@@ -31,7 +31,7 @@
 
 ## Next step
 
-ขั้น 1: ร่าง contract
+ขั้น 4: test contract + stub ของ 4 endpoint
 
 ## Waiting on
 
