@@ -1,4 +1,4 @@
-# API (v1.9)
+# API (v1.10)
 
 Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้างอัตโนมัติที่ `/docs` · frontend generate types จาก `/openapi.json`
 
@@ -40,6 +40,52 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | POST | `/exam-preps/{id}/scope/chat` | **SSE:** `token`, `scope_patch`, `done` |
 | GET | `/exam-preps/{id}/scope/changes` | change log (S14) |
 | POST | `/exam-preps/{id}/scope/confirm` | lock เป็น scope version |
+
+**สร้างการเตรียมสอบและใส่ไฟล์ (v1.10 · ข้อเสนอ รอ Junior ตัดสิน):** UC-02 ขั้น 1–5 (S07–S10) · ai-orchestration §2.3.2 ขั้น 1–3 · ยังไม่มี feature spec ของหน้าจอ · ทุก field ต้องมี และไม่มี field อื่น · prep หรือไฟล์ที่ไม่มีหรือเป็นของ tenant อื่น → `404 not_found`
+
+**`ExamPrep`** (response ของ `POST /exam-preps` และแต่ละแถวของ `GET /exam-preps`)
+
+| Field | Type | ที่มา |
+|---|---|---|
+| `id` | string (uuid) | `exam_preps.id` |
+| `title` | string | `exam_preps.title` |
+| `exam_date` | string (date · `YYYY-MM-DD`) | `exam_preps.exam_date` |
+| `days_left` | integer | เหมือน `Room.days_left` (CM-02) |
+| `daily_minutes` | integer \| null | `exam_preps.daily_minutes` · null = ใช้ค่าจาก `config/learning.yaml` → `planner.default_daily_minutes` (UC-02 A1) |
+| `stage` | `"materials"` \| `"processing"` \| `"scope"` \| `"tutoring"` | คำนวณที่ backend: `tutoring` เมื่อมี `active_scope_version_id` · `scope` เมื่อทุกไฟล์ `ready` · `processing` เมื่อมีไฟล์ `confirmed` หรือ `ingesting` · ไม่งั้น `materials` · หน้าเว็บใช้เลือกว่าการ์ดพาไปหน้าไหน |
+| `readiness` | number 0–1 \| null | PM-03 · null จนกว่า `stage = "tutoring"` |
+| `topics_not_passed` | integer \| null | จำนวนหัวข้อที่ `level ≠ passed` (PM-04) · null จนกว่า `stage = "tutoring"` |
+
+- **`POST /exam-preps`** · body `{title: string (ไม่ว่าง), exam_date: string (date), daily_minutes?: integer ≥ 1}` (CM-01) · `201` + `ExamPrep` (`stage = "materials"`) · `exam_date` ก่อนวันนี้ (Asia/Bangkok) → `422 exam_date_past` · วันนี้ได้
+- **`GET /exam-preps`** · `ExamPrep[]` ของผู้ใช้ เรียงตาม `exam_date` ใกล้ก่อน · ไม่รวม `status = 'archived'`
+
+**`Material`** (แต่ละแถวของ `GET /exam-preps/{id}/materials` และ response ของ `/uploaded`)
+
+| Field | Type | ที่มา |
+|---|---|---|
+| `id` | string (uuid) | `materials.id` |
+| `file_name` | string | `materials.file_name` (แสดงผลอย่างเดียว ไม่ใช้ประกอบ path) |
+| `kind` | `"sheet"` \| `"slides"` \| `"past_exam"` \| `"notes"` \| `"other"` \| null | `materials.kind` · null จนกว่า classify เสร็จ |
+| `kind_confidence` | number 0–1 \| null | `materials.kind_confidence` (CM-06) |
+| `kind_confirmed` | boolean | `materials.kind_confirmed` |
+| `user_note` | string \| null | `materials.user_note` (CM-04) |
+| `status` | `"uploaded"` \| `"classified"` \| `"confirmed"` \| `"ingesting"` \| `"ready"` \| `"failed"` | `materials.status` (CM-07) |
+| `error` | string \| null | `materials.error` · ข้อความสั้นที่แสดงให้ผู้ใช้ได้ เมื่อ `status = "failed"` (UC-02 E5) |
+
+- **`POST /exam-preps/{id}/materials`** · body `{file_name: string, content_type: string, size_bytes: integer ≥ 1}` (CM-03) · response `{material_id, upload_url, path}` · `path` = `{tenant_id}/{exam_prep_id}/{material_id}` (data-model.md · §2.3.2 ขั้น 1) · สร้างแถว `materials` ที่ `status = "uploaded"`
+  - `content_type` ที่รับ (ไม่สนตัวพิมพ์ ตัด parameter หลัง `;` แบบเดียวกับ `/sessions/{id}/uploads`): `application/pdf`, `image/jpeg`, `image/png`, `image/webp`, `image/heic`, PPTX `application/vnd.openxmlformats-officedocument.presentationml.presentation`, DOCX `application/vnd.openxmlformats-officedocument.wordprocessingml.document` · นอกนั้น `422 unsupported_type`
+- **`POST /materials/{id}/uploaded`** · body `{user_note?: string}` · `202` + `Material` · เริ่ม classify (§2.3.2 ขั้น 2) · ไฟล์นี้แจ้งไปแล้ว → `409 already_uploaded`
+- **`GET /exam-preps/{id}/materials`** · `Material[]` เรียงตามเวลาที่สร้าง · หน้า S10 poll จนทุกไฟล์มี `kind`
+- **`POST /exam-preps/{id}/materials/confirm`** · body `{materials: [{id, kind}]}` (ทุกไฟล์ที่ยังไม่ยืนยัน · `kind` ตาม enum ของ `Material`) · `202` + `{queued: integer}` (จำนวนไฟล์ที่เริ่ม ingest · ขั้น 3) · ตั้ง `kind_confirmed = true` · มีไฟล์ที่ยังไม่ `classified` → `409 not_classified` · `id` ที่ไม่ใช่ไฟล์ของ prep นี้ → `422 unknown_material`
+
+**รอตัดสิน (v1.10 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-02 (PR #105) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
+
+1. **ชนิดไฟล์ที่รับ** (UC-02 คำถามเปิด 1): PDF, รูป, PPTX, DOCX ตาม ai-orchestration §2.3.3 · ไฟล์ที่ไม่รับปฏิเสธตอนขอที่อัปโหลด (ก่อน browser ส่งไฟล์)
+2. **ขนาดไฟล์สูงสุด** (UC-02 คำถามเปิด 1): ยังไม่มีค่าใน config · stub ยังไม่ตรวจ · ถ้าจะตรวจต้องเพิ่ม `guards.max_material_mb` ใน `config/ai.yaml` พร้อมป้ายที่มา (threshold · Jam ตัดสิน)
+3. **วันสอบ** (UC-02 คำถามเปิด 2): วันนี้ได้ · ก่อนวันนี้ได้ `422 exam_date_past`
+4. **`stage`, `readiness`, `topics_not_passed` ใน `ExamPrep`:** เดาจาก S27 และ PM-04 · ยังไม่มี spec หน้าหลักของ May
+5. **ประเภทไฟล์:** UC-02 ขั้น 4 พูดถึง "แบบฝึกหัด" แต่ check ของ `materials.kind` ไม่มีค่านี้ · ข้อเสนอคือใช้ enum ของ schema (`sheet`, `slides`, `past_exam`, `notes`, `other`) และนับแบบฝึกหัดเป็น `sheet`
+6. **error code ใหม่:** `exam_date_past`, `unsupported_type` (เหมือนห้องติว), `already_uploaded`, `not_classified`, `unknown_material`
 
 **หน้าตรวจขอบเขต (v1.6 · ข้อเสนอ รอ Junior ตัดสิน):** รูปร่างตามข้อเสนอของ May ใน `specs/features/scope/scope-review.md` §3 (OQ 5–8) · ตัวอย่าง: `apps/web/tests/fixtures/scope/scope-s12.json`, `sources-t3.json` (id ในไฟล์ของเว็บเป็น `t3` ฯลฯ ของจริงเป็น uuid) · ทุก field ต้องมี และไม่มี field อื่น · prep หรือหัวข้อที่ไม่มี หรือเป็นของ tenant อื่น (RLS มองไม่เห็น) → `404` code `not_found`
 

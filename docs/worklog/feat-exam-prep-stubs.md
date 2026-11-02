@@ -11,9 +11,9 @@
 
 ครึ่งแรกของ flow 2.3 (UC-02 ขั้น 1–5 · S07–S10): `POST /exam-preps`, `GET /exam-preps`, `POST /exam-preps/{id}/materials`, `POST /materials/{id}/uploaded`, `GET /exam-preps/{id}/materials`, `POST /exam-preps/{id}/materials/confirm` · `GET /exam-preps/{id}/ingestion` ทำใน PR ถัดไป
 
-- [ ] 1. 🤖 ร่าง contract (ข้อเสนอรอ Junior) จาก ai-orchestration §2.3.2, `exam_preps` / `materials` ใน `0001_init.sql`, UC-02 และ CM-01–CM-07
-- [ ] 2. 🙋 Jam อ่านร่าง ตอบ ok · บอกแชทกลุ่มว่าจะแก้ `api.md` (ไฟล์ร่วม)
-- [ ] 3. 🤖 ใส่ร่างลง `api.md` v1.10 + "รอตัดสิน (v1.10 · Junior)"
+- [x] 1. 🤖 ร่าง contract (ข้อเสนอรอ Junior) จาก ai-orchestration §2.3.2, `exam_preps` / `materials` ใน `0001_init.sql`, UC-02 และ CM-01–CM-07
+- [x] 2. 🙋 Jam อ่านร่าง ตอบ ok · บอกแชทกลุ่มว่าจะแก้ `api.md` (ไฟล์ร่วม)
+- [x] 3. 🤖 ใส่ร่างลง `api.md` v1.10 + "รอตัดสิน (v1.10 · Junior)"
 - [ ] 4. 🤖 test contract + stub · แดงก่อน
 - [ ] 5. 🙋 Jam review test
 - [ ] 6. 🤖 models + stub (`X-Stub: true`) · test เขียว + ruff
@@ -32,7 +32,7 @@
 
 ## Next step
 
-ขั้น 1: ร่าง contract
+ขั้น 4: test contract + stub ของ 6 endpoint
 
 ## Waiting on
 
