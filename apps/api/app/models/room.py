@@ -97,6 +97,13 @@ UPLOAD_CONTENT_TYPES: dict[str, frozenset[str]] = {
 }
 
 
+def bare_content_type(content_type: str) -> str:
+    """`audio/webm;codecs=opus` → `audio/webm`: browsers add codec parameters to MediaRecorder
+    types and may use upper case (voice-input.md OQ 8). Material uploads use the same rule
+    (api.md v1.10)."""
+    return content_type.split(";", 1)[0].strip().lower()
+
+
 class UploadTicket(ApiModel):
     """Response of POST /sessions/{id}/uploads: PUT the file to `upload_url`, then send `path`."""
 
