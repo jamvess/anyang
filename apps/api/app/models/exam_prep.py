@@ -8,10 +8,10 @@ from the materials and the active scope version (api.md v1.10 `ExamPrep`).
 """
 
 from datetime import date
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 from uuid import UUID
 
-from pydantic import Field, StringConstraints
+from pydantic import Field, StringConstraints, model_validator
 
 from app.models.base import ApiModel
 
@@ -64,7 +64,8 @@ class UploadMaterialRequest(ApiModel):
     """Body of POST /exam-preps/{id}/materials (CM-03). The endpoint checks `content_type`
     against MATERIAL_CONTENT_TYPES."""
 
-    file_name: str = Field(min_length=1)  # display only (materials.file_name), never a path
+    # Display only (materials.file_name), never a path.
+    file_name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
     content_type: str
     size_bytes: int = Field(ge=1)
 
@@ -102,9 +103,18 @@ class ConfirmedKind(ApiModel):
 
 
 class ConfirmMaterialsRequest(ApiModel):
-    """Body of POST /exam-preps/{id}/materials/confirm (CM-06): every unconfirmed file."""
+    """Body of POST /exam-preps/{id}/materials/confirm (CM-06): the files to confirm, each once.
+    Failed files are left out; files not sent are not checked, so files can be added later
+    (CM-05)."""
 
     materials: list[ConfirmedKind] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _each_file_once(self) -> Self:
+        ids = [m.id for m in self.materials]
+        if len(ids) != len(set(ids)):
+            raise ValueError("each material id may appear once")
+        return self
 
 
 class MaterialsQueued(ApiModel):

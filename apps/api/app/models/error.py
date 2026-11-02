@@ -1,5 +1,7 @@
 """Error envelope of every non-2xx response (specs/system/api.md Conventions)."""
 
+from typing import Any
+
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict
 
@@ -23,3 +25,17 @@ def error_response(status: int, code: str, message: str) -> JSONResponse:
     """The envelope as a response, for handlers and routers that answer with an error."""
     body = ErrorResponse(error=ErrorBody(code=code, message=message))
     return JSONResponse(body.model_dump(), status_code=status)
+
+
+def error_docs(
+    invalid: str = "Invalid path", conflict: str | None = None
+) -> dict[int | str, dict[str, Any]]:
+    """OpenAPI `responses` of a route with an id in its path, so generated types match the
+    envelope. `invalid` names the 422 causes and `conflict` the 409 codes; no 409 without it."""
+    errors: dict[int | str, dict[str, Any]] = {
+        404: {"model": ErrorResponse, "description": "Not found"},
+        422: {"model": ErrorResponse, "description": invalid},
+    }
+    if conflict:
+        errors[409] = {"model": ErrorResponse, "description": conflict}
+    return errors

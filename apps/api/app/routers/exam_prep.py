@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, Path, Response
 
 from app import stubs
 from app.auth import AuthContext, get_auth
-from app.models.error import ErrorResponse
+from app.models.error import ErrorResponse, error_docs
 from app.models.exam_prep import (
     MATERIAL_CONTENT_TYPES,
     ConfirmMaterialsRequest,
@@ -40,20 +40,6 @@ _BANGKOK = timezone(timedelta(hours=7))
 
 def _today() -> date:
     return datetime.now(_BANGKOK).date()
-
-
-def _errors(
-    invalid: str = "Invalid path or body", conflict: str | None = None
-) -> dict[int | str, dict[str, Any]]:
-    """Documented error shape, so generated types match the envelope. `invalid` names the 422
-    codes and `conflict` the 409 codes of that endpoint (api.md v1.10)."""
-    errors: dict[int | str, dict[str, Any]] = {
-        404: {"model": ErrorResponse, "description": "Not found"},
-        422: {"model": ErrorResponse, "description": invalid},
-    }
-    if conflict:
-        errors[409] = {"model": ErrorResponse, "description": conflict}
-    return errors
 
 
 # --- exam preps ------------------------------------------------------------------
@@ -109,7 +95,7 @@ async def list_exam_preps(response: Response) -> list[ExamPrep]:
 @router.post(
     "/exam-preps/{id}/materials",
     response_model=MaterialUploadTicket,  # errors return a JSONResponse, so the return type is Any
-    responses=_errors("Invalid path or body, or unsupported_type"),
+    responses=error_docs("Invalid path or body, or unsupported_type"),
 )
 async def create_material(
     prep_id: PrepId,
@@ -134,7 +120,7 @@ async def create_material(
 @router.post(
     "/materials/{id}/uploaded",
     status_code=202,
-    responses=_errors(conflict="already_uploaded"),
+    responses=error_docs("Invalid path or body", "already_uploaded"),
 )
 async def material_uploaded(
     material_id: MaterialId, body: MaterialUploadedRequest, response: Response
@@ -148,7 +134,7 @@ async def material_uploaded(
     return Material.model_validate({**row, "id": material_id, "user_note": body.user_note})
 
 
-@router.get("/exam-preps/{id}/materials", responses=_errors("Invalid path"))
+@router.get("/exam-preps/{id}/materials", responses=error_docs())
 async def list_materials(prep_id: PrepId, response: Response) -> list[Material]:
     """Files of this exam prep, oldest first; S10 polls until every file has a kind (CM-07).
 
@@ -161,12 +147,12 @@ async def list_materials(prep_id: PrepId, response: Response) -> list[Material]:
 @router.post(
     "/exam-preps/{id}/materials/confirm",
     status_code=202,
-    responses=_errors("Invalid path or body, or unknown_material", "not_classified"),
+    responses=error_docs("Invalid path or body, or unknown_material", "not_classified"),
 )
 async def confirm_materials(
     prep_id: PrepId, body: ConfirmMaterialsRequest, response: Response
 ) -> MaterialsQueued:
-    """The user's kind for every unconfirmed file; ingestion starts (CM-06, §2.3.2 step 3).
+    """The user's kind for each file sent; ingestion starts (CM-06, §2.3.2 step 3).
 
     stub — queues every file sent; nothing is checked against the fixture
     """

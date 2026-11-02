@@ -341,3 +341,23 @@ def test_apimd_exam_prep_bad_id_is_422_envelope(
 
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "validation_error"
+
+
+# --- added in self-review (after Jam's test review) ----------------------------------
+
+
+def test_CM06_confirm_refuses_the_same_file_twice() -> None:
+    """api.md v1.10: each `id` once, so `queued` counts files, not rows of the body."""
+    body = {
+        "materials": [{"id": MATERIAL_ID, "kind": "sheet"}, {"id": MATERIAL_ID, "kind": "notes"}]
+    }
+
+    with pytest.raises(ValueError):
+        ConfirmMaterialsRequest.model_validate(body)
+
+
+def test_CM03_blank_file_name_is_refused(client: TestClient) -> None:
+    response = client.post(f"/exam-preps/{PREP_ID}/materials", json=upload(file_name="   "))
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "validation_error"

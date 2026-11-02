@@ -52,7 +52,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | `exam_date` | string (date · `YYYY-MM-DD`) | `exam_preps.exam_date` |
 | `days_left` | integer | เหมือน `Room.days_left` (CM-02) |
 | `daily_minutes` | integer \| null | `exam_preps.daily_minutes` · null = ใช้ค่าจาก `config/learning.yaml` → `planner.default_daily_minutes` (UC-02 A1) |
-| `stage` | `"materials"` \| `"processing"` \| `"scope"` \| `"tutoring"` | คำนวณที่ backend: `tutoring` เมื่อมี `active_scope_version_id` · `scope` เมื่อทุกไฟล์ `ready` · `processing` เมื่อมีไฟล์ `confirmed` หรือ `ingesting` · ไม่งั้น `materials` · หน้าเว็บใช้เลือกว่าการ์ดพาไปหน้าไหน |
+| `stage` | `"materials"` \| `"processing"` \| `"scope"` \| `"tutoring"` | คำนวณที่ backend ตามลำดับ: `tutoring` เมื่อมี `active_scope_version_id` · ไม่งั้น `processing` เมื่อมีไฟล์ `confirmed` หรือ `ingesting` · ไม่งั้น `scope` เมื่อมีไฟล์ `ready` อย่างน้อย 1 ไฟล์ (ไฟล์ `failed` ไม่นับ) · ไม่งั้น `materials` (รวม prep ที่ยังไม่มีไฟล์) · หน้าเว็บใช้เลือกว่าการ์ดพาไปหน้าไหน |
 | `readiness` | number 0–1 \| null | PM-03 · null จนกว่า `stage = "tutoring"` |
 | `topics_not_passed` | integer \| null | จำนวนหัวข้อที่ `level ≠ passed` (PM-04) · null จนกว่า `stage = "tutoring"` |
 
@@ -72,11 +72,11 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | `status` | `"uploaded"` \| `"classified"` \| `"confirmed"` \| `"ingesting"` \| `"ready"` \| `"failed"` | `materials.status` (CM-07) |
 | `error` | string \| null | `materials.error` · ข้อความสั้นที่แสดงให้ผู้ใช้ได้ เมื่อ `status = "failed"` (UC-02 E5) |
 
-- **`POST /exam-preps/{id}/materials`** · body `{file_name: string, content_type: string, size_bytes: integer ≥ 1}` (CM-03) · response `{material_id, upload_url, path}` · `path` = `{tenant_id}/{exam_prep_id}/{material_id}` (data-model.md · §2.3.2 ขั้น 1) · สร้างแถว `materials` ที่ `status = "uploaded"`
+- **`POST /exam-preps/{id}/materials`** · body `{file_name: string (ไม่ว่าง), content_type: string, size_bytes: integer ≥ 1}` (CM-03) · response `{material_id, upload_url, path}` · `path` = `{tenant_id}/{exam_prep_id}/{material_id}` (data-model.md · §2.3.2 ขั้น 1) · สร้างแถว `materials` ที่ `status = "uploaded"`
   - `content_type` ที่รับ (ไม่สนตัวพิมพ์ ตัด parameter หลัง `;` แบบเดียวกับ `/sessions/{id}/uploads`): `application/pdf`, `image/jpeg`, `image/png`, `image/webp`, `image/heic`, PPTX `application/vnd.openxmlformats-officedocument.presentationml.presentation`, DOCX `application/vnd.openxmlformats-officedocument.wordprocessingml.document` · นอกนั้น `422 unsupported_type`
 - **`POST /materials/{id}/uploaded`** · body `{user_note?: string}` · `202` + `Material` · เริ่ม classify (§2.3.2 ขั้น 2) · ไฟล์นี้แจ้งไปแล้ว → `409 already_uploaded`
 - **`GET /exam-preps/{id}/materials`** · `Material[]` เรียงตามเวลาที่สร้าง · หน้า S10 poll จนทุกไฟล์มี `kind`
-- **`POST /exam-preps/{id}/materials/confirm`** · body `{materials: [{id, kind}]}` (ทุกไฟล์ที่ยังไม่ยืนยัน · `kind` ตาม enum ของ `Material`) · `202` + `{queued: integer}` (จำนวนไฟล์ที่เริ่ม ingest · ขั้น 3) · ตั้ง `kind_confirmed = true` · มีไฟล์ที่ยังไม่ `classified` → `409 not_classified` · `id` ที่ไม่ใช่ไฟล์ของ prep นี้ → `422 unknown_material`
+- **`POST /exam-preps/{id}/materials/confirm`** · body `{materials: [{id, kind}]}` (ไฟล์ที่จะยืนยัน อย่างน้อย 1 ไฟล์ · `id` ไม่ซ้ำ · ไฟล์ `failed` ไม่ต้องส่ง · `kind` ตาม enum ของ `Material`) · `202` + `{queued: integer}` (จำนวนไฟล์ที่เริ่ม ingest · ขั้น 3) · ตั้ง `kind_confirmed = true` · ไฟล์ใน body ที่ `status` ไม่ใช่ `classified` (ยัง classify ไม่เสร็จ หรือยืนยันไปแล้ว) → `409 not_classified` · ไฟล์ที่ไม่ได้ส่งมาไม่ถูกเช็ค จึงเพิ่มไฟล์ทีหลังได้ (CM-05) · `id` ซ้ำ → `422 validation_error` · `id` ที่ไม่ใช่ไฟล์ของ prep นี้ → `422 unknown_material`
 
 **รอตัดสิน (v1.10 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-02 (PR #105) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
 

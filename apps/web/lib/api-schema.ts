@@ -404,7 +404,7 @@ export interface paths {
         put?: never;
         /**
          * Confirm Materials
-         * @description The user's kind for every unconfirmed file; ingestion starts (CM-06, §2.3.2 step 3).
+         * @description The user's kind for each file sent; ingestion starts (CM-06, §2.3.2 step 3).
          *
          *     stub — queues every file sent; nothing is checked against the fixture
          */
@@ -432,7 +432,9 @@ export interface components {
         };
         /**
          * ConfirmMaterialsRequest
-         * @description Body of POST /exam-preps/{id}/materials/confirm (CM-06): every unconfirmed file.
+         * @description Body of POST /exam-preps/{id}/materials/confirm (CM-06): the files to confirm, each once.
+         *     Failed files are left out; files not sent are not checked, so files can be added later
+         *     (CM-05).
          */
         ConfirmMaterialsRequest: {
             /** Materials */
