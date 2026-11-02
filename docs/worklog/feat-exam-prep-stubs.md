@@ -15,7 +15,7 @@
 - [x] 2. 🙋 Jam อ่านร่าง ตอบ ok · บอกแชทกลุ่มว่าจะแก้ `api.md` (ไฟล์ร่วม)
 - [x] 3. 🤖 ใส่ร่างลง `api.md` v1.10 + "รอตัดสิน (v1.10 · Junior)"
 - [x] 4. 🤖 test contract + stub · แดงก่อน
-- [ ] 5. 🙋 Jam review test
+- [x] 5. 🙋 Jam review test
 - [ ] 6. 🤖 models + stub (`X-Stub: true`) · test เขียว + ruff
 - [ ] 7. 🤖 `api-schema.ts` generate ใหม่ + บรรทัดความคืบหน้าใน checklist
 
