@@ -15,7 +15,7 @@ from app.auth import AUTH_ERRORS, get_auth, install_auth_errors
 from app.middleware import install_middleware
 from app.models.error import error_response
 from app.models.room import EVENT_MODELS
-from app.routers import health, room, scope
+from app.routers import exam_prep, health, room, scope
 from app.settings import get_settings
 
 
@@ -60,6 +60,7 @@ app.include_router(health.router)  # public: app.auth.PUBLIC_PATHS
 # Every other router goes in with the JWT check (api-auth.md §2.4); a test walks app.routes.
 app.include_router(room.router, dependencies=[Depends(get_auth)], responses=AUTH_ERRORS)
 app.include_router(scope.router, dependencies=[Depends(get_auth)], responses=AUTH_ERRORS)
+app.include_router(exam_prep.router, dependencies=[Depends(get_auth)], responses=AUTH_ERRORS)
 
 
 # --- error envelope (api.md Conventions): {"error": {"code", "message"}} ---------

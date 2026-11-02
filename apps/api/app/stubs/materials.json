@@ -1,0 +1,42 @@
+[
+  {
+    "id": "00000000-0000-4000-8000-000000000005",
+    "file_name": "ch3-factorization.pdf",
+    "kind": "sheet",
+    "kind_confidence": 0.92,
+    "kind_confirmed": false,
+    "user_note": null,
+    "status": "classified",
+    "error": null
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000006",
+    "file_name": "midterm-2566.pdf",
+    "kind": "past_exam",
+    "kind_confidence": 0.88,
+    "kind_confirmed": false,
+    "user_note": "ของรุ่นพี่ คนละอาจารย์กัน",
+    "status": "classified",
+    "error": null
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000007",
+    "file_name": "slides-week4.pptx",
+    "kind": null,
+    "kind_confidence": null,
+    "kind_confirmed": false,
+    "user_note": null,
+    "status": "uploaded",
+    "error": null
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000008",
+    "file_name": "whiteboard.heic",
+    "kind": null,
+    "kind_confidence": null,
+    "kind_confirmed": false,
+    "user_note": null,
+    "status": "failed",
+    "error": "อ่านไฟล์นี้ไม่ได้ ลองถ่ายใหม่ให้ชัดขึ้นแล้วอัปโหลดอีกครั้ง"
+  }
+]

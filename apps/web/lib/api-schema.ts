@@ -315,6 +315,106 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/exam-preps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Exam Preps
+         * @description The user's exam preps, soonest exam first, archived ones left out (PM-04).
+         *
+         *     stub — one prep in each stage; exam dates count from today
+         */
+        get: operations["list_exam_preps_exam_preps_get"];
+        put?: never;
+        /**
+         * Create Exam Prep
+         * @description New exam prep from S07-S08 (CM-01). Today is a valid exam date; earlier is not.
+         *
+         *     stub — the prep is not saved, so it is not in GET /exam-preps
+         */
+        post: operations["create_exam_prep_exam_preps_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/exam-preps/{id}/materials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Materials
+         * @description Files of this exam prep, oldest first; S10 polls until every file has a kind (CM-07).
+         *
+         *     stub — a classified, a still uploaded and a failed file
+         */
+        get: operations["list_materials_exam_preps__id__materials_get"];
+        put?: never;
+        /**
+         * Create Material
+         * @description Signed upload URL for one file (CM-03). The type is checked before the browser sends it.
+         *
+         *     stub — the URL is not a real Storage URL and no materials row is made
+         */
+        post: operations["create_material_exam_preps__id__materials_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/materials/{id}/uploaded": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Material Uploaded
+         * @description The browser finished the upload; classification starts (CM-04, §2.3.2 step 2).
+         *
+         *     stub — answers with the fixture file that is still being classified
+         */
+        post: operations["material_uploaded_materials__id__uploaded_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/exam-preps/{id}/materials/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm Materials
+         * @description The user's kind for each file sent; ingestion starts (CM-06, §2.3.2 step 3).
+         *
+         *     stub — queues every file sent; nothing is checked against the fixture
+         */
+        post: operations["confirm_materials_exam_preps__id__materials_confirm_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -330,6 +430,44 @@ export interface components {
              */
             session_id: string;
         };
+        /**
+         * ConfirmMaterialsRequest
+         * @description Body of POST /exam-preps/{id}/materials/confirm (CM-06): the files to confirm, each once.
+         *     Failed files are left out; files not sent are not checked, so files can be added later
+         *     (CM-05).
+         */
+        ConfirmMaterialsRequest: {
+            /** Materials */
+            materials: components["schemas"]["ConfirmedKind"][];
+        };
+        /** ConfirmedKind */
+        ConfirmedKind: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "sheet" | "slides" | "past_exam" | "notes" | "other";
+        };
+        /**
+         * CreateExamPrepRequest
+         * @description Body of POST /exam-preps (CM-01). A date before today is checked by the endpoint.
+         */
+        CreateExamPrepRequest: {
+            /** Title */
+            title: string;
+            /**
+             * Exam Date
+             * Format: date
+             */
+            exam_date: string;
+            /** Daily Minutes */
+            daily_minutes?: number | null;
+        };
         /** ErrorBody */
         ErrorBody: {
             /** Code */
@@ -343,6 +481,37 @@ export interface components {
          */
         ErrorResponse: {
             error: components["schemas"]["ErrorBody"];
+        };
+        /**
+         * ExamPrep
+         * @description Response of POST /exam-preps and each row of GET /exam-preps.
+         */
+        ExamPrep: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /**
+             * Exam Date
+             * Format: date
+             */
+            exam_date: string;
+            /** Days Left */
+            days_left: number;
+            /** Daily Minutes */
+            daily_minutes: number | null;
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "materials" | "processing" | "scope" | "tutoring";
+            /** Readiness */
+            readiness: number | null;
+            /** Topics Not Passed */
+            topics_not_passed: number | null;
         };
         /** HealthResponse */
         HealthResponse: {
@@ -358,6 +527,65 @@ export interface components {
             max_message_chars: number;
             /** Max Image Mb */
             max_image_mb: number;
+        };
+        /**
+         * Material
+         * @description Each row of GET /exam-preps/{id}/materials and the response of /uploaded.
+         */
+        Material: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** File Name */
+            file_name: string;
+            /** Kind */
+            kind: ("sheet" | "slides" | "past_exam" | "notes" | "other") | null;
+            /** Kind Confidence */
+            kind_confidence: number | null;
+            /** Kind Confirmed */
+            kind_confirmed: boolean;
+            /** User Note */
+            user_note: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "uploaded" | "classified" | "confirmed" | "ingesting" | "ready" | "failed";
+            /** Error */
+            error: string | null;
+        };
+        /**
+         * MaterialUploadTicket
+         * @description PUT the file to `upload_url`, then call POST /materials/{material_id}/uploaded.
+         */
+        MaterialUploadTicket: {
+            /**
+             * Material Id
+             * Format: uuid
+             */
+            material_id: string;
+            /** Upload Url */
+            upload_url: string;
+            /** Path */
+            path: string;
+        };
+        /**
+         * MaterialUploadedRequest
+         * @description Body of POST /materials/{id}/uploaded (CM-04).
+         */
+        MaterialUploadedRequest: {
+            /** User Note */
+            user_note?: string | null;
+        };
+        /**
+         * MaterialsQueued
+         * @description Response of /materials/confirm: how many files started ingestion.
+         */
+        MaterialsQueued: {
+            /** Queued */
+            queued: number;
         };
         /** Message */
         Message: {
@@ -577,6 +805,19 @@ export interface components {
         TtsAudio: {
             /** Audio Url */
             audio_url: string;
+        };
+        /**
+         * UploadMaterialRequest
+         * @description Body of POST /exam-preps/{id}/materials (CM-03). The endpoint checks `content_type`
+         *     against MATERIAL_CONTENT_TYPES.
+         */
+        UploadMaterialRequest: {
+            /** File Name */
+            file_name: string;
+            /** Content Type */
+            content_type: string;
+            /** Size Bytes */
+            size_bytes: number;
         };
         /**
          * UploadRequest
@@ -1603,6 +1844,357 @@ export interface operations {
                 };
             };
             /** @description Invalid path */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_exam_preps_exam_preps_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExamPrep"][];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_exam_prep_exam_preps_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateExamPrepRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExamPrep"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid body or exam_date_past */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_materials_exam_preps__id__materials_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Material"][];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_material_exam_preps__id__materials_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UploadMaterialRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaterialUploadTicket"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path or body, or unsupported_type */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    material_uploaded_materials__id__uploaded_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MaterialUploadedRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Material"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description already_uploaded */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path or body */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    confirm_materials_exam_preps__id__materials_confirm_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmMaterialsRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaterialsQueued"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description not_classified */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path or body, or unknown_material */
             422: {
                 headers: {
                     [name: string]: unknown;

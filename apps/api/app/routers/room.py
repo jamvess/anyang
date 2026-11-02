@@ -15,7 +15,6 @@ from typing import Annotated, Any
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, Path, Response
-from fastapi.responses import JSONResponse
 from sse_starlette import EventSourceResponse
 
 from app import stubs
@@ -38,6 +37,7 @@ from app.models.room import (
     TtsAudio,
     UploadRequest,
     UploadTicket,
+    bare_content_type,
 )
 from app.rate_limit import chat_rate_limit
 from app.services.tutor_turn import reply_events
@@ -80,10 +80,6 @@ _SSE_RESPONSE: dict[int | str, dict[str, Any]] = {
 _RATE_LIMITED: dict[int | str, dict[str, Any]] = {
     429: {"model": ErrorResponse, "description": "rate_limited; Retry-After gives the seconds"},
 }
-
-
-# Stub URLs point here, never at real Storage.
-_STUB_STORAGE = "https://stub.invalid/storage"
 
 
 def _unavailable_503(code: str) -> dict[int | str, dict[str, Any]]:
@@ -181,7 +177,7 @@ async def get_progress(prep_id: PrepId, response: Response) -> ProgressCardEvent
     return ProgressCardEvent.model_validate(dict(stubs.events("session_start"))["progress_card"])
 
 
-_STUB_AUDIO_URL = f"{_STUB_STORAGE}/tts/stub.mp3"
+_STUB_AUDIO_URL = f"{stubs.STORAGE_URL}/tts/stub.mp3"
 
 
 @router.get(
@@ -240,20 +236,7 @@ async def send_message(
 # --- uploads, transcribe, ocr/confirm (api.md v1.7 · proposal pending Junior) -----
 
 _BYTES_PER_MB = 1_048_576  # api.md: 1 MB = 1,048,576 bytes, same as Limits.max_image_mb
-_STUB_TENANT = "00000000-0000-4000-8000-0000000000aa"
 _STUB_TRANSCRIPT = "สองเอ็กซ์ลบห้า คูณ สองเอ็กซ์บวกห้า"  # voice-input.md §3 example
-
-
-def _stub_error(status: int, code: str, message: str) -> JSONResponse:
-    response = error_response(status, code, message)
-    response.headers.update(stubs.HEADERS)
-    return response
-
-
-def _bare_type(content_type: str) -> str:
-    """`audio/webm;codecs=opus` → `audio/webm`: browsers add codec parameters to MediaRecorder
-    types and may use upper case (voice-input.md OQ 8)."""
-    return content_type.split(";", 1)[0].strip().lower()
 
 
 @router.post(
@@ -277,21 +260,18 @@ async def create_upload(
 
     stub — the URL is not a real Storage URL until the endpoint talks to Supabase Storage
     """
-    content_type = _bare_type(body.content_type)
+    content_type = bare_content_type(body.content_type)
     if content_type not in UPLOAD_CONTENT_TYPES[body.kind]:
-        return _stub_error(
+        return stubs.error(
             422, "unsupported_type", f"{body.content_type} is not an accepted {body.kind}"
         )
     max_mb = get_settings().ai.guards.max_image_mb
     if body.kind == "image" and body.size_bytes > max_mb * _BYTES_PER_MB:
-        return _stub_error(422, "file_too_large", f"image is over {max_mb} MB")
+        return stubs.error(422, "file_too_large", f"image is over {max_mb} MB")
     response.headers.update(stubs.HEADERS)
-    # Storage paths start with the tenant (data-model.md); anonymous requests (AUTH_REQUIRED=false)
-    # have none, so the stub uses a fixed one.
-    tenant = auth.tenant_id if auth else _STUB_TENANT
     ext = content_type.split("/", 1)[1]
-    path = f"{tenant}/sessions/{session_id}/{uuid4()}.{ext}"
-    return UploadTicket(upload_url=f"{_STUB_STORAGE}/{path}", path=path)
+    path = f"{stubs.tenant_of(auth)}/sessions/{session_id}/{uuid4()}.{ext}"
+    return UploadTicket(upload_url=f"{stubs.STORAGE_URL}/{path}", path=path)
 
 
 @router.post(
@@ -331,5 +311,5 @@ async def confirm_ocr(session_id: SessionId, body: OcrConfirmRequest) -> Respons
     """
     preview = dict(stubs.events("image_reply"))["ocr_preview"]
     if len(body.lines) != len(preview["lines"]):
-        return _stub_error(422, "ocr_lines_mismatch", f"send {len(preview['lines'])} lines")
+        return stubs.error(422, "ocr_lines_mismatch", f"send {len(preview['lines'])} lines")
     return _stream("ocr_confirm")
