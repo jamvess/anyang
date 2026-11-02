@@ -14,7 +14,7 @@
 - [x] 1. 🤖 ร่าง contract (ข้อเสนอรอ Junior) จาก ai-orchestration §2.3.2, `exam_preps` / `materials` ใน `0001_init.sql`, UC-02 และ CM-01–CM-07
 - [x] 2. 🙋 Jam อ่านร่าง ตอบ ok · บอกแชทกลุ่มว่าจะแก้ `api.md` (ไฟล์ร่วม)
 - [x] 3. 🤖 ใส่ร่างลง `api.md` v1.10 + "รอตัดสิน (v1.10 · Junior)"
-- [ ] 4. 🤖 test contract + stub · แดงก่อน
+- [x] 4. 🤖 test contract + stub · แดงก่อน
 - [ ] 5. 🙋 Jam review test
 - [ ] 6. 🤖 models + stub (`X-Stub: true`) · test เขียว + ruff
 - [ ] 7. 🤖 `api-schema.ts` generate ใหม่ + บรรทัดความคืบหน้าใน checklist
@@ -32,7 +32,7 @@
 
 ## Next step
 
-ขั้น 4: test contract + stub ของ 6 endpoint
+ขั้น 5: Jam review `tests/unit/test_exam_prep_api_contract.py` + `test_exam_prep_stubs.py` · แล้วขั้น 6 models + stub
 
 ## Waiting on
 
