@@ -188,7 +188,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 **`GET /exam-preps/{id}/progress`** · progress card ตอนผู้ใช้ขอดู (TM-11) · หน้าแรกก่อนเข้าห้อง (TM-15)
 
-- Response: `ProgressCard` รูปร่างเดียวกับ payload ของ event `progress_card` (`{days_left, passed, total, readiness, topics}` · `topics[]` ตาม "`progress_card.topics[]`" ด้านล่าง)
+- Response: schema `ProgressCardEvent` ตัวเดียวกับ payload ของ event `progress_card` (หน้าเว็บใช้ type เดียว) (`{days_left, passed, total, readiness, topics}` · `topics[]` ตาม "`progress_card.topics[]`" ด้านล่าง)
 - error: `409 scope_not_confirmed` (prep ยังไม่มี `active_scope_version_id` · progress นับจาก scope ที่ยืนยันแล้ว)
 
 **`GET /messages/{id}/tts`** · เสียงอ่านข้อความของ tutor (TM-09 · เทอม 2 · ตอนนี้มีแค่ stub)

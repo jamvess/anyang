@@ -15,9 +15,9 @@
 - [x] 2. 🙋 Jam อ่านร่าง ตอบ ok · บอกแชทกลุ่มว่าจะแก้ `api.md` (ไฟล์ร่วม)
 - [x] 3. 🤖 ใส่ร่างลง `api.md` v1.9 + "รอตัดสิน (v1.9 · Junior)"
 - [x] 4. 🤖 test contract + stub · แดงก่อน
-- [ ] 5. 🙋 Jam review test
-- [ ] 6. 🤖 models + stub (`X-Stub: true`) · test เขียว + ruff
-- [ ] 7. 🤖 `api-schema.ts` generate ใหม่ + บรรทัดความคืบหน้าใน checklist
+- [x] 5. 🙋 Jam review test
+- [x] 6. 🤖 models + stub (`X-Stub: true`) · test เขียว + ruff
+- [x] 7. 🤖 `api-schema.ts` generate ใหม่ + บรรทัดความคืบหน้าใน checklist
 
 ## Definition of done
 
@@ -31,7 +31,13 @@
 
 ## Next step
 
-ขั้น 5: Jam review `tests/unit/test_room_rest_api_contract.py` + `test_room_rest_stubs.py` · แล้วขั้น 6 models + stub
+ทุกขั้นเสร็จแล้ว · `/work-done` (บอกแชทกลุ่มก่อน merge เพราะแก้ api.md)
+
+## Done today
+
+- 2026-11-02 · ขั้น 3: api.md v1.9 + รอตัดสิน 5 ข้อ
+- 2026-11-02 · ขั้น 4–5: test 28 ตัว (`test_room_rest_api_contract.py`, `test_room_rest_stubs.py`) · แดงก่อน (`SessionEndEvent` ไม่มี) · Jam review แล้ว
+- 2026-11-02 · ขั้น 6–7: `SessionEndEvent`, `TtsAudio`, router 4 ตัว, `app/stubs/session_end.sse` · เขียวในรอบเดียว · `api-schema.ts` generate ใหม่
 
 ## Waiting on
 

@@ -87,7 +87,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/sessions/{id}/messages": {
+    "/sessions/{id}/end": {
         parameters: {
             query?: never;
             header?: never;
@@ -97,6 +97,34 @@ export interface paths {
         get?: never;
         put?: never;
         /**
+         * End Session
+         * @description The user ends the session. SSE: session_end (1-2 summary lines) → done (PM-05).
+         *
+         *     stub — always the same summary; nothing is saved
+         */
+        post: operations["end_session_sessions__id__end_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Messages
+         * @description Chat history, oldest first (TM-13). Not paged yet.
+         *
+         *     stub — the messages of the room fixture
+         */
+        get: operations["list_messages_sessions__id__messages_get"];
+        put?: never;
+        /**
          * Send Message
          * @description Send `{text}` or `{image_path}`; the reply streams as SSE and ends with done.
          *
@@ -104,6 +132,50 @@ export interface paths {
          *     streams an `ocr_preview` to confirm with POST /sessions/{id}/ocr/confirm (api.md v1.7).
          */
         post: operations["send_message_sessions__id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/exam-preps/{id}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Progress
+         * @description Progress card, the same shape as the progress_card event (TM-11, TM-15).
+         *
+         *     stub — the card that opens the session fixture
+         */
+        get: operations["get_progress_exam_preps__id__progress_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/messages/{id}/tts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Tts
+         * @description Signed URL of the message read aloud, cached by text + voice (TM-09 · term 2).
+         *
+         *     stub — the URL is not a real Storage URL
+         */
+        get: operations["get_tts_messages__id__tts_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -336,6 +408,45 @@ export interface components {
             /** Map Note */
             map_note: string | null;
         };
+        /** ProgressCardEvent */
+        ProgressCardEvent: {
+            /** Days Left */
+            days_left: number;
+            /** Passed */
+            passed: number;
+            /** Total */
+            total: number;
+            /** Readiness */
+            readiness: number;
+            /** Topics */
+            topics: components["schemas"]["ProgressTopic"][];
+        };
+        /**
+         * ProgressTopic
+         * @description One row of progress_card.topics (api.md v1.4).
+         *
+         *     `stars` is never null: topics whose importance is not computed yet are left out.
+         */
+        ProgressTopic: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Stars */
+            stars: number;
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "not_started" | "weak" | "developing" | "passed";
+            /** Review Due */
+            review_due: boolean;
+            /**
+             * Origin
+             * @enum {string}
+             */
+            origin: "doc" | "user";
+        };
         /**
          * Room
          * @description Response of GET /sessions/{id}.
@@ -460,6 +571,14 @@ export interface components {
             text: string;
         };
         /**
+         * TtsAudio
+         * @description Response of GET /messages/{id}/tts: a signed URL of the cached audio (TM-09).
+         */
+        TtsAudio: {
+            /** Audio Url */
+            audio_url: string;
+        };
+        /**
          * UploadRequest
          * @description Body of POST /sessions/{id}/uploads (api.md v1.7). The router checks `content_type`
          *     against UPLOAD_CONTENT_TYPES and the image size against config/ai.yaml → guards.
@@ -533,44 +652,13 @@ export interface components {
              */
             purpose: "probe" | "verify" | "practice" | "review";
         };
-        /** ProgressCardEvent */
-        ProgressCardEvent: {
-            /** Days Left */
-            days_left: number;
-            /** Passed */
-            passed: number;
-            /** Total */
-            total: number;
-            /** Readiness */
-            readiness: number;
-            /** Topics */
-            topics: components["schemas"]["ProgressTopic"][];
-        };
         /**
-         * ProgressTopic
-         * @description One row of progress_card.topics (api.md v1.4).
-         *
-         *     `stars` is never null: topics whose importance is not computed yet are left out.
+         * SessionEndEvent
+         * @description End-of-session summary (PM-05 · api.md v1.9), saved at tutor_sessions.summary.
          */
-        ProgressTopic: {
-            /** Id */
-            id: string;
-            /** Name */
-            name: string;
-            /** Stars */
-            stars: number;
-            /**
-             * Level
-             * @enum {string}
-             */
-            level: "not_started" | "weak" | "developing" | "passed";
-            /** Review Due */
-            review_due: boolean;
-            /**
-             * Origin
-             * @enum {string}
-             */
-            origin: "doc" | "user";
+        SessionEndEvent: {
+            /** Summary Lines */
+            summary_lines: string[];
         };
         /** SessionEvent */
         SessionEvent: {
@@ -709,7 +797,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["OcrPreviewEvent"] | components["schemas"]["VerdictEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
+                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["OcrPreviewEvent"] | components["schemas"]["VerdictEvent"] | components["schemas"]["SessionEndEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
                 };
             };
             /** @description Missing or invalid Supabase token */
@@ -808,6 +896,131 @@ export interface operations {
             };
         };
     };
+    end_session_sessions__id__end_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description SSE stream; event names and payloads per api.md "SSE events" */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["OcrPreviewEvent"] | components["schemas"]["VerdictEvent"] | components["schemas"]["SessionEndEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description session_already_ended */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path or body */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_messages_sessions__id__messages_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Message"][];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path or body */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     send_message_sessions__id__messages_post: {
         parameters: {
             query?: never;
@@ -829,7 +1042,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["OcrPreviewEvent"] | components["schemas"]["VerdictEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
+                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["OcrPreviewEvent"] | components["schemas"]["VerdictEvent"] | components["schemas"]["SessionEndEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
                 };
             };
             /** @description Missing or invalid Supabase token */
@@ -869,6 +1082,140 @@ export interface operations {
                 };
             };
             /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_progress_exam_preps__id__progress_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgressCardEvent"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description scope_not_confirmed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path or body */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_tts_messages__id__tts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TtsAudio"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description tts_unavailable for this message */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path or body */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description tts_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -1024,7 +1371,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["OcrPreviewEvent"] | components["schemas"]["VerdictEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
+                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["OcrPreviewEvent"] | components["schemas"]["VerdictEvent"] | components["schemas"]["SessionEndEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
                 };
             };
             /** @description Missing or invalid Supabase token */
