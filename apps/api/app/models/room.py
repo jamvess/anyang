@@ -189,7 +189,9 @@ class ErrorEvent(ApiModel):
 class SessionEndEvent(ApiModel):
     """End-of-session summary (PM-05 · api.md v1.9), saved at tutor_sessions.summary."""
 
-    summary_lines: list[str] = Field(min_length=1, max_length=2)
+    summary_lines: list[Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]] = (
+        Field(min_length=1, max_length=2)
+    )
 
 
 class OcrLine(ApiModel):

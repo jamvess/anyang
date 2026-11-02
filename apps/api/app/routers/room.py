@@ -82,6 +82,16 @@ _RATE_LIMITED: dict[int | str, dict[str, Any]] = {
 }
 
 
+# Stub URLs point here, never at real Storage.
+_STUB_STORAGE = "https://stub.invalid/storage"
+
+
+def _unavailable_503(code: str) -> dict[int | str, dict[str, Any]]:
+    """A route's own 503 replaces the 503 of AUTH_ERRORS, so it names both causes."""
+    description = f"{code}, or auth_unavailable (Supabase Auth unreachable)"
+    return {503: {"model": ErrorResponse, "description": description}}
+
+
 def _stream(name: str) -> EventSourceResponse:
     async def events() -> AsyncIterator[dict[str, str]]:
         for event, data in stubs.events(name):
@@ -171,7 +181,7 @@ async def get_progress(prep_id: PrepId, response: Response) -> ProgressCardEvent
     return ProgressCardEvent.model_validate(dict(stubs.events("session_start"))["progress_card"])
 
 
-_STUB_AUDIO_URL = "https://stub.invalid/storage/tts/stub.mp3"
+_STUB_AUDIO_URL = f"{_STUB_STORAGE}/tts/stub.mp3"
 
 
 @router.get(
@@ -179,11 +189,7 @@ _STUB_AUDIO_URL = "https://stub.invalid/storage/tts/stub.mp3"
     responses={
         **_ERRORS,
         409: {"model": ErrorResponse, "description": "tts_unavailable for this message"},
-        # Replaces the 503 of AUTH_ERRORS on this route, so it names both causes.
-        503: {
-            "model": ErrorResponse,
-            "description": "tts_unavailable, or auth_unavailable (Supabase Auth unreachable)",
-        },
+        **_unavailable_503("tts_unavailable"),
     },
 )
 async def get_tts(message_id: MessageId, response: Response) -> TtsAudio:
@@ -285,7 +291,7 @@ async def create_upload(
     tenant = auth.tenant_id if auth else _STUB_TENANT
     ext = content_type.split("/", 1)[1]
     path = f"{tenant}/sessions/{session_id}/{uuid4()}.{ext}"
-    return UploadTicket(upload_url=f"https://stub.invalid/storage/{path}", path=path)
+    return UploadTicket(upload_url=f"{_STUB_STORAGE}/{path}", path=path)
 
 
 @router.post(
@@ -293,11 +299,7 @@ async def create_upload(
     responses={
         **_ERRORS,
         422: {"model": ErrorResponse, "description": "Invalid body or audio_too_long"},
-        # Replaces the 503 of AUTH_ERRORS on this route, so it names both causes.
-        503: {
-            "model": ErrorResponse,
-            "description": "stt_unavailable, or auth_unavailable (Supabase Auth unreachable)",
-        },
+        **_unavailable_503("stt_unavailable"),
     },
 )
 async def transcribe(

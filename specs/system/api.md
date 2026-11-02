@@ -176,8 +176,8 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 **`POST /sessions/{id}/end`** · ผู้ใช้กดจบ session (PM-05 · ai-orchestration §2.2.9) · ไม่มี body
 
-- Response: SSE `session_end` `{summary_lines: string[]}` (1–2 บรรทัด · `session_summary` ทำจาก running summary · บันทึกที่ `tutor_sessions.summary`) → `done`
-- สิ่งที่ backend ทำ: ตั้ง `tutor_sessions.ended_at = now()` และ `end_reason = 'user'` · คำนวณการเปลี่ยนแปลงของ mastery ตาม §2.2.9 (ยังไม่มีใน stub)
+- Response: SSE `session_end` `{summary_lines: string[]}` (1–2 บรรทัดที่ไม่ว่าง · ai-orchestration §2.2.9 เขียนว่า 2 บรรทัด ดูรอตัดสินข้อ 6 · `session_summary` ทำจาก running summary · บันทึกที่ `tutor_sessions.summary` และเป็นข้อความในแชทด้วย ดูรอตัดสินข้อ 7) → `done`
+- สิ่งที่ backend ทำ: ตั้ง `tutor_sessions.ended_at = now()` และ `end_reason = 'user'` **ก่อน**เรียก AI ด้วยคำสั่งเดียวที่มีเงื่อนไข `ended_at is null` (request ที่มาพร้อมกันได้ 409 แทนการเรียก `session_summary` ซ้ำ) · คำนวณการเปลี่ยนแปลงของ mastery ตาม §2.2.9 (ยังไม่มีใน stub)
 - error: `409 session_already_ended` (`ended_at` ไม่เป็น null) · ตอบก่อนเริ่ม SSE
 - จบแบบอื่น (`time_budget`, `plan_done`, `idle`) เป็นของ backend เอง ไม่ผ่าน endpoint นี้
 
@@ -194,7 +194,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 **`GET /messages/{id}/tts`** · เสียงอ่านข้อความของ tutor (TM-09 · เทอม 2 · ตอนนี้มีแค่ stub)
 
 - Response: `{audio_url: string}` · signed URL ของไฟล์เสียงใน Storage ที่ cache ตาม hash(text + voice) (§2.8)
-- error: `409 tts_unavailable` (ไม่ใช่ข้อความของ tutor หรือ buddy · หรือข้อความว่าง) · `503 tts_unavailable` เมื่อ TTS ล่ม
+- error: `409 tts_unavailable` (ไม่ใช่ข้อความของ tutor ตาม TM-09 · หรือข้อความว่าง) · `503 tts_unavailable` เมื่อ TTS ล่ม
 
 **รอตัดสิน (v1.9 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-02 (PR #104) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
 
@@ -203,6 +203,10 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 3. **`GET /sessions/{id}/messages` ยังไม่แบ่งหน้า** · ต้องมีก่อน Beta ถ้า session ยาว
 4. **`GET /exam-preps/{id}/progress` ใช้รูปร่างเดียวกับ event** · หน้าเว็บใช้ component เดียวกันทั้งสองที่
 5. **error code ใหม่:** `session_already_ended`, `scope_not_confirmed` (มีในตัวอย่างของ Conventions อยู่แล้ว), `tts_unavailable`
+6. **จำนวนบรรทัดของสรุป** (self-review #104): ai-orchestration §2.2.9 และ §3.3 เขียนว่า "สรุป 2 บรรทัด" · ตาราง SSE เดิมเขียน `[..2]` · ข้อเสนอคือรับ 1–2 บรรทัด (session สั้นอาจมีเรื่องเดียว) · ถ้าต้อง 2 บรรทัดพอดี ให้แก้ `SessionEndEvent`
+7. **เก็บสรุปเป็นข้อความในแชทด้วย** (self-review #104): PM-05 ให้สรุป "ในรูปแบบ chat message" · ถ้าเก็บแค่ `tutor_sessions.summary` สรุปจะหายจาก `GET /sessions/{id}/messages` หลังโหลดหน้าใหม่ และไม่มี id ให้ `/tts` · ข้อเสนอคือเพิ่มแถวใน `messages` (role `tutor`) และส่ง id ใน `done.message_ids`
+8. **TTS อ่านข้อความของ buddy ด้วยไหม:** TM-09 พูดถึงข้อความของ tutor เท่านั้น · ข้อเสนอคือตาม TM-09 (เพิ่ม buddy ต้องแก้ requirement)
+9. **id ของข้อความและหัวข้อใน fixture ของห้องติวไม่ใช่ uuid** (`m0`, `t1` · ของเดิมตั้งแต่ PR #38): `/messages/{id}/tts` และ `/topics/{id}/sources` รับ uuid · ของจริงเป็น uuid ทั้งหมด (`messages.id`, `topics.id`) · ข้อเสนอคือเปลี่ยน `Message.id` และ `ProgressTopic.id` เป็น uuid พร้อม fixture ใน PR ที่ต่อห้องติวกับ DB
 
 ### บัญชี
 
