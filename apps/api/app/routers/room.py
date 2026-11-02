@@ -28,11 +28,14 @@ from app.models.room import (
     UPLOAD_CONTENT_TYPES,
     ActiveSession,
     Limits,
+    Message,
     OcrConfirmRequest,
+    ProgressCardEvent,
     Room,
     SendMessageRequest,
     TranscribeRequest,
     Transcript,
+    TtsAudio,
     UploadRequest,
     UploadTicket,
 )
@@ -45,6 +48,7 @@ router = APIRouter(tags=["room"])
 # api.md writes every path parameter as {id}.
 PrepId = Annotated[UUID, Path(alias="id")]
 SessionId = Annotated[UUID, Path(alias="id")]
+MessageId = Annotated[UUID, Path(alias="id")]
 
 # Documented error shape for every room endpoint, so generated types match the envelope.
 _ERRORS: dict[int | str, dict[str, Any]] = {
@@ -76,6 +80,16 @@ _SSE_RESPONSE: dict[int | str, dict[str, Any]] = {
 _RATE_LIMITED: dict[int | str, dict[str, Any]] = {
     429: {"model": ErrorResponse, "description": "rate_limited; Retry-After gives the seconds"},
 }
+
+
+# Stub URLs point here, never at real Storage.
+_STUB_STORAGE = "https://stub.invalid/storage"
+
+
+def _unavailable_503(code: str) -> dict[int | str, dict[str, Any]]:
+    """A route's own 503 replaces the 503 of AUTH_ERRORS, so it names both causes."""
+    description = f"{code}, or auth_unavailable (Supabase Auth unreachable)"
+    return {503: {"model": ErrorResponse, "description": description}}
 
 
 def _stream(name: str) -> EventSourceResponse:
@@ -120,6 +134,71 @@ async def get_session(session_id: SessionId, response: Response) -> Room:
     guards = get_settings().ai.guards
     limits = Limits(max_message_chars=guards.max_message_chars, max_image_mb=guards.max_image_mb)
     return Room.model_validate({**stubs.room(), "session_id": session_id, "limits": limits})
+
+
+# --- end, history, progress, tts (api.md v1.9 · proposal pending Junior) ----------
+
+
+@router.post(
+    "/sessions/{id}/end",
+    response_class=EventSourceResponse,
+    responses={
+        **_SSE_RESPONSE,
+        409: {"model": ErrorResponse, "description": "session_already_ended"},
+    },
+)
+async def end_session(session_id: SessionId) -> EventSourceResponse:
+    """The user ends the session. SSE: session_end (1-2 summary lines) → done (PM-05).
+
+    stub — always the same summary; nothing is saved
+    """
+    return _stream("session_end")
+
+
+@router.get("/sessions/{id}/messages", responses=_ERRORS)
+async def list_messages(session_id: SessionId, response: Response) -> list[Message]:
+    """Chat history, oldest first (TM-13). Not paged yet.
+
+    stub — the messages of the room fixture
+    """
+    response.headers.update(stubs.HEADERS)
+    return [Message.model_validate(m) for m in stubs.room()["messages"]]
+
+
+@router.get(
+    "/exam-preps/{id}/progress",
+    responses={
+        **_ERRORS,
+        409: {"model": ErrorResponse, "description": "scope_not_confirmed"},
+    },
+)
+async def get_progress(prep_id: PrepId, response: Response) -> ProgressCardEvent:
+    """Progress card, the same shape as the progress_card event (TM-11, TM-15).
+
+    stub — the card that opens the session fixture
+    """
+    response.headers.update(stubs.HEADERS)
+    return ProgressCardEvent.model_validate(dict(stubs.events("session_start"))["progress_card"])
+
+
+_STUB_AUDIO_URL = f"{_STUB_STORAGE}/tts/stub.mp3"
+
+
+@router.get(
+    "/messages/{id}/tts",
+    responses={
+        **_ERRORS,
+        409: {"model": ErrorResponse, "description": "tts_unavailable for this message"},
+        **_unavailable_503("tts_unavailable"),
+    },
+)
+async def get_tts(message_id: MessageId, response: Response) -> TtsAudio:
+    """Signed URL of the message read aloud, cached by text + voice (TM-09 · term 2).
+
+    stub — the URL is not a real Storage URL
+    """
+    response.headers.update(stubs.HEADERS)
+    return TtsAudio(audio_url=_STUB_AUDIO_URL)
 
 
 @router.post(
@@ -212,7 +291,7 @@ async def create_upload(
     tenant = auth.tenant_id if auth else _STUB_TENANT
     ext = content_type.split("/", 1)[1]
     path = f"{tenant}/sessions/{session_id}/{uuid4()}.{ext}"
-    return UploadTicket(upload_url=f"https://stub.invalid/storage/{path}", path=path)
+    return UploadTicket(upload_url=f"{_STUB_STORAGE}/{path}", path=path)
 
 
 @router.post(
@@ -220,11 +299,7 @@ async def create_upload(
     responses={
         **_ERRORS,
         422: {"model": ErrorResponse, "description": "Invalid body or audio_too_long"},
-        # Replaces the 503 of AUTH_ERRORS on this route, so it names both causes.
-        503: {
-            "model": ErrorResponse,
-            "description": "stt_unavailable, or auth_unavailable (Supabase Auth unreachable)",
-        },
+        **_unavailable_503("stt_unavailable"),
     },
 )
 async def transcribe(

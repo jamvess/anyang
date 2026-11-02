@@ -114,6 +114,12 @@ class Transcript(ApiModel):
     text: str
 
 
+class TtsAudio(ApiModel):
+    """Response of GET /messages/{id}/tts: a signed URL of the cached audio (TM-09)."""
+
+    audio_url: str
+
+
 class OcrConfirmRequest(ApiModel):
     """Body of POST /sessions/{id}/ocr/confirm: every line in order, as many as the preview."""
 
@@ -180,6 +186,14 @@ class ErrorEvent(ApiModel):
     message: str
 
 
+class SessionEndEvent(ApiModel):
+    """End-of-session summary (PM-05 · api.md v1.9), saved at tutor_sessions.summary."""
+
+    summary_lines: list[Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]] = (
+        Field(min_length=1, max_length=2)
+    )
+
+
 class OcrLine(ApiModel):
     latex: str  # plain LaTeX without $ delimiters, like problem.text_latex
     confidence: float = Field(ge=0, le=1)
@@ -222,6 +236,7 @@ EVENT_MODELS: dict[str, type[ApiModel]] = {
     "problem": ProblemEvent,
     "ocr_preview": OcrPreviewEvent,
     "verdict": VerdictEvent,
+    "session_end": SessionEndEvent,
     "buddy": BuddyEvent,
     "done": DoneEvent,
     "error": ErrorEvent,

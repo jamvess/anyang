@@ -1,0 +1,6 @@
+event: session_end
+data: {"summary_lines": ["วันนี้ผ่านผลต่างกำลังสองแล้ว", "พรุ่งนี้ทวนแยก x²+bx+c ต่อนะ"]}
+
+event: done
+data: {}
+
