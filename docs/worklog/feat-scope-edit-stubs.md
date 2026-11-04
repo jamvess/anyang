@@ -14,8 +14,8 @@
 - [x] 1. 🤖 ร่าง contract (ข้อเสนอรอ Junior) จาก ai-orchestration §2.3.2, §2.3.4, §2.3.6, `ingestion_jobs` / `scope_changes` ใน `0001_init.sql`, UC-02, wireframe S11, S13, S14 และ SM-06, SM-07, SM-08, CM-07
 - [x] 2. 🙋 Jam อ่านร่าง ตอบ ok · บอกแชทกลุ่มว่าจะแก้ `api.md` (ไฟล์ร่วม)
 - [x] 3. 🤖 ใส่ร่างลง `api.md` v1.11 + "รอตัดสิน (v1.11 · Junior)"
-- [ ] 4. 🤖 test contract + stub · แดงก่อน
-- [ ] 5. 🙋 Jam review test
+- [x] 4. 🤖 test contract + stub · แดงก่อน
+- [x] 5. 🙋 Jam review test
 - [ ] 6. 🤖 models + stub (`X-Stub: true`) · test เขียว + ruff
 - [ ] 7. 🤖 `api-schema.ts` generate ใหม่ + บรรทัดความคืบหน้าใน checklist
 
@@ -32,7 +32,7 @@
 
 ## Next step
 
-ขั้น 4: เขียน test contract + stub ของ 5 endpoint จาก api.md v1.11 และ AC-11, AC-26 ของ `gateway-guards.md` · ให้แดงก่อน
+ขั้น 5: Jam review `tests/unit/test_scope_edit_api_contract.py` + `test_scope_edit_stubs.py` · แล้วขั้น 6 models + stub
 
 ## Waiting on
 
