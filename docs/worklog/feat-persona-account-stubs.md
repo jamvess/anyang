@@ -11,9 +11,9 @@
 
 กลุ่มสุดท้ายของ D5 (flow 2.7 · UC-01 · S04–S06): `GET /personas/presets`, `POST /personas/extract`, `PUT /me/tutor-profile`, `PUT /me/buddy-profile`, `GET`/`PUT /me/profile`, `DELETE /me`, `DELETE /exam-preps/{id}`
 
-- [ ] 1. 🤖 ร่าง contract (ข้อเสนอรอ Junior) จาก ai-orchestration §2.7, `profiles` / `tutor_profiles` / `buddy_profiles` ใน `0001_init.sql`, UC-01, wireframe S04–S06 และ UM-03–UM-10, CM-10
-- [ ] 2. 🙋 Jam อ่านร่าง ตอบ ok · บอกแชทกลุ่มว่าจะแก้ `api.md` (ไฟล์ร่วม)
-- [ ] 3. 🤖 ใส่ร่างลง `api.md` v1.12 + "รอตัดสิน (v1.12 · Junior)"
+- [x] 1. 🤖 ร่าง contract (ข้อเสนอรอ Junior) จาก ai-orchestration §2.7, `profiles` / `tutor_profiles` / `buddy_profiles` ใน `0001_init.sql`, UC-01, wireframe S04–S06 และ UM-03–UM-10, CM-10
+- [x] 2. 🙋 Jam อ่านร่าง ตอบ ok · บอกแชทกลุ่มว่าจะแก้ `api.md` (ไฟล์ร่วม)
+- [x] 3. 🤖 ใส่ร่างลง `api.md` v1.12 + "รอตัดสิน (v1.12 · Junior)"
 - [ ] 4. 🤖 test contract + stub · แดงก่อน
 - [ ] 5. 🙋 Jam review test
 - [ ] 6. 🤖 models + stub (`X-Stub: true`) · test เขียว + ruff
@@ -28,10 +28,11 @@
 ## Decisions
 
 - 2026-11-04 · ไม่มี feature spec ของหน้าจอ S04–S06 · contract อิง UC-01 (May approve 2026-10-19), ai-orchestration §2.7, wireframe และ schema
+- 2026-11-04 · Jam ok: เพิ่ม `GET` ของ persona 2 ตัวและ `setup_step` (UM-09, UC-01 E6) · นับ `/personas/extract` ใน rate limit เดียวกับห้องติว (`gateway-guards.md` §2.1 + AC-27) · threshold `guards.max_persona_text_chars: 20` ป้าย `[C]` เพราะ `name`, `self_pronoun`, `call_user` เข้า prompt · `description` ใช้ `guards.max_message_chars` เดิม
 
 ## Next step
 
-ขั้น 1: ร่าง contract ของกลุ่ม persona และบัญชี แล้วให้ Jam อ่าน
+ขั้น 4: เขียน test contract + stub จาก api.md v1.12 และ AC-11, AC-27 ของ `gateway-guards.md` · รวม test เทียบรายการ endpoint ใน api.md กับ `/openapi.json` · ให้แดงก่อน · ค่า config ใส่ตอนขั้น 6 พร้อม settings
 
 ## Waiting on
 

@@ -727,7 +727,7 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 
 - Prompt injection จากเอกสาร: `<document>` tags + output schema + user ยืนยัน scope (2.3.9)
 - Injection จาก persona: ใช้ params เท่านั้น (2.7)
-- Limits: ข้อความ ≤ 2,000 ตัวอักษร, 20 ข้อความ/นาที, รูป ≤ 10 MB, เสียง ≤ 60 วินาที
+- Limits: ข้อความ ≤ 2,000 ตัวอักษร, 20 ข้อความ/นาที, รูป ≤ 10 MB, เสียง ≤ 60 วินาที, ข้อความใน persona params (`name`, `self_pronoun`, `call_user`) ≤ 20 ตัวอักษร · `config/ai.yaml` → `guards`
 - ขอให้ทำงานนอกขอบเขต (เช่น "เขียนรายงานวิชาอื่นให้หน่อย"): ปฏิเสธสั้นๆ แล้วดึงกลับ
 - **Distress** (เครียดหนัก, สัญญาณทำร้ายตัวเอง): intent router จับได้ ตอบด้วย template ที่ดูแลความรู้สึก พร้อมสายด่วนสุขภาพจิต 1323 buddy ไม่เล่นมุก และ log ไว้โดยไม่ตัดสิน
 
