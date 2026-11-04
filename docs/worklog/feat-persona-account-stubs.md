@@ -17,7 +17,7 @@
 - [x] 4. 🤖 test contract + stub · แดงก่อน
 - [x] 5. 🙋 Jam review test
 - [x] 6. 🤖 models + stub (`X-Stub: true`) · test เขียว + ruff
-- [ ] 7. 🤖 `api-schema.ts` generate ใหม่ + ติ๊กข้อ D5 ใน checklist ถ้า `/docs` ครบทุก endpoint ใน `api.md`
+- [x] 7. 🤖 `api-schema.ts` generate ใหม่ + ติ๊กข้อ D5 ใน checklist ถ้า `/docs` ครบทุก endpoint ใน `api.md`
 
 ## Definition of done
 
@@ -32,7 +32,7 @@
 
 ## Next step
 
-ขั้น 7: generate `apps/web/lib/api-schema.ts` ใหม่ + ติ๊กข้อ D5 ใน checklist ถ้า `test_api_md_endpoints.py` ผ่าน · แล้ว `/work-done`
+ทุกขั้นเสร็จ · `/work-done` (`api.md`, `config/ai.yaml` เป็นไฟล์ร่วม · ส่งข้อความแชทกลุ่มก่อน merge)
 
 ## Waiting on
 

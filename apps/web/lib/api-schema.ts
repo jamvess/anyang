@@ -526,6 +526,178 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/exam-preps/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Exam Prep
+         * @description Delete an exam prep and all its files (CM-10).
+         *
+         *     stub — nothing is deleted, so the prep stays in GET /exam-preps
+         */
+        delete: operations["delete_exam_prep_exam_preps__id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/personas/presets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Presets
+         * @description Tutors and buddies to choose from, each with a sample sentence (UM-03, UM-04).
+         *
+         *     stub — the people of wireframe S04; their params are the stub's own
+         */
+        get: operations["get_presets_personas_presets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/personas/extract": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Extract Persona
+         * @description Free text → params, the parts it cannot do, and a sample sentence (UM-05, UM-07).
+         *
+         *     stub — the same draft of that kind, whatever was described; no AI call
+         */
+        post: operations["extract_persona_personas_extract_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/tutor-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Tutor Profile
+         * @description The user's tutor persona (UM-09); 404 before S04.
+         *
+         *     stub — always พี่ตาล, the tutor of the room fixture
+         */
+        get: operations["get_tutor_profile_me_tutor_profile_get"];
+        /**
+         * Put Tutor Profile
+         * @description Save the tutor persona; it applies from the next turn (UM-03, UM-05, UM-09).
+         *
+         *     stub — answers with what was sent; nothing is saved
+         */
+        put: operations["put_tutor_profile_me_tutor_profile_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/buddy-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Buddy Profile
+         * @description The user's buddy persona, or that there is no buddy (UM-09); 404 before S04.
+         *
+         *     stub — always มีน, the buddy of the room fixture
+         */
+        get: operations["get_buddy_profile_me_buddy_profile_get"];
+        /**
+         * Put Buddy Profile
+         * @description Save the buddy persona, or no buddy with enabled false (UM-04, UM-05, UM-09).
+         *
+         *     stub — answers with what was sent; nothing is saved
+         */
+        put: operations["put_buddy_profile_me_buddy_profile_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Profile
+         * @description Nickname, education level, language, auto read and how far setup got (UM-08, UC-01 E6).
+         *
+         *     stub — ปาล of the room fixture, setup finished
+         */
+        get: operations["get_profile_me_profile_get"];
+        /**
+         * Put Profile
+         * @description Save the profile of S06 or the settings page (UM-08, UM-09).
+         *
+         *     stub — answers with what was sent; nothing is saved
+         */
+        put: operations["put_profile_me_profile_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Me
+         * @description Delete the account and all its data (UM-10).
+         *
+         *     stub — NOTHING is deleted
+         */
+        delete: operations["delete_me_me_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -540,6 +712,72 @@ export interface components {
              * Format: uuid
              */
             session_id: string;
+        };
+        /** BuddyParams */
+        BuddyParams: {
+            /** Name */
+            name: string;
+            /** Self Pronoun */
+            self_pronoun: string;
+            /** Call User */
+            call_user: string;
+            /** Formality */
+            formality: number;
+            /** Energy */
+            energy: number;
+            /** Strictness */
+            strictness: number;
+            /** Humor */
+            humor: number;
+            /** Emoji */
+            emoji: boolean;
+            /** Voice Id */
+            voice_id: string;
+            /**
+             * Frequency
+             * @enum {string}
+             */
+            frequency: "low" | "med" | "high";
+            /**
+             * Personality
+             * @enum {string}
+             */
+            personality: "curious" | "playful" | "diligent";
+        };
+        /** BuddyPreset */
+        BuddyPreset: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Sample */
+            sample: string;
+            params: components["schemas"]["BuddyParams"];
+        };
+        /**
+         * BuddyProfile
+         * @description Response of GET and PUT /me/buddy-profile.
+         */
+        BuddyProfile: {
+            /** Enabled */
+            enabled: boolean;
+            params: components["schemas"]["BuddyParams"] | null;
+            /** Description */
+            description: string | null;
+            /** Version */
+            version: number;
+        };
+        /**
+         * BuddyProfileRequest
+         * @description Body of PUT /me/buddy-profile. No buddy (UC-01 A2) is `enabled: false`; params may stay,
+         *     so turning the buddy back on does not lose them.
+         */
+        BuddyProfileRequest: {
+            /** Enabled */
+            enabled: boolean;
+            params: components["schemas"]["BuddyParams"] | null;
+            /** Description */
+            description: string | null;
         };
         /**
          * ConfirmMaterialsRequest
@@ -623,6 +861,20 @@ export interface components {
             readiness: number | null;
             /** Topics Not Passed */
             topics_not_passed: number | null;
+        };
+        /**
+         * ExtractPersonaRequest
+         * @description Body of POST /personas/extract. The endpoint checks the length against
+         *     config/ai.yaml → guards.max_message_chars.
+         */
+        ExtractPersonaRequest: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "tutor" | "buddy";
+            /** Description */
+            description: string;
         };
         /** HealthResponse */
         HealthResponse: {
@@ -787,6 +1039,70 @@ export interface components {
             text: string;
             /** Map Note */
             map_note: string | null;
+        };
+        /**
+         * PersonaDraft
+         * @description Response of POST /personas/extract. Nothing is saved until PUT.
+         */
+        PersonaDraft: {
+            /** Params */
+            params: components["schemas"]["TutorParams"] | components["schemas"]["BuddyParams"];
+            /** Refused */
+            refused: string[];
+            /** Sample */
+            sample: string;
+        };
+        /**
+         * PersonaPresets
+         * @description Response of GET /personas/presets. "No buddy" is the web's own choice, not a preset.
+         */
+        PersonaPresets: {
+            /** Tutors */
+            tutors: components["schemas"]["TutorPreset"][];
+            /** Buddies */
+            buddies: components["schemas"]["BuddyPreset"][];
+        };
+        /**
+         * Profile
+         * @description Response of GET and PUT /me/profile.
+         */
+        Profile: {
+            /** Nickname */
+            nickname: string | null;
+            /** Education Level */
+            education_level: ("lower_secondary" | "upper_secondary" | "university" | "other") | null;
+            /**
+             * Explain Language
+             * @enum {string}
+             */
+            explain_language: "th_en" | "th" | "en";
+            /** Auto Read */
+            auto_read: boolean;
+            /**
+             * Setup Step
+             * @enum {string}
+             */
+            setup_step: "crew" | "profile" | "done";
+        };
+        /**
+         * ProfileRequest
+         * @description Body of PUT /me/profile.
+         */
+        ProfileRequest: {
+            /** Nickname */
+            nickname: string;
+            /**
+             * Education Level
+             * @enum {string}
+             */
+            education_level: "lower_secondary" | "upper_secondary" | "university" | "other";
+            /**
+             * Explain Language
+             * @enum {string}
+             */
+            explain_language: "th_en" | "th" | "en";
+            /** Auto Read */
+            auto_read: boolean;
         };
         /** ProgressCardEvent */
         ProgressCardEvent: {
@@ -1009,6 +1325,62 @@ export interface components {
         TtsAudio: {
             /** Audio Url */
             audio_url: string;
+        };
+        /** TutorParams */
+        TutorParams: {
+            /** Name */
+            name: string;
+            /** Self Pronoun */
+            self_pronoun: string;
+            /** Call User */
+            call_user: string;
+            /** Formality */
+            formality: number;
+            /** Energy */
+            energy: number;
+            /** Strictness */
+            strictness: number;
+            /** Humor */
+            humor: number;
+            /** Emoji */
+            emoji: boolean;
+            /** Voice Id */
+            voice_id: string;
+            /**
+             * Explain Style
+             * @enum {string}
+             */
+            explain_style: "step_by_step" | "example_first" | "concise";
+        };
+        /** TutorPreset */
+        TutorPreset: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Sample */
+            sample: string;
+            params: components["schemas"]["TutorParams"];
+        };
+        /**
+         * TutorProfile
+         * @description Response of GET and PUT /me/tutor-profile.
+         */
+        TutorProfile: {
+            params: components["schemas"]["TutorParams"];
+            /** Description */
+            description: string | null;
+            /** Version */
+            version: number;
+        };
+        /**
+         * TutorProfileRequest
+         * @description Body of PUT /me/tutor-profile. `description` is null for a preset.
+         */
+        TutorProfileRequest: {
+            params: components["schemas"]["TutorParams"];
+            /** Description */
+            description: string | null;
         };
         /**
          * UploadMaterialRequest
@@ -2771,6 +3143,481 @@ export interface operations {
             };
             /** @description Invalid path */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_exam_prep_exam_preps__id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_presets_personas_presets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonaPresets"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    extract_persona_personas_extract_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExtractPersonaRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonaDraft"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid body or message_too_long */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description rate_limited; Retry-After gives the seconds */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description persona_unavailable, or auth_unavailable (Supabase Auth unreachable) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_tutor_profile_me_tutor_profile_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TutorProfile"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description not_found: not set yet */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    put_tutor_profile_me_tutor_profile_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TutorProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TutorProfile"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid body or message_too_long */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_buddy_profile_me_buddy_profile_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuddyProfile"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description not_found: not set yet */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    put_buddy_profile_me_buddy_profile_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BuddyProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuddyProfile"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid body or message_too_long */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_profile_me_profile_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    put_profile_me_profile_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid body */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_me_me_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
