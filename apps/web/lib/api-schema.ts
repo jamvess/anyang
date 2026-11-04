@@ -668,7 +668,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "pending" | "running" | "done";
+            status: "pending" | "running" | "done" | "failed";
         };
         /**
          * Limits

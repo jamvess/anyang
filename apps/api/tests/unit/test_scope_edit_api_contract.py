@@ -223,7 +223,7 @@ def test_CM07_file_status_values(status: str) -> None:
                 "error": None,
             },
         ),
-        (IngestionStep, {"label": "หาหัวข้อและลำดับการเรียน", "status": "failed"}),
+        (IngestionStep, {"label": "หาหัวข้อและลำดับการเรียน", "status": "skipped"}),
         (IngestionStep, {"label": "หาหัวข้อและลำดับการเรียน", "status": "queued"}),
     ],
 )
@@ -425,6 +425,15 @@ def test_SM07_scope_patch_changes_schema_says_left_out_not_null(openapi: dict[st
 
 
 # --- added in self-review (after Jam's test review) ----------------------------------
+
+
+def test_CM07_step_can_report_a_failure() -> None:
+    """api.md v1.11: otherwise a failed topic merge leaves S11 polling with every file green.
+
+    Jam chose this in self-review, and the case in the reject test above became `skipped`."""
+    step = IngestionStep.model_validate({"label": "หาหัวข้อและลำดับการเรียน", "status": "failed"})
+
+    assert step.status == "failed"
 
 
 @pytest.mark.parametrize(

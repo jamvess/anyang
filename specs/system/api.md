@@ -151,7 +151,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 |---|---|---|
 | `scope_ready` | boolean | `true` เมื่อ `GET /exam-preps/{id}/scope` ไม่ตอบ `409 scope_not_ready` **และ**ไม่มีไฟล์ที่ยืนยันแล้วซึ่งยัง `confirmed`, `ingesting` หรือ `failed` · หัวข้อเดิมครบแล้วแต่กำลังอ่านไฟล์ใหม่ (CM-05) ยังเป็น `false` |
 | `files` | `IngestionFile[]` | ไฟล์ที่ `kind_confirmed = true` เรียงตามเวลาที่สร้าง · ถ้ามี scope version แล้ว เอาเฉพาะไฟล์ที่มีแถว `ingestion_jobs` ซึ่ง `updated_at` หลัง `confirmed_at` ของ version นั้น (UC-02 A9) ไม่ใช้เวลาที่สร้างไฟล์ เพราะไฟล์ที่อัปโหลดก่อนยืนยันอาจเริ่มอ่านทีหลังได้ |
-| `steps` | `{label: string, status: "pending" \| "running" \| "done"}[]` | ขั้นรวมของทั้ง prep เรียงตามลำดับที่แสดง · `label` เป็นข้อความพร้อมแสดงจาก backend: "อ่านสิ่งที่คุณเขียนกำกับไว้", "หาหัวข้อและลำดับการเรียน", "เทียบกับข้อสอบเก่า {n} ชุด" · ไม่มีข้อสอบเก่าก็ไม่มีขั้นสุดท้าย (UC-02 E1) |
+| `steps` | `{label: string, status: "pending" \| "running" \| "done" \| "failed"}[]` | ขั้นรวมของทั้ง prep เรียงตามลำดับที่แสดง · `label` เป็นข้อความพร้อมแสดงจาก backend: "อ่านสิ่งที่คุณเขียนกำกับไว้", "หาหัวข้อและลำดับการเรียน", "เทียบกับข้อสอบเก่า {n} ชุด" · ไม่มีข้อสอบเก่าก็ไม่มีขั้นสุดท้าย (UC-02 E1) |
 
 **`IngestionFile`**
 
@@ -205,6 +205,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 5. **พูดใน S13 (SM-06):** `/sessions/{id}/uploads` และ `/transcribe` ผูกกับ session แต่ S13 ไม่มี session · **stub รอบนี้รับแค่ข้อความพิมพ์ ฝั่งเสียงของ SM-06 ยังไม่ครบ**
 6. **ข้อความพร้อมแสดง:** `steps.label` และ `files.detail` สร้างที่ backend แบบเดียวกับ `source_label` · May อาจอยากคุมข้อความเอง
 7. **error code ใหม่:** `not_failed`, `material_busy` · ใช้ซ้ำ: `scope_not_ready`, `message_too_long`, `rate_limited`
+8. **ขั้นรวมล้ม (`steps[].status = "failed"`):** เช่น A6 ล้มหลัง retry ครบ · `scope_ready` เป็น `false` และ S11 ต้องหยุด poll · ยังไม่มีทางออกให้ผู้ใช้: endpoint ลองใหม่ของขั้นรวม (Junior) และหน้าตาของสถานะนี้ใน S11 (May · UC-02 E5 พูดถึงเฉพาะรายไฟล์)
 
 ### ห้องติว (flow 2.2, 2.4, 2.5, 2.1)
 

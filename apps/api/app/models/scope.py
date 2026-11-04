@@ -88,7 +88,7 @@ class IngestionFile(ApiModel):
 
 class IngestionStep(ApiModel):
     label: str  # ready to show, e.g. "หาหัวข้อและลำดับการเรียน"; built by the backend
-    status: Literal["pending", "running", "done"]
+    status: Literal["pending", "running", "done", "failed"]
 
 
 class Ingestion(ApiModel):
