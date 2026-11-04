@@ -409,3 +409,16 @@ def test_apimd_scope_edit_bad_id_is_422_envelope(
 
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "validation_error"
+
+
+# --- added at step 7 (after Jam's test review) ---------------------------------------
+
+
+def test_SM07_scope_patch_changes_schema_says_left_out_not_null(openapi: dict[str, Any]) -> None:
+    """A default or a null here makes generated types say `stars: number | null` is always
+    there, but a field that did not change is absent, and `undefined` would overwrite the card."""
+    properties = openapi["components"]["schemas"]["ScopePatchChanges"]["properties"]
+
+    for name, field in properties.items():
+        assert "default" not in field, name
+        assert "anyOf" not in field, name

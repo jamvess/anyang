@@ -15,6 +15,7 @@ from typing import Annotated, Any, Literal, Self
 from uuid import UUID
 
 from pydantic import (
+    ConfigDict,
     Field,
     SerializerFunctionWrapHandler,
     StringConstraints,
@@ -108,9 +109,19 @@ class ScopeChatRequest(ApiModel):
     text: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
 
+def _left_out_not_null(schema: dict[str, Any]) -> None:
+    """OpenAPI as the wire is: a field that did not change is absent, never null, so generated
+    types read `stars?: number` instead of a required `stars: number | null`."""
+    for field in schema["properties"].values():
+        del field["default"]
+        field.update(field.pop("anyOf")[0])
+
+
 class ScopePatchChanges(ApiModel):
     """The fields of a ScopeTopic that changed; the web merges them into the card, so the ones
     left out are not sent at all (a null would overwrite the card)."""
+
+    model_config = ConfigDict(json_schema_extra=_left_out_not_null)
 
     order: int | None = Field(default=None, ge=1)
     name: str | None = None
