@@ -315,6 +315,73 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/exam-preps/{id}/ingestion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Ingestion
+         * @description Progress by file and by step; S11 polls until scope_ready, then opens S12 (CM-07).
+         *
+         *     stub — always the same moment: one file running, one failed, topics not started. So
+         *     scope_ready never turns true here; test the move to S12 with the web's own fixture.
+         */
+        get: operations["get_ingestion_exam_preps__id__ingestion_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/exam-preps/{id}/scope/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Scope Chat
+         * @description Edit the draft scope by chat (SM-06, SM-07). Actions are checked before the reply.
+         *
+         *     stub — always the same reply and patch; nothing is saved, so GET /scope does not change
+         */
+        post: operations["scope_chat_exam_preps__id__scope_chat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/exam-preps/{id}/scope/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Scope Changes
+         * @description What changed since the last confirmed version, oldest first, with reasons (SM-08).
+         *
+         *     stub — the same two changes, whatever was sent to scope/chat
+         */
+        get: operations["list_scope_changes_exam_preps__id__scope_changes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/exam-preps": {
         parameters: {
             query?: never;
@@ -410,6 +477,50 @@ export interface paths {
          */
         post: operations["confirm_materials_exam_preps__id__materials_confirm_post"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/materials/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retry Material
+         * @description "Try again" on a failed file of S11: read it again from the step that failed (UC-02 E5).
+         *
+         *     stub — the fixture's failed file failed while being classified, so it is back at uploaded
+         */
+        post: operations["retry_material_materials__id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/materials/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Material
+         * @description Remove a file: "go on without this file" of S11 (UC-02 E5) and CM-10.
+         *
+         *     stub — nothing is deleted, so the file stays in GET /exam-preps/{id}/materials
+         */
+        delete: operations["delete_material_materials__id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -517,6 +628,47 @@ export interface components {
         HealthResponse: {
             /** Status */
             status: string;
+        };
+        /**
+         * Ingestion
+         * @description Response of GET /exam-preps/{id}/ingestion.
+         */
+        Ingestion: {
+            /** Scope Ready */
+            scope_ready: boolean;
+            /** Files */
+            files: components["schemas"]["IngestionFile"][];
+            /** Steps */
+            steps: components["schemas"]["IngestionStep"][];
+        };
+        /** IngestionFile */
+        IngestionFile: {
+            /**
+             * Material Id
+             * Format: uuid
+             */
+            material_id: string;
+            /** File Name */
+            file_name: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "queued" | "running" | "done" | "failed";
+            /** Detail */
+            detail: string | null;
+            /** Error */
+            error: string | null;
+        };
+        /** IngestionStep */
+        IngestionStep: {
+            /** Label */
+            label: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "running" | "done" | "failed";
         };
         /**
          * Limits
@@ -719,6 +871,58 @@ export interface components {
             unmapped_questions: components["schemas"]["PastQuestion"][];
         };
         /**
+         * ScopeChange
+         * @description Each row of GET /exam-preps/{id}/scope/changes. Rows without a topic are not sent.
+         */
+        ScopeChange: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Topic Id
+             * Format: uuid
+             */
+            topic_id: string;
+            /** Topic Name */
+            topic_name: string;
+            /**
+             * Op
+             * @enum {string}
+             */
+            op: "set_importance" | "exclude" | "include" | "rename" | "reorder" | "add_topic" | "exclude_skill" | "include_skill";
+            /** Before */
+            before: {
+                [key: string]: unknown;
+            } | null;
+            /** After */
+            after: {
+                [key: string]: unknown;
+            } | null;
+            /** Reason */
+            reason: string | null;
+            /**
+             * Actor
+             * @enum {string}
+             */
+            actor: "user" | "ai" | "system";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * ScopeChatRequest
+         * @description Body of POST /exam-preps/{id}/scope/chat. The endpoint checks the length against
+         *     config/ai.yaml → guards.max_message_chars.
+         */
+        ScopeChatRequest: {
+            /** Text */
+            text: string;
+        };
+        /**
          * ScopeConfirmed
          * @description Response of POST /exam-preps/{id}/scope/confirm.
          */
@@ -892,6 +1096,40 @@ export interface components {
              * @enum {string}
              */
             purpose: "probe" | "verify" | "practice" | "review";
+        };
+        /**
+         * ScopePatchChanges
+         * @description The fields of a ScopeTopic that changed; the web merges them into the card, so the ones
+         *     left out are not sent at all (a null would overwrite the card).
+         */
+        ScopePatchChanges: {
+            /** Order */
+            order?: number;
+            /** Name */
+            name?: string;
+            /** Stars */
+            stars?: number;
+            /** Reason */
+            reason?: string;
+            /** Source Label */
+            source_label?: string;
+            /**
+             * Origin
+             * @enum {string}
+             */
+            origin?: "doc" | "user";
+        };
+        /**
+         * ScopePatchEvent
+         * @description SSE event `scope_patch`. An unknown topic_id is a new card (op add_topic).
+         */
+        ScopePatchEvent: {
+            /**
+             * Topic Id
+             * Format: uuid
+             */
+            topic_id: string;
+            changes: components["schemas"]["ScopePatchChanges"];
         };
         /**
          * SessionEndEvent
@@ -1863,6 +2101,211 @@ export interface operations {
             };
         };
     };
+    get_ingestion_exam_preps__id__ingestion_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ingestion"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    scope_chat_exam_preps__id__scope_chat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScopeChatRequest"];
+            };
+        };
+        responses: {
+            /** @description SSE stream: scope_patch (0 or more), then token, then done */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ScopePatchEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description scope_not_ready */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path or body, or message_too_long */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description rate_limited; Retry-After gives the seconds */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_scope_changes_exam_preps__id__scope_changes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScopeChange"][];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description scope_not_ready */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_exam_preps_exam_preps_get: {
         parameters: {
             query?: never;
@@ -2195,6 +2638,138 @@ export interface operations {
                 };
             };
             /** @description Invalid path or body, or unknown_material */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    retry_material_materials__id__retry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Material"];
+                };
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description not_failed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Supabase Auth could not be reached */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_material_materials__id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description material_busy */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path */
             422: {
                 headers: {
                     [name: string]: unknown;

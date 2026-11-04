@@ -1,0 +1,38 @@
+{
+  "scope_ready": false,
+  "files": [
+    {
+      "material_id": "00000000-0000-4000-8000-000000000005",
+      "file_name": "ch3-factorization.pdf",
+      "status": "done",
+      "detail": "14 หน้า",
+      "error": null
+    },
+    {
+      "material_id": "00000000-0000-4000-8000-000000000006",
+      "file_name": "midterm-2566.pdf",
+      "status": "done",
+      "detail": "12 ข้อ",
+      "error": null
+    },
+    {
+      "material_id": "00000000-0000-4000-8000-000000000007",
+      "file_name": "slides-week4.pptx",
+      "status": "running",
+      "detail": "กำลังอ่านไฟล์",
+      "error": null
+    },
+    {
+      "material_id": "00000000-0000-4000-8000-000000000008",
+      "file_name": "whiteboard.heic",
+      "status": "failed",
+      "detail": null,
+      "error": "อ่านไฟล์นี้ไม่ได้ ลองถ่ายใหม่ให้ชัดขึ้นแล้วอัปโหลดอีกครั้ง"
+    }
+  ],
+  "steps": [
+    {"label": "อ่านสิ่งที่คุณเขียนกำกับไว้", "status": "done"},
+    {"label": "หาหัวข้อและลำดับการเรียน", "status": "pending"},
+    {"label": "เทียบกับข้อสอบเก่า 1 ชุด", "status": "pending"}
+  ]
+}

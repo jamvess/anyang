@@ -39,7 +39,7 @@ from app.models.room import (
     UploadTicket,
     bare_content_type,
 )
-from app.rate_limit import chat_rate_limit
+from app.rate_limit import RATE_LIMITED_DOCS, chat_rate_limit
 from app.services.tutor_turn import reply_events
 from app.settings import get_settings
 
@@ -66,7 +66,8 @@ _SSE_RESPONSE: dict[int | str, dict[str, Any]] = {
                 "schema": {
                     "oneOf": [
                         {"$ref": f"#/components/schemas/{model.__name__}"}
-                        for model in EVENT_MODELS.values()
+                        for name, model in EVENT_MODELS.items()
+                        if name != "scope_patch"  # flow 2.3 only (api.md "SSE events")
                     ]
                 }
             }
@@ -76,25 +77,10 @@ _SSE_RESPONSE: dict[int | str, dict[str, Any]] = {
 }
 
 
-# The user-message endpoints share one counter (specs/features/ai/gateway-guards.md §2.1).
-_RATE_LIMITED: dict[int | str, dict[str, Any]] = {
-    429: {"model": ErrorResponse, "description": "rate_limited; Retry-After gives the seconds"},
-}
-
-
 def _unavailable_503(code: str) -> dict[int | str, dict[str, Any]]:
     """A route's own 503 replaces the 503 of AUTH_ERRORS, so it names both causes."""
     description = f"{code}, or auth_unavailable (Supabase Auth unreachable)"
     return {503: {"model": ErrorResponse, "description": description}}
-
-
-def _stream(name: str) -> EventSourceResponse:
-    async def events() -> AsyncIterator[dict[str, str]]:
-        for event, data in stubs.events(name):
-            payload = EVENT_MODELS[event].model_validate(data)
-            yield {"event": event, "data": payload.model_dump_json()}
-
-    return EventSourceResponse(events(), headers=stubs.HEADERS)
 
 
 @router.get("/exam-preps/{id}/sessions/active", responses=_ERRORS)
@@ -117,7 +103,7 @@ async def create_session(prep_id: PrepId) -> EventSourceResponse:
 
     stub — replaced in P4-lite
     """
-    return _stream("session_start")
+    return stubs.stream("session_start")
 
 
 @router.get("/sessions/{id}", responses=_ERRORS)
@@ -148,7 +134,7 @@ async def end_session(session_id: SessionId) -> EventSourceResponse:
 
     stub — always the same summary; nothing is saved
     """
-    return _stream("session_end")
+    return stubs.stream("session_end")
 
 
 @router.get("/sessions/{id}/messages", responses=_ERRORS)
@@ -200,7 +186,7 @@ async def get_tts(message_id: MessageId, response: Response) -> TtsAudio:
 @router.post(
     "/sessions/{id}/messages",
     response_class=EventSourceResponse,
-    responses={**_SSE_RESPONSE, **_RATE_LIMITED},
+    responses={**_SSE_RESPONSE, **RATE_LIMITED_DOCS},
     dependencies=[Depends(chat_rate_limit)],
 )
 async def send_message(
@@ -215,7 +201,7 @@ async def send_message(
     streams an `ocr_preview` to confirm with POST /sessions/{id}/ocr/confirm (api.md v1.7).
     """
     if body.text is None:
-        return _stream("image_reply")
+        return stubs.stream("image_reply")
     max_chars = get_settings().ai.guards.max_message_chars
     if len(body.text) > max_chars:
         # Code proposed in tutor-reply-stream.md §10 item 3, pending Junior.
@@ -300,7 +286,7 @@ async def transcribe(
         **_SSE_RESPONSE,
         409: {"model": ErrorResponse, "description": "no_pending_ocr"},
         422: {"model": ErrorResponse, "description": "Invalid body or ocr_lines_mismatch"},
-        **_RATE_LIMITED,
+        **RATE_LIMITED_DOCS,
     },
     dependencies=[Depends(chat_rate_limit)],
 )
@@ -312,4 +298,4 @@ async def confirm_ocr(session_id: SessionId, body: OcrConfirmRequest) -> Respons
     preview = dict(stubs.events("image_reply"))["ocr_preview"]
     if len(body.lines) != len(preview["lines"]):
         return stubs.error(422, "ocr_lines_mismatch", f"send {len(preview['lines'])} lines")
-    return _stream("ocr_confirm")
+    return stubs.stream("ocr_confirm")

@@ -158,3 +158,31 @@ async def confirm_materials(
     """
     response.headers.update(stubs.HEADERS)
     return MaterialsQueued(queued=len(body.materials))
+
+
+@router.post(
+    "/materials/{id}/retry",
+    status_code=202,
+    responses=error_docs("Invalid path", "not_failed"),
+)
+async def retry_material(material_id: MaterialId, response: Response) -> Material:
+    """ "Try again" on a failed file of S11: read it again from the step that failed (UC-02 E5).
+
+    stub — the fixture's failed file failed while being classified, so it is back at uploaded
+    """
+    response.headers.update(stubs.HEADERS)
+    row = next(m for m in stubs.materials() if m["status"] == "failed")
+    return Material.model_validate({**row, "id": material_id, "status": "uploaded", "error": None})
+
+
+@router.delete(
+    "/materials/{id}",
+    status_code=204,
+    responses=error_docs("Invalid path", "material_busy"),
+)
+async def delete_material(material_id: MaterialId, response: Response) -> None:
+    """Remove a file: "go on without this file" of S11 (UC-02 E5) and CM-10.
+
+    stub — nothing is deleted, so the file stays in GET /exam-preps/{id}/materials
+    """
+    response.headers.update(stubs.HEADERS)

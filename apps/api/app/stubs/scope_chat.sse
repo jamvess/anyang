@@ -1,0 +1,12 @@
+event: scope_patch
+data: {"topic_id": "5f3492ec-65e3-5a5a-85e6-4992d2373271", "changes": {"stars": 3, "reason": "คุณบอกว่าอาจารย์เน้นมาก"}}
+
+event: token
+data: {"speaker": "tutor", "text": "อ๋อ งั้นดันขึ้นให้เป็นสามดาวละกัน "}
+
+event: token
+data: {"speaker": "tutor", "text": "ที่ให้สองดาวตอนแรกเพราะในชีทมีแค่หน้าเดียว"}
+
+event: done
+data: {}
+

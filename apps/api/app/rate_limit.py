@@ -12,11 +12,12 @@ import time
 from collections import deque
 from collections.abc import Callable
 from functools import cache
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import Depends, HTTPException, Request
 
 from app.auth import AuthContext, get_auth
+from app.models.error import ErrorResponse
 from app.settings import get_settings
 
 WINDOW_SECONDS = 60.0  # the "per minute" of the config key's name
@@ -83,12 +84,18 @@ def _client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
+# OpenAPI of the endpoints that use chat_rate_limit.
+RATE_LIMITED_DOCS: dict[int | str, dict[str, Any]] = {
+    429: {"model": ErrorResponse, "description": "rate_limited; Retry-After gives the seconds"},
+}
+
+
 async def chat_rate_limit(
     request: Request,
     auth: Annotated[AuthContext | None, Depends(get_auth)],
     limiter: Annotated[RateLimiter, Depends(get_rate_limiter)],
 ) -> None:
-    """Dependency of the room endpoints that send a user message: 429 ``rate_limited`` with
+    """Dependency of the endpoints that send a user message: 429 ``rate_limited`` with
     ``Retry-After`` over the limit. It runs before the body's fields are checked, so a body
     that fails validation counts too (spec §10 item 3). A body that is not JSON at all is
     refused by FastAPI before dependencies run, so it is not counted; it never reaches the AI."""

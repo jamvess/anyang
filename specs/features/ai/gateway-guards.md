@@ -25,7 +25,8 @@
 - **endpoint ที่นับ** (ข้อความที่ผู้ใช้ส่งในห้องติว · §2.9 "20 ข้อความ/นาที"):
   - `POST /sessions/{id}/messages` (text และรูป)
   - `POST /sessions/{id}/ocr/confirm`
-  - ทั้งสอง endpoint ใช้ตัวนับเดียวกันของ user คนนั้น
+  - `POST /exam-preps/{id}/scope/chat` (เพิ่ม 2026-11-04 · api.md v1.11 · เรียก AI ทุกข้อความเหมือนกัน)
+  - ทุก endpoint ใช้ตัวนับเดียวกันของ user คนนั้น
 - **ไม่นับ:** `GET` ทุกตัว, `/uploads`, `/transcribe`, `POST /exam-preps/{id}/sessions` (§10 ข้อ 2)
 - **ค่า:** `limit = guards.rate_limit_messages_per_minute` (ตอนนี้ 20) · หน้าต่างเวลา 60 วินาทีเลื่อนไปเรื่อยๆ (sliding window) นับย้อนจากตอนนี้ · 60 วินาทีมาจากชื่อค่า "per minute" ไม่ใช่ threshold ใหม่
 - **ทำไม่ถึง limit:** request ที่อยู่ใน 60 วินาทีที่ผ่านมามีไม่ถึง `limit` → ผ่าน และนับเพิ่ม 1
@@ -92,7 +93,8 @@
 - **AC-8 (TM-21)** Given ไม่มี token (`AUTH_REQUIRED=false`) และ `X-Forwarded-For: 203.0.113.7, 10.0.0.1` When ส่ง `L + 1` ครั้ง Then ครั้งที่ `L + 1` ได้ `429` · Given IP อื่น `198.51.100.2` Then ผ่าน
 - **AC-9 (TM-21)** Given body ผิด (`{}`) When ส่ง `L` ครั้ง (ได้ 422 ทุกครั้ง) แล้วส่ง body ที่ถูก Then ได้ `429`
 - **AC-10 (TM-21)** ค่า `L` อ่านจาก `config/ai.yaml` → `guards.rate_limit_messages_per_minute`: Given config ที่ตั้งเป็น 3 When ส่ง 4 ครั้ง Then ครั้งที่ 4 ได้ `429`
-- **AC-11 (TM-21)** OpenAPI ของ `/messages` และ `/ocr/confirm` มี response `429` ที่ชี้ไป `ErrorResponse`
+- **AC-11 (TM-21)** OpenAPI ของ `/messages`, `/ocr/confirm` และ `scope/chat` มี response `429` ที่ชี้ไป `ErrorResponse`
+- **AC-26 (TM-21)** Given `u1` ส่ง `/messages` `L − 1` ครั้ง When ส่ง `scope/chat` 1 ครั้งแล้วส่ง `/messages` อีก Then `scope/chat` ผ่าน และ `/messages` ตอบ `429` (ตัวนับเดียวกัน)
 
 **Circuit breaker (ข)**
 
