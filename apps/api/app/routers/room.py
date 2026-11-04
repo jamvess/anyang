@@ -66,7 +66,8 @@ _SSE_RESPONSE: dict[int | str, dict[str, Any]] = {
                 "schema": {
                     "oneOf": [
                         {"$ref": f"#/components/schemas/{model.__name__}"}
-                        for model in EVENT_MODELS.values()
+                        for name, model in EVENT_MODELS.items()
+                        if name != "scope_patch"  # flow 2.3 only (api.md "SSE events")
                     ]
                 }
             }

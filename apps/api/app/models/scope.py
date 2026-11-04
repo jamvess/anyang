@@ -124,7 +124,7 @@ class ScopePatchChanges(ApiModel):
     model_config = ConfigDict(json_schema_extra=_left_out_not_null)
 
     order: int | None = Field(default=None, ge=1)
-    name: str | None = None
+    name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)] | None = None
     stars: int | None = Field(default=None, ge=0, le=3)
     reason: str | None = None
     source_label: str | None = None
@@ -136,9 +136,10 @@ class ScopePatchChanges(ApiModel):
         return {field: value for field, value in handler(self).items() if value is not None}
 
     @model_validator(mode="after")
-    def _at_least_one(self) -> Self:
-        if not self.model_dump():
-            raise ValueError("changes needs at least one field")
+    def _real_changes_only(self) -> Self:
+        sent = self.model_fields_set
+        if not sent or any(getattr(self, field) is None for field in sent):
+            raise ValueError("changes needs at least one field, and none of them null")
         return self
 
 

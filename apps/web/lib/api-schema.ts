@@ -326,7 +326,8 @@ export interface paths {
          * Get Ingestion
          * @description Progress by file and by step; S11 polls until scope_ready, then opens S12 (CM-07).
          *
-         *     stub — always the same moment: one file running, one failed, topics not started
+         *     stub — always the same moment: one file running, one failed, topics not started. So
+         *     scope_ready never turns true here; test the move to S12 with the web's own fixture.
          */
         get: operations["get_ingestion_exam_preps__id__ingestion_get"];
         put?: never;
@@ -494,7 +495,7 @@ export interface paths {
          * Retry Material
          * @description "Try again" on a failed file of S11: read it again from the step that failed (UC-02 E5).
          *
-         *     stub — answers with the fixture's failed file as if it were queued again
+         *     stub — the fixture's failed file failed while being classified, so it is back at uploaded
          */
         post: operations["retry_material_materials__id__retry_post"];
         delete?: never;
@@ -1275,7 +1276,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ScopePatchEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["OcrPreviewEvent"] | components["schemas"]["VerdictEvent"] | components["schemas"]["SessionEndEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
+                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["OcrPreviewEvent"] | components["schemas"]["VerdictEvent"] | components["schemas"]["SessionEndEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
                 };
             };
             /** @description Missing or invalid Supabase token */
@@ -1391,7 +1392,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ScopePatchEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["OcrPreviewEvent"] | components["schemas"]["VerdictEvent"] | components["schemas"]["SessionEndEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
+                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["OcrPreviewEvent"] | components["schemas"]["VerdictEvent"] | components["schemas"]["SessionEndEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
                 };
             };
             /** @description Missing or invalid Supabase token */
@@ -1520,7 +1521,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ScopePatchEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["OcrPreviewEvent"] | components["schemas"]["VerdictEvent"] | components["schemas"]["SessionEndEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
+                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["OcrPreviewEvent"] | components["schemas"]["VerdictEvent"] | components["schemas"]["SessionEndEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
                 };
             };
             /** @description Missing or invalid Supabase token */
@@ -1849,7 +1850,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ScopePatchEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["OcrPreviewEvent"] | components["schemas"]["VerdictEvent"] | components["schemas"]["SessionEndEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
+                    "text/event-stream": components["schemas"]["SessionEvent"] | components["schemas"]["TokenEvent"] | components["schemas"]["ProgressCardEvent"] | components["schemas"]["ProblemEvent"] | components["schemas"]["OcrPreviewEvent"] | components["schemas"]["VerdictEvent"] | components["schemas"]["SessionEndEvent"] | components["schemas"]["BuddyEvent"] | components["schemas"]["DoneEvent"] | components["schemas"]["ErrorEvent"];
                 };
             };
             /** @description Missing or invalid Supabase token */

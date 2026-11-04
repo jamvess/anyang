@@ -149,8 +149,8 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 | Field | Type | ที่มา |
 |---|---|---|
-| `scope_ready` | boolean | `true` เมื่อ `GET /exam-preps/{id}/scope` ไม่ตอบ `409 scope_not_ready` |
-| `files` | `IngestionFile[]` | ไฟล์ที่ `kind_confirmed = true` เรียงตามเวลาที่สร้าง · ถ้ามี scope version แล้ว เอาเฉพาะไฟล์ที่สร้างหลัง `confirmed_at` ของ version นั้น (UC-02 A9) |
+| `scope_ready` | boolean | `true` เมื่อ `GET /exam-preps/{id}/scope` ไม่ตอบ `409 scope_not_ready` **และ**ไม่มีไฟล์ที่ยืนยันแล้วซึ่งยัง `confirmed`, `ingesting` หรือ `failed` · หัวข้อเดิมครบแล้วแต่กำลังอ่านไฟล์ใหม่ (CM-05) ยังเป็น `false` |
+| `files` | `IngestionFile[]` | ไฟล์ที่ `kind_confirmed = true` เรียงตามเวลาที่สร้าง · ถ้ามี scope version แล้ว เอาเฉพาะไฟล์ที่มีแถว `ingestion_jobs` ซึ่ง `updated_at` หลัง `confirmed_at` ของ version นั้น (UC-02 A9) ไม่ใช้เวลาที่สร้างไฟล์ เพราะไฟล์ที่อัปโหลดก่อนยืนยันอาจเริ่มอ่านทีหลังได้ |
 | `steps` | `{label: string, status: "pending" \| "running" \| "done"}[]` | ขั้นรวมของทั้ง prep เรียงตามลำดับที่แสดง · `label` เป็นข้อความพร้อมแสดงจาก backend: "อ่านสิ่งที่คุณเขียนกำกับไว้", "หาหัวข้อและลำดับการเรียน", "เทียบกับข้อสอบเก่า {n} ชุด" · ไม่มีข้อสอบเก่าก็ไม่มีขั้นสุดท้าย (UC-02 E1) |
 
 **`IngestionFile`**
@@ -163,7 +163,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | `detail` | string \| null | ข้อความพร้อมแสดงจาก backend เช่น "14 หน้า", "12 ข้อ", "กำลังแยกรายข้อ" |
 | `error` | string \| null | ข้อความสั้นที่แสดงให้ผู้ใช้ได้ เมื่อ `status = "failed"` (UC-02 E5) |
 
-- **`POST /materials/{id}/retry`** · ปุ่ม "ลองใหม่" ของ UC-02 E5 · ไม่มี body · `202` + `Material` · อ่านไฟล์ใหม่ตั้งแต่ขั้นที่ล้ม · ไฟล์ที่ `status` ไม่ใช่ `failed` → `409 not_failed`
+- **`POST /materials/{id}/retry`** · ปุ่ม "ลองใหม่" ของ UC-02 E5 · ไม่มี body · `202` + `Material` · อ่านไฟล์ใหม่ตั้งแต่ขั้นที่ล้ม · ล้มตอน classify (เห็นใน S10) → `status = "uploaded"` · ล้มตอน ingest (เห็นใน S11) → `status = "confirmed"` · `error` เป็น null · ไฟล์ที่ `status` ไม่ใช่ `failed` → `409 not_failed`
 - **`DELETE /materials/{id}`** · ปุ่ม "ไปต่อโดยไม่มีไฟล์นี้" ของ UC-02 E5 และการลบไฟล์ของ CM-10 · `204` ไม่มี body · ไฟล์ที่ `status` เป็น `confirmed` หรือ `ingesting` → `409 material_busy`
 
 **`POST /exam-preps/{id}/scope/chat`** (S13 · SM-06, SM-07 · A8 `scope_edit`) · body `{text: string (ไม่ว่าง)}` · ตอบเป็น SSE: `scope_patch` 0 ตัวขึ้นไป → `token` (`speaker = "tutor"`) → `done` (`{}`)
@@ -172,7 +172,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 - แก้หลังยืนยันแล้วได้ · `Scope.status` กลับเป็น `"draft"` ตามกฎของ v1.6
 - error: `409 scope_not_ready` · `422 validation_error` · `422 message_too_long` (เกิน `guards.max_message_chars`) · `429 rate_limited` + `Retry-After` (ตัวนับเดียวกับข้อความในห้องติว · `gateway-guards.md` §2.1) · AI ล่มกลาง stream → event `error` (`ai_unavailable`)
 
-**`scope_patch.changes`** มีเฉพาะ field ของ `ScopeTopic` ที่เปลี่ยน (อย่างน้อย 1 field · ไม่มี `id`) · หน้าเว็บเอาไปทับการ์ดของ `topic_id` · ไม่รู้จัก `topic_id` = การ์ดใหม่
+**`scope_patch.changes`** มีเฉพาะ field ของ `ScopeTopic` ที่เปลี่ยน (อย่างน้อย 1 field · ไม่มี `id` · ไม่มีค่า null · `name` ไม่ว่าง) · หน้าเว็บเอาไปทับการ์ดของ `topic_id` · ไม่รู้จัก `topic_id` และ `changes` มีครบทุก field = การ์ดใหม่ · ไม่รู้จักแต่ไม่ครบ (รายการในหน้าเว็บเก่า) → โหลด `GET /scope` ใหม่ ไม่สร้างการ์ด
 
 | op ของ AI | event ที่ส่ง |
 |---|---|

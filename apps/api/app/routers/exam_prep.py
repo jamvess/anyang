@@ -168,11 +168,11 @@ async def confirm_materials(
 async def retry_material(material_id: MaterialId, response: Response) -> Material:
     """ "Try again" on a failed file of S11: read it again from the step that failed (UC-02 E5).
 
-    stub — answers with the fixture's failed file as if it were queued again
+    stub — the fixture's failed file failed while being classified, so it is back at uploaded
     """
     response.headers.update(stubs.HEADERS)
     row = next(m for m in stubs.materials() if m["status"] == "failed")
-    return Material.model_validate({**row, "id": material_id, "status": "confirmed", "error": None})
+    return Material.model_validate({**row, "id": material_id, "status": "uploaded", "error": None})
 
 
 @router.delete(

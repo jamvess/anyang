@@ -79,7 +79,8 @@ async def confirm_scope(prep_id: PrepId, response: Response) -> ScopeConfirmed:
 async def get_ingestion(prep_id: PrepId, response: Response) -> Ingestion:
     """Progress by file and by step; S11 polls until scope_ready, then opens S12 (CM-07).
 
-    stub — always the same moment: one file running, one failed, topics not started
+    stub — always the same moment: one file running, one failed, topics not started. So
+    scope_ready never turns true here; test the move to S12 with the web's own fixture.
     """
     response.headers.update(stubs.HEADERS)
     return Ingestion.model_validate(stubs.ingestion())

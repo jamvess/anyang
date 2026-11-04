@@ -422,3 +422,40 @@ def test_SM07_scope_patch_changes_schema_says_left_out_not_null(openapi: dict[st
     for name, field in properties.items():
         assert "default" not in field, name
         assert "anyOf" not in field, name
+
+
+# --- added in self-review (after Jam's test review) ----------------------------------
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"stars": None},
+        {"stars": 0, "reason": None},  # the excluded card would keep its old reason
+        {"name": ""},
+        {"name": "   "},
+    ],
+)
+def test_SM07_scope_patch_refuses_null_and_blank_values(changes: dict[str, Any]) -> None:
+    """api.md v1.11: no nulls and no blank name, so a bad action fails validation (UC-02 E2)."""
+    with pytest.raises(ValueError):
+        ScopePatchEvent.model_validate({"topic_id": TOPIC_ID, "changes": changes})
+
+
+def test_SM07_room_streams_do_not_declare_scope_patch(openapi: dict[str, Any]) -> None:
+    """api.md "SSE events": scope_patch belongs to flow 2.3."""
+    operation = openapi["paths"]["/sessions/{id}/messages"]["post"]
+
+    schema = operation["responses"]["200"]["content"]["text/event-stream"]["schema"]
+    assert "ScopePatchEvent" not in {item["$ref"].rsplit("/", 1)[1] for item in schema["oneOf"]}
+
+
+def test_CM07_retry_of_a_file_that_failed_classifying_goes_back_to_uploaded(
+    client: TestClient,
+) -> None:
+    """api.md v1.11: a state the materials flow can reach, not confirmed without a kind."""
+    material = client.post(f"/materials/{MATERIAL_ID}/retry").json()
+
+    assert material["kind"] is None
+    assert material["kind_confirmed"] is False
+    assert material["status"] == "uploaded"
