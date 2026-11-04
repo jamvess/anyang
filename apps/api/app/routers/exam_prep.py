@@ -186,3 +186,12 @@ async def delete_material(material_id: MaterialId, response: Response) -> None:
     stub — nothing is deleted, so the file stays in GET /exam-preps/{id}/materials
     """
     response.headers.update(stubs.HEADERS)
+
+
+@router.delete("/exam-preps/{id}", status_code=204, responses=error_docs())
+async def delete_exam_prep(prep_id: PrepId, response: Response) -> None:
+    """Delete an exam prep and all its files (CM-10).
+
+    stub — nothing is deleted, so the prep stays in GET /exam-preps
+    """
+    response.headers.update(stubs.HEADERS)

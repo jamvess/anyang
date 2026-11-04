@@ -1,4 +1,4 @@
-# API (v1.11)
+# API (v1.12)
 
 Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้างอัตโนมัติที่ `/docs` · frontend generate types จาก `/openapi.json`
 
@@ -20,8 +20,56 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 |---|---|---|
 | GET | `/personas/presets` | preset ของ tutor และ buddy |
 | POST | `/personas/extract` | free text → params + รายการที่ทำไม่ได้ + ประโยคตัวอย่าง |
-| PUT | `/me/tutor-profile` · `/me/buddy-profile` | บันทึก persona |
+| GET / PUT | `/me/tutor-profile` · `/me/buddy-profile` | อ่านและบันทึก persona |
 | GET / PUT | `/me/profile` | ชื่อเล่น ระดับการศึกษา ภาษา |
+
+**Persona และโปรไฟล์ (v1.12 · ข้อเสนอ รอ Junior ตัดสิน):** UC-01 (S04–S06, S30) · ai-orchestration §2.7 · UM-03, UM-04, UM-05, UM-07, UM-08, UM-09 · ยังไม่มี feature spec ของหน้าจอ · ทุก field ต้องมี และไม่มี field อื่น · ของผู้ใช้จาก token เสมอ ไม่รับ `user_id` · UM-06 เป็น `deferred` จึงไม่มี checklist ที่ mark อัตโนมัติ
+
+**`TutorParams`** และ **`BuddyParams`** (§2.7 · เข้า prompt ผ่าน template เท่านั้น)
+
+| Field | Type | ใช้กับ |
+|---|---|---|
+| `name`, `self_pronoun`, `call_user` | string · อักษรไทย อังกฤษ ตัวเลข ช่องว่าง · ตัดช่องว่างหัวท้าย · ไม่ว่าง · ยาวไม่เกิน `guards.max_persona_text_chars` | ทั้งคู่ |
+| `formality`, `energy`, `strictness` | integer 1–3 (ไม่แปลงชนิด เช่น `"2"` ถูกปฏิเสธ · ใช้กับ `humor` และ boolean ทุกตัวในส่วนนี้) | ทั้งคู่ |
+| `humor` | integer 0–2 | ทั้งคู่ |
+| `emoji` | boolean | ทั้งคู่ |
+| `voice_id` | string รูปแบบ `th-TH-` ตามด้วยตัวอักษรอังกฤษ ตัวเลข หรือ `-` (Google TTS) | ทั้งคู่ |
+| `explain_style` | `"step_by_step"` \| `"example_first"` \| `"concise"` | tutor |
+| `frequency` | `"low"` \| `"med"` \| `"high"` | buddy |
+| `personality` | `"curious"` \| `"playful"` \| `"diligent"` | buddy |
+
+- **`GET /personas/presets`** · `{tutors: PersonaPreset[], buddies: PersonaPreset[]}` · `PersonaPreset` = `{id: string, title: string, sample: string, params}` · `title` เช่น "ใจเย็น" · `sample` คือประโยคตัวอย่าง (UM-03) · tutor 3 แบบ, buddy 2 แบบ · "ไม่เอาเพื่อน" เป็นตัวเลือกของหน้าเว็บ ไม่ใช่ preset
+- **`POST /personas/extract`** · body `{kind: "tutor" \| "buddy", description: string (ไม่ว่าง)}` · response `{params, refused: string[], sample: string}` (AI: `persona_extract`, `persona_preview` · UM-05, UM-07)
+  - `params` ตาม `kind` · `refused` คือส่วนที่ทำให้ไม่ได้ พร้อมแสดงในกล่อง "ทำให้ไม่ได้: …" (UC-01 E4) · ไม่มีก็ `[]`
+  - ไม่เก็บอะไร · กด "บันทึก" แล้วค่อย `PUT` · ปรับต่อก็ส่ง `description` ใหม่ทั้งก้อน
+  - error: `422 validation_error` · `422 message_too_long` (เกิน `guards.max_message_chars`) · `429 rate_limited` + `Retry-After` (ตัวนับเดียวกับข้อความในห้องติว · `gateway-guards.md` §2.1) · `503 persona_unavailable` (AI ล่ม · UC-01 E5)
+- **`GET /me/tutor-profile`** · `{params: TutorParams, description: string | null, version: integer ≥ 1}` · ยังไม่ตั้ง → `404 not_found` (UM-09)
+- **`PUT /me/tutor-profile`** · body `{params: TutorParams, description: string | null}` · response เหมือน `GET` · `description` เก็บใน `description_raw` และ**ไม่เข้า prompt** (§2.7) · แก้แล้ว `version` เพิ่ม · มีผลตั้งแต่ turn ถัดไป · `description` เกิน `guards.max_message_chars` → `422 message_too_long` (ใช้กับ `PUT /me/buddy-profile` ด้วย)
+- **`GET /me/buddy-profile`** · `{enabled: boolean, params: BuddyParams | null, description: string | null, version: integer ≥ 1}` · ยังไม่ตั้ง → `404 not_found`
+- **`PUT /me/buddy-profile`** · body `{enabled: boolean, params: BuddyParams | null, description: string | null}` · `enabled = true` ต้องมี `params` (ไม่งั้น `422 validation_error`) · ปิดเพื่อนติว (UC-01 A2) ส่ง `enabled = false` · response เหมือน `GET`
+
+**`Profile`** (response ของ `GET` และ `PUT /me/profile` · UM-08)
+
+| Field | Type | ที่มา |
+|---|---|---|
+| `nickname` | string \| null | `profiles.nickname` · trigger ใส่จากชื่อใน Google |
+| `education_level` | `"lower_secondary"` \| `"upper_secondary"` \| `"university"` \| `"other"` \| null | `profiles.education_level` · null จนกว่าจะตั้ง |
+| `explain_language` | `"th_en"` \| `"th"` \| `"en"` | `profiles.explain_language` (ไทย + ศัพท์อังกฤษ / ไทยล้วน / English) |
+| `auto_read` | boolean | อ่านออกเสียงอัตโนมัติ (TM-09 · ค่าเริ่มต้นปิด) · ยังไม่มีคอลัมน์ (รอตัดสินข้อ 1) |
+| `setup_step` | `"crew"` \| `"profile"` \| `"done"` | คำนวณที่ backend ตามลำดับ: `crew` เมื่อยังไม่มี tutor หรือ buddy profile · `profile` เมื่อ `education_level` เป็น null · ไม่งั้น `done` · หน้าเว็บใช้พากลับหน้าที่ค้าง (UC-01 E6) |
+
+- **`PUT /me/profile`** · body ทุก field ยกเว้น `setup_step` · `nickname` ใช้กฎเดียวกับ `name` ของ persona เพราะเข้า prompt ทุก turn (§2.2) · `education_level` ไม่เป็น null · error `422 validation_error`
+
+**รอตัดสิน (v1.12 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-04 (PR #107) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
+
+1. **`auto_read`:** ยังไม่มีคอลัมน์ · ข้อเสนอคือ migration `profiles.auto_read boolean not null default false` · สวิตช์อยู่ใน S05 แต่บันทึกกับ `PUT /me/profile` ใน S06 ถ้าปิดเว็บก่อนค่าจะหาย
+2. **ค่าเริ่มต้นของภาษา** (UC-01 คำถามเปิด 2): DB เป็น `'th'` แต่หน้าจอเลือก "ไทย + ศัพท์อังกฤษ" ไว้ให้ · ข้อเสนอคือ migration เปลี่ยนเป็น `'th_en'` + เพิ่ม check
+3. **`buddy_profiles.params` ห้าม null:** ปิดเพื่อนติวแล้วเก็บเป็น `{}` ไหม · API ส่ง `params: null`
+4. **แถวของ persona:** `tutor_profiles` และ `buddy_profiles` ไม่มี unique ต่อ user · แก้แล้วเพิ่มแถวเป็น version ใหม่ หรือทับแถวเดิม
+5. **`voice_id` และ preset:** รายการเสียงที่อนุญาตและ params ของ preset เก็บที่ไหน (config หรือตาราง) · stub ใช้ค่าชั่วคราวและตรวจแค่ `th-TH-`
+6. **การลบ:** `DELETE /me` ต้องลบ `auth.users` ด้วย service role และลบไฟล์ใน Storage · ทำให้จบใน request หรือเป็น job · `DELETE /exam-preps/{id}` ลบได้แม้มี session เปิดอยู่ไหม
+7. **error code ใหม่:** `persona_unavailable` · ใช้ซ้ำ: `message_too_long`, `rate_limited`
+8. **`nickname` ที่ trigger คัดลอกจาก Google:** `handle_new_user` ใส่ชื่อดิบ (อาจมี `-`, `'` หรือยาวเกินเพดาน) ซึ่งไม่ผ่านกฎของ `PUT` · ข้อเสนอคือ S06 ให้แก้ก่อนส่ง และ backend กรองค่าก่อนเข้า prompt ถ้าผู้ใช้ยังไม่ผ่าน S06
 
 ### Exam prep และ scope (flow 2.3)
 
@@ -323,8 +371,8 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 | Method | Path | ทำอะไร |
 |---|---|---|
-| DELETE | `/me` | ลบบัญชีและข้อมูลทั้งหมด (UM-10) |
-| DELETE | `/exam-preps/{id}` · `/materials/{id}` | ลบรายการหรือไฟล์ (CM-10) |
+| DELETE | `/me` | ลบบัญชีและข้อมูลทั้งหมด (UM-10) · `204` |
+| DELETE | `/exam-preps/{id}` · `/materials/{id}` | ลบรายการหรือไฟล์ (CM-10) · `204` · `/materials/{id}` ดู v1.11 · ไม่พบ → `404 not_found` |
 
 ## SSE events
 

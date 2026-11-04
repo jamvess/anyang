@@ -13,7 +13,8 @@ session_end.sse is the stub's own two-line summary; exam_preps.json and material
 the stub's own too. exam_preps.json stores `days_left` and no `exam_date`, so the router
 counts the date from today and the fixture never falls into the past. ingestion.json,
 scope_changes.json and scope_chat.sse are the stub's own too; they use the wireframe S11, S14
-and S13 examples, with the files of materials.json and the topics of scope.json.
+and S13 examples, with the files of materials.json and the topics of scope.json. personas.json
+has the people and sample sentences of wireframe S04-S05; their params are the stub's own.
 """
 
 import json
@@ -86,6 +87,11 @@ def ingestion() -> dict[str, Any]:
 @cache
 def scope_changes() -> list[dict[str, Any]]:
     return json.loads((_DIR / "scope_changes.json").read_text(encoding="utf-8"))
+
+
+@cache
+def personas() -> dict[str, Any]:
+    return json.loads((_DIR / "personas.json").read_text(encoding="utf-8"))
 
 
 @cache

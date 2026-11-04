@@ -21,7 +21,7 @@ from app import stubs
 from app.ai.call_context import AICallContext
 from app.ai.gateway import Gateway, get_gateway
 from app.auth import AuthContext, get_auth
-from app.models.error import ErrorResponse, error_response
+from app.models.error import ErrorResponse, error_response, too_long_message, unavailable_docs
 from app.models.room import (
     EVENT_MODELS,
     UPLOAD_CONTENT_TYPES,
@@ -75,12 +75,6 @@ _SSE_RESPONSE: dict[int | str, dict[str, Any]] = {
     },
     **_ERRORS,
 }
-
-
-def _unavailable_503(code: str) -> dict[int | str, dict[str, Any]]:
-    """A route's own 503 replaces the 503 of AUTH_ERRORS, so it names both causes."""
-    description = f"{code}, or auth_unavailable (Supabase Auth unreachable)"
-    return {503: {"model": ErrorResponse, "description": description}}
 
 
 @router.get("/exam-preps/{id}/sessions/active", responses=_ERRORS)
@@ -171,7 +165,7 @@ _STUB_AUDIO_URL = f"{stubs.STORAGE_URL}/tts/stub.mp3"
     responses={
         **_ERRORS,
         409: {"model": ErrorResponse, "description": "tts_unavailable for this message"},
-        **_unavailable_503("tts_unavailable"),
+        **unavailable_docs("tts_unavailable"),
     },
 )
 async def get_tts(message_id: MessageId, response: Response) -> TtsAudio:
@@ -202,10 +196,9 @@ async def send_message(
     """
     if body.text is None:
         return stubs.stream("image_reply")
-    max_chars = get_settings().ai.guards.max_message_chars
-    if len(body.text) > max_chars:
+    if too_long := too_long_message(body.text):
         # Code proposed in tutor-reply-stream.md §10 item 3, pending Junior.
-        return error_response(422, "message_too_long", f"text is over {max_chars} characters")
+        return error_response(422, "message_too_long", too_long)
 
     # No session_id yet: the session is a stub with no tutor_sessions row (api-auth.md §2.5).
     call_context = AICallContext(auth.tenant_id, auth.user_id) if auth else None
@@ -265,7 +258,7 @@ async def create_upload(
     responses={
         **_ERRORS,
         422: {"model": ErrorResponse, "description": "Invalid body or audio_too_long"},
-        **_unavailable_503("stt_unavailable"),
+        **unavailable_docs("stt_unavailable"),
     },
 )
 async def transcribe(
