@@ -16,7 +16,7 @@
 - [x] 3. 🤖 ใส่ร่างลง `api.md` v1.11 + "รอตัดสิน (v1.11 · Junior)"
 - [x] 4. 🤖 test contract + stub · แดงก่อน
 - [x] 5. 🙋 Jam review test
-- [ ] 6. 🤖 models + stub (`X-Stub: true`) · test เขียว + ruff
+- [x] 6. 🤖 models + stub (`X-Stub: true`) · test เขียว + ruff
 - [ ] 7. 🤖 `api-schema.ts` generate ใหม่ + บรรทัดความคืบหน้าใน checklist
 
 ## Definition of done
@@ -29,10 +29,12 @@
 
 - 2026-11-04 · ไม่มี feature spec ของหน้าจอ S11, S13, S14 · contract อิง UC-02 (May approve 2026-10-19), ai-orchestration §2.3, wireframe และ schema
 - 2026-11-04 · Jam ok: แก้กฎ `stage` ของ v1.10 (กฎเดิมให้ `scope` ทั้งที่ยังสกัดหัวข้อไม่เสร็จ) · เพิ่ม `retry` กับ `DELETE /materials/{id}` เพราะปุ่มใน S11 ใช้ไม่ได้ถ้าไม่มี · นับ `scope/chat` ใน rate limit เดียวกับห้องติว (`gateway-guards.md` §2.1 + AC-26)
+- 2026-11-04 · ย้าย `_stream` จาก `routers/room.py` เป็น `stubs.stream` และ `_RATE_LIMITED` เป็น `RATE_LIMITED_DOCS` ใน `app/rate_limit.py` · ใช้ร่วม 2 router แทนการ import ชื่อ private
+- 2026-11-04 · `ScopePatchChanges` ตัด field ที่เป็น null ตอน serialize (model serializer) · หน้าเว็บเอา `changes` ไปทับการ์ด null จึงลบค่าเดิม · ใช้ `exclude_none` ที่ตัว stream ไม่ได้ เพราะ event อื่นมี null ที่ต้องส่ง เช่น `verdict.first_wrong_line`
 
 ## Next step
 
-ขั้น 5: Jam review `tests/unit/test_scope_edit_api_contract.py` + `test_scope_edit_stubs.py` · แล้วขั้น 6 models + stub
+ขั้น 7: generate `apps/web/lib/api-schema.ts` ใหม่ + บรรทัดความคืบหน้า #106 ใน checklist · แล้ว `/work-done`
 
 ## Waiting on
 

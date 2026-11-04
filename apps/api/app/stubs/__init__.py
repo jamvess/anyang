@@ -1,5 +1,5 @@
-"""Fixture data for the tutor room, scope review and exam prep stubs. Delete each file with
-the stub endpoints that serve it.
+"""Fixture data for the tutor room, scope review and exam prep stubs, and what those stubs share.
+Delete each file with the stub endpoints that serve it.
 
 Copied from apps/web/tests/fixtures/ (May's room, SSE and scope fixtures) because the
 Docker image only contains apps/api/app/. Differences from the web copies:
@@ -11,18 +11,23 @@ These have no web copy: image_reply.sse and ocr_confirm.sse use the OCR3 example
 specs/features/check/ocr-confirm-card.md §3 and the verdict example of verdict-mark.md §3;
 session_end.sse is the stub's own two-line summary; exam_preps.json and materials.json are
 the stub's own too. exam_preps.json stores `days_left` and no `exam_date`, so the router
-counts the date from today and the fixture never falls into the past.
+counts the date from today and the fixture never falls into the past. ingestion.json,
+scope_changes.json and scope_chat.sse are the stub's own too; they use the wireframe S11, S14
+and S13 examples, with the files of materials.json and the topics of scope.json.
 """
 
 import json
+from collections.abc import AsyncIterator
 from functools import cache
 from pathlib import Path
 from typing import Any
 
 from fastapi.responses import JSONResponse
+from sse_starlette import EventSourceResponse
 
 from app.auth import AuthContext
 from app.models.error import error_response
+from app.models.room import EVENT_MODELS
 
 _DIR = Path(__file__).parent
 
@@ -74,6 +79,16 @@ def materials() -> list[dict[str, Any]]:
 
 
 @cache
+def ingestion() -> dict[str, Any]:
+    return json.loads((_DIR / "ingestion.json").read_text(encoding="utf-8"))
+
+
+@cache
+def scope_changes() -> list[dict[str, Any]]:
+    return json.loads((_DIR / "scope_changes.json").read_text(encoding="utf-8"))
+
+
+@cache
 def events(name: str) -> list[tuple[str, dict[str, Any]]]:
     """(event, data) pairs of a recorded SSE file. Comment lines are skipped."""
     pairs = []
@@ -88,3 +103,14 @@ def events(name: str) -> list[tuple[str, dict[str, Any]]]:
         if data:
             pairs.append((event, json.loads("\n".join(data))))
     return pairs
+
+
+def stream(name: str) -> EventSourceResponse:
+    """A recorded SSE file as a response; every payload is checked against its event model."""
+
+    async def replay() -> AsyncIterator[dict[str, str]]:
+        for event, data in events(name):
+            payload = EVENT_MODELS[event].model_validate(data)
+            yield {"event": event, "data": payload.model_dump_json()}
+
+    return EventSourceResponse(replay(), headers=HEADERS)

@@ -20,6 +20,7 @@ from pydantic import Field, StringConstraints, model_validator
 
 from app.domain.checker import ErrorType, Verdict
 from app.models.base import ApiModel
+from app.models.scope import ScopePatchEvent
 
 # --- REST ----------------------------------------------------------------------
 
@@ -239,6 +240,7 @@ class VerdictEvent(ApiModel):
 EVENT_MODELS: dict[str, type[ApiModel]] = {
     "session": SessionEvent,
     "token": TokenEvent,
+    "scope_patch": ScopePatchEvent,
     "progress_card": ProgressCardEvent,
     "problem": ProblemEvent,
     "ocr_preview": OcrPreviewEvent,
