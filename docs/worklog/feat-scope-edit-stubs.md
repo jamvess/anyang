@@ -9,11 +9,11 @@
 
 ## Plan
 
-ครึ่งหลังของ flow 2.3 (UC-02 ขั้น 6–12 · S11, S13, S14): `GET /exam-preps/{id}/ingestion`, `POST /exam-preps/{id}/scope/chat`, `GET /exam-preps/{id}/scope/changes` · persona และบัญชีอยู่ PR อื่น
+ครึ่งหลังของ flow 2.3 (UC-02 ขั้น 6–12 · S11, S13, S14): `GET /exam-preps/{id}/ingestion`, `POST /exam-preps/{id}/scope/chat`, `GET /exam-preps/{id}/scope/changes` + ปุ่มของ UC-02 E5: `POST /materials/{id}/retry`, `DELETE /materials/{id}` · persona และบัญชีอยู่ PR อื่น
 
-- [ ] 1. 🤖 ร่าง contract (ข้อเสนอรอ Junior) จาก ai-orchestration §2.3.2, §2.3.4, §2.3.6, `ingestion_jobs` / `scope_changes` ใน `0001_init.sql`, UC-02, wireframe S11, S13, S14 และ SM-06, SM-07, SM-08, CM-07
-- [ ] 2. 🙋 Jam อ่านร่าง ตอบ ok · บอกแชทกลุ่มว่าจะแก้ `api.md` (ไฟล์ร่วม)
-- [ ] 3. 🤖 ใส่ร่างลง `api.md` v1.11 + "รอตัดสิน (v1.11 · Junior)"
+- [x] 1. 🤖 ร่าง contract (ข้อเสนอรอ Junior) จาก ai-orchestration §2.3.2, §2.3.4, §2.3.6, `ingestion_jobs` / `scope_changes` ใน `0001_init.sql`, UC-02, wireframe S11, S13, S14 และ SM-06, SM-07, SM-08, CM-07
+- [x] 2. 🙋 Jam อ่านร่าง ตอบ ok · บอกแชทกลุ่มว่าจะแก้ `api.md` (ไฟล์ร่วม)
+- [x] 3. 🤖 ใส่ร่างลง `api.md` v1.11 + "รอตัดสิน (v1.11 · Junior)"
 - [ ] 4. 🤖 test contract + stub · แดงก่อน
 - [ ] 5. 🙋 Jam review test
 - [ ] 6. 🤖 models + stub (`X-Stub: true`) · test เขียว + ruff
@@ -21,17 +21,18 @@
 
 ## Definition of done
 
-- `api.md` มี request/response/error ของ 3 endpoint และ payload ของ `scope_patch` · ข้อที่ยังไม่ตัดสินอยู่ใน "รอตัดสิน (v1.11 · Junior)"
+- `api.md` มี request/response/error ของ 5 endpoint และ payload ของ `scope_patch` · ข้อที่ยังไม่ตัดสินอยู่ใน "รอตัดสิน (v1.11 · Junior)"
 - `/docs` แสดงครบ · stub ส่ง `X-Stub: true` · test + ruff + CI เขียว
 - ข้อ D5 ยังไม่ติ๊ก (เหลือ persona + บัญชี)
 
 ## Decisions
 
 - 2026-11-04 · ไม่มี feature spec ของหน้าจอ S11, S13, S14 · contract อิง UC-02 (May approve 2026-10-19), ai-orchestration §2.3, wireframe และ schema
+- 2026-11-04 · Jam ok: แก้กฎ `stage` ของ v1.10 (กฎเดิมให้ `scope` ทั้งที่ยังสกัดหัวข้อไม่เสร็จ) · เพิ่ม `retry` กับ `DELETE /materials/{id}` เพราะปุ่มใน S11 ใช้ไม่ได้ถ้าไม่มี · นับ `scope/chat` ใน rate limit เดียวกับห้องติว (`gateway-guards.md` §2.1 + AC-26)
 
 ## Next step
 
-ขั้น 1: ร่าง contract ของ 3 endpoint แล้วให้ Jam อ่าน
+ขั้น 4: เขียน test contract + stub ของ 5 endpoint จาก api.md v1.11 และ AC-11, AC-26 ของ `gateway-guards.md` · ให้แดงก่อน
 
 ## Waiting on
 

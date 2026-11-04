@@ -1,4 +1,4 @@
-# API (v1.10)
+# API (v1.11)
 
 Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้างอัตโนมัติที่ `/docs` · frontend generate types จาก `/openapi.json`
 
@@ -35,6 +35,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | GET | `/exam-preps/{id}/materials` | ประเภทที่ AI เดา + สถานะ |
 | POST | `/exam-preps/{id}/materials/confirm` | 202 เริ่ม ingest + สกัดหัวข้อ |
 | GET | `/exam-preps/{id}/ingestion` | ความคืบหน้าทีละขั้น |
+| POST | `/materials/{id}/retry` | อ่านไฟล์ที่ล้มใหม่ (UC-02 E5) |
 | GET | `/exam-preps/{id}/scope` | หัวข้อ draft + ดาว + เหตุผล |
 | GET | `/topics/{id}/sources` | ข้อความต้นฉบับ + เลขหน้า |
 | POST | `/exam-preps/{id}/scope/chat` | **SSE:** `token`, `scope_patch`, `done` |
@@ -52,7 +53,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | `exam_date` | string (date · `YYYY-MM-DD`) | `exam_preps.exam_date` |
 | `days_left` | integer | เหมือน `Room.days_left` (CM-02) |
 | `daily_minutes` | integer \| null | `exam_preps.daily_minutes` · null = ใช้ค่าจาก `config/learning.yaml` → `planner.default_daily_minutes` (UC-02 A1) |
-| `stage` | `"materials"` \| `"processing"` \| `"scope"` \| `"tutoring"` | คำนวณที่ backend ตามลำดับ: `tutoring` เมื่อมี `active_scope_version_id` · ไม่งั้น `processing` เมื่อมีไฟล์ `confirmed` หรือ `ingesting` · ไม่งั้น `scope` เมื่อมีไฟล์ `ready` อย่างน้อย 1 ไฟล์ (ไฟล์ `failed` ไม่นับ) · ไม่งั้น `materials` (รวม prep ที่ยังไม่มีไฟล์) · หน้าเว็บใช้เลือกว่าการ์ดพาไปหน้าไหน |
+| `stage` | `"materials"` \| `"processing"` \| `"scope"` \| `"tutoring"` | คำนวณที่ backend ตามลำดับ: `tutoring` เมื่อมี `active_scope_version_id` · ไม่งั้น `scope` เมื่อ `Ingestion.scope_ready` (v1.11) · ไม่งั้น `processing` เมื่อมีไฟล์ที่ `kind_confirmed = true` · ไม่งั้น `materials` (รวม prep ที่ยังไม่มีไฟล์) · แก้ใน v1.11 เพราะกฎเดิมให้ `scope` ทั้งที่ยังสกัดหัวข้อไม่เสร็จ · หน้าเว็บใช้เลือกว่าการ์ดพาไปหน้าไหน |
 | `readiness` | number 0–1 \| null | PM-03 · null จนกว่า `stage = "tutoring"` |
 | `topics_not_passed` | integer \| null | จำนวนหัวข้อที่ `level ≠ passed` (PM-04) · null จนกว่า `stage = "tutoring"` |
 
@@ -141,6 +142,69 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 3. **ข้อความต้นฉบับ** (OQ 6): `excerpts.text` เป็นข้อความทั้งหน้าจาก `material_pages` · ถ้ายาวเกินไปค่อยตัดเฉพาะส่วนที่เกี่ยวข้องภายหลัง
 4. **`text` ของข้อสอบใช้ `$…$`** (OQ 7): Jam ตกลง (เป็นเจ้าของ prompt) · `split_past_exam/v1` รับสมการเป็น LaTeX ใน `$` อยู่แล้ว
 5. **error code ของ scope:** `scope_not_ready` (`GET /scope` และ confirm) · `scope_already_confirmed`, `scope_empty` (confirm อย่างเดียว) · 409 ทั้งหมด
+
+**ความคืบหน้า แชทแก้ขอบเขต และ change log (v1.11 · ข้อเสนอ รอ Junior ตัดสิน):** UC-02 ขั้น 6–12 (S11, S13, S14) · ai-orchestration §2.3.2 ขั้น 4–6, §2.3.4, §2.3.6 · ยังไม่มี feature spec ของหน้าจอ · ทุก field ต้องมี และไม่มี field อื่น · prep หรือไฟล์ที่ไม่มีหรือเป็นของ tenant อื่น → `404 not_found`
+
+**`Ingestion`** (response ของ `GET /exam-preps/{id}/ingestion` · CM-07) · หน้า S11 poll จน `scope_ready = true` แล้วไป S12 เอง · ยังไม่มีไฟล์ที่ยืนยัน ก็ตอบ `200` และ `files` เป็น `[]`
+
+| Field | Type | ที่มา |
+|---|---|---|
+| `scope_ready` | boolean | `true` เมื่อ `GET /exam-preps/{id}/scope` ไม่ตอบ `409 scope_not_ready` |
+| `files` | `IngestionFile[]` | ไฟล์ที่ `kind_confirmed = true` เรียงตามเวลาที่สร้าง · ถ้ามี scope version แล้ว เอาเฉพาะไฟล์ที่สร้างหลัง `confirmed_at` ของ version นั้น (UC-02 A9) |
+| `steps` | `{label: string, status: "pending" \| "running" \| "done"}[]` | ขั้นรวมของทั้ง prep เรียงตามลำดับที่แสดง · `label` เป็นข้อความพร้อมแสดงจาก backend: "อ่านสิ่งที่คุณเขียนกำกับไว้", "หาหัวข้อและลำดับการเรียน", "เทียบกับข้อสอบเก่า {n} ชุด" · ไม่มีข้อสอบเก่าก็ไม่มีขั้นสุดท้าย (UC-02 E1) |
+
+**`IngestionFile`**
+
+| Field | Type | ที่มา |
+|---|---|---|
+| `material_id` | string (uuid) | `materials.id` |
+| `file_name` | string | `materials.file_name` |
+| `status` | `"queued"` \| `"running"` \| `"done"` \| `"failed"` | ค่าเดียวกับ `ingestion_jobs.status` · รวมจากทุกแถวของไฟล์นั้น |
+| `detail` | string \| null | ข้อความพร้อมแสดงจาก backend เช่น "14 หน้า", "12 ข้อ", "กำลังแยกรายข้อ" |
+| `error` | string \| null | ข้อความสั้นที่แสดงให้ผู้ใช้ได้ เมื่อ `status = "failed"` (UC-02 E5) |
+
+- **`POST /materials/{id}/retry`** · ปุ่ม "ลองใหม่" ของ UC-02 E5 · ไม่มี body · `202` + `Material` · อ่านไฟล์ใหม่ตั้งแต่ขั้นที่ล้ม · ไฟล์ที่ `status` ไม่ใช่ `failed` → `409 not_failed`
+- **`DELETE /materials/{id}`** · ปุ่ม "ไปต่อโดยไม่มีไฟล์นี้" ของ UC-02 E5 และการลบไฟล์ของ CM-10 · `204` ไม่มี body · ไฟล์ที่ `status` เป็น `confirmed` หรือ `ingesting` → `409 material_busy`
+
+**`POST /exam-preps/{id}/scope/chat`** (S13 · SM-06, SM-07 · A8 `scope_edit`) · body `{text: string (ไม่ว่าง)}` · ตอบเป็น SSE: `scope_patch` 0 ตัวขึ้นไป → `token` (`speaker = "tutor"`) → `done` (`{}`)
+
+- code ตรวจ action ของ AI ก่อน (§2.3.6) แล้วจึงส่ง `scope_patch` และคำตอบ เพราะ A8 คืน JSON ก้อนเดียว · action ไม่ผ่านการตรวจ → ไม่มี `scope_patch` มีแค่ `token` ที่ถามผู้ใช้ใหม่ (UC-02 E2)
+- แก้หลังยืนยันแล้วได้ · `Scope.status` กลับเป็น `"draft"` ตามกฎของ v1.6
+- error: `409 scope_not_ready` · `422 validation_error` · `422 message_too_long` (เกิน `guards.max_message_chars`) · `429 rate_limited` + `Retry-After` (ตัวนับเดียวกับข้อความในห้องติว · `gateway-guards.md` §2.1) · AI ล่มกลาง stream → event `error` (`ai_unavailable`)
+
+**`scope_patch.changes`** มีเฉพาะ field ของ `ScopeTopic` ที่เปลี่ยน (อย่างน้อย 1 field · ไม่มี `id`) · หน้าเว็บเอาไปทับการ์ดของ `topic_id` · ไม่รู้จัก `topic_id` = การ์ดใหม่
+
+| op ของ AI | event ที่ส่ง |
+|---|---|
+| `set_importance`, `exclude`, `include` | `{stars, reason}` · ตัดออก = `stars: 0` |
+| `rename` | `{name}` |
+| `reorder` | 1 event ต่อหัวข้อที่ `order` เปลี่ยน · `{order}` |
+| `add_topic` | ทุก field ของ `ScopeTopic` ยกเว้น `id` · `topic_id` คือ id ใหม่ · `origin = "user"` |
+| `exclude_skill`, `include_skill` | ไม่ส่ง เพราะ skill ไม่อยู่บนการ์ด (SM-12) · ยังมีแถวใน change log |
+
+**`ScopeChange`** (แต่ละแถวของ `GET /exam-preps/{id}/scope/changes` · S14 · SM-08) · เรียงตาม `created_at` เก่าไปใหม่ · แก้หัวข้อเดิมหลายครั้งได้หลายแถว · เฉพาะแถวที่ `created_at` หลัง `confirmed_at` ของ scope version ปัจจุบัน ทั้งหมดถ้ายังไม่เคยยืนยัน (กฎเดียวกับ `Scope.status`) · error: `409 scope_not_ready`
+
+| Field | Type | ที่มา |
+|---|---|---|
+| `id` | string (uuid) | `scope_changes.id` |
+| `topic_id` | string (uuid) | `scope_changes.topic_id` · แถวที่ `topic_id` เป็น null ไม่ส่ง |
+| `topic_name` | string | `topics.name` ปัจจุบัน |
+| `op` | `"set_importance"` \| `"exclude"` \| `"include"` \| `"rename"` \| `"reorder"` \| `"add_topic"` \| `"exclude_skill"` \| `"include_skill"` | `scope_changes.op` |
+| `before` | object \| null | `scope_changes.before` · `{stars}` (`set_importance`, `exclude`, `include`) · `{name}` (`rename`) · `{order}` (`reorder`) · `{skill_name}` (`exclude_skill`, `include_skill`) · `add_topic` เป็น null |
+| `after` | object \| null | `scope_changes.after` · รูปแบบเดียวกับ `before` · `add_topic` เป็น `{name, stars}` |
+| `reason` | string \| null | `scope_changes.reason` |
+| `actor` | `"user"` \| `"ai"` \| `"system"` | `scope_changes.actor` |
+| `created_at` | string (ISO 8601) | `scope_changes.created_at` |
+
+**รอตัดสิน (v1.11 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-04 (PR #106) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
+
+1. **`ingestion_jobs` ของขั้นรวม:** `material_id` ห้าม null แต่หัวข้อกับดาวทำต่อ prep ไม่ใช่ต่อไฟล์ และไม่มี stage ของ "อ่านสิ่งที่เขียนกำกับ" · ข้อเสนอคือ migration ให้ `material_id` เป็น null ได้ + เพิ่ม `exam_prep_id`
+2. **ไฟล์ `failed` ที่ผู้ใช้ยังไม่ตัดสิน:** ข้อเสนอคือขั้นรวมหัวข้อ (A6) รอจนทุกไฟล์เสร็จหรือถูกลบ เพื่อไม่ต้องเรียก main tier ซ้ำ
+3. **ลบไฟล์ที่ `ready` แล้ว:** หัวข้อที่สร้างจากไฟล์นั้นต้องเป็นอย่างไร (CM-10) · ยังไม่มีคำตอบ
+4. **ประวัติแชท S13:** wireframe คุยต่อเนื่องหลายรอบ แต่ input ของ A8 ไม่มีประวัติ และ `messages.session_id` ห้าม null · body `{text}` ใช้ได้ทุกทาง แต่ต้องมีที่เก็บฝั่ง server (prompt · Jam) · ยังไม่มี endpoint อ่านประวัติ รีเฟรชแล้วเริ่มคุยใหม่
+5. **พูดใน S13 (SM-06):** `/sessions/{id}/uploads` และ `/transcribe` ผูกกับ session แต่ S13 ไม่มี session · **stub รอบนี้รับแค่ข้อความพิมพ์ ฝั่งเสียงของ SM-06 ยังไม่ครบ**
+6. **ข้อความพร้อมแสดง:** `steps.label` และ `files.detail` สร้างที่ backend แบบเดียวกับ `source_label` · May อาจอยากคุมข้อความเอง
+7. **error code ใหม่:** `not_failed`, `material_busy` · ใช้ซ้ำ: `scope_not_ready`, `message_too_long`, `rate_limited`
 
 ### ห้องติว (flow 2.2, 2.4, 2.5, 2.1)
 
@@ -267,7 +331,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 |---|---|---|
 | `session` | `{session_id}` · event แรกของ `POST /exam-preps/{id}/sessions` | 2.2 |
 | `token` | `{speaker: "tutor" \| "buddy", text}` | 2.2, 2.3 |
-| `scope_patch` | `{topic_id, changes}` | 2.3 |
+| `scope_patch` | `{topic_id, changes}` · `changes` มีเฉพาะ field ของ `ScopeTopic` ที่เปลี่ยน (ดู v1.11) | 2.3 |
 | `progress_card` | `{days_left, passed, total, readiness, topics: [{id, name, stars, level, review_due, origin}]}` · type ของ `topics[]` ดูด้านล่าง | 2.2 |
 | `problem` | `{problem_id, text_latex, difficulty, purpose}` (ไม่มีเฉลย) | 2.2 |
 | `ocr_preview` | `{lines: [{latex, confidence}]}` · `latex` เป็น LaTeX ล้วนไม่มี `$` · `confidence` 0–1 (หน้าเว็บไม่แสดง · ยืนยันทุกครั้ง AM-02) · `lines` ไม่ว่าง (รูปที่อ่านไม่ได้ส่งเป็น `token` แทน) · v1.7 | 2.2 |
