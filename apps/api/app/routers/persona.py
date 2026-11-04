@@ -12,7 +12,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, Response
 
 from app import stubs
-from app.models.error import ErrorResponse, unavailable_docs
+from app.models.error import ErrorResponse, too_long_message, unavailable_docs
 from app.models.persona import (
     BuddyProfile,
     BuddyProfileRequest,
@@ -25,7 +25,6 @@ from app.models.persona import (
     TutorProfileRequest,
 )
 from app.rate_limit import RATE_LIMITED_DOCS, chat_rate_limit
-from app.settings import get_settings
 
 router = APIRouter(tags=["persona"])
 
@@ -40,14 +39,6 @@ _INVALID_OR_TOO_LONG: dict[int | str, dict[str, Any]] = {
 }
 
 _STUB_VERSION = 2  # one edit after the first save; the fixture's version is never counted up
-
-
-def _too_long(text: str | None) -> Any:
-    """The envelope when `text` is over guards.max_message_chars, else None."""
-    max_chars = get_settings().ai.guards.max_message_chars
-    if text is not None and len(text) > max_chars:
-        return stubs.error(422, "message_too_long", f"text is over {max_chars} characters")
-    return None
 
 
 @router.get("/personas/presets")
@@ -75,9 +66,8 @@ async def extract_persona(body: ExtractPersonaRequest, response: Response) -> An
 
     stub — the same draft of that kind, whatever was described; no AI call
     """
-    too_long = _too_long(body.description)
-    if too_long:
-        return too_long
+    if too_long := too_long_message(body.description):
+        return stubs.error(422, "message_too_long", too_long)
     response.headers.update(stubs.HEADERS)
     return PersonaDraft.model_validate(stubs.personas()["drafts"][body.kind])
 
@@ -102,9 +92,8 @@ async def put_tutor_profile(body: TutorProfileRequest, response: Response) -> An
 
     stub — answers with what was sent; nothing is saved
     """
-    too_long = _too_long(body.description)
-    if too_long:
-        return too_long
+    if too_long := too_long_message(body.description):
+        return stubs.error(422, "message_too_long", too_long)
     response.headers.update(stubs.HEADERS)
     return TutorProfile(params=body.params, description=body.description, version=_STUB_VERSION)
 
@@ -129,9 +118,8 @@ async def put_buddy_profile(body: BuddyProfileRequest, response: Response) -> An
 
     stub — answers with what was sent; nothing is saved
     """
-    too_long = _too_long(body.description)
-    if too_long:
-        return too_long
+    if too_long := too_long_message(body.description):
+        return stubs.error(422, "message_too_long", too_long)
     response.headers.update(stubs.HEADERS)
     return BuddyProfile(
         enabled=body.enabled,

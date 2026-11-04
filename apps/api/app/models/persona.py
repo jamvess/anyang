@@ -1,36 +1,36 @@
 """API models of personas and profiles (specs/system/api.md v1.12 "Persona และโปรไฟล์").
 
 The shape is a proposal pending Junior (api.md "รอตัดสิน (v1.12 · Junior)"). The params are
-ai-orchestration §2.7. They reach the prompt through a template, so the short texts pass a
-whitelist of characters and every other param is an enum or a small range. `description` is the
-user's free text: it is stored in `description_raw` and never reaches a prompt.
+ai-orchestration §2.7. They reach the prompt through a template, and so does the nickname (§2.2
+context layer 2), so the short texts pass a whitelist of characters and every other param is
+strict: an enum or a small range, with no type coercion. `description` is the user's free text:
+it is stored in `description_raw` and never reaches a prompt.
 """
 
 from typing import Annotated, Literal, Self
 
-from pydantic import AfterValidator, Field, StringConstraints, model_validator
+from pydantic import Field, StrictBool, StrictInt, StringConstraints, model_validator
 
 from app.models.base import ApiModel
 from app.settings import get_settings
 
-# Thai block, Latin letters, digits and spaces (ai-orchestration §2.7 "ผ่าน whitelist ตัวอักษร").
-_PERSONA_TEXT = "^[฀-๿A-Za-z0-9 ]+$"
+# ai-orchestration §2.7 "ผ่าน whitelist ตัวอักษร": Thai consonants, vowels, tone marks and digits
+# (no ฿ ๏ ๚ ๛ and no unassigned code points of the block), Latin letters, digits and spaces.
+_PERSONA_TEXT = "^[\u0e01-\u0e3a\u0e40-\u0e4e\u0e50-\u0e59A-Za-z0-9 ]+$"
 
 NonBlank = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-
-
-def _fits_persona_limit(value: str) -> str:
-    limit = get_settings().ai.guards.max_persona_text_chars
-    if not value.strip():
-        raise ValueError("must not be blank")
-    if len(value) > limit:
-        raise ValueError(f"must be at most {limit} characters")
-    return value
-
-
-PersonaText = Annotated[str, Field(pattern=_PERSONA_TEXT), AfterValidator(_fits_persona_limit)]
-OneToThree = Annotated[int, Field(ge=1, le=3)]
-VoiceId = Annotated[str, Field(pattern="^th-TH-")]  # the allowed list is api.md รอตัดสิน v1.12 ข้อ 5
+# Stripped first, so spaces around a name neither reach the prompt nor use up the limit.
+PersonaText = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        pattern=_PERSONA_TEXT,
+        max_length=get_settings().ai.guards.max_persona_text_chars,
+    ),
+]
+OneToThree = Annotated[StrictInt, Field(ge=1, le=3)]
+# Google TTS voice names; the allowed list is api.md รอตัดสิน v1.12 ข้อ 5.
+VoiceId = Annotated[str, Field(pattern="^th-TH-[A-Za-z0-9-]{1,40}$")]
 
 
 class _SharedParams(ApiModel):
@@ -40,8 +40,8 @@ class _SharedParams(ApiModel):
     formality: OneToThree
     energy: OneToThree
     strictness: OneToThree
-    humor: int = Field(ge=0, le=2)
-    emoji: bool
+    humor: StrictInt = Field(ge=0, le=2)
+    emoji: StrictBool
     voice_id: VoiceId
 
 
@@ -114,7 +114,7 @@ class BuddyProfileRequest(ApiModel):
     """Body of PUT /me/buddy-profile. No buddy (UC-01 A2) is `enabled: false`; params may stay,
     so turning the buddy back on does not lose them."""
 
-    enabled: bool
+    enabled: StrictBool
     params: BuddyParams | None
     description: str | None
 
@@ -140,10 +140,10 @@ ExplainLanguage = Literal["th_en", "th", "en"]  # ไทย + ศัพท์อ
 class ProfileRequest(ApiModel):
     """Body of PUT /me/profile."""
 
-    nickname: NonBlank
+    nickname: PersonaText  # reaches the prompt like the persona params
     education_level: EducationLevel
     explain_language: ExplainLanguage
-    auto_read: bool  # TM-09; has no column yet (api.md รอตัดสิน v1.12 ข้อ 1)
+    auto_read: StrictBool  # TM-09; has no column yet (api.md รอตัดสิน v1.12 ข้อ 1)
 
 
 class Profile(ApiModel):

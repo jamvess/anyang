@@ -5,6 +5,8 @@ from typing import Any
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict
 
+from app.settings import get_settings
+
 
 class ErrorBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -25,6 +27,14 @@ def error_response(status: int, code: str, message: str) -> JSONResponse:
     """The envelope as a response, for handlers and routers that answer with an error."""
     body = ErrorResponse(error=ErrorBody(code=code, message=message))
     return JSONResponse(body.model_dump(), status_code=status)
+
+
+def too_long_message(text: str | None) -> str | None:
+    """The message of `422 message_too_long` when `text` is over guards.max_message_chars."""
+    max_chars = get_settings().ai.guards.max_message_chars
+    if text is not None and len(text) > max_chars:
+        return f"text is over {max_chars} characters"
+    return None
 
 
 def error_docs(

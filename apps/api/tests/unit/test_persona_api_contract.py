@@ -500,3 +500,67 @@ def test_UM05_saved_description_over_the_limit_is_refused(
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "message_too_long"
     assert client.put(url, json={**body, "description": "ก" * max_chars}).status_code == 200
+
+
+# --- added in self-review (after Jam's test review) ----------------------------------
+
+
+@pytest.mark.parametrize(
+    "nickname",
+    ["x<system>", "ก" * (get_settings().ai.guards.max_persona_text_chars + 1), "a\u0000b"],
+)
+def test_UM08_nickname_passes_the_persona_whitelist(nickname: str) -> None:
+    """ai-orchestration §2.2: the nickname reaches the prompt every turn, like `name`."""
+    with pytest.raises(ValueError):
+        ProfileRequest.model_validate(profile_body(nickname=nickname))
+
+
+@pytest.mark.parametrize(
+    "voice_id",
+    ["th-TH-", "th-TH-\n<system>", "th-TH-a b", "th-TH-" + "x" * 41, "xth-TH-Standard-A"],
+)
+def test_UM05_voice_id_is_a_voice_name(voice_id: str) -> None:
+    with pytest.raises(ValueError):
+        TutorParams.model_validate(tutor_params(voice_id=voice_id))
+
+
+@pytest.mark.parametrize(
+    "change",
+    [{"formality": "2"}, {"humor": 1.0}, {"strictness": True}, {"emoji": "yes"}, {"emoji": 1}],
+)
+def test_UM05_params_are_not_coerced(change: dict[str, Any]) -> None:
+    with pytest.raises(ValueError):
+        TutorParams.model_validate(tutor_params(**change))
+
+
+def test_UM08_auto_read_is_not_coerced() -> None:
+    with pytest.raises(ValueError):
+        ProfileRequest.model_validate(profile_body(auto_read="true"))
+
+
+def test_UM04_enabled_is_not_coerced() -> None:
+    with pytest.raises(ValueError):
+        BuddyProfileRequest.model_validate(
+            {"enabled": "true", "params": buddy_params(), "description": None}
+        )
+
+
+def test_UM05_spaces_around_short_text_are_removed() -> None:
+    """They reach neither the prompt nor the limit."""
+    limit = get_settings().ai.guards.max_persona_text_chars
+
+    assert TutorParams.model_validate(tutor_params(name="  พี่  ")).name == "พี่"
+    assert TutorParams.model_validate(tutor_params(name=" " + "ก" * limit + " "))
+
+
+@pytest.mark.parametrize("value", ["฿฿฿", "๛๛๛", "๏", "๜"])
+def test_UM05_short_text_refuses_thai_block_symbols(value: str) -> None:
+    with pytest.raises(ValueError):
+        TutorParams.model_validate(tutor_params(name=value))
+
+
+def test_UM05_short_text_limit_is_in_openapi(openapi: dict[str, Any]) -> None:
+    """So a form can read it instead of hard-coding the value of config/ai.yaml."""
+    name = openapi["components"]["schemas"]["TutorParams"]["properties"]["name"]
+
+    assert name["maxLength"] == get_settings().ai.guards.max_persona_text_chars

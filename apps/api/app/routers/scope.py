@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, Path, Response
 from sse_starlette import EventSourceResponse
 
 from app import stubs
-from app.models.error import error_docs
+from app.models.error import error_docs, too_long_message
 from app.models.room import DoneEvent, ErrorEvent, TokenEvent
 from app.models.scope import (
     Ingestion,
@@ -26,7 +26,6 @@ from app.models.scope import (
     TopicSources,
 )
 from app.rate_limit import RATE_LIMITED_DOCS, chat_rate_limit
-from app.settings import get_settings
 
 router = APIRouter(tags=["scope"])
 
@@ -116,9 +115,8 @@ async def scope_chat(prep_id: PrepId, body: ScopeChatRequest) -> Response:
 
     stub — always the same reply and patch; nothing is saved, so GET /scope does not change
     """
-    max_chars = get_settings().ai.guards.max_message_chars
-    if len(body.text) > max_chars:
-        return stubs.error(422, "message_too_long", f"text is over {max_chars} characters")
+    if too_long := too_long_message(body.text):
+        return stubs.error(422, "message_too_long", too_long)
     return stubs.stream("scope_chat")
 
 

@@ -29,11 +29,11 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 | Field | Type | ใช้กับ |
 |---|---|---|
-| `name`, `self_pronoun`, `call_user` | string · อักษรไทย อังกฤษ ตัวเลข ช่องว่าง · ไม่ว่าง · ยาวไม่เกิน `guards.max_persona_text_chars` | ทั้งคู่ |
-| `formality`, `energy`, `strictness` | integer 1–3 | ทั้งคู่ |
+| `name`, `self_pronoun`, `call_user` | string · อักษรไทย อังกฤษ ตัวเลข ช่องว่าง · ตัดช่องว่างหัวท้าย · ไม่ว่าง · ยาวไม่เกิน `guards.max_persona_text_chars` | ทั้งคู่ |
+| `formality`, `energy`, `strictness` | integer 1–3 (ไม่แปลงชนิด เช่น `"2"` ถูกปฏิเสธ · ใช้กับ `humor` และ boolean ทุกตัวในส่วนนี้) | ทั้งคู่ |
 | `humor` | integer 0–2 | ทั้งคู่ |
 | `emoji` | boolean | ทั้งคู่ |
-| `voice_id` | string ขึ้นต้น `th-TH-` (Google TTS) | ทั้งคู่ |
+| `voice_id` | string รูปแบบ `th-TH-` ตามด้วยตัวอักษรอังกฤษ ตัวเลข หรือ `-` (Google TTS) | ทั้งคู่ |
 | `explain_style` | `"step_by_step"` \| `"example_first"` \| `"concise"` | tutor |
 | `frequency` | `"low"` \| `"med"` \| `"high"` | buddy |
 | `personality` | `"curious"` \| `"playful"` \| `"diligent"` | buddy |
@@ -58,7 +58,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | `auto_read` | boolean | อ่านออกเสียงอัตโนมัติ (TM-09 · ค่าเริ่มต้นปิด) · ยังไม่มีคอลัมน์ (รอตัดสินข้อ 1) |
 | `setup_step` | `"crew"` \| `"profile"` \| `"done"` | คำนวณที่ backend ตามลำดับ: `crew` เมื่อยังไม่มี tutor หรือ buddy profile · `profile` เมื่อ `education_level` เป็น null · ไม่งั้น `done` · หน้าเว็บใช้พากลับหน้าที่ค้าง (UC-01 E6) |
 
-- **`PUT /me/profile`** · body ทุก field ยกเว้น `setup_step` · `nickname` ไม่ว่าง · `education_level` ไม่เป็น null · error `422 validation_error`
+- **`PUT /me/profile`** · body ทุก field ยกเว้น `setup_step` · `nickname` ใช้กฎเดียวกับ `name` ของ persona เพราะเข้า prompt ทุก turn (§2.2) · `education_level` ไม่เป็น null · error `422 validation_error`
 
 **รอตัดสิน (v1.12 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-04 (PR #107) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
 
@@ -69,6 +69,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 5. **`voice_id` และ preset:** รายการเสียงที่อนุญาตและ params ของ preset เก็บที่ไหน (config หรือตาราง) · stub ใช้ค่าชั่วคราวและตรวจแค่ `th-TH-`
 6. **การลบ:** `DELETE /me` ต้องลบ `auth.users` ด้วย service role และลบไฟล์ใน Storage · ทำให้จบใน request หรือเป็น job · `DELETE /exam-preps/{id}` ลบได้แม้มี session เปิดอยู่ไหม
 7. **error code ใหม่:** `persona_unavailable` · ใช้ซ้ำ: `message_too_long`, `rate_limited`
+8. **`nickname` ที่ trigger คัดลอกจาก Google:** `handle_new_user` ใส่ชื่อดิบ (อาจมี `-`, `'` หรือยาวเกินเพดาน) ซึ่งไม่ผ่านกฎของ `PUT` · ข้อเสนอคือ S06 ให้แก้ก่อนส่ง และ backend กรองค่าก่อนเข้า prompt ถ้าผู้ใช้ยังไม่ผ่าน S06
 
 ### Exam prep และ scope (flow 2.3)
 

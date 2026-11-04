@@ -21,7 +21,7 @@ from app import stubs
 from app.ai.call_context import AICallContext
 from app.ai.gateway import Gateway, get_gateway
 from app.auth import AuthContext, get_auth
-from app.models.error import ErrorResponse, error_response, unavailable_docs
+from app.models.error import ErrorResponse, error_response, too_long_message, unavailable_docs
 from app.models.room import (
     EVENT_MODELS,
     UPLOAD_CONTENT_TYPES,
@@ -196,10 +196,9 @@ async def send_message(
     """
     if body.text is None:
         return stubs.stream("image_reply")
-    max_chars = get_settings().ai.guards.max_message_chars
-    if len(body.text) > max_chars:
+    if too_long := too_long_message(body.text):
         # Code proposed in tutor-reply-stream.md §10 item 3, pending Junior.
-        return error_response(422, "message_too_long", f"text is over {max_chars} characters")
+        return error_response(422, "message_too_long", too_long)
 
     # No session_id yet: the session is a stub with no tutor_sessions row (api-auth.md §2.5).
     call_context = AICallContext(auth.tenant_id, auth.user_id) if auth else None
