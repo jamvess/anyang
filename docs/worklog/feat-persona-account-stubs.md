@@ -14,8 +14,8 @@
 - [x] 1. 🤖 ร่าง contract (ข้อเสนอรอ Junior) จาก ai-orchestration §2.7, `profiles` / `tutor_profiles` / `buddy_profiles` ใน `0001_init.sql`, UC-01, wireframe S04–S06 และ UM-03–UM-10, CM-10
 - [x] 2. 🙋 Jam อ่านร่าง ตอบ ok · บอกแชทกลุ่มว่าจะแก้ `api.md` (ไฟล์ร่วม)
 - [x] 3. 🤖 ใส่ร่างลง `api.md` v1.12 + "รอตัดสิน (v1.12 · Junior)"
-- [ ] 4. 🤖 test contract + stub · แดงก่อน
-- [ ] 5. 🙋 Jam review test
+- [x] 4. 🤖 test contract + stub · แดงก่อน
+- [x] 5. 🙋 Jam review test
 - [ ] 6. 🤖 models + stub (`X-Stub: true`) · test เขียว + ruff
 - [ ] 7. 🤖 `api-schema.ts` generate ใหม่ + ติ๊กข้อ D5 ใน checklist ถ้า `/docs` ครบทุก endpoint ใน `api.md`
 
@@ -32,7 +32,7 @@
 
 ## Next step
 
-ขั้น 4: เขียน test contract + stub จาก api.md v1.12 และ AC-11, AC-27 ของ `gateway-guards.md` · รวม test เทียบรายการ endpoint ใน api.md กับ `/openapi.json` · ให้แดงก่อน · ค่า config ใส่ตอนขั้น 6 พร้อม settings
+ขั้น 5: Jam review `tests/unit/test_persona_api_contract.py`, `test_persona_stubs.py`, `test_api_md_endpoints.py` · แล้วขั้น 6 models + stub + `guards.max_persona_text_chars` ใน `config/ai.yaml` + settings
 
 ## Waiting on
 

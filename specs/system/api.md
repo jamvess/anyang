@@ -44,7 +44,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
   - ไม่เก็บอะไร · กด "บันทึก" แล้วค่อย `PUT` · ปรับต่อก็ส่ง `description` ใหม่ทั้งก้อน
   - error: `422 validation_error` · `422 message_too_long` (เกิน `guards.max_message_chars`) · `429 rate_limited` + `Retry-After` (ตัวนับเดียวกับข้อความในห้องติว · `gateway-guards.md` §2.1) · `503 persona_unavailable` (AI ล่ม · UC-01 E5)
 - **`GET /me/tutor-profile`** · `{params: TutorParams, description: string | null, version: integer ≥ 1}` · ยังไม่ตั้ง → `404 not_found` (UM-09)
-- **`PUT /me/tutor-profile`** · body `{params: TutorParams, description: string | null}` · response เหมือน `GET` · `description` เก็บใน `description_raw` และ**ไม่เข้า prompt** (§2.7) · แก้แล้ว `version` เพิ่ม · มีผลตั้งแต่ turn ถัดไป
+- **`PUT /me/tutor-profile`** · body `{params: TutorParams, description: string | null}` · response เหมือน `GET` · `description` เก็บใน `description_raw` และ**ไม่เข้า prompt** (§2.7) · แก้แล้ว `version` เพิ่ม · มีผลตั้งแต่ turn ถัดไป · `description` เกิน `guards.max_message_chars` → `422 message_too_long` (ใช้กับ `PUT /me/buddy-profile` ด้วย)
 - **`GET /me/buddy-profile`** · `{enabled: boolean, params: BuddyParams | null, description: string | null, version: integer ≥ 1}` · ยังไม่ตั้ง → `404 not_found`
 - **`PUT /me/buddy-profile`** · body `{enabled: boolean, params: BuddyParams | null, description: string | null}` · `enabled = true` ต้องมี `params` (ไม่งั้น `422 validation_error`) · ปิดเพื่อนติว (UC-01 A2) ส่ง `enabled = false` · response เหมือน `GET`
 
