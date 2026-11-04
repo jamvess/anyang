@@ -39,3 +39,9 @@ def error_docs(
     if conflict:
         errors[409] = {"model": ErrorResponse, "description": conflict}
     return errors
+
+
+def unavailable_docs(code: str) -> dict[int | str, dict[str, Any]]:
+    """A route's own 503 replaces the 503 of AUTH_ERRORS, so it names both causes."""
+    description = f"{code}, or auth_unavailable (Supabase Auth unreachable)"
+    return {503: {"model": ErrorResponse, "description": description}}

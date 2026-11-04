@@ -16,7 +16,7 @@
 - [x] 3. 🤖 ใส่ร่างลง `api.md` v1.12 + "รอตัดสิน (v1.12 · Junior)"
 - [x] 4. 🤖 test contract + stub · แดงก่อน
 - [x] 5. 🙋 Jam review test
-- [ ] 6. 🤖 models + stub (`X-Stub: true`) · test เขียว + ruff
+- [x] 6. 🤖 models + stub (`X-Stub: true`) · test เขียว + ruff
 - [ ] 7. 🤖 `api-schema.ts` generate ใหม่ + ติ๊กข้อ D5 ใน checklist ถ้า `/docs` ครบทุก endpoint ใน `api.md`
 
 ## Definition of done
@@ -32,7 +32,7 @@
 
 ## Next step
 
-ขั้น 5: Jam review `tests/unit/test_persona_api_contract.py`, `test_persona_stubs.py`, `test_api_md_endpoints.py` · แล้วขั้น 6 models + stub + `guards.max_persona_text_chars` ใน `config/ai.yaml` + settings
+ขั้น 7: generate `apps/web/lib/api-schema.ts` ใหม่ + ติ๊กข้อ D5 ใน checklist ถ้า `test_api_md_endpoints.py` ผ่าน · แล้ว `/work-done`
 
 ## Waiting on
 
