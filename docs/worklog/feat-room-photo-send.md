@@ -15,8 +15,8 @@
 - [x] 2. 🙋 Jam อ่าน spec และตัดสิน 2 ข้อ (test ที่ขัดกับการตัดสิน PR #45 · วิธี `PUT` กับ stub) · บอกแชทกลุ่มถ้าแก้ `api.md`
 - [x] 3. 🤖 `/spec-to-tests`: test ฝั่งเว็บและ API · แดงก่อน
 - [x] 4. 🙋 Jam review test
-- [ ] 5. 🤖 `/implement-feature`: API รับข้อความพร้อมรูป + `PUT` ของ stub · เว็บ `transport`, `TutorRoom` · test เขียว
-- [ ] 6. 🙋 Jam ลองในเบราว์เซอร์ตามขั้นตอนที่ให้ (ส่งรูป → การ์ด → ยืนยัน → verdict)
+- [x] 5. 🤖 `/implement-feature`: API รับข้อความพร้อมรูป + `PUT` ของ stub · เว็บ `transport`, `TutorRoom` · test เขียว
+- [x] 6. 🙋 Jam ลองในเบราว์เซอร์ตามขั้นตอนที่ให้ (ส่งรูป → การ์ด → ยืนยัน → verdict)
 - [ ] 7. 🤖 `api-schema.ts` ถ้าเปลี่ยน + บรรทัดความคืบหน้าใน checklist
 
 ## Definition of done
@@ -32,7 +32,7 @@
 
 ## Next step
 
-ขั้น 5: implement ฝั่ง API และเว็บจน test เขียว
+ขั้น 7: generate `api-schema.ts` + บรรทัดความคืบหน้าใน checklist · แล้ว `/work-done`
 
 ## Waiting on
 

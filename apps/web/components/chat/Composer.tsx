@@ -13,7 +13,7 @@ type Props = {
   onSend: (payload: SendPayload) => void;
   /** While the reply streams the draft stays editable but cannot be sent. */
   disabled?: boolean;
-  /** False until the API takes photos (no /uploads yet · room-http.md §2): picking one only explains why. */
+  /** False makes picking a photo only explain why. No room passes it since room-photo-send.md (OQ 5). */
   imagesEnabled?: boolean;
   /** Speech → text. The mic button shows only when given (voice-input.md §2). */
   transcribe?: Transcribe;

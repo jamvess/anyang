@@ -63,18 +63,17 @@ class ActiveSession(ApiModel):
 
 
 class SendMessageRequest(ApiModel):
-    """Body of POST /sessions/{id}/messages: exactly one of `text` or `image_path`.
-
-    api.md "รอตัดสิน" item 1 (Jam) may allow both; change this with the spec.
-    """
+    """Body of POST /sessions/{id}/messages: `text`, `image_path` or both. With both, `text` is
+    the photo's caption (api.md "รอตัดสิน (PR #35)" item 1): the tutor sees it, the checker does
+    not."""
 
     text: str | None = None
     image_path: str | None = None
 
     @model_validator(mode="after")
-    def _exactly_one(self) -> Self:
-        if (self.text is None) == (self.image_path is None):
-            raise ValueError("send exactly one of text or image_path")
+    def _text_or_image(self) -> Self:
+        if self.text is None and self.image_path is None:
+            raise ValueError("send text, image_path or both")
         if self.text is not None and not self.text.strip():
             # Blank text is no message: never a billed tutor_reply call (tutor-reply-stream AC-21).
             raise ValueError("text is empty")
