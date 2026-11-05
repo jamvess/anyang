@@ -17,7 +17,7 @@
 - [x] 4. 🙋 Jam review test
 - [x] 5. 🤖 `/implement-feature`: API รับข้อความพร้อมรูป + `PUT` ของ stub · เว็บ `transport`, `TutorRoom` · test เขียว
 - [x] 6. 🙋 Jam ลองในเบราว์เซอร์ตามขั้นตอนที่ให้ (ส่งรูป → การ์ด → ยืนยัน → verdict)
-- [ ] 7. 🤖 `api-schema.ts` ถ้าเปลี่ยน + บรรทัดความคืบหน้าใน checklist
+- [x] 7. 🤖 `api-schema.ts` ถ้าเปลี่ยน + บรรทัดความคืบหน้าใน checklist
 
 ## Definition of done
 
@@ -32,7 +32,7 @@
 
 ## Next step
 
-ขั้น 7: generate `api-schema.ts` + บรรทัดความคืบหน้าใน checklist · แล้ว `/work-done`
+ทุกขั้นเสร็จ · `/work-done`
 
 ## Waiting on
 
