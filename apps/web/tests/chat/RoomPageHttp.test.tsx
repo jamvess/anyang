@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { act, cleanup, fireEvent, render, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TutorRoom } from "@/components/chat/TutorRoom";
 import fixture from "../fixtures/room/session-s15.json";
@@ -16,7 +16,6 @@ const SEND_ERROR = "ส่งไม่สำเร็จ ลองส่งอ�
 const LOAD_ERROR = "เปิดห้องติวไม่สำเร็จ";
 const NOT_FOUND = "ไม่พบการเตรียมสอบนี้";
 const LOADING = "กำลังเปิดห้องติว…";
-const NO_IMAGES = "ตอนนี้ยังส่งรูปไม่ได้ พิมพ์คำตอบมาก่อนนะ";
 
 const sse = (name: string) => readFileSync(join(__dirname, "..", "fixtures", "sse", name), "utf8");
 
@@ -338,26 +337,5 @@ describe("TutorRoom · sending (TM-20)", () => {
     utils.unmount();
 
     expect(call.init.signal?.aborted).toBe(true);
-  });
-});
-
-describe("TutorRoom · images (TM-06)", () => {
-  it("TM06 picking a photo does not attach it, explains images cannot be sent yet and calls no API", async () => {
-    const api = mockApi({
-      [`GET ${activePath}`]: activeOk,
-      [`GET /sessions/${SESSION}`]: () => json(room()),
-    });
-    const utils = render(<TutorRoom prepId={PREP} />);
-    await waitFor(() => expect(bubbles(utils.container)).toHaveLength(3));
-    const before = api.calls.length;
-
-    const file = utils.container.querySelector('input[type="file"]') as HTMLInputElement;
-    fireEvent.change(file, { target: { files: [new File(["x"], "วิธีทำ.jpg", { type: "image/jpeg" })] } });
-
-    expect(utils.getByText(NO_IMAGES)).toBeTruthy();
-    expect(utils.queryByText("วิธีทำ.jpg")).toBeNull();
-    expect(utils.queryByRole("button", { name: "เอารูปออก" })).toBeNull();
-    expect(api.calls.length).toBe(before);
-    expect(within(utils.container).getByRole("button", { name: "แนบรูป" })).toBeTruthy();
   });
 });

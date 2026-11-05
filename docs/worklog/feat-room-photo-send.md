@@ -13,8 +13,8 @@
 
 - [x] 1. 🤖 `/spec-feature`: ร่าง `specs/features/tutor/room-photo-send.md` จาก TM-06, TM-21, AM-01, AM-02 · แก้ข้อความเก่าใน `room-http.md`
 - [x] 2. 🙋 Jam อ่าน spec และตัดสิน 2 ข้อ (test ที่ขัดกับการตัดสิน PR #45 · วิธี `PUT` กับ stub) · บอกแชทกลุ่มถ้าแก้ `api.md`
-- [ ] 3. 🤖 `/spec-to-tests`: test ฝั่งเว็บและ API · แดงก่อน
-- [ ] 4. 🙋 Jam review test
+- [x] 3. 🤖 `/spec-to-tests`: test ฝั่งเว็บและ API · แดงก่อน
+- [x] 4. 🙋 Jam review test
 - [ ] 5. 🤖 `/implement-feature`: API รับข้อความพร้อมรูป + `PUT` ของ stub · เว็บ `transport`, `TutorRoom` · test เขียว
 - [ ] 6. 🙋 Jam ลองในเบราว์เซอร์ตามขั้นตอนที่ให้ (ส่งรูป → การ์ด → ยืนยัน → verdict)
 - [ ] 7. 🤖 `api-schema.ts` ถ้าเปลี่ยน + บรรทัดความคืบหน้าใน checklist
@@ -32,7 +32,7 @@
 
 ## Next step
 
-ขั้น 3: เขียน test จาก AC ของ `room-photo-send.md` ให้แดงก่อน · แก้ test เดิม 2 ตัวตาม §8
+ขั้น 5: implement ฝั่ง API และเว็บจน test เขียว
 
 ## Waiting on
 
