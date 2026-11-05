@@ -42,7 +42,7 @@
 - HTTP ไม่ใช่ 2xx หรือเน็ตหลุด → `postSSE` throw → ChatRoom แสดง "ส่งไม่สำเร็จ ลองส่งอีกทีนะ" (chat-streaming.md AC-14)
 - ส่ง `signal` ต่อให้ `fetch` เพื่อให้ออกจากห้องแล้ว request ถูกยกเลิก
 
-**รูป (TM-06)**: ยังส่งไม่ได้ เพราะไม่มี `POST /sessions/{id}/uploads` และ api.md "รอตัดสิน" ข้อ 1 (ส่ง text พร้อมรูป) ยังรอ Jam · ปุ่ม "แนบรูป" ยังอยู่และกดได้ (`chat-room-ui.md` AC-11 ยังผ่าน) แต่เมื่อเลือกไฟล์รูป Composer ไม่แนบ และแสดงใต้ช่องพิมพ์ว่า "ตอนนี้ยังส่งรูปไม่ได้ พิมพ์คำตอบมาก่อนนะ" แบบเดียวกับ "แนบได้เฉพาะรูป" (May ตัดสิน 2026-10-21) · Composer รับ prop ที่ไม่บังคับ `imagesEnabled` (ค่าเริ่มต้น `true` เพื่อให้ test เดิมผ่าน) และหน้าห้องที่ใช้ API ส่ง `false` · ชั่วคราวจนกว่าจะมี `/uploads`
+**รูป (TM-06)**: ส่งได้แล้ว ดู `room-photo-send.md` (2026-11-05) · ข้อความกำกับตัดสินแล้ว (Jam 2026-10-21 · PR #45) · ข้อความที่เหลือของย่อหน้านี้คือพฤติกรรมชั่วคราวตอนยังไม่มี `/uploads`: ยังส่งไม่ได้ · ปุ่ม "แนบรูป" ยังอยู่และกดได้ (`chat-room-ui.md` AC-11 ยังผ่าน) แต่เมื่อเลือกไฟล์รูป Composer ไม่แนบ และแสดงใต้ช่องพิมพ์ว่า "ตอนนี้ยังส่งรูปไม่ได้ พิมพ์คำตอบมาก่อนนะ" แบบเดียวกับ "แนบได้เฉพาะรูป" (May ตัดสิน 2026-10-21) · Composer รับ prop ที่ไม่บังคับ `imagesEnabled` (ค่าเริ่มต้น `true` เพื่อให้ test เดิมผ่าน) และหน้าห้องที่ใช้ API ส่ง `false` · ชั่วคราวจนกว่าจะมี `/uploads`
 
 **ลบโหมด demo** (May ตัดสิน 2026-10-21): หน้าห้องใช้ API อย่างเดียว · ลบ `DemoRoom.tsx` และการอ่าน fixture ใน `page.tsx` · ตอน dev ให้เปิด API stub ในเครื่อง (ข้อมูลเดียวกับ fixture) · `lib/fakeTransport.ts` และ fixture ยังเก็บไว้ใช้ใน test
 
@@ -132,7 +132,7 @@ fixture ใหม่: `tests/fixtures/sse/room_session_start.txt` (คัดล�
 
 ## 9. Out of scope
 
-- ส่งรูปจริง (`POST /sessions/{id}/uploads` + Storage) · รอ stub และ api.md "รอตัดสิน" ข้อ 1
+- ส่งรูปจริง (`POST /sessions/{id}/uploads` + Storage) · ทำต่อใน `room-photo-send.md` · Storage จริงรอ Junior
 - Auth header และหน้า login
 - แสดง `progress_card`, `problem`, `ocr_preview`, `verdict`, `session_end` (feature แยก)
 - `done.message_ids` และ `attachment_name` (api.md v1.3) · API ยังเป็น v1.2 · ทำเมื่อ Junior อัปเดตแล้วรัน `pnpm gen:api`

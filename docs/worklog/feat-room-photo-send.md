@@ -11,8 +11,8 @@
 
 เปิดการส่งรูปในห้องติวที่ต่อ API: Composer → `POST /sessions/{id}/uploads` → `PUT` ไฟล์ → `POST /sessions/{id}/messages` → การ์ดยืนยันลายมือ → `POST /sessions/{id}/ocr/confirm` → verdict · ทำได้บางส่วน เพราะ `/uploads` ตัวจริงที่ต่อ Storage รอ Junior
 
-- [ ] 1. 🤖 `/spec-feature`: ร่าง `specs/features/tutor/room-photo-send.md` จาก TM-06, TM-21, AM-01, AM-02 · แก้ข้อความเก่าใน `room-http.md`
-- [ ] 2. 🙋 Jam อ่าน spec และตัดสิน 2 ข้อ (test ที่ขัดกับการตัดสิน PR #45 · วิธี `PUT` กับ stub) · บอกแชทกลุ่มถ้าแก้ `api.md`
+- [x] 1. 🤖 `/spec-feature`: ร่าง `specs/features/tutor/room-photo-send.md` จาก TM-06, TM-21, AM-01, AM-02 · แก้ข้อความเก่าใน `room-http.md`
+- [x] 2. 🙋 Jam อ่าน spec และตัดสิน 2 ข้อ (test ที่ขัดกับการตัดสิน PR #45 · วิธี `PUT` กับ stub) · บอกแชทกลุ่มถ้าแก้ `api.md`
 - [ ] 3. 🤖 `/spec-to-tests`: test ฝั่งเว็บและ API · แดงก่อน
 - [ ] 4. 🙋 Jam review test
 - [ ] 5. 🤖 `/implement-feature`: API รับข้อความพร้อมรูป + `PUT` ของ stub · เว็บ `transport`, `TutorRoom` · test เขียว
@@ -32,7 +32,7 @@
 
 ## Next step
 
-ขั้น 1: ร่าง `specs/features/tutor/room-photo-send.md` ตาม `/spec-feature`
+ขั้น 3: เขียน test จาก AC ของ `room-photo-send.md` ให้แดงก่อน · แก้ test เดิม 2 ตัวตาม §8
 
 ## Waiting on
 
