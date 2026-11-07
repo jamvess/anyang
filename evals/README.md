@@ -18,7 +18,7 @@ evals/
 ```
 
 ```bash
-uv run --project apps/api python evals/run_eval.py --purpose check_answer --prompt v1 \
+uv run --project apps/api python evals/run_eval.py --purpose check_answer --prompt v2 \
     --predictions <checker output>.jsonl
 uv run --project apps/api pytest evals/test_run_eval.py
 ```

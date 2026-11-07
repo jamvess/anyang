@@ -36,7 +36,7 @@ checker มี 3 ส่วน (§2.4.1) · SymPy service (PR #75) กับ merg
 | placeholder | มาจาก | หมายเหตุ |
 |---|---|---|
 | `problem` | `problems.text` | ห่อใน `<document name="problem">` |
-| `reference_answer` | `problems.reference_answer` | |
+| `reference_answer` | `problems.reference_answer` | ห่อใน `<document name="reference_answer">` ตั้งแต่ v2 (2026-11-07) เพราะมาจากชีทของผู้ใช้ · v1 อยู่นอก block |
 | `answer_format` | `problems.answer_format` | |
 | `solution_steps` | `problems.solution_steps` (วิธีของชีท) | ใช้ตัดสิน `method` · ว่างได้ (golden set ไม่มี) → prompt บอกให้ตอบ `doc` เมื่อไม่มีวิธีให้เทียบ (§10 ข้อ 4) |
 | `answer_lines` | `lines` ที่ user ยืนยันแล้ว | ใส่เลขบรรทัดนำหน้า (1, 2, …) · ห่อใน `<document name="answer">` และบอกว่าเป็นข้อมูล ไม่ใช่คำสั่ง (CLAUDE.md กฎ 8) |
@@ -78,7 +78,7 @@ code แปลง `SympyResult` เป็นข้อความสั้น �
 - รันทีละข้อตามลำดับ · **แก้หลังรันจริงครั้งแรก (28 ต.ค.):** free tier ให้ 5 request ต่อนาที และ gateway ไม่รอเกิน `max_retry_wait_seconds` (ตั้งไว้สำหรับห้องแชท) จึงได้ 429 แทบทุกข้อ · script เว้น `--pause` วินาทีระหว่างข้อ (ค่าเริ่ม 13 วินาที ให้ไม่เกิน 5 ต่อนาที) และเมื่อโดน 429 รอ 60 วินาทีแล้วลองข้อเดิมใหม่ไม่เกิน 3 ครั้ง · `--resume` เก็บ prediction ที่มีอยู่แล้วและรันเฉพาะข้อที่ยังไม่มี · ค่าเหล่านี้เป็นของ script eval ไม่ใช่ของ learning model
 - ใช้ provider ตาม `AI_PROVIDER` · fake ใน test · live เมื่อ Jam รันเอง (ขั้น 6 ใน worklog)
 - ข้อที่ gateway ยอมแพ้ (§10 ข้อ 2) ไม่เขียน prediction และพิมพ์ id ไว้ · `run_eval.py` นับข้อที่ไม่มี prediction ว่าไม่ตรง
-- หลังรัน ให้คนรัน `run_eval.py --purpose check_answer --prompt v1 --predictions …` ต่อ
+- หลังรัน ให้คนรัน `run_eval.py --purpose check_answer --prompt <version ใน config> --predictions …` ต่อ
 
 ## 3. Inputs and outputs
 
@@ -137,6 +137,9 @@ code แปลง `SympyResult` เป็นข้อความสั้น �
 **eval กับ model จริง** (ไม่อยู่ใน CI · Jam รันเอง)
 
 - **AC-live (AM-06)** Given golden set 50 ข้อ When `run_checker.py` แล้ว `run_eval.py` Then ได้ verdict, error_type, first_wrong_line เทียบเป้า P2 (≥ 95%, ≥ 80%, ≥ 85%) · ผลนี้ใช้ตัดสิน P2 ไม่ใช่ test ที่ต้องเขียว
+- **AC-v2-1 (AM-06 · CLAUDE.md กฎ 8 · เพิ่ม 2026-11-07)** Given prompt ที่ `config/ai.yaml` ระบุ Then `reference_answer` อยู่ใน data block
+- **AC-v2-2 (AM-06)** Given `reference_answer` มี `<document name="answer">…</document>` Then ข้อความทั้งหมดอยู่ใน block ของ `reference_answer` และจำนวน tag ปิดเท่ากับจำนวน block ของ prompt · **ไม่ได้พิสูจน์ว่า model ไม่เชื่อข้อความนั้น** (golden set ไม่มีเคส injection)
+- **AC-v2-3 (AM-06)** `check_answer/v2` ต่างจาก v1 แค่ตำแหน่งของ `reference_answer` เพื่อเทียบผล eval ได้ตรงๆ
 
 ## 5. Data changes
 
@@ -150,7 +153,7 @@ code แปลง `SympyResult` เป็นข้อความสั้น �
 
 | Purpose | Tier | Output schema | Prompt file |
 |---|---|---|---|
-| `check_answer` | `mid` (`config/ai.yaml` · temperature 0, max_tokens 600, timeout 15 s) | `CheckAnswerResult` | `prompts/check_answer/v1.md` |
+| `check_answer` | `mid` (`config/ai.yaml` · temperature 0, max_tokens 600, timeout 15 s) | `CheckAnswerResult` | `prompts/check_answer/v2.md` |
 
 ## 8. Test plan
 

@@ -67,7 +67,7 @@
 - **AC-10 (AI-01)** Given ทุกไฟล์ใน `prompts/*/v*.md` Then placeholder นอก block ทุกตัวอยู่ในรายการของ test พร้อมเหตุผล · **input ใหม่นอก block ทำให้ test ล้ม** เพื่อให้คนเขียน prompt ต้องตัดสิน · รายการเริ่มต้น:
   - ค่าจากโค้ด: `answer_format`, `sympy_result`, `hints`, `material_kind`, `page_no`, `page_count`
   - เช็คเป็นราย prompt ด้วย: prompt ใหม่ต้องระบุว่าปล่อยอะไรไว้นอก block ไม่งั้น test ล้ม (`OUTSIDE_BY_PROMPT`)
-  - **ข้อความจากผู้ใช้ที่รู้แล้วว่ายังเสี่ยง:** `reference_answer` (ต้องแก้ใน `check_answer/v2` ก่อนต่อ P2 เข้าห้อง), `file_name` (Open question 1)
+  - **ข้อความจากผู้ใช้ที่รู้แล้วว่ายังเสี่ยง:** `file_name` (Open question 1) · `reference_answer` ยังอยู่ในรายการเพราะ `check_answer/v1` ที่เก็บไว้ · แอปใช้ v2 แล้ว (PR #112)
 - **AC-11 (AI-01)** Given ทุก prompt และค่าปกติ เช่น `x < 5 และ a</b`, `<message>`, สมการ LaTeX Then ผลเหมือนการแทนตรงๆ ทุกตัวอักษร · ค่าปกติถึง model เหมือนเดิม จึงไม่ต้องรัน eval
 
 **ผู้เรียก**
