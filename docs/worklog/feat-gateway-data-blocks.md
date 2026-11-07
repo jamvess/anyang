@@ -13,8 +13,8 @@
 
 - [x] 1. 🤖 `/spec-feature`: ร่าง `specs/features/ai/prompt-data-blocks.md`
 - [x] 2. 🙋 Jam อ่าน spec และตอบ Open questions
-- [ ] 3. 🤖 `/spec-to-tests` · แดงก่อน
-- [ ] 4. 🙋 Jam review test
+- [x] 3. 🤖 `/spec-to-tests` · แดงก่อน
+- [x] 4. 🙋 Jam review test
 - [ ] 5. 🤖 `/implement-feature`: แก้ `_render` · เอา `as_data` ออกจาก `tutor_turn` และ `checker` · test เขียว · test เดิมผ่าน
 
 ## Definition of done
@@ -30,7 +30,7 @@
 
 ## Next step
 
-ขั้น 3: เขียน test จาก AC ให้แดงก่อน
+ขั้น 4: Jam review `tests/unit/test_prompt_data_blocks.py` · แล้วขั้น 5
 
 ## Waiting on
 
