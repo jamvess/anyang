@@ -12,8 +12,11 @@ import { roomStrings as t } from "./strings";
  */
 export type OcrPreviewData = { lines: { latex: string; confidence: number }[] };
 
-/** pending: waits for the user · sending: the confirm reply streams · confirmed / retaken: locked. */
-export type OcrStatus = "pending" | "sending" | "confirmed" | "retaken";
+/**
+ * arriving: the reply that brought the card still streams, so its buttons wait (room-photo-send.md AC-20)
+ * · pending: waits for the user · sending: the confirm reply streams · confirmed / retaken: locked.
+ */
+export type OcrStatus = "arriving" | "pending" | "sending" | "confirmed" | "retaken";
 
 type Props = {
   preview: OcrPreviewData;
@@ -36,7 +39,7 @@ export function OcrConfirmCard({ preview, status, onConfirm, onRetake }: Props) 
   if (lines.length === 0) return null;
 
   const locked = status === "confirmed" || status === "retaken";
-  const sending = status === "sending";
+  const sending = status === "sending" || status === "arriving";
 
   function save() {
     if (!editing || editing.draft.trim() === "") return;

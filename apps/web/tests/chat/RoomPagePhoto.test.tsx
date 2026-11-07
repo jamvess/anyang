@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { cleanup, fireEvent, render, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TutorRoom } from "@/components/chat/TutorRoom";
 import fixture from "../fixtures/room/session-s15.json";
@@ -200,5 +200,74 @@ describe("TutorRoom · sending a photo", () => {
       .map((b) => b.getAttribute("aria-label") ?? b.textContent);
     const allowed = [CONFIRM, RETAKE, ...LINES.map((_, i) => `แก้บรรทัด ${i + 1}`)];
     expect(names.sort()).toEqual(allowed.sort());
+  });
+});
+
+// Added in self-review (after Jam's test review).
+describe("TutorRoom · sending a photo, after review", () => {
+  it("TM06 after a refused upload the room can send again (AC-17)", async () => {
+    // The review's AC-17 checks `textarea.disabled`, which is never set, so it could not fail.
+    const { utils } = await openRoom({
+      [UPLOADS]: () => json({ error: { code: "unsupported_type", message: "no" } }, 422),
+    });
+    pickPhoto(utils);
+    send(utils);
+    await utils.findByRole("alert");
+
+    fireEvent.change(utils.getByLabelText("พิมพ์ตอบ"), { target: { value: "ใช่ๆ" } });
+
+    await waitFor(() =>
+      expect((utils.getByRole("button", { name: "ส่ง" }) as HTMLButtonElement).disabled).toBe(false),
+    );
+  });
+
+  it("TM06 no answer choice buttons in the whole room, after confirming too (AC-19)", async () => {
+    // The review's AC-19 looks only inside the card, before confirming.
+    const { utils } = await openRoom({
+      [UPLOADS]: ticket,
+      [MESSAGES]: () => sseResponse(sse("image_reply.txt")),
+      [OCR_CONFIRM]: () => sseResponse(sse("ocr_confirm.txt")),
+    });
+    pickPhoto(utils);
+    send(utils);
+    const card = await utils.findByRole("region", { name: CARD });
+    await waitFor(() =>
+      expect((within(card).getByRole("button", { name: CONFIRM }) as HTMLButtonElement).disabled).toBe(false),
+    );
+
+    fireEvent.click(within(card).getByRole("button", { name: CONFIRM }));
+    await waitFor(() => expect(within(card).queryByRole("button", { name: CONFIRM })).toBeNull());
+
+    const names = utils.getAllByRole("button").map((b) => b.getAttribute("aria-label") ?? b.textContent);
+    expect([...new Set(names)].sort()).toEqual(["ส่ง", "แนบรูป"].sort());
+  });
+
+  it("AM02 the card's buttons wait until the reply that brought it has ended (AC-20)", async () => {
+    let controller!: ReadableStreamDefaultController<Uint8Array>;
+    const body = new ReadableStream<Uint8Array>({ start: (c) => void (controller = c) });
+    const encoder = new TextEncoder();
+    const { utils } = await openRoom({
+      [UPLOADS]: ticket,
+      [MESSAGES]: () => new Response(body, { status: 200, headers: { "Content-Type": "text/event-stream" } }),
+    });
+    pickPhoto(utils);
+    send(utils);
+    await waitFor(() => expect(controller).toBeTruthy());
+
+    const preview = sse("image_reply.txt").split("event: token").slice(0, 2).join("event: token");
+    await act(async () => controller.enqueue(encoder.encode(preview)));
+
+    const card = await utils.findByRole("region", { name: CARD });
+    const button = (name: string) => within(card).getByRole("button", { name }) as HTMLButtonElement;
+    expect(button(CONFIRM).disabled).toBe(true);
+    expect(button(RETAKE).disabled).toBe(true);
+
+    await act(async () => {
+      controller.enqueue(encoder.encode('event: done\ndata: {}\n\n'));
+      controller.close();
+    });
+
+    await waitFor(() => expect(button(CONFIRM).disabled).toBe(false));
+    expect(button(RETAKE).disabled).toBe(false);
   });
 });

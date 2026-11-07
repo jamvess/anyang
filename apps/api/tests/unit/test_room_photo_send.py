@@ -85,3 +85,17 @@ def test_TM21_caption_over_the_limit_is_refused(client: TestClient) -> None:
 
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "message_too_long"
+
+
+# --- added in self-review (after Jam's test review) ----------------------------------
+
+
+@pytest.mark.parametrize(
+    "body", [{"text": "(x-7)(x+7)", "image_path": ""}, {"image_path": ""}, {"image_path": "   "}]
+)
+def test_TM06_blank_image_path_is_refused(client: TestClient, body: dict) -> None:
+    """AC-4b: a blank path must not turn the text next to it into a photo's caption."""
+    response = client.post(MESSAGES, json=body)
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "validation_error"

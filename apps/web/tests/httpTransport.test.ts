@@ -247,3 +247,30 @@ describe("lib/httpTransport · sending a photo", () => {
     ]);
   });
 });
+
+// Added in self-review (after Jam's test review): the review's AC-5 only counted the events.
+describe("lib/httpTransport · sending a photo, in order", () => {
+  it("TM06 yields the events of /messages in their order (AC-5)", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "http://api.test");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) =>
+        String(input).endsWith("/uploads")
+          ? new Response(JSON.stringify({ upload_url: "https://storage.test/x", path: "t/a" }), {
+              status: 200,
+              headers: { "X-Stub": "true" },
+            })
+          : sseResponse(fixture("image_reply.txt")),
+      ),
+    );
+    const { createHttpTransport } = await import("@/lib/httpTransport");
+
+    const events: SSEEvent[] = [];
+    const image = new File(["x"], "a.jpg", { type: "image/jpeg" });
+    for await (const e of createHttpTransport("S")({ text: null, image }, new AbortController().signal)) {
+      events.push(e);
+    }
+
+    expect(events.map((e) => e.event)).toEqual(["token", "ocr_preview", "token", "done"]);
+  });
+});

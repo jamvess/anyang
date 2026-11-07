@@ -91,7 +91,7 @@
 
 **รูป (TM-06)**
 
-- **AC-12 (TM-06)** Given หน้าห้องที่ใช้ API When เลือกไฟล์รูป "วิธีทำ.jpg" ด้วยปุ่ม "แนบรูป" Then ไม่มีรูปแนบ, เห็น "ตอนนี้ยังส่งรูปไม่ได้ พิมพ์คำตอบมาก่อนนะ" และไม่มี request ไป API
+- ~~**AC-12**~~ **เลิกใช้** (2026-11-05 · แทนด้วย `room-photo-send.md` AC-14 · test ถูกลบแล้ว) · ข้อความเดิม: Given หน้าห้องที่ใช้ API When เลือกไฟล์รูป "วิธีทำ.jpg" ด้วยปุ่ม "แนบรูป" Then ไม่มีรูปแนบ, เห็น "ตอนนี้ยังส่งรูปไม่ได้ พิมพ์คำตอบมาก่อนนะ" และไม่มี request ไป API
 - **AC-13 (TM-06)** Given Composer ที่ไม่ได้ส่ง `imagesEnabled` When แนบรูป Then แนบได้ตามเดิม (test เดิมของ `chat-room-ui.md` ผ่าน)
 
 **HTTP transport (unit)**
@@ -122,7 +122,7 @@
 | Test | ระดับ | ครอบคลุม AC |
 |---|---|---|
 | `tests/httpTransport.test.ts` | unit (mock `fetch`) | AC-10, AC-11 |
-| `tests/chat/RoomPageHttp.test.tsx` (ไฟล์ใหม่) | integration (mock `fetch`) | AC-1 ถึง AC-9, AC-2b, AC-2c, AC-3b ถึง AC-3f, AC-12 |
+| `tests/chat/RoomPageHttp.test.tsx` (ไฟล์ใหม่) | integration (mock `fetch`) | AC-1 ถึง AC-9, AC-2b, AC-2c, AC-3b ถึง AC-3f |
 | `tests/chat/Composer.test.tsx` (เพิ่ม test) | unit | AC-13 |
 | test เดิมของ ChatRoom, Composer, MessageList, fakeTransport | — | ยังต้องผ่านโดยไม่แก้เนื้อ test |
 
@@ -145,7 +145,7 @@ fixture ใหม่: `tests/fixtures/sse/room_session_start.txt` (คัดล�
 
 1. ข้อความเปิดของ session ใหม่: แสดงห้องเมื่อได้ `session` แล้วข้อความเปิดไหลเข้าห้อง (AC-2, AC-2b)
 2. โหลดห้องไม่สำเร็จ: "เปิดห้องติวไม่สำเร็จ" + "ลองใหม่" + "กลับหน้าหลัก" · ไม่พบการเตรียมสอบ: ข้อความ + "กลับหน้าหลัก" (AC-3b ถึง AC-3e)
-3. ปุ่มแนบรูป: กดได้ แต่แจ้งว่ายังส่งรูปไม่ได้ (AC-12)
+3. ปุ่มแนบรูป: ส่งรูปได้ ดูขั้นตอนใน `room-photo-send.md`
 4. โหมด demo: ลบทิ้ง หน้าห้องใช้ API อย่างเดียว
 
 Junior ตอบแล้ว (PR #49 · 2026-10-21)

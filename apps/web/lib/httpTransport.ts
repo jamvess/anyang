@@ -59,12 +59,10 @@ export function createHttpTransport(sessionId: string): SendMessage {
   };
 }
 
-/**
- * Sends the confirmed lines to POST /sessions/{id}/ocr/confirm and yields the SSE reply.
- * Hand-written body until the API has `OcrConfirmRequest` (ocr-confirm-card.md OQ 5).
- */
+/** Sends the confirmed lines to POST /sessions/{id}/ocr/confirm and yields the SSE reply. */
 export function createHttpOcrConfirm(sessionId: string): ConfirmOcr {
   return function confirm(lines, signal) {
-    return postSSE(apiUrl(`/sessions/${sessionId}/ocr/confirm`), { lines }, { signal });
+    const body: components["schemas"]["OcrConfirmRequest"] = { lines };
+    return postSSE(apiUrl(`/sessions/${sessionId}/ocr/confirm`), body, { signal });
   };
 }

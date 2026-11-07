@@ -164,8 +164,8 @@ export function ChatRoom({
           const preview = data as OcrPreviewData;
           if (preview.lines.length > 0) {
             setMessages((prev) => [
-              ...prev.map((m) => (m.ocr?.status === "pending" ? { ...m, ocr: { ...m.ocr, status: "retaken" as const } } : m)),
-              newMessage("card", null, { ocr: { preview, status: "pending" } }),
+              ...prev.map((m) => (m.ocr?.status === "pending" || m.ocr?.status === "arriving" ? { ...m, ocr: { ...m.ocr, status: "retaken" as const } } : m)),
+              newMessage("card", null, { ocr: { preview, status: "arriving" } }),
             ]);
           }
           current = null;
@@ -194,6 +194,9 @@ export function ChatRoom({
     } catch {
       // A network failure is shown like an error event.
     }
+    setMessages((prev) =>
+      prev.map((m) => (m.ocr?.status === "arriving" ? { ...m, ocr: { ...m.ocr, status: "pending" } } : m)),
+    );
     if (signal.aborted) return false;
     busyRef.current = false;
     setBusy(false);

@@ -77,6 +77,9 @@ class SendMessageRequest(ApiModel):
         if self.text is not None and not self.text.strip():
             # Blank text is no message: never a billed tutor_reply call (tutor-reply-stream AC-21).
             raise ValueError("text is empty")
+        if self.image_path is not None and not self.image_path.strip():
+            # A blank path would turn the text next to it into a photo's caption.
+            raise ValueError("image_path is empty")
         return self
 
 

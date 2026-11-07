@@ -56,6 +56,7 @@
 - **AC-2 (TM-06)** Given `{image_path}` อย่างเดียว Then ได้ `ocr_preview` · Given `{text}` อย่างเดียว Then ได้คำตอบจาก gateway เหมือนเดิม (ไม่มี `ocr_preview`)
 - **AC-3 (TM-06)** Given `{}` หรือ `{text: null, image_path: null}` Then `422` envelope
 - **AC-4 (TM-06)** Given `{text: "   ", image_path}` Then `422` envelope
+- **AC-4b (TM-06)** Given `{text: "(x-7)(x+7)", image_path: ""}` หรือ `{image_path: "   "}` Then `422` envelope · path ว่างต้องไม่ทำให้ข้อความกลายเป็นคำบรรยายของรูป (เพิ่มตอน self-review)
 - **AC-boundary-caption (TM-21)** Given `image_path` และ `text` ยาว `max_message_chars` Then `200` · ยาว `max_message_chars + 1` Then `422 message_too_long` · ค่าอ่านจาก `config/ai.yaml`
 
 **Transport**
@@ -78,6 +79,7 @@
 - **AC-17 (TM-06)** Given `/uploads` ตอบ `422` When กดส่ง Then bubble ของผู้ใช้ยังอยู่ · เห็น "ส่งไม่สำเร็จ ลองส่งอีกทีนะ" · ช่องพิมพ์ใช้ได้ · ไม่มีการ์ด · ไม่มี request ไป `/messages`
 - **AC-18 (AM-02)** Given การ์ดที่ยังไม่ยืนยัน When กด "ถ่ายใหม่" แล้วเลือกรูปใหม่และส่ง Then มี `/uploads` และ `/messages` อีกรอบ · เห็นการ์ดใบใหม่ · ใบเก่าล็อก
 - **AC-19 (TM-06)** Given เส้นทางทั้งหมดนี้ Then ไม่มีปุ่มตัวเลือกคำตอบในห้อง
+- **AC-20 (AM-02)** Given stream ที่ส่ง `ocr_preview` แล้วแต่ยังไม่จบ Then ปุ่ม "ถูกแล้ว ตรวจเลย" และ "ถ่ายใหม่" กดไม่ได้ · When stream จบ Then กดได้ · ก่อนหน้านี้ปุ่มดูกดได้แต่ไม่เกิดอะไร (เพิ่มตอน self-review)
 
 **AC-tenant:** ไม่มี · feature นี้ไม่อ่านหรือเขียนฐานข้อมูล (stub) · path ที่ขึ้นต้นด้วย tenant อยู่ใน api.md v1.7 และ test ของ `/uploads` แล้ว
 
@@ -101,9 +103,9 @@
 
 | Test | ระดับ | ครอบคลุม AC |
 |---|---|---|
-| `apps/api/tests/unit/test_room_photo_send.py` | unit (API) | AC-1 ถึง AC-4, AC-boundary-caption |
+| `apps/api/tests/unit/test_room_photo_send.py` | unit (API) | AC-1 ถึง AC-4b, AC-boundary-caption |
 | `apps/web/tests/httpTransport.test.ts` (เพิ่มท้ายไฟล์) | unit | AC-5 ถึง AC-13 |
-| `apps/web/tests/chat/RoomPagePhoto.test.tsx` | integration (TutorRoom + fetch ปลอม) | AC-14 ถึง AC-19 |
+| `apps/web/tests/chat/RoomPagePhoto.test.tsx` | integration (TutorRoom + fetch ปลอม) | AC-14 ถึง AC-20 |
 
 **test เดิมที่ต้องแก้ (Jam อนุญาตแล้ว 2026-11-05 · Open question 1):**
 
