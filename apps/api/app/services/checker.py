@@ -6,11 +6,11 @@ merge rules (app/domain/checker.py) join the two. The caller writes ``attempts``
 SSE ``verdict``. Spec: specs/features/check/check-answer-classifier.md.
 """
 
-import re
 from dataclasses import dataclass
 
 from app import ai
 from app.ai.gateway import Gateway
+from app.ai.prompt_data import as_data
 from app.domain.checker import AnswerFormat, CheckResult, LlmResult, SympyResult, merge_check
 from app.math.sympy_service import SympyWorkerPool, check_lines, detect_sign_flip
 from app.models.check import CheckAnswerResult
@@ -26,13 +26,10 @@ _NO_ANSWER_LLM = LlmResult(
     confidence=1.0,
 )
 _NO_SOLUTION_STEPS = "(none: the course sheet gives no method for this problem)"
-_CLOSING_DOCUMENT = re.compile(r"</\s*document", re.IGNORECASE)
 
 
 def _as_data(text: str) -> str:
-    """Text for inside a ``<document>``: a closing tag in it would end the data block early
-    and let the rest read as instructions (CLAUDE.md rule 8)."""
-    return _CLOSING_DOCUMENT.sub("<\\/document", text)
+    return as_data(text, "document")
 
 
 @dataclass(frozen=True)
