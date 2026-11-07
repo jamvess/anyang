@@ -274,14 +274,9 @@ def assert_error_envelope(response: Any, status: int) -> None:
     [
         {},
         {"text": None, "image_path": None},
-        # api.md รอตัดสิน ข้อ 1 (Jam) — change with the spec if Jam allows both.
-        # Text with an image waits for Jam (api.md "รอตัดสิน" item 1), so the old body applies.
-        {"text": "ไม่แน่ใจบรรทัด 3", "image_path": "sessions/s1/วิธีทำ.jpg"},
     ],
 )
-def test_apimd_room_send_message_needs_exactly_one_of_text_or_image(
-    client: TestClient, body: dict
-) -> None:
+def test_apimd_room_send_message_needs_text_or_image(client: TestClient, body: dict) -> None:
     response = client.post(f"/sessions/{SESSION_ID}/messages", json=body)
 
     assert_error_envelope(response, 422)

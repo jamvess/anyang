@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { apiUrl, createHttpTransport } from "@/lib/httpTransport";
+import { apiUrl, createHttpOcrConfirm, createHttpTransport } from "@/lib/httpTransport";
 import { postSSE, type SSEEvent } from "@/lib/sse";
 import { ChatRoom } from "./ChatRoom";
 import { roomStrings as t } from "./strings";
@@ -74,9 +74,10 @@ export function TutorRoom({ prepId }: { prepId: string }) {
 
   const sessionId = state.kind === "ready" ? state.room.session_id : null;
   const sendMessage = useMemo(() => (sessionId ? createHttpTransport(sessionId) : undefined), [sessionId]);
+  const confirmOcr = useMemo(() => (sessionId ? createHttpOcrConfirm(sessionId) : undefined), [sessionId]);
 
   if (state.kind === "ready") {
-    return <ChatRoom room={state.room} sendMessage={sendMessage} opening={state.opening} imagesEnabled={false} />;
+    return <ChatRoom room={state.room} sendMessage={sendMessage} confirmOcr={confirmOcr} opening={state.opening} />;
   }
 
   return (

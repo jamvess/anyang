@@ -189,16 +189,17 @@ async def send_message(
     gateway: Annotated[Gateway, Depends(get_gateway)],
     auth: Annotated[AuthContext | None, Depends(get_auth)],
 ) -> Response:
-    """Send `{text}` or `{image_path}`; the reply streams as SSE and ends with done.
+    """Send `{text}`, `{image_path}` or both; the reply streams as SSE and ends with done.
 
-    `{text}` streams `tutor_reply` from the gateway (P4-lite). `{image_path}` is a stub that
-    streams an `ocr_preview` to confirm with POST /sessions/{id}/ocr/confirm (api.md v1.7).
+    `{text}` streams `tutor_reply` from the gateway (P4-lite). With `image_path` it is a stub that
+    streams an `ocr_preview` to confirm with POST /sessions/{id}/ocr/confirm (api.md v1.7); `text`
+    is then the photo's caption, and the stub ignores it.
     """
-    if body.text is None:
-        return stubs.stream("image_reply")
     if too_long := too_long_message(body.text):
         # Code proposed in tutor-reply-stream.md §10 item 3, pending Junior.
         return error_response(422, "message_too_long", too_long)
+    if body.image_path is not None:
+        return stubs.stream("image_reply")
 
     # No session_id yet: the session is a stub with no tutor_sessions row (api-auth.md §2.5).
     call_context = AICallContext(auth.tenant_id, auth.user_id) if auth else None

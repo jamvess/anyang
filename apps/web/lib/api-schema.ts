@@ -126,10 +126,11 @@ export interface paths {
         put?: never;
         /**
          * Send Message
-         * @description Send `{text}` or `{image_path}`; the reply streams as SSE and ends with done.
+         * @description Send `{text}`, `{image_path}` or both; the reply streams as SSE and ends with done.
          *
-         *     `{text}` streams `tutor_reply` from the gateway (P4-lite). `{image_path}` is a stub that
-         *     streams an `ocr_preview` to confirm with POST /sessions/{id}/ocr/confirm (api.md v1.7).
+         *     `{text}` streams `tutor_reply` from the gateway (P4-lite). With `image_path` it is a stub that
+         *     streams an `ocr_preview` to confirm with POST /sessions/{id}/ocr/confirm (api.md v1.7); `text`
+         *     is then the photo's caption, and the stub ignores it.
          */
         post: operations["send_message_sessions__id__messages_post"];
         delete?: never;
@@ -1276,9 +1277,9 @@ export interface components {
         };
         /**
          * SendMessageRequest
-         * @description Body of POST /sessions/{id}/messages: exactly one of `text` or `image_path`.
-         *
-         *     api.md "รอตัดสิน" item 1 (Jam) may allow both; change this with the spec.
+         * @description Body of POST /sessions/{id}/messages: `text`, `image_path` or both. With both, `text` is
+         *     the photo's caption (api.md "รอตัดสิน (PR #35)" item 1): the tutor sees it, the checker does
+         *     not.
          */
         SendMessageRequest: {
             /** Text */
