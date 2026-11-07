@@ -34,6 +34,7 @@ import yaml
 from pydantic import BaseModel, ValidationError
 
 from app.ai.circuit_breaker import CircuitBreaker
+from app.ai.prompt_data import as_attribute, as_data
 from app.ai.providers.base import (
     EmbedRequest,
     Image,
@@ -64,6 +65,9 @@ InputValue = str | Image | list[Image]
 _sleep = asyncio.sleep  # module attribute so tests can replace it
 
 _PLACEHOLDER = re.compile(r"\{\{(\w+)\}\}")
+# A tag at the start of a line, its attributes, its contents (prompt-data-blocks.md §2). A tag
+# named in the middle of a sentence is not a block.
+_DATA_BLOCK = re.compile(r"^<(\w+)((?: [^>\n]*)?)>(.*?)</\1>", re.MULTILINE | re.DOTALL)
 _CODE_FENCE = re.compile(r"^```(?:json)?\s*(.*?)\s*```$", re.DOTALL)
 _PREVIOUS_ANSWER_CHARS = 2000
 
@@ -120,6 +124,24 @@ def _load_prompt(prompts_dir: Path, purpose: str, version: str) -> _Prompt:
     return _Prompt(version=version, inputs=tuple(meta.get("inputs") or ()), body=body.strip())
 
 
+def _fill(body: str, texts: dict[str, str]) -> str:
+    """Puts each value in by where its placeholder sits, so a caller never names a tag and a
+    renamed tag stays protected (prompt-data-blocks.md §2). One pass, so placeholder-like text
+    inside a value is never substituted again."""
+    blocks = list(_DATA_BLOCK.finditer(body))
+
+    def value(placeholder: re.Match[str]) -> str:
+        text = texts[placeholder.group(1)]
+        for block in blocks:
+            if block.start(2) <= placeholder.start() < block.end(2):
+                return as_attribute(text)
+            if block.start(3) <= placeholder.start() < block.end(3):
+                return as_data(text, block.group(1))
+        return text
+
+    return _PLACEHOLDER.sub(value, body)
+
+
 def _render(prompt: _Prompt, values: dict[str, InputValue]) -> tuple[str, list[Image]]:
     declared, given = set(prompt.inputs), set(values)
     if missing := declared - given:
@@ -144,8 +166,7 @@ def _render(prompt: _Prompt, values: dict[str, InputValue]) -> tuple[str, list[I
     if unfilled := set(_PLACEHOLDER.findall(prompt.body)) - set(texts):
         raise AIInputError(f"placeholders without an input: {sorted(unfilled)}")
 
-    # One pass, so placeholder-like text inside a document is never substituted again.
-    return _PLACEHOLDER.sub(lambda m: texts[m.group(1)], prompt.body), images
+    return _fill(prompt.body, texts), images
 
 
 def _parse[T: BaseModel](text: str, schema: type[T]) -> T:

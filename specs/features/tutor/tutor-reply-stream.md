@@ -34,7 +34,7 @@
 
 1. Body ตาม `SendMessageRequest` เดิม (ส่ง `text` หรือ `image_path` อย่างใดอย่างหนึ่ง) · `text` ที่ว่างหรือมีแต่ช่องว่างถือว่าไม่มีข้อความ → `422 validation_error` (self-review 31 ต.ค.)
 2. `text` ยาวเกิน `guards.max_message_chars` (นับตัวอักษร) → ตอบ `422` แบบ `ErrorResponse` ก่อนเรียก AI · code ดู §10 ข้อ 3
-3. `text` → service `tutor_turn` เรียก `ai.stream("tutor_reply", {"message": as_data(text, "message")})` (AC-23) แล้วส่งแต่ละชิ้นเป็น `token {speaker: "tutor", text: <ชิ้น>}` ตามลำดับ · จบด้วย `done {}` · response **ไม่มี** header `X-Stub`
+3. `text` → service `tutor_turn` เรียก `ai.stream("tutor_reply", {"message": text})` แล้วส่งแต่ละชิ้นเป็น `token {speaker: "tutor", text: <ชิ้น>}` ตามลำดับ · จบด้วย `done {}` · response **ไม่มี** header `X-Stub`
 4. Provider ล้ม**ก่อน**ส่ง token แรก (หลัง retry แล้ว): ส่ง `token {speaker: "tutor", text: "ระบบช้า ลองส่งอีกทีนะ"}` แล้ว `done {}` (api.md "ระบบช้า")
 5. Provider ล้ม**หลัง**ส่ง token ไปแล้ว: ส่ง `error {code, message}` แล้วจบ stream (ไม่มี `done`) · หน้าเว็บแสดง "ส่งไม่สำเร็จ ลองส่งอีกทีนะ" และเก็บ bubble ที่ได้แล้วไว้ (`chat-streaming.md` AC-13) · code ดู §10 ข้อ 3
 5b. Error อื่นใน stream (config หรือ prompt ผิด เช่นไม่มี provider ของ model): ส่ง `error {code: "internal_error"}` แล้วจบ (code เดียวกับ 500 นอก stream ใน `app/middleware.py`) · `message` ของทุก `error` เป็นข้อความคงที่ ไม่มีข้อความจาก exception (รายละเอียดอยู่ใน log) · self-review 31 ต.ค.
@@ -59,7 +59,7 @@
 | Output (ล้มก่อน token แรก) | `token` ข้อความ template → `done {}` | `data: {"speaker":"tutor","text":"ระบบช้า ลองส่งอีกทีนะ"}` |
 | Output (ล้มกลาง stream) | `token` × k → `error {code, message}` | `event: error` / `data: {"code":"ai_unavailable","message":"..."}` |
 | Output (ข้อความยาวเกิน) | `422` `ErrorResponse` | `{"error":{"code":"…","message":"…"}}` |
-| Gateway | `ai.stream(purpose: str, input: dict) -> AsyncIterator[str]` | `async for chunk in ai.stream("tutor_reply", {"message": as_data(text, "message")})` |
+| Gateway | `ai.stream(purpose: str, input: dict) -> AsyncIterator[str]` | `async for chunk in ai.stream("tutor_reply", {"message": text})` · gateway กันการปิด block เอง (`specs/features/ai/prompt-data-blocks.md`) |
 
 ## 4. Acceptance criteria
 
