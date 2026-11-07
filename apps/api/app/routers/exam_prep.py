@@ -26,7 +26,8 @@ from app.models.exam_prep import (
     MaterialUploadTicket,
     UploadMaterialRequest,
 )
-from app.models.room import bare_content_type
+from app.models.room import BYTES_PER_MB, bare_content_type
+from app.settings import get_settings
 
 router = APIRouter(tags=["exam_prep"])
 
@@ -95,7 +96,7 @@ async def list_exam_preps(response: Response) -> list[ExamPrep]:
 @router.post(
     "/exam-preps/{id}/materials",
     response_model=MaterialUploadTicket,  # errors return a JSONResponse, so the return type is Any
-    responses=error_docs("Invalid path or body, or unsupported_type"),
+    responses=error_docs("Invalid path or body, unsupported_type or file_too_large"),
 )
 async def create_material(
     prep_id: PrepId,
@@ -103,12 +104,15 @@ async def create_material(
     response: Response,
     auth: Annotated[AuthContext | None, Depends(get_auth)],
 ) -> Any:
-    """Signed upload URL for one file (CM-03). The type is checked before the browser sends it.
+    """Signed upload URL for one file (CM-03). Type and size are checked before the upload.
 
     stub — the URL is not a real Storage URL and no materials row is made
     """
     if bare_content_type(body.content_type) not in MATERIAL_CONTENT_TYPES:
         return stubs.error(422, "unsupported_type", f"{body.content_type} is not accepted")
+    max_mb = get_settings().ai.guards.max_material_mb
+    if body.size_bytes > max_mb * BYTES_PER_MB:
+        return stubs.error(422, "file_too_large", f"file is over {max_mb} MB")
     response.headers.update(stubs.HEADERS)
     material_id = uuid4()
     path = f"{stubs.tenant_of(auth)}/{prep_id}/{material_id}"

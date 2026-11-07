@@ -14,8 +14,8 @@
 - [x] 3. 🤖 เขียนผลลง spec: `ai-orchestration.md` §2.7, §2.3, `prompts/README.md`, `api.md` v1.13
 - [x] 4. 🤖 test ของเพดานขนาดไฟล์ · แดงก่อน
 - [x] 5. 🙋 Jam review test
-- [ ] 6. 🤖 `guards.max_material_mb` + เช็คใน `POST /exam-preps/{id}/materials` · test เขียว + ruff
-- [ ] 7. 🤖 `api-schema.ts` ถ้าเปลี่ยน
+- [x] 6. 🤖 `guards.max_material_mb` + เช็คใน `POST /exam-preps/{id}/materials` · test เขียว + ruff
+- [x] 7. 🤖 `api-schema.ts` ถ้าเปลี่ยน
 
 ## Definition of done
 
@@ -30,7 +30,7 @@
 
 ## Next step
 
-ขั้น 5: Jam review `tests/unit/test_material_size_limit.py` · แล้วขั้น 6
+ทุกขั้นเสร็จ · `/work-done` (`api.md`, `config/ai.yaml` เป็นไฟล์ร่วม · ส่งข้อความแชทกลุ่มก่อน merge)
 
 ## Waiting on
 

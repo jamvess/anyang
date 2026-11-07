@@ -100,6 +100,9 @@ UPLOAD_CONTENT_TYPES: dict[str, frozenset[str]] = {
 }
 
 
+BYTES_PER_MB = 1_048_576  # api.md: 1 MB = 1,048,576 bytes, same as Limits.max_image_mb
+
+
 def bare_content_type(content_type: str) -> str:
     """`audio/webm;codecs=opus` → `audio/webm`: browsers add codec parameters to MediaRecorder
     types and may use upper case (voice-input.md OQ 8). Material uploads use the same rule

@@ -23,6 +23,7 @@ from app.ai.gateway import Gateway, get_gateway
 from app.auth import AuthContext, get_auth
 from app.models.error import ErrorResponse, error_response, too_long_message, unavailable_docs
 from app.models.room import (
+    BYTES_PER_MB,
     EVENT_MODELS,
     UPLOAD_CONTENT_TYPES,
     ActiveSession,
@@ -215,7 +216,6 @@ async def send_message(
 
 # --- uploads, transcribe, ocr/confirm (api.md v1.7 · proposal pending Junior) -----
 
-_BYTES_PER_MB = 1_048_576  # api.md: 1 MB = 1,048,576 bytes, same as Limits.max_image_mb
 _STUB_TRANSCRIPT = "สองเอ็กซ์ลบห้า คูณ สองเอ็กซ์บวกห้า"  # voice-input.md §3 example
 
 
@@ -246,7 +246,7 @@ async def create_upload(
             422, "unsupported_type", f"{body.content_type} is not an accepted {body.kind}"
         )
     max_mb = get_settings().ai.guards.max_image_mb
-    if body.kind == "image" and body.size_bytes > max_mb * _BYTES_PER_MB:
+    if body.kind == "image" and body.size_bytes > max_mb * BYTES_PER_MB:
         return stubs.error(422, "file_too_large", f"image is over {max_mb} MB")
     response.headers.update(stubs.HEADERS)
     ext = content_type.split("/", 1)[1]
