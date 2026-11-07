@@ -25,7 +25,7 @@
 | ตำแหน่งของ `{{x}}` | สิ่งที่ทำกับค่า |
 |---|---|
 | ในเนื้อ block ของ tag `t` | `as_data(ค่า, t)` |
-| ใน attribute ของ tag ที่เปิด block เช่น `<document name="{{file_name}}">` | แทน `"`, `<`, `>` และตัวขึ้นบรรทัด เพื่อไม่ให้ปิด attribute ได้ |
+| ใน attribute ของ tag ที่เปิด block เช่น `<document name="{{file_name}}">` | แทน `"`, `<`, `>`, ตัวควบคุม และตัวแบ่งบรรทัดของ Unicode ด้วยช่องว่าง เพื่อไม่ให้ปิด attribute หรือขึ้นบรรทัดใหม่ได้ |
 | นอก block | ใส่ตามเดิม · ต้องอยู่ในรายการของ test (AC-10) |
 
 - ค่าเดียวกันใช้หลายตำแหน่งได้ แต่ละตำแหน่งได้การจัดการของตัวเอง
@@ -66,6 +66,7 @@
 
 - **AC-10 (AI-01)** Given ทุกไฟล์ใน `prompts/*/v*.md` Then placeholder นอก block ทุกตัวอยู่ในรายการของ test พร้อมเหตุผล · **input ใหม่นอก block ทำให้ test ล้ม** เพื่อให้คนเขียน prompt ต้องตัดสิน · รายการเริ่มต้น:
   - ค่าจากโค้ด: `answer_format`, `sympy_result`, `hints`, `material_kind`, `page_no`, `page_count`
+  - เช็คเป็นราย prompt ด้วย: prompt ใหม่ต้องระบุว่าปล่อยอะไรไว้นอก block ไม่งั้น test ล้ม (`OUTSIDE_BY_PROMPT`)
   - **ข้อความจากผู้ใช้ที่รู้แล้วว่ายังเสี่ยง:** `reference_answer` (ต้องแก้ใน `check_answer/v2` ก่อนต่อ P2 เข้าห้อง), `file_name` (Open question 1)
 - **AC-11 (AI-01)** Given ทุก prompt และค่าปกติ เช่น `x < 5 และ a</b`, `<message>`, สมการ LaTeX Then ผลเหมือนการแทนตรงๆ ทุกตัวอักษร · ค่าปกติถึง model เหมือนเดิม จึงไม่ต้องรัน eval
 
@@ -99,7 +100,8 @@
 
 - แก้ `reference_answer` ใน `check_answer/v2` (ต้องขึ้น prompt version + รัน eval กับ model จริง)
 - eval ว่า model ไม่ทำตามคำสั่งข้างใน block
-- block ซ้อนกัน · ไม่มี prompt ไหนใช้
+- block ซ้อนกัน และ 2 placeholder ใน block เดียว · ไม่มี prompt ไหนใช้ · ค่าถูกเช็คทีละตัว สองค่าต่อกันจึงอาจกลายเป็น tag ปิดได้ · `test_AI01_blocks_are_simple_enough_to_protect` ทำให้ prompt ใหม่ที่ทำแบบนี้ล้ม
+- ข้อความใน retry ของ schema (`_retry_prompt`): คำตอบเดิมของ model อยู่นอก block · เป็น output ของ model ไม่ใช่ input โดยตรง และ LLM เขียนอะไรไม่ได้ · ยังไม่ทำ
 
 ## 10. Open questions
 

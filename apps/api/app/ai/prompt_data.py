@@ -21,5 +21,6 @@ def as_data(text: str, tag: str) -> str:
 
 def as_attribute(text: str) -> str:
     """A value inside `name="…"` of a tag: anything that could close it, or start a new line of
-    instructions, becomes a space."""
-    return re.sub(r'["<>\r\n]', " ", text)
+    instructions, becomes a space. Control characters too, and the Unicode line separators,
+    because a model can read those as line breaks and file names may contain them."""
+    return re.sub(r'["<>\x00-\x1f\x7f-\x9f\u2028\u2029]', " ", text)

@@ -227,3 +227,55 @@ async def test_AI01_image_inputs_still_work(tmp_path: Path) -> None:
 
     assert fake.requests[0].images == [image]
     assert len(re.findall(r"</\s*problem", fake.requests[0].prompt)) == 1
+
+
+# --- added in self-review (after Jam's test review) ----------------------------------
+
+# AC-10 keyed by name lets a listed name pass in a new prompt. So a new prompt file fails here
+# until someone states what it leaves outside its blocks.
+OUTSIDE_BY_PROMPT = {
+    "check_answer/v1": {"reference_answer", "answer_format", "sympy_result", "hints"},
+    "extract_answer/v1": set(),
+    "extract_topics_local/v1": {"file_name", "material_kind"},
+    "extract_topics_local/v2": {"file_name", "material_kind"},
+    "map_questions/v1": set(),
+    "merge_topics/v1": set(),
+    "merge_topics/v2": set(),
+    "split_past_exam/v1": {"file_name"},
+    "tutor_reply/v1": set(),
+    "vision_extract/v1": {"file_name", "page_no"},
+    "vision_extract_pages/v1": {"file_name", "page_count"},
+}
+
+
+def prompt_name(path: Path) -> str:
+    return f"{path.parent.name}/{path.stem}"
+
+
+def test_AI01_every_prompt_states_what_it_leaves_outside_its_blocks() -> None:
+    """AC-10, per prompt: a check_answer/v2 that still leaves reference_answer out shows here."""
+    found = {prompt_name(p): outside_blocks(body_and_inputs(p)[0]) for p in repo_prompts()}
+
+    assert found == OUTSIDE_BY_PROMPT
+
+
+@pytest.mark.parametrize("path", repo_prompts(), ids=prompt_name)
+def test_AI01_blocks_are_simple_enough_to_protect(path: Path) -> None:
+    """Each value is checked alone, so two placeholders in one block could join into a closing
+    tag. A tag at the start of a line inside a block means a nested block, or a sentence that
+    swallowed what follows. No prompt does either: this keeps it so (spec §9)."""
+    for block in BLOCK.finditer(body_and_inputs(path)[0]):
+        contents = block.group(0).split(">", 1)[1]
+        assert len(PLACEHOLDER.findall(contents)) <= 1, block.group(0)[:60]
+        assert not re.search(r"^<\w", contents, re.MULTILINE), block.group(0)[:60]
+
+
+@pytest.mark.parametrize(
+    "separator", ["\u2028", "\u2029", "\x85", "\x0b", "\x0c", "\x00"], ids=ascii
+)
+async def test_AI01_attribute_has_no_other_line_breaks(tmp_path: Path, separator: str) -> None:
+    body = '<document name="{{f}}">\n{{y}}\n</document>'
+
+    prompt = await stream_prompt(tmp_path, body, ["f", "y"], f=f"a{separator}b", y="data")
+
+    assert prompt.startswith('<document name="a b">')
