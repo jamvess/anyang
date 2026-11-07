@@ -3,7 +3,7 @@
 # "vertex:" runs on Vertex AI when GOOGLE_CLOUD_PROJECT is set (specs/features/ai/gemini-vertex.md;
 # AI-07: no free tier for real users). AI_MODEL_OVERRIDE=gemini:<model> still uses the Gemini API key.
 
-version: 1.10
+version: "1.10"                         # a string: unquoted, YAML reads 1.10 as the float 1.1
 
 tiers:
   small:  {primary: "vertex:gemini-3.5-flash",   fallback: "anthropic:TODO-claude-haiku"}  # P3a on Vertex (31 Oct): A4 43/43, A7 34/43 and 30/43 · flash-lite broke JSON with LaTeX (unescaped \\sqrt) on 1 of 2 exams (P3.md §7)
@@ -60,7 +60,7 @@ guards:
   rate_limit_messages_per_minute: 20
   max_image_mb: 10
   max_audio_seconds: 60
-  max_material_mb: 50                  # [B] the file limit of Supabase Free (supabase.com/docs/guides/storage/uploads/file-limits); a bucket cannot go higher · largest real file so far 6.2 MB (evals/topics, one course) · limits uploads, not cost: scanned PDFs reach the model whole
+  max_material_mb: 50                  # [B] the file limit of Supabase Free (supabase.com/docs/guides/storage/uploads/file-limits); a bucket cannot go higher · largest real file so far 6.2 MB (evals/topics, one course) · the size of an upload only: a scan fails long before this (api.md v1.13 รอตัดสิน v1.10 ข้อ 2)
   max_persona_text_chars: 20           # [C] name, self_pronoun, call_user reach the prompt · a guess that fits a nickname or a pronoun, no data yet (api.md v1.12)
   max_attachment_name_chars: 255       # [B] display cap for user-visible file names · counted in grapheme clusters, extension kept · never used in Storage paths
   answer_leak_check: true

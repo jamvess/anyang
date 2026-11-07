@@ -209,7 +209,7 @@ class EmbeddingConfig(_Strict):
 
 
 class AIConfig(_Strict):
-    version: float
+    version: str
     tiers: dict[str, TierConfig]
     purposes: dict[str, PurposeConfig]
     embedding: EmbeddingConfig

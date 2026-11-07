@@ -64,3 +64,11 @@ def test_CM03_limit_is_documented_in_openapi(client: TestClient) -> None:
     operation = client.get("/openapi.json").json()["paths"]["/exam-preps/{id}/materials"]["post"]
 
     assert "file_too_large" in operation["responses"]["422"]["description"]
+
+
+# --- added in self-review (after Jam's test review) ----------------------------------
+
+
+def test_apimd_config_version_is_not_read_as_a_float() -> None:
+    """Unquoted, YAML reads `version: 1.10` as 1.1, the same as the real ai.yaml 1.1."""
+    assert isinstance(get_settings().ai.version, str)
