@@ -1387,7 +1387,8 @@ export interface components {
          * UploadMaterialRequest
          * @description Body of POST /exam-preps/{id}/materials (CM-03). The endpoint checks `content_type`
          *     against MATERIAL_CONTENT_TYPES and `size_bytes` against config/ai.yaml →
-         *     guards.max_material_mb. `size_bytes` is what the client declares, not the real size.
+         *     guards.max_material_mb, or max_image_mb for an image. `size_bytes` is what the client
+         *     declares, not the real size.
          */
         UploadMaterialRequest: {
             /** File Name */

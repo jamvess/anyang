@@ -121,7 +121,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | `status` | `"uploaded"` \| `"classified"` \| `"confirmed"` \| `"ingesting"` \| `"ready"` \| `"failed"` | `materials.status` (CM-07) |
 | `error` | string \| null | `materials.error` · ข้อความสั้นที่แสดงให้ผู้ใช้ได้ เมื่อ `status = "failed"` (UC-02 E5) |
 
-- **`POST /exam-preps/{id}/materials`** · body `{file_name: string (ไม่ว่าง), content_type: string, size_bytes: integer ≥ 1}` (CM-03) · response `{material_id, upload_url, path}` · `path` = `{tenant_id}/{exam_prep_id}/{material_id}` (data-model.md · §2.3.2 ขั้น 1) · สร้างแถว `materials` ที่ `status = "uploaded"` · เกิน `guards.max_material_mb` (1 MB = 1,048,576 bytes · v1.13) → `422 file_too_large` เหมือน `/sessions/{id}/uploads`
+- **`POST /exam-preps/{id}/materials`** · body `{file_name: string (ไม่ว่าง), content_type: string, size_bytes: integer ≥ 1}` (CM-03) · response `{material_id, upload_url, path}` · `path` = `{tenant_id}/{exam_prep_id}/{material_id}` (data-model.md · §2.3.2 ขั้น 1) · สร้างแถว `materials` ที่ `status = "uploaded"` · เกิน `guards.max_material_mb` หรือ `guards.max_image_mb` ถ้าเป็นรูป (1 MB = 1,048,576 bytes · v1.13) → `422 file_too_large` เหมือน `/sessions/{id}/uploads` · ชนิดไฟล์เช็คก่อนขนาด
   - `content_type` ที่รับ (ไม่สนตัวพิมพ์ ตัด parameter หลัง `;` แบบเดียวกับ `/sessions/{id}/uploads`): `application/pdf`, `image/jpeg`, `image/png`, `image/webp`, `image/heic`, PPTX `application/vnd.openxmlformats-officedocument.presentationml.presentation`, DOCX `application/vnd.openxmlformats-officedocument.wordprocessingml.document` · นอกนั้น `422 unsupported_type`
 - **`POST /materials/{id}/uploaded`** · body `{user_note?: string}` · `202` + `Material` · เริ่ม classify (§2.3.2 ขั้น 2) · ไฟล์นี้แจ้งไปแล้ว → `409 already_uploaded`
 - **`GET /exam-preps/{id}/materials`** · `Material[]` เรียงตามเวลาที่สร้าง · หน้า S10 poll จนทุกไฟล์มี `kind`
@@ -130,7 +130,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 **รอตัดสิน (v1.10 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-02 (PR #105) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
 
 1. **ชนิดไฟล์ที่รับ** (UC-02 คำถามเปิด 1): PDF, รูป, PPTX, DOCX ตาม ai-orchestration §2.3.3 · ไฟล์ที่ไม่รับปฏิเสธตอนขอที่อัปโหลด (ก่อน browser ส่งไฟล์)
-2. ~~**ขนาดไฟล์สูงสุด** (UC-02 คำถามเปิด 1)~~ **ตัดสินแล้ว** (Jam 2026-11-07 · PR #109): `guards.max_material_mb: 50` ตามเพดานของ Supabase Free · ข้อที่ยังเปิด:
+2. ~~**ขนาดไฟล์สูงสุด** (UC-02 คำถามเปิด 1)~~ **ตัดสินแล้ว** (Jam 2026-11-07 · PR #109): `guards.max_material_mb: 50` ตามเพดานของ Supabase Free · รูปใช้ `guards.max_image_mb` เดิม เพราะเข้า `vision_extract` ทั้งก้อนเหมือนรูปในห้องแชท · ข้อที่ยังเปิด:
    - **ไฟล์สแกนล้มก่อนถึงเพดานนี้มาก (Jam):** A2b มี `max_tokens: 16000` และ P3 วัดได้ 3,199–7,943 token จาก 12–14 หน้า · ประมาณจาก 2 ไฟล์ได้ว่าไฟล์สแกนเกินราว 28–70 หน้าจะได้ JSON ขาด แล้ว `failed` หลังอัปโหลดสำเร็จ · ต้องมีเพดานจำนวนหน้าหรือแบ่งไฟล์ก่อนเปิด ingest จริง
    - **`size_bytes` คือค่าที่ client แจ้ง (Junior):** เรียก API ตรงด้วย `size_bytes: 1` แล้วส่งไฟล์ใหญ่ได้ · ของจริงต้องตั้ง `file_size_limit` ของ bucket ให้ตรงค่านี้ หรือตรวจขนาดจริงตอน `/uploaded` · `/sessions/{id}/uploads` ก็เหมือนกัน
    - **หน้าเว็บจะรู้ค่านี้จากไหน:** ยังไม่กำหนด (May · ตอนเขียน spec ของ S09)

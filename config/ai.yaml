@@ -60,7 +60,7 @@ guards:
   rate_limit_messages_per_minute: 20
   max_image_mb: 10
   max_audio_seconds: 60
-  max_material_mb: 50                  # [B] the file limit of Supabase Free (supabase.com/docs/guides/storage/uploads/file-limits); a bucket cannot go higher · largest real file so far 6.2 MB (evals/topics, one course) · the size of an upload only: a scan fails long before this (api.md v1.13 รอตัดสิน v1.10 ข้อ 2)
+  max_material_mb: 50                  # [B] PDF, PPTX, DOCX (images use max_image_mb) · the file limit of Supabase Free (supabase.com/docs/guides/storage/uploads/file-limits); a bucket cannot go higher · largest real file so far 6.2 MB (evals/topics, one course) · the size of an upload only: a scan fails long before this (api.md v1.13 รอตัดสิน v1.10 ข้อ 2)
   max_persona_text_chars: 20           # [C] name, self_pronoun, call_user reach the prompt · a guess that fits a nickname or a pronoun, no data yet (api.md v1.12)
   max_attachment_name_chars: 255       # [B] display cap for user-visible file names · counted in grapheme clusters, extension kept · never used in Storage paths
   answer_leak_check: true

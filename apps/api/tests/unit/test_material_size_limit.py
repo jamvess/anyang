@@ -1,8 +1,9 @@
 """The size limit of a material (specs/system/api.md v1.13 `POST /exam-preps/{id}/materials`,
 "รอตัดสิน (v1.10)" item 2).
 
-The limit is `guards.max_material_mb` from config/ai.yaml, never a literal. It is checked before
-the browser sends the file, so a file that is too big never reaches Storage.
+The limit is `guards.max_material_mb` from config/ai.yaml, never a literal, or `max_image_mb` for
+an image. It is checked before the browser sends the file, against the size the client declares,
+so the real limit on Storage needs the bucket too (api.md "รอตัดสิน (v1.10)" item 2).
 """
 
 from collections.abc import Iterator
@@ -72,3 +73,40 @@ def test_CM03_limit_is_documented_in_openapi(client: TestClient) -> None:
 def test_apimd_config_version_is_not_read_as_a_float() -> None:
     """Unquoted, YAML reads `version: 1.10` as 1.1, the same as the real ai.yaml 1.1."""
     assert isinstance(get_settings().ai.version, str)
+
+
+def image_limit_bytes() -> int:
+    return get_settings().ai.guards.max_image_mb * BYTES_PER_MB
+
+
+@pytest.mark.parametrize("delta", [-1, 0])
+def test_CM03_image_up_to_the_image_limit_gets_an_upload_url(
+    client: TestClient, delta: int
+) -> None:
+    """api.md v1.13: an image reaches vision_extract whole, like a photo in the room."""
+    body = upload(content_type="image/jpeg", size_bytes=image_limit_bytes() + delta)
+
+    assert client.post(URL, json=body).status_code == 200
+
+
+def test_CM03_image_over_the_image_limit_is_refused(client: TestClient) -> None:
+    body = upload(content_type="IMAGE/JPEG; x=1", size_bytes=image_limit_bytes() + 1)
+
+    response = client.post(URL, json=body)
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "file_too_large"
+
+
+@pytest.mark.parametrize(
+    "content_type",
+    [
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ],
+)
+def test_CM03_documents_keep_the_material_limit(client: TestClient, content_type: str) -> None:
+    body = upload(content_type=content_type, size_bytes=image_limit_bytes() + 1)
+
+    assert client.post(URL, json=body).status_code == 200

@@ -108,9 +108,12 @@ async def create_material(
 
     stub — the URL is not a real Storage URL and no materials row is made
     """
-    if bare_content_type(body.content_type) not in MATERIAL_CONTENT_TYPES:
+    content_type = bare_content_type(body.content_type)
+    if content_type not in MATERIAL_CONTENT_TYPES:
         return stubs.error(422, "unsupported_type", f"{body.content_type} is not accepted")
-    max_mb = get_settings().ai.guards.max_material_mb
+    # An image reaches vision_extract whole, like a photo in the room (api.md v1.13).
+    guards = get_settings().ai.guards
+    max_mb = guards.max_image_mb if content_type.startswith("image/") else guards.max_material_mb
     if body.size_bytes > max_mb * BYTES_PER_MB:
         return stubs.error(422, "file_too_large", f"file is over {max_mb} MB")
     response.headers.update(stubs.HEADERS)
