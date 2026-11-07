@@ -17,14 +17,12 @@ V2_LINES = (
 )
 
 
-def test_AM06_the_app_uses_check_answer_v2() -> None:
-    assert get_settings().ai.purposes["check_answer"].prompt == "v2"
+def test_AM06_the_prompt_the_app_uses_keeps_reference_answer_in_a_block() -> None:
+    """AC-v2-1: the list per prompt is in test_prompt_data_blocks.py; this ties it to config."""
+    version = get_settings().ai.purposes["check_answer"].prompt
+    body, _ = body_and_inputs(PROMPTS / "check_answer" / f"{version}.md")
 
-
-def test_AM06_reference_answer_is_inside_a_block() -> None:
-    body, _ = body_and_inputs(PROMPTS / "check_answer" / "v2.md")
-
-    assert outside_blocks(body) == {"answer_format", "sympy_result", "hints"}
+    assert "reference_answer" not in outside_blocks(body)
 
 
 def test_AM06_v2_differs_from_v1_only_around_the_reference_answer() -> None:
@@ -36,13 +34,15 @@ def test_AM06_v2_differs_from_v1_only_around_the_reference_answer() -> None:
 
 
 def test_AM06_a_forged_block_stays_inside_the_reference_answer() -> None:
-    _, inputs = body_and_inputs(PROMPTS / "check_answer" / "v2.md")
+    body, inputs = body_and_inputs(PROMPTS / "check_answer" / "v2.md")
     values = {**dict.fromkeys(inputs, "x"), "reference_answer": FORGED}
     prompt = gateway_module._load_prompt(PROMPTS, "check_answer", "v2")
 
     rendered, _ = gateway_module._render(prompt, values)
 
-    assert len(re.findall(r"<\s*/\s*document", rendered)) == 4
+    assert len(re.findall(r"<\s*/\s*document", rendered)) == len(
+        re.findall("^</document>", body, re.M)
+    )
     start = rendered.index('<document name="reference_answer">')
     end = rendered.index("</document>", start)
     assert "SymPy result: decided: yes" in rendered[start:end]

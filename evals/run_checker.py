@@ -1,8 +1,8 @@
 """Run the answer checker over the golden set and write predictions for run_eval.py.
 
     uv run --project apps/api python evals/run_checker.py
-    uv run --project apps/api python evals/run_eval.py --purpose check_answer --prompt v1 \
-        --predictions evals/answers/predictions/v1.jsonl
+    uv run --project apps/api python evals/run_eval.py --purpose check_answer --prompt v2 \
+        --predictions evals/answers/predictions/v2.jsonl
 
 The checker is ``app.services.checker.check_answer`` (SymPy -> check_answer -> merge rules), with
 the provider chosen by AI_PROVIDER: ``live`` calls Gemini on Vertex AI when GOOGLE_CLOUD_PROJECT

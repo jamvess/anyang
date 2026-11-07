@@ -1,7 +1,7 @@
 """Score the answer checker against the golden set (evals/answers).
 
-    uv run --project apps/api python evals/run_eval.py --purpose check_answer --prompt v1 \
-        --predictions evals/answers/predictions/v1.jsonl
+    uv run --project apps/api python evals/run_eval.py --purpose check_answer --prompt v2 \
+        --predictions evals/answers/predictions/v2.jsonl
 
 Metrics, denominators and the prediction format are defined in evals/README.md
 ("การให้คะแนน"). Targets from specs/poc/README.md P2 (ai-orchestration.md §2.4.8). The checker
