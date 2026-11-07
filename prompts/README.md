@@ -15,7 +15,7 @@ prompts/
 
 1. **ห้ามแก้ไฟล์ version เดิม** ถ้าจะเปลี่ยน ให้สร้าง `v{n+1}.md` แล้วเปลี่ยน `prompt:` ใน `config/ai.yaml` ใน PR เดียวกัน
 2. PR ที่แก้ prompt ต้องรัน eval ของ purpose นั้นและแนบผลเทียบกับ version เดิม
-3. เนื้อหาเอกสารของผู้ใช้ต้องอยู่ใน `<document>...</document>` และ prompt ต้องบอกว่าเป็นข้อมูล ไม่ใช่คำสั่ง
+3. เนื้อหาเอกสารของผู้ใช้ต้องอยู่ใน `<document>...</document>` และ prompt ต้องบอกว่าเป็นข้อมูล ไม่ใช่คำสั่ง · gateway กันการปิด block ให้เอง ทุก placeholder ที่อยู่ในเนื้อ block ซึ่งขึ้นต้นบรรทัดด้วย tag · **placeholder ใหม่นอก block ต้องเพิ่มใน `OUTSIDE_A_BLOCK` ของ `test_prompt_data_blocks.py` พร้อมเหตุผล** (`specs/features/ai/prompt-data-blocks.md`)
 4. ทุก prompt ที่ต้องการ structured output ระบุ JSON schema ตรงกับ Pydantic model ใน `apps/api/app/models/`
 5. ห้ามใส่คำบรรยาย persona ของผู้ใช้ (`description_raw`) ใช้เฉพาะ params · ข้อยกเว้นคือ `name`, `self_pronoun`, `call_user`, `nickname` ซึ่งเป็นข้อความจากผู้ใช้จริง ต้องอยู่ใน `<persona_data>` และบอกว่าเป็นข้อมูล ไม่ใช่คำสั่ง (ai-orchestration §2.7 ข้อ 5) · ประวัติแชทอยู่ใน `<conversation>` แบบเดียวกัน และเนื้อหาต้อง escape `<` ก่อนใส่ (§2.3.6)
 6. Placeholder ใช้ `{{name}}` และ gateway จะ error ถ้ามี placeholder ที่ไม่ได้เติม
