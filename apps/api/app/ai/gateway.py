@@ -137,6 +137,9 @@ def _fill(body: str, texts: dict[str, str]) -> str:
                 return as_attribute(text)
             if block.start(3) <= placeholder.start() < block.end(3):
                 return as_data(text, block.group(1))
+        # Outside every block: it still may not close one, or text could forge a whole block.
+        for tag in {block.group(1) for block in blocks}:
+            text = as_data(text, tag)
         return text
 
     return _PLACEHOLDER.sub(value, body)
