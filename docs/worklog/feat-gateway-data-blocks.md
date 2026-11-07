@@ -11,8 +11,8 @@
 
 ตอนนี้ต้องเรียก `as_data` เองทุกจุด และถ้าเปลี่ยนชื่อ tag การป้องกันจะหายเงียบๆ · ย้ายไปไว้ใน `_render` ของ gateway ซึ่งอ่านจาก prompt ได้เองว่า placeholder อยู่ใน block ไหน
 
-- [ ] 1. 🤖 `/spec-feature`: ร่าง `specs/features/ai/prompt-data-blocks.md`
-- [ ] 2. 🙋 Jam อ่าน spec และตอบ Open questions
+- [x] 1. 🤖 `/spec-feature`: ร่าง `specs/features/ai/prompt-data-blocks.md`
+- [x] 2. 🙋 Jam อ่าน spec และตอบ Open questions
 - [ ] 3. 🤖 `/spec-to-tests` · แดงก่อน
 - [ ] 4. 🙋 Jam review test
 - [ ] 5. 🤖 `/implement-feature`: แก้ `_render` · เอา `as_data` ออกจาก `tutor_turn` และ `checker` · test เขียว · test เดิมผ่าน
@@ -30,7 +30,7 @@
 
 ## Next step
 
-ขั้น 1: ร่าง spec
+ขั้น 3: เขียน test จาก AC ให้แดงก่อน
 
 ## Waiting on
 
