@@ -36,7 +36,7 @@ checker มี 3 ส่วน (§2.4.1) · SymPy service (PR #75) กับ merg
 | placeholder | มาจาก | หมายเหตุ |
 |---|---|---|
 | `problem` | `problems.text` | ห่อใน `<document name="problem">` |
-| `reference_answer` | `problems.reference_answer` | |
+| `reference_answer` | `problems.reference_answer` | ห่อใน `<document name="reference_answer">` ตั้งแต่ v2 (2026-11-07) เพราะมาจากชีทของผู้ใช้ · v1 อยู่นอก block |
 | `answer_format` | `problems.answer_format` | |
 | `solution_steps` | `problems.solution_steps` (วิธีของชีท) | ใช้ตัดสิน `method` · ว่างได้ (golden set ไม่มี) → prompt บอกให้ตอบ `doc` เมื่อไม่มีวิธีให้เทียบ (§10 ข้อ 4) |
 | `answer_lines` | `lines` ที่ user ยืนยันแล้ว | ใส่เลขบรรทัดนำหน้า (1, 2, …) · ห่อใน `<document name="answer">` และบอกว่าเป็นข้อมูล ไม่ใช่คำสั่ง (CLAUDE.md กฎ 8) |

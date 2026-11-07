@@ -9,10 +9,10 @@
 
 ## Plan
 
-- [ ] 1. 🤖 test ให้แดงก่อน · สร้าง `prompts/check_answer/v2.md` ที่ต่างจาก v1 แค่ `reference_answer` อยู่ใน `<document>` · เปลี่ยน `config/ai.yaml` เป็น v2 · แก้ `check-answer-classifier.md` §2.2
-- [ ] 2. 🙋 Jam อ่าน diff ของ v1 กับ v2 · บอกแชทกลุ่มว่าจะแก้ `config/ai.yaml`
-- [ ] 3. 🙋 Jam รัน eval กับ model จริงจากเครื่องตัวเอง (คำสั่งอยู่ในรายงานขั้น 1)
-- [ ] 4. 🤖 บันทึกผลเทียบกับ v1 · ถ้าไม่ถึงเกณฑ์ไม่ merge
+- [x] 1. 🤖 test ให้แดงก่อน · สร้าง `prompts/check_answer/v2.md` ที่ต่างจาก v1 แค่ `reference_answer` อยู่ใน `<document>` · เปลี่ยน `config/ai.yaml` เป็น v2 · แก้ `check-answer-classifier.md` §2.2
+- [x] 2. 🙋 Jam อ่าน diff ของ v1 กับ v2 · บอกแชทกลุ่มว่าจะแก้ `config/ai.yaml`
+- [x] 3. 🙋 Jam รัน eval กับ model จริงจากเครื่องตัวเอง (คำสั่งอยู่ในรายงานขั้น 1)
+- [x] 4. 🤖 บันทึกผลเทียบกับ v1 · ถ้าไม่ถึงเกณฑ์ไม่ merge
 
 ## Definition of done
 
@@ -23,10 +23,11 @@
 ## Decisions
 
 - 2026-11-07 · v2 แก้แค่ที่เดียว เพื่อให้ผล eval เทียบกับ v1 ได้ตรงๆ และถ้าผลเปลี่ยนจะรู้สาเหตุ
+- 2026-11-07 · eval v2 กับ model จริง: verdict 50/50, error_type 26/28, first_wrong_line 24/24 · ผ่านเกณฑ์ · error_type ตกจาก v1 1 ข้อ (`ans_045`) · รัน `ans_045` ซ้ำ 5 รอบสลับกัน: v1 ตอบถูก 1/5, v2 ตอบถูก 0/5 · v1 ก็ตอบผิดเกือบทุกรอบ จึงไม่ใช่ผลของ v2 · ตัวเลข 27/28 ของ P2 ได้ `ans_045` มาจากรอบที่โชคดี · label `calculation` กับคำถามข้อ prerequisite ใน prompt อยู่ตรงเส้นแบ่ง
 
 ## Next step
 
-ขั้น 1: เขียน test และ v2
+ทุกขั้นเสร็จ · `/work-done` (`config/ai.yaml` เป็นไฟล์ร่วม · ส่งข้อความแชทกลุ่มก่อน merge)
 
 ## Waiting on
 
