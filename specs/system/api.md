@@ -1,4 +1,4 @@
-# API (v1.12)
+# API (v1.13)
 
 Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้างอัตโนมัติที่ `/docs` · frontend generate types จาก `/openapi.json`
 
@@ -121,7 +121,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | `status` | `"uploaded"` \| `"classified"` \| `"confirmed"` \| `"ingesting"` \| `"ready"` \| `"failed"` | `materials.status` (CM-07) |
 | `error` | string \| null | `materials.error` · ข้อความสั้นที่แสดงให้ผู้ใช้ได้ เมื่อ `status = "failed"` (UC-02 E5) |
 
-- **`POST /exam-preps/{id}/materials`** · body `{file_name: string (ไม่ว่าง), content_type: string, size_bytes: integer ≥ 1}` (CM-03) · response `{material_id, upload_url, path}` · `path` = `{tenant_id}/{exam_prep_id}/{material_id}` (data-model.md · §2.3.2 ขั้น 1) · สร้างแถว `materials` ที่ `status = "uploaded"`
+- **`POST /exam-preps/{id}/materials`** · body `{file_name: string (ไม่ว่าง), content_type: string, size_bytes: integer ≥ 1}` (CM-03) · response `{material_id, upload_url, path}` · `path` = `{tenant_id}/{exam_prep_id}/{material_id}` (data-model.md · §2.3.2 ขั้น 1) · สร้างแถว `materials` ที่ `status = "uploaded"` · เกิน `guards.max_material_mb` (1 MB = 1,048,576 bytes · v1.13) → `422 file_too_large` เหมือน `/sessions/{id}/uploads`
   - `content_type` ที่รับ (ไม่สนตัวพิมพ์ ตัด parameter หลัง `;` แบบเดียวกับ `/sessions/{id}/uploads`): `application/pdf`, `image/jpeg`, `image/png`, `image/webp`, `image/heic`, PPTX `application/vnd.openxmlformats-officedocument.presentationml.presentation`, DOCX `application/vnd.openxmlformats-officedocument.wordprocessingml.document` · นอกนั้น `422 unsupported_type`
 - **`POST /materials/{id}/uploaded`** · body `{user_note?: string}` · `202` + `Material` · เริ่ม classify (§2.3.2 ขั้น 2) · ไฟล์นี้แจ้งไปแล้ว → `409 already_uploaded`
 - **`GET /exam-preps/{id}/materials`** · `Material[]` เรียงตามเวลาที่สร้าง · หน้า S10 poll จนทุกไฟล์มี `kind`
@@ -130,7 +130,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 **รอตัดสิน (v1.10 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-02 (PR #105) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
 
 1. **ชนิดไฟล์ที่รับ** (UC-02 คำถามเปิด 1): PDF, รูป, PPTX, DOCX ตาม ai-orchestration §2.3.3 · ไฟล์ที่ไม่รับปฏิเสธตอนขอที่อัปโหลด (ก่อน browser ส่งไฟล์)
-2. **ขนาดไฟล์สูงสุด** (UC-02 คำถามเปิด 1): ยังไม่มีค่าใน config · stub ยังไม่ตรวจ · ถ้าจะตรวจต้องเพิ่ม `guards.max_material_mb` ใน `config/ai.yaml` พร้อมป้ายที่มา (threshold · Jam ตัดสิน)
+2. ~~**ขนาดไฟล์สูงสุด** (UC-02 คำถามเปิด 1)~~ **ตัดสินแล้ว** (Jam 2026-11-07 · PR #109): `guards.max_material_mb: 50` ตามเพดานของ Supabase Free · **เพดานนี้ไม่ได้คุมต้นทุน:** PDF สแกนเข้า model ทั้งไฟล์ · เพดานจำนวนหน้ายังเปิดอยู่ · หน้าเว็บจะรู้ค่านี้จากไหนยังไม่กำหนด (May · ตอนเขียน spec ของ S09)
 3. **วันสอบ** (UC-02 คำถามเปิด 2): วันนี้ได้ · ก่อนวันนี้ได้ `422 exam_date_past`
 4. **`stage`, `readiness`, `topics_not_passed` ใน `ExamPrep`:** เดาจาก S27 และ PM-04 · ยังไม่มี spec หน้าหลักของ May
 5. **ประเภทไฟล์:** UC-02 ขั้น 4 พูดถึง "แบบฝึกหัด" แต่ check ของ `materials.kind` ไม่มีค่านี้ · ข้อเสนอคือใช้ enum ของ schema (`sheet`, `slides`, `past_exam`, `notes`, `other`) และนับแบบฝึกหัดเป็น `sheet`
@@ -249,7 +249,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 1. **`ingestion_jobs` ของขั้นรวม:** `material_id` ห้าม null แต่หัวข้อกับดาวทำต่อ prep ไม่ใช่ต่อไฟล์ และไม่มี stage ของ "อ่านสิ่งที่เขียนกำกับ" · ข้อเสนอคือ migration ให้ `material_id` เป็น null ได้ + เพิ่ม `exam_prep_id`
 2. **ไฟล์ `failed` ที่ผู้ใช้ยังไม่ตัดสิน:** ข้อเสนอคือขั้นรวมหัวข้อ (A6) รอจนทุกไฟล์เสร็จหรือถูกลบ เพื่อไม่ต้องเรียก main tier ซ้ำ
 3. **ลบไฟล์ที่ `ready` แล้ว:** หัวข้อที่สร้างจากไฟล์นั้นต้องเป็นอย่างไร (CM-10) · ยังไม่มีคำตอบ
-4. **ประวัติแชท S13:** wireframe คุยต่อเนื่องหลายรอบ แต่ input ของ A8 ไม่มีประวัติ และ `messages.session_id` ห้าม null · body `{text}` ใช้ได้ทุกทาง แต่ต้องมีที่เก็บฝั่ง server (prompt · Jam) · ยังไม่มี endpoint อ่านประวัติ รีเฟรชแล้วเริ่มคุยใหม่
+4. **ประวัติแชท S13:** ฝั่ง prompt ตัดสินแล้ว (Jam 2026-11-07 · PR #109): A8 ได้ `session.context_recent_turns` ข้อความล่าสุดจาก server (ai-orchestration §2.3.6) · **ที่เก็บยังรอ Junior:** `messages.session_id` ห้าม null · body `{text}` ใช้ได้ทุกทาง · ยังไม่มี endpoint อ่านประวัติ รีเฟรชแล้วเริ่มคุยใหม่
 5. **พูดใน S13 (SM-06):** `/sessions/{id}/uploads` และ `/transcribe` ผูกกับ session แต่ S13 ไม่มี session · **stub รอบนี้รับแค่ข้อความพิมพ์ ฝั่งเสียงของ SM-06 ยังไม่ครบ**
 6. **ข้อความพร้อมแสดง:** `steps.label` และ `files.detail` สร้างที่ backend แบบเดียวกับ `source_label` · May อาจอยากคุมข้อความเอง
 7. **error code ใหม่:** `not_failed`, `material_busy` · ใช้ซ้ำ: `scope_not_ready`, `message_too_long`, `rate_limited`
