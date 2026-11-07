@@ -62,7 +62,9 @@ class ExamPrep(ApiModel):
 
 class UploadMaterialRequest(ApiModel):
     """Body of POST /exam-preps/{id}/materials (CM-03). The endpoint checks `content_type`
-    against MATERIAL_CONTENT_TYPES."""
+    against MATERIAL_CONTENT_TYPES and `size_bytes` against config/ai.yaml →
+    guards.max_material_mb, or max_image_mb for an image. `size_bytes` is what the client
+    declares, not the real size."""
 
     # Display only (materials.file_name), never a path.
     file_name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]

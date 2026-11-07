@@ -428,7 +428,7 @@ export interface paths {
         put?: never;
         /**
          * Create Material
-         * @description Signed upload URL for one file (CM-03). The type is checked before the browser sends it.
+         * @description Signed upload URL for one file (CM-03). Type and size are checked before the upload.
          *
          *     stub — the URL is not a real Storage URL and no materials row is made
          */
@@ -1386,7 +1386,9 @@ export interface components {
         /**
          * UploadMaterialRequest
          * @description Body of POST /exam-preps/{id}/materials (CM-03). The endpoint checks `content_type`
-         *     against MATERIAL_CONTENT_TYPES.
+         *     against MATERIAL_CONTENT_TYPES and `size_bytes` against config/ai.yaml →
+         *     guards.max_material_mb, or max_image_mb for an image. `size_bytes` is what the client
+         *     declares, not the real size.
          */
         UploadMaterialRequest: {
             /** File Name */
@@ -2868,7 +2870,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Invalid path or body, or unsupported_type */
+            /** @description Invalid path or body, unsupported_type or file_too_large */
             422: {
                 headers: {
                     [name: string]: unknown;
