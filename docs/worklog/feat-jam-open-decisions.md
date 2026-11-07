@@ -12,8 +12,8 @@
 - [x] 1. 🤖 วัดข้อมูลจริงและร่างทางเลือกของ 3 เรื่อง ให้ Jam อ่าน (ยังไม่แก้ไฟล์ร่วม)
 - [x] 2. 🙋 Jam ตัดสินทั้ง 3 เรื่อง · บอกแชทกลุ่มว่าจะแก้ `api.md` และ `config/ai.yaml` (ไฟล์ร่วม)
 - [x] 3. 🤖 เขียนผลลง spec: `ai-orchestration.md` §2.7, §2.3, `prompts/README.md`, `api.md` v1.13
-- [ ] 4. 🤖 test ของเพดานขนาดไฟล์ · แดงก่อน
-- [ ] 5. 🙋 Jam review test
+- [x] 4. 🤖 test ของเพดานขนาดไฟล์ · แดงก่อน
+- [x] 5. 🙋 Jam review test
 - [ ] 6. 🤖 `guards.max_material_mb` + เช็คใน `POST /exam-preps/{id}/materials` · test เขียว + ruff
 - [ ] 7. 🤖 `api-schema.ts` ถ้าเปลี่ยน
 
@@ -30,7 +30,7 @@
 
 ## Next step
 
-ขั้น 4: เขียน test เพดานขนาดไฟล์ของ `POST /exam-preps/{id}/materials` ให้แดงก่อน
+ขั้น 5: Jam review `tests/unit/test_material_size_limit.py` · แล้วขั้น 6
 
 ## Waiting on
 
