@@ -13,6 +13,7 @@ from pydantic import BaseModel
 
 from app.ai.call_context import AICallContext, ai_call_context
 from app.ai.gateway import AIProviderError, Gateway
+from app.ai.prompt_data import as_data
 from app.models.room import DoneEvent, ErrorEvent, TokenEvent
 
 log = logging.getLogger(__name__)
@@ -49,7 +50,9 @@ async def reply_events(
     sent = False
     try:
         with context:
-            async with aclosing(gateway.stream("tutor_reply", {"message": text})) as chunks:
+            async with aclosing(
+                gateway.stream("tutor_reply", {"message": as_data(text, "message")})
+            ) as chunks:
                 async for chunk in chunks:
                     sent = True
                     yield "token", TokenEvent(speaker="tutor", text=chunk)

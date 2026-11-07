@@ -11,7 +11,7 @@
 
 - [x] 1. 🤖 เพิ่ม AC ใน `specs/features/tutor/tutor-reply-stream.md` + test ให้แดงก่อน
 - [x] 2. 🙋 Jam review AC และ test
-- [ ] 3. 🤖 ย้าย `_as_data` ของ `services/checker.py` เป็น helper ใช้ร่วม แล้วใช้ใน `tutor_turn` · test เขียว · test เดิมของ checker ผ่าน
+- [x] 3. 🤖 ย้าย `_as_data` ของ `services/checker.py` เป็น helper ใช้ร่วม แล้วใช้ใน `tutor_turn` · test เขียว · test เดิมของ checker ผ่าน
 
 ## Definition of done
 
@@ -25,7 +25,7 @@
 
 ## Next step
 
-ขั้น 2: Jam review AC-23, AC-24 และ `test_tutor_reply_message_tag.py`
+ทุกขั้นเสร็จ · `/work-done`
 
 ## Waiting on
 
