@@ -23,8 +23,10 @@ bash poc/P8-lite/agent_lines.sh origin/main HEAD apps/api/tests  # แถว tes
 
 | ส่วน | agent | คน | รวม | % agent |
 |---|---|---|---|---|
-| `apps/api/app` (โค้ด) | | | | |
-| `apps/api/tests` (test) | | | | |
+| `apps/api/app` (โค้ด) | 166 | 0 | 166 | 100% |
+| `apps/api/tests` (test) | 419 | 0 | 419 | 100% |
+
+นับ 8 พ.ย. ก่อน `/code-review` · นับใหม่ตอน PR พร้อม merge ถ้ามี commit เพิ่ม
 
 ## 2. รอบ red → green
 

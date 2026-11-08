@@ -14,7 +14,7 @@ Spec: `specs/features/scope/compute-importance.md` (approved 31 ต.ค.) · SM-
 - [x] 1. 🤖 `/spec-to-tests`: `apps/api/tests/unit/test_stars.py` (19 test ตาม §8) + AC-19 ใน `test_settings.py` · รันให้แดงเพราะยังไม่มี `app/domain/stars.py` · จดเวลาลง metrics §4
 - [x] 2. 🙋 Jam review test (ตาราง AC → test) · จดเวลาเริ่ม–จบลง metrics §4 · test ผิดจดลง metrics §3 · spec ไม่ชัดจดลง §5
 - [x] 3. 🤖 `/implement-feature`: `app/domain/stars.py` + `StarsConfig.no_past_exam_method` เป็น `Literal["page_terciles"]` · จดทุกรอบ red → green ลง metrics §2
-- [ ] 4. 🤖 รัน `pytest`, `ruff` ทั้งหมด · กรอก metrics §1 ด้วย `agent_lines.sh`
+- [x] 4. 🤖 รัน `pytest`, `ruff` ทั้งหมด · กรอก metrics §1 ด้วย `agent_lines.sh`
 - [ ] 5. 🙋 `/work-done`: `/code-review` (จดบั๊กลง metrics §3) · ข้อความกลุ่มให้ Junior + May review test ย้อนหลัง
 
 ## Definition of done
@@ -31,7 +31,7 @@ Spec: `specs/features/scope/compute-importance.md` (approved 31 ต.ค.) · SM-
 
 ## Next step
 
-ขั้น 4: รัน `uv run pytest` + `ruff` ทั้งหมดใน `apps/api` แล้วกรอก metrics §1 ด้วย `bash poc/P8-lite/agent_lines.sh origin/main HEAD apps/api/app` และ `... apps/api/tests`
+พิมพ์ `/work-done` (ขั้น 5): `/code-review` → จดผลลง metrics §3 และเวลาที่อ่านผลลง §4 → นับ metrics §1 ใหม่ถ้ามี commit เพิ่ม → ร่างข้อความกลุ่ม
 
 ## Waiting on
 
