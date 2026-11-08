@@ -16,7 +16,7 @@
 - [x] 3. 🤖 `/spec-to-tests` (fake provider · ไม่ใช้ network)
 - [x] 4. 🙋 Jam review test
 - [x] 5. 🤖 `/implement-feature`
-- [ ] 6. 🙋 smoke ในเครื่องกับ Vertex จริง (ADC ของ Jam): ส่งรูปจาก `evals/` แล้วเห็น `ocr_preview` → ยืนยัน → `verdict` · ขั้นตอนแบบคลิกต่อคลิกจะเขียนให้ตอนถึงขั้นนี้
+- [x] 6. 🙋 smoke ในเครื่องกับ Vertex จริง (ADC ของ Jam): ส่งรูปจาก `evals/` แล้วเห็น `ocr_preview` → ยืนยัน → `verdict` · ขั้นตอนแบบคลิกต่อคลิกจะเขียนให้ตอนถึงขั้นนี้
 - [ ] 7. 🤖 `/work-done` + ข้อความกลุ่มถึง Junior
 
 ## Definition of done
@@ -26,12 +26,13 @@
 
 ## Decisions
 
+- 2026-11-08 · smoke รอบ 1 แล้ว Jam ok ให้แก้ `explain_check/v1.md` ก่อน merge (ยังไม่ merge จึงไม่ต้องขึ้น v2): ตัดชื่อแอป ห้ามทักทาย ห้ามพูดค่าของ checker (`incomplete`, "ผลคะแนน") ย้ำ 120 คำ
 - 2026-11-08 · spec approved (Jam): §10 ข้อ 1 (ข) purpose ใหม่ `explain_check` + ส่งเฉลย · ข้อ 2 (ข) classifier ล้ม → ลองยืนยันใหม่ ไม่แก้ contract · ข้อ 3–8 ใช้ข้อเสนอ รอ Junior ดูย้อนหลัง · ต้องแก้ `config/ai.yaml` (ไฟล์กลาง) ตอน implement → บอกกลุ่มก่อน merge
 - 2026-11-08 · solo time: Jam ทำข้อของ Junior · โครงสร้าง backend ใน spec เป็นข้อเสนอ ให้ Junior ตัดสินย้อนหลัง (`roles.md` "ตัดสินใจเรื่อง")
 
 ## Next step
 
-ขั้น 6 (🙋 Jam): smoke กับ Vertex จริงในเครื่อง ตามขั้นตอนที่ Claude เขียนให้ (สคริปต์อยู่ใน scratchpad ไม่ commit) · ก่อน `/work-done` ต้องแก้ `room-photo-send.md` §9 และ ai-orchestration §2.10 ตาม spec §11
+พิมพ์ `/work-done` · ในขั้น docs ต้องแก้ `room-photo-send.md` §9 และ ai-orchestration §2.10 ตาม spec §11 · ข้อความกลุ่มก่อน merge เพราะแก้ `config/ai.yaml`
 
 ## Waiting on
 
@@ -43,6 +44,10 @@
 
 - เริ่ม 16:47 (8 พ.ย.)
 - `/spec-to-tests` 16:55–17:09 · test ที่ไม่มี AC ตรง: `test_AM02_problem_stays_pending_after_check` (§10 ข้อ 4) · spec ไม่มี AC ของ "ส่งรูปตอนไม่มีโจทย์ค้าง" (§2.1 ข้อ 2) จึงยังไม่มี test
+- smoke กับ Vertex (Claude รันให้ตามที่ Jam สั่ง · ADC ในเครื่อง Jam) · ans_001 (incomplete · concept), ans_002 (incorrect · บรรทัด 2 · prerequisite), ans_003 (correct) · ยืนยันโดยไม่แก้บรรทัด
+  - รอบ 1: verdict ตรง label 3/3 · ลายมือที่อ่านได้ตรง label ทุกบรรทัด · tutor ชี้บรรทัดและสาธิตทันที แต่พูด `"incomplete"` ตรงๆ, "ผลคะแนน", ทักทาย "ยินดีต้อนรับสู่ห้องเรียน" และยาวเกิน
+  - รอบ 2 (หลังแก้ prompt): verdict 3/3 · ไม่มีศัพท์ของระบบและไม่ทักทายแล้ว · ข้อ 2 ยังค่อนข้างยาว · model พิมพ์ผิด 1 คำ ("รูปแแบบ")
+  - เวลาในเครื่อง: ส่งรูป call แรก 26–27 s (ADC token + เปิดครั้งแรก) ต่อจากนั้น 4.7–11.6 s · ยืนยัน 3.3–12 s (call แรกเปิด SymPy worker) · "ขอดูก่อนนะ" ขึ้นทันที · ยังไม่ได้วัดบน staging
 - `/implement-feature` 17:10–17:18 · red → green 2 รอบ: (1) 28 test ใหม่เขียวในรอบแรก (2) guard เดิม 2 ตัวแดง: `photo_check.py` import `Image` จาก `app.ai.providers` (AI-01) → เปลี่ยนเป็น import จาก gateway · prompt ใหม่ต้องลงทะเบียนใน `OUTSIDE_BY_PROMPT` ของ `test_prompt_data_blocks.py` (เพิ่ม 1 แถว · test เดิมออกแบบให้เพิ่มแบบนี้)
 - โค้ดที่ไม่มี test: `_no_pending_problem` (spec ไม่มี AC · §10 ข้อ 4) และการกัน `..` กับ `/` ในชื่อไฟล์ของ `_own_upload`
 - spec draft: SymPy ของจริงตรวจตัวอย่าง AC-11 (`x^2 - 49`, `= (x-7)(x+7)` → ถูกทุกบรรทัด) และ AC-12 (`= (x-7)(x-7)` → บรรทัด 2 ผิด) ได้ตามที่เขียน
