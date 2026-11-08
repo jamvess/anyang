@@ -1,6 +1,12 @@
-from dotenv import dotenv_values
+import shutil
+from pathlib import Path
 
-from app.settings import _REPO_ROOT, EnvSettings
+import pytest
+import yaml
+from dotenv import dotenv_values
+from pydantic import ValidationError
+
+from app.settings import _REPO_ROOT, EnvSettings, load_settings
 
 ENV_EXAMPLE = _REPO_ROOT / ".env.example"
 COMMENTED_IN_ENV_EXAMPLE = {"config_dir", "prompts_dir"}
@@ -26,3 +32,21 @@ def test_env_example_parses() -> None:
 
     assert settings.ai_provider == "fake"
     assert settings.log_level == "info"
+
+
+def test_SM03_unknown_no_past_exam_method_fails_at_config_load(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # compute-importance.md AC-19: a typo in learning.yaml fails when the app loads its
+    # settings (startup), not later when an ingestion job calls compute_importance.
+    config_dir = _REPO_ROOT / "config"
+    learning = yaml.safe_load((config_dir / "learning.yaml").read_text(encoding="utf-8"))
+    learning["stars"]["no_past_exam_method"] = "page_tercile"
+    (tmp_path / "learning.yaml").write_text(
+        yaml.safe_dump(learning, allow_unicode=True), encoding="utf-8"
+    )
+    shutil.copy(config_dir / "ai.yaml", tmp_path / "ai.yaml")
+    monkeypatch.setenv("CONFIG_DIR", str(tmp_path))
+
+    with pytest.raises(ValidationError, match="no_past_exam_method"):
+        load_settings()
