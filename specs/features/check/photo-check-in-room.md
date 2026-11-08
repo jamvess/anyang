@@ -6,7 +6,7 @@
 | Requirements | TM-06, AM-01, AM-02, AM-03, AM-04, AM-05, AM-06, AM-07, TM-21, SA-06 |
 | Owner | Jam (item of Junior · ช่วง solo 2026-11-08) |
 | Reviewer | Jam (AI) · Junior (โครงสร้าง backend ย้อนหลัง · §10) |
-| Status | approved 2026-11-08 (Jam · §10 ข้อ 1–2 ตัดสินแล้ว · ข้อ 3–8 ใช้ข้อเสนอไปก่อน รอ Junior ดูย้อนหลัง) |
+| Status | implemented 2026-11-08 (PR #114 · บน staging ยังเป็น stub จนกว่าจะมี Storage · §2.4) · approved 2026-11-08 (Jam · §10 ข้อ 1–2 ตัดสินแล้ว · ข้อ 3–8 ใช้ข้อเสนอไปก่อน รอ Junior ดูย้อนหลัง) |
 | Related system spec | ai-orchestration.md §2.2.3 (layer 6, 8), §2.2.4 (การสอนตาม error type), §2.2.5 (รูป), §2.4 (checker), §2.10 (degrade) · api.md "ห้องติว" (`POST /sessions/{id}/messages`, v1.7 `/uploads` + `/ocr/confirm`, SSE `ocr_preview` + `verdict`) · `config/learning.yaml` → `ocr.always_confirm`, `checker.*` · `config/ai.yaml` → `extract_answer`, `check_answer`, `guards.max_image_mb` · use-cases.md UC-04 · P1.md · P2.md · features: `check-answer-classifier.md`, `merge-rules.md`, `sympy-service.md`, `ocr-confirm-card.md`, `verdict-mark.md`, `room-photo-send.md`, `tutor-reply-stream.md` |
 
 ## 1. Context
@@ -183,7 +183,7 @@
 | ไฟล์ | แก้อะไร | เจ้าของ · เมื่อไหร่ |
 |---|---|---|
 | `specs/system/api.md` (ไฟล์กลาง) | `POST /sessions/{id}/messages`: `404 not_found` เมื่อ `image_path` ไม่ใช่ของ session หรือไม่พบไฟล์ · `422 file_too_large` เมื่อไฟล์จริงเกิน (§6 · §10 ข้อ 3) | Jam เสนอ · Junior ตัดสิน · ถามก่อนแก้ |
-| `config/ai.yaml` (ไฟล์กลาง) | เพิ่ม `explain_check` (§7) · bump `version` | Jam · PR นี้ตอน implement · บอกกลุ่มก่อน merge |
-| `specs/system/ai-orchestration.md` §2.10 ตาราง tier + ตาราง purpose (T-rows) | เพิ่ม `explain_check` (tier main · หลัง verdict ใน 2.2) | Jam · PR นี้ |
-| `room-photo-send.md` §9 | "`extract_answer` และ checker จริง · ผลตรวจยังเป็น stub" → ชี้มาที่ spec นี้ | Jam · PR นี้ |
+| `config/ai.yaml` (ไฟล์กลาง) | เพิ่ม `explain_check` (§7) · bump `version` | เสร็จแล้ว (PR #114 · `ai.yaml` 1.12) · บอกกลุ่มก่อน merge |
+| `specs/system/ai-orchestration.md` §2.10 ตาราง tier + ตาราง purpose (T-rows) | เพิ่ม `explain_check` (tier main · หลัง verdict ใน 2.2) | เสร็จแล้ว (PR #114 · v1.7) |
+| `room-photo-send.md` §9 | "`extract_answer` และ checker จริง · ผลตรวจยังเป็น stub" → ชี้มาที่ spec นี้ | เสร็จแล้ว (PR #114) |
 | `docs/design/use-cases.md` UC-04 E4 | หมายเหตุว่าตอนนี้ classifier ล้มแล้วให้ยืนยันใหม่ (§10 ข้อ 2 ข) เป็นแบบชั่วคราว | May · ย้อนหลัง |
