@@ -14,8 +14,8 @@
 - [x] 1. 🤖 `/spec-feature` → `specs/features/check/photo-check-in-room.md` (AM-xx, TM-06 · หา ID ที่ถูกตอนเขียน) · อ่าน P1.md, P2.md, ai-orchestration §2.4, api.md v1.7 (`ocr_preview`, `verdict`, `/ocr/confirm`), `room-photo-send.md`, `ocr-confirm-card.md`, `verdict-mark.md` · ทุกเรื่องโครงสร้าง backend (อ่านรูปจาก Storage, เก็บ OCR ที่รอยืนยันและโจทย์ปัจจุบันไว้ที่ไหน) เขียนเป็นข้อเสนอใน §10 ให้ Junior ตัดสินย้อนหลัง
 - [x] 2. 🙋 Jam review spec · ตัดสินเรื่อง AI (prompt, model, threshold) · ข้อเสนอ backend เลือกแบบชั่วคราวได้ แล้วรอ Junior
 - [x] 3. 🤖 `/spec-to-tests` (fake provider · ไม่ใช้ network)
-- [ ] 4. 🙋 Jam review test
-- [ ] 5. 🤖 `/implement-feature`
+- [x] 4. 🙋 Jam review test
+- [x] 5. 🤖 `/implement-feature`
 - [ ] 6. 🙋 smoke ในเครื่องกับ Vertex จริง (ADC ของ Jam): ส่งรูปจาก `evals/` แล้วเห็น `ocr_preview` → ยืนยัน → `verdict` · ขั้นตอนแบบคลิกต่อคลิกจะเขียนให้ตอนถึงขั้นนี้
 - [ ] 7. 🤖 `/work-done` + ข้อความกลุ่มถึง Junior
 
@@ -31,7 +31,7 @@
 
 ## Next step
 
-ขั้น 4: Jam review `apps/api/tests/unit/test_photo_check_in_room.py` (22 test · แดงเพราะยังไม่มี `app.services.photo_check`)
+ขั้น 6 (🙋 Jam): smoke กับ Vertex จริงในเครื่อง ตามขั้นตอนที่ Claude เขียนให้ (สคริปต์อยู่ใน scratchpad ไม่ commit) · ก่อน `/work-done` ต้องแก้ `room-photo-send.md` §9 และ ai-orchestration §2.10 ตาม spec §11
 
 ## Waiting on
 
@@ -43,4 +43,6 @@
 
 - เริ่ม 16:47 (8 พ.ย.)
 - `/spec-to-tests` 16:55–17:09 · test ที่ไม่มี AC ตรง: `test_AM02_problem_stays_pending_after_check` (§10 ข้อ 4) · spec ไม่มี AC ของ "ส่งรูปตอนไม่มีโจทย์ค้าง" (§2.1 ข้อ 2) จึงยังไม่มี test
+- `/implement-feature` 17:10–17:18 · red → green 2 รอบ: (1) 28 test ใหม่เขียวในรอบแรก (2) guard เดิม 2 ตัวแดง: `photo_check.py` import `Image` จาก `app.ai.providers` (AI-01) → เปลี่ยนเป็น import จาก gateway · prompt ใหม่ต้องลงทะเบียนใน `OUTSIDE_BY_PROMPT` ของ `test_prompt_data_blocks.py` (เพิ่ม 1 แถว · test เดิมออกแบบให้เพิ่มแบบนี้)
+- โค้ดที่ไม่มี test: `_no_pending_problem` (spec ไม่มี AC · §10 ข้อ 4) และการกัน `..` กับ `/` ในชื่อไฟล์ของ `_own_upload`
 - spec draft: SymPy ของจริงตรวจตัวอย่าง AC-11 (`x^2 - 49`, `= (x-7)(x+7)` → ถูกทุกบรรทัด) และ AC-12 (`= (x-7)(x-7)` → บรรทัด 2 ผิด) ได้ตามที่เขียน
