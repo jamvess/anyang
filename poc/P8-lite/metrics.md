@@ -2,7 +2,7 @@
 
 ใช้ตอนทำ `compute_importance` ด้วยกันใน S4 (`specs/poc/README.md` P8-lite) · กรอกระหว่างทำ ไม่ใช่ย้อนนึกตอนจบ · ตัวเลขชุดนี้ใช้ใน report P8-lite และ Self-Assessment
 
-Spec: `specs/features/scope/compute-importance.md` (approved 31 ต.ค. · 27 AC) · branch และ PR: กรอกตอนเริ่ม
+Spec: `specs/features/scope/compute-importance.md` (approved 31 ต.ค. · 27 AC) · branch `feat/compute-importance` · PR #113 (เริ่ม 8 พ.ย. 2569 ช่วง solo ของ Jam)
 
 ## กติกาก่อนเริ่ม (ไม่งั้นตัวเลขเชื่อไม่ได้)
 
@@ -53,8 +53,8 @@ bash poc/P8-lite/agent_lines.sh origin/main HEAD apps/api/tests  # แถว tes
 | ขั้น | ใคร | เริ่ม | จบ | นาที |
 |---|---|---|---|---|
 | review spec (ทำแล้ว 31 ต.ค. · Jam) | Jam | | | |
-| `/spec-to-tests` (รอ Claude) | | | | |
-| review test ด้วยกัน | Junior, May, Jam | | | |
+| `/spec-to-tests` (รอ Claude) | Claude | 13:47 | 13:50 | 3 |
+| review test ด้วยกัน | Jam (8 พ.ย. · Junior, May ดูย้อนหลัง) | 13:52 | 13:56 | 4 |
 | `/implement-feature` (รอ Claude + ตอบคำถาม) | | | | |
 | อ่านผล `/code-review` และตัดสินใจ | | | | |
 | รวม | | | | |
@@ -65,7 +65,8 @@ bash poc/P8-lite/agent_lines.sh origin/main HEAD apps/api/tests  # แถว tes
 
 | # | คำถาม | เจอตอนไหน (spec-to-tests · implement · review) | ตัดสินว่า | แก้ spec ใน commit |
 |---|---|---|---|---|
-| 1 | | | | |
+| 1 | โหมดไม่มีข้อสอบเก่า: หัวข้อที่ผู้ใช้แก้ดาวเองคงดาวไว้แต่ยังนับอันดับ (§2 ขั้นที่ 3 ข้อ 1–3) ไม่มี AC ทดสอบ | spec-to-tests | เพิ่ม `test_SM03_no_past_exam_keeps_user_stars_and_counts_their_rank` (Jam ok) · §2 เขียนไว้แล้ว ไม่ต้องแก้ spec | ไม่แก้ |
+| 2 | AC-17: `signal_r` ของหัวข้อที่ตัดออกหารด้วยหน้าของทุกหัวข้อรวมที่ตัดออกไหม (§2 ขั้นที่ 1 "ของทุกหัวข้อ") | spec-to-tests | รวม (9/21 · Jam ok) | ไม่แก้ |
 
 ## 6. ผล (กรอกตอนจบ)
 
