@@ -50,3 +50,25 @@ def test_SM03_unknown_no_past_exam_method_fails_at_config_load(
 
     with pytest.raises(ValidationError, match="no_past_exam_method"):
         load_settings()
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("prerequisite_of_three_star_gets", 0),
+        ("prerequisite_of_three_star_gets", 4),
+        ("three_star_min_r", 0),
+        ("three_star_min_r", 1.1),
+        ("weight_same_instructor", -0.1),
+        ("weight_other_instructor", -0.1),
+    ],
+)
+def test_SM03_stars_config_out_of_range_fails_at_load(field: str, value: float) -> None:
+    # Added after /code-review (8 Nov): a value that would break topics.importance (0-3) or
+    # give ★★★ to topics never seen fails when config loads, like AC-19.
+    from app.settings import StarsConfig, get_settings
+
+    stars = get_settings().learning.stars.model_dump() | {field: value}
+
+    with pytest.raises(ValidationError, match=field):
+        StarsConfig.model_validate(stars)

@@ -392,3 +392,21 @@ def test_SM03_output_keeps_input_order(cfg: StarsConfig, two_same: list[ExamIn])
     assert [r.topic_id for r in result] == ["z", "a", "m", "b"]
     assert compute_importance([], two_same, set(), cfg) == []
     assert compute_importance([], [], set(), cfg) == []
+
+
+# --- added after /code-review (8 Nov) · not in spec §8 ------------------------------
+
+
+def test_SM03_signal_r_does_not_depend_on_exam_order(cfg: StarsConfig) -> None:
+    # Spec §1 (reproducible): weights like 0.1, 0.2, 0.3 are not exact in binary. Adding them
+    # one by one (+=) gives 0.6000000000000001 in this order and 0.6 in the other, so r would
+    # depend on the exam order. (Python 3.12 sum() is already compensated; the code uses
+    # math.fsum, which is exactly rounded.)
+    exams = [ExamIn("m1", 0.1), ExamIn("m2", 0.2), ExamIn("m3", 0.3), ExamIn("m4", 0.4)]
+    appearances = {("a", "m1"), ("a", "m2"), ("a", "m3")}
+
+    results = [
+        compute_importance([topic("a")], order, appearances, cfg)[0].signal_r
+        for order in (exams, exams[::-1])
+    ]
+    assert results[0] == results[1] == 0.6

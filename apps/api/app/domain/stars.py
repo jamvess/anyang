@@ -6,6 +6,7 @@ exams and which topic each exam question was mapped to (A6, A7). Every number co
 the caller turns DB rows into inputs and writes the result to ``topics`` (spec §2, §9).
 """
 
+import math
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Literal
@@ -65,12 +66,10 @@ def compute_importance(
     ``appearances`` holds (topic_id, material_id) when the exam has at least one question
     mapped to the topic. Exams of weight 0 do not count as past exams (spec §2 step 1).
     """
-    counted = {e.material_id: e.weight for e in exams if e.weight > 0}
-    if not counted:
+    if not any(e.weight > 0 for e in exams):
         # cfg.no_past_exam_method has one allowed value, page_terciles (checked at config load).
         return _from_page_terciles(topics)
-    not_counted = {e.material_id for e in exams} - counted.keys()
-    return _from_past_exams(topics, counted, not_counted, appearances, cfg)
+    return _from_past_exams(topics, exams, appearances, cfg)
 
 
 def _fixed(topic: TopicIn) -> tuple[int, str | None] | None:
@@ -89,6 +88,10 @@ def _from_page_terciles(topics: Sequence[TopicIn]) -> list[TopicImportance]:
     ranked = [t for t in topics if not t.excluded]  # user-set topics take a rank too
     n = len(ranked)
     pages_equal = len({t.page_count for t in ranked}) <= 1
+    # Ties share the rank of the first topic of their group, starting at 0.
+    rank: dict[int, int] = {}
+    for k, pages in enumerate(sorted((t.page_count for t in ranked), reverse=True)):
+        rank.setdefault(pages, k)
 
     results = []
     for topic in topics:
@@ -101,8 +104,7 @@ def _from_page_terciles(topics: Sequence[TopicIn]) -> list[TopicImportance]:
                 # Page counts say nothing when they are all the same (spec §10 item 6).
                 stars = TWO_STARS
             else:
-                # Ties share the rank of the first topic of their group, starting at 0.
-                k = sum(1 for t in ranked if t.page_count > topic.page_count)
+                k = rank[topic.page_count]
                 # k < n/3 and k < 2n/3, in integers.
                 stars = THREE_STARS if 3 * k < n else TWO_STARS if 3 * k < 2 * n else ONE_STAR
         results.append(TopicImportance(topic.id, stars, signal_r, reason))
@@ -111,47 +113,47 @@ def _from_page_terciles(topics: Sequence[TopicIn]) -> list[TopicImportance]:
 
 def _from_past_exams(
     topics: Sequence[TopicIn],
-    weights: dict[str, float],
-    zero_weight: set[str],
+    exams: Sequence[ExamIn],
     appearances: set[tuple[str, str]],
     cfg: StarsConfig,
 ) -> list[TopicImportance]:
-    """Spec §2 step 2: the first rule that matches gives the stars. ``weights`` holds only the
-    exams that count (weight > 0); ``zero_weight`` the ones that do not."""
-    seen_in: dict[str, set[str]] = {}
-    for topic_id, material_id in appearances:
-        seen_in.setdefault(topic_id, set()).add(material_id)
-    total_weight = sum(weights.values())
-
-    signal: dict[str, float] = {}
-    n_in: dict[str, int] = {}
-    for topic in topics:
-        counted = seen_in.get(topic.id, set()) & weights.keys()
-        signal[topic.id] = sum(weights[m] for m in counted) / total_weight
-        n_in[topic.id] = len(counted)
+    """Spec §2 step 2: the first rule that matches gives the stars. Exams of weight 0 count
+    nowhere (r, n_in, n_total) except for the reason of rule 6."""
+    counted_exams = [e for e in exams if e.weight > 0]
+    zero_weight_ids = [e.material_id for e in exams if e.weight <= 0]
+    # fsum is exactly rounded, so signal_r and a star at the threshold are the same on every
+    # run and every instance (spec §1: reproducible).
+    total_weight = math.fsum(e.weight for e in counted_exams)
 
     # Rules 1-4, which do not depend on other topics.
+    signal: dict[str, float] = {}
     decided: dict[str, tuple[int, str | None]] = {}
     for topic in topics:
-        r = signal[topic.id]
+        counted_in = [e for e in counted_exams if (topic.id, e.material_id) in appearances]
+        r = math.fsum(e.weight for e in counted_in) / total_weight
+        signal[topic.id] = r
         if fixed := _fixed(topic):
             decided[topic.id] = fixed
         elif r >= cfg.three_star_min_r:
-            decided[topic.id] = (THREE_STARS, _seen_reason(n_in[topic.id], len(weights)))
+            decided[topic.id] = (THREE_STARS, _seen_reason(len(counted_in), len(counted_exams)))
         elif r > 0:
-            decided[topic.id] = (TWO_STARS, _seen_reason(n_in[topic.id], len(weights)))
+            decided[topic.id] = (TWO_STARS, _seen_reason(len(counted_in), len(counted_exams)))
 
-    # Rule 5: final ★★★ (computed or user-set) of a topic that is not excluded lifts its
-    # direct prerequisites; the first such topic in input order names the reason.
-    # An excluded topic already has 0 stars (rule 1), so it is never in this list.
-    three_star = [t for t in topics if t.id in decided and decided[t.id][0] == THREE_STARS]
+    # Rule 5: a final ★★★ (computed or user-set) lifts its direct prerequisites; the first
+    # such topic in input order names the reason. An excluded topic already has 0 (rule 1).
+    first_parent: dict[str, TopicIn] = {}
+    for topic in topics:
+        if topic.id in decided and decided[topic.id][0] == THREE_STARS:
+            for prereq_id in topic.prereq_ids:
+                first_parent.setdefault(prereq_id, topic)
+
     results = []
     for topic in topics:
         if topic.id in decided:
             stars, reason = decided[topic.id]
-        elif parent := next((t for t in three_star if topic.id in t.prereq_ids), None):
+        elif parent := first_parent.get(topic.id):
             stars, reason = cfg.prerequisite_of_three_star_gets, f'เป็นพื้นฐานของ "{parent.name}"'
-        elif seen_in.get(topic.id, set()) & zero_weight:
+        elif any((topic.id, m) in appearances for m in zero_weight_ids):
             # Rule 6: only in exams of weight 0; the user saw those exams, so not "not found".
             stars, reason = ONE_STAR, REASON_ONLY_ZERO_WEIGHT
         else:

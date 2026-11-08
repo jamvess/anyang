@@ -66,10 +66,11 @@ class SpacingConfig(_Strict):
 
 
 class StarsConfig(_Strict):
-    weight_same_instructor: float
-    weight_other_instructor: float
-    three_star_min_r: float
-    prerequisite_of_three_star_gets: int
+    # Bounds fail at startup instead of at the topics.importance check (0-3) in an ingestion.
+    weight_same_instructor: float = Field(ge=0)
+    weight_other_instructor: float = Field(ge=0)
+    three_star_min_r: float = Field(gt=0, le=1)  # 0 would give ★★★ to topics never seen
+    prerequisite_of_three_star_gets: int = Field(ge=1, le=3)
     # One method only: a typo fails at startup, not in an ingestion (compute-importance AC-19).
     no_past_exam_method: Literal["page_terciles"]
 

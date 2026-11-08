@@ -189,9 +189,9 @@ AC-pure ตรวจจากการที่ test ทั้งหมดรั
 
 | ไฟล์ | แก้อะไร | เจ้าของ · เมื่อไหร่ |
 |---|---|---|
-| `config/learning.yaml` → `stars.no_past_exam_method` | comment จาก "open question … decide after P3" เป็นนโยบายที่ตัดสินแล้ว (ค่าไม่เปลี่ยน) | Jam · PR นี้ |
-| `specs/system/learning-model.md` §2 | บรรทัด "ไม่มีข้อสอบเก่าเลย … open question" เป็นตัดสินแล้ว พร้อมกฎหน้าเท่ากัน | Jam · PR นี้ |
-| `apps/api/app/settings.py` → `StarsConfig.no_past_exam_method` | `str` → `Literal["page_terciles"]` (AC-19) | เสร็จแล้ว (PR #113 · 2026-11-08) |
+| `config/learning.yaml` → `stars.no_past_exam_method` | comment จาก "open question … decide after P3" เป็นนโยบายที่ตัดสินแล้ว (ค่าไม่เปลี่ยน) | เสร็จแล้ว (PR #89 · 2026-10-31) |
+| `specs/system/learning-model.md` §2 | บรรทัด "ไม่มีข้อสอบเก่าเลย … open question" เป็นตัดสินแล้ว พร้อมกฎหน้าเท่ากัน | เสร็จแล้ว (PR #89 · 2026-10-31) |
+| `apps/api/app/settings.py` → `StarsConfig.no_past_exam_method` | `str` → `Literal["page_terciles"]` (AC-19) · เพิ่มขอบเขตของค่าอื่นใน `StarsConfig` จาก self-review | เสร็จแล้ว (PR #113 · 2026-11-08) |
 | ~~schema: ที่เก็บช่วงหน้าของหัวข้อ~~ | ตาราง `topic_sources` ใน migration `0003` (PR #67 · 2026-11-01) | เสร็จแล้ว |
 
 ข้อ 10.4 เพิ่มรายละเอียดที่ ai-orchestration §2.3.5 ไม่ได้พูดถึง (ไม่ขัดกัน)
