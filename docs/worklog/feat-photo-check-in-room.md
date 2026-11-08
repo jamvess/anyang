@@ -13,7 +13,7 @@
 
 - [x] 1. 🤖 `/spec-feature` → `specs/features/check/photo-check-in-room.md` (AM-xx, TM-06 · หา ID ที่ถูกตอนเขียน) · อ่าน P1.md, P2.md, ai-orchestration §2.4, api.md v1.7 (`ocr_preview`, `verdict`, `/ocr/confirm`), `room-photo-send.md`, `ocr-confirm-card.md`, `verdict-mark.md` · ทุกเรื่องโครงสร้าง backend (อ่านรูปจาก Storage, เก็บ OCR ที่รอยืนยันและโจทย์ปัจจุบันไว้ที่ไหน) เขียนเป็นข้อเสนอใน §10 ให้ Junior ตัดสินย้อนหลัง
 - [x] 2. 🙋 Jam review spec · ตัดสินเรื่อง AI (prompt, model, threshold) · ข้อเสนอ backend เลือกแบบชั่วคราวได้ แล้วรอ Junior
-- [ ] 3. 🤖 `/spec-to-tests` (fake provider · ไม่ใช้ network)
+- [x] 3. 🤖 `/spec-to-tests` (fake provider · ไม่ใช้ network)
 - [ ] 4. 🙋 Jam review test
 - [ ] 5. 🤖 `/implement-feature`
 - [ ] 6. 🙋 smoke ในเครื่องกับ Vertex จริง (ADC ของ Jam): ส่งรูปจาก `evals/` แล้วเห็น `ocr_preview` → ยืนยัน → `verdict` · ขั้นตอนแบบคลิกต่อคลิกจะเขียนให้ตอนถึงขั้นนี้
@@ -31,7 +31,7 @@
 
 ## Next step
 
-ขั้น 3: รัน `/spec-to-tests specs/features/check/photo-check-in-room.md` → `apps/api/tests/unit/test_photo_check_in_room.py`
+ขั้น 4: Jam review `apps/api/tests/unit/test_photo_check_in_room.py` (22 test · แดงเพราะยังไม่มี `app.services.photo_check`)
 
 ## Waiting on
 
@@ -42,4 +42,5 @@
 ## Notes for next time
 
 - เริ่ม 16:47 (8 พ.ย.)
+- `/spec-to-tests` 16:55–17:09 · test ที่ไม่มี AC ตรง: `test_AM02_problem_stays_pending_after_check` (§10 ข้อ 4) · spec ไม่มี AC ของ "ส่งรูปตอนไม่มีโจทย์ค้าง" (§2.1 ข้อ 2) จึงยังไม่มี test
 - spec draft: SymPy ของจริงตรวจตัวอย่าง AC-11 (`x^2 - 49`, `= (x-7)(x+7)` → ถูกทุกบรรทัด) และ AC-12 (`= (x-7)(x-7)` → บรรทัด 2 ผิด) ได้ตามที่เขียน
