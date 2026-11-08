@@ -7,7 +7,7 @@ event. Not in P4-lite: stage machine, planner, buddy, context layers 2-9 and sav
 
 import logging
 from collections.abc import AsyncIterator
-from contextlib import aclosing, nullcontext
+from contextlib import AbstractContextManager, aclosing, nullcontext
 
 from pydantic import BaseModel
 
@@ -25,15 +25,22 @@ AI_UNAVAILABLE = ErrorEvent(code="ai_unavailable", message="The reply stopped be
 INTERNAL_ERROR = ErrorEvent(code="internal_error", message="Internal server error")
 
 
-async def reply_events(
+def call_scope(call_context: AICallContext | None) -> AbstractContextManager[object]:
+    """``ai_call_context`` for the calls made inside it, or nothing without a context."""
+    if call_context is None:
+        return nullcontext()
+    return ai_call_context(
+        tenant_id=call_context.tenant_id,
+        user_id=call_context.user_id,
+        session_id=call_context.session_id,
+    )
+
+
+def reply_events(
     gateway: Gateway, text: str, call_context: AICallContext | None = None
 ) -> AsyncIterator[tuple[str, BaseModel]]:
     """The tutor's reply to a text message (``tutor_reply``), as ``tutor_events``."""
-    async with aclosing(
-        tutor_events(gateway, "tutor_reply", {"message": text}, call_context)
-    ) as events:
-        async for pair in events:
-            yield pair
+    return tutor_events(gateway, "tutor_reply", {"message": text}, call_context)
 
 
 async def tutor_events(
@@ -52,18 +59,9 @@ async def tutor_events(
     inside the generator that reads the stream, and around ``aclosing``: the gateway reports the
     call when the stream ends, which for a client that leaves early is when ``aclosing`` closes
     it (api-auth.md §2.5)."""
-    context = (
-        ai_call_context(
-            tenant_id=call_context.tenant_id,
-            user_id=call_context.user_id,
-            session_id=call_context.session_id,
-        )
-        if call_context is not None
-        else nullcontext()
-    )
     sent = False
     try:
-        with context:
+        with call_scope(call_context):
             async with aclosing(gateway.stream(purpose, input)) as chunks:
                 async for chunk in chunks:
                     sent = True

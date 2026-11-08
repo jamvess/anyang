@@ -3,7 +3,11 @@
 The pending problem (what a photo answers) and the handwriting preview waiting to be
 confirmed. Proposal pending Junior (spec §10 item 5): the default keeps both in the memory of
 the process, like the rate limiter (gateway-guards.md §2.1), so it holds for one Cloud Run
-instance only. The real one reads and writes ``problems`` and ``messages``.
+instance only and is used only once an ``ImageStore`` exists. The real one reads and writes
+``problems`` and ``messages``.
+
+Every key is ``room_key(tenant_id, session_id)``: a session id alone is not enough, because
+no table says yet which tenant owns a session (SA-06).
 """
 
 from dataclasses import dataclass
@@ -42,31 +46,43 @@ STUB_PROBLEM = PendingProblem(
 )
 
 
+def room_key(tenant_id: str, session_id: str) -> str:
+    return f"{tenant_id}/{session_id}"
+
+
 class RoomState(Protocol):
-    async def pending_problem(self, session_id: str) -> PendingProblem | None: ...
+    async def pending_problem(self, key: str) -> PendingProblem | None: ...
 
-    async def preview(self, session_id: str) -> PendingPreview | None: ...
+    async def set_preview(self, key: str, preview: PendingPreview) -> None:
+        """A new photo replaces the old preview (api.md v1.7)."""
+        ...
 
-    async def set_preview(self, session_id: str, preview: PendingPreview) -> None: ...
+    async def take_preview(self, key: str) -> PendingPreview | None:
+        """Remove and return the preview in one step, so two confirms sent together cannot
+        both check it (one confirm per preview, spec §2.2 item 5)."""
+        ...
 
-    async def clear_preview(self, session_id: str) -> None: ...
+    async def restore_preview(self, key: str, preview: PendingPreview) -> None:
+        """Put a taken preview back when its confirm did not get a verdict, unless a newer
+        photo has set one meanwhile (the newer one wins)."""
+        ...
 
 
 class InMemoryRoomState:
     def __init__(self) -> None:
         self._previews: dict[str, PendingPreview] = {}
 
-    async def pending_problem(self, session_id: str) -> PendingProblem | None:
+    async def pending_problem(self, key: str) -> PendingProblem | None:
         return STUB_PROBLEM
 
-    async def preview(self, session_id: str) -> PendingPreview | None:
-        return self._previews.get(session_id)
+    async def set_preview(self, key: str, preview: PendingPreview) -> None:
+        self._previews[key] = preview
 
-    async def set_preview(self, session_id: str, preview: PendingPreview) -> None:
-        self._previews[session_id] = preview  # a new photo replaces the old preview
+    async def take_preview(self, key: str) -> PendingPreview | None:
+        return self._previews.pop(key, None)  # no await in between: one step on the loop
 
-    async def clear_preview(self, session_id: str) -> None:
-        self._previews.pop(session_id, None)
+    async def restore_preview(self, key: str, preview: PendingPreview) -> None:
+        self._previews.setdefault(key, preview)
 
 
 @lru_cache

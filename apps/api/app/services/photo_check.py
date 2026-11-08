@@ -5,25 +5,25 @@ P1 (``extract_answer``) reads the handwriting; P2 (``check_answer`` service: Sym
 + merge rules) checks the lines the user confirmed; ``explain_check`` turns the result into the
 tutor's explanation (AM-07). Code decides, the LLM speaks (CLAUDE.md rule 1). Storage and the
 database come later (spec §9): the image is read through ``ImageStore`` and the pending problem
-and preview live in ``RoomState`` (app/services/room_state.py).
+and preview live in ``RoomState`` (app/services/room_state.py), under ``room_key``.
 """
 
 import json
 import logging
 from collections.abc import AsyncIterator, Sequence
-from contextlib import aclosing, nullcontext
-from typing import Any, Protocol
+from contextlib import aclosing
+from typing import Protocol
 
 from pydantic import BaseModel
 
-from app.ai.call_context import AICallContext, ai_call_context
+from app.ai.call_context import AICallContext
 from app.ai.gateway import AIProviderError, AISchemaError, Gateway, Image
 from app.domain.checker import CheckResult
 from app.models.room import DoneEvent, OcrLine, OcrPreviewEvent, TokenEvent, VerdictEvent
 from app.models.scope_ai import ExtractAnswerResult
 from app.services.checker import check_answer, number_lines, solution_steps_text
 from app.services.room_state import PendingPreview, PendingProblem, RoomState
-from app.services.tutor_turn import DEGRADE_TEXT, INTERNAL_ERROR, tutor_events
+from app.services.tutor_turn import DEGRADE_TEXT, INTERNAL_ERROR, call_scope, tutor_events
 
 log = logging.getLogger(__name__)
 # AM-03: which lines the user corrected on the card (spec §2.2 item 3) · Cloud Logging for now.
@@ -41,7 +41,9 @@ Event = tuple[str, BaseModel]
 
 class ImageStore(Protocol):
     async def read(self, path: str) -> Image | None:
-        """The uploaded file at ``path``, or None when there is none."""
+        """The uploaded file at ``path``, or None when there is none. The router checks the
+        size of what comes back; a Storage-backed store should also refuse to download an
+        object whose metadata is over ``guards.max_image_mb`` (Junior · self-review PR #114)."""
         ...
 
 
@@ -51,16 +53,6 @@ def get_image_store() -> ImageStore | None:
     return None
 
 
-def _context(call_context: AICallContext | None) -> Any:
-    if call_context is None:
-        return nullcontext()
-    return ai_call_context(
-        tenant_id=call_context.tenant_id,
-        user_id=call_context.user_id,
-        session_id=call_context.session_id,
-    )
-
-
 def _tutor(text: str) -> Event:
     return "token", TokenEvent(speaker="tutor", text=text)
 
@@ -68,7 +60,7 @@ def _tutor(text: str) -> Event:
 async def photo_events(
     gateway: Gateway,
     state: RoomState,
-    session_id: str,
+    key: str,
     pending: PendingProblem,
     image: Image,
     call_context: AICallContext | None = None,
@@ -76,7 +68,7 @@ async def photo_events(
     """SSE of a photo message (spec §2.1 items 4-6). The caption never reaches the model."""
     yield _tutor(LOOKING)  # before the model call, so the user sees the photo was taken
     try:
-        with _context(call_context):
+        with call_scope(call_context):
             result = await gateway.call(
                 "extract_answer",
                 {"image": image, "problem_text": pending.problem.text},
@@ -92,14 +84,20 @@ async def photo_events(
         yield "error", INTERNAL_ERROR
         return
 
-    if not result.lines:  # unreadable or not an answer (UC-04 E1); the old preview stays
+    # A blank line could not be confirmed (the confirm body refuses blank lines), so it is
+    # left out; the confirm body is stripped too, so the preview is kept stripped (AM-03).
+    lines = [
+        OcrLine(latex=line.latex.strip(), confidence=line.confidence)
+        for line in result.lines
+        if line.latex.strip()
+    ]
+    if not lines:  # unreadable or not an answer (UC-04 E1); the old preview stays
         yield _tutor(UNREADABLE)
         yield "done", DoneEvent()
         return
-    lines = [OcrLine(latex=line.latex, confidence=line.confidence) for line in result.lines]
     # Confirmed every time, whatever the confidence (AM-02 · ocr.always_confirm, P1).
     await state.set_preview(
-        session_id, PendingPreview(pending=pending, lines=tuple(line.latex for line in lines))
+        key, PendingPreview(pending=pending, lines=tuple(line.latex for line in lines))
     )
     yield "ocr_preview", OcrPreviewEvent(lines=lines)
     yield _tutor(CHECK_PLEASE)
@@ -129,37 +127,45 @@ def _log_edits(session_id: str, preview: PendingPreview, lines: Sequence[str]) -
 async def confirm_events(
     gateway: Gateway,
     state: RoomState,
+    key: str,
     session_id: str,
     preview: PendingPreview,
     lines: list[str],
     call_context: AICallContext | None = None,
 ) -> AsyncIterator[Event]:
-    """SSE of ocr/confirm (spec §2.2 items 3-8): verdict first, then the tutor explains."""
-    problem = preview.pending.problem
-    try:
-        with _context(call_context):
-            result = await check_answer(problem, lines, gateway=gateway)
-    except (AIProviderError, AISchemaError):
-        # Temporary instead of UC-04 E4 (spec §10 item 2): no verdict, confirm again.
-        log.warning("check_answer classifier failed; the preview stays to confirm again")
-        yield _tutor(DEGRADE_TEXT)
-        yield "done", DoneEvent()
-        return
-    except Exception:
-        log.exception("check_answer failed")
-        yield "error", INTERNAL_ERROR
-        return
+    """SSE of ocr/confirm (spec §2.2 items 3-8): verdict first, then the tutor explains.
 
-    await state.clear_preview(session_id)  # one confirm per preview
+    The router has already taken ``preview`` out of the state (``take_preview``). Until the
+    verdict is built it is put back on every way out, so the user can confirm again (§2.2
+    item 7); a newer photo that arrived meanwhile wins."""
+    problem = preview.pending.problem
+    checked = False
+    try:
+        try:
+            with call_scope(call_context):
+                result = await check_answer(problem, lines, gateway=gateway)
+            verdict = VerdictEvent(
+                verdict=result.verdict,
+                first_wrong_line=result.first_wrong_line,
+                error_type=result.error_type,
+            )
+        except (AIProviderError, AISchemaError):
+            # Temporary instead of UC-04 E4 (spec §10 item 2): no verdict, confirm again.
+            log.warning("check_answer classifier failed; the preview stays to confirm again")
+            yield _tutor(DEGRADE_TEXT)
+            yield "done", DoneEvent()
+            return
+        except Exception:
+            log.exception("check_answer failed")
+            yield "error", INTERNAL_ERROR
+            return
+        checked = True  # one confirm per preview (§2.2 item 5)
+    finally:
+        if not checked:
+            await state.restore_preview(key, preview)
+
     _log_edits(session_id, preview, lines)
-    yield (
-        "verdict",
-        VerdictEvent(
-            verdict=result.verdict,
-            first_wrong_line=result.first_wrong_line,
-            error_type=result.error_type,
-        ),
-    )
+    yield "verdict", verdict
     explain_input = {
         "problem": problem.text,
         # Sent on purpose: the tutor shows the right value and method (§2.2.4). This problem

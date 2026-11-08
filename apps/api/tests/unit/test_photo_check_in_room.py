@@ -643,3 +643,93 @@ def test_AM02_problem_stays_pending_after_check(client, room):
 
     assert "ocr_preview" in names(events)
     assert P1_TEXT in requests_for(fake, "extract_answer")[1].prompt
+
+
+# --- added after /code-review (8 Nov) · not in spec §8 -----------------------------------
+
+
+def test_SA06_another_tenant_cannot_use_or_replace_a_preview(client, room):
+    # The room state is keyed by tenant and session: a session id alone does not say who owns
+    # it until tutor_sessions exists.
+    from uuid import UUID
+
+    from app.auth import AuthContext, get_auth
+
+    tenant_a, tenant_b = UUID(int=0xA), UUID(int=0xB)
+    photo_a = f"{tenant_a}/sessions/{SESSION_ID}/a.jpeg"
+    photo_b = f"{tenant_b}/sessions/{SESSION_ID}/b.jpeg"
+    three = extract(("x^2 - 49", 0.9), ("= (x-7)(x+7)", 0.9), ("= (x+7)(x-7)", 0.9))
+    room(
+        {
+            "extract_answer": [TWO_LINES, three],
+            "check_answer": [CLASSIFY_RIGHT],
+            "explain_check": ["ถูกแล้ว"],
+        },
+        files={photo_a: IMAGE, photo_b: IMAGE},
+    )
+    current: dict[str, AuthContext] = {}
+    app.dependency_overrides[get_auth] = lambda: current["auth"]
+    try:
+        url = f"/sessions/{SESSION_ID}"
+        current["auth"] = AuthContext(tenant_id=tenant_a, user_id=UUID(int=1), token="a")
+        client.post(f"{url}/messages", json={"image_path": photo_a})
+
+        current["auth"] = AuthContext(tenant_id=tenant_b, user_id=UUID(int=2), token="b")
+        b_confirms_a = confirm(client, RIGHT)
+        client.post(f"{url}/messages", json={"image_path": photo_b})
+
+        current["auth"] = AuthContext(tenant_id=tenant_a, user_id=UUID(int=1), token="a")
+        a_confirms = confirm(client, RIGHT)
+    finally:
+        app.dependency_overrides.pop(get_auth, None)
+
+    assert b_confirms_a.status_code == 409
+    assert error_code(b_confirms_a) == "no_pending_ocr"
+    assert a_confirms.status_code == 200  # B's photo did not replace A's 2-line preview
+    assert names(parse_sse(a_confirms.text))[0] == "verdict"
+
+
+def test_AM02_blank_lines_are_left_out_of_the_preview(client, room, caplog):
+    # A blank line cannot be confirmed (the confirm body refuses it), and whitespace alone is
+    # not an edit (AM-03).
+    caplog.set_level(logging.INFO, logger="app.ocr.confirm")
+    spaced = extract((RIGHT[0], 0.9), ("  ", 0.5), (RIGHT[1] + " ", 0.9))
+    room(
+        {
+            "extract_answer": [spaced, extract(("", 0.5))],
+            "check_answer": [CLASSIFY_RIGHT],
+            "explain_check": ["ถูกแล้ว"],
+        }
+    )
+
+    first = parse_sse(send_photo(client).text)
+    confirmed = confirm(client, RIGHT)
+    only_blank = parse_sse(send_photo(client).text)
+
+    assert dict(first)["ocr_preview"]["lines"] == [
+        {"latex": RIGHT[0], "confidence": 0.9},
+        {"latex": RIGHT[1], "confidence": 0.9},
+    ]
+    assert confirmed.status_code == 200
+    [line] = [r for r in caplog.records if r.name == "app.ocr.confirm"]
+    assert json.loads(line.getMessage())["edited_lines"] == []
+    assert tokens(only_blank) == [LOOKING, UNREADABLE]
+
+
+async def test_AM02_a_preview_is_taken_once_and_a_newer_one_wins():
+    # One confirm per preview even when two arrive together; a preview put back after a failed
+    # check never replaces a newer photo.
+    from app.services.room_state import STUB_PROBLEM, PendingPreview
+
+    state = InMemoryRoomState()
+    old = PendingPreview(pending=STUB_PROBLEM, lines=("a",))
+    new = PendingPreview(pending=STUB_PROBLEM, lines=("b",))
+    await state.set_preview("t/s", old)
+
+    assert await state.take_preview("t/s") == old
+    assert await state.take_preview("t/s") is None
+    await state.set_preview("t/s", new)
+    await state.restore_preview("t/s", old)
+    assert await state.take_preview("t/s") == new
+    await state.restore_preview("t/s", old)
+    assert await state.take_preview("t/s") == old

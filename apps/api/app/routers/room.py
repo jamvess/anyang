@@ -51,7 +51,7 @@ from app.services.photo_check import (
     get_image_store,
     photo_events,
 )
-from app.services.room_state import RoomState, get_room_state
+from app.services.room_state import RoomState, get_room_state, room_key
 from app.services.tutor_turn import reply_events
 from app.settings import get_settings
 
@@ -222,16 +222,13 @@ async def send_message(
             str(session_id), body.image_path, auth, gateway, image_store, room_state, call_context
         )
 
-    async def events() -> AsyncIterator[dict[str, str]]:
-        # aclosing: a client that leaves closes the provider stream now (spec §2 Endpoint 8).
-        async with aclosing(reply_events(gateway, body.text, call_context)) as replies:
-            async for event, payload in replies:
-                yield {"event": event, "data": payload.model_dump_json()}
-
-    return EventSourceResponse(events())
+    return _sse(reply_events(gateway, body.text, call_context))
 
 
 def _sse(events: AsyncIterator[tuple[str, BaseModel]]) -> EventSourceResponse:
+    """(event, payload) pairs as SSE. aclosing: a client that leaves closes the provider
+    stream now (tutor-reply-stream.md §2 Endpoint 8)."""
+
     async def encoded() -> AsyncIterator[dict[str, str]]:
         async with aclosing(events) as pairs:
             async for event, payload in pairs:
@@ -264,9 +261,11 @@ async def _photo_message(
     call_context: AICallContext | None,
 ) -> Response:
     """Checks before the SSE starts (photo-check-in-room.md §2.1 items 1-3)."""
-    if not _own_upload(image_path, stubs.tenant_of(auth), session_id):
+    tenant_id = stubs.tenant_of(auth)
+    if not _own_upload(image_path, tenant_id, session_id):
         return error_response(404, "not_found", "No such upload in this session")
-    pending = await room_state.pending_problem(session_id)
+    key = room_key(tenant_id, session_id)
+    pending = await room_state.pending_problem(key)
     if pending is None:
         # UC-04 E9 before an intent router exists (spec §10 item 4 · proposal pending Junior).
         return _sse(_no_pending_problem())
@@ -276,7 +275,7 @@ async def _photo_message(
     max_mb = get_settings().ai.guards.max_image_mb
     if len(image.data) > max_mb * BYTES_PER_MB:  # the browser's size_bytes is checked again
         return error_response(422, "file_too_large", f"image is over {max_mb} MB")
-    return _sse(photo_events(gateway, room_state, session_id, pending, image, call_context))
+    return _sse(photo_events(gateway, room_state, key, pending, image, call_context))
 
 
 async def _no_pending_problem() -> AsyncIterator[tuple[str, BaseModel]]:
@@ -376,12 +375,16 @@ async def confirm_ocr(
             )
         return stubs.stream("ocr_confirm")
 
-    preview = await room_state.preview(str(session_id))
+    key = room_key(stubs.tenant_of(auth), str(session_id))
+    # Taken out now, so a second confirm sent at the same time gets 409 (one confirm per
+    # preview); confirm_events puts it back if no verdict comes (spec §2.2 items 5, 7).
+    preview = await room_state.take_preview(key)
     if preview is None:
         return error_response(409, "no_pending_ocr", "No handwriting preview waits to be confirmed")
     if len(body.lines) != len(preview.lines):
+        await room_state.restore_preview(key, preview)
         return error_response(422, "ocr_lines_mismatch", f"send {len(preview.lines)} lines")
     call_context = AICallContext(auth.tenant_id, auth.user_id) if auth else None
     return _sse(
-        confirm_events(gateway, room_state, str(session_id), preview, body.lines, call_context)
+        confirm_events(gateway, room_state, key, str(session_id), preview, body.lines, call_context)
     )
