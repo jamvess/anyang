@@ -6,7 +6,7 @@
 | Requirements | SM-03, SM-09 |
 | Owner | Jam |
 | Reviewer | Junior |
-| Status | approved 31 ต.ค. 2569 (Jam · ปรับตามผล P3) · ใช้เป็นตัวอย่างของ PoC P8-lite · เริ่ม `/spec-to-tests` ใน S4 |
+| Status | implemented 8 พ.ย. 2569 (PR #113 · `app/domain/stars.py` · `tests/unit/test_stars.py`) · approved 31 ต.ค. 2569 (Jam · ปรับตามผล P3) · ใช้เป็นตัวอย่างของ PoC P8-lite |
 | Related system spec | ai-orchestration.md §2.3.4–2.3.5, learning-model.md §2, `config/learning.yaml` → `stars` · สูตรที่ P3 ใช้จริง: `poc/P3/stars.py` (★★★ ตรง label 10/12 · `specs/poc/reports/P3.md`) |
 
 ## 1. Context
@@ -179,13 +179,19 @@ AC-pure ตรวจจากการที่ test ทั้งหมดรั
 7. **`signal_r` เมื่อไม่มีข้อสอบเก่า** = สัดส่วนจำนวนหน้า ตาม learning-model §5 (ร่างแรกของรอบนี้ใส่ `null` ซึ่งทำให้ความพร้อม % คำนวณไม่ได้)
 8. **จำนวนหน้ามาจาก `sources` ของ A6** ตาม ai-orchestration §2.3.4 ไม่ใช่ `topic_chunks`
 
+**เจอตอน implement (8 พ.ย. · PR #113 · Jam ok)** · ไม่เปลี่ยน behavior ใน §2 แค่เขียนกรณีที่ §2 ไม่ได้พูดถึง
+
+9. **`appearances` ที่ `material_id` ไม่อยู่ใน `exams`** ไม่นับเป็นข้อสอบเก่าและไม่นับเป็นชุดน้ำหนัก 0 (ไม่ทำให้ได้เหตุผล `พบเฉพาะในข้อสอบที่ไม่ได้ใช้คิดดาว`) · ผู้เรียกสร้าง input ทั้งสองจาก `materials` ชุดเดียวกันจึงไม่ควรเกิด
+10. **ผู้ใช้แก้ดาวเองแต่ `current_reason` เป็น `null`** → เหตุผลคง `null` ตามเดิม (§2 ขั้นที่ 2 ข้อ 2 "คงค่าเดิม") · `TopicImportance.reason` จึงเป็น `str | None`
+11. **โหมดไม่มีข้อสอบเก่า หัวข้อที่ผู้ใช้แก้ดาวเองนับอันดับด้วย** (§2 ขั้นที่ 3 ข้อ 2–3) ไม่มี AC จึงเพิ่ม `test_SM03_no_past_exam_keeps_user_stars_and_counts_their_rank` · `signal_r` ของ AC-17 หารด้วยหน้าของทุกหัวข้อรวมที่ตัดออก (§2 ขั้นที่ 1)
+
 ## 11. Spec changes needed
 
 | ไฟล์ | แก้อะไร | เจ้าของ · เมื่อไหร่ |
 |---|---|---|
 | `config/learning.yaml` → `stars.no_past_exam_method` | comment จาก "open question … decide after P3" เป็นนโยบายที่ตัดสินแล้ว (ค่าไม่เปลี่ยน) | Jam · PR นี้ |
 | `specs/system/learning-model.md` §2 | บรรทัด "ไม่มีข้อสอบเก่าเลย … open question" เป็นตัดสินแล้ว พร้อมกฎหน้าเท่ากัน | Jam · PR นี้ |
-| `apps/api/app/settings.py` → `StarsConfig.no_past_exam_method` | `str` → `Literal["page_terciles"]` (AC-19) | ทำใน S4 พร้อม implement |
+| `apps/api/app/settings.py` → `StarsConfig.no_past_exam_method` | `str` → `Literal["page_terciles"]` (AC-19) | เสร็จแล้ว (PR #113 · 2026-11-08) |
 | ~~schema: ที่เก็บช่วงหน้าของหัวข้อ~~ | ตาราง `topic_sources` ใน migration `0003` (PR #67 · 2026-11-01) | เสร็จแล้ว |
 
 ข้อ 10.4 เพิ่มรายละเอียดที่ ai-orchestration §2.3.5 ไม่ได้พูดถึง (ไม่ขัดกัน)
