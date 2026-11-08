@@ -13,7 +13,7 @@ Spec: `specs/features/scope/compute-importance.md` (approved 31 ต.ค.) · SM-
 
 - [x] 1. 🤖 `/spec-to-tests`: `apps/api/tests/unit/test_stars.py` (19 test ตาม §8) + AC-19 ใน `test_settings.py` · รันให้แดงเพราะยังไม่มี `app/domain/stars.py` · จดเวลาลง metrics §4
 - [x] 2. 🙋 Jam review test (ตาราง AC → test) · จดเวลาเริ่ม–จบลง metrics §4 · test ผิดจดลง metrics §3 · spec ไม่ชัดจดลง §5
-- [ ] 3. 🤖 `/implement-feature`: `app/domain/stars.py` + `StarsConfig.no_past_exam_method` เป็น `Literal["page_terciles"]` · จดทุกรอบ red → green ลง metrics §2
+- [x] 3. 🤖 `/implement-feature`: `app/domain/stars.py` + `StarsConfig.no_past_exam_method` เป็น `Literal["page_terciles"]` · จดทุกรอบ red → green ลง metrics §2
 - [ ] 4. 🤖 รัน `pytest`, `ruff` ทั้งหมด · กรอก metrics §1 ด้วย `agent_lines.sh`
 - [ ] 5. 🙋 `/work-done`: `/code-review` (จดบั๊กลง metrics §3) · ข้อความกลุ่มให้ Junior + May review test ย้อนหลัง
 
@@ -31,7 +31,7 @@ Spec: `specs/features/scope/compute-importance.md` (approved 31 ต.ค.) · SM-
 
 ## Next step
 
-รัน `/implement-feature specs/features/scope/compute-importance.md` (ขั้น 3) · จดทุกรอบ red → green ลง `poc/P8-lite/metrics.md` §2
+ขั้น 4: รัน `uv run pytest` + `ruff` ทั้งหมดใน `apps/api` แล้วกรอก metrics §1 ด้วย `bash poc/P8-lite/agent_lines.sh origin/main HEAD apps/api/app` และ `... apps/api/tests`
 
 ## Waiting on
 
@@ -41,4 +41,5 @@ Spec: `specs/features/scope/compute-importance.md` (approved 31 ต.ค.) · SM-
 
 - เริ่มงาน 13:46 (8 พ.ย.) · `/spec-to-tests` 13:47–13:50 (รอ Claude)
 - test ที่ไม่มี AC ตรง (มาจาก §2): `test_SM03_no_past_exam_keeps_user_stars_and_counts_their_rank` (§2 ขั้นที่ 3 ข้อ 1–3) และแถว "ranked by pages, not by input order" ใน `test_SM03_no_past_exam_page_terciles` · ถ้า Jam ok ให้จดลง metrics §5 ว่า spec ไม่มี AC ของกรณีผู้ใช้แก้ดาวในโหมดไม่มีข้อสอบเก่า
+- `/implement-feature` 3 รอบ red → green (metrics §2) · เจอบั๊ก 1 ข้อตอน refactor (metrics §3)
 - integration test ในเครื่องแดงเพราะ local Supabase ยังไม่มี `topic_sources` (ต้อง `npx supabase db reset`) · ไม่เกี่ยวกับงานนี้ · CI รัน migration เอง

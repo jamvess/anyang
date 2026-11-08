@@ -32,7 +32,9 @@ bash poc/P8-lite/agent_lines.sh origin/main HEAD apps/api/tests  # แถว tes
 
 | # | test ที่แดง (ชื่อหรือกลุ่ม AC) | แดงเพราะ | เขียวหลังแก้อะไร |
 |---|---|---|---|
-| 1 | | | |
+| 1 | AC-19 `test_SM03_unknown_no_past_exam_method_fails_at_config_load` | `no_past_exam_method: str` รับค่าอะไรก็ได้ | `Literal["page_terciles"]` ใน `StarsConfig` |
+| 2 | AC-1 ถึง AC-13b, AC-boundary, AC-config, AC-weight-zero-one (18 test) | ยังไม่มี `app/domain/stars.py` | กฎขั้นที่ 2 (มีข้อสอบเก่า) · 11 test ของโหมดไม่มีข้อสอบเก่ายังแดงตามแผน |
+| 3 | AC-zero-weight, AC-14 ถึง AC-18, AC-order + test ที่เพิ่มจาก §2 (11 test) | โหมดไม่มีข้อสอบเก่ายังเป็น `NotImplementedError` | กฎขั้นที่ 3 (page terciles) · เขียวครบ 32 test ในรอบแรก ไม่มีรอบแก้ซ้ำ |
 
 ## 3. บั๊กที่จับได้ก่อน merge
 
@@ -40,7 +42,7 @@ bash poc/P8-lite/agent_lines.sh origin/main HEAD apps/api/tests  # แถว tes
 
 | # | บั๊ก | จับได้ด้วย (unit test · CI · `/code-review` · คนอ่าน) | แก้ใน commit |
 |---|---|---|---|
-| 1 | | | |
+| 1 | กฎข้อ 6 ให้เหตุผล `พบเฉพาะในข้อสอบที่ไม่ได้ใช้คิดดาว` เมื่อหัวข้อมีแถวใน `appearances` ของ material ใดก็ได้ที่ไม่ถูกนับ รวม material ที่ไม่อยู่ใน `exams` (ควรนับเฉพาะชุดน้ำหนัก 0) | Claude อ่านทวนตอน refactor (หลัง test เขียวครบ) · ไม่มี test จับ เพราะ spec ไม่ได้พูดถึง material ที่ไม่อยู่ใน `exams` | commit implement (แก้ก่อน commit) |
 
 ถ้าเจอว่า **test ผิด** (ไม่ใช่โค้ดผิด) ให้จดแยกด้านล่าง เพราะเป็นตัววัดคุณภาพของ `/spec-to-tests`
 
@@ -55,7 +57,7 @@ bash poc/P8-lite/agent_lines.sh origin/main HEAD apps/api/tests  # แถว tes
 | review spec (ทำแล้ว 31 ต.ค. · Jam) | Jam | | | |
 | `/spec-to-tests` (รอ Claude) | Claude | 13:47 | 13:50 | 3 |
 | review test ด้วยกัน | Jam (8 พ.ย. · Junior, May ดูย้อนหลัง) | 13:52 | 13:56 | 4 |
-| `/implement-feature` (รอ Claude + ตอบคำถาม) | | | | |
+| `/implement-feature` (รอ Claude + ตอบคำถาม) | Claude | 13:56 | 13:59 | 3 |
 | อ่านผล `/code-review` และตัดสินใจ | | | | |
 | รวม | | | | |
 
