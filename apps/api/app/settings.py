@@ -70,7 +70,8 @@ class StarsConfig(_Strict):
     weight_other_instructor: float
     three_star_min_r: float
     prerequisite_of_three_star_gets: int
-    no_past_exam_method: str
+    # One method only: a typo fails at startup, not in an ingestion (compute-importance AC-19).
+    no_past_exam_method: Literal["page_terciles"]
 
 
 class ReadinessConfig(_Strict):
