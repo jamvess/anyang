@@ -14,8 +14,8 @@
 - [x] 1. 🤖 `/spec-feature` → `specs/features/tutor/answer-canvas.md` (TM-06 · ดีไซน์ชั่วคราว: หน้าตาและ flow ให้ May ตัดสินย้อนหลังใน §10) → 🙋 Jam ok
 - [x] 2. 🤖 `/spec-to-tests` (Vitest · ตรรกะของเส้นเป็น pure function · mock `getContext` และ `toBlob` เอง ไม่เพิ่ม dependency) → 🙋 Jam review test
 - [x] 3. 🤖 `/implement-feature` (`components/chat/AnswerCanvas.tsx` + `canvasStrokes.ts` · ข้อความไทยใน `strings.ts`)
-- [ ] 4. 🙋 ลองบนคอม (เมาส์) · iPad ทีหลัง (Jam 9 พ.ย.: ตอนนี้ลองแค่คอม)
-- [ ] 5. 🙋 ซ้อม loop เดโม่ทั้งหมดแล้วอัดวิดีโอสำรอง
+- [x] 4. 🙋 ลองบนคอม (เมาส์) · iPad ทีหลัง (Jam 9 พ.ย.: ตอนนี้ลองแค่คอม) · Jam ลอง 3 รอบ (เขียน, ขาดวิธีทำ, แชทระหว่างทำ)
+- [ ] 5. 🙋 ~~ซ้อม loop เดโม่ทั้งหมดแล้วอัดวิดีโอสำรอง~~ ย้ายไปหลัง `feat/hint-ladder` (Jam 9 พ.ย. · เดโม่จะเปลี่ยนวิธีสอน)
 - [ ] 6. 🤖 `/work-done` + ข้อความกลุ่มถึง May (หน้าจอของ May · ดีไซน์ชั่วคราว)
 
 ## Definition of done
@@ -26,6 +26,8 @@
 
 ## Decisions
 
+- 2026-11-09 · Jam ลองรอบ 3: ส่งขั้นแรกของ product rule แล้ว tutor เฉลยเต็ม · อยากได้แบบใบ้ทีละขั้น เฉลยเมื่อทำไม่ได้จริงๆ → Jam ok ออกแบบ hint ladder (ขั้นถูกแต่ไม่จบ = ทำต่อ · ผิด → ชี้จุด → ใบ้วิธี → เฉลย · give_up · BKT ตามระดับ hint · `explain_check/v3` + directive) ทำเป็น PR แยก `feat/hint-ladder` · ขัด AM-07 (Must) จึงทำใน local ก่อนแล้วเสนอทีม · วิดีโอย้ายไปหลังงานนั้น
+- 2026-11-09 · ทำไมบรรทัดเดียวในรอบ 3 ไม่โดนขอวิธีทำ: กฎทำงานถูก (ไม่มี ✓, ส่ง `working: missing`) แต่ model ไม่ทำตาม `explain_check/v2` ที่ห้ามแสดงวิธีทำ → แก้ด้วย directive ใน v3
 - 2026-11-09 · Jam ลองรอบ 2: คุยไปสักพัก canvas เลื่อนพ้นจอ และ tutor พิมพ์ `**` ดิบ → Jam ok: canvas อยู่ท้ายแชทพร้อมหัวโจทย์ สิ่งที่เขียนไม่หายจนกว่าจะเปลี่ยนโจทย์ (answer-canvas §2 B) · `MessageText` ตัดคู่ `**` (§2 C · โค้ดของ May) · แก้ test AC-16 ที่ review แล้ว 1 บรรทัด (`rac` หลุด backslash ตอนเขียนไฟล์ผ่าน shell)
 - 2026-11-09 · Jam: ใช้กฎ 2 ขั้นไปก่อน · แนวคิด "ให้ LLM ตัดสินว่าวิธีทำพอหรือยัง เพราะแต่ละโจทย์ยาวไม่เท่ากัน" จดไว้ใน demo-room §10 ข้อ 3 และ learning-model §8 (ยังไม่ทำ)
 - 2026-11-09 · Jam ลอง canvas บนคอม: เขียน `(x²−7²) = (x−7)(x+7)` บรรทัดเดียวแล้วโดนว่าขาดวิธีทำ และอยากได้ canvas ใหม่เมื่อ tutor ขอวิธีทำ → Jam ok: นับเป็นขั้น (บรรทัด + `=` กลางบรรทัด · `working_steps`) และส่งการ์ดโจทย์เดิมซ้ำเมื่อขาดวิธีทำ (demo-room §2 I ข้อ 5–6) · แก้ test AC-30 ที่ review แล้ว (มี `problem` ก่อน `done`) · ทำใน PR นี้ แตะ `apps/api/`
@@ -35,7 +37,7 @@
 
 ## Next step
 
-ขั้น 4 (🙋 Jam): ลองบนคอมด้วยเมาส์ตามขั้นตอนที่ Claude เขียนให้
+พิมพ์ `/work-done` (วิดีโอสำรองย้ายไปหลัง `feat/hint-ladder`)
 
 ## Waiting on
 
