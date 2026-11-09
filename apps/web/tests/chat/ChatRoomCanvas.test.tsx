@@ -33,7 +33,7 @@ afterEach(() => {
 
 function regionAfter(container: HTMLElement, problemId: string): boolean {
   const card = container.querySelector(`[data-problem-id="${problemId}"]`)!;
-  const canvas = container.querySelector(`[role="region"][aria-label="${CANVAS}"]`)!;
+  const canvas = container.querySelector(`[role="form"][aria-label="${CANVAS}"]`)!;
   return Boolean(card.compareDocumentPosition(canvas) & Node.DOCUMENT_POSITION_FOLLOWING);
 }
 
@@ -41,12 +41,12 @@ describe("ChatRoom answer canvas", () => {
   it("AC-1 TM06 a problem card has the canvas under it; no problem, no canvas", async () => {
     const plain = render(<ChatRoom room={room} opening={stream({ event: "token", data: { speaker: "tutor", text: "สวัสดี" } })} />);
     await flush();
-    expect(plain.queryByRole("region", { name: CANVAS })).toBeNull();
+    expect(plain.queryByRole("form", { name: CANVAS })).toBeNull();
     cleanup();
 
     const { container, getByRole } = render(<ChatRoom room={room} opening={stream(problem("p1", "x^2 - 49"))} />);
     await flush();
-    const canvas = getByRole("region", { name: CANVAS });
+    const canvas = getByRole("form", { name: CANVAS });
     for (const name of ["ปากกา", "ยางลบ", "ย้อนกลับ", "ล้าง", "ใส่รูป", "ส่งคำตอบ"]) {
       expect(canvas.querySelector(`button[aria-label="${name}"]`)).not.toBeNull();
     }
@@ -59,7 +59,7 @@ describe("ChatRoom answer canvas", () => {
     );
     await flush();
 
-    expect(getAllByRole("region", { name: CANVAS })).toHaveLength(1);
+    expect(getAllByRole("form", { name: CANVAS })).toHaveLength(1);
     expect(regionAfter(container, "p2")).toBe(true);
   });
 

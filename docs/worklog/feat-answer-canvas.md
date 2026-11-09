@@ -12,8 +12,8 @@
 ## Plan
 
 - [x] 1. 🤖 `/spec-feature` → `specs/features/tutor/answer-canvas.md` (TM-06 · ดีไซน์ชั่วคราว: หน้าตาและ flow ให้ May ตัดสินย้อนหลังใน §10) → 🙋 Jam ok
-- [ ] 2. 🤖 `/spec-to-tests` (Vitest · ตรรกะของเส้นเป็น pure function · mock `getContext` และ `toBlob` เอง ไม่เพิ่ม dependency) → 🙋 Jam review test
-- [ ] 3. 🤖 `/implement-feature` (`components/chat/AnswerCanvas.tsx` + `canvasStrokes.ts` · ข้อความไทยใน `strings.ts`)
+- [x] 2. 🤖 `/spec-to-tests` (Vitest · ตรรกะของเส้นเป็น pure function · mock `getContext` และ `toBlob` เอง ไม่เพิ่ม dependency) → 🙋 Jam review test
+- [x] 3. 🤖 `/implement-feature` (`components/chat/AnswerCanvas.tsx` + `canvasStrokes.ts` · ข้อความไทยใน `strings.ts`)
 - [ ] 4. 🙋 ลองบนคอม (เมาส์) · iPad ทีหลัง (Jam 9 พ.ย.: ตอนนี้ลองแค่คอม)
 - [ ] 5. 🙋 ซ้อม loop เดโม่ทั้งหมดแล้วอัดวิดีโอสำรอง
 - [ ] 6. 🤖 `/work-done` + ข้อความกลุ่มถึง May (หน้าจอของ May · ดีไซน์ชั่วคราว)
@@ -26,18 +26,21 @@
 
 ## Decisions
 
+- 2026-11-09 · canvas เป็น `role="form"` ไม่ใช่ region (Jam เลือกข้อ 1): test ของการ์ดโจทย์ใน `ChatRoomStream.test.tsx` (ของ May) นับทุก region · แก้ test ของเรา 4 จุดและ AC-1 ใน spec
 - 2026-11-09 · ลองแค่บนคอมก่อน ไม่ต้องลอง iPad ใน PR นี้ (Jam) · ตรรกะ Apple Pencil (pressure, ไม่วาดตามฝ่ามือ) ยังทำและ test ด้วย pure function
 - 2026-11-09 · canvas ผูกกับโจทย์ ไม่ใช่ปุ่มใน composer (Jam) · PR แยกจากเดโม่ (#115 merge แล้ว)
 
 ## Next step
 
-ขั้น 2 (ต่อ): Jam review test 3 ไฟล์ (แดงเพราะยังไม่มี `canvasStrokes.ts` และ `AnswerCanvas.tsx`) แล้ว `/implement-feature`
+ขั้น 4 (🙋 Jam): ลองบนคอมด้วยเมาส์ตามขั้นตอนที่ Claude เขียนให้
 
 ## Waiting on
 
 - May: ตัดสินหน้าตาและ flow ของ canvas ย้อนหลัง (`roles.md` "ตัดสินใจเรื่อง" · หน้าจอและ flow)
 
 ## Notes for next time
+
+- implement: red → green 2 รอบ · (1) ตรรกะ 12/12 และ component 9/9 เขียวรอบแรก (2) ต่อเข้าห้องแล้ว test การ์ดโจทย์ของ May 2 ตัวล้มเพราะนับ region → เปลี่ยนเป็น `role="form"` · eslint จับการอ่าน ref ระหว่าง render (`react-hooks/refs`) แก้แล้ว · `ChatRoomOcr` ล้มครั้งเดียวตอนเครื่องช้า (timeout) รันซ้ำ 3 รอบผ่าน
 
 - test: mock ของ canvas และ PointerEvent อยู่ใน `tests/helpers/fakeCanvas.ts` · หน้าตาโค้ดที่ test กำหนด: `canvasStrokes.ts` (emptyScene, accepts, strokeWidth, start/extend/endStroke, undo, clear, setBackground, isEmpty, canUndo, containRect, drawScene(base, layer, scene, size)) · `AnswerCanvas` props `onSend`, `disabled`, `maxImageMb`, `loadImage?` · ไม่มี prettier ในเครื่อง (ใช้ eslint)
 

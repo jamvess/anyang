@@ -1,3 +1,5 @@
+import type { ComponentProps } from "react";
+import { AnswerCanvas } from "./AnswerCanvas";
 import { MessageText } from "./MessageText";
 import { OcrConfirmCard } from "./OcrConfirmCard";
 import { ProblemCard } from "./ProblemCard";
@@ -60,7 +62,11 @@ type Props = {
   /** Buttons of a handwriting confirm card, by message id (ocr-confirm-card.md). */
   onOcrConfirm?: (id: string, lines: string[]) => void;
   onOcrRetake?: (id: string) => void;
+  /** The answer canvas under the latest problem card (answer-canvas.md); none when not given. */
+  answerCanvas?: AnswerCanvasProps;
 };
+
+type AnswerCanvasProps = Omit<ComponentProps<typeof AnswerCanvas>, "loadImage">;
 
 function Avatar({ role, name }: { role: Speaker; name: string }) {
   return (
@@ -83,6 +89,7 @@ export function MessageList({
   typing = false,
   onOcrConfirm,
   onOcrRetake,
+  answerCanvas,
 }: Props) {
   const names: Record<Speaker, string> = {
     tutor: tutorName,
@@ -94,6 +101,8 @@ export function MessageList({
   const visible = messages
     .filter((m) => SPEAKERS.has(m.role) || (m.role === "card" && (m.card || m.problem || m.ocr || m.verdict)))
     .sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
+  // Only the latest problem card gets a canvas; a new problem brings a fresh one (§2 items 1-2).
+  const latestProblemId = visible.findLast((m) => m.role === "card" && m.problem)?.id;
 
   return (
     <ol className="flex flex-col">
@@ -112,7 +121,10 @@ export function MessageList({
                   onRetake={() => onOcrRetake?.(m.id)}
                 />
               ) : m.problem ? (
-                <ProblemCard problem={m.problem} />
+                <>
+                  <ProblemCard problem={m.problem} />
+                  {answerCanvas && m.id === latestProblemId && <AnswerCanvas key={m.id} {...answerCanvas} />}
+                </>
               ) : (
                 <ProgressCard card={m.card as unknown as ProgressCardData} />
               )}
