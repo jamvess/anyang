@@ -112,7 +112,11 @@ _SSE_RESPONSE: dict[int | str, dict[str, Any]] = {
 }
 
 
-@router.get("/exam-preps/{id}/sessions/active", responses=_ERRORS)
+@router.get(
+    "/exam-preps/{id}/sessions/active",
+    response_model=ActiveSession,  # errors return a JSONResponse, so the return type is Any
+    responses=_ERRORS,
+)
 async def get_active_session(
     prep_id: PrepId,
     response: Response,
@@ -143,8 +147,8 @@ async def create_session(
 ) -> EventSourceResponse:
     """Start a session. SSE: session → progress_card → token (opening) → problem → done.
 
-    stub — replaced in P4-lite. On a local machine the demo starts again and the opening card
-    comes from its real mastery (demo-room.md §2 D item 4).
+    stub — replaced in P4-lite. On a local machine it is a new session of the demo: the card
+    comes from real mastery and the problem is the one reached (demo-room.md §2 D, F, J).
     """
     if not local:
         return stubs.stream("session_start")

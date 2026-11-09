@@ -6,7 +6,7 @@
 | Requirements | TM-06, AM-01, AM-02, AM-07, TM-04, PM-02, TM-15 (ทั้งหมดผ่านของเดิมใน `photo-check-in-room.md` · ไฟล์นี้เพิ่มแค่ทางเดินให้วนได้ในเครื่อง) |
 | Owner | Jam |
 | Reviewer | Jam · Junior ดูย้อนหลัง (upload ในเครื่อง) |
-| Status | approved 2026-11-09 (Jam · §10 ข้อ 1–2 ตามข้อเสนอ) |
+| Status | implemented 2026-11-09 (PR #115 · ส่วน A–J) · approved 2026-11-09 (Jam · §10 ข้อ 1–2 ตามข้อเสนอ) |
 | Related system spec | `photo-check-in-room.md` §2.4 (`ImageStore`, `RoomState`) · api.md v1.7 `/uploads` · `tutor-reply-stream.md` · ai-orchestration §2.2.3 (layer 6–7: tutor ต้องรู้ว่าตอนนี้ทำอะไร) |
 
 ## 1. Context
@@ -209,6 +209,17 @@
 
 1. ~~**`tutor_reply/v2` มีผลบน staging ด้วย**~~ **ตัดสินแล้ว** (Jam 2026-11-09): ทุก env ตามข้อเสนอ · (§2 C ข้อ 3) · ทางเลือกคือเปิดเฉพาะ local แต่ต้องมี prompt 2 ตัวสลับตาม env · ข้อเสนอ: ทุก env ตามเหตุผลใน §2 C ข้อ 3 · ตัวเลข P4-lite (TTFT, ต้นทุน) วัดกับ v1 · input ยาวขึ้นแค่ 1 บรรทัดจึงไม่น่าเปลี่ยน แต่จดไว้ใน PR
 2. ~~**ไปข้อต่อไปแม้ตอบผิด**~~ **ตัดสินแล้ว** (Jam 2026-11-09): ok สำหรับเดโม่ · (§2 B ข้อ 3): ของจริงต้อง Teach → Verify skill เดิม (AM-08) · เดโม่ไปต่อเลยเพื่อให้เห็นหลายโจทย์ · ข้อเสนอ: ok สำหรับเดโม่ และบอกอาจารย์ว่าเป็นจุดที่ planner จะมาแทน
+
+## 12. วิธีเปิดเดโม่ในเครื่อง
+
+Git Bash 2 แท็บ (ต้องมี ADC ของ Vertex: `gcloud auth application-default login`):
+
+```bash
+cd apps/api && APP_ENV=local AI_PROVIDER=live AUTH_REQUIRED=false uv run fastapi dev app/main.py
+cd apps/web && NEXT_PUBLIC_API_URL=http://localhost:8000 pnpm dev
+```
+
+เปิด http://localhost:3000/preps/00000000-0000-4000-8000-000000000001/room · warm-up 1 ข้อก่อน (ครั้งแรกของแต่ละ AI call ช้า 20–40 s) · ความคืบหน้าอยู่ข้าม session จนกว่าจะเปิด API ใหม่ (§2 J) · รูปสำรองของแต่ละข้อดู §3
 
 ## 11. Spec changes needed
 

@@ -1,6 +1,6 @@
 # AI Orchestration Design (v1.5)
 
-ฉบับ markdown สำหรับ repo ของเอกสาร AI Orchestration Design v1.0 (30 ก.ย. 2569) พร้อมการแก้ v1.1: เกณฑ์ mastery 0.95, ระดับอ่อน 0.5, ความพร้อม = Σ(r × mastery) ÷ Σr, spaced review ตาม Cepeda/SM-2, เพดาน 10 ข้อ/skill/วัน, จำนวนข้อต่อ skill จำลองจาก BKT, circuit breaker ตาม Resilience4j · v1.2 (26 ต.ค. 2569): ระดับเป้าตามดาวและ mode + เพดาน mastery ตามระดับยากสุดที่ทำถูกเอง (learning-model.md §4) · v1.3 (28 ต.ค. 2569): §2.4.3 กฎเทียบรายบรรทัดของ SymPy service (`specs/features/check/sympy-service.md`) · v1.4 (31 ต.ค. 2569): ผล PoC P1 P2 P3 ใน §2.3.3, §2.3.7 (A2b แทน A2 สำหรับ PDF สแกน), §2.10 (model ของแต่ละ tier) และ §3.6 · v1.5 (31 ต.ค. 2569): ผล P3a บน Vertex ใน §2.3.7, §2.10, §3.6 (tier main, small · prompt A5/A6 v2) · v1.6 (31 ต.ค. 2569): §2.11 call ที่ไม่มี tenant ลงแค่ log (`ai-calls-log.md`) · v1.7 (8 พ.ย. 2569): purpose `explain_check` (tier main) ใน §2.2 ตาราง call ต่อ turn, §2.10 และตาราง purpose (`photo-check-in-room.md`)
+ฉบับ markdown สำหรับ repo ของเอกสาร AI Orchestration Design v1.0 (30 ก.ย. 2569) พร้อมการแก้ v1.1: เกณฑ์ mastery 0.95, ระดับอ่อน 0.5, ความพร้อม = Σ(r × mastery) ÷ Σr, spaced review ตาม Cepeda/SM-2, เพดาน 10 ข้อ/skill/วัน, จำนวนข้อต่อ skill จำลองจาก BKT, circuit breaker ตาม Resilience4j · v1.2 (26 ต.ค. 2569): ระดับเป้าตามดาวและ mode + เพดาน mastery ตามระดับยากสุดที่ทำถูกเอง (learning-model.md §4) · v1.3 (28 ต.ค. 2569): §2.4.3 กฎเทียบรายบรรทัดของ SymPy service (`specs/features/check/sympy-service.md`) · v1.4 (31 ต.ค. 2569): ผล PoC P1 P2 P3 ใน §2.3.3, §2.3.7 (A2b แทน A2 สำหรับ PDF สแกน), §2.10 (model ของแต่ละ tier) และ §3.6 · v1.5 (31 ต.ค. 2569): ผล P3a บน Vertex ใน §2.3.7, §2.10, §3.6 (tier main, small · prompt A5/A6 v2) · v1.6 (31 ต.ค. 2569): §2.11 call ที่ไม่มี tenant ลงแค่ log (`ai-calls-log.md`) · v1.8 (9 พ.ย. 2569): purpose `open_session` (main) และ `typed_answer` (small · ชั่วคราวแทน `route_intent` + `normalize_math`) · `tutor_reply` v2 รู้โจทย์และบทสนทนา (`demo-room.md`) · v1.7 (8 พ.ย. 2569): purpose `explain_check` (tier main) ใน §2.2 ตาราง call ต่อ turn, §2.10 และตาราง purpose (`photo-check-in-room.md`)
 
 **ตัวเลขทุกตัวในเอกสารนี้เป็นค่าอธิบาย ค่าจริงที่โค้ดใช้อยู่ใน `config/learning.yaml` และ `config/ai.yaml` ที่มาของแต่ละตัวอยู่ใน `learning-model.md`**
 
@@ -392,6 +392,8 @@ A5: `pages` เป็นช่วง `"start-end"` ตามป้าย `[p.N]`
 | `generate_problem` | mid | directive ต้องการโจทย์ใหม่ที่ไม่ได้มาจากข้อสอบเก่า |
 | `tutor_reply` | main | ทุก turn (stream) รวมฉาก buddy ถ้ามี |
 | `explain_check` | main | หลัง `verdict` ของคำตอบจากรูป: อธิบายผลตรวจทันทีตาม §2.2.4 (stream · AM-07 · `specs/features/check/photo-check-in-room.md` · v1.7) |
+| `open_session` | main | เปิด session: ทัก 2–3 ประโยคจาก facts ของ code (directive `open_session` §2.2.2 · TM-15 · stream · v1.8) |
+| `typed_answer` | small | ข้อความพิมพ์ขณะมีโจทย์ค้าง: เป็นคำตอบไหม + LaTeX รายบรรทัด · **ชั่วคราว**แทน `route_intent` + `normalize_math` เพื่อไม่ให้ช้า 2 call (demo-room.md §2 G · v1.8) |
 | `update_running_summary` | small | ทุก 8 turns (`session.context_recent_turns`) ทำเบื้องหลังหลังตอบ user แล้ว |
 
 โดยเฉลี่ย 2–4 calls ต่อ turn ส่วนต้นทุนดูที่ 2.10
@@ -756,9 +758,9 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 
 | Tier | Purposes | Primary (Vertex AI) | Fallback |
 |---|---|---|---|
-| small | route_intent, classify_material, split_past_exam, map_questions, normalize_math, persona_extract, persona_preview, latex_to_speech, summaries (update_running_summary, session_summary) | `gemini-3.5-flash` (P3a บน Vertex: A4 ตัดข้อสอบ 43/43 · flash-lite ไม่ escape LaTeX ใน JSON 1 จาก 2 ไฟล์) | Claude Haiku |
+| small | route_intent, typed_answer (ชั่วคราว), classify_material, split_past_exam, map_questions, normalize_math, persona_extract, persona_preview, latex_to_speech, summaries (update_running_summary, session_summary) | `gemini-3.5-flash` (P3a บน Vertex: A4 ตัดข้อสอบ 43/43 · flash-lite ไม่ escape LaTeX ใน JSON 1 จาก 2 ไฟล์) | Claude Haiku |
 | mid | check_answer, generate_problem, extract_topics_local, scope_edit | `gemini-3.5-flash` (P3: A5 ครบ 4 ชีท, Vertex 74–78% ก่อน merge · P2: checker ผ่านเป้า) | Claude Haiku |
-| main | tutor_reply (+ buddy scene), explain_check, merge_topics, dispute re-check | `gemini-3.5-flash` (P3a บน Vertex: A6 `merge_topics/v2` ผ่าน schema ครั้งแรก, ★★★ 10/12 · ใช้ token out ราว 20,000 จึงตั้ง `max_tokens` 32,000) | Claude Sonnet |
+| main | tutor_reply (+ buddy scene), explain_check, open_session, merge_topics, dispute re-check | `gemini-3.5-flash` (P3a บน Vertex: A6 `merge_topics/v2` ผ่าน schema ครั้งแรก, ★★★ 10/12 · ใช้ token out ราว 20,000 จึงตั้ง `max_tokens` 32,000) | Claude Sonnet |
 | vision | vision_extract, vision_extract_pages, extract_answer | `gemini-3.5-flash-lite` (P1: 95.2% ของบรรทัด · P3a: A2b 14 หน้า 12–27 วินาที) | Mathpix (ยังไม่ทดสอบ · P1 ผ่านเป้า จึงไม่ต้องใช้เป็นหลัก) |
 | embed | ingest, คำถามอิสระ | `gemini-embedding-2` ที่ 768 มิติ (P3b: recall@4 95%) | — |
 
@@ -804,6 +806,8 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 | T5 | `generate_problem` | 2.2 | mid | โจทย์, เฉลย, steps, difficulty, skill, answer_format |
 | T6 | `tutor_reply` | 2.2, 2.1 | main | ข้อความ stream (@tutor / @buddy) |
 | T6b | `explain_check` | 2.2, 2.4 | main | ข้อความ stream อธิบายผลตรวจ (ได้ `CheckResult` + เฉลย · v1.7) |
+| T6c | `open_session` | 2.2 | main | คำทักเปิด session แบบ stream จาก facts (v1.8) |
+| T1b | `typed_answer` | 2.2, 2.4 | small | `is_answer` + LaTeX รายบรรทัด (ชั่วคราวแทน T1 + T3 · v1.8) |
 | T7 | `update_running_summary` | 2.6 | small | summary |
 | T8 | `session_summary` | 2.2 | small | สรุป 2 บรรทัด |
 | T9 | `dispute_recheck` | 2.4 | main | verdict + เหตุผลทีละบรรทัด |
