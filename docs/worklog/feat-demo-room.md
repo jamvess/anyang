@@ -20,6 +20,7 @@ Loop ที่อาจารย์จะเห็น (รันในเคร�
 - [x] 5. 🤖 `tutor_reply/v2` รู้โจทย์ (demo-room §2 C) · 🙋 Jam ดู prompt · smoke กับ Vertex
 - [x] 5b. 🤖 (เพิ่ม 9 พ.ย. หลัง Jam ลองในเบราว์เซอร์) tutor จำบทสนทนา + จอไม่มีประวัติปลอมของ stub (demo-room §2 E) · test → Jam review → implement · smoke กับ Vertex
 - [x] 5c. 🤖 (เพิ่ม 9 พ.ย. หลัง Jam ลองรอบ 2) tutor ทักก่อนจาก facts (`open_session`) + พิมพ์คำตอบแล้วตรวจ (`typed_answer`) (demo-room §2 F, G) · test → Jam review → implement · smoke กับ Vertex
+- [x] 5d. 🤖 (เพิ่ม 9 พ.ย. หลัง Jam ลองรอบ 4) แสดงวิธีทำเต็มทีละขั้นทุกครั้ง (`explain_check/v2`) + ส่งแค่คำตอบยังไม่ผ่าน (`checker.min_working_lines`) (demo-room §2 H, I) · test → Jam review → implement · smoke กับ Vertex
 - [ ] 6. 🙋 ลองครบ loop ในเบราว์เซอร์ (`pnpm dev` + `uv run fastapi dev` · Claude เขียนขั้นตอนให้) ด้วยรูปจากมือถือและจาก `evals/handwriting/raw/` · ซ้อม · อัดวิดีโอสำรอง
 - [ ] 7. 🤖 `/work-done` + ข้อความกลุ่ม (แตะ upload ของ Junior · `config/ai.yaml` ขึ้น `tutor_reply` v2)
 
@@ -32,6 +33,8 @@ Loop ที่อาจารย์จะเห็น (รันในเคร�
 
 ## Decisions
 
+- 2026-11-09 · Jam ลองรอบ 4: อยากให้ tutor แสดงวิธีทำทีละขั้นเป็น LaTeX ทุกครั้ง (ถูกหรือผิด) และส่งแค่คำตอบต้องยังไม่ผ่าน → ส่วน H, I · Jam ok: `explain_check/v2` · `checker.min_working_lines: 2` [C] · คำตอบถูกแต่บรรทัดน้อยกว่านั้น = ไม่มี verdict, ไม่นับ BKT, โจทย์เดิมค้าง, tutor ขอวิธีทำและไม่เฉลย · คำตอบผิดได้ ✗ ตามปกติ · `typed_answer/v1` แยก `a = b = c` เป็นหลายบรรทัด
+- 2026-11-09 · Jam ok แก้ test ที่ review แล้ว 2 จุด: helper `right_answer` คืน 2 บรรทัด (คำตอบที่ถูกต้องมีวิธีทำ) · `test_photo_check_in_room.py` AC-18c อ่าน version ของ `explain_check` จาก config · และ test AC-30 ใหม่ใส่คำตอบบรรทัดเดียวตรงๆ (เดิมใช้ `right_answer` ซึ่งเพิ่งเปลี่ยนเป็น 2 บรรทัด)
 - 2026-11-09 · Jam ลองรอบ 3: ตัวอักษรในการ์ดแทบมองไม่เห็นบนเครื่องที่เป็น dark mode · `globals.css` ของ create-next-app เปลี่ยนสีตัวอักษรเป็น #ededed แต่การ์ดของห้องเป็น bg-white → Jam ok ลบบล็อก dark ออก (เว็บเป็น light เสมอ จนกว่า May จะออกแบบ dark) · `apps/web/` ของ May → บอกกลุ่ม
 - 2026-11-09 · Jam ลองรอบ 2: (1) ห้องเปิดมาโล่ง ไม่มีคำทัก (2) พิมพ์คำตอบต้องตรวจ และ tutor ต้องมี reaction ทั้งถูกและผิด → ส่วน F, G · Jam เลือก (ก) call เดียว `typed_answer` แทน `route_intent` + `normalize_math` ชั่วคราว · `open_session` เป็น purpose ใหม่ (main · stream)
 - 2026-11-09 · Jam ok แก้ test AC-25 1 บรรทัด: เทียบข้อความที่ต่อกันแล้ว เพราะ fake ส่ง string ทีละคำ (test ผิดเอง ไม่ใช่โค้ด)
@@ -51,6 +54,8 @@ Loop ที่อาจารย์จะเห็น (รันในเคร�
 ไม่มี (staging สำหรับให้อาจารย์เปิดลิงก์เอง: Junior env + Storage + auth, May หน้า login · ไม่ขวางงานนี้)
 
 ## Notes for next time
+
+- smoke H, I กับ Vertex: พิมพ์ `(x-7)(x+7)` → ไม่มี ✓/✗ · tutor "คำตอบถูก แต่ยังไม่มีวิธีคิด ส่งขั้นตอนมาด้วย" ไม่เฉลย (แต่พูดคำว่า "คะแนน" ทั้งที่ prompt ห้าม) · พิมพ์ `x^2-49 = x^2-7^2 = (x-7)(x+7)` → ✓ + วิธีทำ 3 บรรทัด `$$…$$` → การ์ด 14% → ข้อ 2 · "ได้ 2" → ✗ + วิธีทำเต็ม 5 ขั้นจนได้ 4 · ข้อความแรก 41 s (เปิดครั้งแรก) ต่อจากนั้น 5–9 s
 
 - ส่วน F, G: red → green 2 รอบ · (1) 3 แถวของ AC-25 ล้มเพราะ test เทียบ token ผิด (2) ตัวอย่างใน `typed_answer/v1` ใช้ `(x-7)(x+7)` ซึ่งเป็นเฉลยของ p1 · test "ไม่มีเฉลยใน prompt" จับได้ → เปลี่ยนตัวอย่างเป็น $x^2-9$
 - ห้องเปิดมาโล่งหลังส่วน E: เว็บถาม `/sessions/active` ก่อน · stub บอกว่ามี session ค้าง เว็บจึงโหลดประวัติ (ว่าง) แทนเปิด session ใหม่ → local ตอบ 404 `no_active_session`
