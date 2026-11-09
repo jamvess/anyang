@@ -20,7 +20,7 @@ from pydantic import BaseModel
 
 from app.ai.call_context import AICallContext
 from app.ai.gateway import AIProviderError, AISchemaError, Gateway, Image
-from app.domain.checker import CheckResult
+from app.domain.checker import CheckResult, working_missing
 from app.models.room import (
     DoneEvent,
     OcrLine,
@@ -40,6 +40,7 @@ from app.services.room_state import (
     RoomState,
 )
 from app.services.tutor_turn import DEGRADE_TEXT, INTERNAL_ERROR, call_scope, tutor_events
+from app.settings import get_settings
 
 log = logging.getLogger(__name__)
 # AM-03: which lines the user corrected on the card (spec §2.2 item 3) · Cloud Logging for now.
@@ -53,6 +54,8 @@ UNREADABLE = "รูปนี้อ่านไม่ออก ลองถ่�
 NO_PENDING_PROBLEM = "ตอนนี้ยังไม่มีโจทย์ที่รอคำตอบ ส่งคำถามเป็นข้อความได้เลยนะ"
 # Before the next problem card of the local demo (demo-room.md §2 B item 2).
 NEXT_PROBLEM = "ข้อต่อไปนะ"
+# The remembered conversation line when a right answer has no working (demo-room.md §2 I).
+NO_WORKING_LINE = "(ผลตรวจ) ขาดวิธีทำ"
 
 Event = tuple[str, BaseModel]
 
@@ -128,13 +131,15 @@ async def photo_events(
     yield "done", DoneEvent()
 
 
-def _check_result_text(result: CheckResult) -> str:
+def _check_result_text(result: CheckResult, no_working: bool = False) -> str:
     fields = {
         "verdict": result.verdict,
         "first_wrong_line": result.first_wrong_line,
         "error_type": result.error_type,
         "evidence": result.evidence,
         "method": result.method,
+        # missing: the final answer is right but has no working (demo-room.md §2 I)
+        "working": "missing" if no_working else "ok",
     }
     return "\n".join(f"{name}: {'none' if v is None else v}" for name, v in fields.items())
 
@@ -244,11 +249,18 @@ async def _verdict_and_explanation(
     call_context: AICallContext | None,
 ) -> AsyncIterator[Event]:
     """After a check, photo or typed (spec §2.2 items 5-8 · demo-room §2 B, D, E): mastery,
-    verdict, the tutor's explanation, then the demo's card and next problem."""
+    verdict, the tutor's explanation, then the demo's card and next problem.
+
+    A right answer with no working (demo-room §2 I) gets none of these but the explanation,
+    which asks for the working: no verdict, no attempt, the same problem stays."""
     problem = pending.problem
-    await state.record_check(key, pending, result.is_correct)  # demo: BKT (§2 D)
-    await state.remember(key, TUTOR, _verdict_line(result))
-    yield "verdict", verdict
+    no_working = working_missing(result.verdict, len(lines), get_settings().learning.checker)
+    if no_working:
+        await state.remember(key, TUTOR, NO_WORKING_LINE)
+    else:
+        await state.record_check(key, pending, result.is_correct)  # demo: BKT (§2 D)
+        await state.remember(key, TUTOR, _verdict_line(result))
+        yield "verdict", verdict
     explain_input = {
         "problem": problem.text,
         # Sent on purpose: the tutor shows the right value and method (§2.2.4). This problem
@@ -256,7 +268,7 @@ async def _verdict_and_explanation(
         "reference_answer": problem.reference_answer,
         "solution_steps": solution_steps_text(problem),
         "answer_lines": number_lines(lines),
-        "check_result": _check_result_text(result),
+        "check_result": _check_result_text(result, no_working),
     }
 
     said: list[str] = []
@@ -265,6 +277,8 @@ async def _verdict_and_explanation(
         # Runs only when the explanation finished (tutor_events), so a degrade text is never
         # remembered as the tutor speaking (§2 E item 2).
         await state.remember(key, TUTOR, "".join(said))
+        if no_working:
+            return  # the same problem stays, so no card and no next problem
         # Demo only (demo-room.md §2 B, D): the default state has no card and no next problem.
         if card := await state.progress_card(key):
             yield "progress_card", card

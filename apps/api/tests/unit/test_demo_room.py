@@ -866,7 +866,11 @@ def test_AM07_answer_without_working_does_not_pass(client, local):
     cfg = get_settings().learning
     fake, _ = local(
         {
-            "typed_answer": [typed(True, right_answer(P1)), typed(True, two_lines(P1))],
+            # One right line, then the answer with working.
+            "typed_answer": [
+                typed(True, [P1.problem.reference_answer]),
+                typed(True, two_lines(P1)),
+            ],
             "check_answer": [CLASSIFY_RIGHT, CLASSIFY_RIGHT],
             "explain_check": [["ถูกแล้ว ", "แต่ส่งวิธีทำมาด้วย"], "เก่งมาก"],
         }
