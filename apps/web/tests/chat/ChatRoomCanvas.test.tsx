@@ -98,3 +98,55 @@ describe("ChatRoom answer canvas", () => {
     expect(await findByText(/คำตอบ\.png/)).toBeTruthy();
   });
 });
+
+// Spec §2 B (added 9 Nov): the canvas sits at the end of the chat while a problem is open.
+describe("ChatRoom answer canvas · at the end of the chat", () => {
+  const canvasForm = (container: HTMLElement) =>
+    container.querySelector<HTMLElement>(`[role="form"][aria-label="${CANVAS}"]`)!;
+  const lastTutor = (container: HTMLElement) =>
+    [...container.querySelectorAll<HTMLElement>('[data-role="tutor"]')].pop()!;
+  const tutor = (text: string): SSEEvent => ({ event: "token", data: { speaker: "tutor", text } });
+
+  async function chat(getByLabelText: (t: string) => HTMLElement, getByRole: (r: string, o: { name: string }) => HTMLElement, text: string) {
+    fireEvent.change(getByLabelText("พิมพ์ตอบ"), { target: { value: text } });
+    fireEvent.click(getByRole("button", { name: "ส่ง" }));
+    await flush();
+    await flush();
+  }
+
+  it("AC-16 AC-17 the canvas follows the latest message, shows the problem, and keeps the drawing", async () => {
+    const sendMessage = vi.fn<(payload: SendPayload) => AsyncGenerator<SSEEvent>>(() =>
+      stream(tutor("ลองให้ u = x^2 ดูนะ")),
+    );
+    const { container, getByLabelText, getByRole } = render(
+      <ChatRoom room={room} opening={stream(problem("p3", "\frac{d}{dx}(x^2 \sin x)"), tutor("ลองข้อนี้"))} sendMessage={sendMessage} />,
+    );
+    await flush();
+    draw(getByLabelText("เขียนวิธีทำตรงนี้"));
+
+    await chat(getByLabelText, getByRole, "อันนี้ทำไม่เป็น ช่วยหน่อย");
+
+    const form = canvasForm(container);
+    expect(lastTutor(container).compareDocumentPosition(form) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(form.textContent).toContain("โจทย์");
+    expect(form.querySelector(".katex")).not.toBeNull();
+    expect((getByRole("button", { name: "ส่งคำตอบ" }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("AC-18 the same problem again keeps the drawing; a new problem starts empty", async () => {
+    const replies = [stream(problem("p1", "x^2 - 49")), stream(problem("p2", "x^3 - x"))];
+    const sendMessage = vi.fn<(payload: SendPayload) => AsyncGenerator<SSEEvent>>(() => replies.shift()!);
+    const { getByLabelText, getByRole } = render(
+      <ChatRoom room={room} opening={stream(problem("p1", "x^2 - 49"))} sendMessage={sendMessage} />,
+    );
+    await flush();
+    const sendAnswer = () => getByRole("button", { name: "ส่งคำตอบ" }) as HTMLButtonElement;
+    draw(getByLabelText("เขียนวิธีทำตรงนี้"));
+
+    await chat(getByLabelText, getByRole, "x^2-49");
+    expect(sendAnswer().disabled).toBe(false);
+
+    await chat(getByLabelText, getByRole, "ต่อ");
+    expect(sendAnswer().disabled).toBe(true);
+  });
+});

@@ -121,3 +121,22 @@ describe("MessageText · escaped dollar", () => {
     expect(container.textContent).toContain("$5");
   });
 });
+
+// Spec: specs/features/tutor/answer-canvas.md §2 item 20 · AC-19 (added 9 Nov).
+describe("MessageText · bold markers", () => {
+  it.each([
+    ["**สูตร** ผลคูณ", "สูตร ผลคูณ"],
+    ["**a** และ **b**", "a และ b"],
+    ["5 ** 2 ไม่มีคู่ปิด", "5 ** 2 ไม่มีคู่ปิด"],
+  ])("AC-19 %s shows as %s", (content, shown) => {
+    const { container } = render(<MessageText content={content} />);
+
+    expect(container.textContent).toBe(shown);
+  });
+
+  it("AC-19 math keeps its ** untouched", () => {
+    const { container } = render(<MessageText content="ดู $a**b$ นะ" />);
+
+    expect(container.querySelector("span.tex annotation")?.textContent).toBe("a**b");
+  });
+});
