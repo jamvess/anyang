@@ -11,26 +11,27 @@
 
 ## Plan
 
-- [ ] 1. 🤖 `/spec-feature` → `specs/features/tutor/answer-canvas.md` (TM-06 · ดีไซน์ชั่วคราว: หน้าตาและ flow ให้ May ตัดสินย้อนหลังใน §10) → 🙋 Jam ok
+- [x] 1. 🤖 `/spec-feature` → `specs/features/tutor/answer-canvas.md` (TM-06 · ดีไซน์ชั่วคราว: หน้าตาและ flow ให้ May ตัดสินย้อนหลังใน §10) → 🙋 Jam ok
 - [ ] 2. 🤖 `/spec-to-tests` (Vitest · ตรรกะของเส้นเป็น pure function · mock `getContext` และ `toBlob` เอง ไม่เพิ่ม dependency) → 🙋 Jam review test
 - [ ] 3. 🤖 `/implement-feature` (`components/chat/AnswerCanvas.tsx` + `canvasStrokes.ts` · ข้อความไทยใน `strings.ts`)
-- [ ] 4. 🙋 ลองบนคอม (เมาส์) และ iPad (Apple Pencil + นิ้ว) · Claude เขียนวิธีเปิดผ่าน Wi-Fi ให้ (API/เว็บฟังที่ IP ของโน้ตบุ๊ก + CORS)
+- [ ] 4. 🙋 ลองบนคอม (เมาส์) · iPad ทีหลัง (Jam 9 พ.ย.: ตอนนี้ลองแค่คอม)
 - [ ] 5. 🙋 ซ้อม loop เดโม่ทั้งหมดแล้วอัดวิดีโอสำรอง
 - [ ] 6. 🤖 `/work-done` + ข้อความกลุ่มถึง May (หน้าจอของ May · ดีไซน์ชั่วคราว)
 
 ## Definition of done
 
-- โจทย์ทุกข้อมี canvas ใต้การ์ด · เขียนด้วยเมาส์และ Apple Pencil ได้ · ใส่รูปเป็นพื้นหลังได้ · ส่งแล้วได้การ์ดยืนยันลายมือและผลตรวจจริงในเดโม่
+- โจทย์ทุกข้อมี canvas ใต้การ์ด · เขียนด้วยเมาส์ได้ (ลองบนคอม) · Apple Pencil ผ่าน test ของตรรกะ (ยังไม่ได้ลองบน iPad) · ใส่รูปเป็นพื้นหลังได้ · ส่งแล้วได้การ์ดยืนยันลายมือและผลตรวจจริงในเดโม่
 - test ของเว็บผ่าน (lint, typecheck, test, build) · test เดิมไม่เปลี่ยน
 - มีวิดีโอสำรองของ loop เดโม่ที่ใช้ canvas
 
 ## Decisions
 
+- 2026-11-09 · ลองแค่บนคอมก่อน ไม่ต้องลอง iPad ใน PR นี้ (Jam) · ตรรกะ Apple Pencil (pressure, ไม่วาดตามฝ่ามือ) ยังทำและ test ด้วย pure function
 - 2026-11-09 · canvas ผูกกับโจทย์ ไม่ใช่ปุ่มใน composer (Jam) · PR แยกจากเดโม่ (#115 merge แล้ว)
 
 ## Next step
 
-ขั้น 1: เขียน `specs/features/tutor/answer-canvas.md` ด้วย `/spec-feature`
+ขั้น 2: `/spec-to-tests specs/features/tutor/answer-canvas.md` → `apps/web/tests/chat/canvasStrokes.test.ts`, `AnswerCanvas.test.tsx`, `ChatRoomCanvas.test.tsx`
 
 ## Waiting on
 
