@@ -119,7 +119,7 @@ describe("ChatRoom answer canvas · at the end of the chat", () => {
       stream(tutor("ลองให้ u = x^2 ดูนะ")),
     );
     const { container, getByLabelText, getByRole } = render(
-      <ChatRoom room={room} opening={stream(problem("p3", "\frac{d}{dx}(x^2 \sin x)"), tutor("ลองข้อนี้"))} sendMessage={sendMessage} />,
+      <ChatRoom room={room} opening={stream(problem("p3", "\\frac{d}{dx}(x^2 \\sin x)"), tutor("ลองข้อนี้"))} sendMessage={sendMessage} />,
     );
     await flush();
     draw(getByLabelText("เขียนวิธีทำตรงนี้"));

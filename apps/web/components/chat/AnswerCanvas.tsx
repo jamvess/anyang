@@ -18,6 +18,7 @@ import {
   type Scene,
   type Tool,
 } from "./canvasStrokes";
+import { Tex } from "@/components/math/Tex";
 import { roomStrings as t } from "./strings";
 import type { SendPayload } from "./types";
 
@@ -37,12 +38,15 @@ export function AnswerCanvas({
   disabled,
   maxImageMb,
   loadImage = decodeImage,
+  problemLatex,
 }: {
   onSend: (payload: SendPayload) => void | Promise<void>;
   /** The room is waiting for a reply: nothing can be sent. */
   disabled: boolean;
   maxImageMb: number;
   loadImage?: (file: File) => Promise<Background>;
+  /** The problem this canvas answers, shown small on top (§2 item 17). */
+  problemLatex?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const layerRef = useRef<HTMLCanvasElement | null>(null);
@@ -171,7 +175,13 @@ export function AnswerCanvas({
     "rounded-lg border border-zinc-200 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40";
 
   return (
-    <section role="form" aria-label={t.canvas} className="mt-2 rounded-xl border border-zinc-200 bg-white p-3">
+    <section role="form" aria-label={t.canvas} className="mt-4 rounded-xl border border-zinc-200 bg-white p-3">
+      {problemLatex && (
+        <div className="mb-2 flex items-center gap-2 text-sm text-zinc-700">
+          <span className="font-mono text-xs uppercase tracking-wide text-zinc-400">{t.problem}</span>
+          <Tex math={problemLatex} />
+        </div>
+      )}
       <canvas
         ref={canvasRef}
         aria-label={t.canvasLabel}

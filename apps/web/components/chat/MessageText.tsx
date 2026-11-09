@@ -95,6 +95,12 @@ function hasLaterMath(s: string, from: number): boolean {
   return false;
 }
 
+/** `**bold**` is not rendered, so the markers go and the words stay; a `**` without a pair stays
+ * (answer-canvas.md §2 item 20). Applied to text parts only, never inside math. */
+export function dropBoldMarkers(text: string): string {
+  return text.replace(/\*\*(?=\S)([\s\S]*?\S)\*\*/g, "$1");
+}
+
 /**
  * Message text with math rendered by KaTeX. Everything else stays plain text:
  * React escapes it, so HTML in the content is never interpreted.
@@ -103,7 +109,7 @@ export function MessageText({ content, streaming = false }: { content: string; s
   return (
     <div className="whitespace-pre-wrap break-words">
       {parse(content, streaming).map((part, k) =>
-        "text" in part ? part.text : <Tex key={k} math={part.math} display={part.display} />,
+        "text" in part ? dropBoldMarkers(part.text) : <Tex key={k} math={part.math} display={part.display} />,
       )}
     </div>
   );

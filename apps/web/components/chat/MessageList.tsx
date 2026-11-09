@@ -66,7 +66,7 @@ type Props = {
   answerCanvas?: AnswerCanvasProps;
 };
 
-type AnswerCanvasProps = Omit<ComponentProps<typeof AnswerCanvas>, "loadImage">;
+type AnswerCanvasProps = Omit<ComponentProps<typeof AnswerCanvas>, "loadImage" | "problemLatex">;
 
 function Avatar({ role, name }: { role: Speaker; name: string }) {
   return (
@@ -101,8 +101,9 @@ export function MessageList({
   const visible = messages
     .filter((m) => SPEAKERS.has(m.role) || (m.role === "card" && (m.card || m.problem || m.ocr || m.verdict)))
     .sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
-  // Only the latest problem card gets a canvas; a new problem brings a fresh one (§2 items 1-2).
-  const latestProblemId = visible.findLast((m) => m.role === "card" && m.problem)?.id;
+  // The canvas follows the latest problem card and sits at the end of the chat; a new problem
+  // (another problem_id) brings a fresh one, the same problem again keeps the drawing (§2 B).
+  const latestProblem = visible.findLast((m) => m.role === "card" && m.problem)?.problem;
 
   return (
     <ol className="flex flex-col">
@@ -121,10 +122,7 @@ export function MessageList({
                   onRetake={() => onOcrRetake?.(m.id)}
                 />
               ) : m.problem ? (
-                <>
-                  <ProblemCard problem={m.problem} />
-                  {answerCanvas && m.id === latestProblemId && <AnswerCanvas key={m.id} {...answerCanvas} />}
-                </>
+                <ProblemCard problem={m.problem} />
               ) : (
                 <ProgressCard card={m.card as unknown as ProgressCardData} />
               )}
@@ -168,6 +166,11 @@ export function MessageList({
               •••
             </span>
           </div>
+        </li>
+      )}
+      {answerCanvas && latestProblem && (
+        <li>
+          <AnswerCanvas key={latestProblem.problem_id} problemLatex={latestProblem.text_latex} {...answerCanvas} />
         </li>
       )}
     </ol>
