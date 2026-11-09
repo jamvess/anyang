@@ -237,6 +237,7 @@ export function ChatRoom({
             typing={typing}
             onOcrConfirm={confirm}
             onOcrRetake={retake}
+            answerCanvas={{ onSend: send, disabled: busy, maxImageMb: room.limits.max_image_mb }}
           />
         </div>
       </main>
