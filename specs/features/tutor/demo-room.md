@@ -84,6 +84,18 @@
 6. ตัดสินว่าเป็นคำตอบของ**โจทย์ที่ค้าง** ไม่ใช่คำตอบของคำถามย่อยของ tutor: "7" ที่ตอบ "เลขอะไรคูณตัวเองได้ 49" ไม่ใช่คำตอบ · prompt จึงได้ `conversation` ด้วย
 7. prompt `typed_answer/v1` · `config/ai.yaml` → `typed_answer`: tier small, `temperature 0`, `thinking: minimal` (เร็ว) · ป้าย `[C]` · ไม่ใช่ local → ไม่เรียก (staging ไม่ช้าลงและไม่เสียค่า call)
 
+**H · tutor แสดงวิธีทำทีละขั้นทุกครั้ง (เพิ่ม 9 พ.ย. · Jam)**
+
+1. `explain_check/v2` (v1 merge แล้วใน PR #114 จึงขึ้น version ใหม่ · `config/ai.yaml`): ถูก → ชม 1 ประโยค แล้วแสดงวิธีทำเต็มตามชีท บรรทัดละขั้นใน `$$…$$` · ผิดหรือไม่ครบ → ชี้บรรทัดแรกที่ผิดและเหตุผล แล้วแสดงวิธีทำที่ถูกเต็มทีละขั้นใน `$$…$$` · ราว 200 คำ (เดิม 120)
+2. `check_result` เพิ่ม field `working: ok | missing` (I ข้อ 2) · `missing` → v2 บอกว่าคำตอบสุดท้ายดูถูกแล้วแต่ต้องส่งวิธีทำมาด้วย และ**ไม่แสดงวิธีทำ** (ไม่งั้นผู้ใช้ copy ส่งได้)
+
+**I · ส่งแค่คำตอบยังไม่ผ่าน ต้องมีวิธีทำ (เพิ่ม 9 พ.ย. · Jam)**
+
+1. `config/learning.yaml` → `checker.min_working_lines` (2 · `[C]` · โจทย์ที่สั้นที่สุดของเดโม่คือแยกตัวประกอบที่ทำได้ใน 2 บรรทัด เช่น $x^2-49$ แล้ว $=(x-7)(x+7)$ · calibrate จาก golden set ว่าวิธีทำที่ครูรับมีกี่บรรทัด)
+2. หลัง `check_answer`: `verdict = correct` และจำนวนบรรทัด < `min_working_lines` → **ขาดวิธีทำ**: ไม่ส่ง `verdict` · ไม่บันทึก attempt (BKT ไม่นับ เพราะยังไม่มีหลักฐานว่าทำเองได้) · โจทย์ค้างไม่เปลี่ยน · ไม่มีการ์ดความคืบหน้าและโจทย์ถัดไป · `explain_check` ได้ `working: missing` · บทสนทนาบันทึก `ติวเตอร์: (ผลตรวจ) ขาดวิธีทำ`
+3. คำตอบสุดท้ายผิด (`incorrect`, `incomplete`) หรือมีบรรทัดพอ → เหมือนเดิม (H ข้อ 1) · ใช้กับทั้งรูปและข้อความพิมพ์ ทุก env
+4. `typed_answer/v1` (ยังไม่ merge) แยกสมการต่อกัน `a = b = c` เป็นบรรทัด `a` / `= b` / `= c` แบบเดียวกับ OCR · การพิมพ์วิธีทำในบรรทัดเดียวจึงนับเป็นหลายบรรทัด
+
 ## 3. Inputs and outputs
 
 ชุดโจทย์ (มาจาก `evals/answers/labels.jsonl` · มีรูปลายมือจริงทั้งแบบถูกและผิดให้ใช้ตอนเดโม่)
@@ -146,6 +158,13 @@
 - **AC-25 (TM-10)** local: `typed_answer` บอกว่าไม่ใช่คำตอบ (เช่น "7") หรือล้ม → `tutor_reply` ตอบ · ไม่มี `verdict` · input ของ `typed_answer` มี `conversation` และโจทย์ค้าง ไม่มีเฉลย
 - **AC-26** local: `check_answer` ล้มหลังรู้ว่าเป็นคำตอบ → `ระบบช้า ลองส่งอีกทีนะ` → `done` · ไม่มี verdict · โจทย์ค้างไม่เปลี่ยน
 - **AC-27** ไม่ใช่ local: ข้อความพิมพ์ไม่เรียก `typed_answer` (เหมือนเดิม)
+**H, I · วิธีทำ**
+
+- **AC-29 (AM-07)** `config/ai.yaml` → `explain_check.prompt` = `v2` · `prompts/explain_check/v2.md` มี front matter v2 และ input เดิมครบ 5 ตัว · ยืนยันคำตอบ 2 บรรทัดที่ถูก → `check_result` มี `working: ok`
+- **AC-30** ตอบถูกบรรทัดเดียว (พิมพ์หรือรูป) → ไม่มี `verdict`, `progress_card`, `problem` · `explain_check` ได้ `working: missing` · token ของคำอธิบายแล้ว `done`
+- **AC-31 (PM-02)** หลัง AC-30 → ส่ง 2 บรรทัดที่ถูกของโจทย์เดิม → `verdict` correct · การ์ดมีหัวข้อนั้นเป็น attempt แรก (readiness เท่ากับถูก 1 ครั้ง) · ได้โจทย์ข้อ 2
+- **AC-32** ตอบผิดบรรทัดเดียว → `verdict` incorrect ตามปกติ (ไม่ใช่ขาดวิธีทำ)
+- **AC-33 (boundary)** pure function `working_missing(verdict, line_count, cfg)` ใน `app/domain/checker.py` · config ทดสอบ `min_working_lines` = 3 → correct 2 บรรทัด = ขาดวิธีทำ · 3 บรรทัด = ผ่าน · incorrect 1 บรรทัด = ไม่ใช่ขาดวิธีทำ
 - **AC-28 (AI-01)** `config/ai.yaml` มี `open_session` (main, stream) และ `typed_answer` (small, ไม่ stream) · prompt ทั้งสองมี front matter ตรงกับ purpose และ version 1
 
 ## 5. Data changes
@@ -169,7 +188,7 @@
 
 ## 8. Test plan
 
-`apps/api/tests/unit/test_demo_room.py` · AC-1 ถึง AC-28 ข้อละ 1 test · ลองครบ loop ในเบราว์เซอร์ด้วยมือ (ขั้น 5 ของ worklog)
+`apps/api/tests/unit/test_demo_room.py` · AC-1 ถึง AC-33 ข้อละ 1 test · ลองครบ loop ในเบราว์เซอร์ด้วยมือ (ขั้น 5 ของ worklog)
 
 ## 9. Out of scope
 
@@ -184,6 +203,8 @@
 
 | ไฟล์ | แก้อะไร | เจ้าของ |
 |---|---|---|
-| `config/ai.yaml` (ไฟล์กลาง) | `tutor_reply.prompt: v2` · `open_session` · `typed_answer` · bump version | Jam · PR นี้ · บอกกลุ่มก่อน merge |
+| `config/ai.yaml` (ไฟล์กลาง) | `tutor_reply.prompt: v2` · `open_session` · `typed_answer` · `explain_check.prompt: v2` · bump version | Jam · PR นี้ · บอกกลุ่มก่อน merge |
+| `config/learning.yaml` (ไฟล์กลาง) + `learning-model.md` §8 | `checker.min_working_lines: 2` [C] (I ข้อ 1) | Jam · PR นี้ · บอกกลุ่มก่อน merge |
+| `photo-check-in-room.md` §2.2 ข้อ 6, AC-18b | คำอธิบายแสดงวิธีทำเต็มทุก verdict (H) และขาดวิธีทำไม่ได้ verdict (I) | Jam · PR นี้ |
 | `specs/system/ai-orchestration.md` §2.2.4, §2.10 | `open_session` (prompt จริงตัวแรก · มีใน design แล้วเป็น directive) และ `typed_answer` (ชั่วคราวแทน `route_intent` + `normalize_math`) | Jam · PR นี้ |
 | `.gitignore` | `.local/` | Jam · PR นี้ |

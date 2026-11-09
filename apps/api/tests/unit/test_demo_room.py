@@ -65,8 +65,9 @@ def extract(lines: list[str]) -> str:
 
 
 def right_answer(problem: PendingProblem) -> list[str]:
-    """One line equal to the reference: SymPy decides it is right for every demo problem."""
-    return [problem.problem.reference_answer]
+    """A right answer with working (demo-room.md §2 I needs checker.min_working_lines = 2):
+    the reference, then the same value again, so SymPy finds every line right."""
+    return [problem.problem.reference_answer, f"= {problem.problem.reference_answer}"]
 
 
 def make_gateway(fake: FakeProvider) -> Gateway:
@@ -822,3 +823,97 @@ def test_AI01_new_purposes_are_routed():
         front = text.split("---")[1]
         assert f"purpose: {purpose}" in front
         assert "version: 1" in front
+
+
+# --- H, I · worked solutions every time, and working is required ---------------------------
+
+
+def two_lines(problem: PendingProblem) -> list[str]:
+    """A right answer with working: the reference, then the same value again (SymPy: each
+    line equals the one before)."""
+    return [problem.problem.reference_answer, f"= {problem.problem.reference_answer}"]
+
+
+def test_AM07_explain_check_v2_and_working_ok(client, local):
+    # AC-29
+    explain = get_settings().ai.purposes["explain_check"]
+    assert explain.prompt == "v2"
+    front = (
+        (get_settings().env.prompts_dir / "explain_check" / "v2.md")
+        .read_text("utf-8")
+        .split("---")[1]
+    )
+    assert "purpose: explain_check" in front and "version: 2" in front
+    for name in ("problem", "reference_answer", "solution_steps", "answer_lines", "check_result"):
+        assert name in front
+    fake, _ = local(
+        {
+            "typed_answer": [typed(True, two_lines(P1))],
+            "check_answer": [CLASSIFY_RIGHT],
+            "explain_check": ["ถูก"],
+        }
+    )
+    client.post(OPEN_ROOM)
+
+    say(client, "x^2-49 = (x-7)(x+7)")
+
+    assert "working: ok" in requests_for(fake, "explain_check")[0].prompt
+
+
+def test_AM07_answer_without_working_does_not_pass(client, local):
+    # AC-30, AC-31: one right line is not enough; the same problem stays, nothing is counted,
+    # and the answer with working then passes as the first attempt.
+    cfg = get_settings().learning
+    fake, _ = local(
+        {
+            "typed_answer": [typed(True, right_answer(P1)), typed(True, two_lines(P1))],
+            "check_answer": [CLASSIFY_RIGHT, CLASSIFY_RIGHT],
+            "explain_check": [["ถูกแล้ว ", "แต่ส่งวิธีทำมาด้วย"], "เก่งมาก"],
+        }
+    )
+    client.post(OPEN_ROOM)
+
+    only_answer = say(client, "(x-7)(x+7)")
+    with_working = say(client, "x^2-49 = (x-7)(x+7)")
+
+    assert names(only_answer) == ["token", "token", "done"]
+    assert "working: missing" in requests_for(fake, "explain_check")[0].prompt
+    assert event(with_working, "verdict")["verdict"] == "correct"
+    assert event(with_working, "problem")["problem_id"] == DEMO_PROBLEMS[1].problem_id
+    once = record_attempt(TopicProgress(cfg.bkt.p_init, 0, 0), True, P1.difficulty, True, cfg)
+    card = event(with_working, "progress_card")
+    assert card["readiness"] == pytest.approx(expected_card_readiness({P1.topic_id: once}))
+
+
+def test_AM05_wrong_answer_without_working_is_still_wrong(client, local):
+    # AC-32
+    local(
+        {
+            "typed_answer": [typed(True, ["(x-7)(x-7)"])],
+            "check_answer": [classify("sign", "incorrect", 1)],
+            "explain_check": ["ผิดที่เครื่องหมาย"],
+        }
+    )
+    client.post(OPEN_ROOM)
+
+    events = say(client, "(x-7)(x-7)")
+
+    assert event(events, "verdict")["verdict"] == "incorrect"
+
+
+@pytest.mark.parametrize(
+    ("verdict", "line_count", "missing"),
+    [
+        pytest.param("correct", 2, True, id="correct, min - 1 lines"),
+        pytest.param("correct", 3, False, id="correct, min lines"),
+        pytest.param("incorrect", 1, False, id="incorrect, 1 line"),
+        pytest.param("incomplete", 1, False, id="incomplete, 1 line"),
+    ],
+)
+def test_AM07_working_missing_boundary(verdict, line_count, missing):
+    # AC-33: the rule reads checker.min_working_lines; here the test config sets it to 3.
+    from app.domain.checker import working_missing
+
+    checker = get_settings().learning.checker.model_copy(update={"min_working_lines": 3})
+
+    assert working_missing(verdict, line_count, checker) is missing
