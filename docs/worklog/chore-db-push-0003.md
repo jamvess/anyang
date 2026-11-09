@@ -9,11 +9,10 @@
 
 ## Plan
 
-- [ ] 1. 🤖 อัปเดต docs: `data-model.md` (ข้อ 1 "รอ Junior ยืนยัน" → ยืนยันแล้ว), note ใต้ข้อ D3 ใน `sprint-checklists.md`
-- [ ] 2. 🙋 `db push` ขึ้น `anyang-dev` ใน terminal ของ Junior เอง (link → `--dry-run` → push → unlink) แล้ววาง output ให้ Claude ตรวจ
-- [ ] 3. 🙋 `db push` ขึ้น `anyang-staging` (`sfapuygntxuelsxsgkay`) แบบเดียวกัน
-- [ ] 4. 🙋 ตรวจใน Dashboard ทั้งสอง project: ตาราง `topic_sources` มี RLS เปิด และ `past_exam_questions.map_note` มีแล้ว
-- [ ] 5. 🤖 อัปเดต `infra/README.md` (migration ที่ขึ้นแล้วของแต่ละ project) + ร่างข้อความกลุ่ม → `/work-done`
+- [x] 1. 🤖 อัปเดต docs: `data-model.md` (ข้อ 1 "รอ Junior ยืนยัน" → ยืนยันแล้ว), note ใต้ข้อ D3 ใน `sprint-checklists.md`
+- [ ] 2. `anyang-dev`: 🙋 Junior `npx supabase login` (ถ้าต้อง) + `npx supabase link --project-ref <ref>` ใน Git Bash · 🤖 `db push --dry-run` → โชว์ output → 🙋 ok → 🤖 `db push` → `migration list` → query เช็ค RLS ของ `topic_sources` + คอลัมน์ `map_note` → `unlink`
+- [ ] 3. `anyang-staging` (`sfapuygntxuelsxsgkay`): แบบเดียวกับขั้น 2
+- [ ] 4. 🤖 อัปเดต `infra/README.md` (migration ที่ขึ้นแล้วของแต่ละ project) + ร่างข้อความกลุ่ม → `/work-done`
 
 ## Definition of done
 
@@ -24,10 +23,11 @@
 ## Decisions
 
 - 2026-11-09 · เก็บ `check (page_from >= 1 and page_to >= page_from)` ตามที่ Jam เสนอ · Junior ยืนยัน ไม่ต้องมี `0004`
+- 2026-11-09 · แบ่งงาน: Junior ทำแค่ login + link (CLI ใช้ login token ไม่ถาม DB password) · Claude รัน dry-run / push (หลัง Junior ok) / ตรวจ / unlink · ให้ Junior เห็น dry-run ก่อนทุกครั้ง
 
 ## Next step
 
-ขั้น 1: แก้ `specs/system/data-model.md` ข้อ 1 ในตาราง P3a และ note ข้อ D3 ใน `docs/team/sprint-checklists.md`
+ขั้น 2: Junior link `anyang-dev` ใน Git Bash แล้ว Claude รัน `npx supabase db push --dry-run`
 
 ## Waiting on
 
