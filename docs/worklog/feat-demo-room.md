@@ -36,13 +36,15 @@ Loop ที่อาจารย์จะเห็น (รันในเคร�
 
 ## Next step
 
-ขั้น 3: อัปโหลดรูปในเครื่อง ตาม demo-room §2 A (เขียน test จาก AC-1 ถึง AC-3 ก่อน)
+ขั้น 3–5 (test รวมของทั้ง demo-room): Jam review `apps/api/tests/unit/test_demo_room.py` (12 test · แดงเพราะยังไม่มี `app.services.demo_room`) แล้ว implement ขั้น 3, 4, 5 ต่อกัน
 
 ## Waiting on
 
 ไม่มี (staging สำหรับให้อาจารย์เปิดลิงก์เอง: Junior env + Storage + auth, May หน้า login · ไม่ขวางงานนี้)
 
 ## Notes for next time
+
+- demo-room test: เขียน test ของขั้น 3–5 รวมไฟล์เดียว ให้ Jam review รอบเดียว · หน้าตาโค้ดที่ test กำหนด: `app.services.dev_uploads` (`get_local_mode`, `get_local_upload_dir` เป็น dependency) · `app.services.demo_room` (`DEMO_PROBLEMS`, `DEMO_TOPICS`, `DemoRoomState`) · `PendingProblem` เพิ่ม `text_latex`, `difficulty`, `topic_id` · เปิดห้องใน local รีเซ็ต state ของ session (การ์ดเริ่มที่ยังไม่เริ่มทุกหัวข้อ · AC-10)
 
 - bkt implement: red → green 1 รอบ (32 กรณีเขียวในรอบแรก) · ruff จับเครื่องหมาย `×` ใน docstring (RUF002) เปลี่ยนเป็น `*`
 
