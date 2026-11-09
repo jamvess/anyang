@@ -279,9 +279,8 @@ async def _verdict_and_explanation(
         await state.remember(key, TUTOR, "".join(said))
         if no_working:
             return  # the same problem stays, so no card and no next problem
-        # Demo only (demo-room.md §2 B, D): the default state has no card and no next problem.
-        if card := await state.progress_card(key):
-            yield "progress_card", card
+        # Demo only (demo-room.md §2 B): the default state has no next problem. No progress
+        # card here: it comes when the room opens (§2 J item 1).
         if upcoming := await state.next_problem(key):
             yield _tutor(NEXT_PROBLEM)
             yield "problem", problem_event(upcoming)

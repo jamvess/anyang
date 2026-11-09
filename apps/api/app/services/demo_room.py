@@ -112,10 +112,16 @@ DEMO_PROBLEMS = (
 )
 
 
+def _student(key: str) -> str:
+    """The tenant part of `room_key(tenant_id, session_id)`."""
+    return key.split("/", 1)[0]
+
+
 class DemoRoomState(InMemoryRoomState):
     def __init__(self, recent_turns: int | None = None) -> None:
         """``recent_turns`` defaults to ``session.context_recent_turns`` (tests set it)."""
         super().__init__()
+        # Per student (tenant), like topic_progress: kept across sessions (spec §2 J item 2).
         self._index: dict[str, int] = {}
         self._progress: dict[str, dict[str, TopicProgress]] = {}
         # Turns of (role, text) lines; a student line starts a turn (spec §2 E item 3).
@@ -123,20 +129,19 @@ class DemoRoomState(InMemoryRoomState):
         self._recent_turns = recent_turns
 
     async def pending_problem(self, key: str) -> PendingProblem | None:
-        return DEMO_PROBLEMS[self._index.get(key, 0)]
+        return DEMO_PROBLEMS[self._index.get(_student(key), 0)]
 
     async def start_session(self, key: str) -> None:
-        """Every opening starts the demo again (the stub session id never changes)."""
+        """A new session: a new conversation and no pending preview, but mastery and the
+        problem reached stay (spec §2 J item 2). Restart the API to start the demo over."""
         await super().start_session(key)
-        self._index.pop(key, None)
-        self._progress.pop(key, None)
         self._turns.pop(key, None)
 
     async def record_check(self, key: str, pending: PendingProblem, is_correct: bool) -> None:
         if pending.topic_id is None:
             return
         cfg = get_settings().learning
-        topics = self._progress.setdefault(key, {})
+        topics = self._progress.setdefault(_student(key), {})
         before = topics.get(pending.topic_id, TopicProgress(cfg.bkt.p_init, 0, 0))
         # The next demo problem is never the one the tutor just worked: independent.
         topics[pending.topic_id] = record_attempt(before, is_correct, pending.difficulty, True, cfg)
@@ -153,12 +158,13 @@ class DemoRoomState(InMemoryRoomState):
         return [line for turn in self._turns.get(key, []) for line in turn]
 
     async def next_problem(self, key: str) -> PendingProblem | None:
-        self._index[key] = (self._index.get(key, 0) + 1) % len(DEMO_PROBLEMS)
-        return DEMO_PROBLEMS[self._index[key]]
+        student = _student(key)
+        self._index[student] = (self._index.get(student, 0) + 1) % len(DEMO_PROBLEMS)
+        return DEMO_PROBLEMS[self._index[student]]
 
     async def progress_card(self, key: str) -> ProgressCardEvent | None:
         cfg = get_settings().learning
-        progress = self._progress.get(key, {})
+        progress = self._progress.get(_student(key), {})
         rows, weights, passed = [], [], 0
         for topic in DEMO_TOPICS:
             state = progress.get(topic.topic_id, TopicProgress(cfg.bkt.p_init, 0, 0))

@@ -60,6 +60,7 @@ from app.services.photo_check import (
     confirm_events,
     get_image_store,
     photo_events,
+    problem_event,
     problem_line,
     typed_answer_events,
 )
@@ -169,11 +170,13 @@ async def create_session(
                     async for pair in greeting:
                         yield pair
             else:
-                if event == "problem":
-                    # What the tutor said on opening is remembered as it was sent (§2 E, F).
+                if event == "problem" and pending:
+                    # What the tutor said on opening is remembered as it was sent (§2 E, F),
+                    # and the card is the problem the student reached (§2 J item 3).
                     await room_state.remember(key, TUTOR, "".join(said))
-                    if pending:
-                        await room_state.remember(key, TUTOR, problem_line(pending))
+                    await room_state.remember(key, TUTOR, problem_line(pending))
+                    yield event, problem_event(pending)
+                    continue
                 yield event, EVENT_MODELS[event].model_validate(data)
 
     return _sse(opening())

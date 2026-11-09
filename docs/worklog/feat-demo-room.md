@@ -21,6 +21,7 @@ Loop ที่อาจารย์จะเห็น (รันในเคร�
 - [x] 5b. 🤖 (เพิ่ม 9 พ.ย. หลัง Jam ลองในเบราว์เซอร์) tutor จำบทสนทนา + จอไม่มีประวัติปลอมของ stub (demo-room §2 E) · test → Jam review → implement · smoke กับ Vertex
 - [x] 5c. 🤖 (เพิ่ม 9 พ.ย. หลัง Jam ลองรอบ 2) tutor ทักก่อนจาก facts (`open_session`) + พิมพ์คำตอบแล้วตรวจ (`typed_answer`) (demo-room §2 F, G) · test → Jam review → implement · smoke กับ Vertex
 - [x] 5d. 🤖 (เพิ่ม 9 พ.ย. หลัง Jam ลองรอบ 4) แสดงวิธีทำเต็มทีละขั้นทุกครั้ง (`explain_check/v2`) + ส่งแค่คำตอบยังไม่ผ่าน (`checker.min_working_lines`) (demo-room §2 H, I) · test → Jam review → implement · smoke กับ Vertex
+- [x] 5e. 🤖 (เพิ่ม 9 พ.ย. หลัง Jam ลองรอบ 5) การ์ดความคืบหน้าเฉพาะตอนเข้าห้อง + ความคืบหน้าอยู่ข้าม session ต่อผู้ใช้ (demo-room §2 J) · test → Jam review → implement (เขียวรอบแรก)
 - [ ] 6. 🙋 ลองครบ loop ในเบราว์เซอร์ (`pnpm dev` + `uv run fastapi dev` · Claude เขียนขั้นตอนให้) ด้วยรูปจากมือถือและจาก `evals/handwriting/raw/` · ซ้อม · อัดวิดีโอสำรอง
 - [ ] 7. 🤖 `/work-done` + ข้อความกลุ่ม (แตะ upload ของ Junior · `config/ai.yaml` ขึ้น `tutor_reply` v2)
 
@@ -33,6 +34,7 @@ Loop ที่อาจารย์จะเห็น (รันในเคร�
 
 ## Decisions
 
+- 2026-11-09 · Jam ลองรอบ 5: (1) การ์ดความคืบหน้าเอาแค่ตอนเข้าห้อง (2) อยากได้ canvas ใต้การ์ดโจทย์ให้เขียนคำตอบ (เมาส์ / Apple Pencil / ใส่รูป) · Jam ok: ข้อ 1 ใน PR นี้ (ส่วน J · ความคืบหน้าผูกกับผู้ใช้ไม่ใช่ session เหมือน topic_progress · รีเซ็ต = เปิด API ใหม่) · canvas เป็น PR แยก `feat/answer-canvas` (งานหน้าจอของ May · ดีไซน์ชั่วคราว)
 - 2026-11-09 · Jam ลองรอบ 4: อยากให้ tutor แสดงวิธีทำทีละขั้นเป็น LaTeX ทุกครั้ง (ถูกหรือผิด) และส่งแค่คำตอบต้องยังไม่ผ่าน → ส่วน H, I · Jam ok: `explain_check/v2` · `checker.min_working_lines: 2` [C] · คำตอบถูกแต่บรรทัดน้อยกว่านั้น = ไม่มี verdict, ไม่นับ BKT, โจทย์เดิมค้าง, tutor ขอวิธีทำและไม่เฉลย · คำตอบผิดได้ ✗ ตามปกติ · `typed_answer/v1` แยก `a = b = c` เป็นหลายบรรทัด
 - 2026-11-09 · Jam ok แก้ test ที่ review แล้ว 2 จุด: helper `right_answer` คืน 2 บรรทัด (คำตอบที่ถูกต้องมีวิธีทำ) · `test_photo_check_in_room.py` AC-18c อ่าน version ของ `explain_check` จาก config · และ test AC-30 ใหม่ใส่คำตอบบรรทัดเดียวตรงๆ (เดิมใช้ `right_answer` ซึ่งเพิ่งเปลี่ยนเป็น 2 บรรทัด)
 - 2026-11-09 · Jam ลองรอบ 3: ตัวอักษรในการ์ดแทบมองไม่เห็นบนเครื่องที่เป็น dark mode · `globals.css` ของ create-next-app เปลี่ยนสีตัวอักษรเป็น #ededed แต่การ์ดของห้องเป็น bg-white → Jam ok ลบบล็อก dark ออก (เว็บเป็น light เสมอ จนกว่า May จะออกแบบ dark) · `apps/web/` ของ May → บอกกลุ่ม
