@@ -220,7 +220,8 @@
 
 - [ ] เดโม่ห้องติวที่ใช้ได้จริงในเครื่อง ให้อาจารย์ดูก่อนทำต่อ (อาจารย์ขอ 9 พ.ย. · เพิ่มเอง)
   - 9 พ.ย. (PR #115 · `specs/features/tutor/demo-room.md` + `specs/features/planner/bkt-mastery.md`): `APP_ENV=local` วนได้จริงกับ Vertex · อัปโหลดรูปในเครื่อง · โจทย์ 5 ข้อ · BKT จริง (`app/domain/bkt.py`) ในการ์ดตอนเข้าห้อง · tutor ทักก่อน (`open_session`) · รู้โจทย์และจำบทสนทนา (`tutor_reply/v2`) · พิมพ์คำตอบแล้วตรวจ (`typed_answer`) · แสดงวิธีทำทีละขั้นทุกครั้ง (`explain_check/v2`) · ส่งแค่คำตอบยังไม่ผ่าน (`checker.min_working_lines`) · วิธีเปิดอยู่ใน spec §12 · staging ยังเป็น stub
-  - เหลือ: canvas ใต้การ์ดโจทย์ (`feat/answer-canvas` · หน้าจอของ May · ดีไซน์ชั่วคราว) · อัดวิดีโอสำรองหลังมี canvas
+  - 9 พ.ย. (PR #117 · `specs/features/tutor/answer-canvas.md`): canvas เขียนคำตอบอยู่ท้ายแชทเมื่อมีโจทย์ค้าง (เมาส์ / Apple Pencil / นิ้ว · ใส่รูป · ส่งเป็น PNG ทางเดิมของรูป) · ลองบนคอมแล้ว · iPad ยังไม่ได้ลอง · นับวิธีทำเป็นขั้น และให้โจทย์เดิมซ้ำเมื่อขาดวิธีทำ · ตัด `**` ในแชท · ดีไซน์ชั่วคราวรอ May (spec §10)
+  - เหลือ: hint ladder ทำทีละขั้นก่อนเฉลย (`feat/hint-ladder` · ขัด AM-07 ต้องเสนอทีม) · อัดวิดีโอสำรองหลังงานนั้น · ลองบน iPad
 - [ ] P8-lite ร่วมกับทีม (เป็นเจ้าของ spec `compute_importance`)
   - 31 ต.ค. ส่วน spec เสร็จก่อนกำหนด (PR #89): `specs/features/scope/compute-importance.md` approved หลังเทียบกับผล P3 · AC 13 → 27 · test plan 19 ชื่อ · ใบเก็บ metrics `poc/P8-lite/metrics.md` · เหลือทำด้วยกันใน S4: `/spec-to-tests` → review test → `/implement-feature` → merge
   - 8 พ.ย. (PR #113 · Jam ช่วง solo): `/spec-to-tests` → Jam review test → `/implement-feature` → merge · `app/domain/stars.py` + 32 test (`test_stars.py`, AC-19 ใน `test_settings.py`) · agent เขียน 100% · red → green 3 รอบ · บั๊กก่อน merge จดใน `poc/P8-lite/metrics.md` §3 · เหลือ: Junior + May review test ย้อนหลังแล้วจดเวลาใน metrics §4, กรอก §6, `/poc-report P8-lite`

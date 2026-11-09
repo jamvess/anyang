@@ -20,7 +20,7 @@ from pydantic import BaseModel
 
 from app.ai.call_context import AICallContext
 from app.ai.gateway import AIProviderError, AISchemaError, Gateway, Image
-from app.domain.checker import CheckResult, working_missing
+from app.domain.checker import CheckResult, working_missing, working_steps
 from app.models.room import (
     DoneEvent,
     OcrLine,
@@ -257,7 +257,9 @@ async def _verdict_and_explanation(
     A right answer with no working (demo-room §2 I) gets none of these but the explanation,
     which asks for the working: no verdict, no attempt, the same problem stays."""
     problem = pending.problem
-    no_working = working_missing(result.verdict, len(lines), get_settings().learning.checker)
+    no_working = working_missing(
+        result.verdict, working_steps(lines), get_settings().learning.checker
+    )
     if no_working:
         await state.remember(key, TUTOR, NO_WORKING_LINE)
     else:
@@ -279,7 +281,10 @@ async def _verdict_and_explanation(
         # remembered as the tutor speaking (§2 E item 2).
         await state.remember(key, TUTOR, explanation)
         if no_working:
-            return  # the same problem stays, so no next problem
+            # The same problem again at the bottom; the canvas keeps the drawing (§2 I item 6).
+            await state.remember(key, TUTOR, problem_line(pending))
+            yield "problem", problem_event(pending)
+            return
         # Demo only (demo-room.md §2 B): the default state has no next problem. No progress
         # card here: it comes when the room opens (§2 J item 1).
         if upcoming := await state.next_problem(key, pending):
