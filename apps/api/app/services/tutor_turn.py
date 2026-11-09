@@ -47,10 +47,16 @@ def reply_events(
     text: str,
     call_context: AICallContext | None = None,
     problem: str = NO_PROBLEM,
+    conversation: str | None = None,
+    tail: Callable[[], AsyncIterator[Event]] | None = None,
 ) -> AsyncIterator[Event]:
     """The tutor's reply to a text message (``tutor_reply``), as ``tutor_events``. ``problem``
-    is the pending problem without its reference (AM-13 · demo-room.md §2 C)."""
-    return tutor_events(gateway, "tutor_reply", {"message": text, "problem": problem}, call_context)
+    is the pending problem without its reference (AM-13 · demo-room.md §2 C); ``conversation``
+    the recent turns, already escaped (§2 E); left out, the prompt's default applies."""
+    values = {"message": text, "problem": problem}
+    if conversation is not None:
+        values["conversation"] = conversation
+    return tutor_events(gateway, "tutor_reply", values, call_context, tail)
 
 
 async def tutor_events(

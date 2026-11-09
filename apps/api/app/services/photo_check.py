@@ -32,7 +32,13 @@ from app.models.room import (
 from app.models.scope_ai import ExtractAnswerResult
 from app.services.checker import check_answer, number_lines, solution_steps_text
 from app.services.dev_uploads import LocalImageStore, get_local_mode, get_local_upload_dir
-from app.services.room_state import PendingPreview, PendingProblem, RoomState
+from app.services.room_state import (
+    STUDENT,
+    TUTOR,
+    PendingPreview,
+    PendingProblem,
+    RoomState,
+)
 from app.services.tutor_turn import DEGRADE_TEXT, INTERNAL_ERROR, call_scope, tutor_events
 
 log = logging.getLogger(__name__)
@@ -109,6 +115,7 @@ async def photo_events(
     ]
     if not lines:  # unreadable or not an answer (UC-04 E1); the old preview stays
         yield _tutor(UNREADABLE)
+        await state.remember(key, TUTOR, f"{LOOKING} {UNREADABLE}")
         yield "done", DoneEvent()
         return
     # Confirmed every time, whatever the confidence (AM-02 · ocr.always_confirm, P1).
@@ -117,6 +124,7 @@ async def photo_events(
     )
     yield "ocr_preview", OcrPreviewEvent(lines=lines)
     yield _tutor(CHECK_PLEASE)
+    await state.remember(key, TUTOR, f"{LOOKING} {CHECK_PLEASE}")
     yield "done", DoneEvent()
 
 
@@ -182,6 +190,8 @@ async def confirm_events(
 
     _log_edits(session_id, preview, lines)
     await state.record_check(key, preview.pending, result.is_correct)  # demo: BKT (§2 D)
+    await state.remember(key, STUDENT, f"(ยืนยันคำตอบ) {' · '.join(lines)}")
+    await state.remember(key, TUTOR, _verdict_line(result))
     yield "verdict", verdict
     explain_input = {
         "problem": problem.text,
@@ -193,19 +203,39 @@ async def confirm_events(
         "check_result": _check_result_text(result),
     }
 
+    said: list[str] = []
+
     async def after_explaining() -> AsyncIterator[Event]:
+        # Runs only when the explanation finished (tutor_events), so a degrade text is never
+        # remembered as the tutor speaking (§2 E item 2).
+        await state.remember(key, TUTOR, "".join(said))
         # Demo only (demo-room.md §2 B, D): the default state has no card and no next problem.
         if card := await state.progress_card(key):
             yield "progress_card", card
         if upcoming := await state.next_problem(key):
             yield _tutor(NEXT_PROBLEM)
             yield "problem", problem_event(upcoming)
+            await state.remember(key, TUTOR, NEXT_PROBLEM)
+            await state.remember(key, TUTOR, problem_line(upcoming))
 
     async with aclosing(
         tutor_events(gateway, "explain_check", explain_input, call_context, after_explaining)
     ) as events:
-        async for event in events:
-            yield event
+        async for name, payload in events:
+            if name == "token" and isinstance(payload, TokenEvent):
+                said.append(payload.text)
+            yield name, payload
+
+
+def _verdict_line(result: CheckResult) -> str:
+    line = result.first_wrong_line if result.first_wrong_line is not None else "ไม่มี"
+    error = result.error_type or "ไม่มี"
+    return f"(ผลตรวจ) verdict {result.verdict} · บรรทัดผิด {line} · {error}"
+
+
+def problem_line(pending: PendingProblem) -> str:
+    """How a problem card reads in the remembered conversation (§2 E item 2)."""
+    return f"(โจทย์) {pending.problem.text}"
 
 
 def problem_event(pending: PendingProblem) -> ProblemEvent:

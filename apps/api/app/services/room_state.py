@@ -61,6 +61,21 @@ def room_key(tenant_id: str, session_id: str) -> str:
     return f"{tenant_id}/{session_id}"
 
 
+# Speakers of the remembered conversation (demo-room.md §2 E item 2).
+STUDENT = "นักเรียน"
+TUTOR = "ติวเตอร์"
+# tutor_reply input when nothing is remembered (the prompt's default).
+NO_CONVERSATION = "none"
+
+
+def conversation_text(lines: list[tuple[str, str]]) -> str:
+    """One `{role}: {text}` line each, oldest first. Every `<` becomes `&lt;`, so a stored
+    message can never close the block or forge a turn (prompts/README.md rule 5)."""
+    if not lines:
+        return NO_CONVERSATION
+    return "\n".join(f"{role}: {text.replace('<', '&lt;')}" for role, text in lines)
+
+
 class RoomState(Protocol):
     async def pending_problem(self, key: str) -> PendingProblem | None: ...
 
@@ -92,6 +107,14 @@ class RoomState(Protocol):
         """Make the next problem the pending one and return it; None keeps the same one."""
         ...
 
+    async def remember(self, key: str, role: str, text: str) -> None:
+        """Keep one line of the conversation (demo-room.md §2 E); written by the server only."""
+        ...
+
+    async def conversation(self, key: str) -> list[tuple[str, str]]:
+        """The recent turns, oldest first; empty when this state keeps none."""
+        ...
+
 
 class InMemoryRoomState:
     def __init__(self) -> None:
@@ -120,6 +143,12 @@ class InMemoryRoomState:
 
     async def next_problem(self, key: str) -> PendingProblem | None:
         return None  # p1 stays pending (photo-check-in-room.md §10 item 4)
+
+    async def remember(self, key: str, role: str, text: str) -> None:
+        return None
+
+    async def conversation(self, key: str) -> list[tuple[str, str]]:
+        return []
 
 
 @lru_cache

@@ -20,7 +20,12 @@ from app.domain.bkt import (
 )
 from app.models.room import ProgressCardEvent, ProgressTopic
 from app.services.checker import CheckProblem
-from app.services.room_state import STUB_PROBLEM, InMemoryRoomState, PendingProblem
+from app.services.room_state import (
+    STUB_PROBLEM,
+    STUDENT,
+    InMemoryRoomState,
+    PendingProblem,
+)
 from app.settings import get_settings
 
 # No planner yet, so the mode never changes (bkt-mastery.md §10 item 2).
@@ -108,10 +113,14 @@ DEMO_PROBLEMS = (
 
 
 class DemoRoomState(InMemoryRoomState):
-    def __init__(self) -> None:
+    def __init__(self, recent_turns: int | None = None) -> None:
+        """``recent_turns`` defaults to ``session.context_recent_turns`` (tests set it)."""
         super().__init__()
         self._index: dict[str, int] = {}
         self._progress: dict[str, dict[str, TopicProgress]] = {}
+        # Turns of (role, text) lines; a student line starts a turn (spec §2 E item 3).
+        self._turns: dict[str, list[list[tuple[str, str]]]] = {}
+        self._recent_turns = recent_turns
 
     async def pending_problem(self, key: str) -> PendingProblem | None:
         return DEMO_PROBLEMS[self._index.get(key, 0)]
@@ -121,6 +130,7 @@ class DemoRoomState(InMemoryRoomState):
         await super().start_session(key)
         self._index.pop(key, None)
         self._progress.pop(key, None)
+        self._turns.pop(key, None)
 
     async def record_check(self, key: str, pending: PendingProblem, is_correct: bool) -> None:
         if pending.topic_id is None:
@@ -130,6 +140,17 @@ class DemoRoomState(InMemoryRoomState):
         before = topics.get(pending.topic_id, TopicProgress(cfg.bkt.p_init, 0, 0))
         # The next demo problem is never the one the tutor just worked: independent.
         topics[pending.topic_id] = record_attempt(before, is_correct, pending.difficulty, True, cfg)
+
+    async def remember(self, key: str, role: str, text: str) -> None:
+        turns = self._turns.setdefault(key, [])
+        if role == STUDENT or not turns:
+            turns.append([])
+        turns[-1].append((role, text))
+        keep = self._recent_turns or get_settings().learning.session.context_recent_turns
+        del turns[:-keep]
+
+    async def conversation(self, key: str) -> list[tuple[str, str]]:
+        return [line for turn in self._turns.get(key, []) for line in turn]
 
     async def next_problem(self, key: str) -> PendingProblem | None:
         self._index[key] = (self._index.get(key, 0) + 1) % len(DEMO_PROBLEMS)

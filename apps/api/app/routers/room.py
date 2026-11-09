@@ -58,8 +58,16 @@ from app.services.photo_check import (
     confirm_events,
     get_image_store,
     photo_events,
+    problem_line,
 )
-from app.services.room_state import RoomState, get_room_state, room_key
+from app.services.room_state import (
+    STUDENT,
+    TUTOR,
+    RoomState,
+    conversation_text,
+    get_room_state,
+    room_key,
+)
 from app.services.tutor_turn import NO_PROBLEM, reply_events
 from app.settings import get_settings
 
@@ -131,6 +139,11 @@ async def create_session(
     card = await room_state.progress_card(key)
     if card is None:
         return stubs.stream("session_start")
+    # What the tutor says on opening is part of the conversation it remembers (§2 E item 2).
+    opening_text = "".join(data["text"] for event, data in recorded if event == "token")
+    await room_state.remember(key, TUTOR, opening_text)
+    if pending := await room_state.pending_problem(key):
+        await room_state.remember(key, TUTOR, problem_line(pending))
 
     async def opening() -> AsyncIterator[tuple[str, BaseModel]]:
         for event, data in recorded:
@@ -143,15 +156,23 @@ async def create_session(
 
 
 @router.get("/sessions/{id}", responses=_ERRORS)
-async def get_session(session_id: SessionId, response: Response) -> Room:
+async def get_session(
+    session_id: SessionId,
+    response: Response,
+    local: Annotated[bool, Depends(get_local_mode)],
+) -> Room:
     """Room data: header, input limits and messages (oldest first).
 
-    stub — replaced in P4-lite
+    stub — replaced in P4-lite. On a local machine there is no sample history: the tutor never
+    had that conversation (demo-room.md §2 E item 1).
     """
     response.headers.update(stubs.HEADERS)
     guards = get_settings().ai.guards
     limits = Limits(max_message_chars=guards.max_message_chars, max_image_mb=guards.max_image_mb)
-    return Room.model_validate({**stubs.room(), "session_id": session_id, "limits": limits})
+    room = {**stubs.room(), "session_id": session_id, "limits": limits}
+    if local:
+        room["messages"] = []
+    return Room.model_validate(room)
 
 
 # --- end, history, progress, tts (api.md v1.9 · proposal pending Junior) ----------
@@ -249,14 +270,42 @@ async def send_message(
         if image_store is None:  # no Storage yet (photo-check-in-room.md §2.4)
             return stubs.stream("image_reply")
         return await _photo_message(
-            str(session_id), body.image_path, auth, gateway, image_store, room_state, call_context
+            str(session_id),
+            body.image_path,
+            body.text,
+            auth,
+            gateway,
+            image_store,
+            room_state,
+            call_context,
         )
 
     key = room_key(stubs.tenant_of(auth), str(session_id))
     pending = await room_state.pending_problem(key)
     # The pending problem without its reference (AM-13 · demo-room.md §2 C).
     problem = pending.problem.text if pending else NO_PROBLEM
-    return _sse(reply_events(gateway, body.text, call_context, problem))
+    # Earlier turns only: the message being answered goes in `message` (§2 E item 4).
+    conversation = conversation_text(await room_state.conversation(key))
+    await room_state.remember(key, STUDENT, body.text)
+    said: list[str] = []
+
+    async def remember_reply() -> AsyncIterator[tuple[str, BaseModel]]:
+        # Only a finished reply is the tutor speaking; a degrade text is not (§2 E item 2).
+        await room_state.remember(key, TUTOR, "".join(said))
+        return
+        yield  # an async generator with nothing to add
+
+    async def reply() -> AsyncIterator[tuple[str, BaseModel]]:
+        events = reply_events(
+            gateway, body.text, call_context, problem, conversation, remember_reply
+        )
+        async with aclosing(events) as pairs:
+            async for name, payload in pairs:
+                if name == "token" and isinstance(payload, TokenEvent):
+                    said.append(payload.text)
+                yield name, payload
+
+    return _sse(reply())
 
 
 def _sse(events: AsyncIterator[tuple[str, BaseModel]]) -> EventSourceResponse:
@@ -288,6 +337,7 @@ def _own_upload(path: str, tenant_id: str, session_id: str) -> bool:
 async def _photo_message(
     session_id: str,
     image_path: str,
+    text: str | None,
     auth: AuthContext | None,
     gateway: Gateway,
     image_store: ImageStore,
@@ -309,6 +359,8 @@ async def _photo_message(
     max_mb = get_settings().ai.guards.max_image_mb
     if len(image.data) > max_mb * BYTES_PER_MB:  # the browser's size_bytes is checked again
         return error_response(422, "file_too_large", f"image is over {max_mb} MB")
+    caption = f" {text}" if text else ""
+    await room_state.remember(key, STUDENT, f"(ส่งรูปวิธีทำ){caption}")
     return _sse(photo_events(gateway, room_state, key, pending, image, call_context))
 
 
