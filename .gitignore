@@ -27,3 +27,6 @@ evals/**/raw/
 
 # os
 .DS_Store
+
+# local demo uploads (specs/features/tutor/demo-room.md §2 A)
+.local/

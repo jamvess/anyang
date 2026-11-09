@@ -9,12 +9,14 @@ A text message is real since P4-lite: the reply streams from the gateway
 uploads, transcribe and ocr/confirm (api.md v1.7 · test_room_media_api_contract.py).
 """
 
+import logging
 from collections.abc import AsyncIterator
 from contextlib import aclosing
+from pathlib import Path as PathLib
 from typing import Annotated, Any
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, Path, Response
+from fastapi import APIRouter, Depends, Path, Request, Response
 from pydantic import BaseModel
 from sse_starlette import EventSourceResponse
 
@@ -44,6 +46,13 @@ from app.models.room import (
     bare_content_type,
 )
 from app.rate_limit import RATE_LIMITED_DOCS, chat_rate_limit
+from app.services.dev_uploads import (
+    LocalImageStore,
+    get_local_mode,
+    get_local_upload_dir,
+    image_mime,
+    upload_path_ok,
+)
 from app.services.photo_check import (
     NO_PENDING_PROBLEM,
     ImageStore,
@@ -51,9 +60,17 @@ from app.services.photo_check import (
     get_image_store,
     photo_events,
 )
-from app.services.room_state import RoomState, get_room_state, room_key
-from app.services.tutor_turn import reply_events
+from app.services.room_chat import text_message_events
+from app.services.room_opening import opening_events
+from app.services.room_state import (
+    STUDENT,
+    RoomState,
+    get_room_state,
+    room_key,
+)
 from app.settings import get_settings
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(tags=["room"])
 
@@ -89,12 +106,23 @@ _SSE_RESPONSE: dict[int | str, dict[str, Any]] = {
 }
 
 
-@router.get("/exam-preps/{id}/sessions/active", responses=_ERRORS)
-async def get_active_session(prep_id: PrepId, response: Response) -> ActiveSession:
+@router.get(
+    "/exam-preps/{id}/sessions/active",
+    response_model=ActiveSession,  # errors return a JSONResponse, so the return type is Any
+    responses=_ERRORS,
+)
+async def get_active_session(
+    prep_id: PrepId,
+    response: Response,
+    local: Annotated[bool, Depends(get_local_mode)],
+) -> Any:
     """Open session of this exam prep (TM-13); 404 `no_active_session` if none.
 
-    stub — replaced in P4-lite
+    stub — replaced in P4-lite. On a local machine there is none, so the web opens a new
+    session and the tutor greets first (demo-room.md §2 F item 1).
     """
+    if local:
+        return error_response(404, "no_active_session", "No open session for this exam prep")
     response.headers.update(stubs.HEADERS)
     return ActiveSession(session_id=stubs.room()["session_id"])
 
@@ -104,24 +132,48 @@ async def get_active_session(prep_id: PrepId, response: Response) -> ActiveSessi
     response_class=EventSourceResponse,
     responses=_SSE_RESPONSE,
 )
-async def create_session(prep_id: PrepId) -> EventSourceResponse:
+async def create_session(
+    prep_id: PrepId,
+    gateway: Annotated[Gateway, Depends(get_gateway)],
+    auth: Annotated[AuthContext | None, Depends(get_auth)],
+    local: Annotated[bool, Depends(get_local_mode)],
+    room_state: Annotated[RoomState, Depends(get_room_state)],
+) -> EventSourceResponse:
     """Start a session. SSE: session → progress_card → token (opening) → problem → done.
 
-    stub — replaced in P4-lite
+    stub — replaced in P4-lite. On a local machine it is a new session of the demo: the card
+    comes from real mastery and the problem is the one reached (demo-room.md §2 D, F, J).
     """
-    return stubs.stream("session_start")
+    if not local:
+        return stubs.stream("session_start")
+    recorded = stubs.events("session_start")
+    key = room_key(stubs.tenant_of(auth), dict(recorded)["session"]["session_id"])
+    await room_state.start_session(key)
+    card = await room_state.progress_card(key)
+    if card is None:
+        return stubs.stream("session_start")
+    call_context = AICallContext(auth.tenant_id, auth.user_id) if auth else None
+    return _sse(opening_events(gateway, room_state, key, recorded, card, call_context))
 
 
 @router.get("/sessions/{id}", responses=_ERRORS)
-async def get_session(session_id: SessionId, response: Response) -> Room:
+async def get_session(
+    session_id: SessionId,
+    response: Response,
+    local: Annotated[bool, Depends(get_local_mode)],
+) -> Room:
     """Room data: header, input limits and messages (oldest first).
 
-    stub — replaced in P4-lite
+    stub — replaced in P4-lite. On a local machine there is no sample history: the tutor never
+    had that conversation (demo-room.md §2 E item 1).
     """
     response.headers.update(stubs.HEADERS)
     guards = get_settings().ai.guards
     limits = Limits(max_message_chars=guards.max_message_chars, max_image_mb=guards.max_image_mb)
-    return Room.model_validate({**stubs.room(), "session_id": session_id, "limits": limits})
+    room = {**stubs.room(), "session_id": session_id, "limits": limits}
+    if local:
+        room["messages"] = []
+    return Room.model_validate(room)
 
 
 # --- end, history, progress, tts (api.md v1.9 · proposal pending Junior) ----------
@@ -202,6 +254,7 @@ async def send_message(
     auth: Annotated[AuthContext | None, Depends(get_auth)],
     image_store: Annotated[ImageStore | None, Depends(get_image_store)],
     room_state: Annotated[RoomState, Depends(get_room_state)],
+    local: Annotated[bool, Depends(get_local_mode)],
 ) -> Response:
     """Send `{text}`, `{image_path}` or both; the reply streams as SSE and ends with done.
 
@@ -219,10 +272,18 @@ async def send_message(
         if image_store is None:  # no Storage yet (photo-check-in-room.md §2.4)
             return stubs.stream("image_reply")
         return await _photo_message(
-            str(session_id), body.image_path, auth, gateway, image_store, room_state, call_context
+            str(session_id),
+            body.image_path,
+            body.text,
+            auth,
+            gateway,
+            image_store,
+            room_state,
+            call_context,
         )
 
-    return _sse(reply_events(gateway, body.text, call_context))
+    key = room_key(stubs.tenant_of(auth), str(session_id))
+    return _sse(text_message_events(gateway, room_state, key, body.text, local, call_context))
 
 
 def _sse(events: AsyncIterator[tuple[str, BaseModel]]) -> EventSourceResponse:
@@ -254,6 +315,7 @@ def _own_upload(path: str, tenant_id: str, session_id: str) -> bool:
 async def _photo_message(
     session_id: str,
     image_path: str,
+    text: str | None,
     auth: AuthContext | None,
     gateway: Gateway,
     image_store: ImageStore,
@@ -275,6 +337,8 @@ async def _photo_message(
     max_mb = get_settings().ai.guards.max_image_mb
     if len(image.data) > max_mb * BYTES_PER_MB:  # the browser's size_bytes is checked again
         return error_response(422, "file_too_large", f"image is over {max_mb} MB")
+    caption = f" {text}" if text else ""
+    await room_state.remember(key, STUDENT, f"(ส่งรูปวิธีทำ){caption}")
     return _sse(photo_events(gateway, room_state, key, pending, image, call_context))
 
 
@@ -302,12 +366,16 @@ _STUB_TRANSCRIPT = "สองเอ็กซ์ลบห้า คูณ สอ�
 async def create_upload(
     session_id: SessionId,
     body: UploadRequest,
+    request: Request,
     response: Response,
     auth: Annotated[AuthContext | None, Depends(get_auth)],
+    local: Annotated[bool, Depends(get_local_mode)],
 ) -> Any:
     """Signed upload URL for one image or audio file (TM-06, TM-07, TM-21).
 
-    stub — the URL is not a real Storage URL until the endpoint talks to Supabase Storage
+    stub — the URL is not a real Storage URL until the endpoint talks to Supabase Storage.
+    On a local machine an image gets a URL of this API, so the photo really arrives
+    (demo-room.md §2 A).
     """
     content_type = bare_content_type(body.content_type)
     if content_type not in UPLOAD_CONTENT_TYPES[body.kind]:
@@ -317,10 +385,40 @@ async def create_upload(
     max_mb = get_settings().ai.guards.max_image_mb
     if body.kind == "image" and body.size_bytes > max_mb * BYTES_PER_MB:
         return stubs.error(422, "file_too_large", f"image is over {max_mb} MB")
-    response.headers.update(stubs.HEADERS)
     ext = content_type.split("/", 1)[1]
     path = f"{stubs.tenant_of(auth)}/sessions/{session_id}/{uuid4()}.{ext}"
+    if local and body.kind == "image":
+        return UploadTicket(upload_url=f"{request.base_url}dev/uploads/{path}", path=path)
+    response.headers.update(stubs.HEADERS)
     return UploadTicket(upload_url=f"{stubs.STORAGE_URL}/{path}", path=path)
+
+
+@router.put("/dev/uploads/{path:path}", include_in_schema=False)
+async def put_local_upload(
+    path: str,
+    request: Request,
+    local: Annotated[bool, Depends(get_local_mode)],
+    upload_dir: Annotated[PathLib, Depends(get_local_upload_dir)],
+) -> Response:
+    """Local stand-in for the signed Storage URL (demo-room.md §2 A). Not in api.md: it exists
+    only with APP_ENV=local, and answers 404 everywhere else."""
+    if not local or not upload_path_ok(path):
+        return error_response(404, "not_found", "Not found")
+    content_type = bare_content_type(request.headers.get("content-type", ""))
+    if content_type not in UPLOAD_CONTENT_TYPES["image"] or image_mime(path) is None:
+        return error_response(422, "unsupported_type", f"{content_type} is not an accepted image")
+    max_mb = get_settings().ai.guards.max_image_mb
+    limit = max_mb * BYTES_PER_MB
+    declared = request.headers.get("content-length", "")
+    # Refuse a declared size before reading the body (self-review); check the real size too.
+    if declared.isdigit() and int(declared) > limit:
+        return error_response(422, "file_too_large", f"image is over {max_mb} MB")
+    data = await request.body()
+    if len(data) > limit:
+        return error_response(422, "file_too_large", f"image is over {max_mb} MB")
+    if not LocalImageStore(upload_dir).write(path, data):
+        return error_response(404, "not_found", "Not found")
+    return Response(status_code=200)
 
 
 @router.post(

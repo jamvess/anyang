@@ -563,7 +563,7 @@ def test_AM07_explain_check_prompt_and_route():
     purposes = get_settings().ai.purposes
     explain, tutor = purposes["explain_check"], purposes["tutor_reply"]
     assert explain.stream is True
-    assert explain.prompt == "v1"
+    assert (get_settings().env.prompts_dir / "explain_check" / f"{explain.prompt}.md").exists()
     same = ("tier", "temperature", "max_tokens", "timeout_s", "thinking")
     assert {k: getattr(explain, k) for k in same} == {k: getattr(tutor, k) for k in same}
 

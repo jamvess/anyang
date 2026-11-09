@@ -9,7 +9,7 @@
 #
 # Changing a value = PR that also updates learning-model.md §"ที่มาของตัวเลข".
 
-version: 1.4
+version: 1.5
 
 bkt:                                   # Bayesian Knowledge Tracing, per topic (learning-model.md §1)
   p_init: 0.3                          # [C] prior P(L0). Fit per skill with pyBKT (EM) after Alpha.
@@ -82,6 +82,7 @@ ocr:
 checker:
   sympy_timeout_seconds: 2             # [calc] budget so the verdict arrives within the TTFT p95 target (2 s) · P2: median 0.14 s, max 0.44 s, no timeout in 50 answers (specs/poc/reports/P2.md)
   sympy_workers: 1                     # [C] warm SymPy worker processes per API instance (a cold start costs ~1.9 s); raise if P4-lite shows checks queueing
+  min_working_lines: 2                 # [C] a right answer with fewer lines is "no working": no verdict, not counted (demo-room.md §2 I) · the shortest demo problem (factoring) takes 2 lines · calibrate on the golden set: how many lines teachers accept as working
   numeric_rel_tolerance: 0.01          # [C] Should: replace with significant figures from the problem · P2 had no numeric answers: measure when numeric is built
   max_generate_retries: 2              # [C] regenerate a problem whose answer fails SymPy · P2 could not test it (no generate_problem yet): once it exists, pick retries covering >= 95% of generated problems
 
