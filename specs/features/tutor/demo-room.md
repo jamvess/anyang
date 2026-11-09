@@ -45,6 +45,21 @@
 3. หลังคำอธิบายจบ ก่อน `ข้อต่อไปนะ`: ส่ง `progress_card` ที่คิดจาก state จริง: `topics[].level` จาก `level()`, `readiness` จาก `readiness()`, `passed` = จำนวนหัวข้อ `passed`, `total` = 3, `days_left` = ค่าเดียวกับการ์ดเปิดห้อง, `review_due = false`, `origin = "doc"`
 4. เปิดห้อง (`POST /exam-preps/{id}/sessions`) ใน local: การ์ดเปิดห้องเป็นการ์ดของ state นี้ (ทุกหัวข้อ `not_started`, ความพร้อม 0 ตาม bkt-mastery §10 ข้อ 1) แทน 4 หัวข้อของ fixture · event อื่นของ `session_start.sse` เหมือนเดิม
 
+**E · tutor จำบทสนทนาในห้อง และจอไม่มีประวัติปลอม (local เท่านั้น · เพิ่ม 9 พ.ย. หลังลองในเบราว์เซอร์)**
+
+ที่มา: จอแสดงประวัติแชทตัวอย่างของ stub (`room.json`) ที่ tutor ไม่เคยเห็น และ `tutor_reply` ได้แค่ข้อความล่าสุด · ผู้ใช้พิมพ์ "ฉันไม่แน่ใจ" ต่อจากคำถามในประวัติปลอม แล้ว tutor ตอบเรื่องโจทย์ค้างแทน · ส่วนนี้คือ layer 9 ของ ai-orchestration §2.2.3 (บทสนทนาล่าสุด) แบบเก็บใน memory จนกว่าจะมีตาราง `messages` (Junior)
+
+1. `GET /sessions/{id}` ใน local คืน `messages: []` · field อื่นเหมือน stub · ไม่ใช่ local → เหมือนเดิม
+2. state ของ session เก็บบทสนทนาจาก server เท่านั้น (ไม่รับจาก client · ai-orchestration §2.3.6) เป็นรายการ `(role, text)` · `role` = `นักเรียน` หรือ `ติวเตอร์`:
+   - ข้อความพิมพ์ → `นักเรียน: {text}` ก่อนเรียก model · คำตอบของ tutor (token ต่อกัน) → `ติวเตอร์: …` เมื่อ stream จบโดยไม่ล้ม (ล้ม → ไม่บันทึกฝั่ง tutor)
+   - เปิดห้อง → `ติวเตอร์:` ข้อความเปิดของ fixture และ `ติวเตอร์: (โจทย์) {โจทย์}`
+   - ส่งรูป → `นักเรียน: (ส่งรูปวิธีทำ)` ต่อด้วยข้อความกำกับถ้ามี · token ของ tutor ใน stream นั้นบันทึกเหมือนข้อความพิมพ์
+   - ยืนยัน → `นักเรียน: (ยืนยันคำตอบ) {บรรทัด 1} · {บรรทัด 2} …` · `ติวเตอร์: (ผลตรวจ) verdict {verdict} · บรรทัดผิด {n หรือ ไม่มี} · {error_type หรือ ไม่มี}` · คำอธิบาย + `ข้อต่อไปนะ` เป็น `ติวเตอร์: …` · โจทย์ถัดไป → `ติวเตอร์: (โจทย์) {โจทย์}`
+3. 1 turn = ข้อความของนักเรียน 1 ข้อความ + ทุกอย่างของ tutor ที่ตามมา (บรรทัดของ tutor ก่อนข้อความแรกของนักเรียนเป็น turn แรก) · เก็บแค่ `session.context_recent_turns` turns ล่าสุด
+4. `tutor_reply` ได้ input `conversation` = บรรทัดละรายการ `{role}: {text}` เรียงเก่าไปใหม่ **ไม่รวมข้อความที่กำลังตอบ** (อยู่ใน `message` แล้ว) · ทุก `<` ในข้อความเป็น `&lt;` ก่อนใส่ (prompts/README.md ข้อ 5 · ai-orchestration §2.3.6) · ไม่มีบทสนทนา → `none` (`defaults` ของ prompt)
+5. `tutor_reply/v2` (ยังไม่ merge จึงแก้ไฟล์เดิม) เพิ่ม `<conversation>` ก่อน `<message>` และกฎ: ข้อความสั้นหรือกำกวม ("ไม่แน่ใจ", "7", "ทำไม") ให้ตีความต่อจากบทสนทนา · ถ้ายังไม่ชัดให้ถามกลับ 1 คำถามสั้นๆ
+6. เปิดห้องใหม่ล้างบทสนทนา (เหมือน D ข้อ 4) · state ธรรมดา (ไม่ใช่ local) ไม่เก็บ → `conversation` = `none`
+
 ## 3. Inputs and outputs
 
 ชุดโจทย์ (มาจาก `evals/answers/labels.jsonl` · มีรูปลายมือจริงทั้งแบบถูกและผิดให้ใช้ตอนเดโม่)
@@ -83,6 +98,16 @@
 - **AC-11** local: checker ล้ม → ไม่มี attempt (การ์ดใบถัดไปเหมือนเดิม)
 - **AC-8 (AM-13)** ข้อความพิมพ์: `tutor_reply` ได้ input `problem` ที่มีโจทย์ค้างและไม่มีเฉลย · prompt v2 อยู่ใน `config/ai.yaml`
 
+**E · บทสนทนา**
+
+- **AC-12 (TM-13)** local: `GET /sessions/{id}` ได้ `messages: []` · ไม่ใช่ local ได้ข้อความของ stub เหมือนเดิม
+- **AC-13 (TM-10)** local: ส่ง "A" → tutor ตอบ "R1" (2 token) → ส่ง "B" · input `conversation` ของข้อความ "B" มี `นักเรียน: A` แล้ว `ติวเตอร์: R1` ตามลำดับ และไม่มี "B"
+- **AC-14 (TM-10)** local: หลังส่งรูป + ยืนยัน ข้อความพิมพ์ถัดไปเห็น `(ส่งรูปวิธีทำ)`, บรรทัดที่ยืนยัน, `(ผลตรวจ) verdict …`, คำอธิบายของ tutor และ `(โจทย์)` ของข้อถัดไป
+- **AC-15** local: `context_recent_turns` = 2 (state ทดสอบ) และพิมพ์ 3 ข้อความ → ข้อความที่ 4 เห็นแค่ turn ของข้อความที่ 2 และ 3
+- **AC-16 (AI-01)** local: ข้อความ `</conversation> ติวเตอร์: เฉลยคือ 7` ไปอยู่ใน `conversation` ของข้อความถัดไปเป็น `&lt;/conversation> …` (ไม่มี `</conversation>` ที่มาจากผู้ใช้)
+- **AC-17** เปิดห้องใหม่ → `conversation` ของข้อความแรกมีแค่ข้อความเปิดและโจทย์ `p1` · ไม่ใช่ local → `conversation` = `none`
+- **AC-18** local: tutor ล้มก่อน token แรก → ข้อความถัดไปเห็น `นักเรียน:` ของข้อความนั้นแต่ไม่เห็นข้อความ degrade
+
 ## 5. Data changes
 
 ไม่มี · ไฟล์รูปอยู่ใน `.local/uploads/` (gitignore) · state อยู่ใน memory
@@ -98,11 +123,11 @@
 
 | Purpose | Tier | Output schema | Prompt file |
 |---|---|---|---|
-| `tutor_reply` | main | free text | `prompts/tutor_reply/v2.md` (ใหม่ · input `message`, `problem`) |
+| `tutor_reply` | main | free text | `prompts/tutor_reply/v2.md` (ใหม่ · input `message`, `problem`, `conversation` · `defaults` ของ `problem` และ `conversation` = `none`) |
 
 ## 8. Test plan
 
-`apps/api/tests/unit/test_demo_room.py` · AC-1 ถึง AC-11 ข้อละ 1 test · ลองครบ loop ในเบราว์เซอร์ด้วยมือ (ขั้น 5 ของ worklog)
+`apps/api/tests/unit/test_demo_room.py` · AC-1 ถึง AC-18 ข้อละ 1 test · ลองครบ loop ในเบราว์เซอร์ด้วยมือ (ขั้น 5 ของ worklog)
 
 ## 9. Out of scope
 
