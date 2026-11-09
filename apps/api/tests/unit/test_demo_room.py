@@ -875,7 +875,9 @@ def test_AM07_answer_without_working_does_not_pass(client, local):
     only_answer = say(client, "(x-7)(x+7)")
     with_working = say(client, "x^2-49 = (x-7)(x+7)")
 
-    assert names(only_answer) == ["token", "token", "done"]
+    # §2 I item 6: the same problem comes again, so a fresh canvas is under it.
+    assert names(only_answer) == ["token", "token", "problem", "done"]
+    assert event(only_answer, "problem")["problem_id"] == P1.problem_id
     assert "working: missing" in requests_for(fake, "explain_check")[0].prompt
     assert event(with_working, "verdict")["verdict"] == "correct"
     assert event(with_working, "problem")["problem_id"] == DEMO_PROBLEMS[1].problem_id
@@ -1055,3 +1057,59 @@ def test_TM15_opening_keeps_the_fixture_card_for_p1(client, local):
 
 def error_code(response: Any) -> str:
     return response.json()["error"]["code"]
+
+
+# --- I items 5-6 · working counted in steps, and the problem again (9 Nov) ----------------
+
+
+@pytest.mark.parametrize(
+    ("lines", "steps"),
+    [
+        pytest.param(["(x^2-7^2) = (x-7)(x+7)"], 2, id="chain on one line"),
+        pytest.param(["(x-7)(x+7)"], 1, id="answer only"),
+        pytest.param(["x^2-49", "= (x-7)(x+7)"], 2, id="leading = on line 2"),
+        pytest.param(["a = b = c"], 3, id="two = on one line"),
+        pytest.param(["x^2-49", "  ", ""], 1, id="blank lines"),
+    ],
+)
+def test_AM07_working_steps(lines, steps):
+    # AC-36
+    from app.domain.checker import working_steps
+
+    assert working_steps(lines) == steps
+
+
+def test_AM07_one_line_with_working_passes(client, local):
+    # AC-37: what the canvas sent in Jam's try (9 Nov): one line, but with a step in it.
+    local(
+        {
+            "typed_answer": [typed(True, ["(x^2-7^2) = (x-7)(x+7)"])],
+            "check_answer": [CLASSIFY_RIGHT],
+            "explain_check": ["เก่งมาก"],
+        }
+    )
+    client.post(OPEN_ROOM)
+
+    events = say(client, "(x^2-7^2) = (x-7)(x+7)")
+
+    assert event(events, "verdict")["verdict"] == "correct"
+
+
+def test_AM07_missing_working_gives_the_problem_again(client, local):
+    # AC-38
+    fake, _ = local(
+        {
+            "typed_answer": [typed(True, [P1.problem.reference_answer]), typed(False)],
+            "check_answer": [CLASSIFY_RIGHT],
+            "explain_check": ["ส่งวิธีทำมาด้วยนะ"],
+            "tutor_reply": ["ok"],
+        }
+    )
+    client.post(OPEN_ROOM)
+
+    events = say(client, "(x-7)(x+7)")
+    say(client, "ข้อนี้อีกที")
+
+    assert names(events)[-2:] == ["problem", "done"]
+    assert event(events, "problem")["problem_id"] == P1.problem_id
+    assert P1.problem.text in requests_for(fake, "tutor_reply")[0].prompt
