@@ -97,14 +97,18 @@ class RoomState(Protocol):
 
     async def start_session(self, key: str) -> None: ...
 
-    async def record_check(self, key: str, pending: PendingProblem, is_correct: bool) -> None: ...
+    async def record_check(self, key: str, pending: PendingProblem, is_correct: bool) -> None:
+        """Count the attempt (BKT) when ``pending`` is still the pending problem."""
+        ...
 
     async def progress_card(self, key: str) -> ProgressCardEvent | None:
         """The card from real mastery, or None when this state keeps none."""
         ...
 
-    async def next_problem(self, key: str) -> PendingProblem | None:
-        """Make the next problem the pending one and return it; None keeps the same one."""
+    async def next_problem(self, key: str, answered: PendingProblem) -> PendingProblem | None:
+        """After ``answered`` was checked, make the next problem the pending one and return it;
+        None keeps the same one. An answer to a problem that is no longer pending (a stale
+        photo preview) moves nothing (self-review PR #115)."""
         ...
 
     async def remember(self, key: str, role: str, text: str) -> None:
@@ -141,7 +145,7 @@ class InMemoryRoomState:
     async def progress_card(self, key: str) -> ProgressCardEvent | None:
         return None
 
-    async def next_problem(self, key: str) -> PendingProblem | None:
+    async def next_problem(self, key: str, answered: PendingProblem) -> PendingProblem | None:
         return None  # p1 stays pending (photo-check-in-room.md §10 item 4)
 
     async def remember(self, key: str, role: str, text: str) -> None:

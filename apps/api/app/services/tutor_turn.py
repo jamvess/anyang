@@ -42,13 +42,18 @@ NO_PROBLEM = "none"
 Event = tuple[str, BaseModel]
 
 
+# What runs after the tutor finished without failing: it gets the full text and may add events
+# before `done` (demo-room.md §2 B, E: remember the reply, then the next problem).
+Tail = Callable[[str], AsyncIterator[Event]]
+
+
 def reply_events(
     gateway: Gateway,
     text: str,
     call_context: AICallContext | None = None,
     problem: str = NO_PROBLEM,
     conversation: str | None = None,
-    tail: Callable[[], AsyncIterator[Event]] | None = None,
+    tail: Tail | None = None,
 ) -> AsyncIterator[Event]:
     """The tutor's reply to a text message (``tutor_reply``), as ``tutor_events``. ``problem``
     is the pending problem without its reference (AM-13 · demo-room.md §2 C); ``conversation``
@@ -64,7 +69,7 @@ async def tutor_events(
     purpose: str,
     input: dict[str, str],
     call_context: AICallContext | None = None,
-    tail: Callable[[], AsyncIterator[Event]] | None = None,
+    tail: Tail | None = None,
 ) -> AsyncIterator[Event]:
     """(event name, payload) pairs of a streamed tutor purpose, in api.md "SSE events" names:
     ``tutor_reply`` here, ``explain_check`` after a verdict (photo-check-in-room.md §2.2).
@@ -77,18 +82,18 @@ async def tutor_events(
     call when the stream ends, which for a client that leaves early is when ``aclosing`` closes
     it (api-auth.md §2.5).
 
-    ``tail`` adds events before ``done`` only when the tutor finished without failing, such as
-    the progress card and the next problem of the demo (demo-room.md §2 B item 4)."""
-    sent = False
+    ``tail`` gets the full text and adds events before ``done`` only when the tutor finished
+    without failing, so a degrade text is never taken for the tutor speaking."""
+    said: list[str] = []
     try:
         with call_scope(call_context):
             async with aclosing(gateway.stream(purpose, input)) as chunks:
                 async for chunk in chunks:
-                    sent = True
+                    said.append(chunk)
                     yield "token", TokenEvent(speaker="tutor", text=chunk)
     except AIProviderError:
-        log.warning("%s failed after %s", purpose, "a partial reply" if sent else "no reply")
-        if sent:
+        log.warning("%s failed after %s", purpose, "a partial reply" if said else "no reply")
+        if said:
             # Part of the reply is on screen already; the web shows its own error text.
             yield "error", AI_UNAVAILABLE
             return
@@ -99,7 +104,7 @@ async def tutor_events(
         return
     else:
         if tail is not None:
-            async with aclosing(tail()) as extra:
+            async with aclosing(tail("".join(said))) as extra:
                 async for event in extra:
                     yield event
     yield "done", DoneEvent()

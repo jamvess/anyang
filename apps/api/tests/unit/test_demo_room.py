@@ -961,3 +961,97 @@ def test_TM13_reopening_continues_at_the_pending_problem(client, local):
 
     assert event(reopened, "problem")["problem_id"] == second.problem_id
     assert second.problem.text in requests_for(fake, "typed_answer")[1].prompt
+
+
+# --- added after /code-review (9 Nov) · not in spec §8 -------------------------------------
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param("C:/sessions/x/evil.png", id="windows drive"),
+        pytest.param(f"{TENANT}/sessions/{SESSION_ID}/../../evil.png", id="dot dot"),
+        pytest.param(f"{TENANT}/sessions/not-a-uuid/a.png", id="not a uuid"),
+    ],
+)
+def test_SA06_dev_upload_never_writes_outside_its_folder(client, local, tmp_path, path):
+    # A drive letter made Path(root) / path absolute on Windows and wrote outside the folder.
+    local({})
+
+    response = client.put(
+        f"/dev/uploads/{path}", content=JPEG, headers={"Content-Type": "image/png"}
+    )
+
+    assert response.status_code == 404
+    assert list(tmp_path.rglob("*.png")) == []
+
+
+def test_TM04_a_stale_photo_preview_is_not_counted_twice(client, local):
+    # A photo preview of p1, then p1 answered by typing: the preview is dropped, so it can no
+    # longer check p1 again, count it twice in BKT or skip demo-2.
+    local(
+        {
+            "extract_answer": [extract(right_answer(P1))],
+            "typed_answer": [typed(True, right_answer(P1))],
+            "check_answer": [CLASSIFY_RIGHT],
+            "explain_check": ["เก่งมาก"],
+        }
+    )
+    client.post(OPEN_ROOM)
+    ticket = client.post(
+        f"/sessions/{FIXTURE_SESSION}/uploads",
+        json={"kind": "image", "content_type": "image/jpeg", "file_name": "a.jpg", "size_bytes": 9},
+    ).json()
+    client.put(ticket["upload_url"], content=JPEG, headers={"Content-Type": "image/jpeg"})
+    client.post(f"/sessions/{FIXTURE_SESSION}/messages", json={"image_path": ticket["path"]})
+
+    typed_reply = say(client, "x^2-49 = (x-7)(x+7)")
+    late = client.post(f"/sessions/{FIXTURE_SESSION}/ocr/confirm", json={"lines": right_answer(P1)})
+
+    assert event(typed_reply, "problem")["problem_id"] == DEMO_PROBLEMS[1].problem_id
+    assert late.status_code == 409
+    assert error_code(late) == "no_pending_ocr"
+
+
+async def test_TM04_an_answer_to_a_problem_no_longer_pending_moves_nothing():
+    # The state itself refuses a late answer (two tabs, or a preview from before).
+    state = DemoRoomState()
+    key = f"{TENANT}/{SESSION_ID}"
+    assert await state.next_problem(key, P1) == DEMO_PROBLEMS[1]
+
+    await state.record_check(key, P1, True)  # p1 is no longer pending
+    late = await state.next_problem(key, P1)
+
+    assert late is None
+    assert await state.pending_problem(key) == DEMO_PROBLEMS[1]
+    card = await state.progress_card(key)
+    assert all(row.level == "not_started" for row in card.topics)
+
+
+def test_AM07_blank_typed_lines_are_not_working(client, local):
+    # One answer line and a blank one is still an answer without working.
+    local(
+        {
+            "typed_answer": [typed(True, [P1.problem.reference_answer, "  ", ""])],
+            "check_answer": [CLASSIFY_RIGHT],
+            "explain_check": ["ส่งวิธีทำมาด้วยนะ"],
+        }
+    )
+    client.post(OPEN_ROOM)
+
+    events = say(client, "(x-7)(x+7)")
+
+    assert "verdict" not in names(events)
+
+
+def test_TM15_opening_keeps_the_fixture_card_for_p1(client, local):
+    # The first problem keeps purpose `probe` of session_start.sse.
+    local({})
+
+    opening = parse_sse(client.post(OPEN_ROOM).text)
+
+    assert event(opening, "problem") == dict(stubs.events("session_start"))["problem"]
+
+
+def error_code(response: Any) -> str:
+    return response.json()["error"]["code"]

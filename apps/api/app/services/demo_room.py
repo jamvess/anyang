@@ -137,8 +137,12 @@ class DemoRoomState(InMemoryRoomState):
         await super().start_session(key)
         self._turns.pop(key, None)
 
+    def _is_pending(self, key: str, problem: PendingProblem) -> bool:
+        return DEMO_PROBLEMS[self._index.get(_student(key), 0)].problem_id == problem.problem_id
+
     async def record_check(self, key: str, pending: PendingProblem, is_correct: bool) -> None:
-        if pending.topic_id is None:
+        # A stale preview of a problem already answered is not counted twice (self-review).
+        if pending.topic_id is None or not self._is_pending(key, pending):
             return
         cfg = get_settings().learning
         topics = self._progress.setdefault(_student(key), {})
@@ -157,7 +161,9 @@ class DemoRoomState(InMemoryRoomState):
     async def conversation(self, key: str) -> list[tuple[str, str]]:
         return [line for turn in self._turns.get(key, []) for line in turn]
 
-    async def next_problem(self, key: str) -> PendingProblem | None:
+    async def next_problem(self, key: str, answered: PendingProblem) -> PendingProblem | None:
+        if not self._is_pending(key, answered):
+            return None  # answered late (a stale preview): the pending problem stays
         student = _student(key)
         self._index[student] = (self._index.get(student, 0) + 1) % len(DEMO_PROBLEMS)
         return DEMO_PROBLEMS[self._index[student]]

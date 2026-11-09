@@ -30,7 +30,12 @@ from app.models.room import (
     VerdictEvent,
 )
 from app.models.scope_ai import ExtractAnswerResult
-from app.services.checker import check_answer, number_lines, solution_steps_text
+from app.services.checker import (
+    CheckProblem,
+    check_answer,
+    number_lines,
+    solution_steps_text,
+)
 from app.services.dev_uploads import LocalImageStore, get_local_mode, get_local_upload_dir
 from app.services.room_state import (
     STUDENT,
@@ -153,6 +158,28 @@ def _log_edits(session_id: str, preview: PendingPreview, lines: Sequence[str]) -
     )
 
 
+async def _check(
+    gateway: Gateway, problem: CheckProblem, lines: list[str], call_context: AICallContext | None
+) -> tuple[CheckResult, VerdictEvent] | list[Event]:
+    """The checker of P2 and the verdict event, or the events that end the stream when it
+    fails: the classifier (AI) → "ระบบช้า" (spec §10 item 2) · anything else → internal_error."""
+    try:
+        with call_scope(call_context):
+            result = await check_answer(problem, lines, gateway=gateway)
+        verdict = VerdictEvent(
+            verdict=result.verdict,
+            first_wrong_line=result.first_wrong_line,
+            error_type=result.error_type,
+        )
+    except (AIProviderError, AISchemaError):
+        log.warning("check_answer classifier failed; the answer can be sent again")
+        return [_tutor(DEGRADE_TEXT), ("done", DoneEvent())]
+    except Exception:
+        log.exception("check_answer failed")
+        return [("error", INTERNAL_ERROR)]
+    return result, verdict
+
+
 async def confirm_events(
     gateway: Gateway,
     state: RoomState,
@@ -167,32 +194,19 @@ async def confirm_events(
     The router has already taken ``preview`` out of the state (``take_preview``). Until the
     verdict is built it is put back on every way out, so the user can confirm again (§2.2
     item 7); a newer photo that arrived meanwhile wins."""
-    problem = preview.pending.problem
     checked = False
     try:
-        try:
-            with call_scope(call_context):
-                result = await check_answer(problem, lines, gateway=gateway)
-            verdict = VerdictEvent(
-                verdict=result.verdict,
-                first_wrong_line=result.first_wrong_line,
-                error_type=result.error_type,
-            )
-        except (AIProviderError, AISchemaError):
-            # Temporary instead of UC-04 E4 (spec §10 item 2): no verdict, confirm again.
-            log.warning("check_answer classifier failed; the preview stays to confirm again")
-            yield _tutor(DEGRADE_TEXT)
-            yield "done", DoneEvent()
-            return
-        except Exception:
-            log.exception("check_answer failed")
-            yield "error", INTERNAL_ERROR
+        outcome = await _check(gateway, preview.pending.problem, lines, call_context)
+        if isinstance(outcome, list):
+            for event in outcome:
+                yield event
             return
         checked = True  # one confirm per preview (§2.2 item 5)
     finally:
         if not checked:
             await state.restore_preview(key, preview)
 
+    result, verdict = outcome
     _log_edits(session_id, preview, lines)
     await state.remember(key, STUDENT, f"(ยืนยันคำตอบ) {' · '.join(lines)}")
     async with aclosing(
@@ -214,23 +228,12 @@ async def typed_answer_events(
 ) -> AsyncIterator[Event]:
     """A typed answer (demo-room.md §2 G): checked like a confirmed photo, with no card to
     confirm (UC-04 A2) and nothing to log for AM-03. The caller has remembered the message."""
-    try:
-        with call_scope(call_context):
-            result = await check_answer(pending.problem, lines, gateway=gateway)
-        verdict = VerdictEvent(
-            verdict=result.verdict,
-            first_wrong_line=result.first_wrong_line,
-            error_type=result.error_type,
-        )
-    except (AIProviderError, AISchemaError):
-        log.warning("check_answer classifier failed on a typed answer")
-        yield _tutor(DEGRADE_TEXT)
-        yield "done", DoneEvent()
+    outcome = await _check(gateway, pending.problem, lines, call_context)
+    if isinstance(outcome, list):
+        for event in outcome:
+            yield event
         return
-    except Exception:
-        log.exception("check_answer failed on a typed answer")
-        yield "error", INTERNAL_ERROR
-        return
+    result, verdict = outcome
     async with aclosing(
         _verdict_and_explanation(gateway, state, key, pending, lines, result, verdict, call_context)
     ) as events:
@@ -249,7 +252,7 @@ async def _verdict_and_explanation(
     call_context: AICallContext | None,
 ) -> AsyncIterator[Event]:
     """After a check, photo or typed (spec §2.2 items 5-8 · demo-room §2 B, D, E): mastery,
-    verdict, the tutor's explanation, then the demo's card and next problem.
+    verdict, the tutor's explanation, then the demo's next problem.
 
     A right answer with no working (demo-room §2 I) gets none of these but the explanation,
     which asks for the working: no verdict, no attempt, the same problem stays."""
@@ -271,29 +274,26 @@ async def _verdict_and_explanation(
         "check_result": _check_result_text(result, no_working),
     }
 
-    said: list[str] = []
-
-    async def after_explaining() -> AsyncIterator[Event]:
+    async def after_explaining(explanation: str) -> AsyncIterator[Event]:
         # Runs only when the explanation finished (tutor_events), so a degrade text is never
         # remembered as the tutor speaking (§2 E item 2).
-        await state.remember(key, TUTOR, "".join(said))
+        await state.remember(key, TUTOR, explanation)
         if no_working:
-            return  # the same problem stays, so no card and no next problem
+            return  # the same problem stays, so no next problem
         # Demo only (demo-room.md §2 B): the default state has no next problem. No progress
         # card here: it comes when the room opens (§2 J item 1).
-        if upcoming := await state.next_problem(key):
-            yield _tutor(NEXT_PROBLEM)
-            yield "problem", problem_event(upcoming)
+        if upcoming := await state.next_problem(key, pending):
+            # Remembered before it is sent: a client that leaves now still finds it (§2 E).
             await state.remember(key, TUTOR, NEXT_PROBLEM)
             await state.remember(key, TUTOR, problem_line(upcoming))
+            yield _tutor(NEXT_PROBLEM)
+            yield "problem", problem_event(upcoming)
 
     async with aclosing(
         tutor_events(gateway, "explain_check", explain_input, call_context, after_explaining)
     ) as events:
-        async for name, payload in events:
-            if name == "token" and isinstance(payload, TokenEvent):
-                said.append(payload.text)
-            yield name, payload
+        async for event in events:
+            yield event
 
 
 def _verdict_line(result: CheckResult) -> str:

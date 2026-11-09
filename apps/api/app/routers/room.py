@@ -22,9 +22,8 @@ from sse_starlette import EventSourceResponse
 
 from app import stubs
 from app.ai.call_context import AICallContext
-from app.ai.gateway import AIProviderError, AISchemaError, Gateway, get_gateway
+from app.ai.gateway import Gateway, get_gateway
 from app.auth import AuthContext, get_auth
-from app.models.check import TypedAnswer
 from app.models.error import ErrorResponse, error_response, too_long_message, unavailable_docs
 from app.models.room import (
     BYTES_PER_MB,
@@ -60,20 +59,15 @@ from app.services.photo_check import (
     confirm_events,
     get_image_store,
     photo_events,
-    problem_event,
-    problem_line,
-    typed_answer_events,
 )
-from app.services.room_opening import greeting_events, opening_facts
+from app.services.room_chat import text_message_events
+from app.services.room_opening import opening_events
 from app.services.room_state import (
     STUDENT,
-    TUTOR,
     RoomState,
-    conversation_text,
     get_room_state,
     room_key,
 )
-from app.services.tutor_turn import NO_PROBLEM, call_scope, reply_events
 from app.settings import get_settings
 
 log = logging.getLogger(__name__)
@@ -158,32 +152,8 @@ async def create_session(
     card = await room_state.progress_card(key)
     if card is None:
         return stubs.stream("session_start")
-    pending = await room_state.pending_problem(key)
     call_context = AICallContext(auth.tenant_id, auth.user_id) if auth else None
-
-    async def opening() -> AsyncIterator[tuple[str, BaseModel]]:
-        said: list[str] = []
-        for event, data in recorded:
-            if event == "progress_card":
-                yield event, card
-            elif event == "token":  # the greeting from facts (demo-room.md §2 F)
-                facts = opening_facts(card, pending)
-                async with aclosing(
-                    greeting_events(gateway, facts, data["text"], said, call_context)
-                ) as greeting:
-                    async for pair in greeting:
-                        yield pair
-            else:
-                if event == "problem" and pending:
-                    # What the tutor said on opening is remembered as it was sent (§2 E, F),
-                    # and the card is the problem the student reached (§2 J item 3).
-                    await room_state.remember(key, TUTOR, "".join(said))
-                    await room_state.remember(key, TUTOR, problem_line(pending))
-                    yield event, problem_event(pending)
-                    continue
-                yield event, EVENT_MODELS[event].model_validate(data)
-
-    return _sse(opening())
+    return _sse(opening_events(gateway, room_state, key, recorded, card, call_context))
 
 
 @router.get("/sessions/{id}", responses=_ERRORS)
@@ -313,55 +283,7 @@ async def send_message(
         )
 
     key = room_key(stubs.tenant_of(auth), str(session_id))
-    pending = await room_state.pending_problem(key)
-    # The pending problem without its reference (AM-13 · demo-room.md §2 C).
-    problem = pending.problem.text if pending else NO_PROBLEM
-    # Earlier turns only: the message being answered goes in `message` (§2 E item 4).
-    conversation = conversation_text(await room_state.conversation(key))
-    await room_state.remember(key, STUDENT, body.text)
-    if local and pending:
-        # Is it the answer to the pending problem? Then it is checked (demo-room.md §2 G).
-        lines = await _typed_answer_lines(gateway, problem, conversation, body.text, call_context)
-        if lines:
-            return _sse(typed_answer_events(gateway, room_state, key, pending, lines, call_context))
-    said: list[str] = []
-
-    async def remember_reply() -> AsyncIterator[tuple[str, BaseModel]]:
-        # Only a finished reply is the tutor speaking; a degrade text is not (§2 E item 2).
-        await room_state.remember(key, TUTOR, "".join(said))
-        return
-        yield  # an async generator with nothing to add
-
-    async def reply() -> AsyncIterator[tuple[str, BaseModel]]:
-        events = reply_events(
-            gateway, body.text, call_context, problem, conversation, remember_reply
-        )
-        async with aclosing(events) as pairs:
-            async for name, payload in pairs:
-                if name == "token" and isinstance(payload, TokenEvent):
-                    said.append(payload.text)
-                yield name, payload
-
-    return _sse(reply())
-
-
-async def _typed_answer_lines(
-    gateway: Gateway,
-    problem: str,
-    conversation: str,
-    text: str,
-    call_context: AICallContext | None,
-) -> list[str]:
-    """The LaTeX lines of a typed answer, or [] when the message is not one or `typed_answer`
-    fails: then the tutor replies as usual (demo-room.md §2 G items 1-4)."""
-    values = {"problem": problem, "conversation": conversation, "message": text}
-    try:
-        with call_scope(call_context):
-            result = await gateway.call("typed_answer", values, TypedAnswer)
-    except (AIProviderError, AISchemaError):
-        log.warning("typed_answer failed; the tutor replies instead")
-        return []
-    return list(result.lines) if result.is_answer else []
+    return _sse(text_message_events(gateway, room_state, key, body.text, local, call_context))
 
 
 def _sse(events: AsyncIterator[tuple[str, BaseModel]]) -> EventSourceResponse:
@@ -485,11 +407,17 @@ async def put_local_upload(
     content_type = bare_content_type(request.headers.get("content-type", ""))
     if content_type not in UPLOAD_CONTENT_TYPES["image"] or image_mime(path) is None:
         return error_response(422, "unsupported_type", f"{content_type} is not an accepted image")
-    data = await request.body()
     max_mb = get_settings().ai.guards.max_image_mb
-    if len(data) > max_mb * BYTES_PER_MB:
+    limit = max_mb * BYTES_PER_MB
+    declared = request.headers.get("content-length", "")
+    # Refuse a declared size before reading the body (self-review); check the real size too.
+    if declared.isdigit() and int(declared) > limit:
         return error_response(422, "file_too_large", f"image is over {max_mb} MB")
-    LocalImageStore(upload_dir).write(path, data)
+    data = await request.body()
+    if len(data) > limit:
+        return error_response(422, "file_too_large", f"image is over {max_mb} MB")
+    if not LocalImageStore(upload_dir).write(path, data):
+        return error_response(404, "not_found", "Not found")
     return Response(status_code=200)
 
 
