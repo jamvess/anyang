@@ -12,16 +12,26 @@ import json
 import logging
 from collections.abc import AsyncIterator, Sequence
 from contextlib import aclosing
-from typing import Protocol
+from pathlib import Path
+from typing import Annotated, Protocol
 
+from fastapi import Depends
 from pydantic import BaseModel
 
 from app.ai.call_context import AICallContext
 from app.ai.gateway import AIProviderError, AISchemaError, Gateway, Image
 from app.domain.checker import CheckResult
-from app.models.room import DoneEvent, OcrLine, OcrPreviewEvent, TokenEvent, VerdictEvent
+from app.models.room import (
+    DoneEvent,
+    OcrLine,
+    OcrPreviewEvent,
+    ProblemEvent,
+    TokenEvent,
+    VerdictEvent,
+)
 from app.models.scope_ai import ExtractAnswerResult
 from app.services.checker import check_answer, number_lines, solution_steps_text
+from app.services.dev_uploads import LocalImageStore, get_local_mode, get_local_upload_dir
 from app.services.room_state import PendingPreview, PendingProblem, RoomState
 from app.services.tutor_turn import DEGRADE_TEXT, INTERNAL_ERROR, call_scope, tutor_events
 
@@ -35,6 +45,8 @@ CHECK_PLEASE = "เช็คให้หน่อยว่าอ่านถู�
 UNREADABLE = "รูปนี้อ่านไม่ออก ลองถ่ายใหม่ให้ชัดขึ้นอีกนิดนะ"
 # UC-04 E9 with no intent router yet (spec §10 item 4 · proposal pending Junior).
 NO_PENDING_PROBLEM = "ตอนนี้ยังไม่มีโจทย์ที่รอคำตอบ ส่งคำถามเป็นข้อความได้เลยนะ"
+# Before the next problem card of the local demo (demo-room.md §2 B item 2).
+NEXT_PROBLEM = "ข้อต่อไปนะ"
 
 Event = tuple[str, BaseModel]
 
@@ -47,10 +59,14 @@ class ImageStore(Protocol):
         ...
 
 
-def get_image_store() -> ImageStore | None:
+def get_image_store(
+    local: Annotated[bool, Depends(get_local_mode)],
+    upload_dir: Annotated[Path, Depends(get_local_upload_dir)],
+) -> ImageStore | None:
     """FastAPI dependency. None means no Storage yet (spec §2.4): photo messages and
-    ocr/confirm keep their stubs until Junior wires Supabase Storage and the real /uploads."""
-    return None
+    ocr/confirm keep their stubs until Junior wires Supabase Storage and the real /uploads.
+    On a local machine the photos come from the local upload folder (demo-room.md §2 A)."""
+    return LocalImageStore(upload_dir) if local else None
 
 
 def _tutor(text: str) -> Event:
@@ -165,6 +181,7 @@ async def confirm_events(
             await state.restore_preview(key, preview)
 
     _log_edits(session_id, preview, lines)
+    await state.record_check(key, preview.pending, result.is_correct)  # demo: BKT (§2 D)
     yield "verdict", verdict
     explain_input = {
         "problem": problem.text,
@@ -175,8 +192,27 @@ async def confirm_events(
         "answer_lines": number_lines(lines),
         "check_result": _check_result_text(result),
     }
+
+    async def after_explaining() -> AsyncIterator[Event]:
+        # Demo only (demo-room.md §2 B, D): the default state has no card and no next problem.
+        if card := await state.progress_card(key):
+            yield "progress_card", card
+        if upcoming := await state.next_problem(key):
+            yield _tutor(NEXT_PROBLEM)
+            yield "problem", problem_event(upcoming)
+
     async with aclosing(
-        tutor_events(gateway, "explain_check", explain_input, call_context)
+        tutor_events(gateway, "explain_check", explain_input, call_context, after_explaining)
     ) as events:
         async for event in events:
             yield event
+
+
+def problem_event(pending: PendingProblem) -> ProblemEvent:
+    """The problem card, never with the reference (api.md "SSE events" problem)."""
+    return ProblemEvent(
+        problem_id=pending.problem_id,
+        text_latex=pending.text_latex,
+        difficulty=pending.difficulty,
+        purpose="practice",
+    )

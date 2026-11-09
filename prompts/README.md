@@ -30,3 +30,5 @@ output_schema: ExtractAnswerResult
 inputs: [image]
 ---
 ```
+
+`defaults` (ไม่บังคับ) ให้ค่า text กับ input ที่ประกาศไว้แต่ผู้เรียกไม่ได้ส่งมา · ใช้ตอนเพิ่ม input ใหม่ใน version ใหม่ เพื่อไม่ให้ผู้เรียกตาม contract เดิมพัง · input ที่ไม่มี default ยังต้องส่งครบ · ตัวอย่าง `tutor_reply/v2`: `defaults: {problem: none}` (`specs/features/tutor/demo-room.md` §2 C · `test_prompt_defaults.py`)

@@ -26,7 +26,7 @@ import re
 import threading
 import time
 from collections.abc import AsyncIterator, Awaitable, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
@@ -106,6 +106,9 @@ class _Prompt:
     version: str
     inputs: tuple[str, ...]
     body: str
+    # Text used for a declared input the caller leaves out (frontmatter `defaults`), so a new
+    # input does not break callers of the earlier contract (prompts/README.md "Frontmatter").
+    defaults: dict[str, str] = field(default_factory=dict)
 
 
 def _load_prompt(prompts_dir: Path, purpose: str, version: str) -> _Prompt:
@@ -121,7 +124,13 @@ def _load_prompt(prompts_dir: Path, purpose: str, version: str) -> _Prompt:
         raise AIConfigError(f"{path} declares purpose {meta.get('purpose')!r}, not {purpose!r}")
     if f"v{meta.get('version')}" != version:
         raise AIConfigError(f"{path} declares version {meta.get('version')!r}, not {version!r}")
-    return _Prompt(version=version, inputs=tuple(meta.get("inputs") or ()), body=body.strip())
+    inputs = tuple(meta.get("inputs") or ())
+    defaults = meta.get("defaults") or {}
+    if not isinstance(defaults, dict) or not all(isinstance(v, str) for v in defaults.values()):
+        raise AIConfigError(f"{path}: defaults must map input names to text")
+    if undeclared := set(defaults) - set(inputs):
+        raise AIConfigError(f"{path}: defaults for undeclared inputs {sorted(undeclared)}")
+    return _Prompt(version=version, inputs=inputs, body=body.strip(), defaults=defaults)
 
 
 def _fill(body: str, texts: dict[str, str]) -> str:
@@ -146,6 +155,7 @@ def _fill(body: str, texts: dict[str, str]) -> str:
 
 
 def _render(prompt: _Prompt, values: dict[str, InputValue]) -> tuple[str, list[Image]]:
+    values = {**prompt.defaults, **values}
     declared, given = set(prompt.inputs), set(values)
     if missing := declared - given:
         raise AIInputError(f"missing inputs: {sorted(missing)}")

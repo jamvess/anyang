@@ -12,15 +12,25 @@ no table says yet which tenant owns a session (SA-06).
 
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Protocol
+from typing import Annotated, Protocol
 
+from fastapi import Depends
+
+from app.models.room import ProgressCardEvent
 from app.services.checker import CheckProblem
+from app.services.dev_uploads import get_local_mode
 
 
 @dataclass(frozen=True)
 class PendingProblem:
+    """``text_latex`` and ``difficulty`` are what the problem card shows; ``topic_id`` is the
+    topic whose mastery an answer updates (demo-room.md §2 D)."""
+
     problem_id: str
     problem: CheckProblem
+    text_latex: str = ""
+    difficulty: int = 1
+    topic_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -43,6 +53,7 @@ STUB_PROBLEM = PendingProblem(
         answer_format="factored",
         solution_steps=[],
     ),
+    text_latex="x^2 - 49",
 )
 
 
@@ -67,6 +78,20 @@ class RoomState(Protocol):
         photo has set one meanwhile (the newer one wins)."""
         ...
 
+    # Hooks of the local demo (demo-room.md §2 B, D); the default state does nothing.
+
+    async def start_session(self, key: str) -> None: ...
+
+    async def record_check(self, key: str, pending: PendingProblem, is_correct: bool) -> None: ...
+
+    async def progress_card(self, key: str) -> ProgressCardEvent | None:
+        """The card from real mastery, or None when this state keeps none."""
+        ...
+
+    async def next_problem(self, key: str) -> PendingProblem | None:
+        """Make the next problem the pending one and return it; None keeps the same one."""
+        ...
+
 
 class InMemoryRoomState:
     def __init__(self) -> None:
@@ -84,8 +109,32 @@ class InMemoryRoomState:
     async def restore_preview(self, key: str, preview: PendingPreview) -> None:
         self._previews.setdefault(key, preview)
 
+    async def start_session(self, key: str) -> None:
+        self._previews.pop(key, None)
+
+    async def record_check(self, key: str, pending: PendingProblem, is_correct: bool) -> None:
+        return None
+
+    async def progress_card(self, key: str) -> ProgressCardEvent | None:
+        return None
+
+    async def next_problem(self, key: str) -> PendingProblem | None:
+        return None  # p1 stays pending (photo-check-in-room.md §10 item 4)
+
 
 @lru_cache
-def get_room_state() -> RoomState:
-    """FastAPI dependency; tests replace it with a fresh ``InMemoryRoomState``."""
+def _memory_state() -> InMemoryRoomState:
     return InMemoryRoomState()
+
+
+@lru_cache
+def _demo_state() -> RoomState:
+    from app.services.demo_room import DemoRoomState  # demo_room builds on this module
+
+    return DemoRoomState()
+
+
+def get_room_state(local: Annotated[bool, Depends(get_local_mode)]) -> RoomState:
+    """FastAPI dependency: the demo state on a local machine (demo-room.md), else the default
+    one. Tests replace it with a fresh state."""
+    return _demo_state() if local else _memory_state()

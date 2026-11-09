@@ -250,6 +250,7 @@ OUTSIDE_BY_PROMPT = {
     "merge_topics/v2": set(),
     "split_past_exam/v1": {"file_name"},
     "tutor_reply/v1": set(),
+    "tutor_reply/v2": set(),
     "vision_extract/v1": {"file_name", "page_no"},
     "vision_extract_pages/v1": {"file_name", "page_count"},
 }

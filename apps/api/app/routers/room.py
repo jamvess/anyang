@@ -11,10 +11,11 @@ uploads, transcribe and ocr/confirm (api.md v1.7 · test_room_media_api_contract
 
 from collections.abc import AsyncIterator
 from contextlib import aclosing
+from pathlib import Path as PathLib
 from typing import Annotated, Any
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, Path, Response
+from fastapi import APIRouter, Depends, Path, Request, Response
 from pydantic import BaseModel
 from sse_starlette import EventSourceResponse
 
@@ -44,6 +45,13 @@ from app.models.room import (
     bare_content_type,
 )
 from app.rate_limit import RATE_LIMITED_DOCS, chat_rate_limit
+from app.services.dev_uploads import (
+    LocalImageStore,
+    get_local_mode,
+    get_local_upload_dir,
+    image_mime,
+    upload_path_ok,
+)
 from app.services.photo_check import (
     NO_PENDING_PROBLEM,
     ImageStore,
@@ -52,7 +60,7 @@ from app.services.photo_check import (
     photo_events,
 )
 from app.services.room_state import RoomState, get_room_state, room_key
-from app.services.tutor_turn import reply_events
+from app.services.tutor_turn import NO_PROBLEM, reply_events
 from app.settings import get_settings
 
 router = APIRouter(tags=["room"])
@@ -104,12 +112,34 @@ async def get_active_session(prep_id: PrepId, response: Response) -> ActiveSessi
     response_class=EventSourceResponse,
     responses=_SSE_RESPONSE,
 )
-async def create_session(prep_id: PrepId) -> EventSourceResponse:
+async def create_session(
+    prep_id: PrepId,
+    auth: Annotated[AuthContext | None, Depends(get_auth)],
+    local: Annotated[bool, Depends(get_local_mode)],
+    room_state: Annotated[RoomState, Depends(get_room_state)],
+) -> EventSourceResponse:
     """Start a session. SSE: session → progress_card → token (opening) → problem → done.
 
-    stub — replaced in P4-lite
+    stub — replaced in P4-lite. On a local machine the demo starts again and the opening card
+    comes from its real mastery (demo-room.md §2 D item 4).
     """
-    return stubs.stream("session_start")
+    if not local:
+        return stubs.stream("session_start")
+    recorded = stubs.events("session_start")
+    key = room_key(stubs.tenant_of(auth), dict(recorded)["session"]["session_id"])
+    await room_state.start_session(key)
+    card = await room_state.progress_card(key)
+    if card is None:
+        return stubs.stream("session_start")
+
+    async def opening() -> AsyncIterator[tuple[str, BaseModel]]:
+        for event, data in recorded:
+            yield (
+                event,
+                card if event == "progress_card" else EVENT_MODELS[event].model_validate(data),
+            )
+
+    return _sse(opening())
 
 
 @router.get("/sessions/{id}", responses=_ERRORS)
@@ -222,7 +252,11 @@ async def send_message(
             str(session_id), body.image_path, auth, gateway, image_store, room_state, call_context
         )
 
-    return _sse(reply_events(gateway, body.text, call_context))
+    key = room_key(stubs.tenant_of(auth), str(session_id))
+    pending = await room_state.pending_problem(key)
+    # The pending problem without its reference (AM-13 · demo-room.md §2 C).
+    problem = pending.problem.text if pending else NO_PROBLEM
+    return _sse(reply_events(gateway, body.text, call_context, problem))
 
 
 def _sse(events: AsyncIterator[tuple[str, BaseModel]]) -> EventSourceResponse:
@@ -302,12 +336,16 @@ _STUB_TRANSCRIPT = "สองเอ็กซ์ลบห้า คูณ สอ�
 async def create_upload(
     session_id: SessionId,
     body: UploadRequest,
+    request: Request,
     response: Response,
     auth: Annotated[AuthContext | None, Depends(get_auth)],
+    local: Annotated[bool, Depends(get_local_mode)],
 ) -> Any:
     """Signed upload URL for one image or audio file (TM-06, TM-07, TM-21).
 
-    stub — the URL is not a real Storage URL until the endpoint talks to Supabase Storage
+    stub — the URL is not a real Storage URL until the endpoint talks to Supabase Storage.
+    On a local machine an image gets a URL of this API, so the photo really arrives
+    (demo-room.md §2 A).
     """
     content_type = bare_content_type(body.content_type)
     if content_type not in UPLOAD_CONTENT_TYPES[body.kind]:
@@ -317,10 +355,34 @@ async def create_upload(
     max_mb = get_settings().ai.guards.max_image_mb
     if body.kind == "image" and body.size_bytes > max_mb * BYTES_PER_MB:
         return stubs.error(422, "file_too_large", f"image is over {max_mb} MB")
-    response.headers.update(stubs.HEADERS)
     ext = content_type.split("/", 1)[1]
     path = f"{stubs.tenant_of(auth)}/sessions/{session_id}/{uuid4()}.{ext}"
+    if local and body.kind == "image":
+        return UploadTicket(upload_url=f"{request.base_url}dev/uploads/{path}", path=path)
+    response.headers.update(stubs.HEADERS)
     return UploadTicket(upload_url=f"{stubs.STORAGE_URL}/{path}", path=path)
+
+
+@router.put("/dev/uploads/{path:path}", include_in_schema=False)
+async def put_local_upload(
+    path: str,
+    request: Request,
+    local: Annotated[bool, Depends(get_local_mode)],
+    upload_dir: Annotated[PathLib, Depends(get_local_upload_dir)],
+) -> Response:
+    """Local stand-in for the signed Storage URL (demo-room.md §2 A). Not in api.md: it exists
+    only with APP_ENV=local, and answers 404 everywhere else."""
+    if not local or not upload_path_ok(path):
+        return error_response(404, "not_found", "Not found")
+    content_type = bare_content_type(request.headers.get("content-type", ""))
+    if content_type not in UPLOAD_CONTENT_TYPES["image"] or image_mime(path) is None:
+        return error_response(422, "unsupported_type", f"{content_type} is not an accepted image")
+    data = await request.body()
+    max_mb = get_settings().ai.guards.max_image_mb
+    if len(data) > max_mb * BYTES_PER_MB:
+        return error_response(422, "file_too_large", f"image is over {max_mb} MB")
+    LocalImageStore(upload_dir).write(path, data)
+    return Response(status_code=200)
 
 
 @router.post(

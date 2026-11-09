@@ -6,7 +6,7 @@ event. Not in P4-lite: stage machine, planner, buddy, context layers 2-9 and sav
 """
 
 import logging
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import AbstractContextManager, aclosing, nullcontext
 
 from pydantic import BaseModel
@@ -36,11 +36,21 @@ def call_scope(call_context: AICallContext | None) -> AbstractContextManager[obj
     )
 
 
+# tutor_reply/v2 input when no problem is pending (demo-room.md §2 C item 1).
+NO_PROBLEM = "none"
+
+Event = tuple[str, BaseModel]
+
+
 def reply_events(
-    gateway: Gateway, text: str, call_context: AICallContext | None = None
-) -> AsyncIterator[tuple[str, BaseModel]]:
-    """The tutor's reply to a text message (``tutor_reply``), as ``tutor_events``."""
-    return tutor_events(gateway, "tutor_reply", {"message": text}, call_context)
+    gateway: Gateway,
+    text: str,
+    call_context: AICallContext | None = None,
+    problem: str = NO_PROBLEM,
+) -> AsyncIterator[Event]:
+    """The tutor's reply to a text message (``tutor_reply``), as ``tutor_events``. ``problem``
+    is the pending problem without its reference (AM-13 · demo-room.md §2 C)."""
+    return tutor_events(gateway, "tutor_reply", {"message": text, "problem": problem}, call_context)
 
 
 async def tutor_events(
@@ -48,7 +58,8 @@ async def tutor_events(
     purpose: str,
     input: dict[str, str],
     call_context: AICallContext | None = None,
-) -> AsyncIterator[tuple[str, BaseModel]]:
+    tail: Callable[[], AsyncIterator[Event]] | None = None,
+) -> AsyncIterator[Event]:
     """(event name, payload) pairs of a streamed tutor purpose, in api.md "SSE events" names:
     ``tutor_reply`` here, ``explain_check`` after a verdict (photo-check-in-room.md §2.2).
 
@@ -58,7 +69,10 @@ async def tutor_events(
     With ``call_context`` the call is logged to ``ai_calls`` under that tenant. It is set here,
     inside the generator that reads the stream, and around ``aclosing``: the gateway reports the
     call when the stream ends, which for a client that leaves early is when ``aclosing`` closes
-    it (api-auth.md §2.5)."""
+    it (api-auth.md §2.5).
+
+    ``tail`` adds events before ``done`` only when the tutor finished without failing, such as
+    the progress card and the next problem of the demo (demo-room.md §2 B item 4)."""
     sent = False
     try:
         with call_scope(call_context):
@@ -77,4 +91,9 @@ async def tutor_events(
         log.exception("%s stream failed", purpose)
         yield "error", INTERNAL_ERROR
         return
+    else:
+        if tail is not None:
+            async with aclosing(tail()) as extra:
+                async for event in extra:
+                    yield event
     yield "done", DoneEvent()

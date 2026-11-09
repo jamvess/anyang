@@ -202,7 +202,7 @@ async def test_AI01_stream_emits_one_call_record_when_complete():
 
     assert len(records) == 1
     assert records[0].purpose == "tutor_reply"
-    assert records[0].prompt_version == "v1"
+    assert records[0].prompt_version == get_settings().ai.purposes["tutor_reply"].prompt
     assert records[0].status == "ok"
 
 

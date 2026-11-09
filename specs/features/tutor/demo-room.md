@@ -36,6 +36,7 @@
 1. ข้อความพิมพ์ส่ง input `problem` = ข้อความโจทย์ค้างของ session (ไม่มีเฉลย · AM-13) ให้ `tutor_reply` · ไม่มีโจทย์ค้าง → `none`
 2. prompt `tutor_reply/v2` = v1 + โจทย์ใน `<document name="problem">` + กฎ: ถ้านักเรียนถามเรื่องโจทย์นี้ ให้ช่วยเริ่มทีละขั้นโดยไม่เฉลยคำตอบสุดท้าย · ถ้าถามเรื่องอื่น ตอบตามปกติ
 3. มีผลทุก `APP_ENV` เพราะการ์ดโจทย์ `p1` ขึ้นในห้องบน staging ด้วย (tutor ควรรู้เรื่องเดียวกับที่ผู้ใช้เห็น) · `config/ai.yaml` → `tutor_reply.prompt: v2` (ไฟล์กลาง)
+4. **เพิ่มตอน implement (Jam เลือก 9 พ.ย.):** test เดิมของ gateway เรียก `tutor_reply` ด้วย `{message}` อย่างเดียว · gateway จึงรองรับ `defaults` ใน frontmatter ของ prompt (`tutor_reply/v2`: `defaults: {problem: none}`) แทนการแก้ test เหล่านั้น · กฎอยู่ใน `prompts/README.md` "Frontmatter" · test `test_prompt_defaults.py`
 
 **D · mastery จริงในการ์ดความคืบหน้า (local เท่านั้น · ใช้ `specs/features/planner/bkt-mastery.md`)**
 
