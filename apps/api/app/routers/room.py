@@ -9,6 +9,7 @@ A text message is real since P4-lite: the reply streams from the gateway
 uploads, transcribe and ocr/confirm (api.md v1.7 · test_room_media_api_contract.py).
 """
 
+import logging
 from collections.abc import AsyncIterator
 from contextlib import aclosing
 from pathlib import Path as PathLib
@@ -21,8 +22,9 @@ from sse_starlette import EventSourceResponse
 
 from app import stubs
 from app.ai.call_context import AICallContext
-from app.ai.gateway import Gateway, get_gateway
+from app.ai.gateway import AIProviderError, AISchemaError, Gateway, get_gateway
 from app.auth import AuthContext, get_auth
+from app.models.check import TypedAnswer
 from app.models.error import ErrorResponse, error_response, too_long_message, unavailable_docs
 from app.models.room import (
     BYTES_PER_MB,
@@ -59,7 +61,9 @@ from app.services.photo_check import (
     get_image_store,
     photo_events,
     problem_line,
+    typed_answer_events,
 )
+from app.services.room_opening import greeting_events, opening_facts
 from app.services.room_state import (
     STUDENT,
     TUTOR,
@@ -68,8 +72,10 @@ from app.services.room_state import (
     get_room_state,
     room_key,
 )
-from app.services.tutor_turn import NO_PROBLEM, reply_events
+from app.services.tutor_turn import NO_PROBLEM, call_scope, reply_events
 from app.settings import get_settings
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(tags=["room"])
 
@@ -106,11 +112,18 @@ _SSE_RESPONSE: dict[int | str, dict[str, Any]] = {
 
 
 @router.get("/exam-preps/{id}/sessions/active", responses=_ERRORS)
-async def get_active_session(prep_id: PrepId, response: Response) -> ActiveSession:
+async def get_active_session(
+    prep_id: PrepId,
+    response: Response,
+    local: Annotated[bool, Depends(get_local_mode)],
+) -> Any:
     """Open session of this exam prep (TM-13); 404 `no_active_session` if none.
 
-    stub — replaced in P4-lite
+    stub — replaced in P4-lite. On a local machine there is none, so the web opens a new
+    session and the tutor greets first (demo-room.md §2 F item 1).
     """
+    if local:
+        return error_response(404, "no_active_session", "No open session for this exam prep")
     response.headers.update(stubs.HEADERS)
     return ActiveSession(session_id=stubs.room()["session_id"])
 
@@ -122,6 +135,7 @@ async def get_active_session(prep_id: PrepId, response: Response) -> ActiveSessi
 )
 async def create_session(
     prep_id: PrepId,
+    gateway: Annotated[Gateway, Depends(get_gateway)],
     auth: Annotated[AuthContext | None, Depends(get_auth)],
     local: Annotated[bool, Depends(get_local_mode)],
     room_state: Annotated[RoomState, Depends(get_room_state)],
@@ -139,18 +153,28 @@ async def create_session(
     card = await room_state.progress_card(key)
     if card is None:
         return stubs.stream("session_start")
-    # What the tutor says on opening is part of the conversation it remembers (§2 E item 2).
-    opening_text = "".join(data["text"] for event, data in recorded if event == "token")
-    await room_state.remember(key, TUTOR, opening_text)
-    if pending := await room_state.pending_problem(key):
-        await room_state.remember(key, TUTOR, problem_line(pending))
+    pending = await room_state.pending_problem(key)
+    call_context = AICallContext(auth.tenant_id, auth.user_id) if auth else None
 
     async def opening() -> AsyncIterator[tuple[str, BaseModel]]:
+        said: list[str] = []
         for event, data in recorded:
-            yield (
-                event,
-                card if event == "progress_card" else EVENT_MODELS[event].model_validate(data),
-            )
+            if event == "progress_card":
+                yield event, card
+            elif event == "token":  # the greeting from facts (demo-room.md §2 F)
+                facts = opening_facts(card, pending)
+                async with aclosing(
+                    greeting_events(gateway, facts, data["text"], said, call_context)
+                ) as greeting:
+                    async for pair in greeting:
+                        yield pair
+            else:
+                if event == "problem":
+                    # What the tutor said on opening is remembered as it was sent (§2 E, F).
+                    await room_state.remember(key, TUTOR, "".join(said))
+                    if pending:
+                        await room_state.remember(key, TUTOR, problem_line(pending))
+                yield event, EVENT_MODELS[event].model_validate(data)
 
     return _sse(opening())
 
@@ -253,6 +277,7 @@ async def send_message(
     auth: Annotated[AuthContext | None, Depends(get_auth)],
     image_store: Annotated[ImageStore | None, Depends(get_image_store)],
     room_state: Annotated[RoomState, Depends(get_room_state)],
+    local: Annotated[bool, Depends(get_local_mode)],
 ) -> Response:
     """Send `{text}`, `{image_path}` or both; the reply streams as SSE and ends with done.
 
@@ -287,6 +312,11 @@ async def send_message(
     # Earlier turns only: the message being answered goes in `message` (§2 E item 4).
     conversation = conversation_text(await room_state.conversation(key))
     await room_state.remember(key, STUDENT, body.text)
+    if local and pending:
+        # Is it the answer to the pending problem? Then it is checked (demo-room.md §2 G).
+        lines = await _typed_answer_lines(gateway, problem, conversation, body.text, call_context)
+        if lines:
+            return _sse(typed_answer_events(gateway, room_state, key, pending, lines, call_context))
     said: list[str] = []
 
     async def remember_reply() -> AsyncIterator[tuple[str, BaseModel]]:
@@ -306,6 +336,25 @@ async def send_message(
                 yield name, payload
 
     return _sse(reply())
+
+
+async def _typed_answer_lines(
+    gateway: Gateway,
+    problem: str,
+    conversation: str,
+    text: str,
+    call_context: AICallContext | None,
+) -> list[str]:
+    """The LaTeX lines of a typed answer, or [] when the message is not one or `typed_answer`
+    fails: then the tutor replies as usual (demo-room.md §2 G items 1-4)."""
+    values = {"problem": problem, "conversation": conversation, "message": text}
+    try:
+        with call_scope(call_context):
+            result = await gateway.call("typed_answer", values, TypedAnswer)
+    except (AIProviderError, AISchemaError):
+        log.warning("typed_answer failed; the tutor replies instead")
+        return []
+    return list(result.lines) if result.is_answer else []
 
 
 def _sse(events: AsyncIterator[tuple[str, BaseModel]]) -> EventSourceResponse:

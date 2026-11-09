@@ -7,6 +7,7 @@ Spec: specs/features/check/check-answer-classifier.md §2.5.
 
 from pydantic import BaseModel, Field
 
+from app.ai.latex import LatexStr
 from app.domain.checker import ErrorType, LlmResult, Method, Verdict
 
 
@@ -29,3 +30,11 @@ class CheckAnswerResult(BaseModel):
             first_wrong_line=line if line is not None and line <= line_count else None,
             confidence=self.confidence,
         )
+
+
+class TypedAnswer(BaseModel):
+    """Output of ``typed_answer`` (specs/features/tutor/demo-room.md §2 G): whether a typed
+    message is the student's answer to the pending problem, and its working as LaTeX lines."""
+
+    is_answer: bool
+    lines: list[LatexStr] = Field(default_factory=list)

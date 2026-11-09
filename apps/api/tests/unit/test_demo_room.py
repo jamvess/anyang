@@ -773,7 +773,8 @@ def test_TM10_a_message_that_is_not_an_answer_goes_to_the_tutor(client, local, r
     events = say(client, "7")
 
     assert "verdict" not in names(events)
-    assert [d["text"] for n, d in events if n == "token"] == ["ถูกต้อง 7 ยกกำลังสอง"]
+    # The fake streams a plain string word by word, so the joined text is compared.
+    assert "".join(d["text"] for n, d in events if n == "token") == "ถูกต้อง 7 ยกกำลังสอง"
     [router] = requests_for(fake, "typed_answer")
     assert "<conversation>" in router.prompt
     assert P1.problem.text in router.prompt

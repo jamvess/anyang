@@ -189,8 +189,64 @@ async def confirm_events(
             await state.restore_preview(key, preview)
 
     _log_edits(session_id, preview, lines)
-    await state.record_check(key, preview.pending, result.is_correct)  # demo: BKT (§2 D)
     await state.remember(key, STUDENT, f"(ยืนยันคำตอบ) {' · '.join(lines)}")
+    async with aclosing(
+        _verdict_and_explanation(
+            gateway, state, key, preview.pending, lines, result, verdict, call_context
+        )
+    ) as events:
+        async for event in events:
+            yield event
+
+
+async def typed_answer_events(
+    gateway: Gateway,
+    state: RoomState,
+    key: str,
+    pending: PendingProblem,
+    lines: list[str],
+    call_context: AICallContext | None = None,
+) -> AsyncIterator[Event]:
+    """A typed answer (demo-room.md §2 G): checked like a confirmed photo, with no card to
+    confirm (UC-04 A2) and nothing to log for AM-03. The caller has remembered the message."""
+    try:
+        with call_scope(call_context):
+            result = await check_answer(pending.problem, lines, gateway=gateway)
+        verdict = VerdictEvent(
+            verdict=result.verdict,
+            first_wrong_line=result.first_wrong_line,
+            error_type=result.error_type,
+        )
+    except (AIProviderError, AISchemaError):
+        log.warning("check_answer classifier failed on a typed answer")
+        yield _tutor(DEGRADE_TEXT)
+        yield "done", DoneEvent()
+        return
+    except Exception:
+        log.exception("check_answer failed on a typed answer")
+        yield "error", INTERNAL_ERROR
+        return
+    async with aclosing(
+        _verdict_and_explanation(gateway, state, key, pending, lines, result, verdict, call_context)
+    ) as events:
+        async for event in events:
+            yield event
+
+
+async def _verdict_and_explanation(
+    gateway: Gateway,
+    state: RoomState,
+    key: str,
+    pending: PendingProblem,
+    lines: list[str],
+    result: CheckResult,
+    verdict: VerdictEvent,
+    call_context: AICallContext | None,
+) -> AsyncIterator[Event]:
+    """After a check, photo or typed (spec §2.2 items 5-8 · demo-room §2 B, D, E): mastery,
+    verdict, the tutor's explanation, then the demo's card and next problem."""
+    problem = pending.problem
+    await state.record_check(key, pending, result.is_correct)  # demo: BKT (§2 D)
     await state.remember(key, TUTOR, _verdict_line(result))
     yield "verdict", verdict
     explain_input = {

@@ -246,11 +246,13 @@ OUTSIDE_BY_PROMPT = {
     "extract_topics_local/v1": {"file_name", "material_kind"},
     "extract_topics_local/v2": {"file_name", "material_kind"},
     "map_questions/v1": set(),
+    "open_session/v1": set(),
     "merge_topics/v1": set(),
     "merge_topics/v2": set(),
     "split_past_exam/v1": {"file_name"},
     "tutor_reply/v1": set(),
     "tutor_reply/v2": set(),
+    "typed_answer/v1": set(),
     "vision_extract/v1": {"file_name", "page_no"},
     "vision_extract_pages/v1": {"file_name", "page_count"},
 }
