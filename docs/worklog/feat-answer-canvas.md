@@ -31,12 +31,14 @@
 
 ## Next step
 
-ขั้น 2: `/spec-to-tests specs/features/tutor/answer-canvas.md` → `apps/web/tests/chat/canvasStrokes.test.ts`, `AnswerCanvas.test.tsx`, `ChatRoomCanvas.test.tsx`
+ขั้น 2 (ต่อ): Jam review test 3 ไฟล์ (แดงเพราะยังไม่มี `canvasStrokes.ts` และ `AnswerCanvas.tsx`) แล้ว `/implement-feature`
 
 ## Waiting on
 
 - May: ตัดสินหน้าตาและ flow ของ canvas ย้อนหลัง (`roles.md` "ตัดสินใจเรื่อง" · หน้าจอและ flow)
 
 ## Notes for next time
+
+- test: mock ของ canvas และ PointerEvent อยู่ใน `tests/helpers/fakeCanvas.ts` · หน้าตาโค้ดที่ test กำหนด: `canvasStrokes.ts` (emptyScene, accepts, strokeWidth, start/extend/endStroke, undo, clear, setBackground, isEmpty, canUndo, containRect, drawScene(base, layer, scene, size)) · `AnswerCanvas` props `onSend`, `disabled`, `maxImageMb`, `loadImage?` · ไม่มี prettier ในเครื่อง (ใช้ eslint)
 
 - canvas ส่ง `{text: null, image: File}` ผ่าน `send()` ของ `ChatRoom` แบบเดียวกับ Composer · `httpTransport.uploadPhoto` อัปโหลดเอง

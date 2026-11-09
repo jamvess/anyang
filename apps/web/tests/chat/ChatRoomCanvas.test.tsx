@@ -1,0 +1,100 @@
+import { act, cleanup, fireEvent, render } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ChatRoom } from "@/components/chat/ChatRoom";
+import type { RoomData, SendPayload } from "@/components/chat/types";
+import type { SSEEvent } from "@/lib/sse";
+import fixture from "../fixtures/room/session-s15.json";
+import { draw, installFakeCanvas } from "../helpers/fakeCanvas";
+
+// Spec: specs/features/tutor/answer-canvas.md §2 items 1-3, 12 · AC-1 to AC-3, AC-15.
+const room = { ...(fixture as RoomData), messages: [] };
+const CANVAS = "เขียนคำตอบ";
+
+function problem(id: string, latex: string): SSEEvent {
+  return { event: "problem", data: { problem_id: id, text_latex: latex, difficulty: 3, purpose: "practice" } };
+}
+
+async function* stream(...events: SSEEvent[]): AsyncGenerator<SSEEvent> {
+  for (const e of events) yield e;
+  yield { event: "done", data: {} };
+}
+
+const flush = () => act(async () => void (await new Promise((r) => setTimeout(r, 0))));
+
+beforeEach(() => {
+  installFakeCanvas();
+});
+
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
+
+function regionAfter(container: HTMLElement, problemId: string): boolean {
+  const card = container.querySelector(`[data-problem-id="${problemId}"]`)!;
+  const canvas = container.querySelector(`[role="region"][aria-label="${CANVAS}"]`)!;
+  return Boolean(card.compareDocumentPosition(canvas) & Node.DOCUMENT_POSITION_FOLLOWING);
+}
+
+describe("ChatRoom answer canvas", () => {
+  it("AC-1 TM06 a problem card has the canvas under it; no problem, no canvas", async () => {
+    const plain = render(<ChatRoom room={room} opening={stream({ event: "token", data: { speaker: "tutor", text: "สวัสดี" } })} />);
+    await flush();
+    expect(plain.queryByRole("region", { name: CANVAS })).toBeNull();
+    cleanup();
+
+    const { container, getByRole } = render(<ChatRoom room={room} opening={stream(problem("p1", "x^2 - 49"))} />);
+    await flush();
+    const canvas = getByRole("region", { name: CANVAS });
+    for (const name of ["ปากกา", "ยางลบ", "ย้อนกลับ", "ล้าง", "ใส่รูป", "ส่งคำตอบ"]) {
+      expect(canvas.querySelector(`button[aria-label="${name}"]`)).not.toBeNull();
+    }
+    expect(regionAfter(container, "p1")).toBe(true);
+  });
+
+  it("AC-2 only the latest problem card has a canvas", async () => {
+    const { container, getAllByRole } = render(
+      <ChatRoom room={room} opening={stream(problem("p1", "x^2 - 49"), problem("p2", "x^3 - x"))} />,
+    );
+    await flush();
+
+    expect(getAllByRole("region", { name: CANVAS })).toHaveLength(1);
+    expect(regionAfter(container, "p2")).toBe(true);
+  });
+
+  it("AC-3 a new problem in a reply brings a fresh, empty canvas", async () => {
+    const sendMessage = vi.fn<(payload: SendPayload) => AsyncGenerator<SSEEvent>>(() => stream(problem("p2", "x^3 - x")));
+    const { getByRole, getByLabelText } = render(
+      <ChatRoom room={room} opening={stream(problem("p1", "x^2 - 49"))} sendMessage={sendMessage} />,
+    );
+    await flush();
+    draw(getByLabelText("เขียนวิธีทำตรงนี้"));
+    const sendButton = () => getByRole("button", { name: "ส่งคำตอบ" }) as HTMLButtonElement;
+    expect(sendButton().disabled).toBe(false);
+
+    fireEvent.click(sendButton());
+    await flush();
+    await flush();
+
+    expect(sendButton().disabled).toBe(true); // the canvas under p2 is empty
+  });
+
+  it("AC-15 the canvas sends through the room like a photo, and the user bubble names คำตอบ.png", async () => {
+    const sendMessage = vi.fn<(payload: SendPayload) => AsyncGenerator<SSEEvent>>(() => stream({ event: "token", data: { speaker: "tutor", text: "ขอดูก่อนนะ" } }));
+    const { getByRole, getByLabelText, findByText } = render(
+      <ChatRoom room={room} opening={stream(problem("p1", "x^2 - 49"))} sendMessage={sendMessage} />,
+    );
+    await flush();
+    draw(getByLabelText("เขียนวิธีทำตรงนี้"));
+
+    fireEvent.click(getByRole("button", { name: "ส่งคำตอบ" }));
+    await flush();
+
+    expect(sendMessage).toHaveBeenCalledTimes(1);
+    const payload = sendMessage.mock.calls[0][0];
+    expect(payload.text).toBeNull();
+    expect(payload.image?.name).toBe("คำตอบ.png");
+    expect(await findByText(/คำตอบ\.png/)).toBeTruthy();
+  });
+});
