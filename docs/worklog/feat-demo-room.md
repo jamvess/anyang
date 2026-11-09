@@ -13,26 +13,30 @@ Loop ที่อาจารย์จะเห็น (รันในเคร�
 
 ## Plan
 
-- [ ] 1. 🤖 spec สั้น `specs/features/tutor/demo-room.md` (checklist ของ loop + ขอบเขต `APP_ENV=local`) → 🙋 Jam ok
-- [ ] 2. 🤖 อัปโหลดรูปในเครื่อง: `APP_ENV=local` → `/uploads` คืน URL ของ API เอง (`PUT /dev/uploads/{path}`) ไม่มี `X-Stub` · เก็บไฟล์ในโฟลเดอร์ local (gitignore) · `ImageStore` อ่านจากโฟลเดอร์นั้น · test สั้น
-- [ ] 3. 🤖 ชุดโจทย์เดโม่ 5 ข้อ (ข้อแรก = `p1` ของ session_start) · ตรวจเสร็จแล้ว stream event `problem` ข้อถัดไปต่อท้ายคำอธิบาย · ครบแล้ววนกลับ · 🙋 Jam เลือกโจทย์จาก `evals/answers/labels.jsonl`
-- [ ] 4. 🤖 tutor รู้โจทย์ปัจจุบัน: `tutor_reply/v2` + input `problem` (โจทย์ ไม่มีเฉลย · AM-13) · 🙋 Jam ดู prompt · smoke 3–4 ข้อความ
-- [ ] 5. 🙋 ลองครบ loop ในเบราว์เซอร์ (`pnpm dev` + `uv run fastapi dev` · Claude เขียนขั้นตอนให้) ด้วยรูปจากมือถือและจาก `evals/handwriting/raw/` · ซ้อม · อัดวิดีโอสำรอง
-- [ ] 6. 🤖 `/work-done` + ข้อความกลุ่ม (แตะ upload ของ Junior และ `config/ai.yaml` ถ้าขึ้น `tutor_reply` v2)
+- [x] 1. 🤖 spec 2 ไฟล์: `specs/features/tutor/demo-room.md` (loop + ขอบเขต `APP_ENV=local` + ส่วน D การ์ดความคืบหน้า) และ `specs/features/planner/bkt-mastery.md` (BKT, ระดับ, ความพร้อม) → 🙋 Jam ok + ตอบ open questions
+- [ ] 2. 🤖 BKT ตาม spec flow: `/spec-to-tests` bkt-mastery → 🙋 Jam review test → `/implement-feature` (`app/domain/bkt.py`)
+- [ ] 3. 🤖 อัปโหลดรูปในเครื่อง (demo-room §2 A) + test
+- [ ] 4. 🤖 ชุดโจทย์ 5 ข้อ + โจทย์ถัดไป + การ์ดความคืบหน้าจาก BKT (demo-room §2 B, D) + test
+- [ ] 5. 🤖 `tutor_reply/v2` รู้โจทย์ (demo-room §2 C) · 🙋 Jam ดู prompt · smoke กับ Vertex
+- [ ] 6. 🙋 ลองครบ loop ในเบราว์เซอร์ (`pnpm dev` + `uv run fastapi dev` · Claude เขียนขั้นตอนให้) ด้วยรูปจากมือถือและจาก `evals/handwriting/raw/` · ซ้อม · อัดวิดีโอสำรอง
+- [ ] 7. 🤖 `/work-done` + ข้อความกลุ่ม (แตะ upload ของ Junior · `config/ai.yaml` ขึ้น `tutor_reply` v2)
 
 ## Definition of done
 
 - ในเครื่อง Jam: วน loop ข้างบนได้อย่างน้อย 4 ข้อติดกันในเบราว์เซอร์โดยไม่มี stub (ไม่มี `X-Stub` ใน response ของห้อง ยกเว้นเปิดห้อง/progress card)
 - `APP_ENV` อื่นทำงานเหมือนเดิม (test เดิมผ่านทั้งหมด)
+- การ์ดความคืบหน้าหลังแต่ละข้อแสดงระดับและความพร้อม % ที่คิดจาก BKT จริง
 - มีวิดีโอสำรองของ loop
 
 ## Decisions
 
+- 2026-11-09 · spec ok ทั้งหมด (Jam): ความพร้อมนับหัวข้อที่ยังไม่เริ่มเป็น 0 (learning-model v1.4) · mode normal · `tutor_reply/v2` ทุก env · ตอบผิดแล้วไปข้อต่อไป (เดโม่)
+- 2026-11-09 · Jam ok ให้เพิ่ม BKT: mastery จริงในการ์ดความคืบหน้าของเดโม่ (spec แยก `bkt-mastery.md` · ไม่มี planner, spaced review, Park)
 - 2026-11-09 · Jam ok: เดโม่ในเครื่อง (ไม่รอ staging) · เอาข้อ 4 (tutor รู้โจทย์) · โจทย์จาก `evals/` (MTH10101) · ไม่ต้องลงรายละเอียดความถูกต้องใน spec
 
 ## Next step
 
-ขั้น 1: เขียน `specs/features/tutor/demo-room.md` แล้วให้ Jam ok
+ขั้น 2: `/spec-to-tests specs/features/planner/bkt-mastery.md` → `apps/api/tests/unit/test_bkt.py`
 
 ## Waiting on
 
