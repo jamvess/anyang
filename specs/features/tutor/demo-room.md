@@ -42,7 +42,7 @@
 
 1. 3 หัวข้อเดโม่ (§3 ตารางที่ 2) แต่ละหัวข้อมี `TopicProgress` ต่อ session เริ่มที่ `p_init`, 0 attempt · mode `normal` · ทุก attempt ของเดโม่ `independent = true` (โจทย์ข้อถัดไปไม่ใช่ข้อที่ tutor เพิ่งสาธิต) · skill ถือว่าครบ (`skills_covered = true` · ยังไม่มี `topic_skills`)
 2. หลัง `verdict` (ก่อนคำอธิบายของ tutor): `record_attempt` ของหัวข้อของโจทย์นั้นด้วย `is_correct` และ `difficulty` ของโจทย์ · checker ล้มไม่มี attempt
-3. หลังคำอธิบายจบ ก่อน `ข้อต่อไปนะ`: ส่ง `progress_card` ที่คิดจาก state จริง: `topics[].level` จาก `level()`, `readiness` จาก `readiness()`, `passed` = จำนวนหัวข้อ `passed`, `total` = 3, `days_left` = ค่าเดียวกับการ์ดเปิดห้อง, `review_due = false`, `origin = "doc"`
+3. ~~หลังคำอธิบายจบ ก่อน `ข้อต่อไปนะ`: ส่ง `progress_card`~~ (J ข้อ 1: การ์ดเฉพาะตอนเปิดห้อง · วิธีคิดการ์ดข้างล่างยังใช้) การ์ด ที่คิดจาก state จริง: `topics[].level` จาก `level()`, `readiness` จาก `readiness()`, `passed` = จำนวนหัวข้อ `passed`, `total` = 3, `days_left` = ค่าเดียวกับการ์ดเปิดห้อง, `review_due = false`, `origin = "doc"`
 4. เปิดห้อง (`POST /exam-preps/{id}/sessions`) ใน local: การ์ดเปิดห้องเป็นการ์ดของ state นี้ (ทุกหัวข้อ `not_started`, ความพร้อม 0 ตาม bkt-mastery §10 ข้อ 1) แทน 4 หัวข้อของ fixture · event อื่นของ `session_start.sse` เหมือนเดิม
 
 **E · tutor จำบทสนทนาในห้อง และจอไม่มีประวัติปลอม (local เท่านั้น · เพิ่ม 9 พ.ย. หลังลองในเบราว์เซอร์)**
@@ -95,6 +95,13 @@
 2. หลัง `check_answer`: `verdict = correct` และจำนวนบรรทัด < `min_working_lines` → **ขาดวิธีทำ**: ไม่ส่ง `verdict` · ไม่บันทึก attempt (BKT ไม่นับ เพราะยังไม่มีหลักฐานว่าทำเองได้) · โจทย์ค้างไม่เปลี่ยน · ไม่มีการ์ดความคืบหน้าและโจทย์ถัดไป · `explain_check` ได้ `working: missing` · บทสนทนาบันทึก `ติวเตอร์: (ผลตรวจ) ขาดวิธีทำ`
 3. คำตอบสุดท้ายผิด (`incorrect`, `incomplete`) หรือมีบรรทัดพอ → เหมือนเดิม (H ข้อ 1) · ใช้กับทั้งรูปและข้อความพิมพ์ ทุก env
 4. `typed_answer/v1` (ยังไม่ merge) แยกสมการต่อกัน `a = b = c` เป็นบรรทัด `a` / `= b` / `= c` แบบเดียวกับ OCR · การพิมพ์วิธีทำในบรรทัดเดียวจึงนับเป็นหลายบรรทัด
+
+**J · การ์ดความคืบหน้าเฉพาะตอนเข้าห้อง และความคืบหน้าอยู่ข้าม session (local · เพิ่ม 9 พ.ย. · Jam · แทน D ข้อ 3–4 และ E ข้อ 6 ส่วนที่รีเซ็ต)**
+
+1. หลังตอบ (รูปหรือพิมพ์) **ไม่มี** `progress_card` แล้ว: `verdict` → คำอธิบาย → `ข้อต่อไปนะ` → `problem` → `done` (การ์ดเป็นของตอนเปิด session · TM-15 · ขอดูระหว่างทาง TM-11 ยังไม่ทำ)
+2. เปิดห้องใหม่ **ไม่รีเซ็ต** mastery (BKT) และโจทย์ที่ทำถึง · รีเซ็ตแค่บทสนทนาและ preview ที่ค้าง (session ใหม่) · การ์ดตอนเปิดห้องจึงแสดงระดับและความพร้อมจริงจาก session ก่อน
+3. stream เปิดห้อง: event `problem` เป็นโจทย์ที่ค้างอยู่ของ state (ข้อแรกคือ `p1`) แทน `p1` ของ fixture · facts ของ `open_session` ใช้การ์ดและโจทย์นั้น
+4. รีเซ็ตทั้งหมดเพื่อซ้อมใหม่ = เปิด API ใหม่ (state อยู่ใน memory ของ process)
 
 ## 3. Inputs and outputs
 
@@ -165,6 +172,10 @@
 - **AC-31 (PM-02)** หลัง AC-30 → ส่ง 2 บรรทัดที่ถูกของโจทย์เดิม → `verdict` correct · การ์ดมีหัวข้อนั้นเป็น attempt แรก (readiness เท่ากับถูก 1 ครั้ง) · ได้โจทย์ข้อ 2
 - **AC-32** ตอบผิดบรรทัดเดียว → `verdict` incorrect ตามปกติ (ไม่ใช่ขาดวิธีทำ)
 - **AC-33 (boundary)** pure function `working_missing(verdict, line_count, cfg)` ใน `app/domain/checker.py` · config ทดสอบ `min_working_lines` = 3 → correct 2 บรรทัด = ขาดวิธีทำ · 3 บรรทัด = ผ่าน · incorrect 1 บรรทัด = ไม่ใช่ขาดวิธีทำ
+**J · การ์ดเฉพาะตอนเข้าห้อง**
+
+- **AC-34 (TM-15, PM-02)** local: ตอบ `p1` ถูก (มีวิธีทำ) → ไม่มี `progress_card` ใน stream · เปิดห้องใหม่ → การ์ดมีแยกตัวประกอบ `developing` และ readiness เท่ากับถูก 1 ครั้ง
+- **AC-35 (TM-13)** local: หลังตอบ `p1` แล้วเปิดห้องใหม่ → event `problem` เป็นโจทย์ข้อ 2 · ข้อความพิมพ์ถัดไปตรวจกับข้อ 2
 - **AC-28 (AI-01)** `config/ai.yaml` มี `open_session` (main, stream) และ `typed_answer` (small, ไม่ stream) · prompt ทั้งสองมี front matter ตรงกับ purpose และ version 1
 
 ## 5. Data changes
@@ -188,7 +199,7 @@
 
 ## 8. Test plan
 
-`apps/api/tests/unit/test_demo_room.py` · AC-1 ถึง AC-33 ข้อละ 1 test · ลองครบ loop ในเบราว์เซอร์ด้วยมือ (ขั้น 5 ของ worklog)
+`apps/api/tests/unit/test_demo_room.py` · AC-1 ถึง AC-35 ข้อละ 1 test · J เปลี่ยน AC-4, 9, 11, 23, 24, 31 ให้ดูการ์ดตอนเปิดห้องครั้งถัดไป (Jam ok 9 พ.ย.) · ลองครบ loop ในเบราว์เซอร์ด้วยมือ (ขั้น 5 ของ worklog)
 
 ## 9. Out of scope
 

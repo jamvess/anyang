@@ -143,6 +143,14 @@ def event(events: list[tuple[str, Any]], name: str) -> Any:
     return next(data for n, data in events if n == name)
 
 
+def opening_card(client: TestClient) -> dict[str, Any]:
+    """The progress card of a new opening: since §2 J the only place a card is shown."""
+    opening = parse_sse(
+        client.post("/exam-preps/00000000-0000-4000-8000-000000000001/sessions").text
+    )
+    return event(opening, "progress_card")
+
+
 def requests_for(fake: FakeProvider, purpose: str) -> list[Any]:
     return [r for r in fake.requests if r.purpose == purpose]
 
@@ -312,7 +320,7 @@ def test_SA06_dev_upload_does_not_exist_outside_local(client, tmp_path):
 
 
 def test_TM04_confirm_ends_with_card_then_next_problem(client, local):
-    # AC-4, AC-9 (order): verdict → explanation → progress_card → "next" → problem → done.
+    # AC-4 (order, §2 J): verdict → explanation → "next" → problem → done; no card.
     second = DEMO_PROBLEMS[1]
     fake, _ = local(
         {
@@ -326,16 +334,8 @@ def test_TM04_confirm_ends_with_card_then_next_problem(client, local):
     events = confirm(client, right_answer(P1))
     send_photo(client)
 
-    assert names(events) == [
-        "verdict",
-        "token",
-        "token",
-        "progress_card",
-        "token",
-        "problem",
-        "done",
-    ]
-    assert events[4] == ("token", {"speaker": "tutor", "text": NEXT})
+    assert names(events) == ["verdict", "token", "token", "token", "problem", "done"]
+    assert events[3] == ("token", {"speaker": "tutor", "text": NEXT})
     assert event(events, "problem") == {
         "problem_id": second.problem_id,
         "text_latex": second.text_latex,
@@ -422,8 +422,10 @@ def test_PM02_progress_card_comes_from_bkt(client, local, correct, expected_leve
     )
     send_photo(client)
 
-    card = event(confirm(client, lines), "progress_card")
+    answered = confirm(client, lines)
+    card = opening_card(client)  # §2 J: the card comes with the next opening
 
+    assert "progress_card" not in names(answered)
     topic = P1.topic_id
     after = record_attempt(TopicProgress(cfg.bkt.p_init, 0, 0), correct, P1.difficulty, True, cfg)
     stars = {t.topic_id: t.stars for t in DEMO_TOPICS}[topic]
@@ -463,8 +465,9 @@ def test_PM02_failed_check_records_no_attempt(client, local):
     )
     send_photo(client)
     confirm(client, right_answer(P1))
+    confirm(client, right_answer(P1))
 
-    card = event(confirm(client, right_answer(P1)), "progress_card")
+    card = opening_card(client)  # §2 J
 
     once = record_attempt(TopicProgress(cfg.bkt.p_init, 0, 0), True, P1.difficulty, True, cfg)
     assert card["readiness"] == pytest.approx(expected_card_readiness({P1.topic_id: once}))
@@ -721,15 +724,7 @@ def test_AM07_typed_right_answer_is_checked_and_praised(client, local):
 
     events = say(client, "(x-7)(x+7)")
 
-    assert names(events) == [
-        "verdict",
-        "token",
-        "token",
-        "progress_card",
-        "token",
-        "problem",
-        "done",
-    ]
+    assert names(events) == ["verdict", "token", "token", "token", "problem", "done"]  # §2 J
     assert event(events, "verdict")["verdict"] == "correct"
     assert event(events, "problem")["problem_id"] == second.problem_id
     assert requests_for(fake, "tutor_reply") == []
@@ -754,7 +749,7 @@ def test_AM07_typed_wrong_answer_gets_the_line_and_an_explanation(client, local)
         "error_type": "sign",
     }
     assert "เครื่องหมายพลิก" in [d["text"] for n, d in events if n == "token"]
-    levels = {row["id"]: row["level"] for row in event(events, "progress_card")["topics"]}
+    levels = {row["id"]: row["level"] for row in opening_card(client)["topics"]}  # §2 J
     assert levels[P1.topic_id] == "weak"
 
 
@@ -885,7 +880,7 @@ def test_AM07_answer_without_working_does_not_pass(client, local):
     assert event(with_working, "verdict")["verdict"] == "correct"
     assert event(with_working, "problem")["problem_id"] == DEMO_PROBLEMS[1].problem_id
     once = record_attempt(TopicProgress(cfg.bkt.p_init, 0, 0), True, P1.difficulty, True, cfg)
-    card = event(with_working, "progress_card")
+    card = opening_card(client)  # §2 J
     assert card["readiness"] == pytest.approx(expected_card_readiness({P1.topic_id: once}))
 
 
@@ -921,3 +916,48 @@ def test_AM07_working_missing_boundary(verdict, line_count, missing):
     checker = get_settings().learning.checker.model_copy(update={"min_working_lines": 3})
 
     assert working_missing(verdict, line_count, checker) is missing
+
+
+# --- J · the card only on opening, and progress stays across sessions -------------------------
+
+
+def test_TM15_card_only_on_opening_and_progress_stays(client, local):
+    # AC-34
+    cfg = get_settings().learning
+    local(
+        {
+            "typed_answer": [typed(True, right_answer(P1))],
+            "check_answer": [CLASSIFY_RIGHT],
+            "explain_check": ["เก่งมาก"],
+        }
+    )
+    client.post(OPEN_ROOM)
+
+    answered = say(client, "x^2-49 = (x-7)(x+7)")
+    card = opening_card(client)
+
+    assert "progress_card" not in names(answered)
+    levels = {row["id"]: row["level"] for row in card["topics"]}
+    assert levels[P1.topic_id] == "developing"
+    once = record_attempt(TopicProgress(cfg.bkt.p_init, 0, 0), True, P1.difficulty, True, cfg)
+    assert card["readiness"] == pytest.approx(expected_card_readiness({P1.topic_id: once}))
+
+
+def test_TM13_reopening_continues_at_the_pending_problem(client, local):
+    # AC-35
+    second = DEMO_PROBLEMS[1]
+    fake, _ = local(
+        {
+            "typed_answer": [typed(True, right_answer(P1)), typed(True, right_answer(second))],
+            "check_answer": [CLASSIFY_RIGHT, CLASSIFY_RIGHT],
+            "explain_check": ["เก่งมาก", "เก่งมาก"],
+        }
+    )
+    client.post(OPEN_ROOM)
+    say(client, "x^2-49 = (x-7)(x+7)")
+
+    reopened = parse_sse(client.post(OPEN_ROOM).text)
+    say(client, "ได้ 4 เพราะ ...")
+
+    assert event(reopened, "problem")["problem_id"] == second.problem_id
+    assert second.problem.text in requests_for(fake, "typed_answer")[1].prompt
