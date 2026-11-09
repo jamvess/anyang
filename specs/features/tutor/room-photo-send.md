@@ -115,7 +115,7 @@
 ## 9. Out of scope
 
 - `/uploads` ตัวจริงที่ต่อ Supabase Storage (bucket + policy · Junior · api.md รอตัดสิน v1.7 ข้อ 2)
-- `extract_answer` และ checker จริง · ผลตรวจยังเป็น stub
+- `extract_answer` และ checker จริง · ผลตรวจยังเป็น stub · **ต่อแล้วใน `specs/features/check/photo-check-in-room.md`** (PR #114 · 2026-11-08) แต่ยังเป็น stub บน staging จนกว่าจะมี Storage จริง (spec นั้น §2.4)
 - ปุ่มไมค์ (`voiceEnabled`) · ทำแยก
 - แสดงรูปจริงในแชทเก่า · แสดงแค่ชื่อไฟล์ตาม `chat-room-ui.md` AC-6
 - token ใน request · หน้า login ยังไม่มี (May)

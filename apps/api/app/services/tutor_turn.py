@@ -7,7 +7,7 @@ event. Not in P4-lite: stage machine, planner, buddy, context layers 2-9 and sav
 
 import logging
 from collections.abc import AsyncIterator
-from contextlib import aclosing, nullcontext
+from contextlib import AbstractContextManager, aclosing, nullcontext
 
 from pydantic import BaseModel
 
@@ -25,10 +25,32 @@ AI_UNAVAILABLE = ErrorEvent(code="ai_unavailable", message="The reply stopped be
 INTERNAL_ERROR = ErrorEvent(code="internal_error", message="Internal server error")
 
 
-async def reply_events(
+def call_scope(call_context: AICallContext | None) -> AbstractContextManager[object]:
+    """``ai_call_context`` for the calls made inside it, or nothing without a context."""
+    if call_context is None:
+        return nullcontext()
+    return ai_call_context(
+        tenant_id=call_context.tenant_id,
+        user_id=call_context.user_id,
+        session_id=call_context.session_id,
+    )
+
+
+def reply_events(
     gateway: Gateway, text: str, call_context: AICallContext | None = None
 ) -> AsyncIterator[tuple[str, BaseModel]]:
-    """(event name, payload) pairs of the reply stream, in api.md "SSE events" names.
+    """The tutor's reply to a text message (``tutor_reply``), as ``tutor_events``."""
+    return tutor_events(gateway, "tutor_reply", {"message": text}, call_context)
+
+
+async def tutor_events(
+    gateway: Gateway,
+    purpose: str,
+    input: dict[str, str],
+    call_context: AICallContext | None = None,
+) -> AsyncIterator[tuple[str, BaseModel]]:
+    """(event name, payload) pairs of a streamed tutor purpose, in api.md "SSE events" names:
+    ``tutor_reply`` here, ``explain_check`` after a verdict (photo-check-in-room.md §2.2).
 
     Errors become events, because the SSE headers (200) are already sent when the first one
     can happen. The client never sees exception text (spec §2 Endpoint 4-5, AC-19).
@@ -37,31 +59,22 @@ async def reply_events(
     inside the generator that reads the stream, and around ``aclosing``: the gateway reports the
     call when the stream ends, which for a client that leaves early is when ``aclosing`` closes
     it (api-auth.md §2.5)."""
-    context = (
-        ai_call_context(
-            tenant_id=call_context.tenant_id,
-            user_id=call_context.user_id,
-            session_id=call_context.session_id,
-        )
-        if call_context is not None
-        else nullcontext()
-    )
     sent = False
     try:
-        with context:
-            async with aclosing(gateway.stream("tutor_reply", {"message": text})) as chunks:
+        with call_scope(call_context):
+            async with aclosing(gateway.stream(purpose, input)) as chunks:
                 async for chunk in chunks:
                     sent = True
                     yield "token", TokenEvent(speaker="tutor", text=chunk)
     except AIProviderError:
-        log.warning("tutor_reply failed after %s", "a partial reply" if sent else "no reply")
+        log.warning("%s failed after %s", purpose, "a partial reply" if sent else "no reply")
         if sent:
             # Part of the reply is on screen already; the web shows its own error text.
             yield "error", AI_UNAVAILABLE
             return
         yield "token", TokenEvent(speaker="tutor", text=DEGRADE_TEXT)
     except Exception:  # config or prompt bug: nothing the student can retry around
-        log.exception("tutor_reply stream failed")
+        log.exception("%s stream failed", purpose)
         yield "error", INTERNAL_ERROR
         return
     yield "done", DoneEvent()

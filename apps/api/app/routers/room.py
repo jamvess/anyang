@@ -15,6 +15,7 @@ from typing import Annotated, Any
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, Path, Response
+from pydantic import BaseModel
 from sse_starlette import EventSourceResponse
 
 from app import stubs
@@ -27,12 +28,14 @@ from app.models.room import (
     EVENT_MODELS,
     UPLOAD_CONTENT_TYPES,
     ActiveSession,
+    DoneEvent,
     Limits,
     Message,
     OcrConfirmRequest,
     ProgressCardEvent,
     Room,
     SendMessageRequest,
+    TokenEvent,
     TranscribeRequest,
     Transcript,
     TtsAudio,
@@ -41,6 +44,14 @@ from app.models.room import (
     bare_content_type,
 )
 from app.rate_limit import RATE_LIMITED_DOCS, chat_rate_limit
+from app.services.photo_check import (
+    NO_PENDING_PROBLEM,
+    ImageStore,
+    confirm_events,
+    get_image_store,
+    photo_events,
+)
+from app.services.room_state import RoomState, get_room_state, room_key
 from app.services.tutor_turn import reply_events
 from app.settings import get_settings
 
@@ -189,29 +200,87 @@ async def send_message(
     body: SendMessageRequest,
     gateway: Annotated[Gateway, Depends(get_gateway)],
     auth: Annotated[AuthContext | None, Depends(get_auth)],
+    image_store: Annotated[ImageStore | None, Depends(get_image_store)],
+    room_state: Annotated[RoomState, Depends(get_room_state)],
 ) -> Response:
     """Send `{text}`, `{image_path}` or both; the reply streams as SSE and ends with done.
 
-    `{text}` streams `tutor_reply` from the gateway (P4-lite). With `image_path` it is a stub that
-    streams an `ocr_preview` to confirm with POST /sessions/{id}/ocr/confirm (api.md v1.7); `text`
-    is then the photo's caption, and the stub ignores it.
+    `{text}` streams `tutor_reply` from the gateway (P4-lite). With `image_path` the photo is read
+    with `extract_answer` and streams an `ocr_preview` to confirm with
+    POST /sessions/{id}/ocr/confirm (api.md v1.7 · photo-check-in-room.md); `text` is then the
+    photo's caption and does not reach the model. Until Storage exists it is a stub.
     """
     if too_long := too_long_message(body.text):
         # Code proposed in tutor-reply-stream.md §10 item 3, pending Junior.
         return error_response(422, "message_too_long", too_long)
-    if body.image_path is not None:
-        return stubs.stream("image_reply")
-
     # No session_id yet: the session is a stub with no tutor_sessions row (api-auth.md §2.5).
     call_context = AICallContext(auth.tenant_id, auth.user_id) if auth else None
+    if body.image_path is not None:
+        if image_store is None:  # no Storage yet (photo-check-in-room.md §2.4)
+            return stubs.stream("image_reply")
+        return await _photo_message(
+            str(session_id), body.image_path, auth, gateway, image_store, room_state, call_context
+        )
 
-    async def events() -> AsyncIterator[dict[str, str]]:
-        # aclosing: a client that leaves closes the provider stream now (spec §2 Endpoint 8).
-        async with aclosing(reply_events(gateway, body.text, call_context)) as replies:
-            async for event, payload in replies:
+    return _sse(reply_events(gateway, body.text, call_context))
+
+
+def _sse(events: AsyncIterator[tuple[str, BaseModel]]) -> EventSourceResponse:
+    """(event, payload) pairs as SSE. aclosing: a client that leaves closes the provider
+    stream now (tutor-reply-stream.md §2 Endpoint 8)."""
+
+    async def encoded() -> AsyncIterator[dict[str, str]]:
+        async with aclosing(events) as pairs:
+            async for event, payload in pairs:
                 yield {"event": event, "data": payload.model_dump_json()}
 
-    return EventSourceResponse(events())
+    return EventSourceResponse(encoded())
+
+
+def _own_upload(path: str, tenant_id: str, session_id: str) -> bool:
+    """`{tenant_id}/sessions/{session_id}/{file}` (api.md v1.7) with a plain file name, so
+    another tenant's or session's file, or a `..` path, is never read (SA-06)."""
+    prefix = f"{tenant_id}/sessions/{session_id}/"
+    name = path.removeprefix(prefix)
+    return (
+        path.startswith(prefix)
+        and bool(name)
+        and "/" not in name
+        and "\\" not in name
+        and not name.startswith(".")
+    )
+
+
+async def _photo_message(
+    session_id: str,
+    image_path: str,
+    auth: AuthContext | None,
+    gateway: Gateway,
+    image_store: ImageStore,
+    room_state: RoomState,
+    call_context: AICallContext | None,
+) -> Response:
+    """Checks before the SSE starts (photo-check-in-room.md §2.1 items 1-3)."""
+    tenant_id = stubs.tenant_of(auth)
+    if not _own_upload(image_path, tenant_id, session_id):
+        return error_response(404, "not_found", "No such upload in this session")
+    key = room_key(tenant_id, session_id)
+    pending = await room_state.pending_problem(key)
+    if pending is None:
+        # UC-04 E9 before an intent router exists (spec §10 item 4 · proposal pending Junior).
+        return _sse(_no_pending_problem())
+    image = await image_store.read(image_path)
+    if image is None:
+        return error_response(404, "not_found", "No such upload in this session")
+    max_mb = get_settings().ai.guards.max_image_mb
+    if len(image.data) > max_mb * BYTES_PER_MB:  # the browser's size_bytes is checked again
+        return error_response(422, "file_too_large", f"image is over {max_mb} MB")
+    return _sse(photo_events(gateway, room_state, key, pending, image, call_context))
+
+
+async def _no_pending_problem() -> AsyncIterator[tuple[str, BaseModel]]:
+    yield "token", TokenEvent(speaker="tutor", text=NO_PENDING_PROBLEM)
+    yield "done", DoneEvent()
 
 
 # --- uploads, transcribe, ocr/confirm (api.md v1.7 · proposal pending Junior) -----
@@ -284,12 +353,38 @@ async def transcribe(
     },
     dependencies=[Depends(chat_rate_limit)],
 )
-async def confirm_ocr(session_id: SessionId, body: OcrConfirmRequest) -> Response:
+async def confirm_ocr(
+    session_id: SessionId,
+    body: OcrConfirmRequest,
+    gateway: Annotated[Gateway, Depends(get_gateway)],
+    auth: Annotated[AuthContext | None, Depends(get_auth)],
+    image_store: Annotated[ImageStore | None, Depends(get_image_store)],
+    room_state: Annotated[RoomState, Depends(get_room_state)],
+) -> Response:
     """Confirmed or edited lines of the last ocr_preview. SSE: verdict → token → done (AM-02).
 
-    stub — checks the line count against the preview of the image message stub
+    The checker of P2 checks the confirmed lines, then `explain_check` explains the result
+    (photo-check-in-room.md §2.2). Until Storage exists it is a stub that checks the line count
+    against the preview of the image message stub.
     """
-    preview = dict(stubs.events("image_reply"))["ocr_preview"]
-    if len(body.lines) != len(preview["lines"]):
-        return stubs.error(422, "ocr_lines_mismatch", f"send {len(preview['lines'])} lines")
-    return stubs.stream("ocr_confirm")
+    if image_store is None:
+        stub_preview = dict(stubs.events("image_reply"))["ocr_preview"]
+        if len(body.lines) != len(stub_preview["lines"]):
+            return stubs.error(
+                422, "ocr_lines_mismatch", f"send {len(stub_preview['lines'])} lines"
+            )
+        return stubs.stream("ocr_confirm")
+
+    key = room_key(stubs.tenant_of(auth), str(session_id))
+    # Taken out now, so a second confirm sent at the same time gets 409 (one confirm per
+    # preview); confirm_events puts it back if no verdict comes (spec §2.2 items 5, 7).
+    preview = await room_state.take_preview(key)
+    if preview is None:
+        return error_response(409, "no_pending_ocr", "No handwriting preview waits to be confirmed")
+    if len(body.lines) != len(preview.lines):
+        await room_state.restore_preview(key, preview)
+        return error_response(422, "ocr_lines_mismatch", f"send {len(preview.lines)} lines")
+    call_context = AICallContext(auth.tenant_id, auth.user_id) if auth else None
+    return _sse(
+        confirm_events(gateway, room_state, key, str(session_id), preview, body.lines, call_context)
+    )

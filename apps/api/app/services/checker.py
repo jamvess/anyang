@@ -37,6 +37,18 @@ class CheckProblem:
     solution_steps: list[str]
 
 
+# The two inputs below are shared with explain_check (photo-check-in-room.md §2.2 item 6).
+
+
+def solution_steps_text(problem: CheckProblem) -> str:
+    return "\n".join(problem.solution_steps) or _NO_SOLUTION_STEPS
+
+
+def number_lines(lines: list[str]) -> str:
+    """The answer as the prompts read it: one line per number, starting at 1."""
+    return "\n".join(f"{n}. {line}" for n, line in enumerate(lines, start=1))
+
+
 def _yes_no(value: bool) -> str:
     return "yes" if value else "no"
 
@@ -66,8 +78,8 @@ def _prompt_input(
         "problem": problem.text,
         "reference_answer": problem.reference_answer,
         "answer_format": problem.answer_format,
-        "solution_steps": "\n".join(problem.solution_steps) or _NO_SOLUTION_STEPS,
-        "answer_lines": "\n".join(f"{n}. {line}" for n, line in enumerate(lines, start=1)),
+        "solution_steps": solution_steps_text(problem),
+        "answer_lines": number_lines(lines),
         "sympy_result": describe_sympy(problem.answer_format, sympy),
         "hints": f"sign_flip_detected: line {sign_flip}" if sign_flip else "none",
     }

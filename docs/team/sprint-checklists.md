@@ -97,6 +97,8 @@
 - [ ] อัปเดต architecture และ data model ตามผล PoC (D2, D3)
   - 1 พ.ย. (PR #101 · Jam ช่วง solo): `architecture.md` v1.2 ใส่ผล P1, P2, P3b, P4-lite แล้ว (model ของแต่ละ tier, embedding 768 มิติ, SymPy worker pool) · data model ได้ `0003` จาก P3 (PR #67) · เหลือ: อัปเดตอีกรอบหลัง P8-lite และ P2 ต่อเข้าห้องแชท
 - [ ] (ถ้ามีเวลา) ต่อ P1 + P2 เข้าหน้าแชท: ส่งรูปแล้วได้ verdict
+  - ทำโดย Jam (8 พ.ย.) ช่วง solo · ทำได้บางส่วน
+  - 8 พ.ย. (PR #114 · `specs/features/check/photo-check-in-room.md`): ส่งรูป → `extract_answer` → `ocr_preview` · ยืนยัน → checker ของ P2 → `verdict` → purpose ใหม่ `explain_check` อธิบายทันที (AM-07) · smoke บน Vertex ในเครื่อง 3 รูปจาก `evals/` verdict ตรง label 3/3 · ผ่าน interface `ImageStore` + `RoomState` (เก็บใน memory) · **บน staging ยังเป็น stub** จนกว่าจะมี Storage · เหลือ (Junior): `/uploads` จริง + bucket/policy + `ImageStore` ที่อ่าน Supabase Storage, บันทึก `messages` / `problems` / `attempts`, ตัดสินข้อเสนอใน spec §10 ข้อ 3–8 · api.md: 404/422 ของ `image_path` (spec §11)
 - [ ] เตรียม staging สำหรับ demo รวม
 
 ### Buffer · 30 พ.ย.–4 ธ.ค.
