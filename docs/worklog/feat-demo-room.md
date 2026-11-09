@@ -14,7 +14,7 @@ Loop ที่อาจารย์จะเห็น (รันในเคร�
 ## Plan
 
 - [x] 1. 🤖 spec 2 ไฟล์: `specs/features/tutor/demo-room.md` (loop + ขอบเขต `APP_ENV=local` + ส่วน D การ์ดความคืบหน้า) และ `specs/features/planner/bkt-mastery.md` (BKT, ระดับ, ความพร้อม) → 🙋 Jam ok + ตอบ open questions
-- [ ] 2. 🤖 BKT ตาม spec flow: `/spec-to-tests` bkt-mastery → 🙋 Jam review test → `/implement-feature` (`app/domain/bkt.py`)
+- [x] 2. 🤖 BKT ตาม spec flow: `/spec-to-tests` bkt-mastery → 🙋 Jam review test → `/implement-feature` (`app/domain/bkt.py`)
 - [ ] 3. 🤖 อัปโหลดรูปในเครื่อง (demo-room §2 A) + test
 - [ ] 4. 🤖 ชุดโจทย์ 5 ข้อ + โจทย์ถัดไป + การ์ดความคืบหน้าจาก BKT (demo-room §2 B, D) + test
 - [ ] 5. 🤖 `tutor_reply/v2` รู้โจทย์ (demo-room §2 C) · 🙋 Jam ดู prompt · smoke กับ Vertex
@@ -36,13 +36,15 @@ Loop ที่อาจารย์จะเห็น (รันในเคร�
 
 ## Next step
 
-ขั้น 2 (ต่อ): Jam review `apps/api/tests/unit/test_bkt.py` (12 test · แดงเพราะยังไม่มี `app.domain.bkt`) แล้ว `/implement-feature specs/features/planner/bkt-mastery.md`
+ขั้น 3: อัปโหลดรูปในเครื่อง ตาม demo-room §2 A (เขียน test จาก AC-1 ถึง AC-3 ก่อน)
 
 ## Waiting on
 
 ไม่มี (staging สำหรับให้อาจารย์เปิดลิงก์เอง: Junior env + Storage + auth, May หน้า login · ไม่ขวางงานนี้)
 
 ## Notes for next time
+
+- bkt implement: red → green 1 รอบ (32 กรณีเขียวในรอบแรก) · ruff จับเครื่องหมาย `×` ใน docstring (RUF002) เปลี่ยนเป็น `*`
 
 - bkt test: `ReadinessTopic` มี field `attempts` เพิ่มจาก spec §3 เพื่อให้ `readiness()` รู้ว่าหัวข้อยังไม่เริ่ม (AC-10b) · ทุกฟังก์ชันรับ `LearningConfig` ยกเว้น `update_mastery` ที่รับ `BktConfig` ตาม spec §3 · ใส่ mode `final` ใน AC-6 ด้วย (★★ final = `two_star_final_difficulty` ตาม §2 ข้อ 3)
 
