@@ -633,3 +633,191 @@ def test_TM10_failed_reply_is_not_remembered(client, local):
     seen = conversation_of(requests_for(fake, "tutor_reply")[1])
     assert "นักเรียน: A" in seen
     assert "ระบบช้า" not in seen
+
+
+# --- F · the tutor greets first -----------------------------------------------------------
+
+FIXTURE_OPENING = next(d["text"] for n, d in stubs.events("session_start") if n == "token")
+
+
+@pytest.mark.parametrize("is_local", [True, False], ids=["local", "not local"])
+def test_TM13_no_active_session_locally(client, is_local):
+    # AC-19: so the web opens a new session, with its greeting, every time.
+    app.dependency_overrides[get_local_mode] = lambda: is_local
+
+    response = client.get("/exam-preps/00000000-0000-4000-8000-000000000001/sessions/active")
+
+    if is_local:
+        assert response.status_code == 404
+        assert response.json()["error"]["code"] == "no_active_session"
+    else:
+        assert response.json()["session_id"] == stubs.room()["session_id"]
+
+
+def test_TM15_tutor_greets_from_facts(client, local):
+    # AC-20
+    fake, _ = local({"open_session": [["สวัสดีครับ ", "เหลือ 5 วัน"]]})
+
+    events = parse_sse(client.post(OPEN_ROOM).text)
+
+    assert names(events) == ["session", "progress_card", "token", "token", "problem", "done"]
+    assert [d["text"] for n, d in events if n == "token"] == ["สวัสดีครับ ", "เหลือ 5 วัน"]
+    assert event(events, "problem")["problem_id"] == P1.problem_id
+    [request] = requests_for(fake, "open_session")
+    card = event(events, "progress_card")
+    assert str(card["days_left"]) in request.prompt
+    assert all(t.name in request.prompt for t in DEMO_TOPICS)
+    assert P1.problem.text in request.prompt
+    assert P1.problem.reference_answer not in request.prompt
+
+
+@pytest.mark.parametrize(
+    ("script", "tokens"),
+    [
+        pytest.param([RuntimeError("down")], [FIXTURE_OPENING], id="before the first token"),
+        pytest.param([["สวัสดี", RuntimeError("cut")]], ["สวัสดี"], id="after a token"),
+    ],
+)
+def test_TM15_room_still_opens_when_the_greeting_fails(client, local, script, tokens):
+    # AC-21
+    local({"open_session": script})
+
+    events = parse_sse(client.post(OPEN_ROOM).text)
+
+    assert [d["text"] for n, d in events if n == "token"] == tokens
+    assert names(events)[-2:] == ["problem", "done"]
+
+
+def test_TM10_greeting_is_remembered(client, local):
+    # AC-22
+    fake, _ = local({"open_session": ["สวัสดีครับ วันนี้เริ่มที่แยกตัวประกอบ"], "tutor_reply": ["ok"]})
+    client.post(OPEN_ROOM)
+
+    say(client, "ครับ")
+
+    seen = conversation_of(requests_for(fake, "tutor_reply")[0]).split("\n")
+    assert seen[0] == "ติวเตอร์: สวัสดีครับ วันนี้เริ่มที่แยกตัวประกอบ"
+
+
+# --- G · typed answers are checked --------------------------------------------------------
+
+
+def typed(is_answer: bool, lines: list[str] | None = None) -> str:
+    return json.dumps({"is_answer": is_answer, "lines": lines or []})
+
+
+def test_AM07_typed_right_answer_is_checked_and_praised(client, local):
+    # AC-23
+    second = DEMO_PROBLEMS[1]
+    fake, _ = local(
+        {
+            "typed_answer": [typed(True, right_answer(P1))],
+            "check_answer": [CLASSIFY_RIGHT],
+            "explain_check": [["เก่ง", "มาก"]],
+        }
+    )
+    client.post(OPEN_ROOM)
+
+    events = say(client, "(x-7)(x+7)")
+
+    assert names(events) == [
+        "verdict",
+        "token",
+        "token",
+        "progress_card",
+        "token",
+        "problem",
+        "done",
+    ]
+    assert event(events, "verdict")["verdict"] == "correct"
+    assert event(events, "problem")["problem_id"] == second.problem_id
+    assert requests_for(fake, "tutor_reply") == []
+
+
+def test_AM07_typed_wrong_answer_gets_the_line_and_an_explanation(client, local):
+    # AC-24
+    local(
+        {
+            "typed_answer": [typed(True, ["(x-7)(x-7)"])],
+            "check_answer": [classify("sign", "incorrect", 1)],
+            "explain_check": ["เครื่องหมายพลิก"],
+        }
+    )
+    client.post(OPEN_ROOM)
+
+    events = say(client, "(x-7)(x-7)")
+
+    assert event(events, "verdict") == {
+        "verdict": "incorrect",
+        "first_wrong_line": 1,
+        "error_type": "sign",
+    }
+    assert "เครื่องหมายพลิก" in [d["text"] for n, d in events if n == "token"]
+    levels = {row["id"]: row["level"] for row in event(events, "progress_card")["topics"]}
+    assert levels[P1.topic_id] == "weak"
+
+
+@pytest.mark.parametrize(
+    "reply",
+    [
+        pytest.param(typed(False), id="not an answer"),
+        pytest.param(typed(True, []), id="answer without lines"),
+        pytest.param(RuntimeError("down"), id="typed_answer fails"),
+    ],
+)
+def test_TM10_a_message_that_is_not_an_answer_goes_to_the_tutor(client, local, reply):
+    # AC-25: e.g. "7" answering the tutor's own question about 49.
+    fake, _ = local({"typed_answer": [reply], "tutor_reply": ["ถูกต้อง 7 ยกกำลังสอง"]})
+    client.post(OPEN_ROOM)
+
+    events = say(client, "7")
+
+    assert "verdict" not in names(events)
+    assert [d["text"] for n, d in events if n == "token"] == ["ถูกต้อง 7 ยกกำลังสอง"]
+    [router] = requests_for(fake, "typed_answer")
+    assert "<conversation>" in router.prompt
+    assert P1.problem.text in router.prompt
+    assert P1.problem.reference_answer not in router.prompt
+
+
+def test_AM04_typed_answer_with_a_failed_checker(client, local):
+    # AC-26: no verdict, and the same problem stays.
+    fake, _ = local(
+        {
+            "typed_answer": [typed(True, right_answer(P1)), typed(False)],
+            "check_answer": [RuntimeError("down")],
+            "tutor_reply": ["ok"],
+        }
+    )
+    client.post(OPEN_ROOM)
+
+    events = say(client, "(x-7)(x+7)")
+    say(client, "ข้อนี้อีกที")
+
+    assert events == [("token", {"speaker": "tutor", "text": "ระบบช้า ลองส่งอีกทีนะ"}), ("done", {})]
+    assert P1.problem.text in requests_for(fake, "tutor_reply")[0].prompt
+
+
+def test_TM10_typed_answer_only_runs_locally(client):
+    # AC-27
+    fake = FakeProvider({"tutor_reply": ["r1"]})
+    app.dependency_overrides[get_gateway] = lambda: make_gateway(fake)
+    app.dependency_overrides[get_room_state] = lambda: InMemoryRoomState()
+
+    say(client, "(x-7)(x+7)", SESSION_ID)
+
+    assert requests_for(fake, "typed_answer") == []
+
+
+def test_AI01_new_purposes_are_routed():
+    # AC-28
+    purposes = get_settings().ai.purposes
+    assert purposes["open_session"].stream is True
+    assert purposes["open_session"].tier == "main"
+    assert purposes["typed_answer"].stream is False
+    assert purposes["typed_answer"].tier == "small"
+    for purpose in ("open_session", "typed_answer"):
+        text = (get_settings().env.prompts_dir / purpose / "v1.md").read_text("utf-8")
+        front = text.split("---")[1]
+        assert f"purpose: {purpose}" in front
+        assert "version: 1" in front

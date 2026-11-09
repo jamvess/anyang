@@ -60,6 +60,30 @@
 5. `tutor_reply/v2` (ยังไม่ merge จึงแก้ไฟล์เดิม) เพิ่ม `<conversation>` ก่อน `<message>` และกฎ: ข้อความสั้นหรือกำกวม ("ไม่แน่ใจ", "7", "ทำไม") ให้ตีความต่อจากบทสนทนา · ถ้ายังไม่ชัดให้ถามกลับ 1 คำถามสั้นๆ
 6. เปิดห้องใหม่ล้างบทสนทนา (เหมือน D ข้อ 4) · state ธรรมดา (ไม่ใช่ local) ไม่เก็บ → `conversation` = `none`
 
+**F · tutor ทักก่อนเมื่อเข้าห้อง (local เท่านั้น · เพิ่ม 9 พ.ย.)**
+
+ที่มา: หลังส่วน E ห้องเปิดมาโล่ง เพราะเว็บถาม `/sessions/active` ก่อน · stub บอกว่ามี session ค้าง เว็บจึงโหลดประวัติ (ซึ่งตอนนี้ว่าง) แทนการเปิด session ใหม่ (`TutorRoom.tsx` · room-http.md)
+
+1. `GET /exam-preps/{id}/sessions/active` ใน local → `404 no_active_session` · เว็บจึงเปิด session ใหม่ทุกครั้ง (กลับเข้าห้องเดิมยังไม่มีในเดโม่) · ไม่ใช่ local → เหมือนเดิม
+2. stream เปิดห้องใน local: `session` → `progress_card` (D ข้อ 4) → `token` ของ tutor จาก `gateway.stream("open_session", facts)` → `problem` (ข้อแรก) → `done` (ai-orchestration §2.2.2 directive `open_session` · TM-15)
+3. facts จาก code (string ใน data block): `days_left` · `readiness` เป็น % · หัวข้อ บรรทัดละ `{ชื่อ} · {ดาว} ดาว · {ระดับ}` · `problem` = ข้อความโจทย์ข้อแรก (ไม่มีเฉลย · AM-13)
+4. prompt `open_session/v1`: ทัก 2–3 ประโยค บอกเหลือกี่วัน เริ่มหัวข้อไหนเพราะอะไร แล้วชวนลองโจทย์ข้อแรก (โจทย์ขึ้นเป็นการ์ดเอง ไม่ต้องพิมพ์โจทย์ซ้ำทั้งหมด) · ไม่สอนก่อน (Probe · §2.2.4)
+5. model ล้มก่อน token แรก → `token` ข้อความเปิดของ `session_start.sse` แทน · ล้มหลังมี token แล้ว → หยุดข้อความนั้น · ทั้งสองกรณียังส่ง `problem` และ `done` (ห้องต้องใช้ต่อได้)
+6. ข้อความที่ส่งจริง (จาก model หรือ template) บันทึกในบทสนทนา (E) แทนข้อความของ fixture
+7. `config/ai.yaml` → `open_session`: tier main, `stream: true`, ค่าเหมือน `tutor_reply` · ป้าย `[C]`
+
+**G · พิมพ์คำตอบแล้วตรวจ และ tutor มี reaction ทั้งถูกและผิด (local เท่านั้น · เพิ่ม 9 พ.ย.)**
+
+ที่มา: Jam ลองแล้วเห็นว่าพิมพ์คำตอบถูก tutor ชมแต่ไม่ไปข้อต่อไปและไม่นับ mastery (UC-04 A2)
+
+1. ข้อความพิมพ์ใน local ที่มีโจทย์ค้าง: เรียก `gateway.call("typed_answer", {problem, conversation, message}, TypedAnswer)` ก่อน · `TypedAnswer` = `{is_answer: bool, lines: [LaTeX]}`
+2. **ตัดสินชั่วคราว (Jam 9 พ.ย. · ข้อ ก):** call เดียวทำงานของ `route_intent` (คำตอบหรือไม่) และ `normalize_math` (เป็น LaTeX รายบรรทัด) ของ ai-orchestration §2.2.4–2.2.5 เพื่อไม่ให้ช้าขึ้น 2 call · แยกเมื่อทำ intent router จริง
+3. `is_answer = true` และ `lines` ไม่ว่าง → บันทึก `นักเรียน: {ข้อความ}` แล้วทำต่อเหมือนยืนยันรูป (photo-check-in-room §2.2 ข้อ 4–8 + D + E): `check_answer` → `verdict` → `explain_check` (ชมถ้าถูก · ชี้บรรทัดและอธิบายถ้าผิด) → `progress_card` → `ข้อต่อไปนะ` → `problem` → `done` · BKT นับเหมือนรูป · ไม่มีการ์ดยืนยัน (UC-04 A2) · ไม่มี log AM-03 (ไม่มีอะไรให้แก้)
+4. `is_answer = false`, `lines` ว่าง, หรือ `typed_answer` ล้ม (`AIProviderError` / `AISchemaError`) → `tutor_reply` เหมือนเดิม (E)
+5. classifier ของ `check_answer` ล้ม → `token` `ระบบช้า ลองส่งอีกทีนะ` → `done` · ไม่มี verdict · ข้อความของนักเรียนยังอยู่ในบทสนทนา
+6. ตัดสินว่าเป็นคำตอบของ**โจทย์ที่ค้าง** ไม่ใช่คำตอบของคำถามย่อยของ tutor: "7" ที่ตอบ "เลขอะไรคูณตัวเองได้ 49" ไม่ใช่คำตอบ · prompt จึงได้ `conversation` ด้วย
+7. prompt `typed_answer/v1` · `config/ai.yaml` → `typed_answer`: tier small, `temperature 0`, `thinking: minimal` (เร็ว) · ป้าย `[C]` · ไม่ใช่ local → ไม่เรียก (staging ไม่ช้าลงและไม่เสียค่า call)
+
 ## 3. Inputs and outputs
 
 ชุดโจทย์ (มาจาก `evals/answers/labels.jsonl` · มีรูปลายมือจริงทั้งแบบถูกและผิดให้ใช้ตอนเดโม่)
@@ -108,6 +132,22 @@
 - **AC-17** เปิดห้องใหม่ → `conversation` ของข้อความแรกมีแค่ข้อความเปิดและโจทย์ `p1` · ไม่ใช่ local → `conversation` = `none`
 - **AC-18** local: tutor ล้มก่อน token แรก → ข้อความถัดไปเห็น `นักเรียน:` ของข้อความนั้นแต่ไม่เห็นข้อความ degrade
 
+**F · ทักก่อน**
+
+- **AC-19 (TM-13)** local: `GET /exam-preps/{id}/sessions/active` → `404 no_active_session` · ไม่ใช่ local → session id ของ stub เหมือนเดิม
+- **AC-20 (TM-15)** local: เปิดห้อง → `session`, `progress_card`, token ของ `open_session` ตามลำดับ chunk, `problem`, `done` · input มี `days_left` ของการ์ด, ชื่อ 3 หัวข้อ, โจทย์ข้อแรก และไม่มีเฉลย
+- **AC-21** local: `open_session` ล้มก่อน token แรก → token เป็นข้อความเปิดของ fixture แล้วยังมี `problem` และ `done` · ล้มหลังมี token → ไม่มี token เพิ่ม แต่ยังมี `problem` และ `done`
+- **AC-22 (TM-10)** ข้อความแรกหลังเปิดห้องเห็น `ติวเตอร์: {คำทักของ open_session}` ในบทสนทนา
+
+**G · พิมพ์คำตอบ**
+
+- **AC-23 (AM-04, AM-07)** local: `typed_answer` บอกว่าเป็นคำตอบ (`(x-7)(x+7)`) → `verdict` correct → token ของ `explain_check` → `progress_card` → `ข้อต่อไปนะ` → `problem` ข้อ 2 → `done` · ไม่เรียก `tutor_reply`
+- **AC-24 (AM-05, AM-07)** local: คำตอบผิด (`(x-7)(x-7)`) → `verdict` incorrect บรรทัด 1 · มีคำอธิบายของ `explain_check` · การ์ดหัวข้อแยกตัวประกอบเป็น `weak`
+- **AC-25 (TM-10)** local: `typed_answer` บอกว่าไม่ใช่คำตอบ (เช่น "7") หรือล้ม → `tutor_reply` ตอบ · ไม่มี `verdict` · input ของ `typed_answer` มี `conversation` และโจทย์ค้าง ไม่มีเฉลย
+- **AC-26** local: `check_answer` ล้มหลังรู้ว่าเป็นคำตอบ → `ระบบช้า ลองส่งอีกทีนะ` → `done` · ไม่มี verdict · โจทย์ค้างไม่เปลี่ยน
+- **AC-27** ไม่ใช่ local: ข้อความพิมพ์ไม่เรียก `typed_answer` (เหมือนเดิม)
+- **AC-28 (AI-01)** `config/ai.yaml` มี `open_session` (main, stream) และ `typed_answer` (small, ไม่ stream) · prompt ทั้งสองมี front matter ตรงกับ purpose และ version 1
+
 ## 5. Data changes
 
 ไม่มี · ไฟล์รูปอยู่ใน `.local/uploads/` (gitignore) · state อยู่ใน memory
@@ -123,11 +163,13 @@
 
 | Purpose | Tier | Output schema | Prompt file |
 |---|---|---|---|
+| `open_session` (ใหม่ · stream) | main | free text | `prompts/open_session/v1.md` (input `days_left`, `readiness`, `topics`, `problem`) |
+| `typed_answer` (ใหม่) | small | `TypedAnswer {is_answer, lines}` | `prompts/typed_answer/v1.md` (input `problem`, `conversation`, `message`) |
 | `tutor_reply` | main | free text | `prompts/tutor_reply/v2.md` (ใหม่ · input `message`, `problem`, `conversation` · `defaults` ของ `problem` และ `conversation` = `none`) |
 
 ## 8. Test plan
 
-`apps/api/tests/unit/test_demo_room.py` · AC-1 ถึง AC-18 ข้อละ 1 test · ลองครบ loop ในเบราว์เซอร์ด้วยมือ (ขั้น 5 ของ worklog)
+`apps/api/tests/unit/test_demo_room.py` · AC-1 ถึง AC-28 ข้อละ 1 test · ลองครบ loop ในเบราว์เซอร์ด้วยมือ (ขั้น 5 ของ worklog)
 
 ## 9. Out of scope
 
@@ -142,5 +184,6 @@
 
 | ไฟล์ | แก้อะไร | เจ้าของ |
 |---|---|---|
-| `config/ai.yaml` (ไฟล์กลาง) | `tutor_reply.prompt: v2` · bump version | Jam · PR นี้ · บอกกลุ่มก่อน merge |
+| `config/ai.yaml` (ไฟล์กลาง) | `tutor_reply.prompt: v2` · `open_session` · `typed_answer` · bump version | Jam · PR นี้ · บอกกลุ่มก่อน merge |
+| `specs/system/ai-orchestration.md` §2.2.4, §2.10 | `open_session` (prompt จริงตัวแรก · มีใน design แล้วเป็น directive) และ `typed_answer` (ชั่วคราวแทน `route_intent` + `normalize_math`) | Jam · PR นี้ |
 | `.gitignore` | `.local/` | Jam · PR นี้ |
