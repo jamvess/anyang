@@ -36,12 +36,14 @@ Loop ที่อาจารย์จะเห็น (รันในเคร�
 
 ## Next step
 
-ขั้น 2: `/spec-to-tests specs/features/planner/bkt-mastery.md` → `apps/api/tests/unit/test_bkt.py`
+ขั้น 2 (ต่อ): Jam review `apps/api/tests/unit/test_bkt.py` (12 test · แดงเพราะยังไม่มี `app.domain.bkt`) แล้ว `/implement-feature specs/features/planner/bkt-mastery.md`
 
 ## Waiting on
 
 ไม่มี (staging สำหรับให้อาจารย์เปิดลิงก์เอง: Junior env + Storage + auth, May หน้า login · ไม่ขวางงานนี้)
 
 ## Notes for next time
+
+- bkt test: `ReadinessTopic` มี field `attempts` เพิ่มจาก spec §3 เพื่อให้ `readiness()` รู้ว่าหัวข้อยังไม่เริ่ม (AC-10b) · ทุกฟังก์ชันรับ `LearningConfig` ยกเว้น `update_mastery` ที่รับ `BktConfig` ตาม spec §3 · ใส่ mode `final` ใน AC-6 ด้วย (★★ final = `two_star_final_difficulty` ตาม §2 ข้อ 3)
 
 - เว็บไม่ต้องแก้: `uploadPhoto` ใน `apps/web/lib/httpTransport.ts` จะ `PUT` ไฟล์เองเมื่อ response ของ `/uploads` ไม่มี `X-Stub` · CORS อนุญาต `PUT` + `Content-Type` แล้ว (`app/cors.py`)
