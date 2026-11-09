@@ -88,8 +88,10 @@ export function setBackground(scene: Scene, background: Background): Scene {
   return { ...scene, history: [...scene.history, snapshot(scene)], background };
 }
 
+/** Nothing to send: no pen stroke and no image. Eraser strokes alone leave blank paper. */
 export function isEmpty(scene: Scene): boolean {
-  return scene.strokes.length === 0 && scene.background === null && scene.current === null;
+  const ink = (s: Stroke | null) => s !== null && s.tool === "pen";
+  return !scene.strokes.some(ink) && scene.background === null && !ink(scene.current);
 }
 
 export function canUndo(scene: Scene): boolean {

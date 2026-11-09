@@ -146,3 +146,12 @@ function recorder() {
   }) as unknown as CanvasRenderingContext2D;
   return { ctx, calls };
 }
+
+describe("canvasStrokes · added after /code-review (9 Nov)", () => {
+  it("TM06 eraser strokes alone leave the canvas empty (nothing to send)", () => {
+    const erased = stroke(emptyScene(), "mouse", "eraser");
+
+    expect(isEmpty(erased)).toBe(true);
+    expect(isEmpty(stroke(erased))).toBe(false);
+  });
+});

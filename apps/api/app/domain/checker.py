@@ -5,6 +5,7 @@ names the error type; this module joins the two with fixed rules (CLAUDE.md rule
 function: no AI call, no database. Spec: specs/features/check/merge-rules.md.
 """
 
+import re
 from dataclasses import dataclass
 from typing import Literal
 
@@ -147,16 +148,33 @@ def merge_check(
     )
 
 
+# A plain `=`: not part of `<=`, `>=`, `!=` or `==` (self-review PR #117).
+_EQUALS = re.compile(r"(?<![<>!=])=(?!=)")
+# A left side that only names the answer, so `f'(x) = 2x` or `dy/dx = 2x` is one step, not two
+# (self-review PR #117): a function with primes or `(x)`, or dy/dx.
+_FUNCTION_LABEL = re.compile(
+    r"^\s*(?:[a-zA-Z]'*\([a-z]\)|[a-zA-Z]'+|\\frac\{d[a-z]\}\{d[a-z]\})\s*$"
+)
+# A single letter names the answer only in `x = 7` (one `=`): in `a = b = c` it is working.
+_LETTER = re.compile(r"^\s*[a-zA-Z]\s*$")
+
+
 def working_steps(lines: list[str]) -> int:
     """Steps of working: each line, plus each `=` inside a line, since `extract_answer` keeps a
     chain `a = b` on one line. A leading `=` continues the line before, so it adds nothing more;
-    blank lines count nothing (demo-room.md §2 I item 5)."""
+    a left side that only names the answer (`x =`, `f'(x) =`) adds nothing either; blank lines
+    count nothing (demo-room.md §2 I item 5)."""
     steps = 0
     for line in lines:
         text = line.strip()
         if not text:
             continue
-        steps += 1 + text.removeprefix("=").count("=")
+        parts = _EQUALS.split(text.removeprefix("="))
+        if len(parts) > 1 and (
+            _FUNCTION_LABEL.match(parts[0]) or (len(parts) == 2 and _LETTER.match(parts[0]))
+        ):
+            parts = parts[1:]
+        steps += len(parts)
     return steps
 
 

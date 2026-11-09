@@ -281,7 +281,7 @@ async def _verdict_and_explanation(
         # remembered as the tutor speaking (§2 E item 2).
         await state.remember(key, TUTOR, explanation)
         if no_working:
-            # The same problem again, so a fresh canvas sits under it at the bottom (§2 I item 6).
+            # The same problem again at the bottom; the canvas keeps the drawing (§2 I item 6).
             await state.remember(key, TUTOR, problem_line(pending))
             yield "problem", problem_event(pending)
             return

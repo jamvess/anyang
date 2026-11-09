@@ -140,3 +140,11 @@ describe("MessageText · bold markers", () => {
     expect(container.querySelector("span.tex annotation")?.textContent).toBe("a**b");
   });
 });
+
+describe("MessageText · bold markers, added after /code-review (9 Nov)", () => {
+  it("TM08 a power written with ** outside math is not taken for bold", () => {
+    const { container } = render(<MessageText content="x**2 + y**2" />);
+
+    expect(container.textContent).toBe("x**2 + y**2");
+  });
+});

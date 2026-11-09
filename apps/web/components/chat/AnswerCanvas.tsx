@@ -51,6 +51,10 @@ export function AnswerCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const layerRef = useRef<HTMLCanvasElement | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  // The pointer drawing the current stroke: other pointers (a palm lifting) never end or extend
+  // it, and a send in progress is not sent again (self-review PR #117).
+  const drawingPointer = useRef<number | null>(null);
+  const sending = useRef(false);
   const [initial] = useState(emptyScene);
   const sceneRef = useRef<Scene>(initial);
   const [scene, setScene] = useState<Scene>(initial);
@@ -90,8 +94,9 @@ export function AnswerCanvas({
     if (canvas.width !== pixelWidth) canvas.width = pixelWidth;
     if (canvas.height !== pixelHeight) canvas.height = pixelHeight;
     const layer = (layerRef.current ??= document.createElement("canvas"));
-    layer.width = pixelWidth;
-    layer.height = pixelHeight;
+    // Resizing clears and reallocates the buffer, so only when the size changes.
+    if (layer.width !== pixelWidth) layer.width = pixelWidth;
+    if (layer.height !== pixelHeight) layer.height = pixelHeight;
     const base = canvas.getContext("2d");
     const ink = layer.getContext("2d");
     if (!base || !ink) return;
@@ -120,17 +125,25 @@ export function AnswerCanvas({
     const before = sceneRef.current;
     const after = update((s) => startStroke(s, tool, info(e)));
     if (after === before) return; // a palm, or not the primary pointer (§2 item 6)
+    drawingPointer.current = e.pointerId;
     e.currentTarget.setPointerCapture?.(e.pointerId);
     setSent(false);
     setError(null);
   }
 
   function onPointerMove(e: ReactPointerEvent<HTMLCanvasElement>) {
-    if (sceneRef.current.current) update((s) => extendStroke(s, info(e)));
+    if (e.pointerId === drawingPointer.current) update((s) => extendStroke(s, info(e)));
   }
 
-  function onPointerEnd() {
+  function onPointerEnd(e: ReactPointerEvent<HTMLCanvasElement>) {
+    if (e.pointerId !== drawingPointer.current) return;
+    drawingPointer.current = null;
     update(endStroke);
+  }
+
+  function edit(change: (s: Scene) => Scene) {
+    update(change);
+    setSent(false); // the note is about what was sent; this is no longer it (§2 item 13)
   }
 
   async function onPickImage(e: React.ChangeEvent<HTMLInputElement>) {
@@ -143,8 +156,7 @@ export function AnswerCanvas({
     }
     try {
       const background = await loadImage(file);
-      update((s) => setBackground(s, background));
-      setSent(false);
+      edit((s) => setBackground(s, background));
       setError(null);
     } catch {
       setError(t.canvasNotImage);
@@ -159,15 +171,21 @@ export function AnswerCanvas({
   }
 
   async function onSendClick() {
-    const blob = await exportPng();
-    if (!blob) return;
-    if (blob.size > maxImageMb * MB) {
-      setError(t.imageTooBig(maxImageMb));
-      return;
+    if (sending.current) return; // a double click sends once
+    sending.current = true;
+    try {
+      const blob = await exportPng();
+      if (!blob) return;
+      if (blob.size > maxImageMb * MB) {
+        setError(t.imageTooBig(maxImageMb));
+        return;
+      }
+      setError(null);
+      setSent(true);
+      await onSend({ text: null, image: new File([blob], t.canvasFileName, { type: "image/png" }) });
+    } finally {
+      sending.current = false;
     }
-    setError(null);
-    setSent(true);
-    await onSend({ text: null, image: new File([blob], t.canvasFileName, { type: "image/png" }) });
   }
 
   const empty = isEmpty(scene);
@@ -200,10 +218,10 @@ export function AnswerCanvas({
         <button type="button" aria-label={t.canvasEraser} aria-pressed={tool === "eraser"} className={button} onClick={() => setTool("eraser")}>
           🧽 {t.canvasEraser}
         </button>
-        <button type="button" aria-label={t.canvasUndo} className={button} disabled={!canUndo(scene)} onClick={() => update(undo)}>
+        <button type="button" aria-label={t.canvasUndo} className={button} disabled={!canUndo(scene)} onClick={() => edit(undo)}>
           ↶ {t.canvasUndo}
         </button>
-        <button type="button" aria-label={t.canvasClear} className={button} disabled={empty} onClick={() => update(clear)}>
+        <button type="button" aria-label={t.canvasClear} className={button} disabled={empty} onClick={() => edit(clear)}>
           {t.canvasClear}
         </button>
         <button type="button" aria-label={t.canvasImage} className={button} onClick={() => fileRef.current?.click()}>

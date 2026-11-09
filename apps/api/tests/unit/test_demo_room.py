@@ -1113,3 +1113,20 @@ def test_AM07_missing_working_gives_the_problem_again(client, local):
     assert names(events)[-2:] == ["problem", "done"]
     assert event(events, "problem")["problem_id"] == P1.problem_id
     assert P1.problem.text in requests_for(fake, "tutor_reply")[0].prompt
+
+
+@pytest.mark.parametrize(
+    ("lines", "steps"),
+    [
+        pytest.param(["x = 7"], 1, id="a variable and its value"),
+        pytest.param(["f'(x) = 2x"], 1, id="a named derivative"),
+        pytest.param([r"\frac{dy}{dx} = 2x"], 1, id="dy/dx named"),
+        pytest.param(["x <= 3"], 1, id="not an equals"),
+        pytest.param(["a = b = c"], 3, id="a chain still counts"),
+    ],
+)
+def test_AM07_working_steps_ignore_a_named_answer(lines, steps):
+    # Added after /code-review (9 Nov): `x = 7` alone is the answer, not working.
+    from app.domain.checker import working_steps
+
+    assert working_steps(lines) == steps

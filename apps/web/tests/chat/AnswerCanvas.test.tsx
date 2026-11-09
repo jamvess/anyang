@@ -153,3 +153,41 @@ describe("AnswerCanvas", () => {
     expect(button("ส่งคำตอบ").disabled).toBe(true);
   });
 });
+
+describe("AnswerCanvas · added after /code-review (9 Nov)", () => {
+  it("TM06 a double click sends once", async () => {
+    const { canvas, button, onSend } = setup();
+    draw(canvas);
+
+    fireEvent.click(button("ส่งคำตอบ"));
+    fireEvent.click(button("ส่งคำตอบ"));
+    await flush();
+
+    expect(onSend).toHaveBeenCalledTimes(1);
+  });
+
+  it("TM06 another pointer lifting does not end the pen's stroke", () => {
+    const { canvas, button } = setup();
+    const pen = (x: number) => ({ pointerType: "pen", isPrimary: true, pointerId: 7, pressure: 0.5, clientX: x, clientY: 10 });
+    fireEvent.pointerDown(canvas, pen(10));
+    // A palm (another pointer) lifts mid-stroke: the stroke must go on, so nothing is committed yet.
+    fireEvent.pointerUp(canvas, { pointerType: "touch", isPrimary: true, pointerId: 9, clientX: 50, clientY: 50 });
+    expect(button("ย้อนกลับ").disabled).toBe(true);
+
+    fireEvent.pointerMove(canvas, pen(40));
+    fireEvent.pointerUp(canvas, pen(40));
+
+    expect(button("ย้อนกลับ").disabled).toBe(false);
+  });
+
+  it("TM06 undo removes the sent note", async () => {
+    const { canvas, button, queryByText } = setup();
+    draw(canvas);
+    fireEvent.click(button("ส่งคำตอบ"));
+    await flush();
+
+    fireEvent.click(button("ย้อนกลับ"));
+
+    expect(queryByText("ส่งแล้ว · แก้แล้วส่งใหม่ได้")).toBeNull();
+  });
+});

@@ -98,7 +98,8 @@ function hasLaterMath(s: string, from: number): boolean {
 /** `**bold**` is not rendered, so the markers go and the words stay; a `**` without a pair stays
  * (answer-canvas.md §2 item 20). Applied to text parts only, never inside math. */
 export function dropBoldMarkers(text: string): string {
-  return text.replace(/\*\*(?=\S)([\s\S]*?\S)\*\*/g, "$1");
+  // Bold only at a word edge, so `x**2 + y**2` (a power, not bold) stays as typed (self-review).
+  return text.replace(/(^|[\s([{"'“])\*\*(?=\S)([\s\S]*?\S)\*\*(?=$|[\s)\]}.,!?:;"'”])/g, "$1$2");
 }
 
 /**
