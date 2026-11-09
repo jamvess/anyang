@@ -17,7 +17,7 @@ Loop ที่อาจารย์จะเห็น (รันในเคร�
 - [x] 2. 🤖 BKT ตาม spec flow: `/spec-to-tests` bkt-mastery → 🙋 Jam review test → `/implement-feature` (`app/domain/bkt.py`)
 - [x] 3. 🤖 อัปโหลดรูปในเครื่อง (demo-room §2 A) + test
 - [x] 4. 🤖 ชุดโจทย์ 5 ข้อ + โจทย์ถัดไป + การ์ดความคืบหน้าจาก BKT (demo-room §2 B, D) + test
-- [ ] 5. 🤖 `tutor_reply/v2` รู้โจทย์ (demo-room §2 C) · 🙋 Jam ดู prompt · smoke กับ Vertex
+- [x] 5. 🤖 `tutor_reply/v2` รู้โจทย์ (demo-room §2 C) · 🙋 Jam ดู prompt · smoke กับ Vertex
 - [ ] 6. 🙋 ลองครบ loop ในเบราว์เซอร์ (`pnpm dev` + `uv run fastapi dev` · Claude เขียนขั้นตอนให้) ด้วยรูปจากมือถือและจาก `evals/handwriting/raw/` · ซ้อม · อัดวิดีโอสำรอง
 - [ ] 7. 🤖 `/work-done` + ข้อความกลุ่ม (แตะ upload ของ Junior · `config/ai.yaml` ขึ้น `tutor_reply` v2)
 
@@ -30,6 +30,7 @@ Loop ที่อาจารย์จะเห็น (รันในเคร�
 
 ## Decisions
 
+- 2026-11-09 · Jam ok: `test_ai_gateway_stream.py:205` อ่าน version ของ `tutor_reply` จาก config แทนการเขียน `"v1"` ไว้ตรงๆ (แก้ test ที่ review แล้ว 1 บรรทัด · test ยังเช็คเรื่องเดิม)
 - 2026-11-09 · Jam เลือกข้อ 1: gateway รองรับ `defaults` ใน frontmatter แทนการแก้ test เดิม 22 ตัวที่เรียก `tutor_reply` ด้วย `{message}` อย่างเดียว · (ข้อ 2 purpose ใหม่ / ข้อ 3 ตัดส่วน C ไม่เลือก)
 - 2026-11-09 · spec ok ทั้งหมด (Jam): ความพร้อมนับหัวข้อที่ยังไม่เริ่มเป็น 0 (learning-model v1.4) · mode normal · `tutor_reply/v2` ทุก env · ตอบผิดแล้วไปข้อต่อไป (เดโม่)
 - 2026-11-09 · Jam ok ให้เพิ่ม BKT: mastery จริงในการ์ดความคืบหน้าของเดโม่ (spec แยก `bkt-mastery.md` · ไม่มี planner, spaced review, Park)
@@ -37,13 +38,16 @@ Loop ที่อาจารย์จะเห็น (รันในเคร�
 
 ## Next step
 
-ขั้น 5 (ต่อ): Jam ตัดสินเรื่อง `test_ai_gateway_stream.py:205` (`prompt_version == "v1"` ล้มเพราะ `tutor_reply` ขึ้น v2) · ดู prompt `tutor_reply/v2` · แล้ว smoke 3–4 ข้อความกับ Vertex
+ขั้น 6 (🙋 Jam): เปิด API (`APP_ENV=local AI_PROVIDER=live AUTH_REQUIRED=false uv run fastapi dev app/main.py`) + เว็บ (`pnpm dev`) แล้วเปิด http://localhost:3000/preps/00000000-0000-4000-8000-000000000001/room · วน 4–5 ข้อด้วยรูปจาก `evals/handwriting/raw/` และจากมือถือ · อัดวิดีโอสำรอง
 
 ## Waiting on
 
 ไม่มี (staging สำหรับให้อาจารย์เปิดลิงก์เอง: Junior env + Storage + auth, May หน้า login · ไม่ขวางงานนี้)
 
 ## Notes for next time
+
+- smoke ครบ loop ผ่าน API กับ Vertex (สคริปต์ใน scratchpad · อัปโหลดลง temp ไม่ใช่ repo): เปิดห้อง → การ์ด 3 หัวข้อยังไม่เริ่ม 0% · ถาม "ข้อนี้เริ่มยังไงดี" → tutor รู้ว่าเป็น $x^2-49$ บอกสูตรผลต่างกำลังสองและขั้นแรก · "บอกคำตอบเลยได้ไหม" → ไม่เฉลย · รูป + แก้บรรทัดบนการ์ด → ถูก → การ์ด 14% → demo-2 · `hw_024` ถูก → 43% → demo-3 · `hw_007` ผิดบรรทัด 3 `sign` (ตรง label) → tutor ชี้เครื่องหมาย → อนุพันธ์ weak 50% → demo-4
+- เวลา: ข้อความแรก 10.7 s (เปิดครั้งแรก) ต่อจากนั้น 1.1 s · ส่งรูป 1.5–1.7 s · ยืนยัน 3.5–6 s
 
 - implement ขั้น 3–5: red → green 2 รอบ · (1) 17/18 test เดโม่เขียว (AC-8 รอ prompt v2) (2) ขึ้น `tutor_reply` v2 แล้ว test เดิม 22 ตัวล้ม `missing inputs: ['problem']` → เพิ่ม `defaults` ใน gateway (Jam ข้อ 1) เหลือ 1 ตัวที่ล้มเพราะเขียน `prompt_version == "v1"` ไว้ตรงๆ
 - `/dev/uploads` เป็น `include_in_schema=False` จึงไม่อยู่ใน `/docs` และ `test_api_md_endpoints` ไม่เห็น
