@@ -32,6 +32,7 @@ Loop ที่อาจารย์จะเห็น (รันในเคร�
 
 ## Decisions
 
+- 2026-11-09 · Jam ลองรอบ 3: ตัวอักษรในการ์ดแทบมองไม่เห็นบนเครื่องที่เป็น dark mode · `globals.css` ของ create-next-app เปลี่ยนสีตัวอักษรเป็น #ededed แต่การ์ดของห้องเป็น bg-white → Jam ok ลบบล็อก dark ออก (เว็บเป็น light เสมอ จนกว่า May จะออกแบบ dark) · `apps/web/` ของ May → บอกกลุ่ม
 - 2026-11-09 · Jam ลองรอบ 2: (1) ห้องเปิดมาโล่ง ไม่มีคำทัก (2) พิมพ์คำตอบต้องตรวจ และ tutor ต้องมี reaction ทั้งถูกและผิด → ส่วน F, G · Jam เลือก (ก) call เดียว `typed_answer` แทน `route_intent` + `normalize_math` ชั่วคราว · `open_session` เป็น purpose ใหม่ (main · stream)
 - 2026-11-09 · Jam ok แก้ test AC-25 1 บรรทัด: เทียบข้อความที่ต่อกันแล้ว เพราะ fake ส่ง string ทีละคำ (test ผิดเอง ไม่ใช่โค้ด)
 - 2026-11-09 · Jam ลองในเบราว์เซอร์แล้วถามว่าทำไม tutor ไม่ตอบตรงคำถาม: ประวัติบนจอเป็นตัวอย่างของ stub (`room.json`) ที่ tutor ไม่เคยเห็น และ `tutor_reply` ได้แค่ข้อความล่าสุด → Jam ให้ทำทั้ง 2 อย่าง "ให้เสมือนจริงที่สุด": ซ่อนประวัติปลอมใน local + tutor จำ `session.context_recent_turns` turns ล่าสุด (layer 9 · ใน memory)
