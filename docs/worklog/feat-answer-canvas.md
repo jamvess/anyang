@@ -26,6 +26,7 @@
 
 ## Decisions
 
+- 2026-11-09 · Jam ลอง canvas บนคอม: เขียน `(x²−7²) = (x−7)(x+7)` บรรทัดเดียวแล้วโดนว่าขาดวิธีทำ และอยากได้ canvas ใหม่เมื่อ tutor ขอวิธีทำ → Jam ok: นับเป็นขั้น (บรรทัด + `=` กลางบรรทัด · `working_steps`) และส่งการ์ดโจทย์เดิมซ้ำเมื่อขาดวิธีทำ (demo-room §2 I ข้อ 5–6) · แก้ test AC-30 ที่ review แล้ว (มี `problem` ก่อน `done`) · ทำใน PR นี้ แตะ `apps/api/`
 - 2026-11-09 · canvas เป็น `role="form"` ไม่ใช่ region (Jam เลือกข้อ 1): test ของการ์ดโจทย์ใน `ChatRoomStream.test.tsx` (ของ May) นับทุก region · แก้ test ของเรา 4 จุดและ AC-1 ใน spec
 - 2026-11-09 · ลองแค่บนคอมก่อน ไม่ต้องลอง iPad ใน PR นี้ (Jam) · ตรรกะ Apple Pencil (pressure, ไม่วาดตามฝ่ามือ) ยังทำและ test ด้วย pure function
 - 2026-11-09 · canvas ผูกกับโจทย์ ไม่ใช่ปุ่มใน composer (Jam) · PR แยกจากเดโม่ (#115 merge แล้ว)

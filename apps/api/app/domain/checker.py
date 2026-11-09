@@ -147,6 +147,19 @@ def merge_check(
     )
 
 
+def working_steps(lines: list[str]) -> int:
+    """Steps of working: each line, plus each `=` inside a line, since `extract_answer` keeps a
+    chain `a = b` on one line. A leading `=` continues the line before, so it adds nothing more;
+    blank lines count nothing (demo-room.md §2 I item 5)."""
+    steps = 0
+    for line in lines:
+        text = line.strip()
+        if not text:
+            continue
+        steps += 1 + text.removeprefix("=").count("=")
+    return steps
+
+
 def working_missing(verdict: Verdict, line_count: int, cfg: CheckerConfig) -> bool:
     """A right final answer with fewer than ``checker.min_working_lines`` lines has no working
     to show it was solved: it gets no verdict and no attempt (demo-room.md §2 I). A wrong
