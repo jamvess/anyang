@@ -8,6 +8,8 @@ function: no AI call, no database. Spec: specs/features/check/merge-rules.md.
 from dataclasses import dataclass
 from typing import Literal
 
+from app.settings import CheckerConfig
+
 AnswerFormat = Literal["expression", "factored", "equation"]
 Verdict = Literal["correct", "correct_with_flaw", "incomplete", "incorrect"]
 ErrorType = Literal["calculation", "sign", "wrong_method", "concept", "prerequisite", "no_answer"]
@@ -143,3 +145,10 @@ def merge_check(
         error_type=llm.error_type,
         final_answer_correct=False,
     )
+
+
+def working_missing(verdict: Verdict, line_count: int, cfg: CheckerConfig) -> bool:
+    """A right final answer with fewer than ``checker.min_working_lines`` lines has no working
+    to show it was solved: it gets no verdict and no attempt (demo-room.md §2 I). A wrong
+    answer is wrong whatever its length."""
+    return verdict == "correct" and line_count < cfg.min_working_lines

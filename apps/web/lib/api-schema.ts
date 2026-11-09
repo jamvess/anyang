@@ -32,7 +32,8 @@ export interface paths {
          * Get Active Session
          * @description Open session of this exam prep (TM-13); 404 `no_active_session` if none.
          *
-         *     stub — replaced in P4-lite
+         *     stub — replaced in P4-lite. On a local machine there is none, so the web opens a new
+         *     session and the tutor greets first (demo-room.md §2 F item 1).
          */
         get: operations["get_active_session_exam_preps__id__sessions_active_get"];
         put?: never;
@@ -56,7 +57,8 @@ export interface paths {
          * Create Session
          * @description Start a session. SSE: session → progress_card → token (opening) → problem → done.
          *
-         *     stub — replaced in P4-lite
+         *     stub — replaced in P4-lite. On a local machine it is a new session of the demo: the card
+         *     comes from real mastery and the problem is the one reached (demo-room.md §2 D, F, J).
          */
         post: operations["create_session_exam_preps__id__sessions_post"];
         delete?: never;
@@ -76,7 +78,8 @@ export interface paths {
          * Get Session
          * @description Room data: header, input limits and messages (oldest first).
          *
-         *     stub — replaced in P4-lite
+         *     stub — replaced in P4-lite. On a local machine there is no sample history: the tutor never
+         *     had that conversation (demo-room.md §2 E item 1).
          */
         get: operations["get_session_sessions__id__get"];
         put?: never;
@@ -128,9 +131,10 @@ export interface paths {
          * Send Message
          * @description Send `{text}`, `{image_path}` or both; the reply streams as SSE and ends with done.
          *
-         *     `{text}` streams `tutor_reply` from the gateway (P4-lite). With `image_path` it is a stub that
-         *     streams an `ocr_preview` to confirm with POST /sessions/{id}/ocr/confirm (api.md v1.7); `text`
-         *     is then the photo's caption, and the stub ignores it.
+         *     `{text}` streams `tutor_reply` from the gateway (P4-lite). With `image_path` the photo is read
+         *     with `extract_answer` and streams an `ocr_preview` to confirm with
+         *     POST /sessions/{id}/ocr/confirm (api.md v1.7 · photo-check-in-room.md); `text` is then the
+         *     photo's caption and does not reach the model. Until Storage exists it is a stub.
          */
         post: operations["send_message_sessions__id__messages_post"];
         delete?: never;
@@ -196,7 +200,9 @@ export interface paths {
          * Create Upload
          * @description Signed upload URL for one image or audio file (TM-06, TM-07, TM-21).
          *
-         *     stub — the URL is not a real Storage URL until the endpoint talks to Supabase Storage
+         *     stub — the URL is not a real Storage URL until the endpoint talks to Supabase Storage.
+         *     On a local machine an image gets a URL of this API, so the photo really arrives
+         *     (demo-room.md §2 A).
          */
         post: operations["create_upload_sessions__id__uploads_post"];
         delete?: never;
@@ -240,7 +246,9 @@ export interface paths {
          * Confirm Ocr
          * @description Confirmed or edited lines of the last ocr_preview. SSE: verdict → token → done (AM-02).
          *
-         *     stub — checks the line count against the preview of the image message stub
+         *     The checker of P2 checks the confirmed lines, then `explain_check` explains the result
+         *     (photo-check-in-room.md §2.2). Until Storage exists it is a stub that checks the line count
+         *     against the preview of the image message stub.
          */
         post: operations["confirm_ocr_sessions__id__ocr_confirm_post"];
         delete?: never;

@@ -101,6 +101,7 @@ class CheckerConfig(_Strict):
     sympy_workers: int = Field(ge=1)
     numeric_rel_tolerance: float = Field(ge=0)
     max_generate_retries: int = Field(ge=0)
+    min_working_lines: int = Field(ge=1)
 
 
 class BuddyQuota(_Strict):
