@@ -11,7 +11,7 @@
 
 - [x] 1. 🤖 api.md v1.14 ปิด "รอตัดสิน" v1.10 ส่วน `/exam-preps` (ข้อ 3, 4, `exam_date_past`) · `guards.max_exam_prep_title_chars` ใน `config/ai.yaml` 1.16 · Junior ok 11 พ.ย.
 - [ ] 2. 🙋 Junior บอก May (ข้อความใน PR) + บอกกลุ่มว่าแก้ไฟล์กลาง `api.md`, `config/ai.yaml`
-- [ ] 3. 🤖 `/spec-feature` → `specs/features/exam-prep/create-exam-prep.md` (CM-01, CM-02)
+- [x] 3. 🤖 `/spec-feature` → `specs/features/exam-prep/create-exam-prep.md` (CM-01, CM-02)
 - [ ] 4. 🙋 Junior review spec
 - [ ] 5. 🤖 `/spec-to-tests`: unit (validation, grapheme, `days_left`, `stage`) + integration กับ Supabase ในเครื่อง (บันทึกผ่าน JWT ของ user, RLS, isolation SA-06)
 - [ ] 6. 🙋 Junior review test
@@ -32,7 +32,7 @@
 
 ## Next step
 
-ข้อ 3: `/spec-feature` สำหรับ CM-01, CM-02
+ข้อ 5: `/spec-to-tests` จาก `specs/features/exam-prep/create-exam-prep.md` · ค้าง: comment ใน issue #40 เพิ่ม `db_unavailable` (503) ในรายการ `error.code` (gh ติด rate limit 11 พ.ย.)
 
 ## Waiting on
 

@@ -106,10 +106,11 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | `topics_not_passed` | integer \| null | จำนวนหัวข้อที่ `level ≠ passed` (PM-04) · null ตามกฎเดียวกับ `readiness` (v1.14) |
 
 - **`POST /exam-preps`** · body `{title: string, exam_date: string (date), daily_minutes?: integer}` (CM-01) · `201` + `ExamPrep` (`stage = "materials"`, `readiness` และ `topics_not_passed` เป็น null) · บันทึกลง `exam_preps` ด้วย JWT ของผู้ใช้ (RLS) · `tenant_id` และ `user_id` มาจาก token เสมอ ไม่รับจาก body (v1.14)
-  - `title`: ชื่อวิชาหรือการสอบที่ผู้ใช้พิมพ์ เช่น "แคลคูลัส 1 กลางภาค" · ตัดช่องว่างหัวท้าย · ไม่ว่าง · ยาวไม่เกิน `config/ai.yaml` → `guards.max_exam_prep_title_chars` นับเป็น grapheme cluster (สระและวรรณยุกต์ไทยไม่นับแยก · แบบเดียวกับ `max_attachment_name_chars`) (v1.14) · ไม่มี field `subject` แยก (เทอม 1 เป็นคณิตอย่างเดียว · `exam_preps.subject` เป็น null)
+  - `title`: ชื่อวิชาหรือการสอบที่ผู้ใช้พิมพ์ เช่น "แคลคูลัส 1 กลางภาค" · ตัดช่องว่างหัวท้าย · ไม่ว่าง · ยาวไม่เกิน `config/ai.yaml` → `guards.max_exam_prep_title_chars` นับเป็น grapheme cluster (สระและวรรณยุกต์ไทยไม่นับแยก · แบบเดียวกับ `max_attachment_name_chars`) · ห้ามมีอักขระควบคุม (Unicode category `Cc` เช่น `\n`, `\t`, `\x00`) ตรงไหนก็ตาม รวมหัวท้าย (ตรวจก่อนตัดช่องว่าง `"แคลคูลัส\n"` จึงถูกปฏิเสธ ไม่ใช่ถูกตัดทิ้ง) · อักขระจัดรูปแบบอย่าง zero-width joiner ยังได้ (v1.14 · title คือ `prep_name` ของห้องและอาจเข้า prompt ของ tutor ทีหลัง) · ไม่มี field `subject` แยก (เทอม 1 เป็นคณิตอย่างเดียว · `exam_preps.subject` เป็น null)
   - `exam_date`: `YYYY-MM-DD` · วันนี้ได้ · ก่อนวันนี้ (Asia/Bangkok) → `422 exam_date_past`
   - `daily_minutes`: ไม่บังคับ (หน้าเว็บไม่ต้องส่ง) · ถ้าส่ง ต้องเป็น integer 1–1440 · ไม่ส่งหรือ `null` = ใช้ค่าจาก `planner.default_daily_minutes` (UC-02 A1)
   - field เกิน, ผิดชนิด หรือผิดกฎข้างบน → `422 validation_error`
+  - DB ติดต่อไม่ได้ (error, timeout, network) → `503 db_unavailable` · message คงที่ ไม่มีรายละเอียดจาก exception (ใช้กับ `GET` ด้วย · v1.14)
 - **`GET /exam-preps`** · `ExamPrep[]` ของผู้ใช้ (RLS) เรียงตาม `exam_date` ใกล้ก่อน แล้วตาม `created_at` · ไม่รวม `status = 'archived'` · ยังไม่มี → `[]` (v1.14)
 - ทั้งสอง endpoint อ่านและเขียน DB จริง ไม่มี header `X-Stub` (v1.14 · เดิมเป็น stub ที่คืน fixture)
 
