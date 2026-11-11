@@ -1,19 +1,30 @@
 """API models of exam preps and materials (specs/system/api.md v1.10
 "สร้างการเตรียมสอบและใส่ไฟล์").
 
-The shape is a proposal pending Junior (api.md "รอตัดสิน (v1.10 · Junior)").
+Exam preps follow api.md v1.14 (decided). Materials are still a proposal pending Junior
+(api.md "รอตัดสิน (v1.10 · Junior)").
 Material kinds and statuses repeat the check constraints of `materials` in 0001_init.sql;
 they are schema rules, not learning-model thresholds. `stage` is computed by the backend
 from the materials and the active scope version (api.md v1.10 `ExamPrep`).
 """
 
+import re
 from datetime import date
 from typing import Annotated, Literal, Self
 from uuid import UUID
 
-from pydantic import Field, StringConstraints, model_validator
+from pydantic import (
+    AfterValidator,
+    BeforeValidator,
+    Field,
+    StrictInt,
+    StringConstraints,
+    model_validator,
+)
 
 from app.models.base import ApiModel
+from app.settings import get_settings
+from app.text import count_graphemes, has_control_characters
 
 MaterialKind = Literal["sheet", "slides", "past_exam", "notes", "other"]
 MaterialStatus = Literal["uploaded", "classified", "confirmed", "ingesting", "ready", "failed"]
@@ -35,13 +46,51 @@ MATERIAL_CONTENT_TYPES = frozenset(
 # --- exam preps ------------------------------------------------------------------
 
 
-class CreateExamPrepRequest(ApiModel):
-    """Body of POST /exam-preps (CM-01). A date before today is checked by the endpoint."""
+_ISO_DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
+MINUTES_PER_DAY = 1440  # daily_minutes can't exceed a day (api.md v1.14)
 
-    title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-    exam_date: date
+
+def _no_control_characters(value: object) -> object:
+    # Before trimming, so "title\n" is refused instead of trimmed (create-exam-prep.md §2.1).
+    if isinstance(value, str) and has_control_characters(value):
+        raise ValueError("title must not contain control characters")
+    return value
+
+
+def _trimmed_title_within_cap(value: str) -> str:
+    # Trim and check here, not with StringConstraints: next to the other validators pydantic
+    # applied min_length before trimming, so "   " passed.
+    value = value.strip()
+    if not value:
+        raise ValueError("title must not be blank")
+    cap = get_settings().ai.guards.max_exam_prep_title_chars
+    if count_graphemes(value) > cap:
+        raise ValueError(f"title must be at most {cap} characters")
+    return value
+
+
+def _iso_date_only(value: object) -> object:
+    # pydantic would also take "2026-11-11T00:00:00" or a Unix time; api.md says YYYY-MM-DD.
+    # Not Strict(): FastAPI validates the body in python mode, where a strict date refuses every
+    # string. [0-9], not \d, which also matches Thai and other non-ASCII digits.
+    if not (isinstance(value, str) and _ISO_DATE.fullmatch(value)):
+        raise ValueError("exam_date must be YYYY-MM-DD")
+    return value
+
+
+class CreateExamPrepRequest(ApiModel):
+    """Body of POST /exam-preps (CM-01 · api.md v1.14). A date before today is checked by the
+    endpoint, which knows today in Bangkok."""
+
+    title: Annotated[
+        str,
+        BeforeValidator(_no_control_characters),
+        AfterValidator(_trimmed_title_within_cap),  # graphemes, so OpenAPI has no maxLength
+    ]
+    exam_date: Annotated[date, BeforeValidator(_iso_date_only)]
     # None: the planner uses config/learning.yaml → planner.default_daily_minutes (UC-02 A1).
-    daily_minutes: int | None = Field(default=None, ge=1)
+    # StrictInt: "30", true and 30.5 are refused, as for persona params (api.md v1.12).
+    daily_minutes: StrictInt | None = Field(default=None, ge=1, le=MINUTES_PER_DAY)
 
 
 class ExamPrep(ApiModel):

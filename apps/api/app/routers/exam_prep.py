@@ -1,20 +1,29 @@
-"""Exam prep and material endpoints (specs/system/api.md v1.10 "สร้างการเตรียมสอบและใส่ไฟล์").
+"""Exam prep and material endpoints (specs/system/api.md "สร้างการเตรียมสอบและใส่ไฟล์").
 
-Stubs until materials are stored and classified: they serve fixture data from app/stubs/ and
-send `X-Stub: true`, so May can wire S07-S10 (UC-02 steps 1-5). Nothing is saved. Shapes and
-request rules are checked by tests/unit/test_exam_prep_api_contract.py, which the real
-endpoints must also pass.
+POST and GET /exam-preps use the database (api.md v1.14 · specs/features/exam-prep/
+create-exam-prep.md); without a token they keep the stub. Material endpoints are still stubs:
+they serve fixture data from app/stubs/ and send `X-Stub: true`, so May can wire S09-S10.
+Shapes and request rules are checked by tests/unit/test_exam_prep_api_contract.py.
 """
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta
 from typing import Annotated, Any
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, Path, Response
+from fastapi.responses import JSONResponse
 
 from app import stubs
 from app.auth import AuthContext, get_auth
-from app.models.error import ErrorResponse, error_docs
+from app.clock import get_now
+from app.db.exam_preps import (
+    DbUnavailableError,
+    ExamPrepRecord,
+    ExamPrepRepository,
+    get_exam_prep_repository,
+)
+from app.domain.exam_prep import bangkok_today, days_left, prep_stage
+from app.models.error import ErrorResponse, error_docs, error_response
 from app.models.exam_prep import (
     MATERIAL_CONTENT_TYPES,
     ConfirmMaterialsRequest,
@@ -35,15 +44,41 @@ router = APIRouter(tags=["exam_prep"])
 PrepId = Annotated[UUID, Path(alias="id")]
 MaterialId = Annotated[UUID, Path(alias="id")]
 
-# api.md v1.10: days are counted in Asia/Bangkok, which has no DST.
-_BANGKOK = timezone(timedelta(hours=7))
-
-
-def _today() -> date:
-    return datetime.now(_BANGKOK).date()
-
-
 # --- exam preps ------------------------------------------------------------------
+
+
+_DB_DOWN_MESSAGE = "ระบบบันทึกข้อมูลไม่ได้ชั่วคราว ลองใหม่อีกครั้ง"
+_DB_DOWN_DOC = {"model": ErrorResponse, "description": "db_unavailable, or auth_unavailable"}
+
+Repository = Annotated[ExamPrepRepository | None, Depends(get_exam_prep_repository)]
+Now = Annotated[datetime, Depends(get_now)]
+
+
+def _exam_prep(record: ExamPrepRecord, today: date) -> ExamPrep:
+    """readiness and topics_not_passed stay null until PM-03, PM-04 are computed (api.md v1.14)."""
+    return ExamPrep(
+        id=record.id,
+        title=record.title,
+        exam_date=record.exam_date,
+        days_left=days_left(record.exam_date, today=today),
+        daily_minutes=record.daily_minutes,
+        stage=prep_stage(
+            has_active_scope=record.active_scope_version_id is not None,
+            topic_importances=record.topic_importances,
+            materials=record.materials,
+        ),
+        readiness=None,
+        topics_not_passed=None,
+    )
+
+
+def _db_unavailable() -> JSONResponse:
+    return error_response(503, "db_unavailable", _DB_DOWN_MESSAGE)
+
+
+# Sync endpoints: the Supabase client blocks, so FastAPI runs them in its thread pool.
+# With a token they use the database. Without one (only possible with AUTH_REQUIRED=false,
+# local dev) they serve the stub with X-Stub (create-exam-prep.md §2.1).
 
 
 @router.post(
@@ -52,42 +87,76 @@ def _today() -> date:
     response_model=ExamPrep,  # errors return a JSONResponse, so the return type is Any
     responses={
         422: {"model": ErrorResponse, "description": "Invalid body or exam_date_past"},
+        503: _DB_DOWN_DOC,
     },
 )
-async def create_exam_prep(body: CreateExamPrepRequest, response: Response) -> Any:
-    """New exam prep from S07-S08 (CM-01). Today is a valid exam date; earlier is not.
+def create_exam_prep(
+    body: CreateExamPrepRequest,
+    response: Response,
+    auth: Annotated[AuthContext | None, Depends(get_auth)],
+    repo: Repository,
+    now: Now,
+) -> Any:
+    """New exam prep from S07-S08 (CM-01). Today in Bangkok is a valid exam date; earlier is
+    not. Saved for the user of the token; tenant and user never come from the body."""
+    today = bangkok_today(now)
+    if body.exam_date < today:
+        error = error_response(422, "exam_date_past", "exam_date is before today")
+        if auth is None:
+            error.headers.update(stubs.HEADERS)
+        return error
+    if auth is None or repo is None:
+        response.headers.update(stubs.HEADERS)
+        return ExamPrep(
+            id=uuid4(),
+            title=body.title,
+            exam_date=body.exam_date,
+            days_left=days_left(body.exam_date, today=today),
+            daily_minutes=body.daily_minutes,
+            stage="materials",
+            readiness=None,
+            topics_not_passed=None,
+        )
+    try:
+        record = repo.create(
+            tenant_id=auth.tenant_id,
+            user_id=auth.user_id,
+            title=body.title,
+            exam_date=body.exam_date,
+            daily_minutes=body.daily_minutes,
+        )
+    except DbUnavailableError:
+        return _db_unavailable()
+    return _exam_prep(record, today)
 
-    stub — the prep is not saved, so it is not in GET /exam-preps
-    """
-    days_left = (body.exam_date - _today()).days
-    if days_left < 0:
-        return stubs.error(422, "exam_date_past", "exam_date is before today")
-    response.headers.update(stubs.HEADERS)
-    return ExamPrep(
-        id=uuid4(),
-        title=body.title,
-        exam_date=body.exam_date,
-        days_left=days_left,
-        daily_minutes=body.daily_minutes,
-        stage="materials",
-        readiness=None,
-        topics_not_passed=None,
-    )
 
-
-@router.get("/exam-preps")
-async def list_exam_preps(response: Response) -> list[ExamPrep]:
-    """The user's exam preps, soonest exam first, archived ones left out (PM-04).
-
-    stub — one prep in each stage; exam dates count from today
-    """
-    response.headers.update(stubs.HEADERS)
-    rows = sorted(stubs.exam_preps(), key=lambda row: row["days_left"])
-    today = _today()
-    return [
-        ExamPrep.model_validate({**row, "exam_date": today + timedelta(days=row["days_left"])})
-        for row in rows
-    ]
+@router.get(
+    "/exam-preps",
+    response_model=list[ExamPrep],
+    responses={503: _DB_DOWN_DOC},
+)
+def list_exam_preps(
+    response: Response,
+    auth: Annotated[AuthContext | None, Depends(get_auth)],
+    repo: Repository,
+    now: Now,
+) -> Any:
+    """The user's exam preps, soonest exam first then oldest created, archived ones left out
+    (CM-01, CM-02, PM-04)."""
+    today = bangkok_today(now)
+    if auth is None or repo is None:
+        response.headers.update(stubs.HEADERS)
+        rows = sorted(stubs.exam_preps(), key=lambda row: row["days_left"])
+        return [
+            ExamPrep.model_validate({**row, "exam_date": today + timedelta(days=row["days_left"])})
+            for row in rows
+        ]
+    try:
+        records = repo.list_active()
+    except DbUnavailableError:
+        return _db_unavailable()
+    records.sort(key=lambda r: (r.exam_date, r.created_at))
+    return [_exam_prep(record, today) for record in records]
 
 
 # --- materials --------------------------------------------------------------------

@@ -101,6 +101,8 @@
   - ทำโดย Jam (8 พ.ย.) ช่วง solo · ทำได้บางส่วน
   - 8 พ.ย. (PR #114 · `specs/features/check/photo-check-in-room.md`): ส่งรูป → `extract_answer` → `ocr_preview` · ยืนยัน → checker ของ P2 → `verdict` → purpose ใหม่ `explain_check` อธิบายทันที (AM-07) · smoke บน Vertex ในเครื่อง 3 รูปจาก `evals/` verdict ตรง label 3/3 · ผ่าน interface `ImageStore` + `RoomState` (เก็บใน memory) · **บน staging ยังเป็น stub** จนกว่าจะมี Storage · เหลือ (Junior): `/uploads` จริง + bucket/policy + `ImageStore` ที่อ่าน Supabase Storage, บันทึก `messages` / `problems` / `attempts`, ตัดสินข้อเสนอใน spec §10 ข้อ 3–8 · api.md: 404/422 ของ `image_path` (spec §11)
 - [ ] เตรียม staging สำหรับ demo รวม
+  - 11 พ.ย. เป้าเปลี่ยนเป็น advisor update จันทร์ 16 พ.ย. (journey เดียวบน staging: login → exam prep → upload → topics → ห้องติว AI จริง → resume) · ลำดับ: 1) login + #120 2) exam prep API 3) บันทึก messages + resume 4) upload + Storage 5) ingestion (Jam)
+  - 11 พ.ย. (PR #121 · `specs/features/exam-prep/create-exam-prep.md`): `POST`/`GET /exam-preps` บันทึกและอ่าน `exam_preps` จริงผ่าน JWT ของผู้ใช้ (RLS) · ไม่มี token + `AUTH_REQUIRED=false` ยังได้ stub (`X-Stub`) · api.md v1.14 · `503 db_unavailable` · เหลือ: #120 (รอหน้า login ของ May), ลำดับ 3–5
 
 ### Buffer · 30 พ.ย.–4 ธ.ค.
 
