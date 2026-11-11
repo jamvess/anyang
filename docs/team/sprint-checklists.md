@@ -158,6 +158,7 @@
   - ทำก่อนกำหนด 21 ต.ค. (PR #36) · มีข้อเสนอแก้ AM-02, ai-orchestration และ api.md v1.3 รอ Junior + Jam review
 - [ ] เตรียมลำดับหน้าจอสำหรับ demo รวม
   - 21 ต.ค. ร่างแล้ว `docs/design/demo-flow.md` (PR #61): 15 นาที 7 ช่วง · ห้องติว live + wireframe คู่ผล PoC · คนพูดแบ่งตามงาน · ทางสำรอง + checklist ก่อน demo · เหลือเติมตัวเลข P2, P4-lite, P8-lite หลัง S3–S4 และให้ทีมตกลงลำดับ
+  - 11 พ.ย. (PR #119) ร่างรอบ 2: live ย้ายมาห้องเดโม่ในเครื่อง May (staging เป็นโบนัส) · รวมช่วง 3+4 เป็น live 5:30 · ตัวเลข P1–P4-lite, P6-lite, P8-lite เติมแล้ว (P8-lite ยังไม่มี report · TTFT staging ยังไม่วัด) · **เหลือ: ทีมตกลงลำดับ** (ถามในกลุ่มแล้ว) · Jam ให้ role Vertex AI User แก่ May ก่อนซ้อม · May เตรียมรูปลายมือข้อ 2 ที่เขียนเอง
 
 ### Buffer · 30 พ.ย.–4 ธ.ค.
 
