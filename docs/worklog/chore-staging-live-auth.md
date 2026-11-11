@@ -11,7 +11,7 @@
 
 - [x] 1. 🙋 (11 พ.ย. · Dashboard: Healthy, migration ล่าสุด topic_sources) เช็คว่า `anyang-staging` เป็น `ACTIVE_HEALTHY` (`npx supabase projects list`) แล้วส่ง `SUPABASE_URL` + anon key (`sb_publishable_...`) ของ `anyang-staging` ให้ Claude · ค่านี้ไม่ใช่ secret (หน้าเว็บใช้อยู่แล้ว · `api-auth.md` §10 ข้อ 4)
 - [x] 2. 🤖 `infra/env/api-staging.yaml`: `AUTH_REQUIRED: "true"`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `AI_PROVIDER: live`, `GOOGLE_CLOUD_PROJECT: anyang-513006`, `GOOGLE_CLOUD_LOCATION: global`
-- [ ] 3. 🤖 `infra/cloudbuild.yaml` + `infra/deploy-staging.ps1` (ตรงกัน): `--service-account=api-runtime@anyang-513006.iam.gserviceaccount.com` + `--set-secrets=SUPABASE_SERVICE_ROLE_KEY=supabase-service-role:latest`
+- [x] 3. 🤖 `infra/cloudbuild.yaml` + `infra/deploy-staging.ps1` (ตรงกัน): `--service-account=api-runtime@anyang-513006.iam.gserviceaccount.com` + `--set-secrets=SUPABASE_SERVICE_ROLE_KEY=supabase-service-role:latest`
 - [ ] 4. 🙋 สร้าง secret `supabase-service-role` ใน Secret Manager (พิมพ์ค่าเองผ่าน stdin · Claude ไม่เห็นค่า)
 - [ ] 5. 🤖 (หลัง Junior ok คำสั่ง) สร้าง SA `api-runtime` · `roles/aiplatform.user` ระดับ project · `roles/secretmanager.secretAccessor` เฉพาะ secret `supabase-service-role` · `cloudbuild-deployer` ได้ `roles/iam.serviceAccountUser` บน `api-runtime` (ถอดจาก default compute SA)
 - [ ] 6. 🤖 `infra/README.md`: อัปเดตหัวข้อ Backend (auth เปิด, runtime SA, secret, live) + "Monday demo checklist"
@@ -34,7 +34,7 @@
 
 ## Next step
 
-ข้อ 3: เพิ่ม `--service-account` + `--set-secrets` ใน `cloudbuild.yaml` และ `deploy-staging.ps1`
+ข้อ 4: Junior สร้าง secret `supabase-service-role` (คำสั่งในข้อ 4 ของรายงาน 11 พ.ย.) · แล้วข้อ 5 สร้าง SA `api-runtime`
 
 ## Waiting on
 
