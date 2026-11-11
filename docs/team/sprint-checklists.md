@@ -54,7 +54,8 @@
   - 20 ต.ค. วาด ERD ใหม่แล้ว 3 รูป ครบ 27 ตาราง (+ `auth.users` วาดไว้ให้ดูความสัมพันธ์) และ FK ทั้ง 45 ตัว (PR #30) · เหลือแก้ schema ตามผล P3 (จดไว้ 5 ข้อใน `data-model.md`)
   - 21 ต.ค. migration `0002` เพิ่ม `messages.attachment_name` (api.md v1.3) + ERD รูป 3 (PR #43) · ตรวจ 5 ข้อของ P3 แล้ว ยังยืนยันไม่ได้สักข้อเพราะ A6/A7 ยังไม่เคยรันผ่าน (สถานะอยู่ใน `data-model.md`) · เหลือแก้ schema หลังมี report P3a
   - ทำโดย Jam (1 พ.ย.) ช่วง solo · ต่อจาก Junior ขั้น 3–5
-  - 1 พ.ย. (PR #67): migration `0003_topic_sources.sql` ตาราง `topic_sources` (ช่วงหน้าของหัวข้อ · check `page_from >= 1 and page_to >= page_from` รอ Junior ยืนยัน) + `past_exam_questions.map_note` · ERD รูป 2 + `data-model.md` v1.3 · ⚠️ Junior ยืนยัน check ก่อน แล้วค่อย `db push` ขึ้น `anyang-dev` และ `anyang-staging` (ถ้าไม่เอา check ให้แก้ด้วย migration `0004` ใน PR ใหม่)
+  - 1 พ.ย. (PR #67): migration `0003_topic_sources.sql` ตาราง `topic_sources` (ช่วงหน้าของหัวข้อ · check `page_from >= 1 and page_to >= page_from` · Junior ยืนยันแล้ว 9 พ.ย.) + `past_exam_questions.map_note` · ERD รูป 2 + `data-model.md` v1.3 · ⚠️ Junior ยืนยัน check ก่อน แล้วค่อย `db push` ขึ้น `anyang-dev` และ `anyang-staging` (ถ้าไม่เอา check ให้แก้ด้วย migration `0004` ใน PR ใหม่)
+  - 9 พ.ย. (PR #116): Junior ยืนยัน check ตามเดิม ไม่ต้องมี `0004` · `db push` `0003` ขึ้น `anyang-dev` และ `anyang-staging`
 - ~~ช่วย Jam ทำ ingest pipeline ของ P3: อ่าน PDF (PyMuPDF), ตัด chunk, เก็บลง DB~~ → ไม่ต้องทำแล้ว (Jam ตัดสิน 1 พ.ย.) · P3 ปิดแล้ว (report `P3.md` · #37, #94) · Jam เขียน ingest ของ PoC เองใน `poc/P3/ingest.py` · ingest จริงของแอป (เก็บลง DB) เป็นงานใหม่ ยังไม่มีใน checklist
 - [x] เขียน report P6-lite ด้วย `/poc-report P6-lite`
   - ทำโดย Jam (1 พ.ย.) ช่วง solo

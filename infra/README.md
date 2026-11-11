@@ -33,7 +33,10 @@ printf '%s' "<anthropic-key>"    | gcloud secrets create anthropic-api-key --dat
 
 - Cloud Build trigger: ทำแล้ว 29 ต.ค. (PR #83) · ดูหัวข้อ "Deploy อัตโนมัติ" ด้านล่าง
 - service account ของ Cloud Build: ทำแล้ว 29 ต.ค. (`cloudbuild-deployer` · ยังไม่มีสิทธิ์อ่าน secret เพราะยังไม่ใช้)
-- Supabase project ใหม่ (เช่น `anyang-staging`): `npx supabase login` → `npx supabase link --project-ref <ref>` → `npx supabase db push` แล้วเปิด Custom Access Token hook ใน Dashboard (Authentication → Hooks) แล้ว `npx supabase unlink` (ถ้าลืมว่ายัง link อยู่ `db push` ครั้งหน้าจะลงผิด project) · `anyang-dev` ทำแล้ว
+- Supabase project ใหม่ (เช่น `anyang-staging`): `npx supabase login` → `npx supabase link --project-ref <ref>` → `npx supabase db push --remote --dry-run` → `npx supabase db push --remote` แล้วเปิด Custom Access Token hook ใน Dashboard (Authentication → Hooks) แล้ว `npx supabase unlink` (ถ้าลืมว่ายัง link อยู่ `db push` ครั้งหน้าจะลงผิด project) · `anyang-dev` ทำแล้ว
+  - ⚠️ CLI เวอร์ชันที่ใช้อยู่ (เจอ 9 พ.ย.) ใช้ local stack เป็นค่า default: `db push`, `migration list`, `db query` ต้องใส่ `--remote` ไม่อย่างนั้นจะยิงไปที่ `127.0.0.1:54322` แล้วล้ม (ไม่แตะ project ที่ link ไว้) · ถ้า agent เป็นคนรัน CLI จะขอ `--yes` ให้ใส่หลังจาก Junior ok dry-run แล้วเท่านั้น
+  - migration ที่ขึ้นแล้ว (9 พ.ย. · PR #116): `anyang-dev` `0001`–`0003` · `anyang-staging` `0001`–`0003` · เช็คด้วย `npx supabase migration list --remote` · ทั้งสอง project เปิด RLS ครบทุกตาราง public
+  - `anyang-staging` อยู่บน free tier ไม่มีคนใช้นานจะถูก pause (`INACTIVE`) · กด Restore ใน Dashboard แล้วรอ `npx supabase projects list` ขึ้น `ACTIVE_HEALTHY` ก่อน link (Dashboard อาจขึ้น Healthy ก่อน · ช่วงนั้น CLI ยังรายงาน `COMING_UP`)
   - `anyang-staging` ทำแล้ว 21 ต.ค.: ref `sfapuygntxuelsxsgkay` · region `ap-southeast-1` (Singapore ใกล้ Cloud Run `asia-southeast1`) · `0001` + `0002` · RLS ครบ 27 ตาราง · hook เปิดแล้ว · `test_SA06_tenant_isolation` ผ่าน · Auth Site URL: `https://anyang-amber.vercel.app` (`anyang-dev` ยังเป็น `http://localhost:3000` เพราะใช้ local อย่างเดียว) · Auth Redirect URLs: `http://localhost:3000/**`, `https://anyang-*-anyang4.vercel.app/**` (glob ของ Supabase หลวมกว่า CORS regex · ต้องทบทวนตอนทำ `anyang-prod`)
 - ให้สิทธิ์ Jam เป็น Vertex AI User เพื่อใช้ Gemini บนเครื่องด้วย `gcloud auth application-default login` (ไม่ต้องดาวน์โหลด key file)
 

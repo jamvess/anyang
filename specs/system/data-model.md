@@ -396,7 +396,7 @@ Golden sets ของการวัดผล AI ไม่อยู่ใน DB 
 
 | # | ผล | ทำที่ไหน |
 |---|---|---|
-| 1 | แก้ · เพิ่มตาราง `topic_sources` ตามข้อเสนอ · มี `check (page_from >= 1 and page_to >= page_from)` (Jam ตัดสินช่วง solo 2026-11-01 · รอ Junior ยืนยัน) | migration `0003` ✅ |
+| 1 | แก้ · เพิ่มตาราง `topic_sources` ตามข้อเสนอ · มี `check (page_from >= 1 and page_to >= page_from)` (Jam ตัดสินช่วง solo 2026-11-01 · Junior ยืนยัน 2026-11-09) | migration `0003` ✅ |
 | 2 | ไม่แก้ตอนนี้ · เลื่อนไปตัดสินตอนทำ `compute_importance` (P8-lite, S4) | - |
 | 3 | แก้ · หน้า scope แสดงเหตุผลของการ map · เพิ่ม `past_exam_questions.map_note text` เก็บ `note` ของ A7 ทุกข้อ ไม่ใช่เฉพาะข้อที่ `topic_id` เป็น null | migration `0003` ✅ |
 | 4 | ไม่แก้ · ใช้ `topics.status = 'excluded'` + 1 แถวใน `scope_changes` (`op = 'exclude'`, `actor = 'ai'`) · ตรวจแล้ว check ของ `op` และ `actor` ใน `0001_init.sql` รับทั้งสองค่าอยู่แล้ว ไม่ต้องแก้ constraint | - |
