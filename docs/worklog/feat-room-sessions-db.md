@@ -1,0 +1,43 @@
+# ห้องติวบันทึกลง DB: `tutor_sessions` + `messages` และ resume (TM-13)
+
+| | |
+|---|---|
+| Owner | Junior |
+| Branch | `feat/room-sessions-db` |
+| Checklist item | เตรียม staging สำหรับ demo รวม (ลำดับ 3 ของ journey วันจันทร์: บันทึก messages + resume) |
+| Status | in progress · 2026-11-11 |
+
+## Plan
+
+- [ ] 1. 🤖 api.md v1.15: ปิด "รอตัดสิน" ของ session (PR #35 ข้อ 2, v1.9 ข้อ 3 และ 9) + กฎการบันทึก + หัวห้องเมื่อยังไม่มี persona · `data-model.md`: `scope_version_id` เป็น null ได้ (กฎสำหรับ planner ของ Jam) · Junior ดูก่อน commit
+- [ ] 2. 🙋 Junior บอกกลุ่ม: migration `0004` + ไฟล์กลาง `api.md`
+- [ ] 3. 🤖 `/spec-feature` → `specs/features/tutor/room-sessions-db.md` (TM-13, PM-05 บางส่วน, SA-06) · 🙋 Junior review
+- [ ] 4. 🤖 `/spec-to-tests` (unit กับ fake repository + integration กับ anyang-dev) · 🙋 Junior review
+- [ ] 5. 🤖 migration `supabase/migrations/0004_tutor_sessions_scope_nullable.sql` + `/implement-feature`
+- [ ] 6. 🙋 Junior `npx supabase db push --remote` ขึ้น anyang-dev แล้ว anyang-staging (dry-run ก่อน)
+- [ ] 7. 🤖 `/work-done` → ถาม Junior ก่อน merge
+
+## Definition of done
+
+- มี token: `POST /exam-preps/{id}/sessions` สร้างแถว `tutor_sessions` จริง · ข้อความ user และ tutor บันทึกใน `messages` · `GET /exam-preps/{id}/sessions/active`, `GET /sessions/{id}`, `GET /sessions/{id}/messages` คืนข้อมูลจริง · เปิดห้องใหม่แล้วเห็นประวัติ
+- ไม่มี token + `AUTH_REQUIRED=false` → stub เดิม (`X-Stub`) · ไม่มี token + `true` → 401
+- isolation ระหว่าง tenant (SA-06) · test ที่ review แล้วไม่ถูกแก้ · CI เขียว
+
+## Decisions
+
+- 2026-11-11 · (1ก) migration `0004`: `tutor_sessions.scope_version_id` เป็น nullable · null = session เริ่มก่อนยืนยัน scope (ทางของ demo) · เมื่อ ingestion + confirm จริงแล้ว session ใหม่ต้องผูก active scope version (กฎของ planner · Jam) · Junior บอกกลุ่มและ `db push` เอง
+- 2026-11-11 · (2) หัวห้อง: `user_name` = `nickname` ไม่มีใช้ "คุณ" · `tutor_name` = tutor profile ล่าสุด ไม่มีใช้ preset tutor ตัวแรก · `buddy_name` = null เมื่อไม่มี profile
+- 2026-11-11 · (3) เปิด session ที่มี token: แถวจริง + `session` id จริง + ทักทายด้วย `open_session` จาก progress card ของ stub · ไม่ส่ง `problem` (ยังไม่มี planner/`problems`) · บันทึกคำทักเป็นข้อความ tutor
+- 2026-11-11 · (4) บันทึก user ก่อน stream · tutor ทั้งก้อนหลัง stream จบ (รวม degrade) · id จริงใน `done.message_ids` · ล้มกลาง stream ไม่บันทึกครึ่ง · tenant อื่น 404 · session จบแล้ว 409 `session_already_ended` · รูป/OCR/verdict ยังไม่บันทึก (ลำดับ 4)
+
+## Next step
+
+ข้อ 1: Junior ดู api.md v1.15 + data-model.md
+
+## Waiting on
+
+ไม่มี
+
+## Notes for next time
+
+- ลำดับของ Junior สำหรับวันจันทร์: 1) login + #120 2) exam prep API (#121 merged) 3) branch นี้ 4) upload + Storage 5) ingestion (Jam)
