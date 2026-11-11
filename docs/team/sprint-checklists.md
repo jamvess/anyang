@@ -150,8 +150,9 @@
 
 ### S4 · 16–27 พ.ย.
 
-- [ ] P8-lite ร่วมกับทีม (review test)
+- [x] P8-lite ร่วมกับทีม (review test)
   - 8 พ.ย. test พร้อมให้ review ย้อนหลัง (PR #113 · `apps/api/tests/unit/test_stars.py`) · จดเวลาที่ใช้ใน `poc/P8-lite/metrics.md` §4 · test ที่ผิดจดใน §3
+  - 11 พ.ย. (PR #118) May review ย้อนหลังแล้ว: 27 AC มี test ครบ · ช่องโหว่ 1 (§10 ข้อ 9, 10 ไม่มี test) · เปราะ 1 (comment AC-13) · เสนอ Jam แก้ใน PR ใหม่ · จดใน `metrics.md` §3, §4
 - [x] Use case UC ติว และ UC ส่งคำตอบ ให้ครบ 4 UC (D7)
   - ทำก่อนกำหนด 21 ต.ค. (PR #36) · มีข้อเสนอแก้ AM-02, ai-orchestration และ api.md v1.3 รอ Junior + Jam review
 - [ ] เตรียมลำดับหน้าจอสำหรับ demo รวม
