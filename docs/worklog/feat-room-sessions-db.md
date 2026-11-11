@@ -11,7 +11,7 @@
 
 - [x] 1. 🤖 api.md v1.15: ปิด "รอตัดสิน" ของ session (PR #35 ข้อ 2, v1.9 ข้อ 3 และ 9) + กฎการบันทึก + หัวห้องเมื่อยังไม่มี persona · `data-model.md`: `scope_version_id` เป็น null ได้ (กฎสำหรับ planner ของ Jam) · Junior ดูก่อน commit
 - [ ] 2. 🙋 Junior บอกกลุ่ม: migration `0004` + ไฟล์กลาง `api.md`
-- [ ] 3. 🤖 `/spec-feature` → `specs/features/tutor/room-sessions-db.md` (TM-13, PM-05 บางส่วน, SA-06) · 🙋 Junior review
+- [x] 3. 🤖 `/spec-feature` → `specs/features/tutor/room-sessions-db.md` (TM-13, PM-05 บางส่วน, SA-06) · 🙋 Junior review
 - [ ] 4. 🤖 `/spec-to-tests` (unit กับ fake repository + integration กับ anyang-dev) · 🙋 Junior review
 - [ ] 5. 🤖 migration `supabase/migrations/0004_tutor_sessions_scope_nullable.sql` + `/implement-feature`
 - [ ] 6. 🙋 Junior `npx supabase db push --remote` ขึ้น anyang-dev แล้ว anyang-staging (dry-run ก่อน)
@@ -32,12 +32,14 @@
 
 ## Next step
 
-ข้อ 3: `/spec-feature` → `specs/features/tutor/room-sessions-db.md`
+ข้อ 4: `/spec-to-tests` จาก `specs/features/tutor/room-sessions-db.md`
 
 ## Waiting on
 
 - May: หน้าห้องติวต้องรองรับ session ที่ไม่มี `progress_card` และไม่มี `problem` (api.md v1.15)
 
 ## Notes for next time
+
+- 2026-11-11 · คำทักเปิดห้องเป็น template ใน `config/messages.yaml` (ไม่ใช่ `prompts/` เพราะ README ของ prompts = 1 โฟลเดอร์ต่อ AI purpose และ `test_prompt_data_blocks.py` ไล่ตรวจทุก `prompts/*/v*.md`) · AI greeting ด้วย `open_session` v2 = follow-up ของ Jam
 
 - ลำดับของ Junior สำหรับวันจันทร์: 1) login + #120 2) exam prep API (#121 merged) 3) branch นี้ 4) upload + Storage 5) ingestion (Jam)
