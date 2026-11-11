@@ -9,7 +9,7 @@
 
 ## Plan
 
-- [ ] 1. 🤖 api.md v1.15: ปิด "รอตัดสิน" ของ session (PR #35 ข้อ 2, v1.9 ข้อ 3 และ 9) + กฎการบันทึก + หัวห้องเมื่อยังไม่มี persona · `data-model.md`: `scope_version_id` เป็น null ได้ (กฎสำหรับ planner ของ Jam) · Junior ดูก่อน commit
+- [x] 1. 🤖 api.md v1.15: ปิด "รอตัดสิน" ของ session (PR #35 ข้อ 2, v1.9 ข้อ 3 และ 9) + กฎการบันทึก + หัวห้องเมื่อยังไม่มี persona · `data-model.md`: `scope_version_id` เป็น null ได้ (กฎสำหรับ planner ของ Jam) · Junior ดูก่อน commit
 - [ ] 2. 🙋 Junior บอกกลุ่ม: migration `0004` + ไฟล์กลาง `api.md`
 - [ ] 3. 🤖 `/spec-feature` → `specs/features/tutor/room-sessions-db.md` (TM-13, PM-05 บางส่วน, SA-06) · 🙋 Junior review
 - [ ] 4. 🤖 `/spec-to-tests` (unit กับ fake repository + integration กับ anyang-dev) · 🙋 Junior review
@@ -27,16 +27,16 @@
 
 - 2026-11-11 · (1ก) migration `0004`: `tutor_sessions.scope_version_id` เป็น nullable · null = session เริ่มก่อนยืนยัน scope (ทางของ demo) · เมื่อ ingestion + confirm จริงแล้ว session ใหม่ต้องผูก active scope version (กฎของ planner · Jam) · Junior บอกกลุ่มและ `db push` เอง
 - 2026-11-11 · (2) หัวห้อง: `user_name` = `nickname` ไม่มีใช้ "คุณ" · `tutor_name` = tutor profile ล่าสุด ไม่มีใช้ preset tutor ตัวแรก · `buddy_name` = null เมื่อไม่มี profile
-- 2026-11-11 · (3) เปิด session ที่มี token: แถวจริง + `session` id จริง + ทักทายด้วย `open_session` จาก progress card ของ stub · ไม่ส่ง `problem` (ยังไม่มี planner/`problems`) · บันทึกคำทักเป็นข้อความ tutor
+- 2026-11-11 · (3) เปิด session ที่มี token: แถวจริง + `session` id จริง + ทักทายด้วย `open_session` · ไม่ส่ง `problem` · **ไม่ส่ง `progress_card` จนกว่า prep จะมี scope ที่ยืนยันแล้ว** (fixture readiness จะดูเหมือนคำนวณคะแนนแล้ว ซึ่งอาจารย์เพิ่งถามเรื่องนี้ · Junior ok) (ยังไม่มี planner/`problems`) · บันทึกคำทักเป็นข้อความ tutor
 - 2026-11-11 · (4) บันทึก user ก่อน stream · tutor ทั้งก้อนหลัง stream จบ (รวม degrade) · id จริงใน `done.message_ids` · ล้มกลาง stream ไม่บันทึกครึ่ง · tenant อื่น 404 · session จบแล้ว 409 `session_already_ended` · รูป/OCR/verdict ยังไม่บันทึก (ลำดับ 4)
 
 ## Next step
 
-ข้อ 1: Junior ดู api.md v1.15 + data-model.md
+ข้อ 3: `/spec-feature` → `specs/features/tutor/room-sessions-db.md`
 
 ## Waiting on
 
-ไม่มี
+- May: หน้าห้องติวต้องรองรับ session ที่ไม่มี `progress_card` และไม่มี `problem` (api.md v1.15)
 
 ## Notes for next time
 

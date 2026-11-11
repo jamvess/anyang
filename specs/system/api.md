@@ -1,4 +1,4 @@
-# API (v1.14)
+# API (v1.15)
 
 Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้างอัตโนมัติที่ `/docs` · frontend generate types จาก `/openapi.json`
 
@@ -268,7 +268,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 | Method | Path | ทำอะไร |
 |---|---|---|
-| GET | `/exam-preps/{id}/sessions/active` | session ที่ยังเปิดอยู่ของการเตรียมสอบนี้ `{session_id}` · 404 `no_active_session` ถ้าไม่มี (TM-13 · ข้อเสนอ ดูด้านล่าง) |
+| GET | `/exam-preps/{id}/sessions/active` | session ที่ยังเปิดอยู่ของการเตรียมสอบนี้ `{session_id}` · 404 `no_active_session` ถ้าไม่มี (TM-13 · ตัดสินแล้ว v1.15) |
 | POST | `/exam-preps/{id}/sessions` | **SSE:** สร้าง session → `session` → `progress_card` → `token` (ข้อความเปิด) → `problem` → `done` |
 | GET | `/sessions/{id}` | ข้อมูลห้อง `Room` (หัวห้อง + `limits` + ข้อความ) · ใช้ตอนเปิดห้องและกลับมาต่อ (TM-13) |
 | POST | `/sessions/{id}/uploads` | signed URL สำหรับรูปหรือเสียง |
@@ -297,10 +297,22 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 **ระบบช้า (degrade ของ tutor, ai-orchestration.md §2.10):** ส่งข้อความ template "ระบบช้า ลองส่งอีกทีนะ" เป็น `token` ที่ `speaker: "tutor"` แล้วตาม `done` และบันทึกเป็นข้อความ tutor ปกติใน `messages` · ส่ง `error` เฉพาะเมื่อไม่มีอะไรให้แสดงเลย
 
+**บันทึกลง DB (v1.15 · Junior 2026-11-11 · `specs/features/tutor/room-sessions-db.md`)** · ใช้กับ `GET /exam-preps/{id}/sessions/active`, `POST /exam-preps/{id}/sessions`, `GET /sessions/{id}`, `GET /sessions/{id}/messages` และ `POST /sessions/{id}/messages` แบบข้อความ
+
+- **3 กรณีของ token** เหมือน `/exam-preps` (v1.14): มี token → DB จริง ไม่มี `X-Stub` · ไม่มี token + `AUTH_REQUIRED=true` → `401 missing_token` · ไม่มี token + `AUTH_REQUIRED=false` (เครื่อง dev) → stub เดิมพร้อม `X-Stub: true` ไม่แตะ DB · ทุกตัวอ่านเขียนผ่าน JWT ของผู้ใช้ (RLS) · `tenant_id`, `user_id` มาจาก token เสมอ
+- **prep หรือ session ที่ไม่มี หรือเป็นของ tenant อื่น** → `404 not_found` · DB ติดต่อไม่ได้ → `503 db_unavailable` (v1.14) · ทั้งสองตอบ**ก่อน**เริ่ม SSE
+- **`GET /exam-preps/{id}/sessions/active`:** session ของ prep นี้ที่ `ended_at is null` ล่าสุดตาม `started_at` · ไม่มี → `404 no_active_session`
+- **`POST /exam-preps/{id}/sessions`:** สร้างแถว `tutor_sessions` ใหม่ทุกครั้ง (session เปิดเก่าไม่ถูกปิด · `active` เลือกอันล่าสุด) · `scope_version_id` = `exam_preps.active_scope_version_id` ซึ่งเป็น null ได้ (data-model.md · session ที่เริ่มก่อนยืนยัน scope) · SSE: `session` (id จริง) → `token` (คำทักจาก AI `open_session`) → `done` · **ไม่มี `progress_card`** จนกว่า prep จะมี scope ที่ยืนยันแล้ว (`active_scope_version_id` ไม่เป็น null) เพราะตัวเลขของ card ต้องมาจาก mastery จริง ไม่ใช่ fixture (Junior 2026-11-11) · หน้าเว็บต้องรองรับ session ที่ไม่มี card · **ไม่มี `problem`** จนกว่าจะมี planner และตาราง `problems` จริง · คำทักบันทึกเป็นข้อความ `tutor` หลัง stream จบ และ id อยู่ใน `done.message_ids`
+- **`GET /sessions/{id}`:** `Room` จาก DB · `prep_name` = `exam_preps.title` · `days_left` ตามกฎ v1.14 · `user_name` = `profiles.nickname` ถ้าเป็น null หรือว่างใช้ "คุณ" · `tutor_name` = `tutor_profiles.params.name` ของ version ล่าสุด ถ้าไม่มี profile ใช้ชื่อของ preset tutor ตัวแรกของ `GET /personas/presets` · `buddy_name` = `buddy_profiles.params.name` ล่าสุดเมื่อ `enabled = true` ไม่งั้น null · `messages` เหมือน `GET /sessions/{id}/messages` · session ที่จบแล้วยังเปิดดูได้ (`200`)
+- **`GET /sessions/{id}/messages`:** แถว `messages` ของ session เรียงตาม `created_at` เก่าไปใหม่ · ยังไม่แบ่งหน้า
+- **`POST /sessions/{id}/messages` (`text` อย่างเดียว):** session จบแล้ว → `409 session_already_ended` ก่อน SSE · บันทึกข้อความ `user` (`content` = text, `input_mode: "text"`) **ก่อน** เรียก AI · หลัง stream ของ tutor จบ บันทึกข้อความ `tutor` ทั้งก้อน (รวมข้อความ degrade "ระบบช้า ลองส่งอีกทีนะ") แล้วส่ง id ใน `done.message_ids` · AI ล้มกลาง stream (event `error`) → ไม่บันทึกข้อความ tutor ครึ่งเดียว ข้อความ user ยังอยู่ · บันทึกข้อความ tutor ไม่สำเร็จหลัง stream → `done` ไม่มี id นั้น และ log พร้อม `request_id` (ข้อความที่เห็นแล้วจะหายตอนโหลดใหม่)
+- **ยังไม่บันทึก:** ข้อความที่มี `image_path`, `ocr_preview`, `verdict`, `/ocr/confirm` และข้อความของ buddy (รอ Storage · ลำดับ 4)
+- **`Message.id`:** ของจริงเป็น uuid (`messages.id`) · fixture ของ stub ยังเป็น `m0`… (v1.9 รอตัดสิน 9)
+
 **รอตัดสิน (PR #35)**
 
 1. ~~**ส่งรูปพร้อมข้อความกำกับ** (รอ Jam)~~ **ตัดสินแล้ว** (Jam 2026-10-21 · PR #45): ข้อความกำกับเป็นคำบรรยายของรูป · เก็บเป็น `content` ของข้อความ user ที่มี `attachment_path` (ข้อความเดียว `input_mode: "image"`) · tutor เห็นใน conversation (เช่น "ข้อ 2 ครับ") · **ไม่ส่งเข้า `extract_answer` และ checker** ผลตรวจใช้แค่บรรทัดที่ user ยืนยันใน `ocr/confirm` เพื่อให้ผลขึ้นกับคำตอบอย่างเดียว และกันข้อความอย่าง "ข้อนี้ถูกแล้ว" ไปชี้นำ LLM classifier · flow รูปยืนยันทุกครั้ง (AM-02)
-2. **หา session ที่เปิดอยู่ (TM-13):** หน้า room รู้แค่ prep id · ข้อเสนอ `GET /exam-preps/{id}/sessions/active` (ด้านบน) ทางเลือกคือให้ `POST /exam-preps/{id}/sessions` คืน session เดิมถ้ายังเปิดอยู่ · เลือก GET เพราะไม่มีผลข้างเคียง ไม่เรียก AI ไม่สร้างข้อความเปิดซ้ำ และ POST ยังมีความหมายเดียวคือเริ่ม session ใหม่ (stream เดียว ไม่ต้องมีสองรูปแบบ response) · "เปิดอยู่" = `ended_at is null` · ถ้ามีหลายอันใช้อันล่าสุด (กันสองแท็บสร้างซ้อนด้วย unique index ได้ภายหลัง ต้องแก้ migration)
+2. ~~**หา session ที่เปิดอยู่ (TM-13)**~~ **ตัดสินแล้ว** (Junior 2026-11-11 · v1.15): ใช้ `GET /exam-preps/{id}/sessions/active` ตามข้อเสนอ · ข้อเสนอเดิม: หน้า room รู้แค่ prep id · ข้อเสนอ `GET /exam-preps/{id}/sessions/active` (ด้านบน) ทางเลือกคือให้ `POST /exam-preps/{id}/sessions` คืน session เดิมถ้ายังเปิดอยู่ · เลือก GET เพราะไม่มีผลข้างเคียง ไม่เรียก AI ไม่สร้างข้อความเปิดซ้ำ และ POST ยังมีความหมายเดียวคือเริ่ม session ใหม่ (stream เดียว ไม่ต้องมีสองรูปแบบ response) · "เปิดอยู่" = `ended_at is null` · ถ้ามีหลายอันใช้อันล่าสุด (กันสองแท็บสร้างซ้อนด้วย unique index ได้ภายหลัง ต้องแก้ migration)
 3. **รายการ `error.code` ของห้องติว** (Junior · ยังเปิด): ตอนนี้มีแค่รูปแบบ `{code, message}`
 4. **หัวข้อ 0 ดาวใน progress card** (รอ May · ถามใน PR #63): ไม่แสดง → `stars` 1–3 · แสดง → `stars` 0–3 · `topics.importance` ใน DB รับ 0–3 และ readiness ไม่นับ 0 ดาวอยู่แล้ว (`learning.yaml` → `readiness.exclude_zero_star`)
 
@@ -368,13 +380,13 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 1. **`/end` ตอบเป็น SSE:** เพราะ `session_end` เป็น event และสรุปมาจาก AI call · ทางเลือกคือตอบ JSON `{summary_lines}` ธรรมดา
 2. **`/end` ไม่นับใน rate limit** (`gateway-guards.md` §2.1 นับเฉพาะข้อความที่ผู้ใช้ส่ง) · ถึงจะเรียก AI แต่จบ session ได้ครั้งเดียว (ครั้งที่สองได้ 409)
-3. **`GET /sessions/{id}/messages` ยังไม่แบ่งหน้า** · ต้องมีก่อน Beta ถ้า session ยาว
+3. ~~**`GET /sessions/{id}/messages` ยังไม่แบ่งหน้า**~~ **ตัดสินแล้ว** (Junior 2026-11-11 · v1.15): ยังไม่แบ่งหน้า · ต้องมีก่อน Beta ถ้า session ยาว
 4. **`GET /exam-preps/{id}/progress` ใช้รูปร่างเดียวกับ event** · หน้าเว็บใช้ component เดียวกันทั้งสองที่
 5. **error code ใหม่:** `session_already_ended`, `scope_not_confirmed` (มีในตัวอย่างของ Conventions อยู่แล้ว), `tts_unavailable`
 6. **จำนวนบรรทัดของสรุป** (self-review #104): ai-orchestration §2.2.9 และ §3.3 เขียนว่า "สรุป 2 บรรทัด" · ตาราง SSE เดิมเขียน `[..2]` · ข้อเสนอคือรับ 1–2 บรรทัด (session สั้นอาจมีเรื่องเดียว) · ถ้าต้อง 2 บรรทัดพอดี ให้แก้ `SessionEndEvent`
 7. **เก็บสรุปเป็นข้อความในแชทด้วย** (self-review #104): PM-05 ให้สรุป "ในรูปแบบ chat message" · ถ้าเก็บแค่ `tutor_sessions.summary` สรุปจะหายจาก `GET /sessions/{id}/messages` หลังโหลดหน้าใหม่ และไม่มี id ให้ `/tts` · ข้อเสนอคือเพิ่มแถวใน `messages` (role `tutor`) และส่ง id ใน `done.message_ids`
 8. **TTS อ่านข้อความของ buddy ด้วยไหม:** TM-09 พูดถึงข้อความของ tutor เท่านั้น · ข้อเสนอคือตาม TM-09 (เพิ่ม buddy ต้องแก้ requirement)
-9. **id ของข้อความและหัวข้อใน fixture ของห้องติวไม่ใช่ uuid** (`m0`, `t1` · ของเดิมตั้งแต่ PR #38): `/messages/{id}/tts` และ `/topics/{id}/sources` รับ uuid · ของจริงเป็น uuid ทั้งหมด (`messages.id`, `topics.id`) · ข้อเสนอคือเปลี่ยน `Message.id` และ `ProgressTopic.id` เป็น uuid พร้อม fixture ใน PR ที่ต่อห้องติวกับ DB
+9. **(ข้อความ ตัดสินแล้ว v1.15: ของจริงเป็น uuid · fixture ยังเป็น `m0` · หัวข้อยังเปิด)** **id ของข้อความและหัวข้อใน fixture ของห้องติวไม่ใช่ uuid** (`m0`, `t1` · ของเดิมตั้งแต่ PR #38): `/messages/{id}/tts` และ `/topics/{id}/sources` รับ uuid · ของจริงเป็น uuid ทั้งหมด (`messages.id`, `topics.id`) · ข้อเสนอคือเปลี่ยน `Message.id` และ `ProgressTopic.id` เป็น uuid พร้อม fixture ใน PR ที่ต่อห้องติวกับ DB
 
 ### บัญชี
 
