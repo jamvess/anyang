@@ -18,7 +18,7 @@
 | ประเภท | **Free Trial** · $300 ภายใน 90 วัน · Jam สร้างและถือ billing · Junior เป็น Owner |
 | ⚠️ ห้าม | กด **Activate** / **Upgrade** เป็น paid account · ถ้า credit หรือ 90 วันหมด resource จะหยุดเอง ไม่ตัดบัตร |
 | Budget alert | $50 (Jam ตั้ง) · ไม่นับ promotional credits จึงเตือนเมื่อเริ่มจ่ายเงินจริง |
-| Gemini | ใช้ผ่าน **Vertex AI เท่านั้น** · credit ของ trial ไม่ครอบคลุม API key ของ AI Studio (`GEMINI_API_KEY`) · gateway มี provider `vertex` แล้ว (31 ต.ค. · `specs/features/ai/gemini-vertex.md`): ตั้ง `GOOGLE_CLOUD_PROJECT` + `GOOGLE_CLOUD_LOCATION=global` · credential จาก ADC ไม่ใช้ key file · เปิด live บน `api-staging` ต้องให้ service account ของ Cloud Run มี `roles/aiplatform.user` ก่อน (ยังไม่ได้ทำ) |
+| Gemini | ใช้ผ่าน **Vertex AI เท่านั้น** · credit ของ trial ไม่ครอบคลุม API key ของ AI Studio (`GEMINI_API_KEY`) · gateway มี provider `vertex` แล้ว (31 ต.ค. · `specs/features/ai/gemini-vertex.md`): ตั้ง `GOOGLE_CLOUD_PROJECT` + `GOOGLE_CLOUD_LOCATION=global` · credential จาก ADC ไม่ใช้ key file · `api-staging` ใช้ผ่าน runtime SA `api-runtime` ที่มี `roles/aiplatform.user` (ทำแล้ว 11 พ.ย.) |
 
 ```bash
 gcloud auth login
@@ -26,10 +26,18 @@ gcloud config set project anyang-513006
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com   artifactregistry.googleapis.com secretmanager.googleapis.com aiplatform.googleapis.com
 gcloud artifacts repositories create anyang --repository-format=docker --location=asia-southeast1
 
-# secrets (ค่าจริงใส่ผ่าน stdin ไม่พิมพ์ลง history)
-printf '%s' "<service-role-key>" | gcloud secrets create supabase-service-role --data-file=-
-printf '%s' "<anthropic-key>"    | gcloud secrets create anthropic-api-key --data-file=-
 ```
+
+- **Secret** (สร้างใน Console → Security → Secret Manager → Create secret · ค่าไม่ผ่าน shell history · Replication: Automatic)
+  - `supabase-service-role` · ทำแล้ว 11 พ.ย. · key `sb_secret_…` ของ `anyang-staging` · `api-staging` อ่านเป็น env `SUPABASE_SERVICE_ROLE_KEY` (`--set-secrets`) · เปลี่ยนค่า = Add new version แล้ว deploy ใหม่ (`:latest` อ่านตอน instance start)
+  - `anthropic-api-key` · ยังไม่สร้าง (fallback ใน `config/ai.yaml` ยังเป็น `TODO`)
+- **Runtime SA `api-runtime`** (ทำแล้ว 11 พ.ย. · PR #120) · `api-staging` รันในนาม SA นี้แทน default compute SA (ซึ่งเป็น Editor ของทั้ง project) · มีแค่ 2 สิทธิ์:
+  - `roles/aiplatform.user` ระดับ project (Vertex ให้ได้แค่ระดับนี้)
+  - `roles/secretmanager.secretAccessor` เฉพาะบน secret `supabase-service-role` · secret ใหม่ต้องให้สิทธิ์ทีละตัว:
+
+    ```powershell
+    gcloud secrets add-iam-policy-binding <secret> --project=anyang-513006 --member="serviceAccount:api-runtime@anyang-513006.iam.gserviceaccount.com" --role="roles/secretmanager.secretAccessor"
+    ```
 
 - Cloud Build trigger: ทำแล้ว 29 ต.ค. (PR #83) · ดูหัวข้อ "Deploy อัตโนมัติ" ด้านล่าง
 - service account ของ Cloud Build: ทำแล้ว 29 ต.ค. (`cloudbuild-deployer` · ยังไม่มีสิทธิ์อ่าน secret เพราะยังไม่ใช้)
@@ -42,17 +50,18 @@ printf '%s' "<anthropic-key>"    | gcloud secrets create anthropic-api-key --dat
 
 ## Backend · Cloud Run `api-staging`
 
-> ⚠️ ห้ามเปิด AI_PROVIDER=live บน api-staging จนกว่าจะเช็ค Supabase JWT ทุก endpoint · URL เป็น public (--allow-unauthenticated) คนนอกเรียกแล้วกิน credit ได้
-> · 1 พ.ย. API เช็ค JWT ได้แล้ว (`specs/features/platform/api-auth.md` · PR #98) แต่ staging ยังตั้ง `AUTH_REQUIRED: "false"` เพราะหน้าเว็บยังไม่ส่ง token · เงื่อนไขก่อนเปิด live: `env/api-staging.yaml` ตั้ง `AUTH_REQUIRED: "true"` + `SUPABASE_URL` + `SUPABASE_ANON_KEY` ของ `anyang-staging`
+> ⚠️ ห้ามตั้ง `AI_PROVIDER: live` คู่กับ `AUTH_REQUIRED: "false"` · URL เป็น public (`--allow-unauthenticated`) คนนอกเรียกแล้วกิน credit ได้
 >
-> ⚠️ ก่อนเปิด live ต้องเปลี่ยน runtime SA ด้วย · ตอนนี้ `api-staging` รันด้วย default compute SA (`659706857266-compute@developer.gserviceaccount.com`) ซึ่งได้ role **Editor** ของทั้ง project มาโดย default · ให้สร้าง SA แยกสำหรับ runtime ที่มีแค่ **Vertex AI User** (`roles/aiplatform.user`) + **Secret Manager Secret Accessor** (`roles/secretmanager.secretAccessor`) แล้ว deploy ด้วย `--service-account` (ทั้ง `cloudbuild.yaml` และ `deploy-staging.ps1`) · `cloudbuild-deployer` ต้องมี `iam.serviceAccountUser` บน SA ตัวใหม่แทนตัวเดิม
+> **ตั้งแต่ PR #120 (merge พร้อมหน้า login ของ May):** `AUTH_REQUIRED: "true"` · ทุก endpoint นอก allowlist (`/health`, `/docs`, `/redoc`, `/openapi.json`) ต้องมี `Authorization: Bearer <Supabase JWT>` ไม่มีได้ `401 missing_token` (`specs/features/platform/api-auth.md`) · `AI_PROVIDER: live` บน Vertex · runtime SA `api-runtime` · service role key จาก Secret Manager · หน้าเว็บที่ไม่ส่ง token จะได้ 401 ทุก request
 
 | | |
 |---|---|
 | URL | https://api-staging-659706857266.asia-southeast1.run.app (`/health`, `/docs`) · อีกชื่อของ service เดียวกัน: `https://api-staging-ws54gmdazq-as.a.run.app` |
 | Region | `asia-southeast1` · `--min-instances=0` `--max-instances=2` `--concurrency=40` `--timeout=600` |
-| Env | `infra/env/api-staging.yaml` (ไม่มี secret) · `APP_ENV=staging`, `AI_PROVIDER=fake`, CORS ของ Vercel production + localhost + regex ของ preview |
-| ตอนนี้ตอบอะไร | `/health` + stub ห้องติวที่คืน fixture (`X-Stub: true`) · ยังไม่เรียก Supabase หรือ AI |
+| Env | `infra/env/api-staging.yaml` (ไม่มี secret) · `APP_ENV=staging`, `AUTH_REQUIRED=true`, `SUPABASE_URL` + `SUPABASE_ANON_KEY` ของ `anyang-staging`, `AI_PROVIDER=live`, `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION=global`, CORS ของ Vercel production + localhost + regex ของ preview |
+| Secret | `SUPABASE_SERVICE_ROLE_KEY` ← `supabase-service-role:latest` (`--set-secrets`) · ใช้แค่ writer ของ `ai_calls` |
+| Runtime SA | `api-runtime@anyang-513006.iam.gserviceaccount.com` (`--service-account`) |
+| ตอนนี้ตอบอะไร | `/health` · ข้อความในห้องติวตอบด้วย Gemini จริง (`tutor_reply`) · endpoint อื่นยังเป็น stub ที่คืน fixture (`X-Stub: true`) |
 | **Demo link** | https://anyang-amber.vercel.app/preps/00000000-0000-4000-8000-000000000001/room · ห้องติวบน Vercel production ที่ stream คำตอบ stub จาก `api-staging` (ตรวจใน Network แล้ว 28 ต.ค.) |
 
 **Deploy อัตโนมัติ** (P6-lite · ตั้งแล้ว 29 ต.ค.)
@@ -63,7 +72,7 @@ printf '%s' "<anthropic-key>"    | gcloud secrets create anthropic-api-key --dat
 | รันเมื่อ | push เข้า `main` (`^main$`) ที่แก้ `apps/api/**`, `config/**`, `prompts/**` หรือ `infra/**` (แก้ `infra/README.md` ก็ deploy ใหม่ · ไม่เสียหาย) |
 | ทำอะไร | `infra/cloudbuild.yaml`: build `apps/api/Dockerfile` → push `asia-southeast1-docker.pkg.dev/anyang-513006/anyang/api:$COMMIT_SHA` → `gcloud run deploy api-staging` ด้วย flag และ `env/api-staging.yaml` ชุดเดียวกับสคริปต์มือ |
 | GitHub | connection 2nd gen `github-anyang` (`asia-southeast1`) · repository `anyang` → `jamvess/anyang` · Jam ต่อไว้ (ต้องใช้ admin ของ repo) |
-| Service account | `cloudbuild-deployer@anyang-513006.iam.gserviceaccount.com` · `roles/run.admin` (project · ต้องใช้ตั้ง `allUsers` ของ `--allow-unauthenticated`) · `roles/artifactregistry.writer` (เฉพาะ repo `anyang`) · `roles/logging.logWriter` (project · build ใช้ `CLOUD_LOGGING_ONLY`) · `roles/iam.serviceAccountUser` (เฉพาะบน runtime SA `659706857266-compute@…`) |
+| Service account | `cloudbuild-deployer@anyang-513006.iam.gserviceaccount.com` · `roles/run.admin` (project · ต้องใช้ตั้ง `allUsers` ของ `--allow-unauthenticated`) · `roles/artifactregistry.writer` (เฉพาะ repo `anyang`) · `roles/logging.logWriter` (project · build ใช้ `CLOUD_LOGGING_ONLY`) · `roles/iam.serviceAccountUser` (เฉพาะบน runtime SA `api-runtime` · 11 พ.ย.) · ⚠️ ยังมี binding เดิมบน `659706857266-compute@…` ไว้ rollback · ถอดหลัง deploy ด้วย `api-runtime` ผ่าน (`docs/worklog/chore-staging-live-auth.md` ข้อ 8) |
 | ดู build | https://console.cloud.google.com/cloud-build/builds;region=asia-southeast1?project=anyang-513006 หรือ `gcloud builds list --region=asia-southeast1 --limit=5` |
 | ดูว่า deploy commit ไหน | `gcloud run services describe api-staging --region=asia-southeast1 --format="value(spec.template.spec.containers[0].image)"` · tag = commit SHA |
 
@@ -88,7 +97,13 @@ curl -s https://api-staging-659706857266.asia-southeast1.run.app/health
 curl -s -o /dev/null -D - -X OPTIONS https://api-staging-659706857266.asia-southeast1.run.app/health -H "Origin: https://anyang-amber.vercel.app" -H "Access-Control-Request-Method: POST" | grep -i access-control-allow-origin
 ```
 
-**Demo-day (ศ. 30 ต.ค.)** กัน cold start: เย็นพฤหัส 29 ต.ค. ตั้ง min instance เป็น 1 · หลัง demo ตั้งกลับเป็น 0 ทันที (instance ที่เปิดค้างกิน trial credit)
+**Monday demo checklist** (advisor update · ทำเช้าวันประชุม ก่อนเริ่ม 30 นาที)
+
+1. **Supabase `anyang-staging` ต้อง ACTIVE** · free tier จะ pause project ที่ไม่มีคนใช้ · `npx supabase projects list` ต้องขึ้น `ACTIVE_HEALTHY` (Dashboard ขึ้น Healthy ก่อน CLI ได้) · ถ้าเป็น `INACTIVE` กด Restore ใน Dashboard แล้วรอ · ถ้า pause อยู่ login ไม่ได้ และ API ตอบ `503 auth_unavailable`
+2. **อุ่น Cloud Run** · เปิด demo link (https://anyang-amber.vercel.app) 1 ครั้งก่อนประชุม และเปิด `curl -s https://api-staging-659706857266.asia-southeast1.run.app/health` · `--min-instances=0` ทำให้ request แรกเจอ cold start ประมาณ 6 วินาที (P6-lite)
+3. **ทดสอบ login ด้วย demo account** · login บน demo link → เปิดห้องติว → ส่ง 1 ข้อความ → ต้องได้คำตอบจาก Gemini แบบ stream (ไม่ใช่ข้อความ stub) · ถ้าได้ 401 ให้ logout แล้ว login ใหม่ (token หมดอายุ)
+
+**กัน cold start ทั้งช่วง demo** (ทางเลือก) ตั้ง min instance เป็น 1 ก่อน demo · หลัง demo ตั้งกลับเป็น 0 ทันที (instance ที่เปิดค้างกิน trial credit)
 
 ```powershell
 gcloud run services update api-staging --region=asia-southeast1 --min-instances=1   # ก่อน demo
