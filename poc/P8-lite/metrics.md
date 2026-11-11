@@ -53,6 +53,8 @@ bash poc/P8-lite/agent_lines.sh origin/main HEAD apps/api/tests  # แถว tes
 | # | test ที่ผิด | ผิดอย่างไร | แก้ spec ด้วยไหม |
 |---|---|---|---|
 | 1 | `test_SM03_signal_and_stars_from_past_exams` (AC-1 ถึง AC-4) | ไม่ผิด แต่เปราะ: ดาวที่คาดไว้เขียนเป็นเลขตาม AC ซึ่งถือว่า `weight_other_instructor = 0.5` และ `three_star_min_r = 0.6` · ถ้าปรับค่าที่ติด [C] ใน config, test ล้มทั้งที่โค้ดถูก (`/code-review`) | ไม่แก้ test (คน review แล้ว) · ถ้าเปลี่ยนค่า ให้แก้ AC กับ test ไปพร้อมกัน |
+| 2 | ช่องโหว่ 2 ข้อ · ไม่มี test ของ spec §10 ข้อ 9 (`appearances` ที่ material ไม่อยู่ใน `exams` ไม่นับ) และข้อ 10 (ผู้ใช้แก้ดาวเองแต่ `current_reason = null` → เหตุผลคง `null`) | ช่องโหว่ ไม่ใช่ test ผิด: กฎสองข้อนี้เพิ่มตอน implement หลัง `/spec-to-tests` จึงไม่มี AC และไม่มี test · ข้อ 9 คือบั๊ก #1 ในตารางบั๊กด้านบน ซึ่งไม่มี test จับ (May review 11 พ.ย.) | ไม่แก้ spec · เสนอ Jam เพิ่ม test 2 ตัวใน PR ใหม่ (ไม่แก้ test เดิม) |
+| 3 | `test_SM09_user_three_star_lifts_its_prerequisites` (AC-13) | ไม่ผิด แต่ comment ทำให้เข้าใจผิด: เขียนว่าต้องมีอีกหัวข้อที่ออก "so the exams count" แต่ตาม §2 ขั้นที่ 1 ข้อสอบนับเมื่อ `Σ w_e > 0` ไม่ขึ้นกับว่ามีหัวข้อไหนออก (May review 11 พ.ย.) | ไม่แก้ spec · เสนอ Jam แก้ comment (assert เหมือนเดิม) |
 
 ## 4. เวลาที่คนใช้
 
@@ -63,6 +65,8 @@ bash poc/P8-lite/agent_lines.sh origin/main HEAD apps/api/tests  # แถว tes
 | review test ด้วยกัน | Jam (8 พ.ย. · Junior, May ดูย้อนหลัง) | 13:52 | 13:56 | 4 |
 | `/implement-feature` (รอ Claude + ตอบคำถาม) | Claude | 13:56 | 13:59 | 3 |
 | อ่านผล `/code-review` และตัดสินใจ | | | | |
+| Claude ทำตาราง AC → test ภาษาไทยให้ May (11 พ.ย.) · เวลาเริ่มประมาณจาก commit เริ่ม branch 11:31:53 | Claude | ~11:32 | 11:35 | ~3 |
+| review test ย้อนหลัง (11 พ.ย.) · อ่านตารางสรุปของ Claude ไม่ได้อ่านโค้ด test เอง · ตอบ 3 คำถาม = 4 เรื่อง: 2 ช่องโหว่ + 1 comment จดใน §3 · test ของ AC-9 ไม่เช็คดาวของ B ไม่เป็นปัญหา (AC-5 เช็คแล้ว) จึงไม่จด | May | 11:35 | 11:36 | 1 |
 | รวม | | | | |
 
 ## 5. สิ่งที่ spec ไม่ชัด
@@ -85,6 +89,6 @@ bash poc/P8-lite/agent_lines.sh origin/main HEAD apps/api/tests  # แถว tes
 | % โค้ดที่ agent เขียน (`apps/api/app` · `apps/api/tests`) | 100% · 100% (203 · 459 บรรทัด) |
 | จำนวนรอบ red → green | 3 (ไม่มีรอบที่ต้องแก้ซ้ำ) · + test 2 ตัวที่เพิ่มหลัง review ถูกเขียนหลังโค้ด (ไม่ใช่ TDD) |
 | บั๊กที่จับได้ก่อน merge (แยกตามวิธีที่จับได้) | 3: Claude อ่านทวนตอน refactor 1 · `/code-review` 2 · unit test และ CI 0 (ทุกข้อเป็นกรณีที่ AC ไม่ได้เขียนไว้) |
-| test ที่ผิด | 0 ผิด · 1 เปราะ (ดาวที่คาดไว้ผูกกับค่า config ปัจจุบัน) |
-| เวลาที่คนใช้รวม (นาที) | Jam: review test 4 + อ่านผล review (กรอก) · Junior, May: review ย้อนหลัง (กรอก) |
+| test ที่ผิด | 0 ผิด · 1 เปราะ (ดาวที่คาดไว้ผูกกับค่า config · `/code-review` 8 พ.ย.) · จาก May review ย้อนหลัง 11 พ.ย.: 2 ช่องโหว่ (§10 ข้อ 9, 10 ไม่มี test) + 1 comment ทำให้เข้าใจผิด (AC-13) |
+| เวลาที่คนใช้รวม (นาที) | Jam: review test 4 + อ่านผล review (กรอก) · May: review ย้อนหลัง 1 (อ่านสรุปของ Claude ไม่ใช่โค้ด test) · Junior: review ย้อนหลัง (กรอก) |
 | จุดที่ spec ไม่ชัด | 5 (§5) · ไม่มีข้อไหนเปลี่ยน behavior ใน §2 |
