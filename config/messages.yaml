@@ -1,0 +1,16 @@
+# Fixed user-facing texts that code fills in (no AI call). Edit the wording here, not in code:
+# the API loads and checks this file at start, so a missing key or an unknown placeholder fails
+# the deploy instead of a request. Placeholders are {name}; values are inserted as text.
+
+version: "1.0"                         # a string: unquoted, YAML reads 1.10 as the float 1.1
+
+# The tutor's greeting when a session opens (specs/features/tutor/room-sessions-db.md §2.8).
+# greeting = hello + " " + one of the exam lines + " " + invite. AI greeting (prompt
+# open_session v2) is Jam's follow-up. Wording: May.
+room_greeting:
+  hello_named: "สวัสดี {user_name}!"                      # the user has a nickname
+  hello_anonymous: "สวัสดี!"                               # no nickname yet
+  days_left_many: "เหลืออีก {days_left} วันก่อนสอบ{prep_name}"  # 1 day or more
+  exam_today: "วันนี้สอบ{prep_name}แล้ว ทบทวนจุดสำคัญกันอีกรอบนะ"  # exam day
+  exam_passed: "สอบ{prep_name}ผ่านไปแล้ว ทบทวนต่อได้เสมอ"        # after the exam
+  invite: "พิมพ์คำถามหรือโจทย์ที่อยากให้ช่วยมาได้เลยนะ"

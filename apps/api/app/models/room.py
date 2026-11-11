@@ -16,7 +16,13 @@ from datetime import datetime
 from typing import Annotated, Any, Literal, Self
 from uuid import UUID
 
-from pydantic import Field, StringConstraints, model_validator
+from pydantic import (
+    Field,
+    SerializerFunctionWrapHandler,
+    StringConstraints,
+    model_serializer,
+    model_validator,
+)
 
 from app.domain.checker import ErrorType, Verdict
 from app.models.base import ApiModel
@@ -191,7 +197,19 @@ class BuddyEvent(ApiModel):
 
 
 class DoneEvent(ApiModel):
-    pass
+    """Last event of every stream. In the room on the database, `message_ids` are the ids of
+    the tutor and buddy messages this stream saved, in stream order (api.md "SSE events" ·
+    room-sessions-db.md). Streams that save nothing (stub, demo) leave it out, so they still
+    send `{}`."""
+
+    message_ids: list[UUID] | None = None
+
+    @model_serializer(mode="wrap")
+    def _leave_out_unset_ids(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
+        data = handler(self)
+        if data.get("message_ids") is None:
+            data.pop("message_ids", None)
+        return data
 
 
 class ErrorEvent(ApiModel):
