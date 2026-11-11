@@ -9,8 +9,8 @@
 
 ## Plan
 
-- [ ] 1. 🙋 เช็คว่า `anyang-staging` เป็น `ACTIVE_HEALTHY` (`npx supabase projects list`) แล้วส่ง `SUPABASE_URL` + anon key (`sb_publishable_...`) ของ `anyang-staging` ให้ Claude · ค่านี้ไม่ใช่ secret (หน้าเว็บใช้อยู่แล้ว · `api-auth.md` §10 ข้อ 4)
-- [ ] 2. 🤖 `infra/env/api-staging.yaml`: `AUTH_REQUIRED: "true"`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `AI_PROVIDER: live`, `GOOGLE_CLOUD_PROJECT: anyang-513006`, `GOOGLE_CLOUD_LOCATION: global`
+- [x] 1. 🙋 (11 พ.ย. · Dashboard: Healthy, migration ล่าสุด topic_sources) เช็คว่า `anyang-staging` เป็น `ACTIVE_HEALTHY` (`npx supabase projects list`) แล้วส่ง `SUPABASE_URL` + anon key (`sb_publishable_...`) ของ `anyang-staging` ให้ Claude · ค่านี้ไม่ใช่ secret (หน้าเว็บใช้อยู่แล้ว · `api-auth.md` §10 ข้อ 4)
+- [x] 2. 🤖 `infra/env/api-staging.yaml`: `AUTH_REQUIRED: "true"`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `AI_PROVIDER: live`, `GOOGLE_CLOUD_PROJECT: anyang-513006`, `GOOGLE_CLOUD_LOCATION: global`
 - [ ] 3. 🤖 `infra/cloudbuild.yaml` + `infra/deploy-staging.ps1` (ตรงกัน): `--service-account=api-runtime@anyang-513006.iam.gserviceaccount.com` + `--set-secrets=SUPABASE_SERVICE_ROLE_KEY=supabase-service-role:latest`
 - [ ] 4. 🙋 สร้าง secret `supabase-service-role` ใน Secret Manager (พิมพ์ค่าเองผ่าน stdin · Claude ไม่เห็นค่า)
 - [ ] 5. 🤖 (หลัง Junior ok คำสั่ง) สร้าง SA `api-runtime` · `roles/aiplatform.user` ระดับ project · `roles/secretmanager.secretAccessor` เฉพาะ secret `supabase-service-role` · `cloudbuild-deployer` ได้ `roles/iam.serviceAccountUser` บน `api-runtime` (ถอดจาก default compute SA)
@@ -29,10 +29,12 @@
 
 - 2026-11-11 · เป้าหมายคือ advisor update วันจันทร์ (ไม่ใช่ demo ศุกร์ 13 พ.ย.) · user journey เดียวบน staging: login → สร้าง exam prep → upload sheet → topics → ห้องติว AI จริง → บันทึกและกลับมาต่อได้ · ให้ใช้ได้ภายในเย็นวันอาทิตย์ · ส่วนไหนยังไม่พร้อมต้องล้มอย่างนุ่มนวล (stub มีป้ายชัด) ไม่ใช่พัง
 - 2026-11-11 · runtime SA แยก `api-runtime` · env ที่ไม่ใช่ secret อยู่ใน `infra/env/api-staging.yaml` · secret อยู่ใน Secret Manager
+- 2026-11-11 · merge PR นี้พร้อม PR login ของ May (ทางเลือก 1) · Claude ไม่ merge เอง ต้องถาม Junior ทุกครั้ง
+- 2026-11-11 · ลำดับงานของ Junior สำหรับวันจันทร์ (Junior ส่งกลุ่มแล้ว): 1) login + #120 2) exam prep API 3) บันทึก messages + resume 4) upload + Storage 5) ingestion (Jam เป็นเจ้าของ · Junior ช่วยเขียน DB) · ไม่ทันให้ตัดจากล่างขึ้นบน
 
 ## Next step
 
-ข้อ 1: Junior ส่ง URL + anon key ของ `anyang-staging`
+ข้อ 3: เพิ่ม `--service-account` + `--set-secrets` ใน `cloudbuild.yaml` และ `deploy-staging.ps1`
 
 ## Waiting on
 
