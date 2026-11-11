@@ -15,7 +15,7 @@
 - [ ] 4. 🙋 Junior review spec
 - [x] 5. 🤖 `/spec-to-tests`: unit (validation, grapheme, `days_left`, `stage`) + integration กับ Supabase ในเครื่อง (บันทึกผ่าน JWT ของ user, RLS, isolation SA-06)
 - [ ] 6. 🙋 Junior review test
-- [ ] 7. 🤖 `/implement-feature`: repository ใน `app/db/` ที่ใช้ `get_user_db` · router เลิกใช้ stub ของ 2 endpoint นี้ · `pnpm gen:api`
+- [x] 7. 🤖 `/implement-feature`: repository ใน `app/db/` ที่ใช้ `get_user_db` · router เลิกใช้ stub ของ 2 endpoint นี้ · `pnpm gen:api`
 - [ ] 8. 🤖 `/work-done` → ถาม Junior ก่อน merge
 
 ## Definition of done
@@ -33,7 +33,7 @@
 
 ## Next step
 
-ข้อ 7: `/implement-feature` ให้ test ใหม่ผ่าน · ค้าง: comment ใน issue #40 เพิ่ม `db_unavailable` (503) ในรายการ `error.code` (gh ติด rate limit 11 พ.ย.)
+ข้อ 8: `/work-done` (code-review) แล้วถาม Junior ก่อน merge #121 · ร่าง PR อยู่ใน scratchpad pr-121.md จะใส่ตอน work-done · ค้าง: comment ใน issue #40 เพิ่ม `db_unavailable` (503) ในรายการ `error.code` (gh ติด rate limit 11 พ.ย.)
 
 ## Waiting on
 
