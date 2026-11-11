@@ -5,7 +5,7 @@
 | Owner | Junior |
 | Branch | `chore/staging-live-auth` |
 | Checklist item | เตรียม staging สำหรับ demo รวม |
-| Status | in progress · 2026-11-11 |
+| Status | paused · 2026-11-11 · รอ PR login ของ May |
 
 ## Plan
 
@@ -33,15 +33,23 @@
 - 2026-11-11 · ลำดับงานของ Junior สำหรับวันจันทร์ (Junior ส่งกลุ่มแล้ว): 1) login + #120 2) exam prep API 3) บันทึก messages + resume 4) upload + Storage 5) ingestion (Jam เป็นเจ้าของ · Junior ช่วยเขียน DB) · ไม่ทันให้ตัดจากล่างขึ้นบน
 - 2026-11-11 · Monday demo checklist มี 3 ข้อไปก่อน · เพิ่มการซ้อม journey เต็มวันเสาร์ 15 พ.ย. เมื่อชิ้นอื่นพร้อม
 
+## Done today (2026-11-11)
+
+- ข้อ 1–6 เสร็จ: `infra/env/api-staging.yaml` (auth true, Supabase, live Vertex) · `cloudbuild.yaml` + `deploy-staging.ps1` (`--service-account=api-runtime@…`, `--set-secrets=SUPABASE_SERVICE_ROLE_KEY=supabase-service-role:latest`) · secret `supabase-service-role` (Junior · Console) · SA `api-runtime` + 3 binding (Junior รันใน PowerShell · Claude เช็คแล้วว่า project role มีแค่ `aiplatform.user`) · `infra/README.md` + Monday demo checklist
+
 ## Next step
 
-ข้อ 7: รอ PR login ของ May → Junior บอกกลุ่ม (แก้ `infra/`) → ถาม Junior ก่อน merge #120 · หลัง deploy ทำข้อ 8 แล้วถอด `serviceAccountUser` ของ deployer ออกจาก default compute SA
+ข้อ 7: เมื่อ PR login ของ May พร้อม → Junior บอกกลุ่ม (แก้ `infra/`) → `git merge origin/main` ใน branch นี้ → `/work-done` → **ถาม Junior ก่อน merge #120** (merge พร้อม PR ของ May) · ข้อ 8 หลัง deploy: `/health` 200 · `curl -s -o /dev/null -w "%{http_code}" -X POST <api>/exam-preps` ได้ 401 · login demo account บน https://anyang-amber.vercel.app แล้วส่งข้อความ ต้องได้ Gemini stream · `gcloud run services describe api-staging --region=asia-southeast1 --format="value(spec.template.spec.serviceAccountName)"` = `api-runtime@…` · มีแถวใหม่ใน `ai_calls` · แล้วถอด binding เดิม: `gcloud iam service-accounts remove-iam-policy-binding 659706857266-compute@developer.gserviceaccount.com --project=anyang-513006 --member="serviceAccount:cloudbuild-deployer@anyang-513006.iam.gserviceaccount.com" --role="roles/iam.serviceAccountUser"` (Junior ok แล้ว) · อัปเดตแถว Service account ใน `infra/README.md`
 
 ## Waiting on
 
-- May: หน้า login ที่ส่ง `Authorization: Bearer` (`api-auth.md` §10 ข้อ 1) · ถ้า merge ก่อนหน้านี้ ห้องติวบน Vercel จะได้ 401
+- May: หน้า login ที่ส่ง `Authorization: Bearer` ทุก fetch/SSE (`api-auth.md` §10 ข้อ 1) · ถ้า merge #120 ก่อน ห้องติวบน Vercel จะได้ 401
+- Junior: สร้าง demo account ใน `anyang-staging` (ใช้ในข้อ 8 และ Monday checklist)
 
 ## Notes for next time
+
+- ⚠️ ถ้ามี PR อื่นแก้ `infra/**` แล้ว merge เข้า `main` ก่อน #120 ไม่กระทบ (flag ใหม่อยู่ใน branch นี้เท่านั้น)
+- Junior ให้ Claude โชว์คำสั่ง gcloud ทีละข้อ แล้วรันเองใน PowerShell พร้อม paste ผล · บอก role + resource ก่อนทุกคำสั่ง
 - secret `supabase-service-role` เป็น key แบบใหม่ `sb_secret_` (ไม่ใช่ JWT `service_role` แบบเดิม) · supabase-py 2.32 สร้าง client ได้ · หลักฐานว่าเขียนได้: test RLS isolation บน staging ผ่านด้วย `SUPABASE_SERVICE_ROLE_KEY=sb_secret_…` ซึ่งใช้ client service role สร้าง user, tenant และแถว (Junior 11 พ.ย.) · ยังต้องยืนยันในข้อ 8 ว่ามีแถวใน `ai_calls` ถ้าไม่มี ให้ดู log `ai_calls insert failed`
 
 - `anyang-staging` บน free tier ถูก pause ได้ · ถ้า JWKS ไม่ตอบ token จะตรวจไม่ได้ (ได้ `503 auth_unavailable`)
