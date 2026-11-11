@@ -152,7 +152,7 @@
 
 - [x] P8-lite ร่วมกับทีม (review test)
   - 8 พ.ย. test พร้อมให้ review ย้อนหลัง (PR #113 · `apps/api/tests/unit/test_stars.py`) · จดเวลาที่ใช้ใน `poc/P8-lite/metrics.md` §4 · test ที่ผิดจดใน §3
-  - 11 พ.ย. (PR #118) May review ย้อนหลังแล้ว: 27 AC มี test ครบ · ช่องโหว่ 1 (§10 ข้อ 9, 10 ไม่มี test) · เปราะ 1 (comment AC-13) · เสนอ Jam แก้ใน PR ใหม่ · จดใน `metrics.md` §3, §4
+  - 11 พ.ย. (PR #118) May review ย้อนหลังแล้ว (1 นาที · อ่านตาราง AC → test ที่ Claude สรุป ไม่ได้อ่านโค้ด test เอง): 27 AC มี test ครบ · ช่องโหว่ 2 (§10 ข้อ 9, 10 ไม่มี test) · comment ทำให้เข้าใจผิด 1 (AC-13) · เสนอ Jam แก้ใน PR ใหม่ · จดใน `metrics.md` §3, §4
 - [x] Use case UC ติว และ UC ส่งคำตอบ ให้ครบ 4 UC (D7)
   - ทำก่อนกำหนด 21 ต.ค. (PR #36) · มีข้อเสนอแก้ AM-02, ai-orchestration และ api.md v1.3 รอ Junior + Jam review
 - [ ] เตรียมลำดับหน้าจอสำหรับ demo รวม
@@ -225,7 +225,7 @@
   - เหลือ: hint ladder ทำทีละขั้นก่อนเฉลย (`feat/hint-ladder` · ขัด AM-07 ต้องเสนอทีม) · อัดวิดีโอสำรองหลังงานนั้น · ลองบน iPad
 - [ ] P8-lite ร่วมกับทีม (เป็นเจ้าของ spec `compute_importance`)
   - 31 ต.ค. ส่วน spec เสร็จก่อนกำหนด (PR #89): `specs/features/scope/compute-importance.md` approved หลังเทียบกับผล P3 · AC 13 → 27 · test plan 19 ชื่อ · ใบเก็บ metrics `poc/P8-lite/metrics.md` · เหลือทำด้วยกันใน S4: `/spec-to-tests` → review test → `/implement-feature` → merge
-  - 8 พ.ย. (PR #113 · Jam ช่วง solo): `/spec-to-tests` → Jam review test → `/implement-feature` → merge · `app/domain/stars.py` + 32 test (`test_stars.py`, AC-19 ใน `test_settings.py`) · agent เขียน 100% · red → green 3 รอบ · บั๊กก่อน merge จดใน `poc/P8-lite/metrics.md` §3 · เหลือ: Junior + May review test ย้อนหลังแล้วจดเวลาใน metrics §4, กรอก §6, `/poc-report P8-lite`
+  - 8 พ.ย. (PR #113 · Jam ช่วง solo): `/spec-to-tests` → Jam review test → `/implement-feature` → merge · `app/domain/stars.py` + 32 test (`test_stars.py`, AC-19 ใน `test_settings.py`) · agent เขียน 100% · red → green 3 รอบ · บั๊กก่อน merge จดใน `poc/P8-lite/metrics.md` §3 · เหลือ: Junior review test ย้อนหลังแล้วจดเวลาใน metrics §4 (May เสร็จ 11 พ.ย. · PR #118), กรอก §6, `/poc-report P8-lite`
 - [x] อัปเดต threshold ใน AI flow specs และ `learning-model.md` ตามผล P1 P2 P3 (D2)
   - 28 ต.ค. (PR #73 · ไม่ได้มาจากผล PoC แต่มาจากการทบทวน design): `learning-model.md` v1.2 เพิ่มระดับเป้าตามดาวและเพดาน mastery (`mastery_eff`) · `learning.yaml` 1.2 · `ai-orchestration.md` v1.2 · TM-16, PM-03 ใน `requirements.md` v1.3 · เหลือปรับค่าตามผล P1 P2 P3
   - 31 ต.ค. เสร็จ (PR #91): งานนี้ไม่เปลี่ยนค่าไหน (ค่าเดียวที่ PoC เปลี่ยนคือ `ocr.always_confirm` จาก P1 ทำไปแล้วใน PR #45) · แก้ป้ายที่มาใน `learning.yaml` 1.4, `ai.yaml` 1.4, `learning-model.md` v1.3 §8–9 · `ai-orchestration.md` v1.4 ใส่ model ที่วัดแล้วของ tier mid, main (ชั่วคราว), vision, embed ใน §2.10 (small ยัง TODO เพราะยังไม่ได้วัด) และผล PoC (§3.6) · PDF สแกนใช้ A2b ทั้งไฟล์ (§2.3.7) · ที่วัดไม่ได้ระบุว่าจะวัดเมื่อไหร่: P3a บน Vertex ใน S4 (ข้อถัดไป) · สัญญาณแยกบรรทัดที่ OCR อ่านผิด เทอม 2 · `numeric_rel_tolerance` และ `max_generate_retries` วัดตอนมี feature
