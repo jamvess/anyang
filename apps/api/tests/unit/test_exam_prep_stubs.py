@@ -1,5 +1,8 @@
-"""Stub-only checks for exam preps and materials. Delete with the stub fixtures when the real
-endpoints exist.
+"""Stub-only checks for exam preps and materials.
+
+POST and GET /exam-preps keep their stub for requests with no token while AUTH_REQUIRED=false
+(local dev without login · specs/features/exam-prep/create-exam-prep.md §2.1), so these checks
+stay after the real endpoints exist. Material checks go with the material stubs.
 
 Contract checks that the real endpoints must also pass are in test_exam_prep_api_contract.py.
 """

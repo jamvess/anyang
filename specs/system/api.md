@@ -112,7 +112,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
   - field เกิน, ผิดชนิด หรือผิดกฎข้างบน → `422 validation_error`
   - DB ติดต่อไม่ได้ (error, timeout, network) → `503 db_unavailable` · message คงที่ ไม่มีรายละเอียดจาก exception (ใช้กับ `GET` ด้วย · v1.14)
 - **`GET /exam-preps`** · `ExamPrep[]` ของผู้ใช้ (RLS) เรียงตาม `exam_date` ใกล้ก่อน แล้วตาม `created_at` · ไม่รวม `status = 'archived'` · ยังไม่มี → `[]` (v1.14)
-- ทั้งสอง endpoint อ่านและเขียน DB จริง ไม่มี header `X-Stub` (v1.14 · เดิมเป็น stub ที่คืน fixture)
+- ทั้งสอง endpoint อ่านและเขียน DB จริง **ไม่มี `X-Stub` เมื่อมี token** (v1.14 · เดิมเป็น stub ที่คืน fixture) · ไม่มี token: `AUTH_REQUIRED=true` → `401 missing_token` (ไม่มี stub) · `AUTH_REQUIRED=false` (เครื่อง dev) → stub เดิมพร้อม `X-Stub: true` ไม่แตะ DB (`specs/features/exam-prep/create-exam-prep.md` §2.1)
 
 **`Material`** (แต่ละแถวของ `GET /exam-preps/{id}/materials` และ response ของ `/uploaded`)
 

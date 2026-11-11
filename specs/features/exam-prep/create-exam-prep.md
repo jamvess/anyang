@@ -17,7 +17,14 @@
 
 **1. `POST /exam-preps`** (CM-01)
 
-1. ต้องมีผู้ใช้: ใช้ dependency `get_user_db` (`api-auth.md` §2.5) · ไม่มี token → `401 missing_token` แม้ `AUTH_REQUIRED=false` เพราะ request ที่ไม่มีผู้ใช้เขียน DB ไม่ได้ · token ผิด → `401 invalid_token`
+1. เลือกทางตาม token (Junior ตัดสิน 2026-11-11 · ใช้กับ `GET` ด้วย):
+
+   | | มี token ที่ถูก | token ผิด | ไม่มี token |
+   |---|---|---|---|
+   | `AUTH_REQUIRED=true` (staging, production) | **DB จริง** · ไม่มี `X-Stub` | `401 invalid_token` | `401 missing_token` · **ไม่มี stub เด็ดขาด** |
+   | `AUTH_REQUIRED=false` (เครื่อง dev, test เดิม) | **DB จริง** · ไม่มี `X-Stub` | `401 invalid_token` | **stub เดิม** ที่คืน fixture พร้อม `X-Stub: true` · ไม่แตะ DB |
+
+   ทางของ stub คงไว้ให้ May รันเว็บในเครื่องได้โดยไม่ login และให้ test ที่ review แล้ว (`test_exam_prep_api_contract.py`, `test_exam_prep_stubs.py`, `test_persona_stubs.py` ของ PR #105, #107) ผ่านโดยไม่ต้องแก้ · ทาง DB ใช้ `get_user_db` (`api-auth.md` §2.5) · การตรวจ body ข้อ 2–3 ใช้กับทั้งสองทาง
 2. ตรวจ body (field เกิน, ขาด หรือผิดชนิด → `422 validation_error`):
    - `title`: string · มีอักขระควบคุม (Unicode category `Cc`: `\n`, `\r`, `\t`, `\x00`, `\x7f` ฯลฯ) ตรงไหนก็ตาม รวมหัวท้าย → `422 validation_error` · ตรวจข้อนี้**ก่อน**ตัดช่องว่าง (`"แคลคูลัส\n"` ถูกปฏิเสธ ไม่ถูกตัดทิ้ง) · อักขระจัดรูปแบบ (category `Cf` เช่น zero-width joiner U+200D) ได้ · แล้วตัดช่องว่างหัวท้าย · หลังตัดต้องไม่ว่าง · จำนวน **grapheme cluster** ต้อง ≤ `config/ai.yaml` → `guards.max_exam_prep_title_chars` (สระบน-ล่างและวรรณยุกต์ไทยรวมกับพยัญชนะเป็น 1 · ไม่นับตาม code point) · เกิน → `422 validation_error` (ไม่ตัดให้สั้น ต่างจาก `attachment_name`) · ชื่อซ้ำกับ prep เดิมได้ (api.md ไม่ห้าม · DB ไม่มี unique)
    - `exam_date`: string รูปแบบ `YYYY-MM-DD` เท่านั้น
@@ -96,7 +103,10 @@
 
 **Auth และ tenant**
 
-- **AC-auth (SA-06)** `POST` และ `GET` ไม่มี token → `401 missing_token` ทั้งเมื่อ `AUTH_REQUIRED=true` และ `false` · token ผิด → `401 invalid_token` · ไม่มีแถวใหม่
+- **AC-auth-required (SA-06)** Given `AUTH_REQUIRED=true` When `POST` หรือ `GET` ไม่มี token Then `401 missing_token` · ไม่มี `X-Stub` · ไม่เรียก repository (ไม่มีแถวใหม่ · ไม่ได้ fixture)
+- **AC-auth-stub (SA-06)** Given `AUTH_REQUIRED=false` When `POST` (body ถูก) หรือ `GET` ไม่มี token Then ได้ stub: `201` / `200` พร้อม `X-Stub: true` · `GET` ได้ fixture (มี prep ครบทั้ง 4 stage) · ไม่เรียก repository · `POST` ที่ body ผิดยังได้ `422` ตามกฎเดียวกัน
+- **AC-auth-real (CM-01)** Given มี token ที่ถูก When `POST` หรือ `GET` ทั้งเมื่อ `AUTH_REQUIRED=true` และ `false` Then ใช้ repository (DB จริง) · ไม่มี header `X-Stub`
+- **AC-auth-bad (SA-06)** token ผิด → `401 invalid_token` ทั้งเมื่อ `AUTH_REQUIRED=true` และ `false` · ไม่มีแถวใหม่
 - **AC-tenant (SA-06)** Given ผู้ใช้ A และ B อยู่คนละ tenant และ A มี prep 2 รายการ When B `GET /exam-preps` Then `[]` · และเมื่อ B `POST` แล้ว A `GET` ก็ไม่เห็นของ B
 - **AC-tenant-body (SA-06)** Given B ส่ง `tenant_id` หรือ `user_id` ของ A ใน body When `POST` Then `422 validation_error` (field เกิน) · ไม่มีแถวใหม่ใน tenant ของ A
 
@@ -125,10 +135,10 @@ OpenAPI: `daily_minutes` มี `minimum: 1`, `maximum: 1440` · `title` ไม�
 
 | Test | ระดับ | ครอบคลุม AC |
 |---|---|---|
-| `tests/unit/test_exam_prep_api.py` · router + validation กับ fake repository (ไม่ต่อ DB) · นาฬิกาตรึง · config จริงที่โหลด | unit | AC-4 ถึง AC-8, AC-boundary-*, AC-title-control, AC-title-format-ok, AC-db, AC-auth (ส่วน `AUTH_REQUIRED`) |
+| `tests/unit/test_exam_prep_api.py` · router + validation กับ fake repository (ไม่ต่อ DB) · นาฬิกาตรึง · config จริงที่โหลด | unit | AC-4 ถึง AC-8, AC-boundary-*, AC-title-control, AC-title-format-ok, AC-db, AC-auth-required, AC-auth-stub, AC-auth-real (fake auth + fake repository) |
 | `tests/unit/test_graphemes.py` · helper นับ grapheme (ไทยมีสระบนและวรรณยุกต์, emoji ที่มี ZWJ, ASCII) | unit | AC-boundary-title, AC-boundary-title-thai |
 | `tests/unit/test_exam_prep_stage.py` · ฟังก์ชันคำนวณ `stage` และ `days_left` (pure) แบบ table-driven | unit | AC-15, AC-boundary-date-tz, AC-14 (ค่าติดลบ) |
-| `tests/integration/test_exam_prep_db.py` · Supabase ในเครื่องหรือ CI · user จริง 2 คนคนละ tenant (สร้างด้วย admin API แล้วลบ เหมือน `test_api_auth_db.py`) | integration | AC-1 ถึง AC-3, AC-9 ถึง AC-13, AC-16, AC-tenant, AC-tenant-body, AC-auth (token จริง) |
+| `tests/integration/test_exam_prep_db.py` · Supabase ในเครื่องหรือ CI · user จริง 2 คนคนละ tenant (สร้างด้วย admin API แล้วลบ เหมือน `test_api_auth_db.py`) | integration | AC-1 ถึง AC-3, AC-9 ถึง AC-13, AC-16, AC-tenant, AC-tenant-body, AC-auth-real, AC-auth-bad (token จริง) |
 
 ชื่อ test ขึ้นต้นด้วย requirement ID เช่น `test_CM01_title_over_max_graphemes_rejected`, `test_SA06_other_tenant_sees_no_exam_preps`
 
