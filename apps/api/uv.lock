@@ -96,7 +96,7 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.15.0" },
     { name = "pymupdf", specifier = ">=1.28.2" },
     { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "regex", specifier = ">=2025.9.1,<2026.11" },
+    { name = "regex", specifier = ">=2025.9.1" },
     { name = "sse-starlette", specifier = ">=3.5.0" },
     { name = "supabase", specifier = ">=2.32.0" },
     { name = "sympy", specifier = ">=1.14.0" },

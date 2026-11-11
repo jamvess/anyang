@@ -179,6 +179,11 @@ async def get_auth(
         raise AuthError("auth_unavailable") from None
 
 
+# Seconds a user query may take. Not a learning threshold: an operational cap, well under the
+# Cloud Run request timeout and long enough for a cold Supabase Free project.
+USER_DB_TIMEOUT_S = 10
+
+
 def get_user_db(auth: Annotated[AuthContext | None, Depends(get_auth)]) -> Client:
     """Supabase client for this user: anon key + the user's JWT, so RLS sees their tenant.
 
@@ -192,5 +197,8 @@ def get_user_db(auth: Annotated[AuthContext | None, Depends(get_auth)]) -> Clien
         headers={"Authorization": f"Bearer {auth.token}"},
         auto_refresh_token=False,
         persist_session=False,
+        # postgrest's default is 120 s: a hung Supabase would hold a pool thread that long before
+        # the endpoint can answer 503 db_unavailable (create-exam-prep.md §2.5 · self-review #121).
+        postgrest_client_timeout=USER_DB_TIMEOUT_S,
     )
     return create_client(env.supabase_url, env.supabase_anon_key.get_secret_value(), options)

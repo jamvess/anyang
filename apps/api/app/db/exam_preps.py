@@ -12,20 +12,19 @@ from datetime import date, datetime
 from typing import Annotated, Any, Protocol
 from uuid import UUID
 
-import httpx
 from fastapi import Depends
-from postgrest.exceptions import APIError
 from supabase import Client
 
 from app.auth import AuthContext, get_auth, get_user_db
 from app.domain.exam_prep import MaterialFacts
+from app.request_context import get_request_id
 
 log = logging.getLogger(__name__)
 
 # One query: the prep, plus the facts its stage needs (topics and files, also behind RLS).
 _COLUMNS = (
     "id,title,exam_date,daily_minutes,created_at,active_scope_version_id,"
-    "topics(importance),materials(kind_confirmed,status)"
+    "topics(importance,status),materials(kind_confirmed,status)"
 )
 
 
@@ -71,12 +70,28 @@ def _record(row: dict[str, Any]) -> ExamPrepRecord:
         active_scope_version_id=(
             UUID(row["active_scope_version_id"]) if row["active_scope_version_id"] else None
         ),
-        topic_importances=[t["importance"] for t in row.get("topics") or []],
+        # api.md: an excluded topic always shows 0 stars, so its importance never blocks the scope.
+        topic_importances=[
+            0 if t["status"] == "excluded" else t["importance"] for t in row.get("topics") or []
+        ],
         materials=[
             MaterialFacts(kind_confirmed=m["kind_confirmed"], status=m["status"])
             for m in row.get("materials") or []
         ],
     )
+
+
+def _unavailable(action: str, error: Exception) -> DbUnavailableError:
+    """Any failure, from the network to an unexpected row shape, is a 503 for the user and a
+    log line with the request id for us (create-exam-prep.md §2.5: never a bare 500)."""
+    log.warning(
+        "exam_preps %s failed (request_id=%s): %s: %s",
+        action,
+        get_request_id(),
+        type(error).__name__,
+        error,
+    )
+    return DbUnavailableError(action)
 
 
 class SupabaseExamPrepRepository:
@@ -101,21 +116,19 @@ class SupabaseExamPrepRepository:
         }
         try:
             data = self._db.table("exam_preps").insert(row).execute().data
-        except (httpx.HTTPError, APIError) as error:
-            log.warning("exam_preps insert failed: %s: %s", type(error).__name__, error)
-            raise DbUnavailableError from error
-        # A new prep has no topics, files or scope yet.
-        return _record(data[0])
+            # A new prep has no topics, files or scope yet.
+            return _record(data[0])
+        except Exception as error:
+            raise _unavailable("insert", error) from error
 
     def list_active(self) -> list[ExamPrepRecord]:
         try:
             data = (
                 self._db.table("exam_preps").select(_COLUMNS).eq("status", "active").execute().data
             )
-        except (httpx.HTTPError, APIError) as error:
-            log.warning("exam_preps select failed: %s: %s", type(error).__name__, error)
-            raise DbUnavailableError from error
-        return [_record(row) for row in data]
+            return [_record(row) for row in data]
+        except Exception as error:
+            raise _unavailable("select", error) from error
 
 
 def get_exam_prep_repository(

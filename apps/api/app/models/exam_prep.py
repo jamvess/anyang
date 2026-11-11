@@ -46,7 +46,7 @@ MATERIAL_CONTENT_TYPES = frozenset(
 # --- exam preps ------------------------------------------------------------------
 
 
-_ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
+_ISO_DATE = re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}")
 MINUTES_PER_DAY = 1440  # daily_minutes can't exceed a day (api.md v1.14)
 
 
@@ -71,6 +71,8 @@ def _trimmed_title_within_cap(value: str) -> str:
 
 def _iso_date_only(value: object) -> object:
     # pydantic would also take "2026-11-11T00:00:00" or a Unix time; api.md says YYYY-MM-DD.
+    # Not Strict(): FastAPI validates the body in python mode, where a strict date refuses every
+    # string. [0-9], not \d, which also matches Thai and other non-ASCII digits.
     if not (isinstance(value, str) and _ISO_DATE.fullmatch(value)):
         raise ValueError("exam_date must be YYYY-MM-DD")
     return value
