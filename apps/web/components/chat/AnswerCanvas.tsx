@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useImperativeHandle, useRef, useState, type PointerEvent as ReactPointerEvent, type Ref } from "react";
 import {
   CANVAS_HEIGHT_PX,
   canUndo,
@@ -22,7 +22,7 @@ import { Tex } from "@/components/math/Tex";
 import { roomStrings as t } from "./strings";
 import type { SendPayload } from "./types";
 
-// Spec: specs/features/tutor/answer-canvas.md · provisional design until May decides (§10).
+// Spec: specs/features/tutor/answer-canvas.md · design decided by May 2026-11-12 (§10).
 
 const MB = 1024 * 1024;
 
@@ -32,13 +32,20 @@ async function decodeImage(file: File): Promise<Background> {
   return { image: bitmap, width: bitmap.width, height: bitmap.height };
 }
 
-/** A drawing area under the latest problem card; what is drawn is sent like a photo. */
+/** Lets the room bring the user back to the canvas, e.g. for "ถ่ายใหม่" (§2 E item 27). */
+export type AnswerCanvasHandle = {
+  /** Scrolls to the canvas and focuses it. False when the canvas is no longer on the page. */
+  goTo: () => boolean;
+};
+
+/** A drawing area at the end of the chat while a problem is open; what is drawn is sent like a photo. */
 export function AnswerCanvas({
   onSend,
   disabled,
   maxImageMb,
   loadImage = decodeImage,
   problemLatex,
+  handle,
 }: {
   onSend: (payload: SendPayload) => void | Promise<void>;
   /** The room is waiting for a reply: nothing can be sent. */
@@ -47,8 +54,24 @@ export function AnswerCanvas({
   loadImage?: (file: File) => Promise<Background>;
   /** The problem this canvas answers, shown small on top (§2 item 17). */
   problemLatex?: string;
+  handle?: Ref<AnswerCanvasHandle>;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const formRef = useRef<HTMLElement>(null);
+  useImperativeHandle(
+    handle,
+    () => ({
+      goTo: () => {
+        const form = formRef.current;
+        if (!form?.isConnected) return false;
+        form.scrollIntoView({ behavior: "smooth", block: "center" });
+        // preventScroll: a plain focus() would jump and cut the smooth scroll short (self-review PR #124).
+        canvasRef.current?.focus({ preventScroll: true });
+        return true;
+      },
+    }),
+    [],
+  );
   const layerRef = useRef<HTMLCanvasElement | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   // The pointer drawing the current stroke: other pointers (a palm lifting) never end or extend
@@ -182,7 +205,7 @@ export function AnswerCanvas({
       }
       setError(null);
       setSent(true);
-      await onSend({ text: null, image: new File([blob], t.canvasFileName, { type: "image/png" }) });
+      await onSend({ text: null, image: new File([blob], t.canvasFileName, { type: "image/png" }), source: "canvas" });
     } finally {
       sending.current = false;
     }
@@ -193,7 +216,7 @@ export function AnswerCanvas({
     "rounded-lg border border-zinc-200 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40";
 
   return (
-    <section role="form" aria-label={t.canvas} className="mt-4 rounded-xl border border-zinc-200 bg-white p-3">
+    <section ref={formRef} role="form" aria-label={t.canvas} className="mt-4 rounded-xl border border-zinc-200 bg-white p-3">
       {problemLatex && (
         <div className="mb-2 flex items-center gap-2 text-sm text-zinc-700">
           <span className="font-mono text-xs uppercase tracking-wide text-zinc-400">{t.problem}</span>
@@ -203,6 +226,7 @@ export function AnswerCanvas({
       <canvas
         ref={canvasRef}
         aria-label={t.canvasLabel}
+        tabIndex={-1}
         className="block w-full cursor-crosshair rounded-lg border border-dashed border-zinc-200"
         style={{ height: CANVAS_HEIGHT_PX, touchAction: "none" }}
         onPointerDown={onPointerDown}
