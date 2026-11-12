@@ -13,8 +13,8 @@
 - [ ] 2. 🙋 Junior บอกกลุ่ม: migration `0004` + ไฟล์กลาง `api.md`
 - [x] 3. 🤖 `/spec-feature` → `specs/features/tutor/room-sessions-db.md` (TM-13, PM-05 บางส่วน, SA-06) · 🙋 Junior review
 - [x] 4. 🤖 `/spec-to-tests` (unit กับ fake repository + integration กับ anyang-dev) · 🙋 Junior review
-- [ ] 5. 🤖 migration `supabase/migrations/0004_tutor_sessions_scope_nullable.sql` (✅ `43a66e9`) + `/implement-feature` (เกือบเสร็จ · commit เป็น wip · ดู Next step)
-- [ ] 6. 🙋 Junior `npx supabase db push --remote` ขึ้น anyang-dev แล้ว anyang-staging (dry-run ก่อน)
+- [x] 5. 🤖 migration `supabase/migrations/0004_tutor_sessions_scope_nullable.sql` (✅ `43a66e9`) + `/implement-feature` (green 12 พ.ย.)
+- [x] 6. 🙋 (12 พ.ย. · Junior link · Claude push `--remote --yes`) Junior `npx supabase db push --remote` ขึ้น anyang-dev แล้ว anyang-staging (dry-run ก่อน)
 - [ ] 7. 🤖 `/work-done` → ถาม Junior ก่อน merge
 
 ## Definition of done
@@ -38,6 +38,9 @@
 ## Done today (2026-11-12)
 
 - แก้ 3 test ของ Jam + ตัวกัน network + guard test 5 ข้อ · unit 1425 ผ่าน · ruff สะอาด · spec §10 ข้อ 4
+- `0004` ขึ้น anyang-dev และ anyang-staging (migration list 0001–0004 ครบทั้งสองฝั่ง · unlink แล้ว) · CLI ต้องมี `--yes` เมื่อรันจาก agent
+- integration `test_room_sessions_db.py` 6/6 · integration ทั้งหมด 39 · suite เต็ม 1464 ผ่าน
+- `DoneEvent.message_ids` ใช้ `Field(exclude_if=...)` แทน wrap `model_serializer` (wrap ซ่อน field จาก OpenAPI ทำให้ type `DoneEvent` ในเว็บเป็น `{[key]: unknown}`) · `pnpm gen:api` (dump OpenAPI แล้ว openapi-typescript) · web typecheck + 298 test ผ่าน
 
 ## Done today (2026-11-11)
 
@@ -47,8 +50,8 @@
 
 ## Next step
 
-1. Junior `link` anyang-dev (`mnwwhkbizjioibjvpnxl`) → Claude dry-run (ต้องเห็นแค่ `0004`) → push → migration list → unlink · แล้วทำแบบเดียวกันกับ anyang-staging (`sfapuygntxuelsxsgkay`)
-2. Claude: รัน integration `tests/integration/test_room_sessions_db.py` กับ anyang-dev → refactor → ruff + suite เต็ม → `pnpm gen:api` → commit `feat: … green` → `/work-done` (ถาม Junior ก่อน merge)
+1. Junior บอกกลุ่ม (ข้อ 2 ของแผน): `0004` ขึ้น dev + staging แล้ว · `api.md` v1.15 · แก้ 3 test ของ Jam (ส่งข้อความหา Jam แล้ว) · type `DoneEvent.message_ids` ใหม่ในเว็บ (อาจไม่มี key เมื่อเป็น stub แม้ type จะไม่ใส่ `?` เพราะ openapi-typescript ถือว่า field ที่มี default ต้องมีเสมอ)
+2. `/work-done` → ถาม Junior ก่อน merge #123 (ต้อง merge ก่อน #120 เปิด auth)
 
 ## Waiting on
 

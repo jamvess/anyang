@@ -18,9 +18,7 @@ from uuid import UUID
 
 from pydantic import (
     Field,
-    SerializerFunctionWrapHandler,
     StringConstraints,
-    model_serializer,
     model_validator,
 )
 
@@ -202,14 +200,9 @@ class DoneEvent(ApiModel):
     room-sessions-db.md). Streams that save nothing (stub, demo) leave it out, so they still
     send `{}`."""
 
-    message_ids: list[UUID] | None = None
-
-    @model_serializer(mode="wrap")
-    def _leave_out_unset_ids(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
-        data = handler(self)
-        if data.get("message_ids") is None:
-            data.pop("message_ids", None)
-        return data
+    # exclude_if, not a wrap model_serializer: a wrap serializer hides the field from the
+    # OpenAPI schema, so the web's generated DoneEvent type lost message_ids.
+    message_ids: list[UUID] | None = Field(default=None, exclude_if=lambda ids: ids is None)
 
 
 class ErrorEvent(ApiModel):
