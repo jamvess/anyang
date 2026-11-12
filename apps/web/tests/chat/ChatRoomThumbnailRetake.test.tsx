@@ -258,3 +258,18 @@ describe("ChatRoom · retake goes to the canvas for canvas answers (§2 E)", () 
     expect(inputClicks).toEqual([composerFileInput(t.container)]);
   });
 });
+
+// --- added after /code-review (12 Nov) · not reviewed with the ones above · spec §2 E item 29 ---
+
+describe("ChatRoom · retake when a newer problem has come (self-review)", () => {
+  it("AM02 AC-29 a canvas card of p1 opens the file picker once p2's empty canvas has replaced it", async () => {
+    const t = setup([() => stream(OCR, problem("p2", "x^3 - x"))]);
+    await flush();
+    await t.sendCanvas();
+
+    await t.retake();
+
+    expect(inputClicks).toEqual([composerFileInput(t.container)]);
+    expect(scrollIntoView.mock.instances).not.toContain(t.canvasForm());
+  });
+});

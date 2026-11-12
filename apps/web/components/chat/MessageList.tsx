@@ -150,7 +150,7 @@ export function MessageList({
               )}
               {m.input_mode === "image" && m.preview_url && (
                 // Sent in this session: the local file as a thumbnail (answer-canvas.md §2 D).
-                <Thumbnail src={m.preview_url} name={m.attachment_name || fileName(m.attachment_path ?? "")} />
+                <Thumbnail src={m.preview_url} name={m.attachment_name ?? ""} />
               )}
               {m.input_mode === "image" && !m.preview_url && (m.attachment_name || m.attachment_path) && (
                 <p className="my-1 inline-block rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-500">

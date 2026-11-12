@@ -19,9 +19,12 @@ export type ChatMessage = Omit<Schemas["Message"], "card" | "attachment_name"> &
     /** Browser-only: a problem from the SSE `problem` event (problem-card.md). Not part of the API. */
     problem?: ProblemData;
     /** Browser-only: lines read from a photo, waiting for the user (ocr-confirm-card.md). Not part of the API. */
-    ocr?: { preview: OcrPreviewData; status: OcrStatus; source?: ImageSource };
+    ocr?: { preview: OcrPreviewData; status: OcrStatus; source?: ImageSource; problemId?: string };
     /** Browser-only: object URL of a photo sent in this session, shown as a thumbnail (answer-canvas.md §2 D). */
     preview_url?: string;
+    /** Browser-only: where a sent image came from, and the open problem then (answer-canvas.md §2 E). */
+    image_source?: ImageSource;
+    image_problem_id?: string;
     /** Browser-only: the check result from the SSE `verdict` event (verdict-mark.md). Not part of the API. */
     verdict?: VerdictData;
   };

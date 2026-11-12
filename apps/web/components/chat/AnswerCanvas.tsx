@@ -65,7 +65,8 @@ export function AnswerCanvas({
         const form = formRef.current;
         if (!form?.isConnected) return false;
         form.scrollIntoView({ behavior: "smooth", block: "center" });
-        canvasRef.current?.focus();
+        // preventScroll: a plain focus() would jump and cut the smooth scroll short (self-review PR #124).
+        canvasRef.current?.focus({ preventScroll: true });
         return true;
       },
     }),
@@ -225,7 +226,7 @@ export function AnswerCanvas({
       <canvas
         ref={canvasRef}
         aria-label={t.canvasLabel}
-        tabIndex={0}
+        tabIndex={-1}
         className="block w-full cursor-crosshair rounded-lg border border-dashed border-zinc-200"
         style={{ height: CANVAS_HEIGHT_PX, touchAction: "none" }}
         onPointerDown={onPointerDown}

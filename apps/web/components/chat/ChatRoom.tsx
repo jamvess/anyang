@@ -10,7 +10,7 @@ import type { ProblemData } from "./ProblemCard";
 import { roomStrings as t } from "./strings";
 import { hasVerdictMark, type VerdictData } from "./VerdictMark";
 import type { SSEEvent } from "@/lib/sse";
-import type { ChatMessage, ConfirmOcr, ImageSource, MessageRole, RoomData, SendMessage, SendPayload, Transcribe } from "./types";
+import type { ChatMessage, ConfirmOcr, MessageRole, RoomData, SendMessage, SendPayload, Transcribe } from "./types";
 
 /** How close to the bottom (px) still counts as "following" the stream. A UI value, not a learning-model one. */
 export const NEAR_BOTTOM_PX = 80;
@@ -26,6 +26,17 @@ type Token = { speaker: "tutor" | "buddy"; text: string };
  * Tutor room (specs: chat-room-ui.md, chat-streaming.md).
  * Sends through `sendMessage` and turns the SSE reply into bubbles.
  */
+/** The problem the canvas is answering now: the latest problem card (answer-canvas.md §2 B). */
+function openProblemId(messages: ChatMessage[]): string | undefined {
+  return messages.findLast((m) => m.problem)?.problem?.problem_id;
+}
+
+/** A confirm card takes its origin from the latest image the user sent (§2 E item 26). */
+function imageOrigin(messages: ChatMessage[]): { source?: ChatMessage["image_source"]; problemId?: string } {
+  const sent = messages.findLast((m) => m.role === "user" && m.input_mode === "image");
+  return { source: sent?.image_source, problemId: sent?.image_problem_id };
+}
+
 export function ChatRoom({
   room,
   sendMessage = noReply,
@@ -58,8 +69,6 @@ export function ChatRoom({
   const stick = useRef(true);
   const composer = useRef<ComposerHandle>(null);
   const canvas = useRef<AnswerCanvasHandle>(null);
-  // Where the latest image came from; the next confirm card takes it (answer-canvas.md §2 E item 26).
-  const lastImageSource = useRef<ImageSource>("photo");
   const busyRef = useRef(false);
 
   useEffect(() => () => abort.current?.abort(), []);
@@ -108,7 +117,6 @@ export function ChatRoom({
     if (image) {
       preview_url = URL.createObjectURL(image);
       previewUrls.current.push(preview_url);
-      lastImageSource.current = payload.source ?? "photo";
     }
     append(
       newMessage("user", text, {
@@ -116,6 +124,7 @@ export function ChatRoom({
         // Not uploaded yet, so no Storage path (chat-room-ui.md AC-6c).
         attachment_name: image ? image.name : null,
         ...(preview_url && { preview_url }),
+        ...(image && { image_source: payload.source ?? "photo", image_problem_id: openProblemId(messages) }),
       }),
     );
     stick.current = true;
@@ -137,8 +146,10 @@ export function ChatRoom({
   function retake(id: string) {
     setOcrStatus(id, "retaken");
     // An answer drawn on the canvas goes back to the canvas; a photo, or no canvas any more, opens the picker (§2 E).
-    const fromCanvas = messages.find((m) => m.id === id)?.ocr?.source === "canvas";
-    if (fromCanvas && canvas.current?.goTo()) return;
+    // Only to the canvas of the same problem: a newer problem's canvas is empty (self-review PR #124).
+    const ocr = messages.find((m) => m.id === id)?.ocr;
+    const sameProblem = ocr?.problemId !== undefined && ocr.problemId === openProblemId(messages);
+    if (ocr?.source === "canvas" && sameProblem && canvas.current?.goTo()) return;
     composer.current?.pickPhoto();
   }
 
@@ -182,7 +193,7 @@ export function ChatRoom({
           if (preview.lines.length > 0) {
             setMessages((prev) => [
               ...prev.map((m) => (m.ocr?.status === "pending" || m.ocr?.status === "arriving" ? { ...m, ocr: { ...m.ocr, status: "retaken" as const } } : m)),
-              newMessage("card", null, { ocr: { preview, status: "arriving", source: lastImageSource.current } }),
+              newMessage("card", null, { ocr: { preview, status: "arriving", ...imageOrigin(prev) } }),
             ]);
           }
           current = null;
