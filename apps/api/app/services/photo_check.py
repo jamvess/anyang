@@ -21,6 +21,7 @@ from pydantic import BaseModel
 from app.ai.call_context import AICallContext
 from app.ai.gateway import AIProviderError, AISchemaError, Gateway, Image
 from app.domain.checker import CheckResult, working_missing, working_steps
+from app.domain.hint_ladder import Directive, attempt_outcome, decide_directive, unfinished
 from app.models.room import (
     DoneEvent,
     OcrLine,
@@ -40,6 +41,7 @@ from app.services.dev_uploads import LocalImageStore, get_local_mode, get_local_
 from app.services.room_state import (
     STUDENT,
     TUTOR,
+    LadderProgress,
     PendingPreview,
     PendingProblem,
     RoomState,
@@ -61,6 +63,16 @@ NO_PENDING_PROBLEM = "ตอนนี้ยังไม่มีโจทย์�
 NEXT_PROBLEM = "ข้อต่อไปนะ"
 # The remembered conversation line when a right answer has no working (demo-room.md §2 I).
 NO_WORKING_LINE = "(ผลตรวจ) ขาดวิธีทำ"
+# The remembered lines of the hint ladder (demo-room.md §2 K item 5).
+UNFINISHED_LINE = "(ผลตรวจ) ถูกแล้ว ยังไม่จบ"
+GAVE_UP_LINE = "(ผลตรวจ) ขอเฉลย"
+# An explain_check input with nothing in it (§2 K items 6-7).
+NONE = "none"
+
+HINTS: frozenset[Directive] = frozenset({"hint_1", "hint_2"})
+# The problem is still open: no reference for the tutor (AM-13), and the same card again.
+OPEN_DIRECTIVES: frozenset[Directive] = HINTS | {"continue"}
+SAME_PROBLEM_AGAIN: frozenset[Directive] = OPEN_DIRECTIVES | {"ask_working"}
 
 Event = tuple[str, BaseModel]
 
@@ -251,37 +263,124 @@ async def _verdict_and_explanation(
     verdict: VerdictEvent,
     call_context: AICallContext | None,
 ) -> AsyncIterator[Event]:
-    """After a check, photo or typed (spec §2.2 items 5-8 · demo-room §2 B, D, E): mastery,
-    verdict, the tutor's explanation, then the demo's next problem.
+    """After a check, photo or typed (spec §2.2 items 5-8 · demo-room §2 B, D, E, I, K): code
+    picks the directive (app/domain/hint_ladder.py), then the verdict, the tutor's explanation,
+    and the same problem again or the next one.
 
-    A right answer with no working (demo-room §2 I) gets none of these but the explanation,
-    which asks for the working: no verdict, no attempt, the same problem stays."""
-    problem = pending.problem
+    Before the explanation, so it holds even if the tutor fails: the wrong answer or the right
+    steps are counted on the ladder (§2 K item 4), or the problem's one attempt is recorded."""
+    settings = get_settings().learning
+    progress = await state.ladder(key, pending)
+    steps = working_steps(lines)
     no_working = working_missing(
-        result.verdict, working_steps(lines), get_settings().learning.checker
+        result.verdict,
+        steps + (progress.steps_before if progress else 0),  # §2 K item 3
+        settings.checker,
     )
-    if no_working:
+    directive = decide_directive(
+        result.verdict,
+        give_up=False,
+        unfinished=unfinished(result.verdict, lines[-1]) if lines else False,
+        no_working=no_working,
+        wrong_before=progress.wrong_before if progress else None,
+        cfg=settings.tutoring,
+    )
+    if directive == "continue":
+        await state.note_try(key, pending, steps=steps)
+        await state.remember(key, TUTOR, UNFINISHED_LINE)
+    elif directive == "ask_working":
         await state.remember(key, TUTOR, NO_WORKING_LINE)
     else:
-        await state.record_check(key, pending, result.is_correct)  # demo: BKT (§2 D)
+        if directive in HINTS:
+            await state.note_try(key, pending, wrong=True)
+        else:
+            await _record_attempt(state, key, pending, directive, progress, result.is_correct)
         await state.remember(key, TUTOR, _verdict_line(result))
         yield "verdict", verdict
-    explain_input = {
+    explain_input = _explain_input(
+        pending.problem,
+        directive,
+        number_lines(lines),
+        _check_result_text(result, no_working),
+    )
+    async with aclosing(
+        _explanation(gateway, state, key, pending, directive, explain_input, call_context)
+    ) as events:
+        async for event in events:
+            yield event
+
+
+async def give_up_events(
+    gateway: Gateway,
+    state: RoomState,
+    key: str,
+    pending: PendingProblem,
+    call_context: AICallContext | None = None,
+) -> AsyncIterator[Event]:
+    """The student gave up on the pending problem (demo-room.md §2 K item 6): nothing to
+    check, so no verdict; the full solution, the attempt counted as wrong, the next problem.
+    The caller has remembered the message."""
+    progress = await state.ladder(key, pending)
+    await _record_attempt(state, key, pending, "reveal", progress, False)
+    await state.remember(key, TUTOR, GAVE_UP_LINE)
+    explain_input = _explain_input(pending.problem, "reveal", NONE, NONE)
+    async with aclosing(
+        _explanation(gateway, state, key, pending, "reveal", explain_input, call_context)
+    ) as events:
+        async for event in events:
+            yield event
+
+
+async def _record_attempt(
+    state: RoomState,
+    key: str,
+    pending: PendingProblem,
+    directive: Directive,
+    progress: LadderProgress | None,
+    is_correct: bool,
+) -> None:
+    """The problem's one attempt (demo: BKT · §2 D, §2 K item 8). With no ladder, every
+    finished answer counts as it is, independent."""
+    if progress is None:
+        await state.record_check(key, pending, is_correct)
+        return
+    outcome = attempt_outcome(directive, progress.wrong_before, get_settings().learning.tutoring)
+    if outcome is not None:
+        await state.record_check(key, pending, *outcome)
+
+
+def _explain_input(
+    problem: CheckProblem, directive: Directive, answer_lines: str, check_result: str
+) -> dict[str, str]:
+    # The tutor shows the right value and method only once the problem is over (§2.2.4). While
+    # it is still open (continue, hints) code leaves the reference out (AM-13 · §2 K item 7).
+    still_open = directive in OPEN_DIRECTIVES
+    return {
         "problem": problem.text,
-        # Sent on purpose: the tutor shows the right value and method (§2.2.4). This problem
-        # is already answered, so AM-13 does not apply.
-        "reference_answer": problem.reference_answer,
-        "solution_steps": solution_steps_text(problem),
-        "answer_lines": number_lines(lines),
-        "check_result": _check_result_text(result, no_working),
+        "reference_answer": NONE if still_open else problem.reference_answer,
+        "solution_steps": NONE if still_open else solution_steps_text(problem),
+        "answer_lines": answer_lines,
+        "check_result": check_result,
+        "directive": directive,
     }
 
+
+async def _explanation(
+    gateway: Gateway,
+    state: RoomState,
+    key: str,
+    pending: PendingProblem,
+    directive: Directive,
+    explain_input: dict[str, str],
+    call_context: AICallContext | None,
+) -> AsyncIterator[Event]:
     async def after_explaining(explanation: str) -> AsyncIterator[Event]:
         # Runs only when the explanation finished (tutor_events), so a degrade text is never
         # remembered as the tutor speaking (§2 E item 2).
         await state.remember(key, TUTOR, explanation)
-        if no_working:
-            # The same problem again at the bottom; the canvas keeps the drawing (§2 I item 6).
+        if directive in SAME_PROBLEM_AGAIN:
+            # The same problem again at the bottom; the canvas keeps the drawing (§2 I item 6,
+            # §2 K item 4).
             await state.remember(key, TUTOR, problem_line(pending))
             yield "problem", problem_event(pending)
             return

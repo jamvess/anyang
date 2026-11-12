@@ -42,6 +42,15 @@ class PendingPreview:
     lines: tuple[str, ...]
 
 
+@dataclass(frozen=True)
+class LadderProgress:
+    """Where the pending problem is on the hint ladder (demo-room.md §2 K item 9): wrong
+    answers so far, and the working steps of the right steps sent before (``continue``)."""
+
+    wrong_before: int = 0
+    steps_before: int = 0
+
+
 # Problem p1 of session_start.sse with its reference kept on the server (spec §3, §10 item 8):
 # the problem event never carries the reference. Pending for every session, and still pending
 # after it is checked, until the planner gives the next problem (§10 item 4).
@@ -97,8 +106,22 @@ class RoomState(Protocol):
 
     async def start_session(self, key: str) -> None: ...
 
-    async def record_check(self, key: str, pending: PendingProblem, is_correct: bool) -> None:
+    async def record_check(
+        self, key: str, pending: PendingProblem, is_correct: bool, independent: bool = True
+    ) -> None:
         """Count the attempt (BKT) when ``pending`` is still the pending problem."""
+        ...
+
+    async def ladder(self, key: str, pending: PendingProblem) -> LadderProgress | None:
+        """The hint ladder of ``pending`` (demo-room.md §2 K), or None when this state has no
+        ladder: then every finished answer gets the solution, as AM-07 says today."""
+        ...
+
+    async def note_try(
+        self, key: str, pending: PendingProblem, *, wrong: bool = False, steps: int = 0
+    ) -> None:
+        """One more wrong answer, or ``steps`` more right working steps, for ``pending`` while
+        it is still the pending problem. The next problem starts the ladder over."""
         ...
 
     async def progress_card(self, key: str) -> ProgressCardEvent | None:
@@ -139,7 +162,17 @@ class InMemoryRoomState:
     async def start_session(self, key: str) -> None:
         self._previews.pop(key, None)
 
-    async def record_check(self, key: str, pending: PendingProblem, is_correct: bool) -> None:
+    async def record_check(
+        self, key: str, pending: PendingProblem, is_correct: bool, independent: bool = True
+    ) -> None:
+        return None
+
+    async def ladder(self, key: str, pending: PendingProblem) -> LadderProgress | None:
+        return None
+
+    async def note_try(
+        self, key: str, pending: PendingProblem, *, wrong: bool = False, steps: int = 0
+    ) -> None:
         return None
 
     async def progress_card(self, key: str) -> ProgressCardEvent | None:

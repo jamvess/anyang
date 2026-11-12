@@ -243,6 +243,7 @@ OUTSIDE_BY_PROMPT = {
     "check_answer/v2": {"answer_format", "sympy_result", "hints"},
     "explain_check/v1": set(),
     "explain_check/v2": set(),
+    "explain_check/v3": set(),
     "extract_answer/v1": set(),
     "extract_topics_local/v1": {"file_name", "material_kind"},
     "extract_topics_local/v2": {"file_name", "material_kind"},
@@ -254,6 +255,7 @@ OUTSIDE_BY_PROMPT = {
     "tutor_reply/v1": set(),
     "tutor_reply/v2": set(),
     "typed_answer/v1": set(),
+    "typed_answer/v2": set(),
     "vision_extract/v1": {"file_name", "page_no"},
     "vision_extract_pages/v1": {"file_name", "page_count"},
 }

@@ -126,6 +126,12 @@ class SessionConfig(_Strict):
     grounding_chunks: int = Field(ge=0)
 
 
+class TutoringConfig(_Strict):
+    """The hint ladder (specs/features/tutor/demo-room.md §2 K)."""
+
+    max_hints_before_solution: int = Field(ge=0)
+
+
 class LearningConfig(_Strict):
     version: float
     bkt: BktConfig
@@ -140,6 +146,7 @@ class LearningConfig(_Strict):
     checker: CheckerConfig
     buddy: BuddyConfig
     session: SessionConfig
+    tutoring: TutoringConfig
 
 
 # --- config/ai.yaml (specs/system/ai-orchestration.md §2.10) -----------------

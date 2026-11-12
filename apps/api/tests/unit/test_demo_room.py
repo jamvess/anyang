@@ -410,19 +410,21 @@ def test_TM04_no_next_problem_outside_local(client, tmp_path):
     ("correct", "expected_level"), [(True, "developing"), (False, "weak")], ids=["right", "wrong"]
 )
 def test_PM02_progress_card_comes_from_bkt(client, local, correct, expected_level):
-    # AC-9
+    # AC-9 · §2 K (Jam ok 12 Nov): a wrong answer counts once the ladder reaches the solution,
+    # after max_hints_before_solution + 1 wrong answers.
     cfg = get_settings().learning
     lines = right_answer(P1) if correct else P1_WRONG
+    tries = 1 if correct else cfg.tutoring.max_hints_before_solution + 1
     local(
         {
-            "extract_answer": [extract(lines)],
-            "check_answer": [CLASSIFY_RIGHT if correct else CLASSIFY_SIGN],
-            "explain_check": ["อธิบาย"],
+            "extract_answer": [extract(lines)] * tries,
+            "check_answer": [CLASSIFY_RIGHT if correct else CLASSIFY_SIGN] * tries,
+            "explain_check": ["อธิบาย"] * tries,
         }
     )
-    send_photo(client)
-
-    answered = confirm(client, lines)
+    for _ in range(tries):
+        send_photo(client)
+        answered = confirm(client, lines)
     card = opening_card(client)  # §2 J: the card comes with the next opening
 
     assert "progress_card" not in names(answered)
@@ -569,7 +571,9 @@ def test_TM10_tutor_sees_the_photo_check(client, local):
     assert f"นักเรียน: (ยืนยันคำตอบ) {P1_WRONG[0]} · {P1_WRONG[1]}" in seen
     assert "ติวเตอร์: (ผลตรวจ) verdict incorrect · บรรทัดผิด 2 · sign" in seen
     assert "เครื่องหมายพลิก" in seen
-    assert f"ติวเตอร์: (โจทย์) {second.problem.text}" in seen
+    # §2 K (Jam ok 12 Nov): after a first hint the same problem comes again, not the next one.
+    assert seen.index("เครื่องหมายพลิก") < seen.rindex(f"ติวเตอร์: (โจทย์) {P1.problem.text}")
+    assert second.problem.text not in seen
 
 
 def test_TM10_only_the_recent_turns_are_kept(client, local):
@@ -731,17 +735,20 @@ def test_AM07_typed_right_answer_is_checked_and_praised(client, local):
 
 
 def test_AM07_typed_wrong_answer_gets_the_line_and_an_explanation(client, local):
-    # AC-24
+    # AC-24 · §2 K (Jam ok 12 Nov): the card is weak once the ladder reaches the solution.
+    tries = get_settings().learning.tutoring.max_hints_before_solution + 1
     local(
         {
-            "typed_answer": [typed(True, ["(x-7)(x-7)"])],
-            "check_answer": [classify("sign", "incorrect", 1)],
-            "explain_check": ["เครื่องหมายพลิก"],
+            "typed_answer": [typed(True, ["(x-7)(x-7)"])] * tries,
+            "check_answer": [classify("sign", "incorrect", 1)] * tries,
+            "explain_check": ["เครื่องหมายพลิก"] * tries,
         }
     )
     client.post(OPEN_ROOM)
 
     events = say(client, "(x-7)(x-7)")
+    for _ in range(tries - 1):
+        say(client, "(x-7)(x-7)")
 
     assert event(events, "verdict") == {
         "verdict": "incorrect",
@@ -830,15 +837,15 @@ def two_lines(problem: PendingProblem) -> list[str]:
 
 
 def test_AM07_explain_check_v2_and_working_ok(client, local):
-    # AC-29
+    # AC-29 · §2 K (Jam ok 12 Nov): the version is read from the config (v2, then v3).
     explain = get_settings().ai.purposes["explain_check"]
-    assert explain.prompt == "v2"
     front = (
-        (get_settings().env.prompts_dir / "explain_check" / "v2.md")
+        (get_settings().env.prompts_dir / "explain_check" / f"{explain.prompt}.md")
         .read_text("utf-8")
         .split("---")[1]
     )
-    assert "purpose: explain_check" in front and "version: 2" in front
+    assert "purpose: explain_check" in front
+    assert f"version: {explain.prompt.removeprefix('v')}" in front
     for name in ("problem", "reference_answer", "solution_steps", "answer_lines", "check_result"):
         assert name in front
     fake, _ = local(
