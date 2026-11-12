@@ -22,7 +22,7 @@ import { Tex } from "@/components/math/Tex";
 import { roomStrings as t } from "./strings";
 import type { SendPayload } from "./types";
 
-// Spec: specs/features/tutor/answer-canvas.md · provisional design until May decides (§10).
+// Spec: specs/features/tutor/answer-canvas.md · design decided by May 2026-11-12 (§10).
 
 const MB = 1024 * 1024;
 
@@ -32,7 +32,7 @@ async function decodeImage(file: File): Promise<Background> {
   return { image: bitmap, width: bitmap.width, height: bitmap.height };
 }
 
-/** A drawing area under the latest problem card; what is drawn is sent like a photo. */
+/** A drawing area at the end of the chat while a problem is open; what is drawn is sent like a photo. */
 export function AnswerCanvas({
   onSend,
   disabled,

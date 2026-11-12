@@ -62,7 +62,7 @@ type Props = {
   /** Buttons of a handwriting confirm card, by message id (ocr-confirm-card.md). */
   onOcrConfirm?: (id: string, lines: string[]) => void;
   onOcrRetake?: (id: string) => void;
-  /** The answer canvas under the latest problem card (answer-canvas.md); none when not given. */
+  /** The answer canvas at the end of the chat while a problem is open (answer-canvas.md §2 B); none when not given. */
   answerCanvas?: AnswerCanvasProps;
 };
 
