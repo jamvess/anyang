@@ -192,6 +192,8 @@ policy เดิมพอ: `tutor_sessions` `owner_rows` (tenant + user) · `mes
 2. ~~**มี token บนเครื่อง dev**~~ **ตัดสินแล้ว** (Junior 2026-11-11): ใช้ DB · ข้อเดิม:ใช้ DB เหมือน staging (demo room ในเครื่องยังใช้ได้เมื่อไม่ส่ง token) · ผลคือ demo room ที่มีโจทย์ 5 ข้อหายไปเมื่อ May รันเว็บพร้อม login
 3. ~~**`messages` RLS เป็น `tenant_rows`**~~ **ตัดสินแล้ว** (Junior 2026-11-11): พอสำหรับตอนนี้ · จดใน data-model.md · ข้อเดิม: · tenant ส่วนตัวมี user เดียวจึงพอ · tenant แบบกลุ่ม (ทีหลัง) ต้องกรองผ่าน session ของ user เอง: feature นี้อ่านข้อความผ่าน session ที่ RLS ของ `tutor_sessions` เห็นแล้วเท่านั้น
 
+4. **ช่องโหว่ของ spec (เจอ 2026-11-12):** AC-auth-stub พูดถึงแค่ test เดิมที่ไม่มี token · ไม่ได้บอกว่า test เดิมที่ส่ง token ไปยัง stub session (`SESSION_ID` ของ fixture) จะเปลี่ยนตาม AC-auth-real (ไป DB) และ AC-23 (`ai_calls.session_id` เป็น id จริง) · 3 test ของ Jam จึงล้ม: `test_api_auth.py::test_AI04_chat_turn_writes_ai_calls_row_for_the_token_user`, `test_rate_limit.py::test_TM21_message_over_the_limit_is_429_without_an_ai_call`, `test_rate_limit.py::test_TM21_other_room_endpoints_are_not_limited` · แก้แล้วใน PR #123: override `get_room_repository` ด้วย fake repo ที่มี `SESSION_ID` เปิดอยู่ · AI04 assert `session_id == SESSION_ID` (Junior ตัดสิน · **Jam ยังไม่ ok** · Jam ขอแก้ทีหลังได้ใน PR ใหม่) · พร้อมกันนั้น unit test ห้ามออก network แล้ว (`tests/unit/conftest.py` + `test_no_network.py`) เพราะ 3 test นี้ยิง anyang-dev จริงผ่าน `SUPABASE_URL` ใน `.env`
+
 ## 11. Spec changes needed
 
 - `specs/system/api.md` v1.15 (commit แล้ว)

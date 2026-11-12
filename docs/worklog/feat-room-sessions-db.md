@@ -31,6 +31,14 @@
 - 2026-11-11 · `0004` Junior push ขึ้นทั้ง anyang-dev และ anyang-staging ในรอบเดียวกัน (dry-run ก่อน, `--remote`, unlink หลังเสร็จ) · staging ต้องมีก่อน #120 เปิด auth ไม่งั้นเปิด session จริงจะล้มที่ NOT NULL
 - 2026-11-11 · (4) บันทึก user ก่อน stream · tutor ทั้งก้อนหลัง stream จบ (รวม degrade) · id จริงใน `done.message_ids` · ล้มกลาง stream ไม่บันทึกครึ่ง · tenant อื่น 404 · session จบแล้ว 409 `session_already_ended` · รูป/OCR/verdict ยังไม่บันทึก (ลำดับ 4)
 
+- 2026-11-12 · 3 test เดิมของ Jam ล้มเพราะพฤติกรรมเปลี่ยนตาม spec (AC-auth-real, AC-23) ไม่ใช่เรื่อง environment → แก้แค่ 3 test นี้ (fake repo ที่มี `SESSION_ID` เปิดอยู่ · AI04 assert `session_id == SESSION_ID`) · **Jam ยังไม่ ok** · Junior ส่งข้อความหา Jam เอง · ไม่ใช้ autouse ที่คืน `None` เพราะจะซ่อนการเปลี่ยนนี้
+- 2026-11-12 · unit test ห้ามออก network: autouse `network_attempts` ใน `tests/unit/conftest.py` (`tests/unit/network_guard.py`) ปิด DNS + connect ทุก host ที่ไม่ใช่ loopback และทำให้ test ล้มแม้ code จะกลืน error ไว้ · guard test `test_no_network.py` · spec gap จดใน `room-sessions-db.md` §10 ข้อ 4
+- 2026-11-12 · `0004`: Junior `link` เอง · Claude รัน `db push --linked --dry-run` / `db push --linked` / `migration list --linked` / `unlink` · dev ก่อน แล้ว staging
+
+## Done today (2026-11-12)
+
+- แก้ 3 test ของ Jam + ตัวกัน network + guard test 5 ข้อ · unit 1425 ผ่าน · ruff สะอาด · spec §10 ข้อ 4
+
 ## Done today (2026-11-11)
 
 - api.md v1.15 + data-model.md (scope null ได้, RLS ของ messages กรองแค่ tenant) · spec `room-sessions-db.md` approved · test 4 ไฟล์ review แล้ว (`a0bdfb4`) · migration `0004` เขียนแล้ว (`43a66e9`) · **ยังไม่ได้ push ขึ้น dev/staging**
@@ -39,15 +47,12 @@
 
 ## Next step
 
-1. **Junior ตัดสิน (ค้างจาก 11 พ.ย.):** suite เต็มล้ม 3 test เดิมที่ review แล้วของ Jam (`test_api_auth.py::test_AI04_chat_turn_writes_ai_calls_row_for_the_token_user`, `test_rate_limit.py::test_TM21_message_over_the_limit_is_429_without_an_ai_call`, `test_rate_limit.py::test_TM21_other_room_endpoints_are_not_limited`) · สาเหตุ: override `get_auth` ด้วย token ปลอม → ตอนนี้วิ่งทาง DB → ยิง Supabase จริงจาก unit test (ผิดกฎ no network) แล้วได้ 503
-   - ทางเลือก 1 (Claude แนะนำ): autouse fixture ใน `tests/unit/conftest.py` ให้ `get_room_repository` และ `get_exam_prep_repository` คืน `None` เป็นค่าเริ่มต้น · ไม่แก้ไฟล์ test ที่ review แล้ว · test ที่ต้องการ DB override fake เองอยู่แล้ว
-   - ทางเลือก 2: แก้ 3 test ของ Jam (ต้องได้ ok + บอก Jam)
-2. **Junior push `0004` ขึ้นทั้ง anyang-dev และ anyang-staging ในรอบเดียว** ก่อน #120 เปิด auth (ไม่งั้นเปิด session จริงบน staging ล้มที่ NOT NULL): `npx supabase projects list` → `link --project-ref mnwwhkbizjioibjvpnxl` → `db push --remote --dry-run` (ต้องเห็นแค่ `0004`) → `db push --remote` → `migration list --remote` → `unlink` · แล้วซ้ำกับ `sfapuygntxuelsxsgkay`
-3. Claude: รัน integration `tests/integration/test_room_sessions_db.py` กับ anyang-dev → refactor → ruff + suite เต็ม → `pnpm gen:api` (dump OpenAPI ลงไฟล์แล้ว `pnpm exec openapi-typescript`) → commit `feat: … green` → `/work-done` (ถาม Junior ก่อน merge)
+1. Junior `link` anyang-dev (`mnwwhkbizjioibjvpnxl`) → Claude dry-run (ต้องเห็นแค่ `0004`) → push → migration list → unlink · แล้วทำแบบเดียวกันกับ anyang-staging (`sfapuygntxuelsxsgkay`)
+2. Claude: รัน integration `tests/integration/test_room_sessions_db.py` กับ anyang-dev → refactor → ruff + suite เต็ม → `pnpm gen:api` → commit `feat: … green` → `/work-done` (ถาม Junior ก่อน merge)
 
 ## Waiting on
 
-- Junior: ทางเลือก 1/2 ของ 3 test เดิม · push `0004` ขึ้น dev + staging
+- Jam: ok การแก้ 3 test (`room-sessions-db.md` §10 ข้อ 4)
 - May: หน้าห้องติวต้องรองรับ session ที่ไม่มี `progress_card` และไม่มี `problem` (api.md v1.15)
 
 ## Notes for next time
