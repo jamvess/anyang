@@ -1130,3 +1130,286 @@ def test_AM07_working_steps_ignore_a_named_answer(lines, steps):
     from app.domain.checker import working_steps
 
     assert working_steps(lines) == steps
+
+
+# --- K · the hint ladder before the solution (§2 K · AC-41 to AC-47, AC-49, AC-50) ------------
+# The ladder length is tutoring.max_hints_before_solution from the real config (2).
+
+
+def block_of(request: Any, name: str) -> str:
+    """The text inside <document name="..."> of a rendered prompt."""
+    import re
+
+    match = re.search(rf'<document name="{name}">\n(.*?)\n</document>', request.prompt, re.DOTALL)
+    assert match, f"the prompt has a {name} block"
+    return match.group(1)
+
+
+def given_up() -> str:
+    return json.dumps({"is_answer": False, "lines": [], "give_up": True})
+
+
+def merged(*scripts: dict[str, list[Any]]) -> dict[str, list[Any]]:
+    """One fake-provider script from several rounds, in order."""
+    out: dict[str, list[Any]] = {}
+    for script in scripts:
+        for purpose, replies in script.items():
+            out.setdefault(purpose, []).extend(replies)
+    return out
+
+
+def right_round(problem: PendingProblem) -> dict[str, list[Any]]:
+    return {
+        "typed_answer": [typed(True, right_answer(problem))],
+        "check_answer": [CLASSIFY_RIGHT],
+        "explain_check": ["เก่งมาก"],
+    }
+
+
+def wrong_round(lines: list[str] = P1_WRONG) -> dict[str, list[Any]]:
+    return {
+        "typed_answer": [typed(True, lines)],
+        "check_answer": [CLASSIFY_SIGN],
+        "explain_check": ["ลองดูบรรทัดสองอีกที"],
+    }
+
+
+DERIVATIVE = DEMO_PROBLEMS[2]  # demo-3: d/dx (x^2 sin x)
+FIRST_STEP = r"2x\sin(x) + x^{2}\frac{d}{dx}\sin(x)"  # product rule, d/dx sin x still left
+NEXT_STEP = r"= 2x\sin(x)+x^{2}\cos(x)"
+
+
+def max_hints() -> int:
+    return get_settings().learning.tutoring.max_hints_before_solution
+
+
+def test_AM05_unfinished_step_goes_on_without_a_verdict(client, local):
+    # AC-41: Jam's try on 9 Nov. SymPy evaluates d/dx itself, so the checker says correct.
+    fake, _ = local(
+        merged(
+            right_round(P1),
+            right_round(DEMO_PROBLEMS[1]),
+            {
+                "typed_answer": [typed(True, [FIRST_STEP])],
+                "check_answer": [CLASSIFY_RIGHT],
+                "explain_check": ["ทำต่อ"],
+            },
+        )
+    )
+    client.post(OPEN_ROOM)
+    say(client, "x^2-49 = (x-7)(x+7)")
+    say(client, "ได้ 4")
+
+    events = say(client, FIRST_STEP)
+
+    assert names(events) == ["token", "problem", "done"]
+    assert event(events, "problem")["problem_id"] == DERIVATIVE.problem_id
+    explain = requests_for(fake, "explain_check")[-1]
+    assert block_of(explain, "directive") == "continue"
+    assert block_of(explain, "reference_answer") == "none"  # AM-13: the problem is still open
+    assert block_of(explain, "solution_steps") == "none"
+    levels = {row["id"]: row["level"] for row in opening_card(client)["topics"]}
+    assert levels[DERIVATIVE.topic_id] == "not_started"
+
+
+def test_AM07_next_step_alone_counts_the_earlier_working(client, local):
+    # AC-42: one step typed after a continue is not "no working" (§2 K item 3).
+    fake, _ = local(
+        merged(
+            right_round(P1),
+            right_round(DEMO_PROBLEMS[1]),
+            {
+                "typed_answer": [typed(True, [FIRST_STEP]), typed(True, [NEXT_STEP])],
+                "check_answer": [CLASSIFY_RIGHT, CLASSIFY_RIGHT],
+                "explain_check": ["ทำต่อ", "เก่งมาก"],
+            },
+        )
+    )
+    client.post(OPEN_ROOM)
+    say(client, "x^2-49 = (x-7)(x+7)")
+    say(client, "ได้ 4")
+    say(client, FIRST_STEP)
+
+    events = say(client, NEXT_STEP)
+
+    assert event(events, "verdict")["verdict"] == "correct"
+    assert block_of(requests_for(fake, "explain_check")[-1], "directive") == "praise_and_show"
+    assert event(events, "problem")["problem_id"] == DEMO_PROBLEMS[3].problem_id
+
+
+def test_AM05_wrong_answers_climb_the_ladder_then_the_solution(client, local):
+    # AC-43
+    cfg = get_settings().learning
+    tries = max_hints() + 1
+    fake, _ = local(merged(*[wrong_round() for _ in range(tries)]))
+    client.post(OPEN_ROOM)
+
+    streams = [say(client, "(x-7)(x-7)") for _ in range(tries)]
+
+    explains = requests_for(fake, "explain_check")
+    for n, events in enumerate(streams[:-1], start=1):
+        assert names(events) == ["verdict", "token", "problem", "done"]
+        assert event(events, "verdict")["verdict"] == "incorrect"
+        assert event(events, "problem")["problem_id"] == P1.problem_id
+        assert block_of(explains[n - 1], "directive") == f"hint_{min(n, 2)}"
+        assert block_of(explains[n - 1], "reference_answer") == "none"
+        assert block_of(explains[n - 1], "solution_steps") == "none"
+    last = streams[-1]
+    assert names(last) == ["verdict", "token", "token", "problem", "done"]
+    assert ("token", {"speaker": "tutor", "text": NEXT}) in last
+    assert event(last, "problem")["problem_id"] == DEMO_PROBLEMS[1].problem_id
+    assert block_of(explains[-1], "directive") == "reveal"
+    assert block_of(explains[-1], "reference_answer") == P1.problem.reference_answer
+    card = opening_card(client)
+    levels = {row["id"]: row["level"] for row in card["topics"]}
+    assert levels[P1.topic_id] == "weak"
+    once = record_attempt(TopicProgress(cfg.bkt.p_init, 0, 0), False, P1.difficulty, True, cfg)
+    assert card["readiness"] == pytest.approx(expected_card_readiness({P1.topic_id: once}))
+
+
+@pytest.mark.parametrize("hint_level", ["one less than the last", "the last"])
+def test_PM02_right_after_hints(client, local, hint_level):
+    # AC-44: right after the last hint is not independent, so BKT does not count it.
+    cfg = get_settings().learning
+    wrongs = max_hints() - 1 if hint_level == "one less than the last" else max_hints()
+    local(merged(*[wrong_round() for _ in range(wrongs)], right_round(P1)))
+    client.post(OPEN_ROOM)
+    for _ in range(wrongs):
+        say(client, "(x-7)(x-7)")
+
+    events = say(client, "x^2-49 = (x-7)(x+7)")
+
+    assert event(events, "verdict")["verdict"] == "correct"
+    assert event(events, "problem")["problem_id"] == DEMO_PROBLEMS[1].problem_id
+    card = opening_card(client)
+    levels = {row["id"]: row["level"] for row in card["topics"]}
+    if hint_level == "the last":
+        assert levels[P1.topic_id] == "not_started"
+        assert card["readiness"] == 0
+    else:
+        assert levels[P1.topic_id] == "developing"
+        once = record_attempt(TopicProgress(cfg.bkt.p_init, 0, 0), True, P1.difficulty, True, cfg)
+        assert card["readiness"] == pytest.approx(expected_card_readiness({P1.topic_id: once}))
+
+
+def test_AM07_giving_up_shows_the_solution_at_once(client, local):
+    # AC-45
+    from app.models.check import TypedAnswer
+
+    fake, _ = local({"typed_answer": [given_up()], "explain_check": ["ไม่เป็นไร"]})
+    client.post(OPEN_ROOM)
+
+    events = say(client, "ไม่ได้จริงๆ")
+
+    assert requests_for(fake, "check_answer") == []
+    assert names(events) == ["token", "token", "problem", "done"]
+    assert ("token", {"speaker": "tutor", "text": NEXT}) in events
+    assert event(events, "problem")["problem_id"] == DEMO_PROBLEMS[1].problem_id
+    [explain] = requests_for(fake, "explain_check")
+    assert block_of(explain, "directive") == "reveal"
+    assert block_of(explain, "answer") == "none"
+    assert block_of(explain, "check_result") == "none"
+    assert block_of(explain, "reference_answer") == P1.problem.reference_answer
+    levels = {row["id"]: row["level"] for row in opening_card(client)["topics"]}
+    assert levels[P1.topic_id] == "weak"
+    # typed_answer/v1 output has no give_up: it still reads, as false.
+    assert TypedAnswer.model_validate({"is_answer": True, "lines": ["x"]}).give_up is False
+
+
+def test_AM07_wrong_tries_start_over_on_the_next_problem(client, local):
+    # AC-46
+    limit = DEMO_PROBLEMS[1]
+    fake, _ = local(
+        merged(
+            *[wrong_round() for _ in range(max_hints())],
+            {"typed_answer": [given_up()], "explain_check": ["ไม่เป็นไร"]},
+            {
+                "typed_answer": [typed(True, ["3", "= 3"])],
+                "check_answer": [classify("calculation", "incorrect", 1)],
+                "explain_check": ["ลองดูอีกที"],
+            },
+        )
+    )
+    client.post(OPEN_ROOM)
+    for _ in range(max_hints()):
+        say(client, "(x-7)(x-7)")
+    say(client, "ยอมแพ้")
+
+    events = say(client, "ได้ 3")
+
+    assert event(events, "problem")["problem_id"] == limit.problem_id
+    assert block_of(requests_for(fake, "explain_check")[-1], "directive") == "hint_1"
+
+
+def test_TM10_the_ladder_is_in_the_conversation(client, local):
+    # AC-47: p1 not factored yet (continue), then wrong (hint_1), then giving up.
+    fake, _ = local(
+        merged(
+            {
+                "typed_answer": [typed(True, ["x^2-49", "= (x^2-49)"])],
+                "check_answer": [classify("concept", "incomplete", None)],
+                "explain_check": ["แยกต่อได้อีก"],
+            },
+            wrong_round(),
+            {"typed_answer": [given_up()], "explain_check": ["ไม่เป็นไร"]},
+            {"typed_answer": [typed(False)], "tutor_reply": ["ok"]},
+        )
+    )
+    client.post(OPEN_ROOM)
+    say(client, "x^2-49 = (x^2-49)")
+    say(client, "(x-7)(x-7)")
+    say(client, "ไม่ได้จริงๆ")
+
+    say(client, "ทำไม")
+
+    seen = conversation_of(requests_for(fake, "tutor_reply")[0])
+    assert "ติวเตอร์: (ผลตรวจ) ถูกแล้ว ยังไม่จบ" in seen
+    assert "แยกต่อได้อีก" in seen
+    assert "ติวเตอร์: (ผลตรวจ) verdict incorrect" in seen
+    assert "ลองดูบรรทัดสองอีกที" in seen
+    assert "ติวเตอร์: (ผลตรวจ) ขอเฉลย" in seen
+    assert seen.index("แยกต่อได้อีก") < seen.rindex(f"ติวเตอร์: (โจทย์) {P1.problem.text}")
+
+
+def test_AM07_no_ladder_outside_local(client, tmp_path):
+    # AC-49: the default room state has no ladder: the first wrong answer gets the solution.
+    fake = FakeProvider(
+        {
+            "extract_answer": [extract(P1_WRONG)],
+            "check_answer": [CLASSIFY_SIGN],
+            "explain_check": ["เครื่องหมายพลิก"],
+        }
+    )
+    state = InMemoryRoomState()
+    app.dependency_overrides[get_gateway] = lambda: make_gateway(fake)
+    app.dependency_overrides[get_room_state] = lambda: state
+    app.dependency_overrides[get_local_mode] = lambda: True  # uploads still work
+    app.dependency_overrides[get_local_upload_dir] = lambda: tmp_path
+    send_photo(client)
+
+    events = confirm(client, P1_WRONG)
+
+    assert event(events, "verdict")["verdict"] == "incorrect"
+    assert "problem" not in names(events)
+    [explain] = requests_for(fake, "explain_check")
+    assert block_of(explain, "directive") == "reveal"
+    assert block_of(explain, "reference_answer") == P1.problem.reference_answer
+
+
+def test_AI01_hint_ladder_prompts_and_config():
+    # AC-50
+    settings = get_settings()
+    purposes = settings.ai.purposes
+    assert purposes["explain_check"].prompt == "v3"
+    assert purposes["typed_answer"].prompt == "v2"
+    for purpose, version in (("explain_check", 3), ("typed_answer", 2)):
+        text = (settings.env.prompts_dir / purpose / f"v{version}.md").read_text("utf-8")
+        front = text.split("---")[1]
+        assert f"purpose: {purpose}" in front
+        assert f"version: {version}" in front
+    assert (
+        "directive"
+        in (settings.env.prompts_dir / "explain_check" / "v3.md").read_text("utf-8").split("---")[1]
+    )
+    assert isinstance(settings.learning.tutoring.max_hints_before_solution, int)
+    assert settings.learning.tutoring.max_hints_before_solution >= 0
