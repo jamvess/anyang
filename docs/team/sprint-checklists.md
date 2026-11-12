@@ -103,6 +103,7 @@
 - [ ] เตรียม staging สำหรับ demo รวม
   - 11 พ.ย. เป้าเปลี่ยนเป็น advisor update จันทร์ 16 พ.ย. (journey เดียวบน staging: login → exam prep → upload → topics → ห้องติว AI จริง → resume) · ลำดับ: 1) login + #120 2) exam prep API 3) บันทึก messages + resume 4) upload + Storage 5) ingestion (Jam)
   - 11 พ.ย. (PR #121 · `specs/features/exam-prep/create-exam-prep.md`): `POST`/`GET /exam-preps` บันทึกและอ่าน `exam_preps` จริงผ่าน JWT ของผู้ใช้ (RLS) · ไม่มี token + `AUTH_REQUIRED=false` ยังได้ stub (`X-Stub`) · api.md v1.14 · `503 db_unavailable` · เหลือ: #120 (รอหน้า login ของ May), ลำดับ 3–5
+  - 12 พ.ย. (PR #123 · `specs/features/tutor/room-sessions-db.md`): ลำดับ 3 เสร็จ · ห้องติวที่มี token บันทึก `tutor_sessions` + `messages` จริง (RLS) และกลับมาเห็นประวัติได้ (TM-13) · เปิดห้องทักด้วย template ใน `config/messages.yaml` ไม่เรียก AI · ยังไม่มี `progress_card` / `problem` จนกว่าจะมี scope ที่ยืนยันแล้ว · api.md v1.15 · `0004` ขึ้น anyang-dev และ anyang-staging แล้ว · unit test ออก network ไม่ได้แล้ว (`tests/unit/conftest.py`) · แก้ 3 test ของ Jam ตาม AC-auth-real / AC-23 (Jam ยังไม่ ok) · เหลือ: #120 (รอหน้า login ของ May), ลำดับ 4–5
 
 ### Buffer · 30 พ.ย.–4 ธ.ค.
 
