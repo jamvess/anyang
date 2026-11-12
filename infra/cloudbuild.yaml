@@ -19,14 +19,18 @@ steps:
       - ${_SERVICE}
       - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/api:$COMMIT_SHA
       - --region=${_REGION}
-      - --allow-unauthenticated   # the browser calls it directly; no live AI until every endpoint checks the Supabase JWT
+      - --allow-unauthenticated   # the browser calls it directly; the API checks the Supabase JWT (AUTH_REQUIRED=true)
+      # Runtime identity: only Vertex AI User + read of its own secrets (not the default compute SA, which is Editor).
+      - --service-account=api-runtime@$PROJECT_ID.iam.gserviceaccount.com
       - --min-instances=0
       - --max-instances=2         # cap spend on trial credit
       - --concurrency=40          # SSE holds connections open; tune with the P6 measurement
       - --timeout=600
-      # Non-secret env (AI_PROVIDER=fake, CORS). A file, so "," "^" "$" in the CORS values need no escaping
-      # and Cloud Build does not substitute "$" inside it. No --set-secrets until live AI.
+      # Non-secret env (auth, Supabase URL + anon key, live AI on Vertex, CORS). A file, so "," "^" "$" in
+      # the CORS values need no escaping and Cloud Build does not substitute "$" inside it.
       - --env-vars-file=infra/env/api-staging.yaml
+      # Secrets from Secret Manager, read by api-runtime at start. Never in the env file.
+      - --set-secrets=SUPABASE_SERVICE_ROLE_KEY=supabase-service-role:latest
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/api:$COMMIT_SHA
