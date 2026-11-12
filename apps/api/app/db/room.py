@@ -135,8 +135,20 @@ def _first[T](rows: list[dict[str, Any]], build: Callable[[dict[str, Any]], T]) 
 
 
 class SupabaseRoomRepository:
-    def __init__(self, client: Client) -> None:
-        self._db = client
+    """`connect` builds the user's client on the first query, not when the dependency resolves:
+    room endpoints that never touch the DB with a token (an image message, a body that fails
+    validation) must not need Supabase settings, and a client that cannot be built is a 503
+    db_unavailable like any other failure, not a 500 (CI run 43152239753)."""
+
+    def __init__(self, connect: Callable[[], Client]) -> None:
+        self._connect = connect
+        self._client: Client | None = None
+
+    @property
+    def _db(self) -> Client:
+        if self._client is None:
+            self._client = self._connect()
+        return self._client
 
     def _run[T](self, what: str, query: Callable[[], T]) -> T:
         try:
@@ -279,4 +291,4 @@ def get_room_repository(
     """The repository for this user, or None without a user (the router keeps the stub)."""
     if auth is None:
         return None
-    return SupabaseRoomRepository(get_user_db(auth))
+    return SupabaseRoomRepository(lambda: get_user_db(auth))

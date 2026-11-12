@@ -6,7 +6,9 @@ import uuid
 from datetime import date
 
 import pytest
+from fastapi.testclient import TestClient
 
+from app.auth import AuthContext, get_auth
 from app.db.room import PrepRecord, ProfileFacts
 from app.domain.room import FALLBACK_USER_NAME, BuddyFacts, room_names
 from app.main import app
@@ -63,3 +65,42 @@ def test_TM13_openapi_lists_the_db_errors_of_the_room(path, method, codes):
 
     assert codes <= set(responses)
     assert "db_unavailable" in responses["503"]["description"]
+
+
+@pytest.fixture
+def signed_in_without_supabase(monkeypatch: pytest.MonkeyPatch):
+    """A token (get_auth overridden) on a machine with no Supabase settings, like CI."""
+    env = get_settings().env
+    monkeypatch.setattr(env, "supabase_url", "")
+    user = AuthContext(tenant_id=uuid.uuid4(), user_id=uuid.uuid4(), token="t")
+    app.dependency_overrides[get_auth] = lambda: user
+    try:
+        with TestClient(app) as client:
+            yield client
+    finally:
+        app.dependency_overrides.pop(get_auth, None)
+
+
+def test_TM13_a_room_request_that_never_reads_the_db_needs_no_supabase_settings(
+    signed_in_without_supabase,
+):
+    """CI run 43152239753: the client was built when the dependency resolved, so an image
+    message (old path, no DB) and a body failing validation got 500."""
+    session_id = uuid.uuid4()
+    image = {"image_path": f"t/sessions/{session_id}/x.jpg"}
+
+    assert (
+        signed_in_without_supabase.post(f"/sessions/{session_id}/messages", json=image).status_code
+        == 200
+    )
+    assert (
+        signed_in_without_supabase.post(f"/sessions/{session_id}/messages", json={}).status_code
+        == 422
+    )
+
+
+def test_TM13_a_db_client_that_cannot_be_built_is_503_not_500(signed_in_without_supabase):
+    response = signed_in_without_supabase.get(f"/sessions/{uuid.uuid4()}")
+
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "db_unavailable"
