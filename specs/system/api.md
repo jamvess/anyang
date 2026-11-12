@@ -1,4 +1,4 @@
-# API (v1.13)
+# API (v1.14)
 
 Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้างอัตโนมัติที่ `/docs` · frontend generate types จาก `/openapi.json`
 
@@ -90,7 +90,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | GET | `/exam-preps/{id}/scope/changes` | change log (S14) |
 | POST | `/exam-preps/{id}/scope/confirm` | lock เป็น scope version |
 
-**สร้างการเตรียมสอบและใส่ไฟล์ (v1.10 · ข้อเสนอ รอ Junior ตัดสิน):** UC-02 ขั้น 1–5 (S07–S10) · ai-orchestration §2.3.2 ขั้น 1–3 · ยังไม่มี feature spec ของหน้าจอ · ทุก field ต้องมี และไม่มี field อื่น · prep หรือไฟล์ที่ไม่มีหรือเป็นของ tenant อื่น → `404 not_found`
+**สร้างการเตรียมสอบและใส่ไฟล์ (v1.10 · `POST`/`GET /exam-preps` ตัดสินแล้ว v1.14 · Junior 2026-11-11 · ส่วน materials ยังเป็นข้อเสนอ รอ Junior ตัดสิน):** UC-02 ขั้น 1–5 (S07–S10) · ai-orchestration §2.3.2 ขั้น 1–3 · ยังไม่มี feature spec ของหน้าจอ · ทุก field ต้องมี และไม่มี field อื่น · prep หรือไฟล์ที่ไม่มีหรือเป็นของ tenant อื่น → `404 not_found`
 
 **`ExamPrep`** (response ของ `POST /exam-preps` และแต่ละแถวของ `GET /exam-preps`)
 
@@ -102,11 +102,17 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | `days_left` | integer | เหมือน `Room.days_left` (CM-02) |
 | `daily_minutes` | integer \| null | `exam_preps.daily_minutes` · null = ใช้ค่าจาก `config/learning.yaml` → `planner.default_daily_minutes` (UC-02 A1) |
 | `stage` | `"materials"` \| `"processing"` \| `"scope"` \| `"tutoring"` | คำนวณที่ backend ตามลำดับ: `tutoring` เมื่อมี `active_scope_version_id` · ไม่งั้น `scope` เมื่อ `Ingestion.scope_ready` (v1.11) · ไม่งั้น `processing` เมื่อมีไฟล์ที่ `kind_confirmed = true` · ไม่งั้น `materials` (รวม prep ที่ยังไม่มีไฟล์) · แก้ใน v1.11 เพราะกฎเดิมให้ `scope` ทั้งที่ยังสกัดหัวข้อไม่เสร็จ · หน้าเว็บใช้เลือกว่าการ์ดพาไปหน้าไหน |
-| `readiness` | number 0–1 \| null | PM-03 · null จนกว่า `stage = "tutoring"` |
-| `topics_not_passed` | integer \| null | จำนวนหัวข้อที่ `level ≠ passed` (PM-04) · null จนกว่า `stage = "tutoring"` |
+| `readiness` | number 0–1 \| null | PM-03 · null เมื่อยังคำนวณไม่ได้: ก่อน `stage = "tutoring"` หรือ backend ยังไม่ได้คำนวณ PM-03 (v1.14) · หน้าเว็บแสดง "—" ไม่ใช่ 0% |
+| `topics_not_passed` | integer \| null | จำนวนหัวข้อที่ `level ≠ passed` (PM-04) · null ตามกฎเดียวกับ `readiness` (v1.14) |
 
-- **`POST /exam-preps`** · body `{title: string (ไม่ว่าง), exam_date: string (date), daily_minutes?: integer ≥ 1}` (CM-01) · `201` + `ExamPrep` (`stage = "materials"`) · `exam_date` ก่อนวันนี้ (Asia/Bangkok) → `422 exam_date_past` · วันนี้ได้
-- **`GET /exam-preps`** · `ExamPrep[]` ของผู้ใช้ เรียงตาม `exam_date` ใกล้ก่อน · ไม่รวม `status = 'archived'`
+- **`POST /exam-preps`** · body `{title: string, exam_date: string (date), daily_minutes?: integer}` (CM-01) · `201` + `ExamPrep` (`stage = "materials"`, `readiness` และ `topics_not_passed` เป็น null) · บันทึกลง `exam_preps` ด้วย JWT ของผู้ใช้ (RLS) · `tenant_id` และ `user_id` มาจาก token เสมอ ไม่รับจาก body (v1.14)
+  - `title`: ชื่อวิชาหรือการสอบที่ผู้ใช้พิมพ์ เช่น "แคลคูลัส 1 กลางภาค" · ตัดช่องว่างหัวท้าย · ไม่ว่าง · ยาวไม่เกิน `config/ai.yaml` → `guards.max_exam_prep_title_chars` นับเป็น grapheme cluster (สระและวรรณยุกต์ไทยไม่นับแยก · แบบเดียวกับ `max_attachment_name_chars`) · ห้ามมีอักขระควบคุม (Unicode category `Cc` เช่น `\n`, `\t`, `\x00`) ตรงไหนก็ตาม รวมหัวท้าย (ตรวจก่อนตัดช่องว่าง `"แคลคูลัส\n"` จึงถูกปฏิเสธ ไม่ใช่ถูกตัดทิ้ง) · อักขระจัดรูปแบบอย่าง zero-width joiner ยังได้ (v1.14 · title คือ `prep_name` ของห้องและอาจเข้า prompt ของ tutor ทีหลัง) · ไม่มี field `subject` แยก (เทอม 1 เป็นคณิตอย่างเดียว · `exam_preps.subject` เป็น null)
+  - `exam_date`: `YYYY-MM-DD` · วันนี้ได้ · ก่อนวันนี้ (Asia/Bangkok) → `422 exam_date_past`
+  - `daily_minutes`: ไม่บังคับ (หน้าเว็บไม่ต้องส่ง) · ถ้าส่ง ต้องเป็น integer 1–1440 · ไม่ส่งหรือ `null` = ใช้ค่าจาก `planner.default_daily_minutes` (UC-02 A1)
+  - field เกิน, ผิดชนิด หรือผิดกฎข้างบน → `422 validation_error`
+  - DB ติดต่อไม่ได้ (error, timeout, network) → `503 db_unavailable` · message คงที่ ไม่มีรายละเอียดจาก exception (ใช้กับ `GET` ด้วย · v1.14)
+- **`GET /exam-preps`** · `ExamPrep[]` ของผู้ใช้ (RLS) เรียงตาม `exam_date` ใกล้ก่อน แล้วตาม `created_at` · ไม่รวม `status = 'archived'` · ยังไม่มี → `[]` (v1.14)
+- ทั้งสอง endpoint อ่านและเขียน DB จริง **ไม่มี `X-Stub` เมื่อมี token** (v1.14 · เดิมเป็น stub ที่คืน fixture) · ไม่มี token: `AUTH_REQUIRED=true` → `401 missing_token` (ไม่มี stub) · `AUTH_REQUIRED=false` (เครื่อง dev) → stub เดิมพร้อม `X-Stub: true` ไม่แตะ DB (`specs/features/exam-prep/create-exam-prep.md` §2.1)
 
 **`Material`** (แต่ละแถวของ `GET /exam-preps/{id}/materials` และ response ของ `/uploaded`)
 
@@ -134,10 +140,10 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
    - **ไฟล์สแกนล้มก่อนถึงเพดานนี้มาก (Jam):** A2b มี `max_tokens: 16000` และ P3 วัดได้ 3,199–7,943 token จาก 12–14 หน้า · ประมาณจาก 2 ไฟล์ได้ว่าไฟล์สแกนเกินราว 28–70 หน้าจะได้ JSON ขาด แล้ว `failed` หลังอัปโหลดสำเร็จ · ต้องมีเพดานจำนวนหน้าหรือแบ่งไฟล์ก่อนเปิด ingest จริง
    - **`size_bytes` คือค่าที่ client แจ้ง (Junior):** เรียก API ตรงด้วย `size_bytes: 1` แล้วส่งไฟล์ใหญ่ได้ · ของจริงต้องตั้ง `file_size_limit` ของ bucket ให้ตรงค่านี้ หรือตรวจขนาดจริงตอน `/uploaded` · `/sessions/{id}/uploads` ก็เหมือนกัน
    - **หน้าเว็บจะรู้ค่านี้จากไหน:** ยังไม่กำหนด (May · ตอนเขียน spec ของ S09)
-3. **วันสอบ** (UC-02 คำถามเปิด 2): วันนี้ได้ · ก่อนวันนี้ได้ `422 exam_date_past`
-4. **`stage`, `readiness`, `topics_not_passed` ใน `ExamPrep`:** เดาจาก S27 และ PM-04 · ยังไม่มี spec หน้าหลักของ May
+3. ~~**วันสอบ** (UC-02 คำถามเปิด 2)~~ **ตัดสินแล้ว** (Junior 2026-11-11 · v1.14): วันนี้ได้ · ก่อนวันนี้ได้ `422 exam_date_past`
+4. ~~**`stage`, `readiness`, `topics_not_passed` ใน `ExamPrep`**~~ **ตัดสินแล้ว** (Junior 2026-11-11 · v1.14): ใช้ตามข้อเสนอ · `readiness` และ `topics_not_passed` เป็น null ได้จนกว่า backend จะคำนวณ PM-03, PM-04 จริง
 5. **ประเภทไฟล์:** UC-02 ขั้น 4 พูดถึง "แบบฝึกหัด" แต่ check ของ `materials.kind` ไม่มีค่านี้ · ข้อเสนอคือใช้ enum ของ schema (`sheet`, `slides`, `past_exam`, `notes`, `other`) และนับแบบฝึกหัดเป็น `sheet`
-6. **error code ใหม่:** `exam_date_past`, `unsupported_type` และ `file_too_large` (เหมือนห้องติว), `already_uploaded`, `not_classified`, `unknown_material`
+6. **error code ใหม่:** ~~`exam_date_past`~~ (ตัดสินแล้ว v1.14), `unsupported_type` และ `file_too_large` (เหมือนห้องติว), `already_uploaded`, `not_classified`, `unknown_material`
 
 **หน้าตรวจขอบเขต (v1.6 · ข้อเสนอ รอ Junior ตัดสิน):** รูปร่างตามข้อเสนอของ May ใน `specs/features/scope/scope-review.md` §3 (OQ 5–8) · ตัวอย่าง: `apps/web/tests/fixtures/scope/scope-s12.json`, `sources-t3.json` (id ในไฟล์ของเว็บเป็น `t3` ฯลฯ ของจริงเป็น uuid) · ทุก field ต้องมี และไม่มี field อื่น · prep หรือหัวข้อที่ไม่มี หรือเป็นของ tenant อื่น (RLS มองไม่เห็น) → `404` code `not_found`
 

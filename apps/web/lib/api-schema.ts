@@ -400,17 +400,15 @@ export interface paths {
         };
         /**
          * List Exam Preps
-         * @description The user's exam preps, soonest exam first, archived ones left out (PM-04).
-         *
-         *     stub — one prep in each stage; exam dates count from today
+         * @description The user's exam preps, soonest exam first then oldest created, archived ones left out
+         *     (CM-01, CM-02, PM-04).
          */
         get: operations["list_exam_preps_exam_preps_get"];
         put?: never;
         /**
          * Create Exam Prep
-         * @description New exam prep from S07-S08 (CM-01). Today is a valid exam date; earlier is not.
-         *
-         *     stub — the prep is not saved, so it is not in GET /exam-preps
+         * @description New exam prep from S07-S08 (CM-01). Today in Bangkok is a valid exam date; earlier is
+         *     not. Saved for the user of the token; tenant and user never come from the body.
          */
         post: operations["create_exam_prep_exam_preps_post"];
         delete?: never;
@@ -813,7 +811,8 @@ export interface components {
         };
         /**
          * CreateExamPrepRequest
-         * @description Body of POST /exam-preps (CM-01). A date before today is checked by the endpoint.
+         * @description Body of POST /exam-preps (CM-01 · api.md v1.14). A date before today is checked by the
+         *     endpoint, which knows today in Bangkok.
          */
         CreateExamPrepRequest: {
             /** Title */
@@ -2716,7 +2715,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -2767,7 +2766,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable */
             503: {
                 headers: {
                     [name: string]: unknown;
