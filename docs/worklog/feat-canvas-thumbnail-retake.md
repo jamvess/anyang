@@ -15,8 +15,8 @@
 - [x] 2. 🙋 May review spec (Claude สรุปเป็นข้อๆ + ถามเป็นตัวเลือก) · 2026-11-12 May approve · D1 ขยายดูภาพเต็มในหน้า (เพิ่ม AC-24b) · D2 160 px
 - [x] 3. 🤖 `/spec-to-tests` (Vitest) · 2026-11-12 11 test ใน `ChatRoomThumbnailRetake.test.tsx` · 7 แดงเพราะยังไม่มีภาพย่อและยังไม่พาไป canvas · 4 เขียวอยู่แล้ว (AC-23, 27, 28, 29 ล็อกพฤติกรรมเดิมไว้) · ไม่แก้ test เดิม
 - [x] 4. 🙋 May review test (Claude สรุปชื่อ test เป็นภาษาไทย) · 2026-11-12 May approve 11 test (เก็บ AC-29 ไว้)
-- [ ] 5. 🤖 `/implement-feature` จน test ผ่าน + lint, typecheck, test, build
-- [ ] 6. 🙋 May ลองในห้องเดโม่ (AI จำลอง): ส่งรูปจาก 📷 และจาก canvas เห็นภาพย่อ · กด "ถ่ายใหม่" ของคำตอบจาก canvas แล้วจอเลื่อนไปที่ canvas
+- [x] 5. 🤖 `/implement-feature` จน test ผ่าน + lint, typecheck, test, build · 2026-11-12 red → green 2 รอบ (ภาพย่อ, ถ่ายใหม่ → canvas) · 309/309 · lint ไม่มี warning ใหม่ · build ผ่าน
+- [x] 6. 🙋 May ลองในห้องเดโม่ (AI จำลอง): ส่งรูปจาก 📷 และจาก canvas เห็นภาพย่อ · กด "ถ่ายใหม่" ของคำตอบจาก canvas แล้วจอเลื่อนไปที่ canvas · 2026-11-12 May ลองแล้ว ok
 
 ## Definition of done
 
@@ -26,11 +26,12 @@
 ## Decisions
 
 - 2026-11-12 · ใช้ type `feat` · เปลี่ยน behavior ของหน้าจอ
+- 2026-11-12 · ระหว่าง implement: test เดิม 4 ข้อหาชื่อไฟล์ใน bubble → แสดงชื่อไฟล์ตัวเล็กใต้ภาพย่อ (ไม่มี 📷 · ตรง §2 D ข้อ 21) · test เดิมของ Jam `RoomPagePhoto` AC-19 นับปุ่มทั้งห้อง → **May เลือก** ให้ภาพย่อเป็นลิงก์แทนปุ่ม และแก้ test AC-24b ที่ May เพิ่ง review ให้หา link (ไม่แตะ test ของ Jam) · spec §2 D ข้อ 25 แก้ตาม
 - 2026-11-12 · แก้ spec เดิม `answer-canvas.md` (ไฟล์ของ Jam · หน้าจอเป็นของ May) แทนการสร้าง spec ใหม่ · เป็นการต่อยอดจาก §10
 
 ## Next step
 
-Claude ทำขั้น 5: `/implement-feature` ให้ `ChatRoomThumbnailRetake.test.tsx` ผ่าน (ห้ามแก้ test)
+ทุกขั้นเสร็จแล้ว · May พิมพ์ `/work-done`
 
 ## Waiting on
 

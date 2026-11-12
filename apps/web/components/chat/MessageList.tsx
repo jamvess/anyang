@@ -5,8 +5,11 @@ import { OcrConfirmCard } from "./OcrConfirmCard";
 import { ProblemCard } from "./ProblemCard";
 import { ProgressCard, type ProgressCardData } from "./ProgressCard";
 import { roomStrings } from "./strings";
+import { Thumbnail } from "./Thumbnail";
 import { VerdictMark } from "./VerdictMark";
 import type { ChatMessage } from "./types";
+
+export { THUMBNAIL_MAX_PX } from "./Thumbnail";
 
 type Speaker = "tutor" | "buddy" | "user";
 
@@ -145,7 +148,11 @@ export function MessageList({
                   </time>
                 </p>
               )}
-              {m.input_mode === "image" && (m.attachment_name || m.attachment_path) && (
+              {m.input_mode === "image" && m.preview_url && (
+                // Sent in this session: the local file as a thumbnail (answer-canvas.md §2 D).
+                <Thumbnail src={m.preview_url} name={m.attachment_name || fileName(m.attachment_path ?? "")} />
+              )}
+              {m.input_mode === "image" && !m.preview_url && (m.attachment_name || m.attachment_path) && (
                 <p className="my-1 inline-block rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-500">
                   {/* attachment_name first: the Storage path is a uuid (api.md v1.3 · AC-6b) */}
                   📷 {m.attachment_name || fileName(m.attachment_path!)}

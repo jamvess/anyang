@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import type { AnswerCanvasHandle } from "./AnswerCanvas";
 import { Composer, type ComposerHandle } from "./Composer";
 import { MessageList } from "./MessageList";
 import type { OcrPreviewData, OcrStatus } from "./OcrConfirmCard";
@@ -9,7 +10,7 @@ import type { ProblemData } from "./ProblemCard";
 import { roomStrings as t } from "./strings";
 import { hasVerdictMark, type VerdictData } from "./VerdictMark";
 import type { SSEEvent } from "@/lib/sse";
-import type { ChatMessage, ConfirmOcr, MessageRole, RoomData, SendMessage, SendPayload, Transcribe } from "./types";
+import type { ChatMessage, ConfirmOcr, ImageSource, MessageRole, RoomData, SendMessage, SendPayload, Transcribe } from "./types";
 
 /** How close to the bottom (px) still counts as "following" the stream. A UI value, not a learning-model one. */
 export const NEAR_BOTTOM_PX = 80;
@@ -56,9 +57,15 @@ export function ChatRoom({
   const log = useRef<HTMLElement>(null);
   const stick = useRef(true);
   const composer = useRef<ComposerHandle>(null);
+  const canvas = useRef<AnswerCanvasHandle>(null);
+  // Where the latest image came from; the next confirm card takes it (answer-canvas.md §2 E item 26).
+  const lastImageSource = useRef<ImageSource>("photo");
   const busyRef = useRef(false);
 
   useEffect(() => () => abort.current?.abort(), []);
+  // Object URLs of photos sent in this session (thumbnails · answer-canvas.md §2 D item 24).
+  const previewUrls = useRef<string[]>([]);
+  useEffect(() => () => previewUrls.current.forEach((url) => URL.revokeObjectURL(url)), []);
 
   // Follow the stream only when the user is already near the bottom (chat-streaming.md §2).
   useLayoutEffect(() => {
@@ -97,11 +104,18 @@ export function ChatRoom({
 
   async function send(payload: SendPayload) {
     const { text, image } = payload;
+    let preview_url: string | undefined;
+    if (image) {
+      preview_url = URL.createObjectURL(image);
+      previewUrls.current.push(preview_url);
+      lastImageSource.current = payload.source ?? "photo";
+    }
     append(
       newMessage("user", text, {
         input_mode: image ? "image" : payload.voice ? "voice" : "text",
         // Not uploaded yet, so no Storage path (chat-room-ui.md AC-6c).
         attachment_name: image ? image.name : null,
+        ...(preview_url && { preview_url }),
       }),
     );
     stick.current = true;
@@ -122,6 +136,9 @@ export function ChatRoom({
 
   function retake(id: string) {
     setOcrStatus(id, "retaken");
+    // An answer drawn on the canvas goes back to the canvas; a photo, or no canvas any more, opens the picker (§2 E).
+    const fromCanvas = messages.find((m) => m.id === id)?.ocr?.source === "canvas";
+    if (fromCanvas && canvas.current?.goTo()) return;
     composer.current?.pickPhoto();
   }
 
@@ -165,7 +182,7 @@ export function ChatRoom({
           if (preview.lines.length > 0) {
             setMessages((prev) => [
               ...prev.map((m) => (m.ocr?.status === "pending" || m.ocr?.status === "arriving" ? { ...m, ocr: { ...m.ocr, status: "retaken" as const } } : m)),
-              newMessage("card", null, { ocr: { preview, status: "arriving" } }),
+              newMessage("card", null, { ocr: { preview, status: "arriving", source: lastImageSource.current } }),
             ]);
           }
           current = null;
@@ -237,7 +254,7 @@ export function ChatRoom({
             typing={typing}
             onOcrConfirm={confirm}
             onOcrRetake={retake}
-            answerCanvas={{ onSend: send, disabled: busy, maxImageMb: room.limits.max_image_mb }}
+            answerCanvas={{ onSend: send, disabled: busy, maxImageMb: room.limits.max_image_mb, handle: canvas }}
           />
         </div>
       </main>

@@ -19,12 +19,17 @@ export type ChatMessage = Omit<Schemas["Message"], "card" | "attachment_name"> &
     /** Browser-only: a problem from the SSE `problem` event (problem-card.md). Not part of the API. */
     problem?: ProblemData;
     /** Browser-only: lines read from a photo, waiting for the user (ocr-confirm-card.md). Not part of the API. */
-    ocr?: { preview: OcrPreviewData; status: OcrStatus };
+    ocr?: { preview: OcrPreviewData; status: OcrStatus; source?: ImageSource };
+    /** Browser-only: object URL of a photo sent in this session, shown as a thumbnail (answer-canvas.md §2 D). */
+    preview_url?: string;
     /** Browser-only: the check result from the SSE `verdict` event (verdict-mark.md). Not part of the API. */
     verdict?: VerdictData;
   };
 
 export type MessageRole = ChatMessage["role"];
+
+/** Where a sent image came from: the answer canvas or the Composer's 📷 (answer-canvas.md §2 E). */
+export type ImageSource = "canvas" | "photo";
 
 /**
  * Input limits from `config/ai.yaml` → `guards`, sent by the API with the room. The audio limits are
@@ -36,7 +41,7 @@ export type InputLimits = Schemas["Limits"] & { max_audio_seconds?: number; min_
 export type RoomData = Omit<Schemas["Room"], "messages"> & { messages: ChatMessage[] };
 
 /** `voice` is set only when the text came from speech (voice-input.md · typed messages keep `{text, image}`). */
-export type SendPayload = { text: string | null; image: File | null; voice?: true };
+export type SendPayload = { text: string | null; image: File | null; voice?: true; source?: ImageSource };
 
 /**
  * Sends one message and yields the SSE events of the reply

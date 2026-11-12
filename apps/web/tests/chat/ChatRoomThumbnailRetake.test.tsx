@@ -177,7 +177,8 @@ describe("ChatRoom · thumbnail in the sent bubble (§2 D)", () => {
     await flush();
     await t.sendPhoto("วิธีทำ.jpg");
 
-    const open = within(t.lastUserBubble()).getByRole("button", { name: "ดูรูปเต็ม: วิธีทำ.jpg" });
+    // A link, not a button (May 12 Nov): the room keeps only its input buttons (RoomPagePhoto AC-19).
+    const open = within(t.lastUserBubble()).getByRole("link", { name: "ดูรูปเต็ม: วิธีทำ.jpg" });
     fireEvent.click(open);
     const dialog = t.getByRole("dialog");
     expect(dialog.getAttribute("aria-modal")).toBe("true");
