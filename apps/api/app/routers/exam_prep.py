@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse
 from app import stubs
 from app.auth import AuthContext, get_auth
 from app.clock import get_now
+from app.db.errors import DB_DOWN_MESSAGE
 from app.db.exam_preps import (
     DbUnavailableError,
     ExamPrepRecord,
@@ -47,7 +48,6 @@ MaterialId = Annotated[UUID, Path(alias="id")]
 # --- exam preps ------------------------------------------------------------------
 
 
-_DB_DOWN_MESSAGE = "ระบบบันทึกข้อมูลไม่ได้ชั่วคราว ลองใหม่อีกครั้ง"
 _DB_DOWN_DOC = {"model": ErrorResponse, "description": "db_unavailable, or auth_unavailable"}
 
 Repository = Annotated[ExamPrepRepository | None, Depends(get_exam_prep_repository)]
@@ -73,7 +73,7 @@ def _exam_prep(record: ExamPrepRecord, today: date) -> ExamPrep:
 
 
 def _db_unavailable() -> JSONResponse:
-    return error_response(503, "db_unavailable", _DB_DOWN_MESSAGE)
+    return error_response(503, "db_unavailable", DB_DOWN_MESSAGE)
 
 
 # Sync endpoints: the Supabase client blocks, so FastAPI runs them in its thread pool.

@@ -1,4 +1,5 @@
-"""Typed settings: environment variables + config/learning.yaml + config/ai.yaml.
+"""Typed settings: environment variables + config/learning.yaml + config/ai.yaml +
+config/messages.yaml.
 
 Every threshold of the learning model and every model-routing choice lives in the
 YAML files (root CLAUDE.md rules 5 and 3). The models below mirror those files with
@@ -7,6 +8,7 @@ silently ignored.
 """
 
 import re
+import string
 from functools import lru_cache
 from pathlib import Path
 from typing import Annotated, Literal, Self
@@ -315,12 +317,61 @@ class EnvSettings(BaseSettings):
     log_level: Literal["debug", "info", "warning", "error", "critical"] = "info"
 
 
+# --- config/messages.yaml (room-sessions-db.md §2.8) --------------------------------------
+
+# The placeholders each greeting template may use (spec §2.8 table).
+_GREETING_PLACEHOLDERS: dict[str, frozenset[str]] = {
+    "hello_named": frozenset({"user_name"}),
+    "hello_anonymous": frozenset(),
+    "days_left_many": frozenset({"days_left", "prep_name"}),
+    "exam_today": frozenset({"prep_name"}),
+    "exam_passed": frozenset({"prep_name"}),
+    "invite": frozenset(),
+}
+
+
+def _placeholders(template: str) -> set[str]:
+    """Field names of a str.format template; a conversion, a format spec or a positional or
+    dotted field is refused, so a template can only take plain named values."""
+    names: set[str] = set()
+    for _, name, spec, conversion in string.Formatter().parse(template):
+        if name is None:
+            continue
+        if spec or conversion or not name.isidentifier():
+            raise ValueError(f"placeholder {{{name}}} must be a plain name")
+        names.add(name)
+    return names
+
+
+class RoomGreetingConfig(_Strict):
+    hello_named: str
+    hello_anonymous: str
+    days_left_many: str
+    exam_today: str
+    exam_passed: str
+    invite: str
+
+    @model_validator(mode="after")
+    def _known_placeholders(self) -> "RoomGreetingConfig":
+        for key, allowed in _GREETING_PLACEHOLDERS.items():
+            unknown = _placeholders(getattr(self, key)) - allowed
+            if unknown:
+                raise ValueError(f"room_greeting.{key}: unknown placeholders {sorted(unknown)}")
+        return self
+
+
+class MessagesConfig(_Strict):
+    version: str
+    room_greeting: RoomGreetingConfig
+
+
 class Settings(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     env: EnvSettings
     learning: LearningConfig
     ai: AIConfig
+    messages: MessagesConfig
 
 
 def _load_yaml(path: Path) -> dict:
@@ -337,6 +388,7 @@ def load_settings() -> Settings:
         env=env,
         learning=LearningConfig.model_validate(_load_yaml(env.config_dir / "learning.yaml")),
         ai=AIConfig.model_validate(_load_yaml(env.config_dir / "ai.yaml")),
+        messages=MessagesConfig.model_validate(_load_yaml(env.config_dir / "messages.yaml")),
     )
 
 

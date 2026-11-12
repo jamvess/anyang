@@ -16,6 +16,8 @@ SQL จริงอยู่ที่ `supabase/migrations/` เริ่มจ�
 - งานเบื้องหลัง (ingestion) ใช้ service role ซึ่งข้าม RLS จึงต้องใส่ `tenant_id` เองทุกครั้ง
 - ค่า threshold ไม่อยู่ใน DB ทั้งหมดอยู่ใน `config/learning.yaml`
 - Storage path: `{tenant_id}/{exam_prep_id}/{material_id}` และตั้ง storage policy ให้อ่านได้เฉพาะ prefix ของ tenant ตัวเอง
+- `tutor_sessions.scope_version_id` เป็น null ได้ (`0004` · Junior 2026-11-11): null = **session ที่เริ่มก่อนยืนยัน scope** (ทางของ demo ระหว่างที่ ingestion และ `scope/confirm` ยังไม่จริง · `specs/features/tutor/room-sessions-db.md`) · **กฎของ planner (Jam):** เมื่อ ingestion + confirm จริงแล้ว session ใหม่ต้องผูก `exam_preps.active_scope_version_id` เสมอ ถ้า prep มี scope ที่ยืนยันแล้ว และ planner ต้องรับมือ session เก่าที่เป็น null (เช่น ไม่เลือกหัวข้อจาก scope ให้ session นั้น หรือผูก version ที่ active ตอนเปิด session ครั้งถัดไป)
+- **RLS ของ `messages` กรองแค่ tenant** (`tenant_rows` ไม่ดู `user_id` · ต่างจาก `tutor_sessions` ที่เป็น `owner_rows`): พอสำหรับ tenant ส่วนตัวที่มี user เดียว · API อ่านข้อความผ่าน session ที่ RLS ของ `tutor_sessions` เห็นแล้วเท่านั้น (`room-sessions-db.md`) · **เมื่อมี tenant แบบกลุ่ม:** user ในกลุ่มเดียวกันจะอ่านข้อความของกันได้ถ้า query `messages` ตรง ต้องเปลี่ยน policy ให้ตรวจผ่าน `tutor_sessions.user_id = auth.uid()` (migration ใหม่) ก่อนเปิดกลุ่ม
 - `messages.attachment_name` คือชื่อไฟล์เดิมที่ user เห็น (เช่น "วิธีทำ.jpg") · ค่ามาจาก user จึงใช้แสดงผลอย่างเดียว **ห้ามใช้ประกอบ path ใน Storage** · `attachment_path` ตั้งชื่อด้วย uuid เสมอ · ความยาวสูงสุดคือ `config/ai.yaml` → `guards.max_attachment_name_chars` (นับเป็น grapheme cluster) ตรวจที่ API ไม่มี `CHECK` ใน SQL · ชื่อที่ยาวเกินให้ **ตัดให้สั้น ไม่ปฏิเสธ**: ตัดเป็น grapheme cluster (สระและวรรณยุกต์ไทยต้องติดกับพยัญชนะ ไม่ตัดตาม code point) และเก็บนามสกุลไฟล์ไว้ (2026-10-21 · ข้อความใน api.md จะตามมาพร้อม PR ของ api.md ข้อ 5 · guard จริงทำพร้อม endpoint uploads ใน S3)
 
 ## ERD
@@ -214,7 +216,7 @@ erDiagram
 erDiagram
   users ||--o{ tutor_sessions : "user_id"
   exam_preps ||--o{ tutor_sessions : "exam_prep_id"
-  scope_versions ||--o{ tutor_sessions : "scope_version_id"
+  scope_versions |o--o{ tutor_sessions : "scope_version_id"
   topics |o--o{ tutor_sessions : "current_topic_id"
   tutor_sessions ||--o{ messages : "session_id"
   tutor_sessions ||--o{ problems : "session_id"

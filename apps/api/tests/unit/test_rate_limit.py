@@ -17,9 +17,11 @@ from fastapi.testclient import TestClient
 from app.ai.gateway import get_gateway
 from app.ai.providers.fake import FakeProvider
 from app.auth import AuthContext, get_auth
+from app.db.room import get_room_repository
 from app.main import app
 from app.rate_limit import RateLimiter, get_rate_limiter
 from app.settings import get_settings
+from tests.unit.test_room_sessions_api import PREP_ID, FakeRoomRepo, prep_record
 from tests.unit.test_tutor_reply_stream_api import make_gateway
 
 L = get_settings().ai.guards.rate_limit_messages_per_minute
@@ -85,6 +87,13 @@ def as_user() -> Iterator[Callable[[UUID | None, UUID], None]]:
 def client() -> Iterator[TestClient]:
     with TestClient(app) as c:
         yield c
+
+
+def open_session_repo() -> FakeRoomRepo:
+    """SESSION_ID as an open session the signed-in user can see (room-sessions-db.md)."""
+    repo = FakeRoomRepo(preps={PREP_ID: prep_record()})
+    repo.add_session(id=UUID(SESSION_ID))
+    return repo
 
 
 def send(
@@ -197,6 +206,9 @@ def test_TM21_message_over_the_limit_is_429_without_an_ai_call(client, limiter, 
     """AC-2: the (L + 1)th text message gets 429 and tutor_reply is not called for it."""
     fake = FakeProvider({"tutor_reply": ["ตอบ"] * (L + 1)})
     app.dependency_overrides[get_gateway] = lambda: make_gateway(fake)
+    # A signed-in text message goes to the DB (room-sessions-db.md AC-auth-real): SESSION_ID is
+    # an open session in a fake repository (Jam ยังไม่ ok · 2026-11-12 · PR #123).
+    app.dependency_overrides[get_room_repository] = open_session_repo
     try:
         as_user(U1)
         assert send(client, L, body={"text": "ข้อ 1"}) == [200] * L
@@ -207,6 +219,7 @@ def test_TM21_message_over_the_limit_is_429_without_an_ai_call(client, limiter, 
         assert len(fake.requests) == L
     finally:
         app.dependency_overrides.pop(get_gateway, None)
+        app.dependency_overrides.pop(get_room_repository, None)
 
 
 def test_TM21_retry_after_a_429_stays_429(client, limiter, as_user) -> None:
@@ -234,8 +247,13 @@ def test_TM21_other_room_endpoints_are_not_limited(client, limiter, as_user) -> 
     as_user(U1)
     send(client, L)
     upload = {"kind": "image", "content_type": "image/jpeg", "file_name": "a.jpg", "size_bytes": 9}
-
-    assert client.get(f"/sessions/{SESSION_ID}").status_code == 200
+    # A signed-in GET /sessions/{id} reads the DB (room-sessions-db.md AC-auth-real): SESSION_ID
+    # is an open session in a fake repository (Jam ยังไม่ ok · 2026-11-12 · PR #123).
+    app.dependency_overrides[get_room_repository] = open_session_repo
+    try:
+        assert client.get(f"/sessions/{SESSION_ID}").status_code == 200
+    finally:
+        app.dependency_overrides.pop(get_room_repository, None)
     assert client.post(f"/sessions/{SESSION_ID}/uploads", json=upload).status_code == 200
     assert (
         client.post(

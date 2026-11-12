@@ -16,7 +16,11 @@ from datetime import datetime
 from typing import Annotated, Any, Literal, Self
 from uuid import UUID
 
-from pydantic import Field, StringConstraints, model_validator
+from pydantic import (
+    Field,
+    StringConstraints,
+    model_validator,
+)
 
 from app.domain.checker import ErrorType, Verdict
 from app.models.base import ApiModel
@@ -191,7 +195,14 @@ class BuddyEvent(ApiModel):
 
 
 class DoneEvent(ApiModel):
-    pass
+    """Last event of every stream. In the room on the database, `message_ids` are the ids of
+    the tutor and buddy messages this stream saved, in stream order (api.md "SSE events" ·
+    room-sessions-db.md). Streams that save nothing (stub, demo) leave it out, so they still
+    send `{}`."""
+
+    # exclude_if, not a wrap model_serializer: a wrap serializer hides the field from the
+    # OpenAPI schema, so the web's generated DoneEvent type lost message_ids.
+    message_ids: list[UUID] | None = Field(default=None, exclude_if=lambda ids: ids is None)
 
 
 class ErrorEvent(ApiModel):

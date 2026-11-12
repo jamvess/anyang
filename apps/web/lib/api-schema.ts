@@ -30,10 +30,11 @@ export interface paths {
         };
         /**
          * Get Active Session
-         * @description Open session of this exam prep (TM-13); 404 `no_active_session` if none.
+         * @description Open session of this exam prep, the latest started (TM-13); 404 `no_active_session` if
+         *     none, `not_found` if the prep is not the user's.
          *
-         *     stub — replaced in P4-lite. On a local machine there is none, so the web opens a new
-         *     session and the tutor greets first (demo-room.md §2 F item 1).
+         *     Without a token (AUTH_REQUIRED=false): stub. On a local machine there is none, so the web
+         *     opens a new session and the tutor greets first (demo-room.md §2 F item 1).
          */
         get: operations["get_active_session_exam_preps__id__sessions_active_get"];
         put?: never;
@@ -55,10 +56,13 @@ export interface paths {
         put?: never;
         /**
          * Create Session
-         * @description Start a session. SSE: session → progress_card → token (opening) → problem → done.
+         * @description Start a session. With a token: a new tutor_sessions row, then SSE session → token (the
+         *     greeting from config/messages.yaml) → done, with no progress_card or problem yet
+         *     (room-sessions-db.md §2.4). 404 if the prep is not the user's.
          *
-         *     stub — replaced in P4-lite. On a local machine it is a new session of the demo: the card
-         *     comes from real mastery and the problem is the one reached (demo-room.md §2 D, F, J).
+         *     Without a token (AUTH_REQUIRED=false): stub SSE session → progress_card → token → problem →
+         *     done. On a local machine it is a new session of the demo: the card comes from real mastery
+         *     and the problem is the one reached (demo-room.md §2 D, F, J).
          */
         post: operations["create_session_exam_preps__id__sessions_post"];
         delete?: never;
@@ -76,10 +80,11 @@ export interface paths {
         };
         /**
          * Get Session
-         * @description Room data: header, input limits and messages (oldest first).
+         * @description Room data: header, input limits and messages (oldest first). An ended session still
+         *     opens (room-sessions-db.md §2.5).
          *
-         *     stub — replaced in P4-lite. On a local machine there is no sample history: the tutor never
-         *     had that conversation (demo-room.md §2 E item 1).
+         *     Without a token (AUTH_REQUIRED=false): stub. On a local machine there is no sample history:
+         *     the tutor never had that conversation (demo-room.md §2 E item 1).
          */
         get: operations["get_session_sessions__id__get"];
         put?: never;
@@ -123,7 +128,7 @@ export interface paths {
          * List Messages
          * @description Chat history, oldest first (TM-13). Not paged yet.
          *
-         *     stub — the messages of the room fixture
+         *     Without a token (AUTH_REQUIRED=false): the messages of the room fixture.
          */
         get: operations["list_messages_sessions__id__messages_get"];
         put?: never;
@@ -1438,8 +1443,20 @@ export interface components {
             /** Text */
             text: string;
         };
-        /** DoneEvent */
-        DoneEvent: Record<string, never>;
+        /**
+         * DoneEvent
+         * @description Last event of every stream. In the room on the database, `message_ids` are the ids of
+         *     the tutor and buddy messages this stream saved, in stream order (api.md "SSE events" ·
+         *     room-sessions-db.md). Streams that save nothing (stub, demo) leave it out, so they still
+         *     send `{}`.
+         */
+        DoneEvent: {
+            /**
+             * Message Ids
+             * @default null
+             */
+            message_ids: string[] | null;
+        };
         /** ErrorEvent */
         ErrorEvent: {
             /** Code */
@@ -1630,7 +1647,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -1688,7 +1705,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -1746,7 +1763,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -1871,7 +1888,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -1924,6 +1941,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            /** @description session_already_ended */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             /** @description Invalid path or body */
             422: {
                 headers: {
@@ -1942,7 +1968,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;
