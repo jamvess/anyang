@@ -11,8 +11,8 @@
 
 ขอบเขต: ฝั่งเว็บ (`apps/web`) เท่านั้น · ภาพย่อของรูปที่**ส่งใน session นี้** ใช้ไฟล์ในเครื่อง (object URL) · ภาพย่อของแชทเก่าหลังโหลดใหม่ต้องให้ API ส่งลิงก์อ่านรูป (api.md · Junior · ชนกับ #123) จึงอยู่นอกขอบเขต แสดงชื่อไฟล์เหมือนเดิม
 
-- [ ] 1. 🤖 เขียนส่วนใหม่ใน `specs/features/tutor/answer-canvas.md` (§2 D ภาพย่อ, §2 E ถ่ายใหม่ → canvas) + AC + boundary · แจ้ง `ocr-confirm-card.md` §2 (ปุ่มถ่ายใหม่) ว่าเปลี่ยนเมื่อส่งจาก canvas
-- [ ] 2. 🙋 May review spec (Claude สรุปเป็นข้อๆ + ถามเป็นตัวเลือก)
+- [x] 1. 🤖 เขียนส่วนใหม่ใน `specs/features/tutor/answer-canvas.md` (§2 D ภาพย่อ, §2 E ถ่ายใหม่ → canvas) + AC + boundary · แจ้ง `ocr-confirm-card.md` §2 (ปุ่มถ่ายใหม่) ว่าเปลี่ยนเมื่อส่งจาก canvas · 2026-11-12 ร่างแล้ว §2 D ข้อ 21–25, E ข้อ 26–29, AC-20 ถึง AC-29, คำถาม D1–D3
+- [x] 2. 🙋 May review spec (Claude สรุปเป็นข้อๆ + ถามเป็นตัวเลือก) · 2026-11-12 May approve · D1 ขยายดูภาพเต็มในหน้า (เพิ่ม AC-24b) · D2 160 px
 - [ ] 3. 🤖 `/spec-to-tests` (Vitest)
 - [ ] 4. 🙋 May review test (Claude สรุปชื่อ test เป็นภาษาไทย)
 - [ ] 5. 🤖 `/implement-feature` จน test ผ่าน + lint, typecheck, test, build
@@ -30,7 +30,7 @@
 
 ## Next step
 
-Claude ทำขั้น 1: ร่าง §2 D, §2 E และ AC
+Claude ทำขั้น 3: `/spec-to-tests` สำหรับ AC-20 ถึง AC-29 + AC-24b ลงไฟล์ใหม่ `apps/web/tests/chat/ChatRoomThumbnailRetake.test.tsx`
 
 ## Waiting on
 
