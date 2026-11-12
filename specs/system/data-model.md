@@ -1,4 +1,4 @@
-# Data model (v1.3)
+# Data model (v1.4)
 
 SQL จริงอยู่ที่ `supabase/migrations/` เริ่มจาก `0001_init.sql` (ทดสอบรันบน PostgreSQL + pgvector แล้ว และทดสอบ RLS ว่า user A มองไม่เห็นข้อมูลของ user B) แล้วแก้ต่อด้วย migration ใหม่ทีละไฟล์ ไม่แก้ไฟล์เดิม ไฟล์นี้อธิบายภาพรวมและเหตุผล
 
@@ -6,6 +6,7 @@ SQL จริงอยู่ที่ `supabase/migrations/` เริ่มจ�
 |---|---|
 | `0002_messages_attachment_name.sql` | เพิ่ม `messages.attachment_name` (api.md v1.3 · 2026-10-21) |
 | `0003_topic_sources.sql` | ตารางใหม่ `topic_sources` (ช่วงหน้าของหัวข้อ) + `past_exam_questions.map_note` · ผลจาก P3 ข้อ 1 และ 3 (2026-11-01) |
+| `0004_tutor_sessions_scope_nullable.sql` | `tutor_sessions.scope_version_id` เป็น null ได้: session ที่เริ่มก่อนยืนยัน scope (`room-sessions-db.md` · Junior 2026-11-11 · ขึ้น anyang-dev และ anyang-staging แล้ว) · FK เดิมยังอยู่ |
 
 ## กฎทั่วไป
 
@@ -22,7 +23,7 @@ SQL จริงอยู่ที่ `supabase/migrations/` เริ่มจ�
 
 ## ERD
 
-ครบทุกตาราง (28 ตารางใน `public`) และทุก foreign key ใน `0001_init.sql`–`0003_topic_sources.sql` แบ่งเป็น 3 รูปตามกลุ่ม
+ครบทุกตาราง (28 ตารางใน `public`) และทุก foreign key ใน `0001_init.sql`–`0004_tutor_sessions_scope_nullable.sql` แบ่งเป็น 3 รูปตามกลุ่ม (`0004` เปลี่ยนแค่ให้ `tutor_sessions.scope_version_id` เป็น null ได้ · เส้น `|o--o{` ในรูป 3 ถูกอยู่แล้ว)
 
 วิธีอ่าน:
 
@@ -369,6 +370,8 @@ Golden sets ของการวัดผล AI ไม่อยู่ใน DB 
 ## สิ่งที่ยังไม่ชัด
 
 - `problems.source_ref` เป็น `uuid` ที่ไม่มี FK · `ai-orchestration.md` §3 ระบุแค่ชื่อ column ไม่ได้บอกว่าตอน `source = past_exam` หรือ `doc` ต้องชี้ไปตารางไหน (น่าจะเป็น `past_exam_questions` / `chunks` แต่ยังไม่ได้ตกลงกัน)
+- **(รอทีม · จากข้อเสนอแก้ AM-07 · PR #127)** ถ้าทีมรับ hint ladder: `attempts` ต้องเก็บจำนวน hint ต่อโจทย์ (AM-10 กลับมา active · PM-01) เช่น `hints_used smallint not null default 0` · ตอนนี้ `independent` ที่มีอยู่แล้วพอสำหรับกติกา BKT (ถูกหลัง hint ระดับสุดท้าย = `independent = false`) · migration ใหม่ทำเมื่อบันทึก `attempts` จริง (ตอนนี้ hint ladder อยู่ในเดโม่ในเครื่องที่เก็บใน memory เท่านั้น · `demo-room.md` §2 K)
+- ยังไม่มีโค้ดเขียน `problems`, `attempts`, `topic_progress` · ห้องติวบน DB (`room-sessions-db.md`) เขียนแค่ `tutor_sessions` + `messages` · mastery ในเดโม่อยู่ใน memory (`demo-room.md` §2 D)
 
 ## สิ่งที่ยังรอผล PoC
 
