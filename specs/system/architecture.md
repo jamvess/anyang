@@ -1,10 +1,12 @@
-# Architecture (v1.2)
+# Architecture (v1.3)
+
+v1.3 (2026-11-12 · D2, D3 · Jam ช่วง solo · item ของ Junior): ตาราง "สร้างแล้วหรือยัง" ตรวจกับโค้ดบน `main` วันที่ 12 พ.ย. (หลัง PR #127) · ตัวเลขผล PoC ของแต่ละ tier อยู่ใน `ai-orchestration.md` §2.10 และ §3.6 ไม่ซ้ำที่นี่
 
 v1.2 (2026-11-01 · D2): ตรวจกับที่ตั้งจริงแล้ว · ที่มาของแต่ละข้ออยู่ใน `infra/README.md`, `config/ai.yaml`, `.github/workflows/` และ report PoC ใน `specs/poc/reports/` · ของที่ยังไม่สร้างเขียนว่า **แผน** และสถานะรวมอยู่ในหัวข้อ "สร้างแล้วหรือยัง" ด้านล่าง
 
 ## ภาพรวม 3 ชั้น
 
-เส้นประ (ทั้งเส้นเชื่อมและกรอบ) = ยังเป็นแผน
+เส้นประ (ทั้งเส้นเชื่อมและกรอบ) = ยังเป็นแผน หรือมีโค้ดแล้วแต่ยังไม่ได้ใช้บน staging (`stars` ยังไม่มีใครเรียก · `bkt`, `hint ladder` และ services ของเดโม่ใช้เฉพาะ `APP_ENV=local`)
 
 ```mermaid
 flowchart TB
@@ -14,9 +16,11 @@ flowchart TB
   end
   W <-->|REST + SSE · Bearer JWT| A
   subgraph Cloud Run · asia-southeast1
-    A[FastAPI · ตรวจ JWT] --> D[domain: checker]
-    A -.-> DP[domain: stars · bkt · planner · stage machine · buddy · spacing]
-    A --> S[services: checker · tutor turn]
+    A[FastAPI · ตรวจ JWT] --> D[domain: checker · exam prep · room]
+    A -.-> DL[domain ที่มีแล้วแต่ยังไม่ได้ใช้บน staging: stars · bkt · hint ladder]
+    A -.-> DP[domain: planner · stage machine · buddy · spacing]
+    A --> S[services: checker · tutor turn · photo check · room on DB]
+    A -.-> SL[services ของเดโม่ในเครื่อง: demo room · room chat · room opening · dev uploads]
     A -.-> SP[services: ingestion · scope edit]
     S --> G[AI gateway: routing · retry · circuit breaker · log]
     G -.-> GP[answer-leak check · fallback]
@@ -32,7 +36,7 @@ flowchart TB
   W <--> AU[Supabase Auth · Google login แผน · UM-02]
 
   classDef plan stroke-dasharray: 5 5
-  class DP,SP,GP,C,T,ST plan
+  class DL,DP,SP,GP,C,T,ST,SL plan
 ```
 
 - **AI gateway** (`apps/api/app/ai/gateway.py`) เลือก provider จาก prefix ของ model id ใน `config/ai.yaml`:
@@ -83,22 +87,30 @@ flowchart TB
   - ทางสำรองคือ `infra/deploy-staging.ps1`
 - **frontend:** PR ที่แก้ `apps/web/**` → workflow `web-deploy` สร้าง preview · push เข้า `main` → deploy production
 - **prod:** แผนคือกด promote (เทอม 2)
-- **migration:** Junior รัน `npx supabase db push` ขึ้น `anyang-dev` และ `anyang-staging` หลัง merge · CI ไม่ได้ push ให้ · 1 พ.ย. `anyang-staging` มี `0001` + `0002` (`infra/README.md`) · `0003` (PR #67) รอ Junior push
+- **migration:** Junior รัน `npx supabase db push` ขึ้น `anyang-dev` และ `anyang-staging` หลัง merge · CI ไม่ได้ push ให้ · `0001`–`0003` ขึ้นทั้ง `anyang-dev` และ `anyang-staging` แล้ว 9 พ.ย. (PR #116 · `infra/README.md`) · `0004` ขึ้นทั้งสองแล้ว 11 พ.ย. (PR #123 · `data-model.md`)
 
-## สร้างแล้วหรือยัง (2026-11-01)
+## สร้างแล้วหรือยัง (2026-11-12)
+
+"เดโม่ในเครื่อง" = `APP_ENV=local` (`specs/features/tutor/demo-room.md`): ทางที่วนได้ครบกับ Gemini จริงบน Vertex เพื่อให้อาจารย์ดู · state อยู่ใน memory ของ process ไม่ใช่ DB · ไม่ใช่โครงสร้างจริงของ production
 
 | ส่วน | สถานะ | ที่มา |
 |---|---|---|
-| AI gateway: `ai.call`, `ai.stream`, routing, retry, log `ai_calls`, circuit breaker ต่อ provider | สร้างแล้ว · **answer-leak check และ fallback ยังไม่มี** (`gateway.py`) · breaker เปิดแล้วล้มทันทีแล้ว degrade | `ai-calls-log.md`, `gemini-vertex.md`, `gateway-guards.md` |
-| Rate limit ข้อความในห้องติว (`guards.rate_limit_messages_per_minute`) | สร้างแล้ว · นับในหน่วยความจำต่อ instance · ไม่มี token นับต่อ IP (ปลอมได้ · ห้ามเปิด live ขณะ `AUTH_REQUIRED=false`) | `gateway-guards.md` |
-| ตรวจ JWT ทุก endpoint | สร้างแล้ว · `api-staging` ยังไม่ตรวจเลย (ไม่มี `SUPABASE_URL` / `SUPABASE_ANON_KEY`) รอหน้าเว็บ login | `api-auth.md` |
-| ห้องติว: ข้อความ text stream จาก gateway | สร้างแล้ว (P4-lite) · ยังไม่บันทึก `messages` · endpoint อื่นของห้องเป็น stub (`X-Stub: true`) | `tutor-reply-stream.md` |
-| หน้าตรวจขอบเขต | stub 3 endpoint (api.md v1.6) | PR #100 |
-| ตรวจคำตอบ: SymPy service + merge rules + classifier | สร้างแล้ว ยังไม่ต่อเข้าห้องแชท | `sympy-service.md`, `check-answer-classifier.md` |
-| `domain/`: stars, bkt, planner, stage machine, buddy, spacing | แผน · มีแค่ `checker.py` · `compute_importance` ทำใน P8-lite (S4) | `compute-importance.md` |
-| ingestion (classify → อ่าน PDF → สกัดหัวข้อ → ดาว) | แผน · มีแค่โค้ดของ PoC ใน `poc/P3/` | P3.md |
-| Upload ไฟล์และรูปขึ้น Storage | แผน | api.md "Exam prep และ scope", "ห้องติว" |
-| หน้าเว็บ login (Google · UM-02) | แผน · ต้องตั้ง Google provider + redirect URL ใน Supabase Auth | requirements.md UM-02 |
+| AI gateway: `ai.call`, `ai.stream`, routing, retry, log `ai_calls`, circuit breaker ต่อ provider, `defaults` ของ prompt | สร้างแล้ว · **answer-leak check (AM-13) และ fallback model ยังไม่มี** · ระหว่างใบ้ code ไม่ส่งเฉลยให้ model แทน (demo-room §2 K ข้อ 7) | `ai-calls-log.md`, `gemini-vertex.md`, `gateway-guards.md` |
+| Rate limit ข้อความในห้องติว (`guards.rate_limit_messages_per_minute`) | สร้างแล้ว · นับในหน่วยความจำต่อ instance · ไม่มี token นับต่อ IP จาก `X-Forwarded-For` (ปลอมได้) · **ห้ามเปิด `AI_PROVIDER=live` บน staging ขณะ `AUTH_REQUIRED=false`** (gateway-guards §10) | `gateway-guards.md` |
+| ตรวจ JWT ทุก endpoint | สร้างแล้วใน API · `api-staging` ยังไม่ตรวจ: `infra/env/api-staging.yaml` บน main ไม่มี `SUPABASE_URL` / `SUPABASE_ANON_KEY` และเป็น `AUTH_REQUIRED: "false"`, `AI_PROVIDER: fake` · #120 เพิ่มทั้งสามอย่าง และรอ merge พร้อมหน้า login ของ May (`AUTH_REQUIRED=true` ที่ไม่มีสองค่านั้น API เปิดไม่ขึ้น · api-auth §2.3) | `api-auth.md` · PR #120 |
+| หน้าเว็บ login (Google · UM-02) | **ยังไม่มี** · May ทำอยู่ | requirements.md UM-02 |
+| Exam prep: `POST` / `GET /exam-preps` | สร้างแล้วบน DB (JWT ของผู้ใช้ + RLS) · ไม่มี token → stub · endpoint ของ materials ยังเป็น stub | `create-exam-prep.md` · PR #121 |
+| ห้องติวบน DB: เปิด session, บันทึก `tutor_sessions` + `messages`, กลับมาเห็นประวัติ (TM-13) | สร้างแล้วเมื่อมี token · เปิดห้องทักด้วย template ใน `config/messages.yaml` (ไม่เรียก AI) · ไม่มี `progress_card` / `problem` จนกว่าจะมี scope ที่ยืนยันแล้ว · **ยังเป็น stub แม้มี token:** จบ session (`POST /sessions/{id}/end` ไม่บันทึก) และการ์ดความคืบหน้า (`GET /exam-preps/{id}/progress`) | `room-sessions-db.md` · PR #123 |
+| ห้องติว: ข้อความ text stream จาก gateway (`tutor_reply/v2` รู้โจทย์ค้าง) | สร้างแล้ว | `tutor-reply-stream.md`, demo-room §2 C |
+| ส่งรูปคำตอบ → อ่านลายมือ (P1) → ยืนยัน → ตรวจ (P2) → คำอธิบาย | สร้างแล้วในโค้ด · **ไปถึงรูปได้เฉพาะเดโม่ในเครื่อง** (`LocalImageStore`) · ที่อื่นยังเป็น stub เพราะยังไม่มี Storage | `photo-check-in-room.md` · PR #114, #115 |
+| ตรวจคำตอบ: SymPy service + merge rules + classifier | สร้างแล้ว · ต่อเข้าห้องแล้ว (รูปและข้อความพิมพ์) | `sympy-service.md`, `check-answer-classifier.md` |
+| Canvas เขียนคำตอบท้ายแชท (เมาส์ / Apple Pencil / นิ้ว · ส่งเป็น PNG ทางเดียวกับรูป) | สร้างแล้วในหน้าเว็บ · ยังไม่ได้ลองบน iPad | `answer-canvas.md` · PR #117, #124 |
+| `domain/`: `checker`, `stars` (compute_importance), `bkt`, `hint_ladder`, `exam_prep`, `room` | สร้างแล้ว · `stars` ยังไม่มีใครเรียก (รอ ingestion) · `bkt` และ `hint_ladder` ใช้ในเดโม่ในเครื่องเท่านั้น (ยังไม่บันทึก `attempts` / `topic_progress`) | `compute-importance.md` · `bkt-mastery.md` · demo-room §2 D, K |
+| `domain/`: planner, stage machine, buddy, spacing | แผน · เดโม่ใช้โจทย์ 5 ข้อเรียงตายตัวแทน planner | demo-room §2 B, §10 ข้อ 2 |
+| Hint ladder (ใบ้ 2 ระดับก่อนเฉลย) | เดโม่ในเครื่องเท่านั้น · ที่อื่นยังเฉลยทันทีตาม AM-07 · ข้อเสนอแก้ AM-07 รอทีม | demo-room §2 K · PR #127 |
+| ingestion (classify → อ่าน PDF → สกัดหัวข้อ → ดาว) | แผน · มีแค่โค้ดของ PoC ใน `poc/P3/` · หน้าตรวจขอบเขตเป็น stub 3 endpoint | P3.md · PR #100 |
+| Upload ไฟล์และรูปขึ้น Storage | แผน · เดโม่ใช้โฟลเดอร์ในเครื่อง (`PUT /dev/uploads/…`) แทน | api.md "ห้องติว" · demo-room §2 A |
+| Persona และโปรไฟล์ | stub (`X-Stub: true`) · ยังไม่บันทึก | api.md v1.12 |
 | STT / TTS, Sentry, PWA, prod | แผน | |
 
 ## Multi-tenant
