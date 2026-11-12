@@ -169,3 +169,19 @@ def test_AM07_max_hints_boundary(max_hints, ladder):
 def test_PM02_attempt_counted_once_per_problem(chosen, wrong_before, max_hints, expected):
     # §2 K item 8: (is_correct, independent), or None when nothing is recorded yet.
     assert attempt_outcome(chosen, wrong_before, tutoring(max_hints)) == expected
+
+
+# --- added after the live smoke on Vertex (12 Nov) · not in the reviewed AC-40 table -------------
+
+
+@pytest.mark.parametrize(
+    ("last_line", "expected"),
+    [
+        pytest.param(r"\lim_{x \to 2}\frac{x+2}{x-1} = 4", False, id="lim worked out to 4"),
+        pytest.param(r"\frac{d}{dx}(x^{2}) = 2x", False, id="d/dx worked out"),
+        pytest.param(r"x^{2}\sin(x) = \frac{d}{dx}(x^{2})\sin(x)", True, id="d/dx after the ="),
+    ],
+)
+def test_AM05_only_the_part_after_the_last_equals_counts(last_line, expected):
+    # The whole line had \lim in it, so a finished limit was taken for an unfinished step.
+    assert unfinished("correct", last_line) is expected

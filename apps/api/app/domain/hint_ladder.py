@@ -20,14 +20,32 @@ _HINT_LEVELS: tuple[Directive, ...] = ("hint_1", "hint_2")
 # final answer (§2 K item 2): \frac{d}{dx}, \frac{d^2}{dx^2}, \lim, \int, \sum, d/dx.
 _UNEVALUATED = re.compile(r"\\frac\{d(?:\^\{?\d+\}?)?\}\{d|\\lim|\\int|\\sum|\bd/d[a-z]")
 _SPACES = re.compile(r"\s+")
+# A plain `=`, not part of `<=`, `>=`, `!=` or `==` (as in app/domain/checker.py).
+_EQUALS = re.compile(r"(?<![<>!=])=(?!=)")
 
 
 def unfinished(verdict: Verdict, last_line: str) -> bool:
     """A right step that is not yet the final answer: an operator still to work out, or the
-    right value not yet in the form the problem asks for (``incomplete``)."""
+    right value not yet in the form the problem asks for (``incomplete``). Only what comes
+    after the last `=` counts: `\\lim_{x \\to 2} ... = 4` is finished (live smoke, 12 Nov)."""
     if verdict == "incomplete":
         return True
-    return verdict == "correct" and bool(_UNEVALUATED.search(_SPACES.sub("", last_line)))
+    result = _after_last_equals(last_line)
+    return verdict == "correct" and bool(_UNEVALUATED.search(_SPACES.sub("", result)))
+
+
+def _after_last_equals(line: str) -> str:
+    """The text after the last `=` outside braces and brackets (`\\sum_{k=1}` keeps its `=`)."""
+    depth, start = 0, 0
+    for match in re.finditer(r"[{(\[]|[})\]]|" + _EQUALS.pattern, line):
+        token = match.group()
+        if token in "{([":
+            depth += 1
+        elif token in "})]":
+            depth = max(0, depth - 1)
+        elif depth == 0:
+            start = match.end()
+    return line[start:]
 
 
 def decide_directive(
