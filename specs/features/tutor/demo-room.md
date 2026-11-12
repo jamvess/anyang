@@ -6,7 +6,7 @@
 | Requirements | TM-06, AM-01, AM-02, AM-07, TM-04, PM-02, TM-15 (ทั้งหมดผ่านของเดิมใน `photo-check-in-room.md` · ไฟล์นี้เพิ่มแค่ทางเดินให้วนได้ในเครื่อง) |
 | Owner | Jam |
 | Reviewer | Jam · Junior ดูย้อนหลัง (upload ในเครื่อง) |
-| Status | implemented 2026-11-09 (PR #115 · ส่วน A–J) · approved 2026-11-09 (Jam · §10 ข้อ 1–2 ตามข้อเสนอ) · ส่วน K draft 2026-11-12 (PR #127) |
+| Status | implemented 2026-11-09 (PR #115 · ส่วน A–J) · approved 2026-11-09 (Jam · §10 ข้อ 1–2 ตามข้อเสนอ) · ส่วน K implemented 2026-11-12 (PR #127 · Jam ok spec + test · smoke บน Vertex 6 ขั้นผ่าน) |
 | Related system spec | `photo-check-in-room.md` §2.4 (`ImageStore`, `RoomState`) · api.md v1.7 `/uploads` · `tutor-reply-stream.md` · ai-orchestration §2.2.3 (layer 6–7: tutor ต้องรู้ว่าตอนนี้ทำอะไร) |
 
 ## 1. Context

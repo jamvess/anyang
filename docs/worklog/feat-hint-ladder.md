@@ -15,8 +15,8 @@
 - [x] 2. 🤖 (12 พ.ย. · ร่างแล้ว รอ Jam ส่งในกลุ่ม) ร่างข้อความเสนอทีมเรื่อง AM-07 · 🙋 Jam ส่งในกลุ่ม
 - [x] 3. 🤖 (12 พ.ย. · Jam ok · แก้ test เดิม 4 ตัวตามที่ ok) Test (red) จาก AC: domain ตัดสิน directive + "ยังไม่จบ" + นโยบาย BKT · service: hint นับต่อโจทย์, give_up, ไม่มี verdict ตอนทำต่อ · prompt v3 / typed_answer v2 · 🙋 Jam review test
 - [x] 4. 🤖 (12 พ.ย. · green · Jam ok ไฟล์กลาง) Implement จน green · ไฟล์กลาง `config/learning.yaml` (`tutoring.max_hints_before_solution: 2` [C]) และ `config/ai.yaml` (prompt version) ถาม Jam ก่อนแก้
-- [ ] 5. 🙋 Jam ลองในเบราว์เซอร์กับ Vertex: ข้อ 3 (อนุพันธ์) ส่งขั้นแรก → "ถูกแล้ว ทำต่อ" · ส่งผิด 2 ครั้ง → hint 1, hint 2 · ครั้งที่ 3 → เฉลย · พิมพ์ "ไม่ได้จริงๆ" → เฉลยทันที (วิธีเปิด: spec §12)
-- [ ] 6. 🤖 อัปเดต docs + checklist แล้ว `/work-done`
+- [x] 5. (12 พ.ย. · Jam ไม่มีเวลา · Claude smoke ผ่าน API บน Vertex แทน 6 ขั้นผ่านหลังแก้บั๊ก `\lim … = 4` · **canvas ในเบราว์เซอร์ยังไม่ได้ลอง** ย้ายไปลองตอนซ้อมเดโม่) 🙋 Jam ลองในเบราว์เซอร์กับ Vertex: ข้อ 3 (อนุพันธ์) ส่งขั้นแรก → "ถูกแล้ว ทำต่อ" · ส่งผิด 2 ครั้ง → hint 1, hint 2 · ครั้งที่ 3 → เฉลย · พิมพ์ "ไม่ได้จริงๆ" → เฉลยทันที (วิธีเปิด: spec §12)
+- [x] 6. 🤖 (12 พ.ย.) อัปเดต docs + checklist แล้ว `/work-done`
 
 ## Definition of done
 
@@ -33,7 +33,7 @@
 
 ## Next step
 
-ขั้น 5: Jam ลองในเบราว์เซอร์กับ Vertex ตามรายการในขั้น 5 (วิธีเปิด `demo-room.md` §12) แล้วเล่าผลหรือส่งภาพหน้าจอ
+ทุกขั้นเสร็จ · Jam พิมพ์ `/work-done` (ก่อน merge ต้องส่งข้อความกลุ่มเรื่องไฟล์กลาง `config/learning.yaml`, `config/ai.yaml`)
 
 ## Waiting on
 
@@ -41,6 +41,7 @@
 
 ## Notes for next time
 
+- smoke บน Vertex: สคริปต์เรียก API ในเครื่องแบบ in-process (`APP_ENV=local AI_PROVIDER=live`) ตามตารางขั้น 5 · ครั้งแรกช้า ~45 s (cold) แล้ว 3–7 s ต่อข้อความ · hint_1 ไม่บอกค่า · hint_2 บอกสูตร + $x^2-7^2$ ไม่บอกคำตอบ · continue บอกว่ายังเหลือดิฟ $\sin x$ · การ์ดหลังจบ: แยกตัวประกอบ weak, ลิมิต developing, อนุพันธ์ developing
 - `explain_check/v3` และ `typed_answer/v2` ยังไม่มี golden set (เหมือน v2 / v1) · เช็คด้วยการลองในเบราว์เซอร์เท่านั้น
 - `test_prompt_data_blocks.py`: เพิ่ม `explain_check/v3`, `typed_answer/v2` ใน `OUTSIDE_BY_PROMPT` (ตั้งใจให้ prompt ใหม่ fail จนกว่าจะประกาศ · ทุก input อยู่ใน block)
 - `typed_answer/v1` merge แล้วใน #115 จึงต้อง bump เป็น v2 (ตอนออกแบบคิดว่ายังแก้ v1 ได้)
