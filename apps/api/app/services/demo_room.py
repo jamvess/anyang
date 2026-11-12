@@ -24,6 +24,7 @@ from app.services.room_state import (
     STUB_PROBLEM,
     STUDENT,
     InMemoryRoomState,
+    LadderProgress,
     PendingProblem,
 )
 from app.settings import get_settings
@@ -124,6 +125,11 @@ class DemoRoomState(InMemoryRoomState):
         # Per student (tenant), like topic_progress: kept across sessions (spec §2 J item 2).
         self._index: dict[str, int] = {}
         self._progress: dict[str, dict[str, TopicProgress]] = {}
+        # The hint ladder of each student's pending problem (spec §2 K item 9).
+        self._ladder: dict[str, LadderProgress] = {}
+        # Students whose pending problem has its one attempt already (spec §2 K item 8): when
+        # the tutor fails after it, the problem stays and must not count again (self-review).
+        self._counted: set[str] = set()
         # Turns of (role, text) lines; a student line starts a turn (spec §2 E item 3).
         self._turns: dict[str, list[list[tuple[str, str]]]] = {}
         self._recent_turns = recent_turns
@@ -140,15 +146,39 @@ class DemoRoomState(InMemoryRoomState):
     def _is_pending(self, key: str, problem: PendingProblem) -> bool:
         return DEMO_PROBLEMS[self._index.get(_student(key), 0)].problem_id == problem.problem_id
 
-    async def record_check(self, key: str, pending: PendingProblem, is_correct: bool) -> None:
+    async def record_check(
+        self, key: str, pending: PendingProblem, is_correct: bool, independent: bool = True
+    ) -> None:
         # A stale preview of a problem already answered is not counted twice (self-review).
         if pending.topic_id is None or not self._is_pending(key, pending):
             return
+        if _student(key) in self._counted:
+            return
+        self._counted.add(_student(key))
         cfg = get_settings().learning
         topics = self._progress.setdefault(_student(key), {})
         before = topics.get(pending.topic_id, TopicProgress(cfg.bkt.p_init, 0, 0))
-        # The next demo problem is never the one the tutor just worked: independent.
-        topics[pending.topic_id] = record_attempt(before, is_correct, pending.difficulty, True, cfg)
+        # Not independent only right after the last hint (spec §2 K item 8).
+        topics[pending.topic_id] = record_attempt(
+            before, is_correct, pending.difficulty, independent, cfg
+        )
+
+    async def ladder(self, key: str, pending: PendingProblem) -> LadderProgress | None:
+        if not self._is_pending(key, pending):
+            # A stale preview: explained as before, with no hint and nothing moved (§2 K 9).
+            return None
+        return self._ladder.get(_student(key), LadderProgress())
+
+    async def note_try(
+        self, key: str, pending: PendingProblem, *, wrong: bool = False, steps: int = 0
+    ) -> None:
+        if not self._is_pending(key, pending):
+            return
+        student = _student(key)
+        now = self._ladder.get(student, LadderProgress())
+        self._ladder[student] = LadderProgress(
+            wrong_before=now.wrong_before + wrong, steps_before=now.steps_before + steps
+        )
 
     async def remember(self, key: str, role: str, text: str) -> None:
         turns = self._turns.setdefault(key, [])
@@ -166,6 +196,8 @@ class DemoRoomState(InMemoryRoomState):
             return None  # answered late (a stale preview): the pending problem stays
         student = _student(key)
         self._index[student] = (self._index.get(student, 0) + 1) % len(DEMO_PROBLEMS)
+        self._ladder.pop(student, None)  # the ladder starts over (spec §2 K item 9)
+        self._counted.discard(student)
         return DEMO_PROBLEMS[self._index[student]]
 
     async def progress_card(self, key: str) -> ProgressCardEvent | None:

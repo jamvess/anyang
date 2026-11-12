@@ -3,7 +3,7 @@
 # "vertex:" runs on Vertex AI when GOOGLE_CLOUD_PROJECT is set (specs/features/ai/gemini-vertex.md;
 # AI-07: no free tier for real users). AI_MODEL_OVERRIDE=gemini:<model> still uses the Gemini API key.
 
-version: "1.16"                        # a string: unquoted, YAML reads 1.10 as the float 1.1
+version: "1.17"                        # a string: unquoted, YAML reads 1.10 as the float 1.1
 
 tiers:
   small:  {primary: "vertex:gemini-3.5-flash",   fallback: "anthropic:TODO-claude-haiku"}  # P3a on Vertex (31 Oct): A4 43/43, A7 34/43 and 30/43 · flash-lite broke JSON with LaTeX (unescaped \\sqrt) on 1 of 2 exams (P3.md §7)
@@ -32,8 +32,8 @@ purposes:
   generate_problem:       {tier: mid,    temperature: 0.7, max_tokens: 800,  timeout_s: 20, prompt: v1}
   tutor_reply:            {tier: main,   temperature: 0.6, max_tokens: 2000, timeout_s: 30, prompt: v2, stream: true, thinking: minimal}  # v2 knows the pending problem (demo-room.md §2 C) · P4-lite measured v1 on Vertex (2026-11-01, 50 messages each): low TTFT p95 3.87 s, 435 tokens out; minimal p95 1.20 s, 78 out, 0.039 THB/message (poc/P4-lite/README.md) · [C] max_tokens 2000 kept (minimal max 116 out)
   open_session:           {tier: main,   temperature: 0.6, max_tokens: 2000, timeout_s: 30, prompt: v1, stream: true, thinking: minimal}  # greeting from facts when the room opens (demo-room.md §2 F · TM-15) · [C] same as tutor_reply until measured
-  typed_answer:           {tier: small,  temperature: 0.0, max_tokens: 800,  timeout_s: 10, prompt: v1, thinking: minimal}  # is a typed message the answer, and its LaTeX lines (demo-room.md §2 G · stands in for route_intent + normalize_math) · [C] minimal thinking for speed; measure on a golden set
-  explain_check:          {tier: main,   temperature: 0.6, max_tokens: 2000, timeout_s: 30, prompt: v2, stream: true, thinking: minimal}  # v2 shows the full worked solution every time and asks for working when it is missing (demo-room.md §2 H, I) · the tutor's explanation after a verdict (photo-check-in-room.md §2.2 item 6 · AM-07) · [C] same as tutor_reply until measured: no golden set yet, smoke on Vertex only
+  typed_answer:           {tier: small,  temperature: 0.0, max_tokens: 800,  timeout_s: 10, prompt: v2, thinking: minimal}  # v2 also reads giving up (demo-room.md §2 K item 6) · is a typed message the answer, and its LaTeX lines (demo-room.md §2 G · stands in for route_intent + normalize_math) · [C] minimal thinking for speed; measure on a golden set
+  explain_check:          {tier: main,   temperature: 0.6, max_tokens: 2000, timeout_s: 30, prompt: v3, stream: true, thinking: minimal}  # v3 says what the code's directive says: continue, hint_1, hint_2, reveal, praise_and_show, ask_working (demo-room.md §2 K) · v2 shows the full worked solution every time and asks for working when it is missing (demo-room.md §2 H, I) · the tutor's explanation after a verdict (photo-check-in-room.md §2.2 item 6 · AM-07) · [C] same as tutor_reply until measured: no golden set yet, smoke on Vertex only
   dispute_recheck:       {tier: main,   temperature: 0.0, max_tokens: 1000, timeout_s: 30, prompt: v1}
   update_running_summary: {tier: small,  temperature: 0.2, max_tokens: 400,  timeout_s: 20, prompt: v1}
   session_summary:        {tier: small,  temperature: 0.3, max_tokens: 150,  timeout_s: 15, prompt: v1}

@@ -38,3 +38,6 @@ class TypedAnswer(BaseModel):
 
     is_answer: bool
     lines: list[LatexStr] = Field(default_factory=list)
+    # typed_answer/v2: the student gives up and asks for the solution (demo-room.md §2 K
+    # item 6); absent in v1 output, so false.
+    give_up: bool = False

@@ -6,7 +6,7 @@
 | Requirements | TM-06, AM-01, AM-02, AM-07, TM-04, PM-02, TM-15 (ทั้งหมดผ่านของเดิมใน `photo-check-in-room.md` · ไฟล์นี้เพิ่มแค่ทางเดินให้วนได้ในเครื่อง) |
 | Owner | Jam |
 | Reviewer | Jam · Junior ดูย้อนหลัง (upload ในเครื่อง) |
-| Status | implemented 2026-11-09 (PR #115 · ส่วน A–J) · approved 2026-11-09 (Jam · §10 ข้อ 1–2 ตามข้อเสนอ) |
+| Status | implemented 2026-11-09 (PR #115 · ส่วน A–J) · approved 2026-11-09 (Jam · §10 ข้อ 1–2 ตามข้อเสนอ) · ส่วน K implemented 2026-11-12 (PR #127 · Jam ok spec + test · smoke บน Vertex 6 ขั้นผ่าน) |
 | Related system spec | `photo-check-in-room.md` §2.4 (`ImageStore`, `RoomState`) · api.md v1.7 `/uploads` · `tutor-reply-stream.md` · ai-orchestration §2.2.3 (layer 6–7: tutor ต้องรู้ว่าตอนนี้ทำอะไร) |
 
 ## 1. Context
@@ -105,6 +105,53 @@
 3. stream เปิดห้อง: event `problem` เป็นโจทย์ที่ค้างอยู่ของ state (ข้อแรกคือ `p1`) แทน `p1` ของ fixture · facts ของ `open_session` ใช้การ์ดและโจทย์นั้น
 4. รีเซ็ตทั้งหมดเพื่อซ้อมใหม่ = เปิด API ใหม่ (state อยู่ใน memory ของ process)
 
+**K · ทำทีละขั้นด้วย hint ladder ก่อนเฉลย (local เท่านั้น · ออกแบบ 9 พ.ย. · Jam "all ok" · ขัด AM-07 จึงเสนอทีมใน §11)**
+
+ที่มา: Jam ส่งขั้นแรกของข้อ 3 (กระจาย product rule ยังมี $\frac{d}{dx}$ ค้าง) · SymPy คำนวณ $\frac{d}{dx}$ เองจึงเห็นเป็นคำตอบสุดท้ายที่ถูก แล้ว tutor เฉลยเต็มทันที · Jam อยากให้ทำทีละขั้น ใบ้ก่อน และเฉลยเมื่อทำไม่ได้จริงๆ · หลักเดิม: **code เลือก directive, LLM แค่พูด**
+
+นอก `local` ทุกอย่างเหมือนเดิม (ผิดแล้วเฉลยทันทีตาม AM-07) จนกว่าทีมตกลง §11
+
+1. **directive** (pure function `decide_directive` ใน `app/domain/hint_ladder.py`) เลือกจากผลตรวจ, ลำดับข้อ 2–6 ตามนี้ (ข้อแรกที่ตรงชนะ):
+
+   | ผลตรวจ | directive | `verdict` event | BKT (ข้อ 8) | โจทย์ถัดไป |
+   |---|---|---|---|---|
+   | ยอมแพ้ (ข้อ 6) | `reveal` | ไม่มี | ผิด | ไป |
+   | ยังไม่จบ (ข้อ 2) | `continue` | ไม่มี | ไม่นับ | โจทย์เดิมซ้ำ |
+   | ถูกแต่ขาดวิธีทำ (I) | `ask_working` | ไม่มี | ไม่นับ | โจทย์เดิมซ้ำ |
+   | `correct` | `praise_and_show` | ✓ | ถูก | ไป |
+   | `incorrect`, ผิดครั้งที่ 1 ของโจทย์นี้ | `hint_1` | ✗ | ไม่นับ | โจทย์เดิมซ้ำ |
+   | `incorrect`, ผิดครั้งที่ 2 | `hint_2` | ✗ | ไม่นับ | โจทย์เดิมซ้ำ |
+   | `incorrect`, ผิดครั้งที่ `max_hints_before_solution + 1` | `reveal` | ✗ | ผิด | ไป |
+   | `correct_with_flaw` (คำตอบสุดท้ายถูกแล้ว ไม่มีอะไรให้ลองใหม่) | `reveal` | มี (เหมือนเดิม) | ผิด (`is_correct`) | ไป |
+
+   - จำนวน hint ก่อนเฉลยอ่านจาก `config/learning.yaml` → `tutoring.max_hints_before_solution: 2` `[C]` (ไฟล์กลาง · calibrate ใน Alpha: อัตราที่ผู้ใช้ทำถูกหลัง hint แต่ละระดับ และอัตรายอมแพ้) · ค่า 2 = `hint_1`, `hint_2` แล้วเฉลย · ค่า 1 = `hint_1` แล้วเฉลย · ค่า 0 = เฉลยทันที (เหมือน AM-07)
+   - `hint_n` ที่ n เกิน 2 ไม่มี: ค่าที่มากกว่า 2 ให้ระดับ 3 ขึ้นไปใช้ `hint_2` ซ้ำ
+   - นอก local: `correct` → `praise_and_show` · ขาดวิธีทำ → `ask_working` · อย่างอื่น → `reveal` (เหมือนเดิมทุกอย่าง แค่ส่ง directive ให้ prompt v3)
+2. **ยังไม่จบ** (pure function `unfinished(verdict, last_line)` ใน `app/domain/hint_ladder.py`):
+   - `verdict = correct` และบรรทัดสุดท้ายยังมีตัวดำเนินการที่ยังไม่ได้คำนวณ: `\frac{d}{d…}` (รวม `\frac{d^2}{dx^2}`), `\lim`, `\int`, `\sum`, `d/dx` · ไม่สนช่องว่าง · **ดูเฉพาะส่วนหลัง `=` ตัวสุดท้ายที่อยู่นอกวงเล็บ** (แก้ 12 พ.ย. หลัง smoke บน Vertex: `\lim_{x \to 2}\frac{x+2}{x-1} = 4` เคยได้ `continue` ทั้งที่ทำเสร็จแล้ว · `=` ใน `\sum_{k=1}` ไม่นับ)
+   - หรือ `verdict = incomplete` (ค่าถูกแต่ยังไม่อยู่ในรูปที่โจทย์ถาม เช่น แยกตัวประกอบไม่สุด)
+   - ตรวจก่อนขาดวิธีทำ (I): ขั้นที่ยังไม่จบไม่ใช่คำตอบสุดท้าย จึงยังไม่ต้องมีวิธีทำ
+3. **นับวิธีทำข้ามรอบ:** ขั้นของคำตอบที่ได้ `continue` สะสมต่อโจทย์ · I ใช้ `working_steps(บรรทัดรอบนี้) + ขั้นที่สะสม` เทียบกับ `min_working_lines` · เหตุผล: พิมพ์ต่อแค่ขั้นถัดไป (`= 2x\sin x + x^2\cos x`) ต้องไม่โดนขาดวิธีทำ · รูปหรือ canvas ที่มีขั้นเดิมซ้ำจะนับซ้ำ ซึ่งแค่ทำให้ผ่านง่ายขึ้นสำหรับขั้นที่ส่งมาแล้วจริง
+4. **โจทย์เดิมซ้ำ** (`continue`, `hint_1`, `hint_2`): หลังคำอธิบายจบ ส่ง `problem` ของโจทย์เดิมแบบ I ข้อ 6 · canvas ท้ายแชทจึงเก็บสิ่งที่เขียนไว้ให้แก้หรือเขียนต่อ · tutor ล้ม → ไม่ส่ง `problem` แต่จำนวนครั้งที่ผิดนับแล้ว (ผลตรวจเกิดแล้ว)
+5. **บทสนทนา (E):** `continue` → `ติวเตอร์: (ผลตรวจ) ถูกแล้ว ยังไม่จบ` · hint → บรรทัด `(ผลตรวจ) verdict …` เดิม · ยอมแพ้ → `ติวเตอร์: (ผลตรวจ) ขอเฉลย` · ทุกแบบตามด้วยคำอธิบายของ tutor และ `(โจทย์)` เมื่อส่งโจทย์
+6. **ยอมแพ้:** `typed_answer/v2` เพิ่ม field `give_up: bool` (default `false` · `TypedAnswer` ของ v1 ยังอ่านได้) · `true` เมื่อข้อความบอกว่าทำไม่ได้หรือขอเฉลยของโจทย์ค้าง ("ไม่ได้จริงๆ", "เฉลยเลย", "ยอมแพ้", "ขอดูวิธีทำ") · **ไม่ใช่** ขอความช่วยเหลือ ("เริ่มยังไง", "ใบ้หน่อย", "งง") ซึ่งยังไป `tutor_reply` · `give_up = true` → ไม่เรียก `check_answer` · `explain_check` ได้ `reveal` · `answer_lines` = `none` · `check_result` = `none` · หลังคำอธิบาย → `ข้อต่อไปนะ` → `problem` ข้อถัดไป (B ข้อ 2) · ถ้า `is_answer` และ `give_up` เป็น true ทั้งคู่ → ยอมแพ้ชนะ · นอก local ไม่เรียก `typed_answer` (G ข้อ 7)
+7. **ไม่มีเฉลยระหว่างใบ้ (AM-13):** directive `continue`, `hint_1`, `hint_2` → code ส่ง `reference_answer` = `none` และ `solution_steps` = `none` ให้ `explain_check` (โจทย์ยังค้าง) · `reveal`, `praise_and_show`, `ask_working` ส่งเหมือนเดิม (`ask_working` prompt ห้ามแสดงวิธีทำอยู่แล้ว · H ข้อ 2) · ตรวจคำตอบหลุดใน token (answer-leak check ของ AM-13) ยังไม่ทำ (§9)
+8. **BKT นับครั้งเดียวต่อโจทย์ ตอนจบโจทย์** (`praise_and_show` หรือ `reveal`) แทน D ข้อ 2 ใน local:
+   - `praise_and_show` หลังผิด 0 หรือ 1 ครั้ง → ถูก, `independent = true`
+   - `praise_and_show` หลังผิด 2 ครั้งขึ้นไป (ได้ `hint_2` ซึ่งเริ่มเป็นการทำตามที่สอน) → `independent = false` · ด้วย `bkt.count_only_independent: true` จึงไม่นับ
+   - `reveal` (ผิดครบ, `correct_with_flaw`, ยอมแพ้) → ผิด, `independent = true`
+   - เกณฑ์ "ผิดกี่ครั้งถึงไม่ independent" = `max_hints_before_solution` (ครั้งที่ได้ hint ระดับสุดท้าย) · pure function `attempt_outcome(directive, wrong_tries, cfg)` ใน `app/domain/hint_ladder.py` คืน `(is_correct, independent)` หรือ `None` (ไม่นับ)
+9. **state ต่อโจทย์** (`RoomState`): จำนวนครั้งที่ผิดและขั้นที่สะสม ของโจทย์ค้างของนักเรียน · ล้างเมื่อไปโจทย์ถัดไป · อยู่ข้าม session เหมือนโจทย์ที่ทำถึง (J ข้อ 2) · state ธรรมดา (นอก local) ไม่มี ladder: คืน `None` แล้วใช้ directive แบบนอก local (ข้อ 1)
+10. **`explain_check/v3`** (v2 merge แล้ว · `config/ai.yaml` ไฟล์กลาง) input เดิม 5 ตัว + `directive` · `check_result` เก็บ `working` เดิม · แต่ละ directive พูดอะไรได้:
+    - `continue`: บอกว่าที่ทำมาถูก แล้วชี้ว่ายังเหลืออะไร (เช่น ยังมี $\frac{d}{dx}\sin x$ ค้าง หรือยังแยกได้อีก) ชวนทำขั้นต่อไป · **ห้าม** บอกผลของขั้นต่อไปหรือคำตอบสุดท้าย · ไม่มีวิธีทำเต็ม
+    - `hint_1`: ชี้บรรทัด `first_wrong_line` และประเภทความผิดเป็นภาษาธรรมดา ให้ลองแก้บรรทัดนั้นแล้วส่งใหม่ · **ห้าม** บอกค่าที่ถูกของบรรทัดนั้น · ไม่มีวิธีทำ
+    - `hint_2`: ชี้บรรทัดเดิม บอกกฎหรือสูตรที่ต้องใช้ แล้วทำส่วนแรกของบรรทัดนั้นให้ดู 1 ขั้น ให้ทำต่อเอง · **ห้าม** บอกคำตอบสุดท้าย
+    - `reveal`: ไม่เป็นไร แล้ววิธีทำเต็มทีละขั้นตาม verdict (เหมือน v2) · ยอมแพ้ (`check_result` = `none`) → ไม่ต้องชี้บรรทัด แสดงวิธีทำเต็มเลย
+    - `praise_and_show`: ชม 1 ประโยค แล้ววิธีทำเต็มให้เทียบ (เหมือน v2 `correct`)
+    - `ask_working`: เหมือน v2 `working: missing`
+    - กฎของ v2 ที่ห้ามให้ hint แล้วให้ลองใหม่ ใช้เฉพาะ `reveal` และ `praise_and_show`
+11. **ขอความช่วยเหลือก่อนส่งคำตอบ** ("ทำไม่เป็น", "เริ่มยังไง"): ยังเป็น `tutor_reply/v2` (บอกวิธีและขั้นแรก ไม่เฉลย · C ข้อ 2) · ไม่นับเป็น hint ของ ladder และไม่มีผลต่อ BKT (§10 ข้อ 4)
+
 ## 3. Inputs and outputs
 
 ชุดโจทย์ (มาจาก `evals/answers/labels.jsonl` · มีรูปลายมือจริงทั้งแบบถูกและผิดให้ใช้ตอนเดโม่)
@@ -183,6 +230,21 @@
 - **AC-35 (TM-13)** local: หลังตอบ `p1` แล้วเปิดห้องใหม่ → event `problem` เป็นโจทย์ข้อ 2 · ข้อความพิมพ์ถัดไปตรวจกับข้อ 2
 - **AC-28 (AI-01)** `config/ai.yaml` มี `open_session` (main, stream) และ `typed_answer` (small, ไม่ stream) · prompt ทั้งสองมี front matter ตรงกับ purpose และ version 1
 
+**K · hint ladder** (ทุกข้อ local ยกเว้นที่บอก · ใช้ `tutoring.max_hints_before_solution` จาก config จริง (2) ยกเว้น AC-48)
+
+- **AC-39 (AM-07 เสนอแก้)** `decide_directive` ตามตาราง K ข้อ 1 ทุกแถว (table-driven) · นอก local: `correct` → `praise_and_show`, ขาดวิธีทำ → `ask_working`, `incorrect` ครั้งแรก → `reveal`
+- **AC-40** `unfinished`: `correct` + บรรทัดสุดท้าย `2x\sin(x) + x^{2}\frac{d}{dx}\sin(x)` → true · `\lim_{x \to 2}(x+2)` → true · `\int x\,dx` → true · `d/dx(x^2)` → true · `2x\sin(x)+x^{2}\cos(x)` → false · `incomplete` + `(x^2-1)x` → true · `incorrect` + `\frac{d}{dx}x` → false
+- **AC-41 (AM-05)** ส่งขั้นแรกของ `demo-3` ที่ยังมี $\frac{d}{dx}$ (checker ได้ `correct`) → ไม่มี `verdict` · `explain_check` ได้ `directive: continue`, `reference_answer: none`, `solution_steps: none` → token → `problem` ของ `demo-3` → `done` · การ์ดเปิดห้องครั้งถัดไป: อนุพันธ์ยัง `not_started`
+- **AC-42** หลัง AC-41 พิมพ์ต่อแค่ `= 2x\sin(x)+x^{2}\cos(x)` (1 ขั้น) → `verdict` correct (ไม่ใช่ขาดวิธีทำ เพราะขั้นสะสม) · `praise_and_show` · ได้โจทย์ `demo-4`
+- **AC-43 (AM-05)** `p1` ผิด 1 ครั้ง → `verdict` incorrect → `hint_1` (ไม่มีเฉลยใน input) → `problem` `p1` · ผิดครั้งที่ 2 → `hint_2` → `problem` `p1` · ผิดครั้งที่ 3 → `reveal` (มีเฉลยใน input) → `ข้อต่อไปนะ` → `problem` `demo-2` · การ์ดเปิดห้องครั้งถัดไป: แยกตัวประกอบ `weak` และ attempt 1 ครั้ง
+- **AC-44 (PM-02)** ผิด 1 ครั้งแล้วถูก → การ์ด: แยกตัวประกอบ `developing` (เท่ากับถูก 1 ครั้ง) · ผิด 2 ครั้งแล้วถูก → แยกตัวประกอบ `not_started` (ไม่นับ · `count_only_independent`) · ทั้งสองได้โจทย์ `demo-2`
+- **AC-45** พิมพ์ "ไม่ได้จริงๆ" (`typed_answer` → `give_up: true`) → ไม่เรียก `check_answer` · ไม่มี `verdict` · `explain_check` ได้ `reveal`, `answer_lines: none`, `check_result: none`, มีเฉลย → `ข้อต่อไปนะ` → `problem` ข้อถัดไป · การ์ด: หัวข้อนั้น `weak` · output ของ v1 ที่ไม่มี `give_up` ยังอ่านได้ (`false`)
+- **AC-46** ไปโจทย์ถัดไปแล้ว จำนวนครั้งที่ผิดเริ่มใหม่: ผิด `p1` 2 ครั้งแล้วยอมแพ้ → ผิด `demo-2` ครั้งแรกได้ `hint_1`
+- **AC-47 (TM-10)** หลัง `continue` และ `hint_1` ข้อความถัดไปเห็น `(ผลตรวจ) ถูกแล้ว ยังไม่จบ`, `(ผลตรวจ) verdict incorrect …`, คำอธิบาย และ `(โจทย์)` ในบทสนทนา · ยอมแพ้ → `(ผลตรวจ) ขอเฉลย`
+- **AC-48 (boundary)** `decide_directive` กับ config ทดสอบ `max_hints_before_solution` = 0 → ผิดครั้งแรก `reveal` · = 1 → `hint_1` แล้ว `reveal` · = 3 → `hint_1`, `hint_2`, `hint_2`, `reveal` · `attempt_outcome` กับค่า 1: ถูกหลังผิด 1 ครั้ง → `independent = false`
+- **AC-49** ไม่ใช่ local: ผิดครั้งแรก → `verdict` incorrect และ `explain_check` ได้ `directive: reveal` พร้อมเฉลย (เหมือนเดิม) · ไม่มี `problem`
+- **AC-50 (AI-01)** `config/ai.yaml` → `explain_check.prompt: v3`, `typed_answer.prompt: v2` · front matter ตรง purpose และ version · v3 มี input `directive` · `learning.yaml` มี `tutoring.max_hints_before_solution` ที่ `LearningConfig` อ่านได้
+
 ## 5. Data changes
 
 ไม่มี · ไฟล์รูปอยู่ใน `.local/uploads/` (gitignore) · state อยู่ใน memory
@@ -201,10 +263,14 @@
 | `open_session` (ใหม่ · stream) | main | free text | `prompts/open_session/v1.md` (input `days_left`, `readiness`, `topics`, `problem`) |
 | `typed_answer` (ใหม่) | small | `TypedAnswer {is_answer, lines}` | `prompts/typed_answer/v1.md` (input `problem`, `conversation`, `message`) |
 | `tutor_reply` | main | free text | `prompts/tutor_reply/v2.md` (ใหม่ · input `message`, `problem`, `conversation` · `defaults` ของ `problem` และ `conversation` = `none`) |
+| `explain_check` (K) | main | free text | `prompts/explain_check/v3.md` (input v2 + `directive`) |
+| `typed_answer` (K) | small | `TypedAnswer {is_answer, lines, give_up = false}` | `prompts/typed_answer/v2.md` (input เดิม) |
 
 ## 8. Test plan
 
 `apps/api/tests/unit/test_demo_room.py` · AC-1 ถึง AC-35 ข้อละ 1 test · J เปลี่ยน AC-4, 9, 11, 23, 24, 31 ให้ดูการ์ดตอนเปิดห้องครั้งถัดไป (Jam ok 9 พ.ย.) · ลองครบ loop ในเบราว์เซอร์ด้วยมือ (ขั้น 5 ของ worklog)
+
+K: AC-39, 40, 48 ใน `apps/api/tests/unit/test_hint_ladder.py` (domain, table-driven) · AC-41 ถึง 47, 49, 50 ใน `test_demo_room.py` · **K เปลี่ยนความหมายของ test เดิมที่ตอบผิดครั้งแรกใน local** (เดิมเฉลยและไปข้อต่อไป ตอนนี้ได้ `hint_1` และโจทย์เดิม) · รายชื่อ test ที่ต้องแก้และแก้อย่างไร เสนอตอน `/spec-to-tests` ให้ Jam ok ก่อนแก้ (กฎ: ไม่แก้ test ที่ review แล้วโดยไม่ได้รับอนุญาต)
 
 ## 9. Out of scope
 
@@ -215,6 +281,9 @@
 1. ~~**`tutor_reply/v2` มีผลบน staging ด้วย**~~ **ตัดสินแล้ว** (Jam 2026-11-09): ทุก env ตามข้อเสนอ · (§2 C ข้อ 3) · ทางเลือกคือเปิดเฉพาะ local แต่ต้องมี prompt 2 ตัวสลับตาม env · ข้อเสนอ: ทุก env ตามเหตุผลใน §2 C ข้อ 3 · ตัวเลข P4-lite (TTFT, ต้นทุน) วัดกับ v1 · input ยาวขึ้นแค่ 1 บรรทัดจึงไม่น่าเปลี่ยน แต่จดไว้ใน PR
 2. ~~**ไปข้อต่อไปแม้ตอบผิด**~~ **ตัดสินแล้ว** (Jam 2026-11-09): ok สำหรับเดโม่ · (§2 B ข้อ 3): ของจริงต้อง Teach → Verify skill เดิม (AM-08) · เดโม่ไปต่อเลยเพื่อให้เห็นหลายโจทย์ · ข้อเสนอ: ok สำหรับเดโม่ และบอกอาจารย์ว่าเป็นจุดที่ planner จะมาแทน
 3. **(แนวคิดเก็บไว้ · Jam 9 พ.ย.) ให้ LLM ตัดสินว่าวิธีทำพอหรือยัง:** แต่ละโจทย์ต้องการวิธีทำยาวไม่เท่ากัน (แยกตัวประกอบ 2 ขั้นอาจพอ แต่ limit หรืออนุพันธ์ควรมีมากกว่า) · กฎ 2 ขั้นของ §2 I เป็นแบบชั่วคราว · ทางที่คิดไว้: เพิ่ม field เช่น `working_sufficient` ใน `check_answer` (หรือเทียบกับ `solution_steps` ของโจทย์) แล้ว code ตัดสินจากผลนั้น · ต้องมี golden set ของวิธีทำที่ครูรับ/ไม่รับ ก่อนเปลี่ยน · **ตอนนี้ใช้ 2 ขั้นไปก่อน**
+4. **(K · เปิดไว้) ขอความช่วยเหลือก่อนส่งคำตอบควรนับเป็น hint ไหม:** แบบ 9 พ.ย. บอกว่าใช้ลำดับเดียวกัน · K ข้อ 11 ยังไม่นับ เพราะต้องมีตัวแยก "ขอใบ้" ออกจาก "คำถามทั่วไป" (intent router · ai-orchestration §2.2.5) และ `tutor_reply/v2` ไม่เฉลยอยู่แล้ว · ข้อเสนอ: ทำพร้อม intent router จริง แล้วนับเป็นระดับ 1 ของ ladder
+5. **(K · ข้อจำกัดที่รู้) อนุพันธ์อันดับสูงทำทีละขั้นไม่ได้:** `demo-4` ถาม $f''(x)$ · ส่งแค่ $f'(x) = 4x^3-6x+2$ (ถูกแต่ยังไม่จบ) → SymPy เห็นบรรทัดนิยามเป็นการทวนโจทย์ แล้วค่าไม่เท่าเฉลย → `incorrect` → `hint_1` (นับเป็นผิด 1 ครั้ง) · แก้ต้องรู้ลำดับอนุพันธ์ที่โจทย์ถาม (field ใหม่ของโจทย์) · ข้อเสนอ: เดโม่ยอมไปก่อน tutor ของ `hint_1` เห็นวิธีทำของนักเรียนจึงน่าจะบอกได้ว่าต้องหาอนุพันธ์อีกครั้ง · ทำจริงเมื่อมี `generate_problem`
+6. **(K · เปิดไว้ · self-review PR #127) `continue` ไม่มีเพดาน:** ส่งคำตอบที่ยังไม่จบเดิมซ้ำ (เช่น `x(x^2-1)` ของ `demo-5`) ได้ `continue` ทุกครั้ง ไม่ขึ้น hint ไม่เฉลย และ BKT ไม่นับ จนกว่าจะพิมพ์ยอมแพ้ · tutor บอกทุกครั้งว่ายังเหลืออะไร จึงไม่น่าติดในเดโม่ · ข้อเสนอ: นับ `continue` ที่ไม่มีขั้นใหม่ (ขั้นสะสมไม่เพิ่ม) เป็นผิด 1 ครั้งของ ladder · ตัดสินพร้อม §10 ข้อ 4
 
 ## 12. วิธีเปิดเดโม่ในเครื่อง
 
@@ -236,3 +305,7 @@ cd apps/web && NEXT_PUBLIC_API_URL=http://localhost:8000 pnpm dev
 | `photo-check-in-room.md` §2.2 ข้อ 6, AC-18b | คำอธิบายแสดงวิธีทำเต็มทุก verdict (H) และขาดวิธีทำไม่ได้ verdict (I) | Jam · PR นี้ |
 | `specs/system/ai-orchestration.md` §2.2.4, §2.10 | `open_session` (prompt จริงตัวแรก · มีใน design แล้วเป็น directive) และ `typed_answer` (ชั่วคราวแทน `route_intent` + `normalize_math`) | Jam · PR นี้ |
 | `.gitignore` | `.local/` | Jam · PR นี้ |
+| `config/learning.yaml` (ไฟล์กลาง) + `learning-model.md` §8 | K: section ใหม่ `tutoring.max_hints_before_solution: 2` [C] · bump version | Jam · PR hint ladder · บอกกลุ่มก่อน merge |
+| `config/ai.yaml` (ไฟล์กลาง) | K: `explain_check.prompt: v3`, `typed_answer.prompt: v2` | Jam · PR hint ladder · บอกกลุ่มก่อน merge |
+| `specs/requirements/requirements.md` (ไฟล์กลาง) | **ข้อเสนอ K · รอทีมตกลง ไม่แก้ใน PR นี้:** AM-07 → "เมื่อคำตอบผิด ระบบต้องชี้บรรทัดที่ผิดก่อน แล้วใบ้เพิ่มทีละระดับ ไม่เกิน `max_hints_before_solution` ครั้ง จากนั้นอธิบายวิธีแก้เต็ม · ผู้ใช้ขอเฉลยได้ทุกเมื่อ · ไม่ถามว่า user งงตรงไหน" · AM-10 obsolete → active: "log จำนวน hint ต่อโจทย์ และไม่นับ independent ถ้าถูกหลัง hint ระดับสุดท้าย" · PM-01 กลับมาเก็บจำนวน hint | ทีม · Jam ส่งข้อเสนอในกลุ่ม |
+| `specs/system/ai-orchestration.md` §2.2.4 (ห้ามใบ้แล้วให้ลองเอง) | ตามข้อเสนอ AM-07 เมื่อทีมตกลง · directive ใหม่ `continue`, `hint_1`, `hint_2`, `reveal`, `praise_and_show`, `ask_working` | Jam · หลังทีมตกลง |

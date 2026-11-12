@@ -149,7 +149,7 @@ def merge_check(
 
 
 # A plain `=`: not part of `<=`, `>=`, `!=` or `==` (self-review PR #117).
-_EQUALS = re.compile(r"(?<![<>!=])=(?!=)")
+EQUALS = re.compile(r"(?<![<>!=])=(?!=)")
 # A left side that only names the answer, so `f'(x) = 2x` or `dy/dx = 2x` is one step, not two
 # (self-review PR #117): a function with primes or `(x)`, or dy/dx.
 _FUNCTION_LABEL = re.compile(
@@ -169,7 +169,7 @@ def working_steps(lines: list[str]) -> int:
         text = line.strip()
         if not text:
             continue
-        parts = _EQUALS.split(text.removeprefix("="))
+        parts = EQUALS.split(text.removeprefix("="))
         if len(parts) > 1 and (
             _FUNCTION_LABEL.match(parts[0]) or (len(parts) == 2 and _LETTER.match(parts[0]))
         ):
