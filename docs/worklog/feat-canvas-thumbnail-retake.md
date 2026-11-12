@@ -13,8 +13,8 @@
 
 - [x] 1. 🤖 เขียนส่วนใหม่ใน `specs/features/tutor/answer-canvas.md` (§2 D ภาพย่อ, §2 E ถ่ายใหม่ → canvas) + AC + boundary · แจ้ง `ocr-confirm-card.md` §2 (ปุ่มถ่ายใหม่) ว่าเปลี่ยนเมื่อส่งจาก canvas · 2026-11-12 ร่างแล้ว §2 D ข้อ 21–25, E ข้อ 26–29, AC-20 ถึง AC-29, คำถาม D1–D3
 - [x] 2. 🙋 May review spec (Claude สรุปเป็นข้อๆ + ถามเป็นตัวเลือก) · 2026-11-12 May approve · D1 ขยายดูภาพเต็มในหน้า (เพิ่ม AC-24b) · D2 160 px
-- [ ] 3. 🤖 `/spec-to-tests` (Vitest)
-- [ ] 4. 🙋 May review test (Claude สรุปชื่อ test เป็นภาษาไทย)
+- [x] 3. 🤖 `/spec-to-tests` (Vitest) · 2026-11-12 11 test ใน `ChatRoomThumbnailRetake.test.tsx` · 7 แดงเพราะยังไม่มีภาพย่อและยังไม่พาไป canvas · 4 เขียวอยู่แล้ว (AC-23, 27, 28, 29 ล็อกพฤติกรรมเดิมไว้) · ไม่แก้ test เดิม
+- [x] 4. 🙋 May review test (Claude สรุปชื่อ test เป็นภาษาไทย) · 2026-11-12 May approve 11 test (เก็บ AC-29 ไว้)
 - [ ] 5. 🤖 `/implement-feature` จน test ผ่าน + lint, typecheck, test, build
 - [ ] 6. 🙋 May ลองในห้องเดโม่ (AI จำลอง): ส่งรูปจาก 📷 และจาก canvas เห็นภาพย่อ · กด "ถ่ายใหม่" ของคำตอบจาก canvas แล้วจอเลื่อนไปที่ canvas
 
@@ -30,7 +30,7 @@
 
 ## Next step
 
-Claude ทำขั้น 3: `/spec-to-tests` สำหรับ AC-20 ถึง AC-29 + AC-24b ลงไฟล์ใหม่ `apps/web/tests/chat/ChatRoomThumbnailRetake.test.tsx`
+Claude ทำขั้น 5: `/implement-feature` ให้ `ChatRoomThumbnailRetake.test.tsx` ผ่าน (ห้ามแก้ test)
 
 ## Waiting on
 
