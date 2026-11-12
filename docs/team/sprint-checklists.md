@@ -95,10 +95,10 @@
 
 - [ ] P8-lite ร่วมกับทีม (review test ของ `compute_importance`)
   - 8 พ.ย. test พร้อมให้ review ย้อนหลัง (PR #113 · `apps/api/tests/unit/test_stars.py`) · จดเวลาที่ใช้ใน `poc/P8-lite/metrics.md` §4 · test ที่ผิดจดใน §3
-- [x] อัปเดต architecture และ data model ตามผล PoC (D2, D3)
+- [ ] อัปเดต architecture และ data model ตามผล PoC (D2, D3)
   - 1 พ.ย. (PR #101 · Jam ช่วง solo): `architecture.md` v1.2 ใส่ผล P1, P2, P3b, P4-lite แล้ว (model ของแต่ละ tier, embedding 768 มิติ, SymPy worker pool) · data model ได้ `0003` จาก P3 (PR #67) · เหลือ: อัปเดตอีกรอบหลัง P8-lite และ P2 ต่อเข้าห้องแชท
   - ทำโดย Jam (12 พ.ย.) ช่วง solo
-  - 12 พ.ย. (PR #128): `architecture.md` v1.3 ตาราง "สร้างแล้วหรือยัง" ตรวจกับโค้ดบน main (P2 ต่อเข้าห้องแล้ว, ห้องติวบน DB #123, exam prep API #121, `domain/` stars + bkt + hint_ladder, canvas, เดโม่ในเครื่อง, login / staging ยังรอ #120) · `data-model.md` v1.4 แถว `0004` และเรื่องที่รอทีม (`attempts` เก็บจำนวน hint ถ้ารับข้อเสนอ AM-07) · ไม่มี migration ใหม่ · P8-lite ไม่เปลี่ยนโครงสร้าง (เป็นตัวเลขวิธีทำงาน) จึงติ๊ก · Junior ดูย้อนหลัง ถ้ายังไม่ครบเอาติ๊กออกได้
+  - 12 พ.ย. (PR #128): `architecture.md` v1.3 ตาราง "สร้างแล้วหรือยัง" ตรวจกับโค้ดบน main (P2 ต่อเข้าห้องแล้ว, ห้องติวบน DB #123, exam prep API #121, `domain/` stars + bkt + hint_ladder, canvas, เดโม่ในเครื่อง, login / staging ยังรอ #120) · `data-model.md` v1.4 แถว `0004` และเรื่องที่รอทีม (`attempts` เก็บจำนวน hint ถ้ารับข้อเสนอ AM-07) · ไม่มี migration ใหม่ · **ยังไม่ติ๊ก** (self-review): ข้อนี้ให้อัปเดตอีกรอบหลัง P8-lite ซึ่งยังไม่จบ · เหลือ: ดูผล P8-lite ว่าเปลี่ยน `compute_importance` หรือ input ของดาวไหม แล้วติ๊ก · Junior ดูย้อนหลังได้
 - [ ] (ถ้ามีเวลา) ต่อ P1 + P2 เข้าหน้าแชท: ส่งรูปแล้วได้ verdict
   - ทำโดย Jam (8 พ.ย.) ช่วง solo · ทำได้บางส่วน
   - 8 พ.ย. (PR #114 · `specs/features/check/photo-check-in-room.md`): ส่งรูป → `extract_answer` → `ocr_preview` · ยืนยัน → checker ของ P2 → `verdict` → purpose ใหม่ `explain_check` อธิบายทันที (AM-07) · smoke บน Vertex ในเครื่อง 3 รูปจาก `evals/` verdict ตรง label 3/3 · ผ่าน interface `ImageStore` + `RoomState` (เก็บใน memory) · **บน staging ยังเป็น stub** จนกว่าจะมี Storage · เหลือ (Junior): `/uploads` จริง + bucket/policy + `ImageStore` ที่อ่าน Supabase Storage, บันทึก `messages` / `problems` / `attempts`, ตัดสินข้อเสนอใน spec §10 ข้อ 3–8 · api.md: 404/422 ของ `image_path` (spec §11)

@@ -6,7 +6,7 @@ v1.2 (2026-11-01 · D2): ตรวจกับที่ตั้งจริง�
 
 ## ภาพรวม 3 ชั้น
 
-เส้นประ (ทั้งเส้นเชื่อมและกรอบ) = ยังเป็นแผน
+เส้นประ (ทั้งเส้นเชื่อมและกรอบ) = ยังเป็นแผน หรือมีโค้ดแล้วแต่ยังไม่ได้ใช้บน staging (`stars` ยังไม่มีใครเรียก · `bkt`, `hint ladder` และ services ของเดโม่ใช้เฉพาะ `APP_ENV=local`)
 
 ```mermaid
 flowchart TB
@@ -16,9 +16,11 @@ flowchart TB
   end
   W <-->|REST + SSE · Bearer JWT| A
   subgraph Cloud Run · asia-southeast1
-    A[FastAPI · ตรวจ JWT] --> D[domain: checker · stars · bkt · hint ladder · exam prep · room]
+    A[FastAPI · ตรวจ JWT] --> D[domain: checker · exam prep · room]
+    A -.-> DL[domain ที่มีแล้วแต่ยังไม่ได้ใช้บน staging: stars · bkt · hint ladder]
     A -.-> DP[domain: planner · stage machine · buddy · spacing]
     A --> S[services: checker · tutor turn · photo check · room on DB]
+    A -.-> SL[services ของเดโม่ในเครื่อง: demo room · room chat · room opening · dev uploads]
     A -.-> SP[services: ingestion · scope edit]
     S --> G[AI gateway: routing · retry · circuit breaker · log]
     G -.-> GP[answer-leak check · fallback]
@@ -34,7 +36,7 @@ flowchart TB
   W <--> AU[Supabase Auth · Google login แผน · UM-02]
 
   classDef plan stroke-dasharray: 5 5
-  class DP,SP,GP,C,T,ST plan
+  class DL,DP,SP,GP,C,T,ST,SL plan
 ```
 
 - **AI gateway** (`apps/api/app/ai/gateway.py`) เลือก provider จาก prefix ของ model id ใน `config/ai.yaml`:
@@ -85,7 +87,7 @@ flowchart TB
   - ทางสำรองคือ `infra/deploy-staging.ps1`
 - **frontend:** PR ที่แก้ `apps/web/**` → workflow `web-deploy` สร้าง preview · push เข้า `main` → deploy production
 - **prod:** แผนคือกด promote (เทอม 2)
-- **migration:** Junior รัน `npx supabase db push` ขึ้น `anyang-dev` และ `anyang-staging` หลัง merge · CI ไม่ได้ push ให้ · 1 พ.ย. `anyang-staging` มี `0001` + `0002` (`infra/README.md`) · `0003` (PR #67) รอ Junior push
+- **migration:** Junior รัน `npx supabase db push` ขึ้น `anyang-dev` และ `anyang-staging` หลัง merge · CI ไม่ได้ push ให้ · `0001`–`0003` ขึ้นทั้ง `anyang-dev` และ `anyang-staging` แล้ว 9 พ.ย. (PR #116 · `infra/README.md`) · `0004` ขึ้นทั้งสองแล้ว 11 พ.ย. (PR #123 · `data-model.md`)
 
 ## สร้างแล้วหรือยัง (2026-11-12)
 
@@ -94,11 +96,11 @@ flowchart TB
 | ส่วน | สถานะ | ที่มา |
 |---|---|---|
 | AI gateway: `ai.call`, `ai.stream`, routing, retry, log `ai_calls`, circuit breaker ต่อ provider, `defaults` ของ prompt | สร้างแล้ว · **answer-leak check (AM-13) และ fallback model ยังไม่มี** · ระหว่างใบ้ code ไม่ส่งเฉลยให้ model แทน (demo-room §2 K ข้อ 7) | `ai-calls-log.md`, `gemini-vertex.md`, `gateway-guards.md` |
-| Rate limit ข้อความในห้องติว | สร้างแล้ว · นับในหน่วยความจำต่อ instance | `gateway-guards.md` |
-| ตรวจ JWT ทุก endpoint | สร้างแล้วใน API · `api-staging` ยังไม่เปิด (`AUTH_REQUIRED: "false"`, `AI_PROVIDER: fake` ใน `infra/env/api-staging.yaml`) จนกว่าจะ merge #120 พร้อมหน้า login | `api-auth.md` · PR #120 |
+| Rate limit ข้อความในห้องติว (`guards.rate_limit_messages_per_minute`) | สร้างแล้ว · นับในหน่วยความจำต่อ instance · ไม่มี token นับต่อ IP จาก `X-Forwarded-For` (ปลอมได้) · **ห้ามเปิด `AI_PROVIDER=live` บน staging ขณะ `AUTH_REQUIRED=false`** (gateway-guards §10) | `gateway-guards.md` |
+| ตรวจ JWT ทุก endpoint | สร้างแล้วใน API · `api-staging` ยังไม่ตรวจ: `infra/env/api-staging.yaml` บน main ไม่มี `SUPABASE_URL` / `SUPABASE_ANON_KEY` และเป็น `AUTH_REQUIRED: "false"`, `AI_PROVIDER: fake` · #120 เพิ่มทั้งสามอย่าง และรอ merge พร้อมหน้า login ของ May (`AUTH_REQUIRED=true` ที่ไม่มีสองค่านั้น API เปิดไม่ขึ้น · api-auth §2.3) | `api-auth.md` · PR #120 |
 | หน้าเว็บ login (Google · UM-02) | **ยังไม่มี** · May ทำอยู่ | requirements.md UM-02 |
 | Exam prep: `POST` / `GET /exam-preps` | สร้างแล้วบน DB (JWT ของผู้ใช้ + RLS) · ไม่มี token → stub · endpoint ของ materials ยังเป็น stub | `create-exam-prep.md` · PR #121 |
-| ห้องติวบน DB: เปิด session, บันทึก `tutor_sessions` + `messages`, กลับมาเห็นประวัติ (TM-13) | สร้างแล้วเมื่อมี token · เปิดห้องทักด้วย template ใน `config/messages.yaml` (ไม่เรียก AI) · ไม่มี `progress_card` / `problem` จนกว่าจะมี scope ที่ยืนยันแล้ว | `room-sessions-db.md` · PR #123 |
+| ห้องติวบน DB: เปิด session, บันทึก `tutor_sessions` + `messages`, กลับมาเห็นประวัติ (TM-13) | สร้างแล้วเมื่อมี token · เปิดห้องทักด้วย template ใน `config/messages.yaml` (ไม่เรียก AI) · ไม่มี `progress_card` / `problem` จนกว่าจะมี scope ที่ยืนยันแล้ว · **ยังเป็น stub แม้มี token:** จบ session (`POST /sessions/{id}/end` ไม่บันทึก) และการ์ดความคืบหน้า (`GET /exam-preps/{id}/progress`) | `room-sessions-db.md` · PR #123 |
 | ห้องติว: ข้อความ text stream จาก gateway (`tutor_reply/v2` รู้โจทย์ค้าง) | สร้างแล้ว | `tutor-reply-stream.md`, demo-room §2 C |
 | ส่งรูปคำตอบ → อ่านลายมือ (P1) → ยืนยัน → ตรวจ (P2) → คำอธิบาย | สร้างแล้วในโค้ด · **ไปถึงรูปได้เฉพาะเดโม่ในเครื่อง** (`LocalImageStore`) · ที่อื่นยังเป็น stub เพราะยังไม่มี Storage | `photo-check-in-room.md` · PR #114, #115 |
 | ตรวจคำตอบ: SymPy service + merge rules + classifier | สร้างแล้ว · ต่อเข้าห้องแล้ว (รูปและข้อความพิมพ์) | `sympy-service.md`, `check-answer-classifier.md` |
