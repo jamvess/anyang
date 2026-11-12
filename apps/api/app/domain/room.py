@@ -28,10 +28,15 @@ class RoomNames:
     user_name: str
     tutor_name: str
     buddy_name: str | None
+    has_nickname: bool = False  # the greeting needs this, not a compare with FALLBACK_USER_NAME
 
 
-def _name(params: Mapping[str, Any] | None) -> str | None:
-    value = (params or {}).get("name")
+def _name(params: Any) -> str | None:
+    # params is any non-null jsonb (data-model.md): only an object can carry a name; anything
+    # else falls back like a missing name instead of a 500 (spec §2.2).
+    if not isinstance(params, Mapping):
+        return None
+    value = params.get("name")
     if isinstance(value, str) and value.strip():
         return value.strip()
     return None
@@ -46,12 +51,14 @@ def room_names(
 ) -> RoomNames:
     """§2.5: nickname or "คุณ"; the latest tutor profile's name or the first preset's; the
     buddy's name only while it is enabled."""
-    user_name = nickname.strip() if nickname and nickname.strip() else FALLBACK_USER_NAME
+    has_nickname = bool(nickname and nickname.strip())
+    user_name = nickname.strip() if nickname and has_nickname else FALLBACK_USER_NAME
     buddy_name = _name(buddy.params) if buddy and buddy.enabled else None
     return RoomNames(
         user_name=user_name,
         tutor_name=_name(tutor_params) or preset_tutor_name,
         buddy_name=buddy_name,
+        has_nickname=has_nickname,
     )
 
 

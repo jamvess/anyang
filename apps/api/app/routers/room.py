@@ -123,10 +123,8 @@ Auth = Annotated[AuthContext | None, Depends(get_auth)]
 Repo = Annotated[RoomRepository | None, Depends(get_room_repository)]
 Now = Annotated[datetime, Depends(get_now)]
 
-_DB_ERRORS: dict[int | str, dict[str, Any]] = {
-    **_ERRORS,
-    503: {"model": ErrorResponse, "description": "db_unavailable, or auth_unavailable"},
-}
+_DB_ERRORS: dict[int | str, dict[str, Any]] = {**_ERRORS, **unavailable_docs("db_unavailable")}
+_DB_SSE_RESPONSE: dict[int | str, dict[str, Any]] = {**_SSE_RESPONSE, **_DB_ERRORS}
 
 
 def _not_found() -> JSONResponse:
@@ -195,7 +193,7 @@ async def _send_and_save(
 @router.get(
     "/exam-preps/{id}/sessions/active",
     response_model=ActiveSession,  # errors return a JSONResponse, so the return type is Any
-    responses=_ERRORS,
+    responses=_DB_ERRORS,
 )
 def get_active_session(
     prep_id: PrepId,
@@ -229,7 +227,7 @@ def get_active_session(
 @router.post(
     "/exam-preps/{id}/sessions",
     response_class=EventSourceResponse,
-    responses=_SSE_RESPONSE,
+    responses=_DB_SSE_RESPONSE,
 )
 async def create_session(
     prep_id: PrepId,
@@ -373,7 +371,11 @@ async def get_tts(message_id: MessageId, response: Response) -> TtsAudio:
 @router.post(
     "/sessions/{id}/messages",
     response_class=EventSourceResponse,
-    responses={**_SSE_RESPONSE, **RATE_LIMITED_DOCS},
+    responses={
+        **_DB_SSE_RESPONSE,
+        409: {"model": ErrorResponse, "description": "session_already_ended"},
+        **RATE_LIMITED_DOCS,
+    },
     dependencies=[Depends(chat_rate_limit)],
 )
 async def send_message(

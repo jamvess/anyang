@@ -21,7 +21,6 @@ from app.db.errors import DbUnavailableError
 from app.db.room import MessageRecord, PrepRecord, ProfileFacts, RoomRepository, SessionRecord
 from app.domain.exam_prep import days_left
 from app.domain.room import (
-    FALLBACK_USER_NAME,
     RoomNames,
     greeting_text,
     recent_turns,
@@ -91,10 +90,10 @@ def room_of(
 
 def greeting_of(prep: PrepRecord, profile: ProfileFacts, today: date) -> str:
     """Spec §2.8: the template from config/messages.yaml; no AI call."""
-    user_name = names_of(profile).user_name
+    names = names_of(profile)
     return greeting_text(
         get_settings().messages.room_greeting,
-        user_name=None if user_name == FALLBACK_USER_NAME else user_name,
+        user_name=names.user_name if names.has_nickname else None,
         prep_name=prep.title,
         days_left=days_left(prep.exam_date, today=today),
     )
