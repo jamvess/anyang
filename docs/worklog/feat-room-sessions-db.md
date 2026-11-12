@@ -5,7 +5,7 @@
 | Owner | Junior |
 | Branch | `feat/room-sessions-db` |
 | Checklist item | เตรียม staging สำหรับ demo รวม (ลำดับ 3 ของ journey วันจันทร์: บันทึก messages + resume) |
-| Status | paused · 2026-11-11 |
+| Status | in progress · 2026-11-12 |
 
 ## Plan
 
