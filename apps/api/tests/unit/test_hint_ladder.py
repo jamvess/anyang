@@ -185,3 +185,24 @@ def test_PM02_attempt_counted_once_per_problem(chosen, wrong_before, max_hints, 
 def test_AM05_only_the_part_after_the_last_equals_counts(last_line, expected):
     # The whole line had \lim in it, so a finished limit was taken for an unfinished step.
     assert unfinished("correct", last_line) is expected
+
+
+# --- added after /code-review (12 Nov) ----------------------------------------------------------
+
+
+def test_PM02_no_hints_at_all_still_counts_a_right_answer():
+    # max 0 is "the solution at once": a right first answer must still count (it was not).
+    assert attempt_outcome("praise_and_show", 0, tutoring(0)) == (True, True)
+
+
+@pytest.mark.parametrize(
+    "last_line",
+    [
+        pytest.param(r"2x\sin(x) + x^{2}\dfrac{d}{dx}\sin(x)", id="dfrac"),
+        pytest.param(r"\tfrac{d}{dx}(x^{2})", id="tfrac"),
+        pytest.param(r"\frac{\mathrm{d}}{\mathrm{d}x}(x^{2})", id="mathrm d"),
+        pytest.param(r"\iint x\,dx\,dy", id="double integral"),
+    ],
+)
+def test_AM05_other_ways_to_write_an_operator(last_line):
+    assert unfinished("correct", last_line) is True

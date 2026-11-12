@@ -1420,3 +1420,45 @@ def test_AI01_hint_ladder_prompts_and_config():
     )
     assert isinstance(settings.learning.tutoring.max_hints_before_solution, int)
     assert settings.learning.tutoring.max_hints_before_solution >= 0
+
+
+# --- added after /code-review (12 Nov) ----------------------------------------------------------
+
+
+def test_PM02_a_problem_counts_once_even_when_the_tutor_fails(client, local):
+    # The solution was recorded, then the tutor failed, so p1 stayed pending: the next answer to
+    # p1 must not record a second attempt.
+    cfg = get_settings().learning
+    tries = max_hints() + 1
+    local(
+        merged(
+            *[wrong_round() for _ in range(tries - 1)],
+            {
+                "typed_answer": [typed(True, P1_WRONG)],
+                "check_answer": [CLASSIFY_SIGN],
+                "explain_check": [RuntimeError("down")],
+            },
+            right_round(P1),
+        )
+    )
+    client.post(OPEN_ROOM)
+    for _ in range(tries):
+        say(client, "(x-7)(x-7)")
+
+    say(client, "x^2-49 = (x-7)(x+7)")
+
+    card = opening_card(client)
+    once = record_attempt(TopicProgress(cfg.bkt.p_init, 0, 0), False, P1.difficulty, True, cfg)
+    assert card["readiness"] == pytest.approx(expected_card_readiness({P1.topic_id: once}))
+
+
+def test_AM13_a_hint_does_not_get_the_classifiers_evidence(client, local):
+    # The evidence often states the right value of the wrong line ("+7 กลายเป็น -7").
+    fake, _ = local(wrong_round())
+    client.post(OPEN_ROOM)
+
+    say(client, "(x-7)(x-7)")
+
+    check_result = block_of(requests_for(fake, "explain_check")[0], "check_result")
+    assert "evidence: none" in check_result
+    assert "first_wrong_line: 2" in check_result

@@ -8,7 +8,7 @@ call, no database. The number of hints before the solution is
 import re
 from typing import Literal
 
-from app.domain.checker import Verdict
+from app.domain.checker import EQUALS, Verdict
 from app.settings import TutoringConfig
 
 Directive = Literal["continue", "hint_1", "hint_2", "reveal", "praise_and_show", "ask_working"]
@@ -17,11 +17,15 @@ Directive = Literal["continue", "hint_1", "hint_2", "reveal", "praise_and_show",
 _HINT_LEVELS: tuple[Directive, ...] = ("hint_1", "hint_2")
 
 # An operator SymPy evaluates by itself, so a line that still has one is a step, not the
-# final answer (§2 K item 2): \frac{d}{dx}, \frac{d^2}{dx^2}, \lim, \int, \sum, d/dx.
-_UNEVALUATED = re.compile(r"\\frac\{d(?:\^\{?\d+\}?)?\}\{d|\\lim|\\int|\\sum|\bd/d[a-z]")
+# final answer (§2 K item 2): \frac{d}{dx} (also \dfrac, \tfrac, \mathrm{d}), \frac{d^2}{dx^2},
+# \lim, \int (and \iint), \sum, d/dx. Spaces are removed before matching.
+_D = r"(?:d|\\mathrm\{d\})"
+_UNEVALUATED = re.compile(
+    rf"\\[dt]?frac\{{{_D}(?:\^\{{?\d+\}}?)?\}}\{{{_D}|\\lim|\\i+nt|\\sum|\bd/d[a-z]"
+)
 _SPACES = re.compile(r"\s+")
-# A plain `=`, not part of `<=`, `>=`, `!=` or `==` (as in app/domain/checker.py).
-_EQUALS = re.compile(r"(?<![<>!=])=(?!=)")
+# A bracket, or a plain `=` (the rule of app/domain/checker.py), for _after_last_equals.
+_BRACKET_OR_EQUALS = re.compile(r"[{(\[]|[})\]]|" + EQUALS.pattern)
 
 
 def unfinished(verdict: Verdict, last_line: str) -> bool:
@@ -37,7 +41,7 @@ def unfinished(verdict: Verdict, last_line: str) -> bool:
 def _after_last_equals(line: str) -> str:
     """The text after the last `=` outside braces and brackets (`\\sum_{k=1}` keeps its `=`)."""
     depth, start = 0, 0
-    for match in re.finditer(r"[{(\[]|[})\]]|" + _EQUALS.pattern, line):
+    for match in _BRACKET_OR_EQUALS.finditer(line):
         token = match.group()
         if token in "{([":
             depth += 1
@@ -83,7 +87,8 @@ def attempt_outcome(
     """``(is_correct, independent)`` of the one attempt a problem records when it ends
     (§2 K item 8), or None while it goes on. Right after the last hint is not independent."""
     if directive == "praise_and_show":
-        return True, wrong_before < cfg.max_hints_before_solution
+        # With no hints at all (max 0) nothing was taught, so a right answer is independent.
+        return True, wrong_before == 0 or wrong_before < cfg.max_hints_before_solution
     if directive == "reveal":
         return False, True
     return None

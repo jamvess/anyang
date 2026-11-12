@@ -127,6 +127,9 @@ class DemoRoomState(InMemoryRoomState):
         self._progress: dict[str, dict[str, TopicProgress]] = {}
         # The hint ladder of each student's pending problem (spec §2 K item 9).
         self._ladder: dict[str, LadderProgress] = {}
+        # Students whose pending problem has its one attempt already (spec §2 K item 8): when
+        # the tutor fails after it, the problem stays and must not count again (self-review).
+        self._counted: set[str] = set()
         # Turns of (role, text) lines; a student line starts a turn (spec §2 E item 3).
         self._turns: dict[str, list[list[tuple[str, str]]]] = {}
         self._recent_turns = recent_turns
@@ -149,6 +152,9 @@ class DemoRoomState(InMemoryRoomState):
         # A stale preview of a problem already answered is not counted twice (self-review).
         if pending.topic_id is None or not self._is_pending(key, pending):
             return
+        if _student(key) in self._counted:
+            return
+        self._counted.add(_student(key))
         cfg = get_settings().learning
         topics = self._progress.setdefault(_student(key), {})
         before = topics.get(pending.topic_id, TopicProgress(cfg.bkt.p_init, 0, 0))
@@ -191,6 +197,7 @@ class DemoRoomState(InMemoryRoomState):
         student = _student(key)
         self._index[student] = (self._index.get(student, 0) + 1) % len(DEMO_PROBLEMS)
         self._ladder.pop(student, None)  # the ladder starts over (spec §2 K item 9)
+        self._counted.discard(student)
         return DEMO_PROBLEMS[self._index[student]]
 
     async def progress_card(self, key: str) -> ProgressCardEvent | None:

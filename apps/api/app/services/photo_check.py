@@ -148,12 +148,12 @@ async def photo_events(
     yield "done", DoneEvent()
 
 
-def _check_result_text(result: CheckResult, no_working: bool = False) -> str:
+def _check_result_text(result: CheckResult, no_working: bool = False, evidence: bool = True) -> str:
     fields = {
         "verdict": result.verdict,
         "first_wrong_line": result.first_wrong_line,
         "error_type": result.error_type,
-        "evidence": result.evidence,
+        "evidence": result.evidence if evidence else None,
         "method": result.method,
         # missing: the final answer is right but has no working (demo-room.md §2 I)
         "working": "missing" if no_working else "ok",
@@ -301,7 +301,9 @@ async def _verdict_and_explanation(
         pending.problem,
         directive,
         number_lines(lines),
-        _check_result_text(result, no_working),
+        # The classifier's evidence often states the right value of the wrong line, so it is
+        # left out while the problem is open, like the reference (AM-13 · self-review PR #127).
+        _check_result_text(result, no_working, evidence=directive not in OPEN_DIRECTIVES),
     )
     async with aclosing(
         _explanation(gateway, state, key, pending, directive, explain_input, call_context)
@@ -321,11 +323,19 @@ async def give_up_events(
     check, so no verdict; the full solution, the attempt counted as wrong, the next problem.
     The caller has remembered the message."""
     progress = await state.ladder(key, pending)
-    await _record_attempt(state, key, pending, "reveal", progress, False)
+    directive = decide_directive(
+        None,
+        give_up=True,
+        unfinished=False,
+        no_working=False,
+        wrong_before=progress.wrong_before if progress else None,
+        cfg=get_settings().learning.tutoring,
+    )
+    await _record_attempt(state, key, pending, directive, progress, False)
     await state.remember(key, TUTOR, GAVE_UP_LINE)
-    explain_input = _explain_input(pending.problem, "reveal", NONE, NONE)
+    explain_input = _explain_input(pending.problem, directive, NONE, NONE)
     async with aclosing(
-        _explanation(gateway, state, key, pending, "reveal", explain_input, call_context)
+        _explanation(gateway, state, key, pending, directive, explain_input, call_context)
     ) as events:
         async for event in events:
             yield event

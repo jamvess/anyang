@@ -44,8 +44,9 @@ async def text_message_events(
             if typed.give_up:  # wins over an answer in the same message (§2 K item 6)
                 events = give_up_events(gateway, state, key, pending, call_context)
             else:
-                lines = [line.strip() for line in typed.lines if line.strip()]
-                events = typed_answer_events(gateway, state, key, pending, lines, call_context)
+                events = typed_answer_events(
+                    gateway, state, key, pending, list(typed.lines), call_context
+                )
             async with aclosing(events) as stream:
                 async for event in stream:
                     yield event
@@ -83,6 +84,7 @@ async def _typed_answer(
         return None
     if result.give_up:
         return result
-    if result.is_answer and any(line.strip() for line in result.lines):
-        return result
+    lines = [line.strip() for line in result.lines if line.strip()]
+    if result.is_answer and lines:
+        return result.model_copy(update={"lines": lines})
     return None
