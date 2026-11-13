@@ -157,3 +157,17 @@ def text_latex_of(text: str) -> str:
         elif part.strip():
             out.append(rf"\text{{{part}}}")
     return " ".join(out)
+
+
+_LATEX_COMMAND = re.compile(r"\\[A-Za-z]+")
+_LETTER = re.compile(r"[A-Za-z]")
+_SPACE = re.compile(r"\s+")
+
+
+def poses_a_problem(expression: str, reference_answer: str) -> bool:
+    """§2.3 item 4 (found in the live run, 13 Nov): `expression` must be the problem, not its
+    answer worked out by the model, or SymPy would only check arithmetic (`5 + 1` = `6`). So it
+    keeps a variable once the LaTeX commands are taken out, and is not the answer itself."""
+    if _SPACE.sub("", expression) == _SPACE.sub("", reference_answer):
+        return False
+    return bool(_LETTER.search(_LATEX_COMMAND.sub("", expression)))

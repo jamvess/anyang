@@ -90,3 +90,31 @@ def test_TM02_the_reason_is_name_stars_and_level():
 def test_TM13_card_latex_from_the_stored_text(text, latex):
     # §10 item 4: problems has no text_latex column; a reused problem rebuilds it from text.
     assert text_latex_of(text) == latex
+
+
+# --- added after the live run on Vertex (13 Nov) · spec §2.3 item 4, AC-14 ---------------------
+
+
+@pytest.mark.parametrize(
+    ("expression", "reference", "poses"),
+    [
+        pytest.param(r"\lim_{x \to 2}\frac{x^{2}-4}{x-2}", "4", True, id="a limit"),
+        pytest.param(
+            r"\frac{d}{dx}\left(x^{2}\sin(x)\right)",
+            r"2x\sin(x)+x^{2}\cos(x)",
+            True,
+            id="a derivative",
+        ),
+        pytest.param("x^{3}-x", "x(x-1)(x+1)", True, id="to factor"),
+        pytest.param("5 + 1", "6", False, id="arithmetic only"),
+        pytest.param("2(2)^{3}-3(2)^{2}-12(2)+5", "-15", False, id="numbers put in already"),
+        pytest.param(r"5-\sqrt{7}", r"5-\sqrt{7}", False, id="the answer itself"),
+        pytest.param(
+            r"\frac{3}{7} \cdot \frac{7}{5}", r"\frac{3}{5}", False, id="commands are not variables"
+        ),
+    ],
+)
+def test_AM11_the_expression_must_be_the_problem_not_its_answer(expression, reference, poses):
+    from app.domain.room import poses_a_problem
+
+    assert poses_a_problem(expression, reference) is poses

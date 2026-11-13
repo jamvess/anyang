@@ -27,7 +27,14 @@ from app.domain.bkt import (
     readiness,
     target_difficulty,
 )
-from app.domain.room import LEVEL_NAMES, TopicFacts, choose_topic, focus_text, text_latex_of
+from app.domain.room import (
+    LEVEL_NAMES,
+    TopicFacts,
+    choose_topic,
+    focus_text,
+    poses_a_problem,
+    text_latex_of,
+)
 from app.math.sympy_service import check_lines
 from app.models.room import (
     DoneEvent,
@@ -232,7 +239,10 @@ async def _problem_for(
 
 async def verified(result: GenerateProblemResult) -> bool:
     """AM-11 · ai-orchestration §2.4.6: SymPy evaluates `expression` to `reference_answer`; a
-    `factored` answer must also be fully factored."""
+    `factored` answer must also be fully factored. An `expression` that is only the answer
+    worked out does not count (`poses_a_problem`)."""
+    if not poses_a_problem(result.expression, result.reference_answer):
+        return False
     check = await check_lines(
         answer_format=result.answer_format,
         reference_answer=result.reference_answer,

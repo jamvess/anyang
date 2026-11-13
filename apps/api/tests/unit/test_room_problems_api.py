@@ -425,3 +425,17 @@ def test_TM10_no_open_problem_is_none(signed_in, problems, fake, repo: FakeRoomR
 
     [reply] = requests(fake, "tutor_reply")
     assert block(reply, "problem") == "none"
+
+
+# --- added after the live run on Vertex (13 Nov) · spec §2.3 item 4, AC-14 ---------------------
+
+
+def test_AM11_an_answer_worked_out_in_the_expression_is_a_failed_try(signed_in, problems, fake):
+    # The live run had `5 + 1` = `6`: SymPy only checked arithmetic.
+    script(fake, generate_problem=[generated("5 + 1", "6"), generated()], open_session=["สวัสดี"])
+
+    parse_sse(signed_in.post(OPEN).text)
+
+    assert len(requests(fake, "generate_problem")) == 2
+    [row] = problems.problems
+    assert row.reference_answer == "4"
