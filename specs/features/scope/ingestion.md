@@ -24,7 +24,7 @@ demo end to end (23 พ.ย.) ต้องให้ไฟล์ที่ผู�
 
 ### 2.2 ขั้น A1 · classify (CM-06)
 
-1. input: ชื่อไฟล์ที่ทำความสะอาดแล้ว (§2.5 ข้อ 1) · ข้อความของ `ingestion.classify_pages` หน้าแรก (อ่านแบบ §2.3 ข้อ 1–2) · `user_note` (ไม่มี → `ไม่มี`)
+1. input: ชื่อไฟล์ที่ทำความสะอาดแล้ว (§2.5 ข้อ 1) · ข้อความ text layer ของ `ingestion.classify_pages` หน้าแรกในรูป `[p.N]` (ไม่เรียก vision ตอน classify เพื่อให้เร็วและถูก · ไฟล์สแกนจึงพึ่งชื่อไฟล์และ note เป็นหลัก · แก้ 13 พ.ย. ตอนเขียน test) · `user_note` (ไม่มี → `ไม่มี`)
 2. `classify_material/v1` คืน `{kind, confidence, other_instructor, reason}` · `kind` ∈ `sheet | slides | past_exam | notes | other` · `other_instructor` = note หรือเนื้อหาบอกว่าข้อสอบชุดนี้เป็นของอาจารย์คนละคน
 3. code เขียน `materials.kind`, `kind_confidence = confidence`, `relevance_weight` = `stars.weight_other_instructor` ถ้า `kind = past_exam` และ `other_instructor` ไม่งั้น `stars.weight_same_instructor` (AI ไม่ให้ตัวเลขน้ำหนักเอง · CLAUDE.md ข้อ 1) · `status = 'classified'` · ผู้ใช้ยืนยัน/แก้ใน S10 (ของ Junior + May)
 4. AI ล้มหลัง retry ของ gateway → `status = 'failed'`, `error` = ข้อความสั้นสำหรับผู้ใช้ (§2.6 `error`)
