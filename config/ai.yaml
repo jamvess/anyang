@@ -53,7 +53,7 @@ ingestion:                             # files → pages → chunks (specs/featu
 
 embedding:                             # A3 embed (ai-orchestration §2.3.3), tier `embed` · no prompt
   timeout_s: 60                        # [C] one batch request · P3b: 116 chunks in 21.6 s (~1.8 s per batch of 10), so 60 leaves a wide margin · after Alpha: from ai_calls
-  batch_size: 10                       # [C] texts per request · gemini-embedding-2 allows 8,192 tokens per request in total and chunks are up to 800
+  batch_size: 1                        # [C] texts per request · Vertex: embedContent of gemini-embedding-2 takes one content per request (live run of ingestion on MTH10101, 13 Nov · specs/features/scope/ingestion.md §2.3) · P3b sent 10 on the Gemini API · 116 chunks ≈ 70 s · raise only with a provider that batches
   dimensions: 768                      # = chunks.embedding vector(768) · P3b: gemini-embedding-2 recall@4 95% at 768 vs 90% at 3072 (specs/poc/reports/P3.md)
 
 gateway:

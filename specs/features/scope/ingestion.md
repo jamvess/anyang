@@ -182,6 +182,10 @@ AI (A1, A2/A2b, A4, A5, A6, A7) ให้แค่ข้อความ หั�
 | `tests/integration/test_ingestion_db.py` (Supabase ในเครื่อง · 2 tenants) | integration | AC-tenant, AC-18 |
 | รันจริงบน Vertex กับ MTH10101 เทียบ P3 (`poc/P3/score.py` อ่านผลจาก DB) | eval (มือ · ขั้น 4 ของ worklog) | เป้า: ★★★ ≥ 10/12 · ≤ 3 นาทีต่อไฟล์ |
 
+**ผลรันจริงบน Vertex (13 พ.ย. · ขั้น 4 ของ worklog · store ในหน่วยความจำ + PDF จริงของ MTH10101 · ให้คะแนนด้วย `poc/P3/score.py` · ผลอยู่ใน `poc/P3/results/apps-api-ingestion/`):** หัวข้อตรง label 20/27 = 74% (P3 20/27) · ★★★ 9/12 = 75% (P3 10/12 · เป้า 80%) · map ข้อสอบ 30/43 = 70% (P3 70%) · สูงสุด 1.44 นาทีต่อไฟล์ (เป้า ≤ 3) · chunk 116 (เท่า P3b) · **Jam ตัดสิน 13 พ.ย.: รับผลนี้ไปก่อน** · สาเหตุที่ ★★★ ต่ำกว่า 1 หัวข้อยังไม่ได้แยก: ผลต่างระหว่างรอบ (P3 เคยได้ 8–10/12) หรือ `material_kind` = `sheet` แทน `exercise` ของไฟล์แบบฝึกหัด (§10 ข้อ 5 · หัวข้อของ AI ที่ไม่ตรง label 14 หัวข้อ ส่วนมากมาจากแบบฝึกหัด) · ลองหลัง demo
+
+**เจอตอนรันจริง:** Vertex `embedContent` ของ `gemini-embedding-2` รับครั้งละ 1 ข้อความ (P3b ใช้ Gemini API ที่ส่ง batch ได้) → `config/ai.yaml` `embedding.batch_size: 1` (Jam ok) · test ของ gateway ที่ผูกกับค่าเดิมใช้ batch ของตัวเอง (Jam ok)
+
 ## 9. Out of scope
 
 - endpoint ของไฟล์ (`/materials…`), signed upload URL, bucket + policy (Junior · demo ขั้น 3) · feature นี้อ่านไฟล์ผ่าน interface `MaterialFiles.read(storage_path)` ที่มีตัวจริงอ่าน Supabase Storage ด้วย service role และตัวในเครื่องอ่านโฟลเดอร์
@@ -198,7 +202,7 @@ AI (A1, A2/A2b, A4, A5, A6, A7) ให้แค่ข้อความ หั�
 2. **(Junior) ตัวรัน job:** demo ใช้ `asyncio` task ใน process ของ API (§2.7) · บน Cloud Run ต้องเปิด CPU ตลอดเวลา หรือแยกเป็น Cloud Run Job / Cloud Tasks · ตัดสินใน S5 ตอนทำ journey บน staging
 3. **(Junior) `MaterialFiles` บน Storage:** ใครเขียนตัวที่อ่าน Supabase Storage · ข้อเสนอ: Jam เขียนใน PR นี้ (service role อ่าน bucket ของ demo ขั้น 3) แล้ว Junior ดูย้อนหลัง · ชื่อ bucket ตามที่ Junior ตั้ง
 4. **(Jam · prompt) A1 คืน `other_instructor` แทน `relevance_weight`:** ให้ code เลือกน้ำหนักจาก config (CLAUDE.md ข้อ 1, 5) · แก้ตาราง ai-orchestration §2.3.7 (§11)
-5. **(Jam) `material_kind` ของ A5 = `materials.kind`** (`sheet`, `slides`, `notes`, `other`) · P3 ส่ง `lecture` / `exercise` ตามที่รู้จากชื่อไฟล์ · kind ใน DB ไม่มี "แบบฝึกหัด" · ข้อเสนอ: ส่ง `materials.kind` ตรงๆ แล้วดูผลในขั้น 4 ของ worklog (เทียบ P3) · ถ้าแย่ลงค่อยเพิ่มค่า `exercise` (migration) หรือให้ A1 บอกว่าเป็นแบบฝึกหัด
+5. **(Jam · ผลรันจริงอยู่ใน §8: ★★★ 9/12 · ลองหลัง demo) `material_kind` ของ A5 = `materials.kind`** (`sheet`, `slides`, `notes`, `other`) · P3 ส่ง `lecture` / `exercise` ตามที่รู้จากชื่อไฟล์ · kind ใน DB ไม่มี "แบบฝึกหัด" · ข้อเสนอ: ส่ง `materials.kind` ตรงๆ แล้วดูผลในขั้น 4 ของ worklog (เทียบ P3) · ถ้าแย่ลงค่อยเพิ่มค่า `exercise` (migration) หรือให้ A1 บอกว่าเป็นแบบฝึกหัด
 6. **ไฟล์ `failed` บล็อกขั้นรวม** จนผู้ใช้ลองใหม่หรือลบ (api.md รอตัดสิน ข้อ 2 · ข้อเสนอเดิม) · ใน demo ไม่ควรเกิด · ถ้าเกิดตอนอัดใช้ retry
 
 ## 11. Spec changes needed

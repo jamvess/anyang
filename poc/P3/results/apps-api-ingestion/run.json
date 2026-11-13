@@ -1,0 +1,78 @@
+{
+  "model": "vertex (apps/api pipeline)",
+  "wall_seconds": null,
+  "tokens_in": 0,
+  "tokens_out": 0,
+  "calls": [
+    {
+      "tag": "ingest:midterm-2559-1",
+      "file": "midterm-2559-1",
+      "purpose": "ingest",
+      "status": "ok",
+      "latency_ms": 64770,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "schema_retries": 0
+    },
+    {
+      "tag": "ingest:midterm-2561-1",
+      "file": "midterm-2561-1",
+      "purpose": "ingest",
+      "status": "ok",
+      "latency_ms": 21994,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "schema_retries": 0
+    },
+    {
+      "tag": "ingest:sheet-01",
+      "file": "sheet-01",
+      "purpose": "ingest",
+      "status": "ok",
+      "latency_ms": 51833,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "schema_retries": 0
+    },
+    {
+      "tag": "ingest:sheet-02",
+      "file": "sheet-02",
+      "purpose": "ingest",
+      "status": "ok",
+      "latency_ms": 11453,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "schema_retries": 0
+    },
+    {
+      "tag": "ingest:sheet-03",
+      "file": "sheet-03",
+      "purpose": "ingest",
+      "status": "ok",
+      "latency_ms": 1513,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "schema_retries": 0
+    },
+    {
+      "tag": "ingest:sheet-04",
+      "file": "sheet-04",
+      "purpose": "ingest",
+      "status": "ok",
+      "latency_ms": 1468,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "schema_retries": 0
+    },
+    {
+      "tag": "scope",
+      "file": "",
+      "purpose": "scope",
+      "status": "ok",
+      "latency_ms": 128494,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "schema_retries": 0
+    }
+  ]
+}
