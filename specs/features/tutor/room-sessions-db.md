@@ -33,7 +33,7 @@
 1. หา prep (ไม่เจอ → `404 not_found` ก่อน SSE)
 2. insert `tutor_sessions`: `tenant_id`, `user_id` จาก token · `exam_prep_id` · `scope_version_id` = `exam_preps.active_scope_version_id` (null ได้ · data-model.md) · คอลัมน์อื่นใช้ default · session เปิดเก่าไม่ถูกปิด
 3. SSE: `session {session_id}` (id ของแถวใหม่) → `token` 1 ตัว (คำทักทั้งก้อน §2.8) → `done {message_ids: [id ของคำทัก]}` · ไม่เรียก AI
-4. **ไม่ส่ง `progress_card`** เมื่อ `scope_version_id` เป็น null (api.md v1.15) · prep ที่มี scope แล้ว: ยังไม่ส่งเหมือนกันใน feature นี้ เพราะ card จาก mastery จริงยังไม่มี (§9) · **ไม่ส่ง `problem`**
+4. **(13 พ.ย.: prep ที่มีหัวข้อแล้ว ดู `room-problems-db.md` §2.2 · ข้อนี้ใช้กับ prep ที่ยังไม่มีหัวข้อ)** **ไม่ส่ง `progress_card`** เมื่อ `scope_version_id` เป็น null (api.md v1.15) · prep ที่มี scope แล้ว: ยังไม่ส่งเหมือนกันใน feature นี้ เพราะ card จาก mastery จริงยังไม่มี (§9) · **ไม่ส่ง `problem`**
 5. หลังส่งคำทัก insert ข้อความ `role: "tutor"`, `content` = คำทักทั้งก้อน, `input_mode: null` แล้วส่ง id ใน `done` · insert ไม่สำเร็จ → `done {message_ids: []}` + log (session ยังใช้ได้)
 
 **5. `GET /sessions/{id}`:** `Room`
