@@ -16,6 +16,43 @@
 
 ---
 
+## ⭐ Priority: demo end to end · จ. 23 พ.ย. 2569
+
+อาจารย์ขอ (13 พ.ย. · Jam): ผู้ใช้คนเดียวเดินได้ครบ **ตั้งแต่ login จนจบ session แล้วกลับมาเห็นต่อ** · **รันในเครื่องแล้วอัดเป็นวิดีโอ** (ไม่ต้องบน staging) · ทำข้อในส่วนนี้ก่อนข้ออื่นทุกข้อ · สถานะตรวจกับโค้ดบน `main` 13 พ.ย. (`specs/system/architecture.md` v1.3)
+
+**วันสำคัญ:** พฤ. 19 พ.ย. ทุกขั้นต่อกันได้ในเครื่องเดียว · ศ. 20 พ.ย. ซ้อมเดินครบ + แก้บั๊ก · ส. 21 – อา. 22 พ.ย. อัดวิดีโอ (May) · จ. 23 พ.ย. ส่งอาจารย์
+
+**เครื่องที่รัน:** Supabase ในเครื่อง (`npx supabase start` · มี Auth + Storage + DB ครบ · migration ขึ้นด้วย `npx supabase db reset` ไม่ต้อง `db push`) + API `APP_ENV=local AI_PROVIDER=live AUTH_REQUIRED=true` + เว็บ `pnpm dev` · Gemini จริงบน Vertex
+
+### Journey 9 ขั้น
+
+| # | ขั้น | ผ่านเมื่อ | มีแล้ว | ที่ขาด (เจ้าของ) | ถ้าไม่ทัน |
+|---|---|---|---|---|---|
+| 1 | Login (UM-01) | สมัคร / เข้าด้วย email + password แล้วหน้าเว็บส่ง token ทุก request · API ได้ `tenant_id` จาก token | API ตรวจ JWT (`api-auth.md`) · trigger สร้าง tenant + profile (`0001`) | หน้า login + เก็บ session + ส่ง `Authorization` (**May**) · เปิด `custom_access_token_hook` ใน Supabase ในเครื่อง + ค่า env ของ API ในเครื่อง (**Junior**) | บัญชีที่สร้างไว้ก่อน แล้ว login ในวิดีโอ |
+| 2 | สร้างการเตรียมสอบ (CM-01, CM-02) | กรอกชื่อวิชา + วันสอบ → เห็นในรายการพร้อมวันที่เหลือ | `POST` / `GET /exam-preps` บน DB (#121) | หน้ารายการ + ฟอร์มสร้าง แทนหน้า template ของ Next (**May**) | ฟอร์มเดียวไม่มีรายการ |
+| 3 | อัปโหลดชีท + ข้อสอบเก่า (CM-03, CM-07) | เลือกหลายไฟล์ → ขึ้น Storage → เห็นสถานะรายไฟล์ | สัญญา API ของ materials (api.md v1.10 · ยังเป็นข้อเสนอ) · stub | `/exam-preps/{id}/materials` จริง + signed upload URL + bucket และ policy (migration ใหม่) (**Junior**) · หน้าอัปโหลด (**May**) | ไฟล์เดียว · ไม่มีการแก้ประเภทไฟล์ |
+| 4 | ระบบอ่านไฟล์ → หัวข้อ + ดาว (SM-01, SM-03, SM-04, CM-06) | หลังยืนยันไฟล์ ระบบสกัดหัวข้อ ดาว และหน้าที่มา ลง `topics`, `topic_sources` | pipeline ใน `poc/P3/` (★★★ ตรง 83%) · `domain/stars.py` (#113) | ย้าย pipeline เข้า `apps/api` เป็นงานเบื้องหลัง + เรียก `compute_importance` + `GET /exam-preps/{id}/ingestion` จริง (**Jam** · DB write ร่วมกับ **Junior**) | รัน ingestion จริงก่อนอัด แล้วตัดช่วงรอในวิดีโอ |
+| 5 | ตรวจขอบเขตแล้วยืนยัน (SM-07, SM-09) | หน้า scope แสดงหัวข้อจริง → ยืนยัน → บันทึก `scope_versions` + `active_scope_version_id` | หน้า scope (`ScopeReview.tsx`) · API stub 3 ตัว | `GET /scope` อ่าน DB + `POST /scope/confirm` เขียน DB (**Junior**) · หน้าเว็บต่อ API จริง (**May**) · แก้ scope ผ่านแชท (SM-06) หลัง demo | ยืนยันได้อย่างเดียว ไม่แก้ |
+| 6 | เข้าห้องติว · tutor ทักก่อน · ให้โจทย์จากหัวข้อของผู้ใช้ (TM-01, TM-15, AM-11) | session ผูก scope ที่ยืนยัน · การ์ดความคืบหน้าจาก DB · โจทย์ของหัวข้อที่เลือก มีเฉลยที่ SymPy ตรวจแล้ว | ห้องบน DB (#123) · คำทัก `open_session` · เดโม่ในเครื่อง (โจทย์ตายตัว 5 ข้อ) | ทางที่มี token ใช้ของเดโม่ (คำทัก, โจทย์, hint ladder) แทนการตอบแชทอย่างเดียว (**Jam**) · เลือกหัวข้อด้วยกฎง่าย (ดาวสูง mastery ต่ำ) ยังไม่ใช่ planner เต็ม (**Jam**) · ที่มาของโจทย์: ดูคำถาม D3 | คลังโจทย์ที่เขียนไว้ต่อหัวข้อ |
+| 7 | ตอบ (พิมพ์ / รูป / canvas) → ตรวจ → ใบ้ (TM-06, AM-01–07) | ทั้ง 3 ทางได้ผลตรวจจาก SymPy และ hint ladder ในทางที่มี token | ครบในเดโม่ในเครื่อง (#115, #117, #127) · ไม่มี token เท่านั้น | `ImageStore` ที่อ่านจาก Storage (**Junior**) · ต่อ `typed_answer` + ตรวจ + hint ladder เข้าทางที่มี token (**Jam**) | ใช้ข้อความพิมพ์ + รูปที่เตรียมไว้ |
+| 8 | ความคืบหน้าบันทึกและเห็น (PM-01, PM-02, PM-04) | ตอบแล้วบันทึก `problems`, `attempts`, `topic_progress` · เปิดห้องใหม่เห็นระดับและความพร้อมเปลี่ยน | BKT (`domain/bkt.py`) · การ์ดคิดจาก state ในเดโม่ | repository ของ 3 ตาราง (**Junior**) · เรียก BKT แล้วเขียนผล + การ์ดจาก DB (**Jam**) | การ์ดตอนเปิดห้องเท่านั้น |
+| 9 | จบ session · กลับมาเห็นต่อ (TM-12, TM-13, PM-05) | กดจบ → สรุป session → กลับมาเห็นประวัติและโจทย์ค้าง | ประวัติแชทกลับมาเห็นได้ (#123) | `POST /sessions/{id}/end` จริง (บันทึก `ended_at` + สรุป) (**Junior**) · สรุปจาก AI (`session_summary`) (**Jam**) | สรุปแบบ template ไม่เรียก AI |
+
+### ต้องตัดสินก่อนเริ่ม (ภายใน จ. 16 พ.ย.)
+
+- **D1 · Junior + May:** login ใน demo เป็น **email + password** บน Supabase ในเครื่อง (UM-01) ไหม · Google (UM-02) ต้องตั้ง OAuth client ซึ่งรันในเครื่องยุ่งกว่า · ข้อเสนอ: email ใน demo · Google ทำใน S5 (ยังเป็น Must)
+- **D2 · Junior:** demo ใช้ Supabase ในเครื่อง (Docker) แทน `anyang-dev` ไหม · ข้อเสนอ: ในเครื่อง เพราะมี Storage, ขึ้น migration ได้เอง และไม่กระทบ DB ของทีม · หลังอัดวิดีโอค่อยทำบน staging
+- **D3 · Jam:** โจทย์ในห้องมาจากไหน · (ก) `generate_problem` สร้างจากหัวข้อ + ตรวจเฉลยด้วย SymPy (AM-11 · ตรงกับ design) · (ข) คลังโจทย์เขียนไว้ต่อหัวข้อ · **ตัดสินแล้ว 13 พ.ย. (Jam): (ก) และใช้ (ข) เป็นทางสำรอง**
+- **D4 · May:** ลำดับในวิดีโอและความยาว (`docs/design/demo-flow.md` ของ May · ช่วง live เดิมเป็นห้องติวอย่างเดียว)
+
+### งานของแต่ละคนสำหรับ demo (เรียงตามที่คนอื่นรอ)
+
+- **Junior:** D1, D2 → hook + env ในเครื่อง (ขั้น 1) → materials + Storage (ขั้น 3) → scope อ่าน/ยืนยันบน DB (ขั้น 5) → repository `problems` / `attempts` / `topic_progress` (ขั้น 8) → `ImageStore` บน Storage (ขั้น 7) → จบ session (ขั้น 9)
+- **May:** D1, D4 → หน้า login (ขั้น 1) → หน้ารายการ + สร้างการเตรียมสอบ (ขั้น 2) → หน้าอัปโหลด (ขั้น 3) → หน้า scope ต่อ API จริง (ขั้น 5) → อัดวิดีโอ
+- **Jam:** D3 → ingestion เข้า `apps/api` (ขั้น 4 · ใหญ่สุด เริ่มก่อน) → ห้องติวในทางที่มี token: คำทัก + โจทย์ + ตรวจ + hint ladder (ขั้น 6–7) → BKT ลง DB (ขั้น 8) → สรุป session (ขั้น 9)
+
+---
+
 ## Junior · Backend + DevOps
 
 ### S1 · 5–16 ต.ค.
