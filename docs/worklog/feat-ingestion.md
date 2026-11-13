@@ -13,7 +13,7 @@
 
 - [x] 1. 🤖 (13 พ.ย. · Jam ok) `/spec-feature` → `specs/features/scope/ingestion.md`: ขั้นของ job และสถานะใน `ingestion_jobs` · ทางของแต่ละ `kind` (ชีท text layer / สแกน → A2b / ข้อสอบเก่า → A4) · chunk + embed · A5 → A6 → A7 → `compute_importance` · ตารางที่เขียน · รันซ้ำได้ (idempotent) · เมื่อไฟล์ล้ม · `GET /exam-preps/{id}/ingestion` ตาม api.md `Ingestion` · `classify_material` (A1, ยังไม่มี prompt) · interface ที่ Junior ต่อ · ข้อเสนอถึง Junior (service role, ตัวรัน job) · 🙋 Jam review spec
 - [x] 2. 🤖 (13 พ.ย. · Jam ok) `/spec-to-tests`: unit test ด้วย fake provider + repository ปลอม · integration test เขียน DB จริงบน Supabase ในเครื่อง (RLS + `tenant_id`) · 🙋 Jam review test
-- [ ] 3. 🤖 `/implement-feature` จน green · ไฟล์กลางที่อาจต้องแก้ (`config/ai.yaml`, `specs/system/api.md`) ถามก่อน
+- [x] 3. 🤖 (13 พ.ย. · green ในเครื่อง · Jam ok ai.yaml, api.md, แก้ fake ของ test) `/implement-feature` จน green · ไฟล์กลางที่อาจต้องแก้ (`config/ai.yaml`, `specs/system/api.md`) ถามก่อน
 - [ ] 4. 🤖 รันจริงบน Vertex กับชีท + ข้อสอบ MTH10101 (`evals/topics/mth10101/raw/`) ผ่าน pipeline ใหม่ · เทียบกับผล P3 (`poc/P3/score.py`) ว่าไม่แย่ลง
 - [ ] 5. 🤖 อัปเดต docs + checklist แล้ว `/work-done`
 

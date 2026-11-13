@@ -221,10 +221,29 @@ class EmbeddingConfig(_Strict):
     dimensions: int | None = Field(default=None, ge=1)
 
 
+class IngestionConfig(_Strict):
+    """Reading files into pages and chunks (specs/features/scope/ingestion.md §2.3)."""
+
+    min_thai_share: float = Field(ge=0, le=1)
+    render_dpi: int = Field(ge=1)
+    classify_pages: int = Field(ge=1)
+    chunk_min_tokens: int = Field(ge=1)
+    chunk_max_tokens: int = Field(ge=1)
+    chunk_max_pages: int = Field(ge=1)
+    thai_chars_per_token: float = Field(gt=0)
+
+    @model_validator(mode="after")
+    def _min_below_max(self) -> "IngestionConfig":
+        if self.chunk_min_tokens > self.chunk_max_tokens:
+            raise ValueError("ingestion.chunk_min_tokens must not exceed chunk_max_tokens")
+        return self
+
+
 class AIConfig(_Strict):
     version: str
     tiers: dict[str, TierConfig]
     purposes: dict[str, PurposeConfig]
+    ingestion: IngestionConfig
     embedding: EmbeddingConfig
     gateway: GatewayConfig
     guards: GuardsConfig

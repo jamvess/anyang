@@ -340,8 +340,9 @@ export interface paths {
          * Get Ingestion
          * @description Progress by file and by step; S11 polls until scope_ready, then opens S12 (CM-07).
          *
-         *     stub — always the same moment: one file running, one failed, topics not started. So
-         *     scope_ready never turns true here; test the move to S12 with the web's own fixture.
+         *     With a token: the rows the user's JWT can see (specs/features/scope/ingestion.md §2.6) ·
+         *     another tenant's prep → 404. Without one (AUTH_REQUIRED=false): the stub, always the same
+         *     moment (one file running, one failed, topics not started).
          */
         get: operations["get_ingestion_exam_preps__id__ingestion_get"];
         put?: never;
@@ -2556,7 +2557,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;

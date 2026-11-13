@@ -11,10 +11,14 @@ from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Path, Response
+from fastapi.concurrency import run_in_threadpool
 from sse_starlette import EventSourceResponse
 
 from app import stubs
-from app.models.error import error_docs, too_long_message
+from app.auth import AuthContext, get_auth
+from app.db.errors import DB_DOWN_MESSAGE, DbUnavailableError
+from app.db.ingestion import IngestionReader, get_ingestion_reader
+from app.models.error import error_docs, error_response, too_long_message, unavailable_docs
 from app.models.room import DoneEvent, ErrorEvent, TokenEvent
 from app.models.scope import (
     Ingestion,
@@ -26,6 +30,7 @@ from app.models.scope import (
     TopicSources,
 )
 from app.rate_limit import RATE_LIMITED_DOCS, chat_rate_limit
+from app.services.ingestion import ingestion_view
 
 router = APIRouter(tags=["scope"])
 
@@ -74,15 +79,33 @@ async def confirm_scope(prep_id: PrepId, response: Response) -> ScopeConfirmed:
 # --- ingestion progress, scope chat, change log (api.md v1.11 · proposal pending Junior) ---
 
 
-@router.get("/exam-preps/{id}/ingestion", responses=error_docs())
-async def get_ingestion(prep_id: PrepId, response: Response) -> Ingestion:
+@router.get(
+    "/exam-preps/{id}/ingestion",
+    response_model=Ingestion,
+    responses={**error_docs(), **unavailable_docs("db_unavailable")},
+)
+async def get_ingestion(
+    prep_id: PrepId,
+    response: Response,
+    auth: Annotated[AuthContext | None, Depends(get_auth)],
+    reader: Annotated[IngestionReader | None, Depends(get_ingestion_reader)],
+) -> Any:
     """Progress by file and by step; S11 polls until scope_ready, then opens S12 (CM-07).
 
-    stub — always the same moment: one file running, one failed, topics not started. So
-    scope_ready never turns true here; test the move to S12 with the web's own fixture.
+    With a token: the rows the user's JWT can see (specs/features/scope/ingestion.md §2.6) ·
+    another tenant's prep → 404. Without one (AUTH_REQUIRED=false): the stub, always the same
+    moment (one file running, one failed, topics not started).
     """
-    response.headers.update(stubs.HEADERS)
-    return Ingestion.model_validate(stubs.ingestion())
+    if auth is None or reader is None:
+        response.headers.update(stubs.HEADERS)
+        return Ingestion.model_validate(stubs.ingestion())
+    try:
+        snapshot = await run_in_threadpool(reader.snapshot, prep_id)
+    except DbUnavailableError:
+        return error_response(503, "db_unavailable", DB_DOWN_MESSAGE)
+    if snapshot is None:
+        return error_response(404, "not_found", "Not found")
+    return ingestion_view(snapshot)
 
 
 _CHAT_EVENTS = (ScopePatchEvent, TokenEvent, DoneEvent, ErrorEvent)

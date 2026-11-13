@@ -77,7 +77,7 @@ class FakeDocuments:
 
     def __init__(self, pages: dict[bytes, list[str]], broken: set[bytes] | None = None) -> None:
         self._pages = pages
-        self._broken = broken or set()
+        self._broken = broken if broken is not None else set()
         self.rendered: list[tuple[bytes, int]] = []
 
     def pages_text(self, data: bytes) -> list[str]:

@@ -1,4 +1,4 @@
-# API (v1.15)
+# API (v1.16)
 
 Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้างอัตโนมัติที่ `/docs` · frontend generate types จาก `/openapi.json`
 
@@ -204,6 +204,8 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 **`Ingestion`** (response ของ `GET /exam-preps/{id}/ingestion` · CM-07) · หน้า S11 poll จน `scope_ready = true` แล้วไป S12 เอง · ยังไม่มีไฟล์ที่ยืนยัน ก็ตอบ `200` และ `files` เป็น `[]`
 
+**อ่านจาก DB (v1.16 · Jam ช่วง solo 2026-11-13 · `specs/features/scope/ingestion.md` §2.6 · Junior ดูย้อนหลัง):** มี token → อ่านด้วย JWT ของผู้ใช้ (RLS) · prep ไม่มีหรือเป็นของ tenant อื่น → `404 not_found` · DB ล่ม → `503 db_unavailable` (แบบ v1.14) · ไม่มี token (`AUTH_REQUIRED=false`) → stub เดิม (`X-Stub`) · `files[].detail`: กำลังทำ → "กำลังอ่าน", "กำลังแยกรายข้อ", "กำลังเตรียมเนื้อหา" · เสร็จ → "{n} หน้า" (ข้อสอบเก่าต่อด้วย " · {m} ข้อ") · `files[].error`: "เปิดไฟล์นี้ไม่ได้" หรือ "อ่านไฟล์นี้ไม่สำเร็จ ลองใหม่ได้" (รายละเอียดอยู่ใน log ไม่ส่งให้ผู้ใช้) · `steps[0]` ("อ่านสิ่งที่คุณเขียนกำกับไว้") `done` เมื่อทุกไฟล์ `done`
+
 | Field | Type | ที่มา |
 |---|---|---|
 | `scope_ready` | boolean | `true` เมื่อ `GET /exam-preps/{id}/scope` ไม่ตอบ `409 scope_not_ready` **และ**ไม่มีไฟล์ที่ยืนยันแล้วซึ่งยัง `confirmed`, `ingesting` หรือ `failed` · หัวข้อเดิมครบแล้วแต่กำลังอ่านไฟล์ใหม่ (CM-05) ยังเป็น `false` |
@@ -255,7 +257,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 **รอตัดสิน (v1.11 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-04 (PR #106) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
 
-1. **`ingestion_jobs` ของขั้นรวม:** `material_id` ห้าม null แต่หัวข้อกับดาวทำต่อ prep ไม่ใช่ต่อไฟล์ และไม่มี stage ของ "อ่านสิ่งที่เขียนกำกับ" · ข้อเสนอคือ migration ให้ `material_id` เป็น null ได้ + เพิ่ม `exam_prep_id`
+1. **`ingestion_jobs` ของขั้นรวม:** `material_id` ห้าม null แต่หัวข้อกับดาวทำต่อ prep ไม่ใช่ต่อไฟล์ และไม่มี stage ของ "อ่านสิ่งที่เขียนกำกับ" · ข้อเสนอคือ migration ให้ `material_id` เป็น null ได้ + เพิ่ม `exam_prep_id` · **13 พ.ย.: ทำตามข้อเสนอแล้วใน `0005_ingestion_jobs_prep.sql` (Jam ช่วง solo เพื่อ demo 23 พ.ย. · ขึ้นแค่ Supabase ในเครื่อง) · รอ Junior ดูแล้ว `db push`** · "อ่านสิ่งที่เขียนกำกับ" ไม่มีแถวของตัวเอง: `done` เมื่อทุกไฟล์ `done`
 2. **ไฟล์ `failed` ที่ผู้ใช้ยังไม่ตัดสิน:** ข้อเสนอคือขั้นรวมหัวข้อ (A6) รอจนทุกไฟล์เสร็จหรือถูกลบ เพื่อไม่ต้องเรียก main tier ซ้ำ
 3. **ลบไฟล์ที่ `ready` แล้ว:** หัวข้อที่สร้างจากไฟล์นั้นต้องเป็นอย่างไร (CM-10) · ยังไม่มีคำตอบ
 4. **ประวัติแชท S13:** ฝั่ง prompt ตัดสินแล้ว (Jam 2026-11-07 · PR #109): A8 ได้ `session.context_recent_turns` ข้อความล่าสุดจาก server (ai-orchestration §2.3.6) · **ที่เก็บยังรอ Junior:** `messages.session_id` ห้าม null · body `{text}` ใช้ได้ทุกทาง · ยังไม่มี endpoint อ่านประวัติ รีเฟรชแล้วเริ่มคุยใหม่

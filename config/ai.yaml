@@ -3,7 +3,7 @@
 # "vertex:" runs on Vertex AI when GOOGLE_CLOUD_PROJECT is set (specs/features/ai/gemini-vertex.md;
 # AI-07: no free tier for real users). AI_MODEL_OVERRIDE=gemini:<model> still uses the Gemini API key.
 
-version: "1.17"                        # a string: unquoted, YAML reads 1.10 as the float 1.1
+version: "1.18"                        # a string: unquoted, YAML reads 1.10 as the float 1.1
 
 tiers:
   small:  {primary: "vertex:gemini-3.5-flash",   fallback: "anthropic:TODO-claude-haiku"}  # P3a on Vertex (31 Oct): A4 43/43, A7 34/43 and 30/43 · flash-lite broke JSON with LaTeX (unescaped \\sqrt) on 1 of 2 exams (P3.md §7)
@@ -41,6 +41,15 @@ purposes:
   persona_extract:        {tier: small,  temperature: 0.0, max_tokens: 400,  timeout_s: 15, prompt: v1}
   persona_preview:        {tier: small,  temperature: 0.7, max_tokens: 150,  timeout_s: 15, prompt: v1}
   latex_to_speech:        {tier: small,  temperature: 0.0, max_tokens: 300,  timeout_s: 8,  prompt: v1}
+
+ingestion:                             # files → pages → chunks (specs/features/scope/ingestion.md · ai-orchestration §2.3.3) · values of PoC P3, no change
+  min_thai_share: 0.3                  # [C] Thai ÷ (Thai + Latin) letters of a file's text layer; below → scanned, read by vision · P3: scanned exams 0.0, sheets > 0.5 · calibrate on more courses
+  render_dpi: 150                      # [C] page images for vision_extract_pages · P3: 14 scanned pages read well at 150
+  classify_pages: 3                    # [C] first pages (text layer) sent to classify_material (ai-orchestration §2.3.2 step 2)
+  chunk_min_tokens: 400                # ai-orchestration §2.3.3 · P3b
+  chunk_max_tokens: 800                # ai-orchestration §2.3.3 · P3b (recall@4 95%)
+  chunk_max_pages: 2                   # ai-orchestration §2.3.3
+  thai_chars_per_token: 1.7            # [C] P3b: count_tokens of gemini-embedding-2 gave 1.47–1.82 Thai chars per token
 
 embedding:                             # A3 embed (ai-orchestration §2.3.3), tier `embed` · no prompt
   timeout_s: 60                        # [C] one batch request · P3b: 116 chunks in 21.6 s (~1.8 s per batch of 10), so 60 leaves a wide margin · after Alpha: from ai_calls
