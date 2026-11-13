@@ -11,7 +11,7 @@
 
 ต้องเสร็จก่อน พฤ. 19 พ.ย. (ต่อทุกขั้นของ demo) · ย้าย pipeline ที่พิสูจน์แล้วใน `poc/P3/` (★★★ ตรง 83%) เข้า `apps/api` ตาม ai-orchestration §2.3.2–2.3.5 · prompt ใช้ของเดิมที่วัดแล้ว (A2b, A4, A5 v2, A6 v2, A7) · ไม่รอ endpoint materials ของ Junior: ต่อกันผ่าน interface (อ่านไฟล์ + เริ่ม job) แล้ว endpoint ของ Junior เรียกเข้ามา
 
-- [ ] 1. 🤖 `/spec-feature` → `specs/features/scope/ingestion.md`: ขั้นของ job และสถานะใน `ingestion_jobs` · ทางของแต่ละ `kind` (ชีท text layer / สแกน → A2b / ข้อสอบเก่า → A4) · chunk + embed · A5 → A6 → A7 → `compute_importance` · ตารางที่เขียน · รันซ้ำได้ (idempotent) · เมื่อไฟล์ล้ม · `GET /exam-preps/{id}/ingestion` ตาม api.md `Ingestion` · `classify_material` (A1, ยังไม่มี prompt) · interface ที่ Junior ต่อ · ข้อเสนอถึง Junior (service role, ตัวรัน job) · 🙋 Jam review spec
+- [x] 1. 🤖 (13 พ.ย. · Jam ok) `/spec-feature` → `specs/features/scope/ingestion.md`: ขั้นของ job และสถานะใน `ingestion_jobs` · ทางของแต่ละ `kind` (ชีท text layer / สแกน → A2b / ข้อสอบเก่า → A4) · chunk + embed · A5 → A6 → A7 → `compute_importance` · ตารางที่เขียน · รันซ้ำได้ (idempotent) · เมื่อไฟล์ล้ม · `GET /exam-preps/{id}/ingestion` ตาม api.md `Ingestion` · `classify_material` (A1, ยังไม่มี prompt) · interface ที่ Junior ต่อ · ข้อเสนอถึง Junior (service role, ตัวรัน job) · 🙋 Jam review spec
 - [ ] 2. 🤖 `/spec-to-tests`: unit test ด้วย fake provider + repository ปลอม · integration test เขียน DB จริงบน Supabase ในเครื่อง (RLS + `tenant_id`) · 🙋 Jam review test
 - [ ] 3. 🤖 `/implement-feature` จน green · ไฟล์กลางที่อาจต้องแก้ (`config/ai.yaml`, `specs/system/api.md`) ถามก่อน
 - [ ] 4. 🤖 รันจริงบน Vertex กับชีท + ข้อสอบ MTH10101 (`evals/topics/mth10101/raw/`) ผ่าน pipeline ใหม่ · เทียบกับผล P3 (`poc/P3/score.py`) ว่าไม่แย่ลง
