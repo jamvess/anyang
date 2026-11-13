@@ -144,6 +144,11 @@ class SupabaseRoomRepository:
         self._connect = connect
         self._client: Client | None = None
 
+    def client(self) -> Client:
+        """The user's client, made on first use; shared with the problem repository of the same
+        request (app/db/room_problems.py)."""
+        return self._db
+
     @property
     def _db(self) -> Client:
         if self._client is None:

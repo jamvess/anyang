@@ -386,9 +386,16 @@ class RoomGreetingConfig(_Strict):
         return self
 
 
+class RoomTextsConfig(_Strict):
+    """Room lines that code sends (room-problems-db.md §2.3 item 7)."""
+
+    no_problem: str = Field(min_length=1)
+
+
 class MessagesConfig(_Strict):
     version: str
     room_greeting: RoomGreetingConfig
+    room: RoomTextsConfig
 
 
 class Settings(BaseModel):

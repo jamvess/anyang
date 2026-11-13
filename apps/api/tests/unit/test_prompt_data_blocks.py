@@ -250,6 +250,8 @@ OUTSIDE_BY_PROMPT = {
     "extract_topics_local/v2": {"file_name", "material_kind"},
     "map_questions/v1": set(),
     "open_session/v1": set(),
+    "open_session/v2": set(),
+    "generate_problem/v1": set(),
     "merge_topics/v1": set(),
     "merge_topics/v2": set(),
     "split_past_exam/v1": {"file_name"},

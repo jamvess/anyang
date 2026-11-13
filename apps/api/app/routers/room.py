@@ -30,7 +30,8 @@ from app.auth import AuthContext, get_auth
 from app.clock import get_now
 from app.db.errors import DB_DOWN_MESSAGE, DbUnavailableError
 from app.db.room import RoomRepository, SessionRecord, get_room_repository
-from app.domain.exam_prep import bangkok_today
+from app.db.room_problems import ProblemRepository, get_problem_repository
+from app.domain.exam_prep import bangkok_today, days_left
 from app.models.error import ErrorResponse, error_response, too_long_message, unavailable_docs
 from app.models.room import (
     BYTES_PER_MB,
@@ -53,7 +54,7 @@ from app.models.room import (
     bare_content_type,
 )
 from app.rate_limit import RATE_LIMITED_DOCS, chat_rate_limit
-from app.services import room_db
+from app.services import room_db, room_problems
 from app.services.dev_uploads import (
     LocalImageStore,
     get_local_mode,
@@ -76,6 +77,7 @@ from app.services.room_state import (
     get_room_state,
     room_key,
 )
+from app.services.tutor_turn import NO_PROBLEM
 from app.settings import get_settings
 
 log = logging.getLogger(__name__)
@@ -121,6 +123,7 @@ _SSE_RESPONSE: dict[int | str, dict[str, Any]] = {
 
 Auth = Annotated[AuthContext | None, Depends(get_auth)]
 Repo = Annotated[RoomRepository | None, Depends(get_room_repository)]
+Problems = Annotated[ProblemRepository | None, Depends(get_problem_repository)]
 Now = Annotated[datetime, Depends(get_now)]
 
 _DB_ERRORS: dict[int | str, dict[str, Any]] = {**_ERRORS, **unavailable_docs("db_unavailable")}
@@ -136,14 +139,21 @@ def _db_unavailable() -> JSONResponse:
 
 
 def _open_and_save(
-    prep_id: UUID, auth: AuthContext, repo: RoomRepository, now: datetime
+    prep_id: UUID,
+    auth: AuthContext,
+    repo: RoomRepository,
+    now: datetime,
+    gateway: Gateway,
+    problems: ProblemRepository | None,
 ) -> Response:
-    """POST /exam-preps/{id}/sessions with a token (spec §2.4)."""
+    """POST /exam-preps/{id}/sessions with a token (room-sessions-db.md §2.4). A prep with
+    topics also gets a progress card and a verified problem (room-problems-db.md §2.2)."""
     try:
         prep = repo.get_prep(prep_id)
         if prep is None:
             return _not_found()
         profile = repo.profile_facts()
+        topics = room_problems.usable_topics(problems.list_topics(prep.id)) if problems else []
         session = repo.create_session(
             tenant_id=auth.tenant_id,
             user_id=auth.user_id,
@@ -152,17 +162,30 @@ def _open_and_save(
         )
     except DbUnavailableError:
         return _db_unavailable()
-    greeting = room_db.greeting_of(prep, profile, bangkok_today(now))
-    return _sse(room_db.opening_events(repo, auth, session, greeting))
+    today = bangkok_today(now)
+    greeting = room_db.greeting_of(prep, profile, today)
+    if problems is None or not topics:
+        return _sse(room_db.opening_events(repo, auth, session, greeting))
+    days = days_left(prep.exam_date, today=today)
+    return _sse(
+        room_problems.opening_events(
+            gateway, repo, problems, auth, prep, session, topics, days, greeting
+        )
+    )
 
 
 async def _send_and_save(
-    session_id: UUID, text: str, auth: AuthContext, repo: RoomRepository, gateway: Gateway
+    session_id: UUID,
+    text: str,
+    auth: AuthContext,
+    repo: RoomRepository,
+    gateway: Gateway,
+    problems: ProblemRepository | None = None,
 ) -> Response:
     """POST /sessions/{id}/messages `{text}` with a token (spec §2.7): 404 / 409 / 503 before
     the stream; the user message is saved before the model is called."""
 
-    def check_and_save_user() -> tuple[SessionRecord, str] | JSONResponse:
+    def check_and_save_user() -> tuple[SessionRecord, str, str] | JSONResponse:
         try:
             session = repo.get_session(session_id)
             if session is None:
@@ -172,6 +195,9 @@ async def _send_and_save(
                     409, "session_already_ended", "This session has already ended"
                 )
             conversation = room_db.conversation_of(repo.list_messages(session.id))
+            # Before the message is saved: a failed read must not leave a saved message behind
+            # a 503 (self-review PR #131).
+            open_problem = problems.session_problem(session.id) if problems else None
             repo.add_message(
                 tenant_id=auth.tenant_id,
                 session_id=session.id,
@@ -181,13 +207,14 @@ async def _send_and_save(
             )
         except DbUnavailableError:
             return _db_unavailable()
-        return session, conversation
+        # The open problem without its answer (room-problems-db.md §2.4 · AM-13).
+        return session, conversation, open_problem.text if open_problem else NO_PROBLEM
 
     checked = await run_in_threadpool(check_and_save_user)
     if isinstance(checked, JSONResponse):
         return checked
-    session, conversation = checked
-    return _sse(room_db.reply_and_save(gateway, repo, auth, session, text, conversation))
+    session, conversation, problem = checked
+    return _sse(room_db.reply_and_save(gateway, repo, auth, session, text, conversation, problem))
 
 
 @router.get(
@@ -237,17 +264,19 @@ async def create_session(
     room_state: Annotated[RoomState, Depends(get_room_state)],
     repo: Repo,
     now: Now,
+    problems: Problems,
 ) -> Response:
-    """Start a session. With a token: a new tutor_sessions row, then SSE session → token (the
-    greeting from config/messages.yaml) → done, with no progress_card or problem yet
-    (room-sessions-db.md §2.4). 404 if the prep is not the user's.
+    """Start a session. With a token: a new tutor_sessions row. A prep with topics: SSE session →
+    progress_card (from the database) → token (open_session) → problem (verified by SymPy) →
+    done (room-problems-db.md §2.2). A prep without topics: session → token (the greeting from
+    config/messages.yaml) → done (room-sessions-db.md §2.4). 404 if the prep is not the user's.
 
     Without a token (AUTH_REQUIRED=false): stub SSE session → progress_card → token → problem →
     done. On a local machine it is a new session of the demo: the card comes from real mastery
     and the problem is the one reached (demo-room.md §2 D, F, J).
     """
     if auth is not None and repo is not None:
-        return await run_in_threadpool(_open_and_save, prep_id, auth, repo, now)
+        return await run_in_threadpool(_open_and_save, prep_id, auth, repo, now, gateway, problems)
     if not local:
         return stubs.stream("session_start")
     recorded = stubs.events("session_start")
@@ -387,6 +416,7 @@ async def send_message(
     room_state: Annotated[RoomState, Depends(get_room_state)],
     local: Annotated[bool, Depends(get_local_mode)],
     repo: Repo,
+    problems: Problems,
 ) -> Response:
     """Send `{text}`, `{image_path}` or both; the reply streams as SSE and ends with done.
 
@@ -399,7 +429,7 @@ async def send_message(
         # Code proposed in tutor-reply-stream.md §10 item 3, pending Junior.
         return error_response(422, "message_too_long", too_long)
     if auth is not None and repo is not None and body.image_path is None and body.text:
-        return await _send_and_save(session_id, body.text, auth, repo, gateway)
+        return await _send_and_save(session_id, body.text, auth, repo, gateway, problems)
     # No session_id yet: the session is a stub with no tutor_sessions row (api-auth.md §2.5).
     call_context = AICallContext(auth.tenant_id, auth.user_id) if auth else None
     if body.image_path is not None:

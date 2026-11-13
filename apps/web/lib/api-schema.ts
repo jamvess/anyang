@@ -56,9 +56,10 @@ export interface paths {
         put?: never;
         /**
          * Create Session
-         * @description Start a session. With a token: a new tutor_sessions row, then SSE session → token (the
-         *     greeting from config/messages.yaml) → done, with no progress_card or problem yet
-         *     (room-sessions-db.md §2.4). 404 if the prep is not the user's.
+         * @description Start a session. With a token: a new tutor_sessions row. A prep with topics: SSE session →
+         *     progress_card (from the database) → token (open_session) → problem (verified by SymPy) →
+         *     done (room-problems-db.md §2.2). A prep without topics: session → token (the greeting from
+         *     config/messages.yaml) → done (room-sessions-db.md §2.4). 404 if the prep is not the user's.
          *
          *     Without a token (AUTH_REQUIRED=false): stub SSE session → progress_card → token → problem →
          *     done. On a local machine it is a new session of the demo: the card comes from real mastery

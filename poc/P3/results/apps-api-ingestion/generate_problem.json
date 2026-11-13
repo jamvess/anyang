@@ -1,0 +1,298 @@
+[
+ {
+  "topic": "ฟังก์ชัน (Function)",
+  "stars": 2,
+  "ok_at": 1,
+  "notes": [
+   "try 1: ok expression '\\\\frac{2\\\\left(\\\\frac{2x+3}{x-1}\\\\right)+3}{\\\\frac{2x+3}{x-1}-1}' = '\\\\frac{7x+3}{x+4}' (45.0s)"
+  ]
+ },
+ {
+  "topic": "ลิมิตของฟังก์ชัน (Limit of a Function)",
+  "stars": 3,
+  "ok_at": 1,
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to 3} \\\\frac{2x^{2}-5x-3}{x^{2}-9}' = '\\\\frac{7}{6}' (2.9s)"
+  ]
+ },
+ {
+  "topic": "ทฤษฎีบทแซนด์วิช (Squeeze Theorem)",
+  "stars": 2,
+  "ok_at": 1,
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to \\\\infty}\\\\frac{4x^{2}-\\\\cos(5x)}{2x^{2}+3x}' = '2' (10.4s)"
+  ]
+ },
+ {
+  "topic": "ลิมิตที่เกี่ยวข้องกับค่าอนันต์ (Limits Involving Infinity)",
+  "stars": 2,
+  "ok_at": 1,
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to -\\\\infty}\\\\frac{\\\\sqrt{16x^{2}-x+3}}{5x+2}' = '-\\\\frac{4}{5}' (27.3s)"
+  ]
+ },
+ {
+  "topic": "ความต่อเนื่องของฟังก์ชัน (Continuous Functions)",
+  "stars": 3,
+  "ok_at": 1,
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to 2^{-}} \\\\left(\\\\frac{x^2 - 4}{x - 2} + 3x\\\\right) - 4' = '6' (12.8s)"
+  ]
+ },
+ {
+  "topic": "นิยามของอนุพันธ์ (Definition of Derivative)",
+  "stars": 2,
+  "ok_at": 1,
+  "notes": [
+   "try 1: ok expression '\\\\lim_{h \\\\to 0} \\\\frac{\\\\sqrt{3(5+h)+1} - \\\\sqrt{3(5)+1}}{h}' = '\\\\frac{3}{8}' (2.8s)"
+  ]
+ },
+ {
+  "topic": "การหาอนุพันธ์โดยใช้สูตร (Differentiation Formulas)",
+  "stars": 3,
+  "ok_at": 1,
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(\\\\frac{x^{2}-2x}{3x+1}\\\\right)' = '\\\\frac{3x^{2}+2x-2}{(3x+1)^{2}}' (6.3s)"
+  ]
+ },
+ {
+  "topic": "กฎลูกโซ่ (The Chain Rule)",
+  "stars": 2,
+  "ok_at": 2,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d}{dx}\\\\left(\\\\left(\\\\frac{x^{2}+1}{x^{2}-1}\\right)^{3}\\right)' = '-\\\\frac{12x(x^{2}+1)^{2}}{(x^{2}-1)^{4}}' (8.3s)",
+   "try 2: ok expression '\\\\frac{d}{dx}\\\\left(\\\\left(\\\\frac{x^{2}+1}{2x-3}\\\\right)^{3}\\\\right)' = '\\\\frac{6(x^{2}+1)^{2}(x^{2}-3x-1)}{(2x-3)^{4}}' (6.6s)"
+  ]
+ },
+ {
+  "topic": "อนุพันธ์ของฟังก์ชันตรีโกณมิติ (Derivatives of Trigonometric Functions)",
+  "stars": 2,
+  "ok_at": 1,
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(\\\\frac{\\\\tan(2x)}{1+\\\\sec(2x)}\\\\right)' = '\\\\frac{2}{\\\\cos(2x)+1}' (14.2s)"
+  ]
+ },
+ {
+  "topic": "การหาอนุพันธ์ของฟังก์ชันลอการิทึม (Derivatives of Logarithmic Functions)",
+  "stars": 3,
+  "ok_at": 1,
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(\\\\ln\\\\left(\\\\frac{x^{3}(2x-1)^{5}}{4x+3}\\\\right)\\\\right)' = '\\\\frac{3}{x}+\\\\frac{10}{2x-1}-\\\\frac{4}{4x+3}' (7.0s)"
+  ]
+ },
+ {
+  "topic": "การหาอนุพันธ์ของฟังก์ชันชี้กำลัง (Derivatives of Exponential Functions)",
+  "stars": 2,
+  "ok_at": 1,
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(3^{\\\\sin(2x)}(x^{2}+1)\\\\right)' = '2*x*3^{\\\\sin(2*x)} + 2*(x^{2} + 1)*3^{\\\\sin(2*x)}*\\\\ln(3)*\\\\cos(2*x)' (10.7s)"
+  ]
+ },
+ {
+  "topic": "อนุพันธ์ของฟังก์ชันตรีโกณมิติผกผัน (Derivatives of Inverse Trigonometric Functions)",
+  "stars": 2,
+  "ok_at": 1,
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(\\\\arctan\\\\left(\\\\frac{x+1}{x-1}\\\\right)\\\\right)' = '-\\\\frac{1}{x^{2}+1}' (7.4s)"
+  ]
+ },
+ {
+  "topic": "การหาอนุพันธ์เชิงลอการิทึม (Logarithmic Differentiation)",
+  "stars": 3,
+  "ok_at": 1,
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left((x^{2}+1)^{\\\\ln(x)}\\\\right)' = '(x^{2}+1)^{\\\\ln(x)}\\\\left(\\\\frac{\\\\ln(x^{2}+1)}{x}+\\\\frac{2x\\\\ln(x)}{x^{2}+1}\\\\right)' (7.2s)"
+  ]
+ },
+ {
+  "topic": "อนุพันธ์อันดับสูง (Derivatives of Higher Order)",
+  "stars": 2,
+  "ok_at": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d^{3}}{dx^{3}}\\\\left((2x+1)^{1/2}\\\\right)' = '3*(2*x + 1)**(-5/2)' (10.1s)",
+   "try 2: NOT verified expression '\\\\frac{d^{4}}{dx^{4}}\\\\left(\\\\ln(2x+1)\\\\right)' = '-\\\\frac{96}{(2x+1)^{4}}' (7.6s)",
+   "try 3: NOT verified expression '\\\\frac{d^{5}}{dx^{5}}\\\\left(x^{1/2}\\\\right)' = '\\\\frac{105}{32}x^{-9/2}' (7.0s)"
+  ]
+ },
+ {
+  "topic": "การหาอนุพันธ์ฟังก์ชันโดยปริยาย (Implicit Differentiation)",
+  "stars": 2,
+  "ok_at": 1,
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(\\\\frac{-x + \\\\sqrt{x^{2}+4}}{2}\\\\right)' = '\\\\frac{x}{2\\\\sqrt{x^{2}+4}}-\\\\frac{1}{2}' (13.3s)"
+  ]
+ },
+ {
+  "topic": "ค่าเฉลี่ยของฟังก์ชัน (Mean-Value of Function)",
+  "stars": 2,
+  "ok_at": null,
+  "notes": [
+   "try 1: NOT verified equation '3*x^2 - 6*x - 9 - \\\\frac{(4^3 - 3*4^2 - 9*4 + 5) - ((-1)^3 - 3*(-1)^2 - 9*(-1) + 5)}{4 - (-1)} = 0' = 'x = \\\\frac{3+\\\\sqrt{21}}{3}' (13.1s)",
+   "try 2: NOT verified equation '\\\\frac{d}{dx}\\\\left(\\\\frac{x+1}{x}\\\\right) = \\\\frac{\\\\frac{3+1}{3} - \\\\frac{1+1}{1}}{3-1}' = 'x=\\\\sqrt{3}' (9.9s)",
+   "try 3: NOT verified equation '3x^2 - 2 = \\\\frac{(2^3 - 2(2)) - ((-1)^3 - 2(-1))}{2 - (-1)}' = 'x=1' (10.8s)"
+  ]
+ },
+ {
+  "topic": "ทฤษฎีบทของโรลล์ (Rolle's Theorem)",
+  "stars": 1,
+  "ok_at": 1,
+  "notes": [
+   "try 1: ok equation '3x^{2}-4=0' = 'x=-\\\\frac{2\\\\sqrt{3}}{3}, x=\\\\frac{2\\\\sqrt{3}}{3}' (5.0s)"
+  ]
+ },
+ {
+  "topic": "ฟังก์ชันเพิ่มและฟังก์ชันลด (Increasing and Decreasing Functions)",
+  "stars": 3,
+  "ok_at": 1,
+  "notes": [
+   "try 1: ok equation '2x^{2}+x-6=0' = 'x=-2, x=\\\\frac{3}{2}' (10.4s)"
+  ]
+ },
+ {
+  "topic": "โค้งเว้าและจุดเปลี่ยนเว้า (Concavity and Point of Inflection)",
+  "stars": 3,
+  "ok_at": null,
+  "notes": [
+   "try 1: NOT verified equation '\\\\frac{d^{2}}{dx^{2}}\\\\left(x^{2}-\\\\frac{8}{x}\\\\right)=0' = 'x=2' (8.9s)",
+   "try 2: NOT verified equation '\\\\frac{d^{2}}{dx^{2}}\\\\left(\\\\frac{1}{20}x^{5}-\\\\frac{1}{6}x^{3}+2x\\\\right)=0' = 'x=-1, x=0, x=1' (6.8s)",
+   "try 3: NOT verified equation '\\\\frac{d^2}{dx^2}(x^4 - 6x^2 + 5) = 0' = 'x=-1, x=1' (10.0s)"
+  ]
+ },
+ {
+  "topic": "ค่าสูงสุดและค่าต่ำสุดของฟังก์ชัน (Maximum Value and Minimum Value of Function)",
+  "stars": 3,
+  "ok_at": null,
+  "notes": [
+   "try 1: NOT verified expression 'f(x) = 2x^{3} - 9x^{2} + 12x + 1, x \\\\in [0,3]' = '1' (2.6s)",
+   "try 2: NOT verified expression '2(3)^{3}-9(3)^{2}+12(3)-3' = '6' (2.7s)",
+   "try 3: NOT verified expression '\\\\max_{x \\\\in [0, 3]} (2x^{3} - 9x^{2} + 12x - 3)' = '6' (2.5s)"
+  ]
+ },
+ {
+  "topic": "การวาดกราฟของฟังก์ชันพหุนาม (Sketching Graphs of Polynomial Functions)",
+  "stars": 3,
+  "ok_at": null,
+  "notes": [
+   "try 1: NOT verified equation '\\\\frac{d^{2}}{dx^{2}}\\\\left(x^3 - 6x^2 + 9x + 2\\\\right) = 0' = 'x=2' (2.2s)",
+   "try 2: NOT verified expression '\\\\frac{d^2}{dx^2}(x^3 - 6x^2 + 9x + 2)' = '(2, 4)' (2.7s)",
+   "try 3: NOT verified expression '\\\\frac{d^2}{dx^2}(x^3 - 6x^2 + 9x + 2)' = '(2, 4)' (2.0s)"
+  ]
+ },
+ {
+  "topic": "เส้นกำกับ (Asymptotes)",
+  "stars": 3,
+  "ok_at": 1,
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to \\\\infty} \\\\frac{3x^{2}-12}{2x^{2}-2x-12}' = '3/2' (10.6s)"
+  ]
+ },
+ {
+  "topic": "ผลต่างเชิงอนุพันธ์ (Differentials)",
+  "stars": 2,
+  "ok_at": 2,
+  "notes": [
+   "try 1: NOT verified expression '10 + \\\\frac{1}{2\\\\sqrt{100}}(-0.4)' = '9.98' (8.4s)",
+   "try 2: ok expression '\\\\frac{d}{dx}\\\\left(\\\\frac{e^{2x}}{x+1}\\\\right)' = '\\\\frac{e^{2x}(2x+1)}{(x+1)^2}' (7.4s)"
+  ]
+ },
+ {
+  "topic": "การประมาณค่าเชิงเส้น (Linear Approximation)",
+  "stars": 2,
+  "ok_at": null,
+  "notes": [
+   "try 1: NOT verified expression '2 + \\\\frac{7.97 - 8}{12}' = '1.9975' (7.1s)",
+   "try 2: NOT verified expression '2^{5} + 5(2)^{4}(1.998 - 2)' = '31.84' (9.5s)",
+   "try 3: NOT verified expression '\\\\sqrt{4^2+9} + \\\\left(\\\\left.\\\\frac{d}{dx}\\\\sqrt{x^2+9}\\\\right|_{x=4}\\\\right)(x-4)' = '\\\\frac{4}{5}x + \\\\frac{9}{5}' (11.0s)"
+  ]
+ },
+ {
+  "topic": "รูปแบบไม่กำหนด (Indeterminate forms)",
+  "stars": 3,
+  "ok_at": 1,
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to 0}\\\\frac{e^{x} - e^{-x} - 2x}{x - \\\\sin(x)}' = '2' (6.7s)"
+  ]
+ },
+ {
+  "topic": "การประยุกต์ค่าสูงสุดและค่าต่ำสุด (Application of Maxima and Minima)",
+  "stars": 3,
+  "ok_at": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d}{dx}\\\\left(x(10-2x)(16-2x)\\\\right) = 0' = '2' (13.1s)",
+   "try 2: NOT verified expression '\\\\frac{d}{dx}\\\\left(x(10-2x)(16-2x)\\\\right) = 0' = '2' (12.0s)",
+   "try 3: NOT verified expression '\\\\frac{d}{dx}\\\\left(x(10-2x)(20-2x)\\\\right)' = '\\\\frac{15-5\\\\sqrt{3}}{3}' (11.4s)"
+  ]
+ },
+ {
+  "topic": "อัตราสัมพัทธ์ (Related Rates)",
+  "stars": 3,
+  "ok_at": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\lim_{x \\\\to 0} \\\\frac{\\\\pi (60 + 2x)^{2} - \\\\pi (60)^{2}}{x}' = '240\\\\pi' (12.2s)",
+   "try 2: NOT verified expression '\\\\frac{12}{\\\\pi \\\\left( \\\\frac{1}{3} (6) \\\\right)^2}' = '\\\\frac{3}{\\\\pi}' (11.0s)",
+   "try 3: NOT verified expression '\\\\frac{20\\\\pi}{4\\\\pi(5)^{2}}' = '\\\\frac{1}{5}' (12.1s)"
+  ]
+ },
+ {
+  "topic": "โดเมน เรนจ์ ลิมิต และความต่อเนื่องของฟังก์ชันหลายตัวแปร (Domain, Range, Limits, and Continuity of Multivariable Functions)",
+  "stars": 1,
+  "ok_at": 1,
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to 0}\\\\frac{x^{2}(3x^{2})}{x^{4}+(3x^{2})^{2}}' = '\\\\frac{3}{10}' (5.5s)"
+  ]
+ },
+ {
+  "topic": "พื้นผิวในระบบพิกัดสามมิติ (Surfaces in Three-Dimensional Coordinate System)",
+  "stars": 1,
+  "ok_at": 1,
+  "notes": [
+   "try 1: ok equation '\\\\frac{x^2}{16} = 1' = 'x=-4, x=4' (14.4s)"
+  ]
+ },
+ {
+  "topic": "อนุพันธ์ย่อย (Partial Derivatives)",
+  "stars": 1,
+  "ok_at": 1,
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left((\\\\sin(x))^{2}-3(\\\\cos(x))^{2}\\\\right)' = '8\\\\sin(x)\\\\cos(x)' (9.7s)"
+  ]
+ },
+ {
+  "topic": "กฎลูกโซ่สำหรับฟังก์ชันหลายตัวแปร (Chain Rule for Multivariable Functions)",
+  "stars": 1,
+  "ok_at": 3,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d}{dx}\\\\left((e^{x})^{2}+(x^{2})^{3}\\right)' = '2e^{2x}+6x^{5}' (13.2s)",
+   "try 2: NOT verified expression '\\\\frac{d}{dx}\\\\left((e^{x})^{2}-(e^{-x})^{2}\\right)' = '2e^{2x}+2e^{-2x}' (6.7s)",
+   "try 3: ok expression '\\\\frac{d}{dx}\\\\left((\\\\sin(x))^{2} + 3e^{2x}\\\\right)' = '2\\\\sin(x)\\\\cos(x) + 6e^{2x}' (5.0s)"
+  ]
+ },
+ {
+  "topic": "อนุพันธ์ของฟังก์ชันแฝงและจาโคเบียน (Implicit Differentiation and Jacobian)",
+  "stars": 1,
+  "ok_at": 1,
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to 2} \\\\frac{9(4) - 3x^2}{3(4)^2 - 9x}' = '\\\\frac{4}{5}' (50.7s)"
+  ]
+ },
+ {
+  "topic": "ผลต่างเชิงอนุพันธ์รวมและการประมาณค่า (Total Differentials and Approximation)",
+  "stars": 1,
+  "ok_at": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\sqrt{8} + \\\\frac{1}{2\\\\sqrt{8}}(0.01)' = '2\\\\sqrt{2} + \\\\frac{\\\\sqrt{2}}{800}' (14.9s)",
+   "try 2: NOT verified expression '4 + \\\\frac{1}{2\\\\sqrt{16}}\\\\left(\\\\frac{8}{100}\\\\right)' = '\\\\frac{401}{100}' (9.3s)",
+   "try 3: NOT verified expression '3 + \\\\frac{1}{3 \\\\cdot 27^{2/3}}\\\\left(-\\\\frac{1}{5}\\\\right)' = '\\\\frac{404}{135}' (11.7s)"
+  ]
+ },
+ {
+  "topic": "ค่าสุดขีดสัมพัทธ์และจุดอานม้า (Relative Extrema and Saddle Points)",
+  "stars": 1,
+  "ok_at": null,
+  "notes": [
+   "try 1: NOT verified equation '2x^{3} - 3x^{2} - 12x + 5 = 0' = 'x=-1, x=2' (10.6s)",
+   "try 2: NOT verified equation '\\\\frac{d}{dx}\\\\left(2x^{3}-3x^{2}-12x+5\\\\right)=0' = 'x=-1, x=2' (13.7s)",
+   "try 3: NOT verified equation '\\\\frac{d}{dx}\\\\left(x^{2}-4x+7\\\\right)=0' = 'x=2' (12.6s)"
+  ]
+ }
+]
