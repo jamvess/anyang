@@ -4,9 +4,11 @@ No I/O: the room header names (§2.5), the greeting from config/messages.yaml (�
 saved messages reach tutor_reply as the conversation (§2.7 item 3).
 """
 
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
+from uuid import UUID
 
 from app.settings import RoomGreetingConfig
 
@@ -90,3 +92,68 @@ def recent_turns(lines: Sequence[ChatLine], turns: int) -> list[ChatLine]:
             grouped.append([])
         grouped[-1].append((role, text))
     return [line for turn in grouped[-turns:] for line in turn] if turns > 0 else []
+
+
+# --- the topic of the session and its problem (specs/features/tutor/room-problems-db.md) ------
+
+# Level names as the progress card and the greeting say them (demo-room.md §2 F).
+LEVEL_NAMES = {
+    "not_started": "ยังไม่เริ่ม",
+    "weak": "อ่อน",
+    "developing": "กำลังดี",
+    "passed": "ผ่าน",
+}
+
+_MATH = re.compile(r"\$([^$]+)\$")
+
+
+@dataclass(frozen=True)
+class TopicFacts:
+    """A topic of the prep as the room needs it (`topics` row)."""
+
+    id: UUID
+    name: str
+    order_index: int
+    importance: int | None
+    status: str  # draft | confirmed | excluded
+    origin: str
+    signal_r: float = 0.0
+
+
+def choose_topic(
+    topics: Sequence[TopicFacts],
+    mastery: Mapping[UUID, float],
+    levels: Mapping[UUID, str],
+    p_init: float,
+) -> TopicFacts | None:
+    """§2.2 item 3 (TM-01, simple rule): among topics with a star that are not passed, most
+    stars, then lowest mastery (not started = `p_init`), then `order_index`. All passed → the
+    lowest mastery. No topic with a star → None."""
+    eligible = [t for t in topics if t.status != "excluded" and (t.importance or 0) >= 1]
+    if not eligible:
+        return None
+    open_ones = [t for t in eligible if levels.get(t.id, "not_started") != "passed"]
+    if open_ones:
+        return min(
+            open_ones,
+            key=lambda t: (-(t.importance or 0), mastery.get(t.id, p_init), t.order_index),
+        )
+    return min(eligible, key=lambda t: (mastery.get(t.id, p_init), t.order_index))
+
+
+def focus_text(topic: TopicFacts, level: str) -> str:
+    """The short reason of the choice for the greeting (§2.2 item 4 · TM-02)."""
+    return f"{topic.name} · {topic.importance or 0} ดาว · {LEVEL_NAMES[level]}"
+
+
+def text_latex_of(text: str) -> str:
+    """One line of LaTeX for the problem card from text with `$…$` math: the words go in
+    `\\text{}` (§10 item 4 · `problems` has no text_latex column)."""
+    parts = _MATH.split(text)
+    out = []
+    for n, part in enumerate(parts):
+        if n % 2:  # inside $…$
+            out.append(part.strip())
+        elif part.strip():
+            out.append(rf"\text{{{part}}}")
+    return " ".join(out)

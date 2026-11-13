@@ -13,7 +13,7 @@
 
 - [x] 1. 🤖 (13 พ.ย. · Jam ok) `/spec-feature` → `specs/features/tutor/room-problems-db.md`: เปิดห้อง (การ์ดจาก `topics` + `topic_progress` · ไม่มีหัวข้อ → แบบเดิม) · กฎเลือกหัวข้อแบบง่าย (ยังไม่ใช่ planner เต็ม · TM-01, TM-02) · `generate_problem/v1` (input: หัวข้อ, skill, ข้อความจากหน้าที่มา, ระดับยากเป้าตามดาว · output: โจทย์ + นิพจน์ที่ SymPy คำนวณได้ + เฉลย + ขั้นตอน + `answer_format`) · ตรวจเฉลยด้วย SymPy แล้วสร้างใหม่ไม่เกิน `checker.max_generate_retries` (AM-11 · ai-orchestration §2.4.6) · ทางสำรองเมื่อสร้างไม่ผ่าน · บันทึก `problems` + การ์ดโจทย์ใน `messages` (กลับมาเห็นได้ · TM-13) · หัวข้อที่ยังไม่ยืนยัน scope · 🙋 Jam review spec + ร่าง prompt
 - [x] 2. 🤖 (13 พ.ย. · Jam ok) `/spec-to-tests` (fake provider + repository ปลอม + SymPy จริง) · 🙋 Jam review test
-- [ ] 3. 🤖 `/implement-feature` จน green · ไฟล์กลาง (`config/ai.yaml` ค่า `generate_problem`, `specs/system/api.md`) ถามก่อน
+- [x] 3. 🤖 (13 พ.ย. · green ยกเว้น test boundary ที่ใช้ setattr บน config frozen · รอ Jam ok แก้ test) `/implement-feature` จน green · ไฟล์กลาง (`config/ai.yaml` ค่า `generate_problem`, `specs/system/api.md`) ถามก่อน
 - [ ] 4. 🤖 รันจริงบน Vertex: สร้างโจทย์ของหัวข้อ MTH10101 (จากผล ingestion) แล้วนับว่า SymPy ยืนยันผ่านกี่ % ในรอบที่ 1, 2, 3 (calibrate `max_generate_retries` · learning.yaml บอกให้วัดตอนมี feature)
 - [ ] 5. 🤖 อัปเดต docs + checklist แล้ว `/work-done`
 

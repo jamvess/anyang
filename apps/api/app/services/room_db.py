@@ -148,14 +148,14 @@ async def reply_and_save(
     session: SessionRecord,
     text: str,
     conversation: str,
+    problem: str = NO_PROBLEM,
 ) -> AsyncIterator[Event]:
-    """Spec §2.7 items 5-7: tutor_reply with no problem and the saved conversation. A finished
+    """Spec §2.7 items 5-7: tutor_reply with the saved conversation. ``problem`` is the open
+    problem of the session without its answer (room-problems-db.md §2.4 · AM-13). A finished
     reply, the degrade text included, is saved before `done`; a reply cut by `error` is not."""
     call_context = AICallContext(auth.tenant_id, auth.user_id, session.id)
     said: list[str] = []
-    async with aclosing(
-        reply_events(gateway, text, call_context, NO_PROBLEM, conversation)
-    ) as events:
+    async with aclosing(reply_events(gateway, text, call_context, problem, conversation)) as events:
         async for name, payload in events:
             if name == "token" and isinstance(payload, TokenEvent):
                 said.append(payload.text)

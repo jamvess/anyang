@@ -13,6 +13,7 @@ from pydantic import BaseModel
 
 from app.ai.call_context import AICallContext
 from app.ai.gateway import Gateway
+from app.domain.room import LEVEL_NAMES
 from app.models.room import EVENT_MODELS, ProgressCardEvent, TokenEvent
 from app.services.photo_check import problem_event, problem_line
 from app.services.room_state import TUTOR, PendingProblem, RoomState
@@ -21,12 +22,6 @@ from app.services.tutor_turn import call_scope
 log = logging.getLogger(__name__)
 
 # How the progress card levels read to the model (ai-orchestration §2.2.2 table).
-LEVEL_NAMES = {
-    "not_started": "ยังไม่เริ่ม",
-    "weak": "อ่อน",
-    "developing": "กำลังดี",
-    "passed": "ผ่าน",
-}
 
 
 def opening_facts(card: ProgressCardEvent, pending: PendingProblem | None) -> dict[str, str]:

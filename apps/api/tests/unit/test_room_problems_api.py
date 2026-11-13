@@ -264,7 +264,11 @@ def test_AM11_a_wrong_answer_is_generated_again(signed_in, problems, fake):
 @pytest.mark.parametrize("retries", [0, 2])
 def test_AM11_no_problem_after_the_last_try(signed_in, problems, fake, monkeypatch, retries):
     # AC-boundary
-    monkeypatch.setattr(SETTINGS.learning.checker, "max_generate_retries", retries)
+    # The config is frozen: the service gets a copy with this retry count (Jam ok 13 Nov).
+    checker = SETTINGS.learning.checker.model_copy(update={"max_generate_retries": retries})
+    learning = SETTINGS.learning.model_copy(update={"checker": checker})
+    settings = SETTINGS.model_copy(update={"learning": learning})
+    monkeypatch.setattr("app.services.room_problems.get_settings", lambda: settings)
     script(fake, generate_problem=[WRONG] * (retries + 1), open_session=["สวัสดี"])
 
     events = parse_sse(signed_in.post(OPEN).text)

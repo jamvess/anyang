@@ -14,3 +14,7 @@ room_greeting:
   exam_today: "วันนี้สอบ{prep_name}แล้ว ทบทวนจุดสำคัญกันอีกรอบนะ"  # exam day
   exam_passed: "สอบ{prep_name}ผ่านไปแล้ว ทบทวนต่อได้เสมอ"        # after the exam
   invite: "พิมพ์คำถามหรือโจทย์ที่อยากให้ช่วยมาได้เลยนะ"
+
+# Room lines that code sends (specs/features/tutor/room-problems-db.md). Wording: May.
+room:
+  no_problem: "ตอนนี้เตรียมโจทย์ไม่ทัน ลองเปิดห้องใหม่อีกครั้งนะ"   # no verified problem after every try (§2.3 item 7)
