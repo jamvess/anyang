@@ -241,6 +241,7 @@ async def test_AI01_image_inputs_still_work(tmp_path: Path) -> None:
 OUTSIDE_BY_PROMPT = {
     "check_answer/v1": {"reference_answer", "answer_format", "sympy_result", "hints"},
     "check_answer/v2": {"answer_format", "sympy_result", "hints"},
+    "classify_material/v1": {"file_name"},
     "explain_check/v1": set(),
     "explain_check/v2": set(),
     "explain_check/v3": set(),

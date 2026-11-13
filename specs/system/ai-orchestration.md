@@ -1,4 +1,4 @@
-# AI Orchestration Design (v1.5)
+# AI Orchestration Design (v1.6)
 
 ฉบับ markdown สำหรับ repo ของเอกสาร AI Orchestration Design v1.0 (30 ก.ย. 2569) พร้อมการแก้ v1.1: เกณฑ์ mastery 0.95, ระดับอ่อน 0.5, ความพร้อม = Σ(r × mastery) ÷ Σr, spaced review ตาม Cepeda/SM-2, เพดาน 10 ข้อ/skill/วัน, จำนวนข้อต่อ skill จำลองจาก BKT, circuit breaker ตาม Resilience4j · v1.2 (26 ต.ค. 2569): ระดับเป้าตามดาวและ mode + เพดาน mastery ตามระดับยากสุดที่ทำถูกเอง (learning-model.md §4) · v1.3 (28 ต.ค. 2569): §2.4.3 กฎเทียบรายบรรทัดของ SymPy service (`specs/features/check/sympy-service.md`) · v1.4 (31 ต.ค. 2569): ผล PoC P1 P2 P3 ใน §2.3.3, §2.3.7 (A2b แทน A2 สำหรับ PDF สแกน), §2.10 (model ของแต่ละ tier) และ §3.6 · v1.5 (31 ต.ค. 2569): ผล P3a บน Vertex ใน §2.3.7, §2.10, §3.6 (tier main, small · prompt A5/A6 v2) · v1.6 (31 ต.ค. 2569): §2.11 call ที่ไม่มี tenant ลงแค่ log (`ai-calls-log.md`) · v1.8 (9 พ.ย. 2569): purpose `open_session` (main) และ `typed_answer` (small · ชั่วคราวแทน `route_intent` + `normalize_math`) · `tutor_reply` v2 รู้โจทย์และบทสนทนา (`demo-room.md`) · v1.7 (8 พ.ย. 2569): purpose `explain_check` (tier main) ใน §2.2 ตาราง call ต่อ turn, §2.10 และตาราง purpose (`photo-check-in-room.md`)
 
@@ -119,7 +119,7 @@ AI ไม่ได้ตอบจากเอกสารอย่างเด�
 - PPTX อ่านทีละสไลด์, DOCX อ่านทีละหัวข้อ
 - **ชื่อไฟล์เป็นข้อความจากผู้ใช้ (Jam ตัดสิน 2026-11-07 · PR #111):** `file_name` อยู่นอก data block ในบรรทัด `File name:` ของ A2, A2b, A4, A5 · gateway กันแค่ใน attribute · **ตอนต่อ ingest ต้องทำความสะอาดชื่อก่อนเข้า AI** (ตัดตัวขึ้นบรรทัดและตัวควบคุม) ไม่งั้นตั้งชื่อไฟล์ที่ขึ้นบรรทัดใหม่ตามด้วยคำสั่งได้
 
-**Chunk**
+**Chunk** (ค่าทุกตัวอยู่ใน `config/ai.yaml` → `ingestion` · v1.6 · `specs/features/scope/ingestion.md` §2.3)
 
 - ชีทและโน้ต ตัดตามหัวข้อหรือสไลด์ ขนาดประมาณ 400–800 tokens ห้ามคร่อมเกิน 2 หน้า
 - **นับ token ภาษาไทยที่ประมาณ 1.7 ตัวอักษรต่อ token** (P3b วัดด้วย `count_tokens` ของ `gemini-embedding-2` ได้ 1.47–1.82) ไม่ใช่ 3–4 แบบภาษาอังกฤษ ถ้าใช้ค่าภาษาอังกฤษ chunk จะใหญ่เกินจริงเกือบ 2 เท่า · MTH10101 ตัดได้ 116 chunk (median 486 token, ไม่มีอันไหนเกิน 800)
@@ -183,7 +183,7 @@ LLM ไม่แตะ database โดยตรง แต่คืน JSON ใ�
 
 | # | Call | Tier | Output schema | ความถี่ |
 |---|---|---|---|---|
-| A1 | `classify_material` | small | `{kind, confidence, relevance_weight, reason}` | 1 ครั้ง/ไฟล์ |
+| A1 | `classify_material` | small | `{kind, confidence, other_instructor, reason}` (v1.6 · AI บอกแค่ว่าข้อสอบเป็นของอาจารย์คนละคน · code เลือก `relevance_weight` จาก `stars.weight_*` · `ingestion.md` §2.2) | 1 ครั้ง/ไฟล์ |
 | A2 | `vision_extract` | vision | `{text, latex_blocks, notes}` | เฉพาะไฟล์รูป (PDF สแกนใช้ A2b) |
 | A2b | `vision_extract_pages` | vision | `{pages: [{page, text}], notes}` | 1 ครั้ง/ไฟล์สแกน (ทุกหน้าใน call เดียว · เพิ่มใน PoC P3) |
 | A3 | `embed` | embed | vector | 1 ครั้ง/chunk |
@@ -790,7 +790,7 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 
 | ID | Call | Flow | Tier | Output |
 |---|---|---|---|---|
-| A1 | `classify_material` | 2.3 | small | kind, confidence, relevance_weight, reason |
+| A1 | `classify_material` | 2.3 | small | kind, confidence, other_instructor, reason |
 | A2 | `vision_extract` | 2.3 | vision | text, latex_blocks ของไฟล์รูปเดี่ยว (PDF สแกนใช้ A2b) |
 | A2b | `vision_extract_pages` | 2.3 | vision | text ทุกหน้าของไฟล์สแกนใน call เดียว (PoC P3) |
 | A3 | `embed` | 2.3 | embed | vector |

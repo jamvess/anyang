@@ -108,7 +108,7 @@ flowchart TB
 | `domain/`: `checker`, `stars` (compute_importance), `bkt`, `hint_ladder`, `exam_prep`, `room` | สร้างแล้ว · `stars` ยังไม่มีใครเรียก (รอ ingestion) · `bkt` และ `hint_ladder` ใช้ในเดโม่ในเครื่องเท่านั้น (ยังไม่บันทึก `attempts` / `topic_progress`) | `compute-importance.md` · `bkt-mastery.md` · demo-room §2 D, K |
 | `domain/`: planner, stage machine, buddy, spacing | แผน · เดโม่ใช้โจทย์ 5 ข้อเรียงตายตัวแทน planner | demo-room §2 B, §10 ข้อ 2 |
 | Hint ladder (ใบ้ 2 ระดับก่อนเฉลย) | เดโม่ในเครื่องเท่านั้น · ที่อื่นยังเฉลยทันทีตาม AM-07 · ข้อเสนอแก้ AM-07 รอทีม | demo-room §2 K · PR #127 |
-| ingestion (classify → อ่าน PDF → สกัดหัวข้อ → ดาว) | แผน · มีแค่โค้ดของ PoC ใน `poc/P3/` · หน้าตรวจขอบเขตเป็น stub 3 endpoint | P3.md · PR #100 |
+| ingestion (classify → อ่าน PDF → สกัดหัวข้อ → ดาว) | สร้างแล้ว 13 พ.ย. (`app/services/ingestion.py` · service role) · `GET /exam-preps/{id}/ingestion` อ่าน DB เมื่อมี token · **ยังไม่มีใครเรียก** จนกว่า endpoint materials ของ Junior จะมา (demo ขั้น 3) · ตัวรัน job เป็น asyncio task ใน API (ไม่ทน API ปิด · Cloud Run ใน S5) · migration `0005` ขึ้นแค่ในเครื่อง · หน้าตรวจขอบเขตยังเป็น stub 3 endpoint | `ingestion.md` · PR #130 · P3.md · PR #100 |
 | Upload ไฟล์และรูปขึ้น Storage | แผน · เดโม่ใช้โฟลเดอร์ในเครื่อง (`PUT /dev/uploads/…`) แทน | api.md "ห้องติว" · demo-room §2 A |
 | Persona และโปรไฟล์ | stub (`X-Stub: true`) · ยังไม่บันทึก | api.md v1.12 |
 | STT / TTS, Sentry, PWA, prod | แผน | |

@@ -1,0 +1,393 @@
+[
+  {
+    "id": "e6d97b34-4f1c-4f20-8ea6-c1755b625c34",
+    "name": "ฟังก์ชัน (Function)",
+    "order": 1,
+    "sources": [
+      "sheet-01:120-138"
+    ],
+    "stars": 2,
+    "signal_r": 0.0,
+    "reason": "เป็นพื้นฐานของ \"ลิมิตของฟังก์ชัน (Limit of a Function)\""
+  },
+  {
+    "id": "ff541aec-baff-4ca8-9982-e1e7c87364c4",
+    "name": "ลิมิตของฟังก์ชัน (Limit of a Function)",
+    "order": 2,
+    "sources": [
+      "sheet-01:2-9",
+      "sheet-03:1-1"
+    ],
+    "stars": 3,
+    "signal_r": 1.0,
+    "reason": "ออกในข้อสอบเก่า 2 จาก 2 ชุด"
+  },
+  {
+    "id": "6fd652b2-d73b-4d32-83f2-b0cc2e0b2f19",
+    "name": "ทฤษฎีบทแซนด์วิช (Squeeze Theorem)",
+    "order": 3,
+    "sources": [
+      "sheet-03:1-1"
+    ],
+    "stars": 2,
+    "signal_r": 0.5,
+    "reason": "ออกในข้อสอบเก่า 1 จาก 2 ชุด"
+  },
+  {
+    "id": "45a6ec05-1093-437b-b588-f767900836d1",
+    "name": "ลิมิตที่เกี่ยวข้องกับค่าอนันต์ (Limits Involving Infinity)",
+    "order": 4,
+    "sources": [
+      "sheet-01:11-19",
+      "sheet-03:1-1"
+    ],
+    "stars": 2,
+    "signal_r": 0.0,
+    "reason": "เป็นพื้นฐานของ \"ความต่อเนื่องของฟังก์ชัน (Continuous Functions)\""
+  },
+  {
+    "id": "348aa2a0-149d-46dd-9313-530dc562b5e1",
+    "name": "ความต่อเนื่องของฟังก์ชัน (Continuous Functions)",
+    "order": 5,
+    "sources": [
+      "sheet-01:19-25",
+      "sheet-03:1-2"
+    ],
+    "stars": 3,
+    "signal_r": 1.0,
+    "reason": "ออกในข้อสอบเก่า 2 จาก 2 ชุด"
+  },
+  {
+    "id": "b00f78cd-3b45-45fc-b41a-2199f0aac8e3",
+    "name": "นิยามของอนุพันธ์ (Definition of Derivative)",
+    "order": 6,
+    "sources": [
+      "sheet-01:29-37"
+    ],
+    "stars": 2,
+    "signal_r": 0.5,
+    "reason": "ออกในข้อสอบเก่า 1 จาก 2 ชุด"
+  },
+  {
+    "id": "cdf5b6d1-61b2-4b67-afc9-4177fc1a3337",
+    "name": "การหาอนุพันธ์โดยใช้สูตร (Differentiation Formulas)",
+    "order": 7,
+    "sources": [
+      "sheet-01:37-40",
+      "sheet-03:2-2"
+    ],
+    "stars": 3,
+    "signal_r": 1.0,
+    "reason": "ออกในข้อสอบเก่า 2 จาก 2 ชุด"
+  },
+  {
+    "id": "44c90c90-0db6-438f-a749-9b8b0d38a103",
+    "name": "กฎลูกโซ่ (The Chain Rule)",
+    "order": 8,
+    "sources": [
+      "sheet-01:41-45",
+      "sheet-03:2-2"
+    ],
+    "stars": 2,
+    "signal_r": 0.5,
+    "reason": "ออกในข้อสอบเก่า 1 จาก 2 ชุด"
+  },
+  {
+    "id": "1b087882-1c39-4b60-b867-693909f41f84",
+    "name": "อนุพันธ์ของฟังก์ชันตรีโกณมิติ (Derivatives of Trigonometric Functions)",
+    "order": 9,
+    "sources": [
+      "sheet-01:46-50"
+    ],
+    "stars": 2,
+    "signal_r": 0.5,
+    "reason": "ออกในข้อสอบเก่า 1 จาก 2 ชุด"
+  },
+  {
+    "id": "c81f930e-4106-4980-ad5d-ffaa8c72209e",
+    "name": "การหาอนุพันธ์ของฟังก์ชันลอการิทึม (Derivatives of Logarithmic Functions)",
+    "order": 10,
+    "sources": [
+      "sheet-01:51-53"
+    ],
+    "stars": 3,
+    "signal_r": 1.0,
+    "reason": "ออกในข้อสอบเก่า 2 จาก 2 ชุด"
+  },
+  {
+    "id": "606c583f-8467-43b7-ba33-314686b4abc4",
+    "name": "การหาอนุพันธ์ของฟังก์ชันชี้กำลัง (Derivatives of Exponential Functions)",
+    "order": 11,
+    "sources": [
+      "sheet-01:54-56"
+    ],
+    "stars": 2,
+    "signal_r": 0.5,
+    "reason": "ออกในข้อสอบเก่า 1 จาก 2 ชุด"
+  },
+  {
+    "id": "f8acbfa1-04d6-4eb8-a5b0-d27a6e33371d",
+    "name": "อนุพันธ์ของฟังก์ชันตรีโกณมิติผกผัน (Derivatives of Inverse Trigonometric Functions)",
+    "order": 12,
+    "sources": [
+      "sheet-01:57-61"
+    ],
+    "stars": 2,
+    "signal_r": 0.5,
+    "reason": "ออกในข้อสอบเก่า 1 จาก 2 ชุด"
+  },
+  {
+    "id": "83006762-4a13-48a3-8c3b-de0566fb5e37",
+    "name": "การหาอนุพันธ์เชิงลอการิทึม (Logarithmic Differentiation)",
+    "order": 13,
+    "sources": [
+      "sheet-01:62-65"
+    ],
+    "stars": 3,
+    "signal_r": 1.0,
+    "reason": "ออกในข้อสอบเก่า 2 จาก 2 ชุด"
+  },
+  {
+    "id": "a57b6c5f-55c9-4955-9b58-bfe9f515a8f2",
+    "name": "อนุพันธ์อันดับสูง (Derivatives of Higher Order)",
+    "order": 14,
+    "sources": [
+      "sheet-01:81-82",
+      "sheet-03:2-2"
+    ],
+    "stars": 2,
+    "signal_r": 0.5,
+    "reason": "ออกในข้อสอบเก่า 1 จาก 2 ชุด"
+  },
+  {
+    "id": "a7d9a32f-f678-4070-9935-2a8c1d401bcd",
+    "name": "การหาอนุพันธ์ฟังก์ชันโดยปริยาย (Implicit Differentiation)",
+    "order": 15,
+    "sources": [
+      "sheet-01:84-85",
+      "sheet-03:2-2"
+    ],
+    "stars": 2,
+    "signal_r": 0.5,
+    "reason": "ออกในข้อสอบเก่า 1 จาก 2 ชุด"
+  },
+  {
+    "id": "65c4b44c-09f2-4660-9505-de1fe80a8530",
+    "name": "ค่าเฉลี่ยของฟังก์ชัน (Mean-Value of Function)",
+    "order": 16,
+    "sources": [
+      "sheet-01:87-89",
+      "sheet-03:2-2"
+    ],
+    "stars": 2,
+    "signal_r": 0.5,
+    "reason": "ออกในข้อสอบเก่า 1 จาก 2 ชุด"
+  },
+  {
+    "id": "9a3dd964-87f2-4b8a-8e7f-5e6e6fe869f9",
+    "name": "ทฤษฎีบทของโรลล์ (Rolle's Theorem)",
+    "order": 17,
+    "sources": [
+      "sheet-03:2-2"
+    ],
+    "stars": 1,
+    "signal_r": 0.0,
+    "reason": "ไม่พบในข้อสอบเก่า"
+  },
+  {
+    "id": "cb1521b1-ca49-4ff2-97f8-66b538c9ff74",
+    "name": "ฟังก์ชันเพิ่มและฟังก์ชันลด (Increasing and Decreasing Functions)",
+    "order": 18,
+    "sources": [
+      "sheet-01:91-93",
+      "sheet-03:3-3"
+    ],
+    "stars": 3,
+    "signal_r": 1.0,
+    "reason": "ออกในข้อสอบเก่า 2 จาก 2 ชุด"
+  },
+  {
+    "id": "9ca3b5a5-67bf-464c-b5aa-4d562a8324e4",
+    "name": "โค้งเว้าและจุดเปลี่ยนเว้า (Concavity and Point of Inflection)",
+    "order": 19,
+    "sources": [
+      "sheet-01:94-97",
+      "sheet-03:3-3"
+    ],
+    "stars": 3,
+    "signal_r": 1.0,
+    "reason": "ออกในข้อสอบเก่า 2 จาก 2 ชุด"
+  },
+  {
+    "id": "2fb9a602-0acf-4db2-a5c3-81f7695a413b",
+    "name": "ค่าสูงสุดและค่าต่ำสุดของฟังก์ชัน (Maximum Value and Minimum Value of Function)",
+    "order": 20,
+    "sources": [
+      "sheet-01:98-110",
+      "sheet-03:2-3"
+    ],
+    "stars": 3,
+    "signal_r": 1.0,
+    "reason": "ออกในข้อสอบเก่า 2 จาก 2 ชุด"
+  },
+  {
+    "id": "496b1045-2676-4190-b90a-497d2e8b5058",
+    "name": "การวาดกราฟของฟังก์ชันพหุนาม (Sketching Graphs of Polynomial Functions)",
+    "order": 21,
+    "sources": [
+      "sheet-01:111-111",
+      "sheet-03:3-3"
+    ],
+    "stars": 3,
+    "signal_r": 1.0,
+    "reason": "ออกในข้อสอบเก่า 2 จาก 2 ชุด"
+  },
+  {
+    "id": "8d58f1dd-a3ff-4309-80f9-675ee54937ea",
+    "name": "เส้นกำกับ (Asymptotes)",
+    "order": 22,
+    "sources": [
+      "sheet-01:111-116"
+    ],
+    "stars": 3,
+    "signal_r": 1.0,
+    "reason": "ออกในข้อสอบเก่า 2 จาก 2 ชุด"
+  },
+  {
+    "id": "7d8fc4df-150f-4217-9ad2-236654b80057",
+    "name": "ผลต่างเชิงอนุพันธ์ (Differentials)",
+    "order": 23,
+    "sources": [
+      "sheet-02:2-3",
+      "sheet-04:1-1"
+    ],
+    "stars": 2,
+    "signal_r": 0.5,
+    "reason": "ออกในข้อสอบเก่า 1 จาก 2 ชุด"
+  },
+  {
+    "id": "b39b0ccf-4b9f-4507-845d-692ca64ccc6d",
+    "name": "การประมาณค่าเชิงเส้น (Linear Approximation)",
+    "order": 24,
+    "sources": [
+      "sheet-02:5-7",
+      "sheet-04:1-1"
+    ],
+    "stars": 2,
+    "signal_r": 0.5,
+    "reason": "ออกในข้อสอบเก่า 1 จาก 2 ชุด"
+  },
+  {
+    "id": "3617af3a-a1d7-44dc-accf-3e9ea0a35acc",
+    "name": "รูปแบบไม่กำหนด (Indeterminate forms)",
+    "order": 25,
+    "sources": [
+      "sheet-02:9-20",
+      "sheet-04:1-1"
+    ],
+    "stars": 3,
+    "signal_r": 1.0,
+    "reason": "ออกในข้อสอบเก่า 2 จาก 2 ชุด"
+  },
+  {
+    "id": "fd2a9319-20b8-4364-83d0-0584cd355e95",
+    "name": "การประยุกต์ค่าสูงสุดและค่าต่ำสุด (Application of Maxima and Minima)",
+    "order": 26,
+    "sources": [
+      "sheet-02:24-27",
+      "sheet-04:1-1"
+    ],
+    "stars": 3,
+    "signal_r": 1.0,
+    "reason": "ออกในข้อสอบเก่า 2 จาก 2 ชุด"
+  },
+  {
+    "id": "a1ed1410-1d3c-46f8-b5db-a88e24aee9ec",
+    "name": "อัตราสัมพัทธ์ (Related Rates)",
+    "order": 27,
+    "sources": [
+      "sheet-02:28-31",
+      "sheet-04:1-1"
+    ],
+    "stars": 3,
+    "signal_r": 1.0,
+    "reason": "ออกในข้อสอบเก่า 2 จาก 2 ชุด"
+  },
+  {
+    "id": "d7c10cde-239b-4148-bf49-eb527cb411d7",
+    "name": "โดเมน เรนจ์ ลิมิต และความต่อเนื่องของฟังก์ชันหลายตัวแปร (Domain, Range, Limits, and Continuity of Multivariable Functions)",
+    "order": 28,
+    "sources": [
+      "sheet-04:1-2"
+    ],
+    "stars": 1,
+    "signal_r": 0.0,
+    "reason": "ไม่พบในข้อสอบเก่า"
+  },
+  {
+    "id": "c0124145-5f73-4889-8c24-7c8a5f1001f4",
+    "name": "พื้นผิวในระบบพิกัดสามมิติ (Surfaces in Three-Dimensional Coordinate System)",
+    "order": 29,
+    "sources": [
+      "sheet-04:2-2"
+    ],
+    "stars": 1,
+    "signal_r": 0.0,
+    "reason": "ไม่พบในข้อสอบเก่า"
+  },
+  {
+    "id": "d186b014-b627-4147-a18f-04d5f04c1182",
+    "name": "อนุพันธ์ย่อย (Partial Derivatives)",
+    "order": 30,
+    "sources": [
+      "sheet-04:2-2"
+    ],
+    "stars": 1,
+    "signal_r": 0.0,
+    "reason": "ไม่พบในข้อสอบเก่า"
+  },
+  {
+    "id": "20475a1f-27d0-432e-9f0f-44b014d8be08",
+    "name": "กฎลูกโซ่สำหรับฟังก์ชันหลายตัวแปร (Chain Rule for Multivariable Functions)",
+    "order": 31,
+    "sources": [
+      "sheet-04:2-2"
+    ],
+    "stars": 1,
+    "signal_r": 0.0,
+    "reason": "ไม่พบในข้อสอบเก่า"
+  },
+  {
+    "id": "53a7d5db-6a72-4fe5-9cd3-0e2abf730f5c",
+    "name": "อนุพันธ์ของฟังก์ชันแฝงและจาโคเบียน (Implicit Differentiation and Jacobian)",
+    "order": 32,
+    "sources": [
+      "sheet-04:2-3"
+    ],
+    "stars": 1,
+    "signal_r": 0.0,
+    "reason": "ไม่พบในข้อสอบเก่า"
+  },
+  {
+    "id": "5561afda-02f3-41fd-b4c6-c5c402cf745f",
+    "name": "ผลต่างเชิงอนุพันธ์รวมและการประมาณค่า (Total Differentials and Approximation)",
+    "order": 33,
+    "sources": [
+      "sheet-04:3-3"
+    ],
+    "stars": 1,
+    "signal_r": 0.0,
+    "reason": "ไม่พบในข้อสอบเก่า"
+  },
+  {
+    "id": "68201f2d-9c60-40dc-92a8-5ae093e6b554",
+    "name": "ค่าสุดขีดสัมพัทธ์และจุดอานม้า (Relative Extrema and Saddle Points)",
+    "order": 34,
+    "sources": [
+      "sheet-04:3-3"
+    ],
+    "stars": 1,
+    "signal_r": 0.0,
+    "reason": "ไม่พบในข้อสอบเก่า"
+  }
+]

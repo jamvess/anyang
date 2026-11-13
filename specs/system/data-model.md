@@ -1,4 +1,4 @@
-# Data model (v1.4)
+# Data model (v1.5)
 
 SQL จริงอยู่ที่ `supabase/migrations/` เริ่มจาก `0001_init.sql` (ทดสอบรันบน PostgreSQL + pgvector แล้ว และทดสอบ RLS ว่า user A มองไม่เห็นข้อมูลของ user B) แล้วแก้ต่อด้วย migration ใหม่ทีละไฟล์ ไม่แก้ไฟล์เดิม ไฟล์นี้อธิบายภาพรวมและเหตุผล
 
@@ -6,6 +6,7 @@ SQL จริงอยู่ที่ `supabase/migrations/` เริ่มจ�
 |---|---|
 | `0002_messages_attachment_name.sql` | เพิ่ม `messages.attachment_name` (api.md v1.3 · 2026-10-21) |
 | `0003_topic_sources.sql` | ตารางใหม่ `topic_sources` (ช่วงหน้าของหัวข้อ) + `past_exam_questions.map_note` · ผลจาก P3 ข้อ 1 และ 3 (2026-11-01) |
+| `0005_ingestion_jobs_prep.sql` | `ingestion_jobs.exam_prep_id` (ไม่ null · เติมจาก `materials` ของแถวเดิม) + `material_id` null ได้: แถวของขั้นรวม `topics`, `stars` ทำต่อ prep ไม่ใช่ต่อไฟล์ (`specs/features/scope/ingestion.md` §5 · api.md รอตัดสิน ข้อ 1 · Jam ช่วง solo 2026-11-13 · **ขึ้นแค่ Supabase ในเครื่อง · รอ Junior ดูแล้ว `db push`**) |
 | `0004_tutor_sessions_scope_nullable.sql` | `tutor_sessions.scope_version_id` เป็น null ได้: session ที่เริ่มก่อนยืนยัน scope (`room-sessions-db.md` · Junior 2026-11-11 · ขึ้น anyang-dev และ anyang-staging แล้ว) · FK เดิมยังอยู่ |
 
 ## กฎทั่วไป
@@ -23,7 +24,7 @@ SQL จริงอยู่ที่ `supabase/migrations/` เริ่มจ�
 
 ## ERD
 
-ครบทุกตาราง (28 ตารางใน `public`) และทุก foreign key ใน `0001_init.sql`–`0004_tutor_sessions_scope_nullable.sql` แบ่งเป็น 3 รูปตามกลุ่ม (`0004` เปลี่ยนแค่ให้ `tutor_sessions.scope_version_id` เป็น null ได้ · เส้น `|o--o{` ในรูป 3 ถูกอยู่แล้ว)
+ครบทุกตาราง (28 ตารางใน `public`) และทุก foreign key ใน `0001_init.sql`–`0005_ingestion_jobs_prep.sql` แบ่งเป็น 3 รูปตามกลุ่ม (`0004` เปลี่ยนแค่ให้ `tutor_sessions.scope_version_id` เป็น null ได้ · เส้น `|o--o{` ในรูป 3 ถูกอยู่แล้ว · `0005` เพิ่ม `ingestion_jobs.exam_prep_id` ในรูป 2)
 
 วิธีอ่าน:
 
@@ -102,7 +103,8 @@ erDiagram
   scope_versions |o--o{ exam_preps : "active_scope_version_id"
   materials ||--o{ material_pages : "material_id"
   materials ||--o{ chunks : "material_id"
-  materials ||--o{ ingestion_jobs : "material_id"
+  materials |o--o{ ingestion_jobs : "material_id"
+  exam_preps ||--o{ ingestion_jobs : "exam_prep_id"
   materials ||--o{ past_exam_questions : "material_id"
   topics ||--o{ topic_skills : "topic_id"
   topics ||--o{ topic_chunks : "topic_id"
@@ -149,7 +151,8 @@ erDiagram
   }
   ingestion_jobs {
     uuid id PK
-    uuid material_id FK
+    uuid exam_prep_id FK "0005"
+    uuid material_id FK "null = step of the prep (0005)"
     text stage
     numeric progress
     text status
