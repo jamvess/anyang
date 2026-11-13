@@ -181,7 +181,7 @@ def _add_text(out: list[str], words: str) -> None:
 _LATEX_COMMAND = re.compile(r"\\[A-Za-z]+")
 _LETTER = re.compile(r"[A-Za-z]")
 _SPACE = re.compile(r"\s+")
-# One variable on the left, no letter on the right once LaTeX commands are gone (`x = -\frac{2}{3}`).
+# A variable on the left, no letter on the right once LaTeX commands are gone (`x = -\frac{2}{3}`).
 _SOLVED = re.compile(r"^\s*[A-Za-z]\s*=\s*(?:[^A-Za-z\\]|\\[A-Za-z]+)*$")
 
 
