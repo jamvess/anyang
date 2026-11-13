@@ -329,7 +329,8 @@
 
 ### S4 · 16–27 พ.ย.
 
-- [ ] ⭐ demo ขั้น 4: ingestion ใน `apps/api` (งานเบื้องหลัง: classify → อ่านไฟล์ → chunk + embed → สกัดหัวข้อ → `compute_importance`) ลง `materials`, `chunks`, `topics`, `topic_sources` · `GET /exam-preps/{id}/ingestion` จริง (SM-01, SM-03, SM-04, CM-06, AI-08) · เริ่มก่อนข้ออื่น
+- [x] ⭐ demo ขั้น 4: ingestion ใน `apps/api` (งานเบื้องหลัง: classify → อ่านไฟล์ → chunk + embed → สกัดหัวข้อ → `compute_importance`) ลง `materials`, `chunks`, `topics`, `topic_sources` · `GET /exam-preps/{id}/ingestion` จริง (SM-01, SM-03, SM-04, CM-06, AI-08) · เริ่มก่อนข้ออื่น
+  - 13 พ.ย. (PR #130 · `specs/features/scope/ingestion.md`): pipeline ของ P3 อยู่ใน `apps/api` แล้ว · classify (prompt ใหม่ `classify_material/v1`) · อ่าน/ตัดรายข้อ/chunk/embed ทีละไฟล์ · A5 → A6 → A7 → `compute_importance` ต่อ prep · `GET /ingestion` อ่าน DB · migration `0005` (`ingestion_jobs.exam_prep_id`) ขึ้นแค่ในเครื่อง **Junior: ดูแล้ว `db push`** · รันจริงบน Vertex กับ MTH10101: หัวข้อ 20/27, ★★★ 9/12 (P3 10/12 · Jam รับผล · ลองส่ง kind `exercise` หลัง demo), map 70%, ≤ 1.44 นาทีต่อไฟล์ · Vertex embed ทีละข้อความ (`embedding.batch_size: 1`) · **ต่อเข้า demo:** endpoint materials ของ Junior (ขั้น 3) เรียก `classify_material` และ `get_ingestion_runner().start(prep_id)` หลังยืนยันไฟล์ · bucket ชื่อ `materials`
 - [ ] ⭐ demo ขั้น 6: ห้องติวในทางที่มี token: คำทัก `open_session` + การ์ดจาก DB + เลือกหัวข้อด้วยกฎง่าย + `generate_problem` ที่ SymPy ตรวจเฉลยแล้ว (คลังโจทย์เป็นทางสำรอง · D3) (TM-01, TM-15, AM-11)
 - [ ] ⭐ demo ขั้น 7: `typed_answer` + ตรวจ + รูป/canvas ในทางที่มี token (TM-06 ส่วนพิมพ์และรูป, AM-01–07) · hint ladder เฉพาะ `APP_ENV=local` ตาม `demo-room.md` §2 K (AM-07 ยังเป็นข้อเดิมจนกว่าทีมตัดสิน)
 - [ ] ⭐ demo ขั้น 8–9: BKT ลง `attempts` / `topic_progress` + การ์ดจาก DB (PM-01–04) · สรุป session ด้วย `session_summary` (PM-05)
