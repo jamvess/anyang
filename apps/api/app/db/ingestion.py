@@ -21,6 +21,7 @@ from typing import Annotated, Any, Protocol
 from uuid import UUID
 
 from fastapi import Depends
+from postgrest.types import CountMethod
 from supabase import Client
 
 from app.auth import AuthContext, get_auth, get_user_db
@@ -56,7 +57,7 @@ def _material(row: dict[str, Any]) -> MaterialRow:
         kind=row.get("kind"),
         kind_confirmed=bool(row.get("kind_confirmed")),
         user_note=row.get("user_note"),
-        relevance_weight=float(row.get("relevance_weight") or 1.0),
+        relevance_weight=float(row["relevance_weight"]),
         status=row["status"],
         error=row.get("error"),
         created_at=_time(row.get("created_at")),
@@ -95,7 +96,12 @@ class IngestionStore(Protocol):
         ...
 
     def clear_file(self, material_id: UUID) -> None:
-        """Delete the pages, chunks and questions of one file (a re-run starts clean)."""
+        """Delete the pages, chunks and questions of one file and its ingest job rows (not
+        classify), so a re-run starts clean and an old failed stage does not show."""
+        ...
+
+    def upsert(self, table: str, rows: list[dict[str, Any]]) -> None:
+        """Write whole rows by `id` in one call (rows that exist are replaced)."""
         ...
 
     def insert(self, table: str, rows: list[dict[str, Any]]) -> None: ...
@@ -338,6 +344,16 @@ class InMemoryIngestionStore:
         for table in FILE_TABLES:
             rows = self._table(table)
             rows[:] = [r for r in rows if r["material_id"] != material_id]
+        jobs = self._table("ingestion_jobs")
+        jobs[:] = [j for j in jobs if j["material_id"] != material_id or j["stage"] == "classify"]
+
+    def upsert(self, table: str, rows: list[dict[str, Any]]) -> None:
+        self._check()
+        if table in self._fail_next:
+            self._fail_next.discard(table)
+            raise DbUnavailableError(f"upsert {table}")
+        for row in rows:
+            next(r for r in self._table(table) if r["id"] == row["id"]).update(copy.deepcopy(row))
 
     def insert(self, table: str, rows: list[dict[str, Any]]) -> None:
         self._check()
@@ -537,8 +553,22 @@ class SupabaseIngestionStore:
         def query() -> None:
             for table in FILE_TABLES:
                 self._db().table(table).delete().eq("material_id", str(material_id)).execute()
+            (
+                self._db()
+                .table("ingestion_jobs")
+                .delete()
+                .eq("material_id", str(material_id))
+                .neq("stage", "classify")
+                .execute()
+            )
 
         self._run("clear file", query)
+
+    def upsert(self, table: str, rows: list[dict[str, Any]]) -> None:
+        if rows:
+            self._run(
+                f"upsert {table}", lambda: self._db().table(table).upsert(_json(rows)).execute()
+            )
 
     def insert(self, table: str, rows: list[dict[str, Any]]) -> None:
         if rows:
@@ -597,31 +627,25 @@ class SupabaseIngestionReader:
                 .execute()
                 .data
             )
-            ids = [m["id"] for m in materials]
-            pages = (
-                self._db.table("material_pages")
-                .select("material_id")
-                .in_("material_id", ids)
-                .execute()
-                .data
-                if ids
-                else []
-            )
-            questions = (
-                self._db.table("past_exam_questions")
-                .select("material_id")
-                .in_("material_id", ids)
-                .execute()
-                .data
-                if ids
-                else []
-            )
+
+            def count(table: str, material_id: str) -> int:
+                # A count, not the rows: S11 polls, and PostgREST caps the rows it returns.
+                result = (
+                    self._db.table(table)
+                    .select("id", count=CountMethod.exact, head=True)
+                    .eq("material_id", material_id)
+                    .execute()
+                )
+                return result.count or 0
+
             files = [
                 FileSnapshot(
                     material=_material(m),
                     jobs=[(j["stage"], j["status"]) for j in jobs if j["material_id"] == m["id"]],
-                    page_count=sum(1 for p in pages if p["material_id"] == m["id"]),
-                    question_count=sum(1 for q in questions if q["material_id"] == m["id"]),
+                    page_count=count("material_pages", m["id"]),
+                    question_count=count("past_exam_questions", m["id"])
+                    if m.get("kind") == "past_exam"
+                    else 0,
                 )
                 for m in materials
             ]

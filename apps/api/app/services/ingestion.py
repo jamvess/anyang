@@ -143,6 +143,10 @@ async def classify_material(material_id: UUID, deps: IngestionDeps) -> None:
     except (AIProviderError, AISchemaError) as error:
         await _fail_file(deps, material, "classify", TRY_AGAIN, f"classify_material: {error}")
         return
+    except Exception as error:  # the database or a bug: never leave the file "running"
+        log.exception("ingestion: classify of %s failed", material.id)
+        await _fail_file(deps, material, "classify", TRY_AGAIN, f"classify: {error!r}")
+        return
     stars = settings.learning.stars
     other = result.kind == "past_exam" and result.other_instructor
     weight = stars.weight_other_instructor if other else stars.weight_same_instructor
@@ -224,16 +228,18 @@ async def ingest_material(material_id: UUID, deps: IngestionDeps) -> None:
     except (AIProviderError, AISchemaError) as error:
         await _fail_file(deps, material, stage, TRY_AGAIN, f"{stage}: {error}")
         return
+    except Exception as error:  # the database or a bug: never leave the file "ingesting"
+        log.exception("ingestion: %s of %s failed", stage, material.id)
+        await _fail_file(deps, material, stage, TRY_AGAIN, f"{stage}: {error!r}")
+        return
     await _db(deps.store.update_material, material.id, {"status": "ready", "error": None})
 
 
 def _image_type(material: MaterialRow) -> str | None:
-    suffix = (
-        "." + material.storage_path.rsplit(".", 1)[-1].lower()
-        if "." in material.storage_path
-        else ""
-    )
-    return _IMAGE_TYPES.get(suffix)
+    """A photo by the extension of the user's file name: `storage_path` is
+    `{tenant}/{prep}/{material}` with no extension (0001_init.sql · self-review PR #130)."""
+    name = material.file_name.strip().lower()
+    return _IMAGE_TYPES.get("." + name.rsplit(".", 1)[-1]) if "." in name else None
 
 
 async def _extract(deps: IngestionDeps, material: MaterialRow) -> tuple[list[tuple[int, str]], str]:
@@ -242,7 +248,11 @@ async def _extract(deps: IngestionDeps, material: MaterialRow) -> tuple[list[tup
     if image_type is not None:  # a single photo of a page: A2
         result = await deps.gateway.call(
             "vision_extract",
-            {"image": Image(data=data, mime_type=image_type), "file_name": _name(material)},
+            {
+                "image": Image(data=data, mime_type=image_type),
+                "file_name": _name(material),
+                "page_no": "1",
+            },
             VisionExtractResult,
         )
         return [(1, result.text)], "vision"
@@ -319,16 +329,19 @@ async def _fail_file(
     deps: IngestionDeps, material: MaterialRow, stage: str, message: str, detail: str
 ) -> None:
     log.warning("ingestion: %s of %s failed: %s", stage, material.id, detail)
-    await _db(
-        deps.store.set_job,
-        tenant_id=material.tenant_id,
-        exam_prep_id=material.exam_prep_id,
-        material_id=material.id,
-        stage=stage,
-        status="failed",
-        error=detail[:_JOB_ERROR_CHARS],
-    )
-    await _db(deps.store.update_material, material.id, {"status": "failed", "error": message})
+    try:
+        await _db(
+            deps.store.set_job,
+            tenant_id=material.tenant_id,
+            exam_prep_id=material.exam_prep_id,
+            material_id=material.id,
+            stage=stage,
+            status="failed",
+            error=detail[:_JOB_ERROR_CHARS],
+        )
+        await _db(deps.store.update_material, material.id, {"status": "failed", "error": message})
+    except Exception:
+        log.exception("ingestion: could not mark %s as failed", material.id)
 
 
 # --- §2.4 · the prep: topics, question map, stars (SM-01, SM-03, SM-04)
@@ -336,7 +349,32 @@ async def _fail_file(
 
 async def build_scope(prep_id: UUID, deps: IngestionDeps) -> None:
     """A5 per sheet → A6 → A7 per exam → write → stars. Starts only when every confirmed file is
-    ready (a failed file waits for the user · spec §2.4)."""
+    ready (a failed file waits for the user · spec §2.4). An unexpected error (the database, a
+    bug) fails the step that was running instead of leaving it "running"."""
+    try:
+        await _build_scope(prep_id, deps)
+    except Exception as error:
+        log.exception("ingestion: the scope of %s stopped", prep_id)
+        try:
+            tenant = await _db(deps.store.prep_tenant, prep_id)
+            jobs = await _db(
+                deps.store.select, "ingestion_jobs", exam_prep_id=prep_id, material_id=None
+            )
+            for job in jobs:
+                if job["status"] == "running" and tenant is not None:
+                    await _db(
+                        deps.store.set_job,
+                        tenant_id=tenant,
+                        exam_prep_id=prep_id,
+                        stage=job["stage"],
+                        status="failed",
+                        error=repr(error)[:_JOB_ERROR_CHARS],
+                    )
+        except Exception:
+            log.exception("ingestion: could not mark the scope of %s as failed", prep_id)
+
+
+async def _build_scope(prep_id: UUID, deps: IngestionDeps) -> None:
     tenant = await _db(deps.store.prep_tenant, prep_id)
     if tenant is None:
         return
@@ -519,23 +557,62 @@ async def _write_scope(
                 "map_note": m.note if m is not None else None,
             }
 
-    topic_rows = [
-        {
-            "id": topic_ids[t.id],
-            "tenant_id": tenant,
-            "exam_prep_id": prep_id,
-            "name": t.name,
-            "order_index": t.order,
-            "prereq_ids": [topic_ids[p] for p in t.prereqs],
-            "importance": None,
-            "importance_reason": None,
-            "importance_source": "computed",
-            "signal_r": None,
-            "origin": "doc",
-            "status": "excluded" if t.excluded_by_note else "draft",
-        }
-        for t in merged.topics
-    ]
+    # Stars before anything is written (compute-importance.md §2 "ผู้เรียก"), so the topics go in
+    # once with their stars and the writes are as few as possible (self-review PR #130).
+    ranges = {t.id: resolve_sources(t.sources, keys, page_counts) for t in merged.topics}
+    appearances = {
+        (str(links[q["id"]]["topic_id"]), str(exam.id))
+        for exam in exams
+        for q in questions[exam.id]
+        if links[q["id"]]["topic_id"] is not None
+    }
+    importance = {
+        UUID(r.topic_id): r
+        for r in compute_importance(
+            [
+                TopicIn(
+                    id=str(topic_ids[t.id]),
+                    name=t.name,
+                    prereq_ids=[str(topic_ids[p]) for p in t.prereqs],
+                    excluded=t.excluded_by_note,
+                    importance_source="computed",
+                    current_importance=None,
+                    current_reason=None,
+                    page_count=len(
+                        {
+                            (r.material_id, p)
+                            for r in ranges[t.id]
+                            for p in range(r.page_from, r.page_to + 1)
+                        }
+                    ),
+                )
+                for t in sorted(merged.topics, key=lambda t: t.order)
+            ],
+            [ExamIn(str(e.id), e.relevance_weight) for e in exams],
+            appearances,
+            get_settings().learning.stars,
+        )
+    }
+
+    topic_rows = []
+    for t in merged.topics:
+        stars = importance[topic_ids[t.id]]
+        topic_rows.append(
+            {
+                "id": topic_ids[t.id],
+                "tenant_id": tenant,
+                "exam_prep_id": prep_id,
+                "name": t.name,
+                "order_index": t.order,
+                "prereq_ids": [topic_ids[p] for p in t.prereqs],
+                "importance": stars.importance,
+                "importance_reason": stars.reason,
+                "importance_source": "computed",
+                "signal_r": stars.signal_r,
+                "origin": "doc",
+                "status": "excluded" if t.excluded_by_note else "draft",
+            }
+        )
     new_ids.extend(topic_ids.values())
     await _db(deps.store.insert, "topics", topic_rows)
     await _db(
@@ -555,7 +632,6 @@ async def _write_scope(
             for s in t.skills
         ],
     )
-    ranges = {t.id: resolve_sources(t.sources, keys, page_counts) for t in merged.topics}
     await _db(
         deps.store.insert,
         "topic_sources",
@@ -571,50 +647,13 @@ async def _write_scope(
             for r in rs
         ],
     )
-    for question_id, fields in links.items():
-        await _db(deps.store.update, "past_exam_questions", question_id, fields)
-
-    # Stars (compute-importance.md §2 "ผู้เรียก").
-    importance = compute_importance(
-        [
-            TopicIn(
-                id=str(topic_ids[t.id]),
-                name=t.name,
-                prereq_ids=[str(topic_ids[p]) for p in t.prereqs],
-                excluded=t.excluded_by_note,
-                importance_source="computed",
-                current_importance=None,
-                current_reason=None,
-                page_count=len(
-                    {
-                        (r.material_id, p)
-                        for r in ranges[t.id]
-                        for p in range(r.page_from, r.page_to + 1)
-                    }
-                ),
-            )
-            for t in sorted(merged.topics, key=lambda t: t.order)
-        ],
-        [ExamIn(str(e.id), e.relevance_weight) for e in exams],
-        {
-            (str(link["topic_id"]), str(exam.id))
-            for exam in exams
-            for q in questions[exam.id]
-            if (link := links[q["id"]])["topic_id"] is not None
-        },
-        get_settings().learning.stars,
+    # The question links last, in one call: until here a failure leaves the old links as they
+    # were (the caller removes the new topics only).
+    await _db(
+        deps.store.upsert,
+        "past_exam_questions",
+        [{**q, **links[q["id"]]} for exam in exams for q in questions[exam.id]],
     )
-    for result in importance:
-        await _db(
-            deps.store.update,
-            "topics",
-            UUID(result.topic_id),
-            {
-                "importance": result.importance,
-                "signal_r": result.signal_r,
-                "importance_reason": result.reason,
-            },
-        )
     await _db(deps.store.delete_topics, old)
 
 
@@ -685,19 +724,39 @@ class IngestionRunner:
         self._tasks[prep_id] = task
         return task
 
+    async def _queued(self, prep_id: UUID) -> list[MaterialRow]:
+        materials = await _db(self._deps.store.list_materials, prep_id)
+        return [m for m in materials if m.kind_confirmed and m.status == "confirmed"]
+
     async def _run(self, prep_id: UUID) -> None:
         try:
-            # Files confirmed while this runs are picked up by the next pass.
-            while queued := [
-                m
-                for m in await _db(self._deps.store.list_materials, prep_id)
-                if m.kind_confirmed and m.status == "confirmed"
-            ]:
+            first = True
+            # A file confirmed (or retried) while the scope is being built is picked up by the
+            # next pass, and the scope is built again with it (self-review PR #130).
+            while (queued := await self._queued(prep_id)) or first:
+                first = False
+                if queued:
+                    await self._restart_steps(prep_id)
                 for material in queued:
                     await ingest_material(material.id, self._deps)
-            await build_scope(prep_id, self._deps)
+                await build_scope(prep_id, self._deps)
         except Exception:
             log.exception("ingestion of %s stopped", prep_id)
+
+    async def _restart_steps(self, prep_id: UUID) -> None:
+        """New files: the prep's steps are pending again, so S11 does not show an old scope as
+        ready while they are read."""
+        tenant = await _db(self._deps.store.prep_tenant, prep_id)
+        if tenant is None:
+            return
+        for stage in ("topics", "stars"):
+            await _db(
+                self._deps.store.set_job,
+                tenant_id=tenant,
+                exam_prep_id=prep_id,
+                stage=stage,
+                status="queued",
+            )
 
     async def retry(self, material_id: UUID) -> None:
         """`POST /materials/{id}/retry`: classify again, or read the file again and build the
@@ -711,7 +770,8 @@ class IngestionRunner:
         await _db(
             self._deps.store.update_material, material_id, {"status": "confirmed", "error": None}
         )
-        await self.start(material.exam_prep_id)
+        # Not awaited: the request returns, and a cancelled request cannot cancel the job.
+        self.start(material.exam_prep_id)
 
 
 @lru_cache

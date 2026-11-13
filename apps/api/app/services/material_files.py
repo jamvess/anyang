@@ -36,9 +36,15 @@ class SupabaseMaterialFiles:
     def __init__(self, connect: Callable[[], Client], bucket: str) -> None:
         self._connect = connect
         self._bucket = bucket
+        self._client: Client | None = None  # one client for the process, like the store's
+
+    def _db(self) -> Client:
+        if self._client is None:
+            self._client = self._connect()
+        return self._client
 
     async def read(self, storage_path: str) -> bytes:
         def download() -> bytes:
-            return self._connect().storage.from_(self._bucket).download(storage_path)
+            return self._db().storage.from_(self._bucket).download(storage_path)
 
         return await asyncio.to_thread(download)

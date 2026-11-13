@@ -716,3 +716,85 @@ async def test_SM01_start_returns_before_the_job_ends_and_does_not_start_twice()
     await asyncio.wait_for(first, timeout=10)
     assert {m["status"] for m in world.rows("materials")} == {"ready"}
     assert len(world.rows("topics")) == 2
+
+
+# --- added after /code-review (13 Nov) · not in spec §4 ---------------------------------------
+
+
+async def test_SM01_a_database_error_fails_the_file_and_the_next_file_goes_on():
+    # It used to leave the file "ingesting" and stop the whole job.
+    world = World({})
+    first = world.add("sheet-01.pdf", "sheet", [THAI_PAGE])
+    second = world.add("sheet-02.pdf", "sheet", [THAI_PAGE])
+    world.store.fail_writes_to("material_pages")
+
+    await asyncio.wait_for(IngestionRunner(world.deps).start(world.prep), timeout=10)
+
+    assert world.rows("materials", id=first)[0]["status"] == "failed"
+    assert world.rows("materials", id=second)[0]["status"] == "ready"
+
+
+async def test_SM01_a_photo_is_known_by_its_file_name():
+    # storage_path is {tenant}/{prep}/{material}, with no extension.
+    world = World(
+        {"vision_extract": [json.dumps({"text": "x^2", "latex_blocks": [], "notes": ""})]}
+    )
+    photo = world.add("page.JPG", "notes", [THAI_PAGE])
+    path = world.rows("materials", id=photo)[0]["storage_path"]
+    world.store.update_material(photo, {"storage_path": path.rsplit(".", 1)[0]})
+    world.blobs[path.rsplit(".", 1)[0]] = world.blobs[path]
+
+    await ingest_material(photo, world.deps)
+
+    [request] = world.requests("vision_extract")
+    assert request.images[0].mime_type == "image/jpeg"
+    assert world.rows("materials", id=photo)[0]["status"] == "ready"
+
+
+async def test_CM07_reading_a_file_again_drops_its_old_failed_stage():
+    world = World({})
+    sheet = world.add("sheet-01.pdf", "sheet", [THAI_PAGE])
+    world.store.add_job(world.prep, "embed", "failed", material_id=sheet, error="old")
+    world.store.add_job(world.prep, "classify", "done", material_id=sheet)
+
+    await ingest_material(sheet, world.deps)
+
+    jobs = {j["stage"]: j["status"] for j in world.rows("ingestion_jobs", material_id=sheet)}
+    assert jobs == {"classify": "done", "extract": "done", "chunk": "done", "embed": "done"}
+
+
+async def test_SM03_a_weight_of_zero_stays_zero():
+    world = World({})
+    exam = world.add("midterm.pdf", "past_exam", [JUNK_PAGE], relevance_weight=0.0)
+
+    assert world.store.get_material(exam).relevance_weight == 0.0
+
+
+async def test_SM01_retry_does_not_wait_for_the_job():
+    world = demo_world(delay_s=0.05)
+    failed = world.rows("materials", file_name="sheet-02.pdf")[0]["id"]
+    world.store.update_material(failed, {"status": "failed"})
+    runner = IngestionRunner(world.deps)
+
+    await runner.retry(failed)
+
+    task = runner.start(world.prep)  # the task retry started
+    assert not task.done()
+    await asyncio.wait_for(task, timeout=20)
+    assert len(world.rows("topics")) == 2
+
+
+async def test_SM01_a_file_confirmed_while_the_job_runs_is_read_too():
+    world = demo_world(delay_s=0.05)
+    task = IngestionRunner(world.deps).start(world.prep)
+    await asyncio.sleep(0.01)
+    late = world.add("sheet-03.pdf", "sheet", [THAI_PAGE])
+    world.provider._script.setdefault("extract_topics_local", []).extend(
+        [local(("ลิมิต", "1-2")), local(("อนุพันธ์", "1-1")), local(("ลิมิต", "1-1"))]
+    )
+    world.provider._script.setdefault("merge_topics", []).append(TWO_TOPICS)
+    world.provider._script.setdefault("map_questions", []).append(mapping(("f4:1", "t01", "")))
+
+    await asyncio.wait_for(task, timeout=20)
+
+    assert world.rows("materials", id=late)[0]["status"] == "ready"
