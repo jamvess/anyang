@@ -195,6 +195,9 @@ async def _send_and_save(
                     409, "session_already_ended", "This session has already ended"
                 )
             conversation = room_db.conversation_of(repo.list_messages(session.id))
+            # Before the message is saved: a failed read must not leave a saved message behind
+            # a 503 (self-review PR #131).
+            open_problem = problems.session_problem(session.id) if problems else None
             repo.add_message(
                 tenant_id=auth.tenant_id,
                 session_id=session.id,
@@ -202,7 +205,6 @@ async def _send_and_save(
                 content=text,
                 input_mode="text",
             )
-            open_problem = problems.session_problem(session.id) if problems else None
         except DbUnavailableError:
             return _db_unavailable()
         # The open problem without its answer (room-problems-db.md §2.4 · AM-13).

@@ -104,7 +104,20 @@ LEVEL_NAMES = {
     "passed": "ผ่าน",
 }
 
-_MATH = re.compile(r"\$([^$]+)\$")
+_MATH = re.compile(r"\$\$(.+?)\$\$|\$([^$]+)\$", re.DOTALL)
+# Characters that mean something in LaTeX text mode, as KaTeX writes them inside \text{}.
+_TEXT_ESCAPES = {
+    "\\": r"\textbackslash{}",
+    "{": r"\{",
+    "}": r"\}",
+    "%": r"\%",
+    "#": r"\#",
+    "&": r"\&",
+    "_": r"\_",
+    "^": r"\textasciicircum{}",
+    "~": r"\textasciitilde{}",
+    "$": r"\$",
+}
 
 
 @dataclass(frozen=True)
@@ -149,19 +162,27 @@ def focus_text(topic: TopicFacts, level: str) -> str:
 def text_latex_of(text: str) -> str:
     """One line of LaTeX for the problem card from text with `$…$` math: the words go in
     `\\text{}` (§10 item 4 · `problems` has no text_latex column)."""
-    parts = _MATH.split(text)
-    out = []
-    for n, part in enumerate(parts):
-        if n % 2:  # inside $…$
-            out.append(part.strip())
-        elif part.strip():
-            out.append(rf"\text{{{part}}}")
+    out: list[str] = []
+    end = 0
+    for match in _MATH.finditer(text):
+        _add_text(out, text[end : match.start()])
+        out.append((match.group(1) or match.group(2)).strip())
+        end = match.end()
+    _add_text(out, text[end:])
     return " ".join(out)
+
+
+def _add_text(out: list[str], words: str) -> None:
+    if words.strip():
+        escaped = "".join(_TEXT_ESCAPES.get(char, char) for char in words)
+        out.append(rf"\text{{{escaped}}}")
 
 
 _LATEX_COMMAND = re.compile(r"\\[A-Za-z]+")
 _LETTER = re.compile(r"[A-Za-z]")
 _SPACE = re.compile(r"\s+")
+# One variable on the left, no letter on the right once LaTeX commands are gone (`x = -\frac{2}{3}`).
+_SOLVED = re.compile(r"^\s*[A-Za-z]\s*=\s*(?:[^A-Za-z\\]|\\[A-Za-z]+)*$")
 
 
 def poses_a_problem(expression: str, reference_answer: str) -> bool:
@@ -170,4 +191,6 @@ def poses_a_problem(expression: str, reference_answer: str) -> bool:
     keeps a variable once the LaTeX commands are taken out, and is not the answer itself."""
     if _SPACE.sub("", expression) == _SPACE.sub("", reference_answer):
         return False
+    if all(_SOLVED.match(part) for part in expression.split(",")):
+        return False  # `x=3, x=2`: solutions, not an equation to solve
     return bool(_LETTER.search(_LATEX_COMMAND.sub("", expression)))

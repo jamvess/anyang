@@ -118,3 +118,31 @@ def test_AM11_the_expression_must_be_the_problem_not_its_answer(expression, refe
     from app.domain.room import poses_a_problem
 
     assert poses_a_problem(expression, reference) is poses
+
+
+# --- added after /code-review (13 Nov) · not in spec §4 ------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("text", "latex"),
+    [
+        pytest.param("ลดลง 20% ภายใน #1", r"\text{ลดลง 20\% ภายใน \#1}", id="percent and hash"),
+        pytest.param(r"หาค่า $$x^2$$ นี้", r"\text{หาค่า } x^2 \text{ นี้}", id="display math"),
+    ],
+)
+def test_TM13_card_text_is_escaped_and_display_math_is_math(text, latex):
+    assert text_latex_of(text) == latex
+
+
+@pytest.mark.parametrize(
+    ("expression", "poses"),
+    [
+        pytest.param("x=3, x=2", False, id="solutions in another order"),
+        pytest.param(r"x = -\frac{2}{3}", False, id="one solution"),
+        pytest.param("x^{2}-5x+6=0", True, id="an equation to solve"),
+    ],
+)
+def test_AM11_solutions_are_the_answer_not_a_problem(expression, poses):
+    from app.domain.room import poses_a_problem
+
+    assert poses_a_problem(expression, "x=2, x=3") is poses

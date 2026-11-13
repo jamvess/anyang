@@ -439,3 +439,42 @@ def test_AM11_an_answer_worked_out_in_the_expression_is_a_failed_try(signed_in, 
     assert len(requests(fake, "generate_problem")) == 2
     [row] = problems.problems
     assert row.reference_answer == "4"
+
+
+# --- added after /code-review (13 Nov) · not in spec §4 ------------------------------------------
+
+
+def test_TM13_topics_without_stars_open_the_room_as_before(signed_in, problems, fake):
+    # Right after ingestion, before stars: no topic has importance >= 1 (spec §2.2 item 3).
+    problems.topics = [TopicFacts(uuid.uuid4(), "ลิมิต", 1, None, "draft", "doc")]
+
+    events = parse_sse(signed_in.post(OPEN).text)
+
+    assert set(names(events)) == {"session", "token", "done"}
+    assert fake.requests == []
+
+
+def test_AM11_a_polynomial_already_factored_is_not_a_problem(signed_in, problems, fake):
+    script(
+        fake,
+        generate_problem=[
+            generated(r"(x-1)(x+1)x", r"x(x-1)(x+1)", "factored"),
+            generated(r"x^{3}-x", r"x(x-1)(x+1)", "factored"),
+        ],
+        open_session=["สวัสดี"],
+    )
+
+    parse_sse(signed_in.post(OPEN).text)
+
+    assert len(requests(fake, "generate_problem")) == 2
+
+
+def test_AM11_the_no_problem_line_is_saved(signed_in, problems, fake, repo: FakeRoomRepo):
+    script(fake, generate_problem=[WRONG] * 3, open_session=["สวัสดี"])
+
+    events = parse_sse(signed_in.post(OPEN).text)
+
+    session_id = uuid.UUID(events[0][1]["session_id"])
+    saved = [m.content for m in repo.messages[session_id]]
+    assert saved == ["สวัสดี", NO_PROBLEM]
+    assert len(events[-1][1]["message_ids"]) == 2

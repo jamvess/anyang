@@ -15,7 +15,7 @@ from uuid import UUID
 from fastapi import Depends
 from supabase import Client
 
-from app.auth import AuthContext, get_auth, get_user_db
+from app.auth import AuthContext, get_auth
 from app.db.errors import DbUnavailableError, unavailable
 from app.db.room import RoomRepository, SupabaseRoomRepository, get_room_repository
 from app.domain.room import TopicFacts
@@ -83,7 +83,9 @@ class ProblemRepository(Protocol):
         ...
 
     def session_problem(self, session_id: UUID) -> ProblemRecord | None:
-        """The latest problem of the session with no attempt."""
+        """The problem on screen in this session: the latest problem with no attempt of the
+        session's prep, since a reopened room shows an open problem of an earlier session
+        (AC-8 · self-review PR #131)."""
         ...
 
     def topic_has_problems(self, prep_id: UUID, topic_id: UUID) -> bool: ...
@@ -212,22 +214,26 @@ class SupabaseProblemRepository:
                 .data
             )
             texts: list[str] = []
+            seen: set[str] = set()  # overlapping sources must not repeat a chunk
             for source in sources:
                 if len(texts) >= limit:
                     break
                 chunks = (
                     self._db()
                     .table("chunks")
-                    .select("text")
+                    .select("id,text")
                     .eq("material_id", source["material_id"])
                     .lte("page_from", source["page_to"])
                     .gte("page_to", source["page_from"])
                     .order("page_from")
-                    .limit(limit - len(texts))
+                    .limit(limit)
                     .execute()
                     .data
                 )
-                texts.extend(c["text"] for c in chunks)
+                for chunk in chunks:
+                    if chunk["id"] not in seen and len(texts) < limit:
+                        seen.add(chunk["id"])
+                        texts.append(chunk["text"])
             return texts[:limit]
 
         return self._run("source chunks", query)
@@ -267,11 +273,29 @@ class SupabaseProblemRepository:
 
     def session_problem(self, session_id: UUID) -> ProblemRecord | None:
         def query() -> ProblemRecord | None:
+            session = (
+                self._db()
+                .table("tutor_sessions")
+                .select("exam_prep_id")
+                .eq("id", str(session_id))
+                .execute()
+                .data
+            )
+            if not session:
+                return None
+            sessions = (
+                self._db()
+                .table("tutor_sessions")
+                .select("id")
+                .eq("exam_prep_id", session[0]["exam_prep_id"])
+                .execute()
+                .data
+            )
             rows = (
                 self._db()
                 .table("problems")
                 .select("*")
-                .eq("session_id", str(session_id))
+                .in_("session_id", [s["id"] for s in sessions])
                 .order("created_at", desc=True)
                 .execute()
                 .data
@@ -317,4 +341,4 @@ def get_problem_repository(
     opens as before)."""
     if auth is None or not isinstance(room, SupabaseRoomRepository):
         return None
-    return SupabaseProblemRepository(lambda: get_user_db(auth))
+    return SupabaseProblemRepository(room.client)

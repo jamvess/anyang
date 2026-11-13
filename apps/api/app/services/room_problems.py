@@ -9,6 +9,7 @@ Supabase client blocks.
 
 import logging
 from collections.abc import AsyncIterator, Sequence
+from contextlib import aclosing
 from uuid import UUID
 
 from starlette.concurrency import run_in_threadpool
@@ -28,7 +29,6 @@ from app.domain.bkt import (
     target_difficulty,
 )
 from app.domain.room import (
-    LEVEL_NAMES,
     TopicFacts,
     choose_topic,
     focus_text,
@@ -46,7 +46,7 @@ from app.models.room import (
 )
 from app.models.tutor_ai import GenerateProblemResult
 from app.services.room_db import _save_tutor
-from app.services.room_opening import greeting_events
+from app.services.room_opening import greeting_events, topic_lines
 from app.services.tutor_turn import Event, call_scope
 from app.settings import get_settings
 
@@ -60,8 +60,11 @@ NONE = "none"  # the prompts' word for "nothing"
 
 
 def usable_topics(topics: Sequence[TopicFacts]) -> list[TopicFacts]:
-    """Spec §2.1: every topic that is not excluded, before or after the scope is confirmed."""
-    return [t for t in topics if t.status != "excluded"]
+    """Spec §2.1: every topic that is not excluded, before or after the scope is confirmed.
+    None of them has a star yet (stars not computed) → [] so the room opens as before (§2.2
+    item 3 · self-review PR #131)."""
+    usable = [t for t in topics if t.status != "excluded"]
+    return usable if any((t.importance or 0) >= 1 for t in usable) else []
 
 
 def _card(
@@ -140,15 +143,17 @@ async def opening_events(
     facts = {
         "days_left": str(card.days_left),
         "readiness": f"{round(card.readiness * 100)}%",
-        "topics": "\n".join(
-            f"{t.name} · {t.stars} ดาว · {LEVEL_NAMES[t.level]}" for t in card.topics
-        ),
+        "topics": topic_lines(card),
         "problem": problem.text if problem else NONE,  # never the answer (AM-13)
         "focus": focus_text(chosen, levels[chosen.id]) if chosen else NONE,
     }
     said: list[str] = []
-    async for event in greeting_events(gateway, facts, fallback_greeting, said, call_context):
-        yield event
+    # Closed with the stream: a client that leaves also closes the model's stream.
+    async with aclosing(
+        greeting_events(gateway, facts, fallback_greeting, said, call_context)
+    ) as greeting:
+        async for event in greeting:
+            yield event
     ids = await _save_tutor(repo, auth, session, "".join(said))
     if problem is not None:
         yield (
@@ -161,7 +166,9 @@ async def opening_events(
             ),
         )
     elif chosen is not None:
-        yield "token", TokenEvent(speaker="tutor", text=get_settings().messages.room.no_problem)
+        line = get_settings().messages.room.no_problem
+        yield "token", TokenEvent(speaker="tutor", text=line)
+        ids += await _save_tutor(repo, auth, session, line)  # what was sent is saved (§2.2)
     yield "done", DoneEvent(message_ids=ids)
 
 
@@ -188,7 +195,9 @@ async def _problem_for(
         return None
 
     cfg = get_settings().learning
-    difficulty = target_difficulty(topic.importance or 0, MODE, cfg) or 1
+    difficulty = target_difficulty(topic.importance or 0, MODE, cfg)
+    if difficulty is None:  # a skipped topic is never chosen (importance >= 1 · §2.2 item 3)
+        return None
     keys = {f"s{n}": skill.id for n, skill in enumerate(skills, start=1)}
     values = {
         "topic": topic.name,
@@ -256,5 +265,6 @@ async def verified(result: GenerateProblemResult) -> bool:
             reference_answer=result.reference_answer,
             lines=[result.reference_answer],
         )
-        return form.final_in_form is True
+        # The problem must still need factoring: `(x-1)(x+1)x` for `x(x-1)(x+1)` is the answer.
+        return form.final_in_form is True and check.final_in_form is False
     return True
