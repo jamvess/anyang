@@ -88,6 +88,7 @@
 - [x] สร้าง Supabase project `anyang-staging` · ref `sfapuygntxuelsxsgkay` Singapore (21 ต.ค., PR #28)
   - 21 ต.ค. Jam ตั้ง Vercel env ทั้ง **Production** และ **Preview** (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) ให้ชี้ `anyang-staging` (`sfapuygntxuelsxsgkay`) แบบ Config แล้ว redeploy production · มีผลเมื่อมีหน้าที่ import `lib/supabase.ts` (ตอนนี้ยังไม่มี production จึงไม่เคยพังจริง)
 - [ ] ให้สิทธิ์ทีม: GitHub collaborator + Supabase org (เจ้าของ repo ทำ, `setup.md` A0), GCP (Jam: Vertex AI User)
+  - 14 พ.ย.: Jam ให้ Vertex AI User แก่ May แล้ว (`roles/aiplatform.user` ใน `anyang-513006`)
   - 13 พ.ย. แผนใหม่: หลัง demo
   - 28 ต.ค. ส่วน GCP ไม่ต้องทำ: Jam สร้าง project เองจึงเป็น Owner อยู่แล้ว
 - [x] แก้ `.github/CODEOWNERS` เป็น username จริง · + เพิ่ม `/.github/` ให้ Junior ตาม `roles.md` (19 ต.ค.)
@@ -338,6 +339,7 @@
 - [x] ⭐ demo: ข้อต่อไปไม่ซ้ำข้อที่เพิ่งจบ · `generate_problem/v2` รับโจทย์ล่าสุดของหัวข้อ + code ตัดโจทย์ข้อความซ้ำ (นับเป็นรอบที่ไม่ผ่าน) · วัดใหม่บน Vertex (AM-11 · **Jam** · เจอตอนรันจริงของ PR #132 · `room-answers-db.md` §10 ข้อ 4)
   - 14 พ.ย. (PR #133 · `room-problems-db.md` §2.3 v2): `generate_problem/v2` ได้ `previous_problems` (โจทย์ล่าสุดของหัวข้อ ≤ `session.avoid_recent_problems` = 5 [C]) · code ตัดโจทย์ที่คณิตใน `$…$` ซ้ำ (`same_problem`) นับเป็นรอบที่ไม่ผ่าน · ใช้ทั้งตอนเปิดห้องและข้อต่อไป · วัดบน Vertex 34 หัวข้อ × 3 ข้อ: ไม่มีโจทย์ซ้ำ · SymPy ยืนยันภายใน 3 รอบ 65/71/68% (v1 71%) · หัวข้อหลักของ demo ผ่านรอบแรก (Jam รับผล)
 - [ ] ⭐ demo ขั้น 8–9: BKT ลง `attempts` / `topic_progress` + การ์ดจาก DB (PM-01–04) · สรุป session ด้วย `session_summary` (PM-05)
+  - 14 พ.ย. (PR #135 · `specs/features/planner/topic-progress-db.md`): **ขั้น 8 เสร็จ** · โจทย์จบ (ถูก, เฉลย, ยอมแพ้) → BKT ของ `domain/bkt.py` ลง `topic_progress` ของผู้ใช้ (นับครั้งเดียวต่อโจทย์ · ถูกหลังใบ้สุดท้ายไม่นับ) · การ์ดตอนเปิดห้องอ่าน `d_max` จริง · migration `0007` (`topic_progress.d_max`) **Junior: ดูแล้ว `db push`** · รันจริงบน Vertex: ตอบถูก 2 ข้อ → ความพร้อม 0% → 31% · ลิมิต `developing` · **เหลือขั้น 9** (จบ session + `session_summary`)
 - [ ] เดโม่ห้องติวที่ใช้ได้จริงในเครื่อง ให้อาจารย์ดูก่อนทำต่อ (อาจารย์ขอ 9 พ.ย. · เพิ่มเอง)
   - 13 พ.ย. แผนใหม่: ⭐ demo ขั้น 6–7 · ของในเดโม่นี้ (คำทัก, ตรวจ, hint ladder, BKT) ต้องย้ายเข้าทางที่มี token (ข้อใหม่ข้างล่าง) · ที่เหลือเดิม (canvas ในเบราว์เซอร์, วิดีโอ) รวมเข้า demo end to end · iPad หลัง demo
   - 9 พ.ย. (PR #115 · `specs/features/tutor/demo-room.md` + `specs/features/planner/bkt-mastery.md`): `APP_ENV=local` วนได้จริงกับ Vertex · อัปโหลดรูปในเครื่อง · โจทย์ 5 ข้อ · BKT จริง (`app/domain/bkt.py`) ในการ์ดตอนเข้าห้อง · tutor ทักก่อน (`open_session`) · รู้โจทย์และจำบทสนทนา (`tutor_reply/v2`) · พิมพ์คำตอบแล้วตรวจ (`typed_answer`) · แสดงวิธีทำทีละขั้นทุกครั้ง (`explain_check/v2`) · ส่งแค่คำตอบยังไม่ผ่าน (`checker.min_working_lines`) · วิธีเปิดอยู่ใน spec §12 · staging ยังเป็น stub

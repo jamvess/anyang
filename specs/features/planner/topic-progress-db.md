@@ -83,6 +83,8 @@ fake room repository + fake problem repository (เพิ่ม `topic_progress`
 | `tests/integration/test_topic_progress_db.py` | integration | AC-tenant (ต้องมี `0007`) |
 | รันจริงบน Vertex (ขั้น 4 ของ worklog) | มือ | เปิดห้อง → ตอบถูก 2 ข้อ → เปิดใหม่ การ์ดขยับ |
 
+**ผลรันจริงบน Vertex (14 พ.ย. · ขั้น 4 ของ worklog · API + repository ในหน่วยความจำ · ไม่ใช่ local):** เปิดห้อง → ความพร้อม 0% ทุกหัวข้อ `not_started` → ตอบถูกพร้อมวิธีทำ (ลิมิตที่มีราก) → `topic_progress` ของลิมิต mastery 0.30 → 0.710 · `attempts_n` 1 · `correct_n` 1 · `d_max` 3 · `developing` → ตอบถูกข้อต่อไป (ไม่ซ้ำข้อแรก) → mastery 0.929 · 2/2 · ยัง `developing` (เกณฑ์ `mastery_threshold` 0.95 = ถูกติดกัน 3 ข้อจาก `p_init`) → เปิดห้องใหม่ → ความพร้อม 31% · ลิมิต `developing` · **รอบแรกของการรัน:** คำตอบข้อที่ 2 ไม่ได้ `verdict` และไม่มีข้อต่อไป · ไม่ได้เก็บ event จึงไม่รู้สาเหตุแน่ชัด (น่าจะเป็น classifier ล้มแล้ว degrade ตามเดิม หรือคำตอบที่สคริปต์ประกอบจากโจทย์ `$$` ขึ้นต้นด้วยบรรทัดว่าง) · `topic_progress` ไม่ได้นับผิดหรือนับซ้ำ · รอบสองที่เก็บ event ไม่เกิดซ้ำ · **Jam รับผล (14 พ.ย.)**
+
 ## 9. Out of scope
 
 - จบ session + สรุป (demo ขั้น 9) · การ์ดกลาง session (TM-11 · S5)
