@@ -7,17 +7,23 @@ S11, S13, S14. Shapes are checked by tests/unit/test_scope_api_contract.py and
 test_scope_edit_api_contract.py, which the real endpoints must also pass.
 """
 
+from collections.abc import Callable
+from datetime import datetime
 from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Path, Response
 from fastapi.concurrency import run_in_threadpool
+from fastapi.responses import JSONResponse
 from sse_starlette import EventSourceResponse
 
 from app import stubs
 from app.auth import AuthContext, get_auth
+from app.clock import get_now
 from app.db.errors import DB_DOWN_MESSAGE, DbUnavailableError
 from app.db.ingestion import IngestionReader, get_ingestion_reader
+from app.db.scope import ScopeRepository, get_scope_repository
+from app.domain.exam_prep import bangkok_today
 from app.models.error import error_docs, error_response, too_long_message, unavailable_docs
 from app.models.room import DoneEvent, ErrorEvent, TokenEvent
 from app.models.scope import (
@@ -30,6 +36,7 @@ from app.models.scope import (
     TopicSources,
 )
 from app.rate_limit import RATE_LIMITED_DOCS, chat_rate_limit
+from app.services import scope_db
 from app.services.ingestion import ingestion_view
 
 router = APIRouter(tags=["scope"])
@@ -37,43 +44,86 @@ router = APIRouter(tags=["scope"])
 # api.md writes every path parameter as {id}.
 PrepId = Annotated[UUID, Path(alias="id")]
 TopicId = Annotated[UUID, Path(alias="id")]
+Now = Annotated[datetime, Depends(get_now)]
 
 
 _STUB_VERSION_ID = UUID("6f1d2c3a-0000-4000-8000-0000000000c1")
 
 
-@router.get("/exam-preps/{id}/scope", responses=error_docs(conflict="scope_not_ready"))
-async def get_scope(prep_id: PrepId, response: Response) -> Scope:
+Repo = Annotated[ScopeRepository | None, Depends(get_scope_repository)]
+_DB_DOWN = unavailable_docs("db_unavailable")
+
+
+async def _with_db[T](work: Callable[[], T]) -> T | JSONResponse:
+    """Run a scope service call in the thread pool; a refusal or a database failure becomes the
+    error envelope of api.md (specs/features/scope/scope-db.md §2)."""
+    try:
+        return await run_in_threadpool(work)
+    except scope_db.ScopeRefused as refused:
+        return error_response(refused.status, refused.code, refused.message)
+    except DbUnavailableError:
+        return error_response(503, "db_unavailable", DB_DOWN_MESSAGE)
+
+
+@router.get(
+    "/exam-preps/{id}/scope",
+    response_model=Scope,
+    responses={**error_docs(conflict="scope_not_ready"), **_DB_DOWN},
+)
+async def get_scope(prep_id: PrepId, response: Response, repo: Repo, now: Now) -> Any:
     """Draft topics with stars and reasons, in API order (SM-02, SM-03), excluded topics included.
 
-    stub — replaced when ingestion and compute_importance exist
+    With a token: the rows of the user's JWT (specs/features/scope/scope-db.md §2.1). Without
+    one: the stub.
     """
-    response.headers.update(stubs.HEADERS)
-    return Scope.model_validate(stubs.scope())
+    if repo is None:
+        response.headers.update(stubs.HEADERS)
+        return Scope.model_validate(stubs.scope())
+    return await _with_db(lambda: scope_db.scope_of(repo, prep_id, bangkok_today(now)))
 
 
-@router.get("/topics/{id}/sources", responses=error_docs())
-async def get_topic_sources(topic_id: TopicId, response: Response) -> TopicSources:
+@router.get(
+    "/topics/{id}/sources",
+    response_model=TopicSources,
+    responses={**error_docs(), **_DB_DOWN},
+)
+async def get_topic_sources(topic_id: TopicId, response: Response, repo: Repo) -> Any:
     """Source pages and past exam questions of one topic (SM-04).
 
-    stub — replaced when ingestion exists; every topic id gets the sources of the
-    difference-of-squares topic (May's sources-t3.json)
+    With a token: the pages of the topic's ranges and its questions (scope-db.md §2.2). Without
+    one: the stub, the sources of the difference-of-squares topic for every id (May's
+    sources-t3.json).
     """
-    response.headers.update(stubs.HEADERS)
-    return TopicSources.model_validate(stubs.topic_sources())
+    if repo is None:
+        response.headers.update(stubs.HEADERS)
+        return TopicSources.model_validate(stubs.topic_sources())
+    return await _with_db(lambda: scope_db.sources_of(repo, topic_id))
 
 
 @router.post(
     "/exam-preps/{id}/scope/confirm",
-    responses=error_docs(conflict="scope_not_ready, scope_already_confirmed or scope_empty"),
+    response_model=ScopeConfirmed,
+    responses={
+        **error_docs(conflict="scope_not_ready, scope_already_confirmed or scope_empty"),
+        **_DB_DOWN,
+    },
 )
-async def confirm_scope(prep_id: PrepId, response: Response) -> ScopeConfirmed:
+async def confirm_scope(
+    prep_id: PrepId,
+    response: Response,
+    repo: Repo,
+    auth: Annotated[AuthContext | None, Depends(get_auth)],
+    now: Now,
+) -> Any:
     """Lock the draft scope as a scope version (SM-09).
 
-    stub — replaced when scope_versions are written
+    With a token: a `scope_versions` row, `active_scope_version_id`, draft topics confirmed
+    (scope-db.md §2.3). Without one: the stub.
     """
-    response.headers.update(stubs.HEADERS)
-    return ScopeConfirmed(scope_version_id=_STUB_VERSION_ID, version=1)
+    if repo is None or auth is None:
+        response.headers.update(stubs.HEADERS)
+        return ScopeConfirmed(scope_version_id=_STUB_VERSION_ID, version=1)
+    return await _with_db(lambda: scope_db.confirm(repo, prep_id, auth.tenant_id, now))
 
 
 # --- ingestion progress, scope chat, change log (api.md v1.11 · proposal pending Junior) ---
