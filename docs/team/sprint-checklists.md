@@ -22,15 +22,15 @@
 
 อาจารย์ขอ (13 พ.ย. · Jam): ผู้ใช้คนเดียวเดินได้ครบ **ตั้งแต่ login จนจบ session แล้วกลับมาเห็นต่อ** · **รันในเครื่องแล้วอัดเป็นวิดีโอ** (ไม่ต้องบน staging) · ทำข้อในส่วนนี้ก่อนข้ออื่นทุกข้อ · สถานะตรวจกับโค้ดบน `main` 13 พ.ย. (`specs/system/architecture.md` v1.3)
 
-**วันสำคัญ:** พฤ. 19 พ.ย. ทุกขั้นต่อกันได้ในเครื่องเดียว · ศ. 20 พ.ย. ซ้อมเดินครบ + แก้บั๊ก · ส. 21 – อา. 22 พ.ย. อัดวิดีโอ (May) · จ. 23 พ.ย. ส่งอาจารย์
+**วันสำคัญ:** จ. 16 พ.ย. advisor update (โชว์ journey เท่าที่ต่อได้ · คนละงานกับวิดีโอ) · พฤ. 19 พ.ย. ทุกขั้นต่อกันได้ในเครื่องเดียว · ศ. 20 พ.ย. ซ้อมเดินครบ + แก้บั๊ก · ส. 21 – อา. 22 พ.ย. อัดวิดีโอ (May) · จ. 23 พ.ย. ส่งอาจารย์
 
-**เครื่องที่รัน:** Supabase ในเครื่อง (`npx supabase start` · มี Auth + Storage + DB ครบ · migration ขึ้นด้วย `npx supabase db reset` ไม่ต้อง `db push`) + API `APP_ENV=local AI_PROVIDER=live AUTH_REQUIRED=true` + เว็บ `pnpm dev` · Gemini จริงบน Vertex
+**เครื่องที่รัน (D2 · 14 พ.ย.):** Supabase cloud **`anyang-dev`** (ไม่ใช้ Docker · มี Auth + Storage + DB + hook ครบ · migration ขึ้นด้วย `db push` ของ Junior) + API ในเครื่อง `APP_ENV=local AI_PROVIDER=live AUTH_REQUIRED=true` ชี้ `anyang-dev` + เว็บ `pnpm dev` · Gemini จริงบน Vertex
 
 ### Journey 9 ขั้น
 
 | # | ขั้น | ผ่านเมื่อ | มีแล้ว | ที่ขาด (เจ้าของ) | ถ้าไม่ทัน |
 |---|---|---|---|---|---|
-| 1 | Login (UM-01) | สมัคร / เข้าด้วย email + password แล้วหน้าเว็บส่ง token ทุก request · API ได้ `tenant_id` จาก token | API ตรวจ JWT (`api-auth.md`) · trigger สร้าง tenant + profile (`0001`) · `custom_access_token_hook` เปิดแล้วใน `supabase/config.toml` | หน้า login + เก็บ session + ส่ง `Authorization` (**May**) · env ของ API ให้ชี้ Supabase ในเครื่อง (`SUPABASE_URL`, `SUPABASE_ANON_KEY` ของ `npx supabase status`) แล้วยืนยันว่า token มี `tenant_id` (**Junior**) | บัญชีที่สร้างไว้ก่อน แล้ว login ในวิดีโอ |
+| 1 | Login (UM-01) | สมัคร / เข้าด้วย email + password แล้วหน้าเว็บส่ง token ทุก request · API ได้ `tenant_id` จาก token | API ตรวจ JWT (`api-auth.md`) · trigger สร้าง tenant + profile (`0001`) · `custom_access_token_hook` เปิดแล้วใน `supabase/config.toml` | หน้า login + เก็บ session + ส่ง `Authorization` (**May**) · env ของ API ให้ชี้ `anyang-dev` (`SUPABASE_URL`, `SUPABASE_ANON_KEY` จาก Dashboard · D2) แล้วยืนยันว่า token มี `tenant_id` (**Junior**) | บัญชีที่สร้างไว้ก่อน แล้ว login ในวิดีโอ |
 | 2 | สร้างการเตรียมสอบ (CM-01, CM-02) | กรอกชื่อวิชา + วันสอบ → เห็นในรายการพร้อมวันที่เหลือ | `POST` / `GET /exam-preps` บน DB (#121) | หน้ารายการ + ฟอร์มสร้าง แทนหน้า template ของ Next (**May**) | ฟอร์มเดียวไม่มีรายการ |
 | 3 | อัปโหลดชีท + ข้อสอบเก่า (CM-03, CM-07) | เลือกหลายไฟล์ → ขึ้น Storage → เห็นสถานะรายไฟล์ | สัญญา API ของ materials (api.md v1.10 · ยังเป็นข้อเสนอ) · stub | `/exam-preps/{id}/materials` จริง + signed upload URL + bucket และ policy (migration ใหม่) (**Junior**) · หน้าอัปโหลด (**May**) | ไฟล์เดียว · ไม่มีการแก้ประเภทไฟล์ |
 | 4 | ระบบอ่านไฟล์ → หัวข้อ + ดาว (SM-01, SM-03, SM-04, CM-06) | หลังยืนยันไฟล์ ระบบสกัดหัวข้อ ดาว และหน้าที่มา ลง `topics`, `topic_sources` | pipeline ใน `poc/P3/` (★★★ ตรง 83%) · `domain/stars.py` (#113) | ย้าย pipeline เข้า `apps/api` เป็นงานเบื้องหลัง + เรียก `compute_importance` + `GET /exam-preps/{id}/ingestion` จริง (**Jam** · DB write ร่วมกับ **Junior**) | รัน ingestion จริงก่อนอัด แล้วตัดช่วงรอในวิดีโอ |
@@ -42,8 +42,12 @@
 
 ### ต้องตัดสินก่อนเริ่ม (ภายใน จ. 16 พ.ย.)
 
-- **D1 · Junior + May:** login ใน demo เป็น **email + password** บน Supabase ในเครื่อง (UM-01) ไหม · Google (UM-02) ต้องตั้ง OAuth client ซึ่งรันในเครื่องยุ่งกว่า · ข้อเสนอ: email ใน demo · Google ทำใน S5 (ยังเป็น Must)
-- **D2 · Junior:** demo ใช้ Supabase ในเครื่อง (Docker) แทน `anyang-dev` ไหม · ข้อเสนอ: ในเครื่อง เพราะมี Storage, ขึ้น migration ได้เอง และไม่กระทบ DB ของทีม · หลังอัดวิดีโอค่อยทำบน staging
+- **D1 · Junior + May:** login ใน demo เป็น **email + password** (UM-01) ไหม · Google (UM-02) ต้องตั้ง OAuth client ซึ่งรันในเครื่องยุ่งกว่า · **ตัดสินแล้ว 14 พ.ย. (Junior): email + password · Google ทำใน S5 (ยังเป็น Must)**
+- **D2 · Junior:** demo ใช้ Supabase ในเครื่อง (Docker) หรือ `anyang-dev` (cloud) · **ตัดสินแล้ว 14 พ.ย. (Junior): `anyang-dev`** · เหตุผล: ทีมไม่ใช้ Docker (`setup.md`), ข้อมูล demo (หัวข้อจาก ingestion) ใช้ร่วมกันได้ทั้งทีม, hook + RLS เปิดแล้ว · ข้อเสีย: ข้อมูลทดสอบปนกัน, migration ต้องรอ Junior push, อีเมลยืนยันของ SMTP ฟรีจำกัด · กติกา:
+  - (ก) บัญชี demo แยก ใช้โชว์และอัดวิดีโออย่างเดียว ห้ามใช้ทดสอบ · ทดสอบให้สมัครบัญชีของตัวเอง
+  - (ข) Junior push `0005`, `0006` ขึ้น `anyang-dev` 14 พ.ย. · migration ใหม่ทุกตัว (ตัวต่อไป `0007` Storage) แท็ก Junior ให้ push
+  - (ค) ปิด Confirm email ใน `anyang-dev` (Authentication → Sign In / Providers → Email) สมัครแล้วเข้าได้ทันที
+  - (ง) API ในเครื่องใช้ `SUPABASE_URL` + `SUPABASE_ANON_KEY` ของ `anyang-dev` + `AUTH_REQUIRED=true` (ขั้นตอนใน `setup.md` A5)
 - **D3 · Jam:** โจทย์ในห้องมาจากไหน · (ก) `generate_problem` สร้างจากหัวข้อ + ตรวจเฉลยด้วย SymPy (AM-11 · ตรงกับ design) · (ข) คลังโจทย์เขียนไว้ต่อหัวข้อ · **ตัดสินแล้ว 13 พ.ย. (Jam): (ก) และใช้ (ข) เป็นทางสำรอง**
 - **D4 · May:** ลำดับในวิดีโอและความยาว (`docs/design/demo-flow.md` ของ May · ช่วง live เดิมเป็นห้องติวอย่างเดียว)
 
@@ -153,8 +157,9 @@
 
 ### S4 · 16–27 พ.ย.
 
-- [ ] ⭐ demo D1 + D2: ตัดสิน login ใน demo และ Supabase ในเครื่อง (ภายใน จ. 16 พ.ย.)
-- [ ] ⭐ demo ขั้น 1: env ของ API ชี้ Supabase ในเครื่อง (hook เปิดใน `supabase/config.toml` แล้ว) · ยืนยัน `tenant_id` ใน token · `AUTH_REQUIRED=true` วนได้กับหน้า login ของ May (UM-01)
+- [x] ⭐ demo D1 + D2: ตัดสิน login ใน demo และ Supabase ในเครื่อง (ภายใน จ. 16 พ.ย.)
+  - 14 พ.ย.: D1 email + password · D2 `anyang-dev` (cloud) ไม่ใช้ Supabase ในเครื่อง · กติกา (ก)–(ง) อยู่ในส่วน ⭐ Priority
+- [ ] ⭐ demo ขั้น 1: env ของ API ชี้ `anyang-dev` (cloud · ไม่ต้องลง Docker · hook เปิดใน Dashboard แล้ว) · ยืนยัน `tenant_id` ใน token · `AUTH_REQUIRED=true` วนได้กับหน้า login ของ May (UM-01)
 - [ ] ⭐ demo ขั้น 3: `POST /exam-preps/{id}/materials` + `POST /materials/{id}/uploaded` + `POST /exam-preps/{id}/materials/confirm` จริง · signed upload URL · bucket + storage policy (migration ใหม่ + isolation test) (CM-03, CM-07)
 - [ ] ⭐ demo ขั้น 5: `GET /exam-preps/{id}/scope` อ่าน DB · `POST /scope/confirm` เขียน `scope_versions` + `active_scope_version_id` (SM-09)
 - [ ] ⭐ demo ขั้น 8: repository ของ `problems`, `attempts`, `topic_progress` (PM-01, PM-02, PM-06)
