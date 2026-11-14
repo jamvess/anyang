@@ -14,7 +14,7 @@
 - [x] 1. 🤖 (14 พ.ย. · Jam ok) `/spec-feature` → แก้ `specs/features/tutor/room-problems-db.md` §2.3 + AC ใหม่: input `previous_problems` (ข้อความของโจทย์ล่าสุดของหัวข้อใน prep นี้ ไม่เกิน N ข้อ · N ใน `config/learning.yaml` ไฟล์กลาง) · code ตัดโจทย์ที่ `text` หรือ `expression` (ตัดช่องว่างแล้ว) ซ้ำกับข้อเหล่านั้น → นับเป็นรอบที่ไม่ผ่าน · repository เพิ่ม `recent_problems(prep_id, topic_id, limit)` · 🙋 Jam review spec
 - [x] 2. 🤖 (14 พ.ย. · Jam ok) `/spec-to-tests` (fake provider + fake repository + SymPy จริง) · 🙋 Jam review test
 - [x] 3. 🤖 (14 พ.ย. · green 1686 · Jam ok) prompt `generate_problem/v2` (ไม่ทับ v1) + `config/ai.yaml` `prompt: v2` + `config/learning.yaml` ค่า N (ไฟล์กลาง · ถาม Jam ก่อน) + `test_prompt_data_blocks.py` · implement จน green
-- [ ] 4. 🤖 วัดใหม่บน Vertex: หัวข้อหลักของ demo (MTH10101) สร้างโจทย์ต่อกัน 3 ข้อต่อหัวข้อ · นับ % ที่ SymPy ยืนยันภายใน 3 รอบ (v1 = 71%) และจำนวนโจทย์ซ้ำ (v1 ซ้ำแทบทุกครั้ง) · 🙋 Jam รับผล
+- [x] 4. 🤖 (14 พ.ย. · ไม่มีโจทย์ซ้ำ · ยืนยันภายใน 3 รอบ 65/71/68% (v1 71%) · หัวข้อหลักของ demo ผ่านรอบแรก · Jam รับผล) วัดใหม่บน Vertex: หัวข้อหลักของ demo (MTH10101) สร้างโจทย์ต่อกัน 3 ข้อต่อหัวข้อ · นับ % ที่ SymPy ยืนยันภายใน 3 รอบ (v1 = 71%) และจำนวนโจทย์ซ้ำ (v1 ซ้ำแทบทุกครั้ง) · 🙋 Jam รับผล
 - [ ] 5. 🤖 อัปเดต docs + checklist แล้ว `/work-done`
 
 ## Definition of done
@@ -32,7 +32,7 @@
 
 ## Next step
 
-ขั้น 4: วัด v2 บน Vertex (หัวข้อหลักของ demo · 3 ข้อต่อกันต่อหัวข้อ)
+ขั้น 5: `/work-done` · ก่อน merge ส่งข้อความกลุ่ม (ไฟล์กลาง `config/learning.yaml`, `config/ai.yaml`)
 
 ## Waiting on
 
@@ -41,3 +41,4 @@
 ## Notes for next time
 
 - รันจริงของ #132 อยู่ใน `room-answers-db.md` §8
+- วัด v2: สคริปต์ใน scratchpad (`live_generate_v2.py`) ต่อจากสคริปต์วัด v1 ของ #131 · 21.7 นาที · ต้องมี main guard (SymPy worker บน Windows)
