@@ -277,7 +277,8 @@ export interface paths {
          * Get Scope
          * @description Draft topics with stars and reasons, in API order (SM-02, SM-03), excluded topics included.
          *
-         *     stub — replaced when ingestion and compute_importance exist
+         *     With a token: the rows of the user's JWT (specs/features/scope/scope-db.md §2.1). Without
+         *     one: the stub.
          */
         get: operations["get_scope_exam_preps__id__scope_get"];
         put?: never;
@@ -299,8 +300,9 @@ export interface paths {
          * Get Topic Sources
          * @description Source pages and past exam questions of one topic (SM-04).
          *
-         *     stub — replaced when ingestion exists; every topic id gets the sources of the
-         *     difference-of-squares topic (May's sources-t3.json)
+         *     With a token: the pages of the topic's ranges and its questions (scope-db.md §2.2). Without
+         *     one: the stub, the sources of the difference-of-squares topic for every id (May's
+         *     sources-t3.json).
          */
         get: operations["get_topic_sources_topics__id__sources_get"];
         put?: never;
@@ -324,7 +326,8 @@ export interface paths {
          * Confirm Scope
          * @description Lock the draft scope as a scope version (SM-09).
          *
-         *     stub — replaced when scope_versions are written
+         *     With a token: a `scope_versions` row, `active_scope_version_id`, draft topics confirmed
+         *     (scope-db.md §2.3). Without one: the stub.
          */
         post: operations["confirm_scope_exam_preps__id__scope_confirm_post"];
         delete?: never;
@@ -2378,7 +2381,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -2436,7 +2439,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -2503,7 +2506,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;

@@ -1,4 +1,4 @@
-# API (v1.19)
+# API (v1.20)
 
 Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้างอัตโนมัติที่ `/docs` · frontend generate types จาก `/openapi.json`
 
@@ -192,13 +192,15 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
   - `409 scope_already_confirmed` · `Scope.status` เป็น `"confirmed"` อยู่แล้ว
   - `409 scope_empty` · ไม่มีหัวข้อที่ไม่ได้ถูกตัดออก
 
+**v1.20 · ทางที่มี token ทำงานจริงแล้ว** (Jam ช่วง solo 2026-11-14 · Junior ให้ตัดสินใจไปก่อน · `specs/features/scope/scope-db.md` · Junior ดูย้อนหลัง): `GET /exam-preps/{id}/scope`, `GET /topics/{id}/sources`, `POST /exam-preps/{id}/scope/confirm` อ่านเขียนด้วย JWT ของผู้ใช้ (RLS) ตามข้อเสนอข้อ 1–3, 5 ข้างล่าง · DB ล่ม → `503 db_unavailable` · confirm เขียน 3 ขั้นทีละคำสั่ง (`scope_versions` → `active_scope_version_id` → หัวข้อ `draft` เป็น `confirmed`) · ยืนยันพร้อมกันชน `unique (exam_prep_id, version)` → `409 scope_already_confirmed` · `snapshot` = `{topic_id, name, order, stars, status, origin}` ต่อหัวข้อ · ไม่มี token → stub เดิม · `source_label` ใช้ชื่อไฟล์ไม่มีนามสกุล (ยังไม่มีชื่อย่อ)
+
 **รอตัดสิน (v1.6 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-01 (PR #100) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
 
-1. **รูปร่างของ `Scope` และ `status`** (scope-review OQ 5): ใช้ข้อเสนอของ May ตามที่เขียนไว้ · `status` ดูจาก `active_scope_version_id` เพราะ scope ที่ยืนยันแล้วคือ version ที่ prep ชี้อยู่ และไม่มีการแก้หลังยืนยัน · ส่งหัวข้อที่ตัดออกเป็น `stars: 0` เพราะ OQ 3 ต้องแสดงหัวข้อที่ถูกตัด · backend ต้องเปลี่ยน `status = 'excluded'` กับ `importance = 0` ไปด้วยกันเสมอ เพราะ 0 ดาว = ตัดออก (§2.3.5) · หัวข้อที่เพิ่มด้วย `add_topic` ต้องได้ดาวตอนเพิ่ม (ยังไม่ได้เขียนใน §2.3.6) ไม่งั้น `GET /scope` จะตอบ `scope_not_ready`
-2. **กฎของ `source_label` และ `label`** (OQ 6): ข้อเสนอคือ `{ชื่อไฟล์ไม่มีนามสกุล} น.{from}–{to}` (หน้าเดียวใช้ `น.{n}`) หลายช่วงคั่นด้วย `, ` · `label` = `{ชื่อไฟล์ไม่มีนามสกุล} ข้อ {q_no}` · ชื่อสั้นอย่าง "ch3" ใน fixture ของ May ต้องมีที่เก็บชื่อย่อ (ยังไม่มีใน schema) · หัวข้อ `origin = 'user'` ไม่มีช่วงหน้า ข้อเสนอคือส่ง `""` และหน้าเว็บไม่แสดงส่วนที่มา (ต้องถาม May ด้วย)
-3. **ข้อความต้นฉบับ** (OQ 6): `excerpts.text` เป็นข้อความทั้งหน้าจาก `material_pages` · ถ้ายาวเกินไปค่อยตัดเฉพาะส่วนที่เกี่ยวข้องภายหลัง
+1. **รูปร่างของ `Scope` และ `status`** (ใช้แล้ว v1.20 · รอ Junior ยืนยัน) (scope-review OQ 5): ใช้ข้อเสนอของ May ตามที่เขียนไว้ · `status` ดูจาก `active_scope_version_id` เพราะ scope ที่ยืนยันแล้วคือ version ที่ prep ชี้อยู่ และไม่มีการแก้หลังยืนยัน · ส่งหัวข้อที่ตัดออกเป็น `stars: 0` เพราะ OQ 3 ต้องแสดงหัวข้อที่ถูกตัด · backend ต้องเปลี่ยน `status = 'excluded'` กับ `importance = 0` ไปด้วยกันเสมอ เพราะ 0 ดาว = ตัดออก (§2.3.5) · หัวข้อที่เพิ่มด้วย `add_topic` ต้องได้ดาวตอนเพิ่ม (ยังไม่ได้เขียนใน §2.3.6) ไม่งั้น `GET /scope` จะตอบ `scope_not_ready`
+2. **กฎของ `source_label` และ `label`** (ใช้แล้ว v1.20 · รอ Junior ยืนยัน) (OQ 6): ข้อเสนอคือ `{ชื่อไฟล์ไม่มีนามสกุล} น.{from}–{to}` (หน้าเดียวใช้ `น.{n}`) หลายช่วงคั่นด้วย `, ` · `label` = `{ชื่อไฟล์ไม่มีนามสกุล} ข้อ {q_no}` · ชื่อสั้นอย่าง "ch3" ใน fixture ของ May ต้องมีที่เก็บชื่อย่อ (ยังไม่มีใน schema) · หัวข้อ `origin = 'user'` ไม่มีช่วงหน้า ข้อเสนอคือส่ง `""` และหน้าเว็บไม่แสดงส่วนที่มา (ต้องถาม May ด้วย)
+3. **ข้อความต้นฉบับ** (ใช้แล้ว v1.20 · รอ Junior ยืนยัน) (OQ 6): `excerpts.text` เป็นข้อความทั้งหน้าจาก `material_pages` · ถ้ายาวเกินไปค่อยตัดเฉพาะส่วนที่เกี่ยวข้องภายหลัง
 4. **`text` ของข้อสอบใช้ `$…$`** (OQ 7): Jam ตกลง (เป็นเจ้าของ prompt) · `split_past_exam/v1` รับสมการเป็น LaTeX ใน `$` อยู่แล้ว
-5. **error code ของ scope:** `scope_not_ready` (`GET /scope` และ confirm) · `scope_already_confirmed`, `scope_empty` (confirm อย่างเดียว) · 409 ทั้งหมด
+5. **error code ของ scope:** (ใช้แล้ว v1.20 · รอ Junior ยืนยัน) `scope_not_ready` (`GET /scope` และ confirm) · `scope_already_confirmed`, `scope_empty` (confirm อย่างเดียว) · 409 ทั้งหมด
 
 **ความคืบหน้า แชทแก้ขอบเขต และ change log (v1.11 · ข้อเสนอ รอ Junior ตัดสิน):** UC-02 ขั้น 6–12 (S11, S13, S14) · ai-orchestration §2.3.2 ขั้น 4–6, §2.3.4, §2.3.6 · ยังไม่มี feature spec ของหน้าจอ · ทุก field ต้องมี และไม่มี field อื่น · prep หรือไฟล์ที่ไม่มีหรือเป็นของ tenant อื่น → `404 not_found`
 

@@ -13,7 +13,7 @@
 
 - [x] 1. 🤖 (14 พ.ย. · Jam ok) `/spec-feature` → `specs/features/scope/scope-db.md`: มี token → `GET /scope` อ่าน `topics` (รวมที่ตัดออก · `stars` 0), `source_label` จาก `topic_sources` + `materials.file_name`, `unmapped_questions`, `status` จาก `active_scope_version_id` · ดาวยังไม่ครบ → `409 scope_not_ready` · `POST /scope/confirm` → `409` 3 แบบ · สร้าง `scope_versions` (version ถัดไป · `snapshot` ของหัวข้อ) → ตั้ง `active_scope_version_id` → หัวข้อ `draft` เป็น `confirmed` · ยืนยันพร้อมกัน 2 ครั้ง → `409` (unique ของ version) · `GET /topics/{id}/sources` อ่านหน้าใน `material_pages` + ข้อสอบของหัวข้อ · ไม่มี token → stub เดิม · 🙋 Jam review spec
 - [x] 2. 🤖 (14 พ.ย. · Jam ok) `/spec-to-tests` (fake repository · integration: RLS + ยืนยันแล้วห้องติวใช้ scope version) · 🙋 Jam review test
-- [ ] 3. 🤖 `/implement-feature` จน green · ไฟล์กลาง (`specs/system/api.md`) ถามก่อน
+- [x] 3. 🤖 (14 พ.ย. · green 1742 · Jam ok) `/implement-feature` จน green · ไฟล์กลาง (`specs/system/api.md`) ถามก่อน
 - [ ] 4. 🤖 รันกับข้อมูลจริงของ MTH10101 (ingestion ในเครื่อง → `GET /scope` → confirm → เปิดห้อง) · 🙋 Jam ดูผล
 - [ ] 5. 🤖 อัปเดต docs + checklist แล้ว `/work-done`
 
@@ -25,12 +25,14 @@
 
 ## Decisions
 
+- 2026-11-14 · ยืนยัน 3 ขั้นทีละคำสั่ง ไม่ใช่ transaction (SQL function หลัง demo ถ้าต้องการ · Jam ok spec)
+- 2026-11-14 · `confirmed_at` ใช้นาฬิกาของ request (`get_now`) ให้เทียบกับ `scope_changes` บนนาฬิกาเดียวกันและทดสอบได้
 - 2026-11-14 · รวม `GET /topics/{id}/sources` ใน PR นี้ (Jam ok)
 - 2026-11-14 · Junior ให้ Jam ตัดสินใจเรื่อง DB ของ scope ไปก่อน (ตามข้อเสนอ api.md v1.6) แล้วมาเช็คทีหลัง
 
 ## Next step
 
-ขั้น 3: implement (Jam ok api.md v1.20)
+ขั้น 4: รันกับข้อมูลจริงของ MTH10101 (ingestion ในเครื่อง → GET /scope → ยืนยัน → เปิดห้อง)
 
 ## Waiting on
 
