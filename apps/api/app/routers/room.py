@@ -29,7 +29,7 @@ from app.ai.gateway import Gateway, get_gateway
 from app.auth import AuthContext, get_auth
 from app.clock import get_now
 from app.db.errors import DB_DOWN_MESSAGE, DbUnavailableError
-from app.db.room import RoomRepository, SessionRecord, get_room_repository
+from app.db.room import PrepRecord, RoomRepository, SessionRecord, get_room_repository
 from app.db.room_problems import ProblemRecord, ProblemRepository, get_problem_repository
 from app.domain.exam_prep import bangkok_today, days_left
 from app.models.error import ErrorResponse, error_response, too_long_message, unavailable_docs
@@ -54,7 +54,7 @@ from app.models.room import (
     bare_content_type,
 )
 from app.rate_limit import RATE_LIMITED_DOCS, chat_rate_limit
-from app.services import room_db, room_problems
+from app.services import room_db, room_problems, session_end
 from app.services.dev_uploads import (
     LocalImageStore,
     get_local_mode,
@@ -376,16 +376,50 @@ def get_session(
     "/sessions/{id}/end",
     response_class=EventSourceResponse,
     responses={
-        **_SSE_RESPONSE,
+        **_DB_SSE_RESPONSE,
         409: {"model": ErrorResponse, "description": "session_already_ended"},
     },
 )
-async def end_session(session_id: SessionId) -> EventSourceResponse:
+async def end_session(
+    session_id: SessionId,
+    gateway: Annotated[Gateway, Depends(get_gateway)],
+    auth: Auth,
+    repo: Repo,
+    problems: Problems,
+    now: Now,
+) -> Response:
     """The user ends the session. SSE: session_end (1-2 summary lines) → done (PM-05).
 
-    stub — always the same summary; nothing is saved
+    With a token (session-end-db.md): 404 / 409 / 503 before the stream; the session is closed
+    first, in one update that needs `ended_at is null`, so two ends at once cannot both reach
+    the AI. The summary is saved and is a chat message too. Without a token it is the stub:
+    always the same summary, nothing saved.
     """
-    return stubs.stream("session_end")
+    if auth is None or repo is None:
+        return stubs.stream("session_end")
+
+    def close() -> tuple[SessionRecord, PrepRecord] | JSONResponse:
+        session = _open_session(session_id, repo)
+        if isinstance(session, JSONResponse):
+            return session
+        try:
+            prep = repo.get_prep(session.exam_prep_id)
+            if prep is None:
+                return _not_found()
+            if not repo.end_session(session.id, "user"):  # another request ended it first
+                return error_response(
+                    409, "session_already_ended", "This session has already ended"
+                )
+        except DbUnavailableError:
+            return _db_unavailable()
+        return session, prep
+
+    closed = await run_in_threadpool(close)
+    if isinstance(closed, JSONResponse):
+        return closed
+    session, prep = closed
+    days = days_left(prep.exam_date, today=bangkok_today(now))
+    return _sse(session_end.end_events(gateway, repo, problems, auth, session, prep, days))
 
 
 @router.get("/sessions/{id}/messages", response_model=list[Message], responses=_DB_ERRORS)

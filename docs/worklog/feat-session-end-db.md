@@ -13,7 +13,7 @@
 
 - [x] 1. 🤖 (14 พ.ย. · Jam ok) `/spec-feature` → `specs/features/tutor/session-end-db.md`: มี token → 404 / 409 / 503 ก่อน SSE · ตั้ง `ended_at` + `end_reason = 'user'` ด้วยคำสั่งเดียวที่มีเงื่อนไข `ended_at is null` (ชนกัน → 409) · code คิด facts ของ session (โจทย์ที่ทำ, ถูกกี่ข้อ, หัวข้อและระดับตอนนี้จาก `topic_progress`) → `session_summary/v1` (small · 1–2 บรรทัด) → `session_end` → บันทึก `tutor_sessions.summary` + ข้อความ `tutor` ใน `messages` (`done.message_ids`) · AI ล้ม → สรุปจาก template ของ code · ไม่มี token → stub เดิม · กลับมาเปิดห้องได้ session ใหม่ + โจทย์ค้างเดิม (TM-13) · 🙋 Jam review spec
 - [x] 2. 🤖 (14 พ.ย. · Jam ok) `/spec-to-tests` (fake repository + fake provider · integration: RLS + 409 ชนกัน) · 🙋 Jam review test
-- [ ] 3. 🤖 prompt `prompts/session_summary/v1.md` + implement จน green · ไฟล์กลาง (`config/ai.yaml` ถ้าต้องตั้ง `thinking`, `config/messages.yaml` template สำรอง, `specs/system/api.md`) ถามก่อน
+- [x] 3. 🤖 (14 พ.ย. · green 1716 · Jam ok) prompt `prompts/session_summary/v1.md` + implement จน green · ไฟล์กลาง (`config/ai.yaml` ถ้าต้องตั้ง `thinking`, `config/messages.yaml` template สำรอง, `specs/system/api.md`) ถามก่อน
 - [ ] 4. 🤖 รันจริงบน Vertex: เปิดห้อง → ตอบ 2 ข้อ → จบ session → สรุป 2 บรรทัด → เปิดห้องใหม่ได้ session ใหม่ · 🙋 Jam ดูผล
 - [ ] 5. 🤖 อัปเดต docs + checklist แล้ว `/work-done`
 
@@ -26,11 +26,13 @@
 
 ## Decisions
 
+- 2026-11-14 · นับคำตอบของ session จาก `attempts.created_at ≥ started_at` (ไม่เพิ่มคอลัมน์) · ไม่คำนวณ mastery ที่เปลี่ยน (Jam ok spec)
+- 2026-11-14 · ไฟล์กลาง: `messages.yaml` 1.1 template สรุปสำรอง · `ai.yaml` 1.21 `session_summary` `thinking: minimal` · `api.md` v1.19 (Jam ok)
 - 2026-11-14 · ทำ endpoint ของ Junior ช่วง solo ตามข้อเสนอ api.md v1.9 (SSE, ไม่นับ rate limit, 1–2 บรรทัด, เก็บเป็นข้อความในแชทด้วย) · Junior ดูย้อนหลัง
 
 ## Next step
 
-ขั้น 3: implement (Jam ok ไฟล์กลาง messages.yaml, ai.yaml, api.md)
+ขั้น 4: รันจริงบน Vertex (เปิดห้อง → ตอบ 2 ข้อ → จบ → สรุป → เปิดใหม่)
 
 ## Waiting on
 

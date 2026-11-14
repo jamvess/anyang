@@ -253,6 +253,7 @@ OUTSIDE_BY_PROMPT = {
     "open_session/v2": set(),
     "generate_problem/v1": set(),
     "generate_problem/v2": set(),
+    "session_summary/v1": set(),
     "merge_topics/v1": set(),
     "merge_topics/v2": set(),
     "split_past_exam/v1": {"file_name"},

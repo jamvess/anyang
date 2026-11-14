@@ -227,3 +227,58 @@ def same_problem(text: str, other: str) -> bool:
     if math or other_math:
         return math == other_math
     return _ANY_SPACE.sub("", text) == _ANY_SPACE.sub("", other)
+
+
+# --- the result of a session (specs/features/tutor/session-end-db.md §2.2) -------------------
+
+
+@dataclass(frozen=True)
+class TopicResult:
+    name: str
+    answers: int
+    right: int
+    level: str  # not_started | weak | developing | passed
+
+
+@dataclass(frozen=True)
+class SessionResult:
+    topics: list[TopicResult]
+    answers: int
+    right: int
+
+
+def session_result(
+    answers: Sequence[tuple[UUID, bool]],
+    topics: Sequence[TopicFacts],
+    levels: Mapping[UUID, str],
+) -> SessionResult:
+    """§2.2: the checked answers ``(topic_id, is_correct)`` of the session, per topic of the
+    prep (answers of other topics are left out), most answers first, then `order_index`. The
+    level is the one of `topic_progress` now (no row = not started)."""
+    by_id = {t.id: t for t in topics}
+    counts: dict[UUID, list[int]] = {}
+    for topic_id, is_correct in answers:
+        if topic_id in by_id:
+            count = counts.setdefault(topic_id, [0, 0])
+            count[0] += 1
+            count[1] += int(is_correct)
+    ordered = sorted(counts, key=lambda tid: (-counts[tid][0], by_id[tid].order_index))
+    results = [
+        TopicResult(by_id[tid].name, counts[tid][0], counts[tid][1], levels.get(tid, "not_started"))
+        for tid in ordered
+    ]
+    return SessionResult(results, sum(r.answers for r in results), sum(r.right for r in results))
+
+
+def topics_text(result: SessionResult) -> str | None:
+    """One line per topic for `session_summary` (§2.3 item 1); None when nothing was answered."""
+    if not result.topics:
+        return None
+    return "\n".join(
+        f"{t.name} · ตอบ {t.answers} ครั้ง ถูก {t.right} · ระดับตอนนี้ {LEVEL_NAMES[t.level]}"
+        for t in result.topics
+    )
+
+
+def totals_text(result: SessionResult) -> str:
+    return f"ตอบ {result.answers} ครั้ง ถูก {result.right}"
