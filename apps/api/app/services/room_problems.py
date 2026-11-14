@@ -136,7 +136,9 @@ async def opening_events(
     problem: ProblemRecord | None = None
     card_latex = ""
     if chosen is not None:
-        found = await _problem_for(gateway, problems, auth, prep, session, chosen, call_context)
+        found = await _problem_for(
+            gateway, problems, auth, prep.id, session.id, chosen, call_context
+        )
         if found is not None:
             problem, card_latex = found
 
@@ -176,21 +178,21 @@ async def _problem_for(
     gateway: Gateway,
     problems: ProblemRepository,
     auth: AuthContext,
-    prep: PrepRecord,
-    session: SessionRecord,
+    prep_id: UUID,
+    session_id: UUID,
     topic: TopicFacts,
     call_context: AICallContext,
 ) -> tuple[ProblemRecord, str] | None:
     """The open problem of the topic, or a new verified one (spec §2.3); None when there is
     none. The second value is the card's LaTeX."""
     try:
-        reused = await run_in_threadpool(problems.open_problem, prep.id, topic.id)
+        reused = await run_in_threadpool(problems.open_problem, prep_id, topic.id)
         if reused is not None:
             return reused, text_latex_of(reused.text)
         skills = await run_in_threadpool(problems.list_skills, topic.id)
         limit = get_settings().learning.session.grounding_chunks
         chunks = await run_in_threadpool(problems.source_chunks, topic.id, limit)
-        practised = await run_in_threadpool(problems.topic_has_problems, prep.id, topic.id)
+        practised = await run_in_threadpool(problems.topic_has_problems, prep_id, topic.id)
     except DbUnavailableError:
         return None
 
@@ -227,7 +229,7 @@ async def _problem_for(
             saved = await run_in_threadpool(
                 lambda result=result: problems.add_problem(
                     tenant_id=auth.tenant_id,
-                    session_id=session.id,
+                    session_id=session_id,
                     topic_id=topic.id,
                     skill_id=keys.get(result.skill or ""),
                     source="generated",
@@ -244,6 +246,28 @@ async def _problem_for(
             return None
         return saved, result.text_latex
     return None
+
+
+async def next_problem(
+    gateway: Gateway,
+    problems: ProblemRepository,
+    auth: AuthContext,
+    prep_id: UUID,
+    session_id: UUID,
+    call_context: AICallContext,
+) -> tuple[ProblemRecord, str] | None:
+    """The problem after one has ended (room-answers-db.md §2.2 item 5): the topic and the
+    problem by the rules of the opening (§2.2 item 3, §2.3), in the current session."""
+    try:
+        topics = usable_topics(await run_in_threadpool(problems.list_topics, prep_id))
+        progress = await run_in_threadpool(problems.list_progress, prep_id)
+    except DbUnavailableError:
+        return None
+    _, levels, mastery = _card(topics, progress, days=0)  # the card itself comes at opening
+    chosen = choose_topic(topics, mastery, levels, get_settings().learning.bkt.p_init)
+    if chosen is None:  # also no topics (usable_topics gave [])
+        return None
+    return await _problem_for(gateway, problems, auth, prep_id, session_id, chosen, call_context)
 
 
 async def verified(result: GenerateProblemResult) -> bool:

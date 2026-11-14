@@ -82,7 +82,7 @@
 4. `is_answer = false`, `lines` ว่าง, หรือ `typed_answer` ล้ม (`AIProviderError` / `AISchemaError`) → `tutor_reply` เหมือนเดิม (E)
 5. classifier ของ `check_answer` ล้ม → `token` `ระบบช้า ลองส่งอีกทีนะ` → `done` · ไม่มี verdict · ข้อความของนักเรียนยังอยู่ในบทสนทนา
 6. ตัดสินว่าเป็นคำตอบของ**โจทย์ที่ค้าง** ไม่ใช่คำตอบของคำถามย่อยของ tutor: "7" ที่ตอบ "เลขอะไรคูณตัวเองได้ 49" ไม่ใช่คำตอบ · prompt จึงได้ `conversation` ด้วย
-7. prompt `typed_answer/v1` · `config/ai.yaml` → `typed_answer`: tier small, `temperature 0`, `thinking: minimal` (เร็ว) · ป้าย `[C]` · ไม่ใช่ local → ไม่เรียก (staging ไม่ช้าลงและไม่เสียค่า call)
+7. prompt `typed_answer/v1` · `config/ai.yaml` → `typed_answer`: tier small, `temperature 0`, `thinking: minimal` (เร็ว) · ป้าย `[C]` · ไม่ใช่ local → ไม่เรียก (staging ไม่ช้าลงและไม่เสียค่า call) · **ยกเว้นทางที่มี token:** เรียกทุก env เมื่อ session มีโจทย์ค้างใน DB (`room-answers-db.md` §2.1 ข้อ 1)
 
 **H · tutor แสดงวิธีทำทีละขั้นทุกครั้ง (เพิ่ม 9 พ.ย. · Jam)**
 

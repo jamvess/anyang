@@ -293,8 +293,13 @@ async def _verdict_and_explanation(
     else:
         if directive in HINTS:
             await state.note_try(key, pending, wrong=True)
+            independent = True
         else:
-            await _record_attempt(state, key, pending, directive, progress, result.is_correct)
+            independent = await _record_attempt(
+                state, key, pending, directive, progress, result.is_correct
+            )
+        # Every answer with a verdict (room-answers-db.md §2.3 · PM-01); the demo keeps none.
+        await state.record_answer(key, pending, lines, result, independent)
         await state.remember(key, TUTOR, _verdict_line(result))
         yield "verdict", verdict
     explain_input = _explain_input(
@@ -348,15 +353,17 @@ async def _record_attempt(
     directive: Directive,
     progress: LadderProgress | None,
     is_correct: bool,
-) -> None:
+) -> bool:
     """The problem's one attempt (demo: BKT · §2 D, §2 K item 8). With no ladder, every
-    finished answer counts as it is, independent."""
+    finished answer counts as it is, independent. Returns whether it was independent."""
     if progress is None:
         await state.record_check(key, pending, is_correct)
-        return
+        return True
     outcome = attempt_outcome(directive, progress.wrong_before, get_settings().learning.tutoring)
-    if outcome is not None:
-        await state.record_check(key, pending, *outcome)
+    if outcome is None:
+        return True
+    await state.record_check(key, pending, *outcome)
+    return outcome[1]
 
 
 def _explain_input(
@@ -427,5 +434,5 @@ def problem_event(pending: PendingProblem) -> ProblemEvent:
         problem_id=pending.problem_id,
         text_latex=pending.text_latex,
         difficulty=pending.difficulty,
-        purpose="practice",
+        purpose=pending.purpose,  # type: ignore[arg-type]  # problems.purpose check
     )

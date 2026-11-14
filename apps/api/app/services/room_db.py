@@ -23,19 +23,15 @@ from app.domain.exam_prep import days_left
 from app.domain.room import (
     RoomNames,
     greeting_text,
-    recent_turns,
     room_names,
 )
 from app.models.room import DoneEvent, Limits, Message, Room, SessionEvent, TokenEvent
 from app.request_context import get_request_id
-from app.services.room_state import STUDENT, TUTOR, conversation_text
+from app.services.room_state import conversation_text, saved_conversation
 from app.services.tutor_turn import NO_PROBLEM, Event, reply_events
 from app.settings import get_settings
 
 log = logging.getLogger(__name__)
-
-# How saved roles read in the tutor_reply conversation (demo-room.md §2 E item 2).
-_SPEAKERS = {"user": STUDENT, "tutor": TUTOR}
 
 
 def preset_tutor_name() -> str:
@@ -135,10 +131,11 @@ async def opening_events(
 
 
 def conversation_of(messages: list[MessageRecord]) -> str:
-    """Spec §2.7 item 3: the last `session.context_recent_turns` turns, escaped."""
-    lines = [(m.role, m.content) for m in messages if m.role in _SPEAKERS and m.content is not None]
+    """Spec §2.7 item 3: the last `session.context_recent_turns` turns, escaped. The hidden
+    `system` lines of a check count too (room-answers-db.md §2.2 item 7), so the tutor still
+    knows what was checked after the problem ended."""
     turns = get_settings().learning.session.context_recent_turns
-    return conversation_text([(_SPEAKERS[role], text) for role, text in recent_turns(lines, turns)])
+    return conversation_text(saved_conversation(((m.role, m.content) for m in messages), turns))
 
 
 async def reply_and_save(

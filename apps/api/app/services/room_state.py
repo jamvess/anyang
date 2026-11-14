@@ -10,12 +10,15 @@ Every key is ``room_key(tenant_id, session_id)``: a session id alone is not enou
 no table says yet which tenant owns a session (SA-06).
 """
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Annotated, Protocol
 
 from fastapi import Depends
 
+from app.domain.checker import CheckResult
+from app.domain.room import recent_turns
 from app.models.room import ProgressCardEvent
 from app.services.checker import CheckProblem
 from app.services.dev_uploads import get_local_mode
@@ -23,14 +26,15 @@ from app.services.dev_uploads import get_local_mode
 
 @dataclass(frozen=True)
 class PendingProblem:
-    """``text_latex`` and ``difficulty`` are what the problem card shows; ``topic_id`` is the
-    topic whose mastery an answer updates (demo-room.md §2 D)."""
+    """``text_latex``, ``difficulty`` and ``purpose`` are what the problem card shows;
+    ``topic_id`` is the topic whose mastery an answer updates (demo-room.md §2 D)."""
 
     problem_id: str
     problem: CheckProblem
     text_latex: str = ""
     difficulty: int = 1
     topic_id: str | None = None
+    purpose: str = "practice"  # problems.purpose; the demo's problems are practice
 
 
 @dataclass(frozen=True)
@@ -85,6 +89,36 @@ def conversation_text(lines: list[tuple[str, str]]) -> str:
     return "\n".join(f"{role}: {text.replace('<', '&lt;')}" for role, text in lines)
 
 
+# Lines the server writes for the tutor's memory, not for the screen (room-answers-db.md §2.2
+# item 6): saved in `messages` with role `system`, which the room never shows. The first two
+# are the student's side of the conversation.
+STUDENT_NOTES = ("(ยืนยันคำตอบ)", "(ส่งรูปวิธีทำ)")
+TUTOR_NOTES = ("(ผลตรวจ)", "(โจทย์)")
+
+
+def speaker_of(role: str, text: str) -> str | None:
+    """Who said a saved `messages` line (§2.2 item 7); None leaves it out of the
+    conversation (buddy and card lines are not the tutor's conversation yet)."""
+    if role == "user":
+        return STUDENT
+    if role == "tutor":
+        return TUTOR
+    if role == "system":
+        return STUDENT if text.startswith(STUDENT_NOTES) else TUTOR
+    return None
+
+
+def saved_conversation(rows: Iterable[tuple[str, str | None]], turns: int) -> list[tuple[str, str]]:
+    """The last ``turns`` turns of saved `(role, content)` rows as `(speaker, text)`, oldest
+    first. Every turn starts at a line of the student's side (room-sessions-db.md §2.7 item 3)."""
+    lines = []
+    for role, text in rows:
+        speaker = speaker_of(role, text) if text is not None else None
+        if speaker is not None and text is not None:
+            lines.append(("user" if speaker == STUDENT else "tutor", text))
+    return [(STUDENT if r == "user" else TUTOR, t) for r, t in recent_turns(lines, turns)]
+
+
 class RoomState(Protocol):
     async def pending_problem(self, key: str) -> PendingProblem | None: ...
 
@@ -110,6 +144,18 @@ class RoomState(Protocol):
         self, key: str, pending: PendingProblem, is_correct: bool, independent: bool = True
     ) -> None:
         """Count the attempt (BKT) when ``pending`` is still the pending problem."""
+        ...
+
+    async def record_answer(
+        self,
+        key: str,
+        pending: PendingProblem,
+        lines: list[str],
+        result: CheckResult,
+        independent: bool,
+    ) -> None:
+        """Save one answer that got a verdict (room-answers-db.md §2.3 · PM-01): the database
+        state writes an `attempts` row; the demo states keep none."""
         ...
 
     async def ladder(self, key: str, pending: PendingProblem) -> LadderProgress | None:
@@ -164,6 +210,16 @@ class InMemoryRoomState:
 
     async def record_check(
         self, key: str, pending: PendingProblem, is_correct: bool, independent: bool = True
+    ) -> None:
+        return None
+
+    async def record_answer(
+        self,
+        key: str,
+        pending: PendingProblem,
+        lines: list[str],
+        result: CheckResult,
+        independent: bool,
     ) -> None:
         return None
 
