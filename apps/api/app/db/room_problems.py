@@ -42,7 +42,7 @@ class ProgressFacts:
     mastery: float
     attempts_n: int
     level: str
-    d_max: int | None = None
+    d_max: int = 0
     correct_n: int = 0
 
 
@@ -120,8 +120,10 @@ class ProblemRepository(Protocol):
         """`attempts` rows of the problem with `verdict = incorrect` (the hint ladder)."""
         ...
 
-    def end_problem(self, problem_id: UUID) -> None:
-        """Set `ended_at` to now, once; a problem that has ended keeps its first time."""
+    def end_problem(self, problem_id: UUID) -> bool | None:
+        """Set `ended_at` to now, once; a problem that has ended keeps its first time. True
+        when this call ended it, False when it had ended already (another request won), None
+        when the store cannot say (self-review PR #135)."""
         ...
 
     def working_steps(self, problem_id: UUID) -> int: ...
@@ -225,7 +227,7 @@ class SupabaseProblemRepository:
                 .data
             ),
         )
-        return [_progress(r) for r in rows]
+        return self._run("progress rows", lambda: [_progress(r) for r in rows])
 
     def get_topic_progress(self, topic_id: UUID) -> ProgressFacts | None:
         rows = self._run(
@@ -239,7 +241,8 @@ class SupabaseProblemRepository:
                 .data
             ),
         )
-        return _progress(rows[0]) if rows else None
+        # An unexpected row shape is a store failure too, so the room goes on (§2.3 item 2).
+        return self._run("topic progress row", lambda: _progress(rows[0]) if rows else None)
 
     def save_topic_progress(self, **fields: Any) -> None:
         self._run(
@@ -429,8 +432,8 @@ class SupabaseProblemRepository:
         )
         return int(count or 0)
 
-    def end_problem(self, problem_id: UUID) -> None:
-        self._run(
+    def end_problem(self, problem_id: UUID) -> bool | None:
+        rows = self._run(
             "end problem",
             lambda: (
                 self._db()
@@ -439,8 +442,10 @@ class SupabaseProblemRepository:
                 .eq("id", str(problem_id))
                 .is_("ended_at", "null")
                 .execute()
+                .data
             ),
         )
+        return bool(rows)  # PostgREST returns the updated rows: none = it had ended already
 
     def working_steps(self, problem_id: UUID) -> int:
         rows = self._run(

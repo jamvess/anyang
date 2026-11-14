@@ -78,7 +78,7 @@ fake room repository + fake problem repository (เพิ่ม `topic_progress`
 
 | Test | ระดับ | ครอบคลุม AC |
 |---|---|---|
-| `tests/unit/test_topic_progress_db.py` (ไฟล์ใหม่ · fake ของ #132 + `topic_progress` · ไม่แก้ไฟล์ test เดิม) | unit | AC-1 ถึง AC-8 |
+| `tests/unit/test_topic_progress_db.py` (ไฟล์ใหม่ · fake ของ #132 + `topic_progress`) · fake `FakeProblemRepo` ของ `test_room_problems_api.py` ได้ `get_topic_progress` / `save_topic_progress` (Jam ok 14 พ.ย. · ไม่แตะ assert) | unit | AC-1 ถึง AC-8 · โจทย์ที่ request อื่นปิดก่อนไม่นับซ้ำ (§2.1 ข้อ 3 · self-review) |
 | test เดิมทั้งหมด (`test_room_answers_db.py`, `test_room_problems_api.py`, `test_demo_room.py`, `test_bkt.py`) | unit | ไม่เปลี่ยนพฤติกรรมเดิม |
 | `tests/integration/test_topic_progress_db.py` | integration | AC-tenant (ต้องมี `0007`) |
 | รันจริงบน Vertex (ขั้น 4 ของ worklog) | มือ | เปิดห้อง → ตอบถูก 2 ข้อ → เปิดใหม่ การ์ดขยับ |

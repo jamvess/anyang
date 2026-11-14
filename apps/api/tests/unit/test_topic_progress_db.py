@@ -291,3 +291,17 @@ def test_PM02_progress_that_cannot_be_saved_does_not_stop_the_stream(room: Room)
     assert event(events, "verdict")["verdict"] == "correct"
     assert any(n == "problem" for n, _ in events)
     assert events[-1][0] == "done"
+
+
+# --- added by the self-review of PR #135 -----------------------------------------------------
+
+
+def test_PM02_a_problem_another_request_ended_first_is_not_counted_again(room: Room):
+    # §2.1 item 3: the store says this call did not end it (the other request counts it)
+    room.problems.end_problem = lambda problem_id: False  # type: ignore[method-assign]
+    room.script(**RIGHT_ROUND, generate_problem=[generated()])
+
+    events = room.say("x^2-49 = (x-7)(x+7)")
+
+    assert event(events, "verdict")["verdict"] == "correct"
+    assert limit_row(room) is None

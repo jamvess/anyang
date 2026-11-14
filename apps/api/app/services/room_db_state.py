@@ -11,6 +11,7 @@ A failure to read or write inside the stream is logged and the stream goes on: w
 sees is already on screen (§2.2 item 6, §2.3 item 4).
 """
 
+import asyncio
 import logging
 from collections.abc import Callable
 from datetime import UTC, datetime
@@ -24,7 +25,7 @@ from app.auth import AuthContext
 from app.db.errors import DbUnavailableError
 from app.db.room import RoomRepository, SessionRecord
 from app.db.room_problems import ProblemRecord, ProblemRepository, ProgressFacts
-from app.domain.bkt import TopicProgress, level, record_attempt, target_difficulty
+from app.domain.bkt import record_attempt
 from app.domain.checker import CheckResult
 from app.domain.room import text_latex_of
 from app.models.room import ProgressCardEvent
@@ -135,8 +136,8 @@ class DbRoomState:
             problem_id = UUID(problem.problem_id)
 
             def end() -> bool:
-                self._problems.end_problem(problem_id)
-                return True
+                # False: another request ended it first and counts it (self-review PR #135).
+                return self._problems.end_problem(problem_id) is not False
 
             if await self._db("end problem", end, False):
                 self._ended.add(problem.problem_id)
@@ -183,32 +184,28 @@ class DbRoomState:
         topic_id = UUID(str(pending.topic_id))
         prep_id = self._session.exam_prep_id
         failed = object()  # a read that failed: no write from a wrong start (§2.3 item 2)
-        row = await self._db(
-            "topic progress", lambda: self._problems.get_topic_progress(topic_id), failed
+        # Two reads at once: they run before the tutor speaks (self-review PR #135).
+        row, topics = await asyncio.gather(
+            self._db("topic progress", lambda: self._problems.get_topic_progress(topic_id), failed),
+            self._db("topics", lambda: self._problems.list_topics(prep_id), None),
         )
-        topics = await self._db("topics", lambda: self._problems.list_topics(prep_id), None)
         if row is failed or topics is None:
             return
-        topic = next((t for t in topics if t.id == topic_id), None)
-        before = (
-            TopicProgress(row.mastery, row.attempts_n, row.d_max or 0)
-            if isinstance(row, ProgressFacts)
-            else TopicProgress(cfg.bkt.p_init, 0, 0)
-        )
+        facts = row if isinstance(row, ProgressFacts) else None
+        before = room_problems.progress_state(facts, cfg)
         after = record_attempt(before, is_correct, pending.difficulty, independent, cfg)
         if after is before:  # not independent: does not count (bkt.count_only_independent)
             return
-        stars = topic.importance or 0 if topic else 0
-        d_target = target_difficulty(stars, room_problems.MODE, cfg)
-        correct_n = row.correct_n if isinstance(row, ProgressFacts) else 0
+        topic = next((t for t in topics if t.id == topic_id), None)
+        stars = (topic.importance or 0) if topic else 0
+        correct_n = facts.correct_n if facts else 0
         fields = {
             "tenant_id": self._auth.tenant_id,
             "user_id": self._auth.user_id,
             "exam_prep_id": prep_id,
             "topic_id": topic_id,
             "mastery": after.mastery,
-            # Every skill counts as covered until skill coverage exists (§10 item 2).
-            "level": level(after, d_target, True, cfg),
+            "level": room_problems.topic_level(after, stars, cfg),
             "attempts_n": after.attempts,
             "correct_n": correct_n + is_correct,
             "d_max": after.d_max,
