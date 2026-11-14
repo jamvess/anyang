@@ -159,7 +159,9 @@
 - [ ] ⭐ demo ขั้น 3: `POST /exam-preps/{id}/materials` + `POST /materials/{id}/uploaded` + `POST /exam-preps/{id}/materials/confirm` จริง · signed upload URL · bucket + storage policy (migration ใหม่ + isolation test) (CM-03, CM-07)
 - [ ] ⭐ demo ขั้น 5: `GET /exam-preps/{id}/scope` อ่าน DB · `POST /scope/confirm` เขียน `scope_versions` + `active_scope_version_id` (SM-09)
 - [ ] ⭐ demo ขั้น 8: repository ของ `problems`, `attempts`, `topic_progress` (PM-01, PM-02, PM-06)
-- [ ] ⭐ demo ขั้น 9: `POST /sessions/{id}/end` จริง (`ended_at` + สรุป) (TM-13, PM-05)
+- [x] ⭐ demo ขั้น 9: `POST /sessions/{id}/end` จริง (`ended_at` + สรุป) (TM-13, PM-05)
+  - 14 พ.ย. (PR #136 · `specs/features/tutor/session-end-db.md`): มี token → ปิด session ด้วย update ที่มีเงื่อนไข `ended_at is null` ก่อนเรียก AI (ชนกัน → 409) · `end_reason = 'user'` · สรุปจาก `session_summary/v1` บันทึก `tutor_sessions.summary` + ข้อความในแชท · AI ล้มใช้ template · ไม่มี migration · ทำตามข้อเสนอ api.md รอตัดสิน v1.9 ข้อ 1, 2, 6, 7 **Junior: ดูย้อนหลังแล้วยืนยันใน api.md**
+  - ทำโดย Jam (14 พ.ย.) ช่วง solo
 - [ ] P8-lite ร่วมกับทีม (review test ของ `compute_importance`)
   - 13 พ.ย. แผนใหม่: หลัง demo (ทำใน S4 หลัง 23 พ.ย.)
   - 8 พ.ย. test พร้อมให้ review ย้อนหลัง (PR #113 · `apps/api/tests/unit/test_stars.py`) · จดเวลาที่ใช้ใน `poc/P8-lite/metrics.md` §4 · test ที่ผิดจดใน §3
@@ -338,7 +340,8 @@
   - 14 พ.ย. (PR #132 · `specs/features/tutor/room-answers-db.md`): ทางที่มี token ใช้ flow ตรวจของเดโม่ทั้งหมดผ่าน `DbRoomState` · พิมพ์คำตอบเมื่อมีโจทย์ค้าง → `typed_answer` (ทุก env) → ตรวจ → `explain_check` → ใบ้ (local) หรือเฉลย → ข้อต่อไปจาก `generate_problem` · รูป/canvas และยืนยันลายมือเฉพาะ `APP_ENV=local` · ทุกคำตอบที่ได้ verdict ลง `attempts` (PM-01) · บรรทัดภายในเป็น `messages.role = system` · migration `0006` (`problems.ended_at`, `working_steps`) ขึ้นแค่ในเครื่อง **Junior: ดูแล้ว `db push`** · api.md v1.18 · รันจริงบน Vertex ครบ flow (hint_1 → hint_2 → ยอมแพ้ → ข้อต่อไป → ถูก) · แก้ merge rule ที่ LLM ให้ `no_answer` แต่มีบรรทัด (เคยทำ stream จบด้วย `internal_error`) · BKT ลง `topic_progress` ยังเป็นขั้น 8
 - [x] ⭐ demo: ข้อต่อไปไม่ซ้ำข้อที่เพิ่งจบ · `generate_problem/v2` รับโจทย์ล่าสุดของหัวข้อ + code ตัดโจทย์ข้อความซ้ำ (นับเป็นรอบที่ไม่ผ่าน) · วัดใหม่บน Vertex (AM-11 · **Jam** · เจอตอนรันจริงของ PR #132 · `room-answers-db.md` §10 ข้อ 4)
   - 14 พ.ย. (PR #133 · `room-problems-db.md` §2.3 v2): `generate_problem/v2` ได้ `previous_problems` (โจทย์ล่าสุดของหัวข้อ ≤ `session.avoid_recent_problems` = 5 [C]) · code ตัดโจทย์ที่คณิตใน `$…$` ซ้ำ (`same_problem`) นับเป็นรอบที่ไม่ผ่าน · ใช้ทั้งตอนเปิดห้องและข้อต่อไป · วัดบน Vertex 34 หัวข้อ × 3 ข้อ: ไม่มีโจทย์ซ้ำ · SymPy ยืนยันภายใน 3 รอบ 65/71/68% (v1 71%) · หัวข้อหลักของ demo ผ่านรอบแรก (Jam รับผล)
-- [ ] ⭐ demo ขั้น 8–9: BKT ลง `attempts` / `topic_progress` + การ์ดจาก DB (PM-01–04) · สรุป session ด้วย `session_summary` (PM-05)
+- [x] ⭐ demo ขั้น 8–9: BKT ลง `attempts` / `topic_progress` + การ์ดจาก DB (PM-01–04) · สรุป session ด้วย `session_summary` (PM-05)
+  - 14 พ.ย. (PR #136): **ขั้น 9 เสร็จ** · สรุป session ด้วย `session_summary/v1` (small · 1–2 บรรทัดจาก facts ของ code: คำตอบของ session ต่อหัวข้อ + ระดับจาก `topic_progress`) · รันจริงบน Vertex: สรุปตรงกับ facts · ภาษายังแข็งเล็กน้อย ปรับ v2 ได้ภายหลัง
   - 14 พ.ย. (PR #135 · `specs/features/planner/topic-progress-db.md`): **ขั้น 8 เสร็จ** · โจทย์จบ (ถูก, เฉลย, ยอมแพ้) → BKT ของ `domain/bkt.py` ลง `topic_progress` ของผู้ใช้ (นับครั้งเดียวต่อโจทย์ · ถูกหลังใบ้สุดท้ายไม่นับ) · การ์ดตอนเปิดห้องอ่าน `d_max` จริง · migration `0007` (`topic_progress.d_max`) **Junior: ดูแล้ว `db push`** · รันจริงบน Vertex: ตอบถูก 2 ข้อ → ความพร้อม 0% → 31% · ลิมิต `developing` · **เหลือขั้น 9** (จบ session + `session_summary`)
 - [ ] เดโม่ห้องติวที่ใช้ได้จริงในเครื่อง ให้อาจารย์ดูก่อนทำต่อ (อาจารย์ขอ 9 พ.ย. · เพิ่มเอง)
   - 13 พ.ย. แผนใหม่: ⭐ demo ขั้น 6–7 · ของในเดโม่นี้ (คำทัก, ตรวจ, hint ladder, BKT) ต้องย้ายเข้าทางที่มี token (ข้อใหม่ข้างล่าง) · ที่เหลือเดิม (canvas ในเบราว์เซอร์, วิดีโอ) รวมเข้า demo end to end · iPad หลัง demo
