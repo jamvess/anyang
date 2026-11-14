@@ -32,13 +32,13 @@
 ### 2.3 สรุป (AI · `session_summary/v1` · tier small)
 
 1. input (string ใน data block): `prep_name` · `days_left` · `topics` (บรรทัดละหัวข้อ `{ชื่อ} · ตอบ {n} ครั้ง ถูก {k} · ระดับตอนนี้ {ระดับ}` · ไม่มีคำตอบ → `none`) · `totals` (`ตอบ {n} ครั้ง ถูก {k}`)
-2. output `SessionSummaryResult {lines: [string]}` 1–2 บรรทัดที่ไม่ว่าง (api.md รอตัดสินข้อ 6 · session สั้นอาจมีเรื่องเดียว) · ภาษาไทย · บรรทัดแรก = ทำอะไรไปและผลเป็นอย่างไร · บรรทัดที่สอง (ถ้ามี) = ครั้งหน้าควรทำอะไรต่อ · ไม่มีตัวเลขที่ไม่อยู่ใน facts
-3. **AI ล้มหรือ schema ผิดหลัง retry ของ gateway → สรุปจาก template ของ code** (`config/messages.yaml` → `room.session_summary`: มีคำตอบ / ไม่มีคำตอบ · ไฟล์กลาง) · session จบแล้วอยู่ดี
+2. output `SessionSummaryResult {lines: [string]}` 1–2 บรรทัดที่ไม่ว่าง (api.md รอตัดสินข้อ 6 · session สั้นอาจมีเรื่องเดียว) · ภาษาไทย · บรรทัดแรก = ทำอะไรไปและผลเป็นอย่างไร · บรรทัดที่สอง (ถ้ามี) = ครั้งหน้าควรทำอะไรต่อ · ไม่มีตัวเลขที่ไม่อยู่ใน facts · **code ตรวจ:** ทุกตัวเลขในสรุปต้องเป็นตัวเลขที่อยู่ใน facts (input ทั้ง 4) · ไม่ใช่ → ใช้ template ของข้อ 3 (self-review PR #136 · code ตัดสินจำนวน ไม่ใช่ LLM)
+3. **AI ล้มหรือ schema ผิดหลัง retry ของ gateway → สรุปจาก template ของ code** (`config/messages.yaml` → `room.session_summary`: มีคำตอบ / ไม่มีคำตอบ · ไฟล์กลาง) · session จบแล้วอยู่ดี · **อ่านคำตอบของ session ไม่ได้ (DB ล่ม)** → ไม่เรียก AI และใช้ `room.session_summary_unknown` (ไม่บอกว่า "ไม่ได้ทำโจทย์" ทั้งที่ไม่รู้ · self-review PR #136 · Jam ok)
 
 ### 2.4 SSE และบันทึก
 
 1. SSE: `session_end {summary_lines}` → `done {message_ids}` (api.md v1.9)
-2. บันทึก (JWT ของผู้ใช้) **ก่อน** `done`: `tutor_sessions.summary` = บรรทัดต่อด้วย `\n` · และ**ข้อความ `tutor` ใน `messages`** ของ session (content = บรรทัดต่อด้วย `\n`) → id ใน `done.message_ids` (api.md รอตัดสินข้อ 7 · PM-05 "ในรูปแบบ chat message" · โหลดใหม่ยังเห็นใน `GET /sessions/{id}/messages`)
+2. บันทึก (JWT ของผู้ใช้) **ก่อน `session_end`** (client ที่ปิด stream ทันทีที่ได้สรุปยังเห็นสรุปเมื่อโหลดใหม่ · self-review PR #136): `tutor_sessions.summary` = บรรทัดต่อด้วย `\n` · และ**ข้อความ `tutor` ใน `messages`** ของ session (content = บรรทัดต่อด้วย `\n`) → id ใน `done.message_ids` (api.md รอตัดสินข้อ 7 · PM-05 "ในรูปแบบ chat message" · โหลดใหม่ยังเห็นใน `GET /sessions/{id}/messages`)
 3. บันทึกไม่ได้ → log แล้ว `done` ไม่มี id นั้น (แบบ #123 AC-5 · session ปิดแล้วตั้งแต่ §2.1 ข้อ 3)
 
 ### 2.5 กลับมาติวต่อ (TM-13)

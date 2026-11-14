@@ -393,6 +393,7 @@ class RoomTextsConfig(_Strict):
     no_problem: str = Field(min_length=1)
     session_summary_answered: str = Field(min_length=1)
     session_summary_empty: str = Field(min_length=1)
+    session_summary_unknown: str = Field(min_length=1)
 
     @model_validator(mode="after")
     def _known_placeholders(self) -> "RoomTextsConfig":
@@ -400,6 +401,7 @@ class RoomTextsConfig(_Strict):
             "no_problem": set(),
             "session_summary_answered": {"answers", "right"},
             "session_summary_empty": set(),
+            "session_summary_unknown": set(),
         }
         for key, names in allowed.items():
             unknown = _placeholders(getattr(self, key)) - names

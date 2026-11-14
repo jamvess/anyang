@@ -210,12 +210,18 @@ class ErrorEvent(ApiModel):
     message: str
 
 
+# 1-2 lines that are not blank (api.md v1.9 รอตัดสิน 6): the event and the AI output share
+# it, so a change cannot let the output pass and the event fail (self-review PR #136).
+SummaryLines = Annotated[
+    list[Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]],
+    Field(min_length=1, max_length=2),
+]
+
+
 class SessionEndEvent(ApiModel):
     """End-of-session summary (PM-05 · api.md v1.9), saved at tutor_sessions.summary."""
 
-    summary_lines: list[Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]] = (
-        Field(min_length=1, max_length=2)
-    )
+    summary_lines: SummaryLines
 
 
 class OcrLine(ApiModel):

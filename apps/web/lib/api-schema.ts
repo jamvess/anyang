@@ -109,7 +109,10 @@ export interface paths {
          * End Session
          * @description The user ends the session. SSE: session_end (1-2 summary lines) → done (PM-05).
          *
-         *     stub — always the same summary; nothing is saved
+         *     With a token (session-end-db.md): 404 / 409 / 503 before the stream; the session is closed
+         *     first, in one update that needs `ended_at is null`, so two ends at once cannot both reach
+         *     the AI. The summary is saved and is a chat message too. Without a token it is the stub:
+         *     always the same summary, nothing saved.
          */
         post: operations["end_session_sessions__id__end_post"];
         delete?: never;
@@ -1832,7 +1835,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;

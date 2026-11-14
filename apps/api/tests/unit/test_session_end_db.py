@@ -262,7 +262,8 @@ def test_PM05_a_database_that_is_down_gives_503(ending: Ending):
 
 
 def test_PM05_a_summary_that_cannot_be_saved_still_ends_the_stream(ending: Ending):
-    # AC-9
+    # AC-9 · answers, so the numbers of LINES are facts (self-review PR #136 · Jam ok)
+    three_answers(ending)
     ending.repo.fail_summary = True
     ending.repo.fail_insert_role = "tutor"
     script(ending.fake, session_summary=[summary(LINES)])
@@ -272,3 +273,32 @@ def test_PM05_a_summary_that_cannot_be_saved_still_ends_the_stream(ending: Endin
     assert event(events, "session_end") == {"summary_lines": LINES}
     assert event(events, "done")["message_ids"] == []
     assert ending.repo.sessions[ending.session_id].ended_at is not None
+
+
+# --- added by the self-review of PR #136 -----------------------------------------------------
+
+
+def test_PM05_a_summary_with_a_number_that_is_not_in_the_facts_is_not_shown(ending: Ending):
+    # §2.3 item 2: code decides the counts (3 answers, 2 right · no 5)
+    three_answers(ending)
+    script(ending.fake, session_summary=[summary(["วันนี้ตอบไป 5 ข้อ ถูก 2 ข้อ"])])
+
+    events = parse_sse(ending.end().text)
+
+    expected = ROOM.session_summary_answered.format(answers=3, right=2)
+    assert event(events, "session_end") == {"summary_lines": [expected]}
+
+
+def test_PM05_answers_that_cannot_be_read_are_not_called_none(ending: Ending):
+    # A failed read must not become "you answered nothing"
+    three_answers(ending)
+
+    def down(since):
+        raise DbUnavailableError("select attempts")
+
+    ending.problems.attempts_since = down  # type: ignore[method-assign]
+
+    events = parse_sse(ending.end().text)
+
+    assert event(events, "session_end") == {"summary_lines": [ROOM.session_summary_unknown]}
+    assert ending.requests("session_summary") == []

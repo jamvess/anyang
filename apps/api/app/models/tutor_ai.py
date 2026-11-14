@@ -4,9 +4,11 @@
 against `reference_answer` with SymPy before the problem reaches the student (AM-11).
 """
 
-from typing import Annotated, Literal
+from typing import Literal
 
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field
+
+from app.models.room import SummaryLines
 
 # The formats the answer checker grades (app/domain/checker.py · spec §2.3 item 2).
 GradedFormat = Literal["expression", "factored", "equation"]
@@ -15,9 +17,7 @@ GradedFormat = Literal["expression", "factored", "equation"]
 class SessionSummaryResult(BaseModel):
     """1-2 lines that end the session (session-end-db.md §2.3 · api.md v1.9 รอตัดสิน 6)."""
 
-    lines: list[Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]] = Field(
-        min_length=1, max_length=2
-    )
+    lines: SummaryLines
 
 
 class GenerateProblemResult(BaseModel):

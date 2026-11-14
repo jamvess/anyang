@@ -428,7 +428,6 @@ class SupabaseProblemRepository:
                 .table("attempts")
                 .select("topic_id,is_correct,created_at")
                 .gte("created_at", since.isoformat())  # RLS: only the user's own rows
-                .order("created_at")
                 .execute()
                 .data
             ),
