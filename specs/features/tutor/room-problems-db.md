@@ -37,7 +37,7 @@ demo end to end (23 พ.ย.) เข้าห้องติวหลัง logi
 
 ### 2.3 สร้างโจทย์และยืนยันเฉลย (AM-11 · ai-orchestration §2.4.6)
 
-1. **ใช้โจทย์ค้างก่อน:** มีแถว `problems` ของ prep นี้ (session ไหนก็ได้ของ prep) ที่ยังไม่มี `attempts` และ `topic_id` เป็นหัวข้อที่เลือก → ใช้แถวล่าสุดนั้น ไม่สร้างใหม่ (เปิดห้องใหม่แล้วโจทย์เดิมยังรออยู่ · TM-13) · `problem_id` เดิม
+1. **ใช้โจทย์ค้างก่อน:** มีแถว `problems` ของ prep นี้ (session ไหนก็ได้ของ prep) ที่ยังไม่จบ (`ended_at` ว่าง · เดิม "ยังไม่มี `attempts`" · เปลี่ยนใน `room-answers-db.md` §2.2 ข้อ 1 เพราะคำตอบผิดที่ได้ใบ้มี attempt แต่โจทย์ยังไม่จบ) และ `topic_id` เป็นหัวข้อที่เลือก → ใช้แถวล่าสุดนั้น ไม่สร้างใหม่ (เปิดห้องใหม่แล้วโจทย์เดิมยังรออยู่ · TM-13) · `problem_id` เดิม
 2. **input ของ `generate_problem/v1`** (ทุกค่าเป็น string ใน data block):
    - `topic` = ชื่อหัวข้อ · `skills` = บรรทัดละ `s{n}: {ชื่อ skill}` ตามลำดับของ `topic_skills` ที่ไม่ `excluded`
    - `source_text` = ข้อความของ `chunks` ที่ช่วงหน้าทับกับ `topic_sources` ของหัวข้อ เรียงตามไฟล์และหน้า เอา `session.grounding_chunks` ก้อนแรก (learning.yaml · ไม่มี chunk → `none`) · โจทย์ต้องใช้วิธีและสัญลักษณ์ตามชีท (SM-11 · ai-orchestration §1.4)
@@ -51,7 +51,7 @@ demo end to end (23 พ.ย.) เข้าห้องติวหลัง logi
 
 ### 2.4 ข้อความพิมพ์ในห้องที่มี token (demo-room §2 C บน DB · TM-10)
 
-`tutor_reply` ได้ input `problem` = `text` ของโจทย์ค้างของ session (แถว `problems` ล่าสุดของ session ที่ยังไม่มี `attempts`) **ไม่มีเฉลย** · ไม่มี → `none` ตามเดิม · การตรวจคำตอบที่พิมพ์เป็นขั้น 7 (§9)
+`tutor_reply` ได้ input `problem` = `text` ของโจทย์ค้างของ session (แถว `problems` ล่าสุดของ prep ของ session ที่ `ended_at` ว่าง) **ไม่มีเฉลย** · ไม่มี → `none` ตามเดิม · การตรวจคำตอบที่พิมพ์: `room-answers-db.md`
 
 ### 2.5 code ตัดสิน · AI พูด
 
@@ -81,7 +81,7 @@ fake provider · repository ปลอม (แถวที่ JWT ของผู
 - **AC-6 (AM-11)** `factored` ที่เฉลยยังแยกไม่สุด (`x(x^{2}-1)`) → ไม่ผ่าน · `expression` parse ไม่ได้ → ไม่ผ่าน · AI ล้ม → ไม่ผ่าน (นับรอบ)
 - **AC-14 (AM-11 · เพิ่ม 13 พ.ย.)** `expression` ที่เป็นคำตอบคิดมาแล้ว (`5 + 1` = `6`, ตัวเลขล้วน, เท่ากับเฉลย, มีแค่คำสั่ง LaTeX ไม่มีตัวแปร) → ไม่ผ่าน นับเป็น 1 รอบ · `\lim_{x…}`, `\frac{d}{dx}(…)`, `x^{3}-x` → ผ่านกฎนี้
 - **AC-7** `skill` = `s9` (ไม่มี) หรือ null → `skill_id` null · ยังใช้โจทย์ได้
-- **AC-8 (TM-13)** prep มีโจทย์ค้าง (ไม่มี attempt) ของหัวข้อที่เลือกจาก session ก่อน → ไม่เรียก `generate_problem` · `problem.problem_id` = แถวเดิม · ไม่มีแถวใหม่
+- **AC-8 (TM-13)** prep มีโจทย์ค้าง (`ended_at` ว่าง) ของหัวข้อที่เลือกจาก session ก่อน → ไม่เรียก `generate_problem` · `problem.problem_id` = แถวเดิม · ไม่มีแถวใหม่
 - **AC-9 (TM-03)** หัวข้อที่เคยมีโจทย์ใน prep แล้ว (มี attempt) → โจทย์ใหม่ `purpose = practice`
 - **AC-10** prep ไม่มีหัวข้อ → เหมือน #123 ทุกอย่าง (`session` → `token` template → `done` · ไม่เรียก AI · ไม่มี `progress_card` / `problem`)
 - **AC-11** `open_session` ล้มก่อน token → token template ของ #123 · ยังมี `progress_card`, `problem`, `done`

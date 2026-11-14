@@ -30,7 +30,7 @@ from app.auth import AuthContext, get_auth
 from app.clock import get_now
 from app.db.errors import DB_DOWN_MESSAGE, DbUnavailableError
 from app.db.room import RoomRepository, SessionRecord, get_room_repository
-from app.db.room_problems import ProblemRepository, get_problem_repository
+from app.db.room_problems import ProblemRecord, ProblemRepository, get_problem_repository
 from app.domain.exam_prep import bangkok_today, days_left
 from app.models.error import ErrorResponse, error_response, too_long_message, unavailable_docs
 from app.models.room import (
@@ -70,6 +70,7 @@ from app.services.photo_check import (
     photo_events,
 )
 from app.services.room_chat import text_message_events
+from app.services.room_db_state import DbRoomState
 from app.services.room_opening import opening_events
 from app.services.room_state import (
     STUDENT,
@@ -174,6 +175,35 @@ def _open_and_save(
     )
 
 
+def _open_session(session_id: UUID, repo: RoomRepository) -> SessionRecord | JSONResponse:
+    """The session of a message or a confirm with a token: 404 / 409 / 503 before the stream
+    (room-sessions-db.md §2.7)."""
+    try:
+        session = repo.get_session(session_id)
+    except DbUnavailableError:
+        return _db_unavailable()
+    if session is None:
+        return _not_found()
+    if session.ended_at is not None:
+        return error_response(409, "session_already_ended", "This session has already ended")
+    return session
+
+
+async def _db_room_state(
+    session_id: UUID,
+    auth: AuthContext,
+    repo: RoomRepository,
+    problems: ProblemRepository,
+    gateway: Gateway,
+    local: bool,
+) -> DbRoomState | JSONResponse:
+    """The room state on the database for a photo or a confirm (room-answers-db.md §2.1)."""
+    session = await run_in_threadpool(_open_session, session_id, repo)
+    if isinstance(session, JSONResponse):
+        return session
+    return DbRoomState(gateway, repo, problems, auth, session, local=local)
+
+
 async def _send_and_save(
     session_id: UUID,
     text: str,
@@ -181,23 +211,24 @@ async def _send_and_save(
     repo: RoomRepository,
     gateway: Gateway,
     problems: ProblemRepository | None = None,
+    local: bool = False,
 ) -> Response:
     """POST /sessions/{id}/messages `{text}` with a token (spec §2.7): 404 / 409 / 503 before
-    the stream; the user message is saved before the model is called."""
+    the stream. With an open problem the message may be its answer: it is checked through the
+    room state on the database, which saves the message itself (room-answers-db.md §2.1
+    item 1). Otherwise the user message is saved before the model is called."""
 
-    def check_and_save_user() -> tuple[SessionRecord, str, str] | JSONResponse:
+    def check_and_save_user() -> tuple[SessionRecord, str | ProblemRecord] | JSONResponse:
+        session = _open_session(session_id, repo)
+        if isinstance(session, JSONResponse):
+            return session
         try:
-            session = repo.get_session(session_id)
-            if session is None:
-                return _not_found()
-            if session.ended_at is not None:
-                return error_response(
-                    409, "session_already_ended", "This session has already ended"
-                )
-            conversation = room_db.conversation_of(repo.list_messages(session.id))
             # Before the message is saved: a failed read must not leave a saved message behind
             # a 503 (self-review PR #131).
             open_problem = problems.session_problem(session.id) if problems else None
+            if open_problem is not None:
+                return session, open_problem
+            conversation = room_db.conversation_of(repo.list_messages(session.id))
             repo.add_message(
                 tenant_id=auth.tenant_id,
                 session_id=session.id,
@@ -207,14 +238,21 @@ async def _send_and_save(
             )
         except DbUnavailableError:
             return _db_unavailable()
-        # The open problem without its answer (room-problems-db.md §2.4 · AM-13).
-        return session, conversation, open_problem.text if open_problem else NO_PROBLEM
+        return session, conversation
 
     checked = await run_in_threadpool(check_and_save_user)
     if isinstance(checked, JSONResponse):
         return checked
-    session, conversation, problem = checked
-    return _sse(room_db.reply_and_save(gateway, repo, auth, session, text, conversation, problem))
+    session, found = checked
+    if isinstance(found, ProblemRecord) and problems is not None:
+        state = DbRoomState(gateway, repo, problems, auth, session, local=local, open_problem=found)
+        key = room_key(str(auth.tenant_id), str(session.id))
+        # typed_answer in every env on this path (§2.1 item 1 · demo-room.md §2 G item 7).
+        return _sse(text_message_events(gateway, state, key, text, True, state.call_context))
+    conversation = found if isinstance(found, str) else ""
+    return _sse(
+        room_db.reply_and_save(gateway, repo, auth, session, text, conversation, NO_PROBLEM)
+    )
 
 
 @router.get(
@@ -429,12 +467,20 @@ async def send_message(
         # Code proposed in tutor-reply-stream.md §10 item 3, pending Junior.
         return error_response(422, "message_too_long", too_long)
     if auth is not None and repo is not None and body.image_path is None and body.text:
-        return await _send_and_save(session_id, body.text, auth, repo, gateway, problems)
+        return await _send_and_save(session_id, body.text, auth, repo, gateway, problems, local)
     # No session_id yet: the session is a stub with no tutor_sessions row (api-auth.md §2.5).
     call_context = AICallContext(auth.tenant_id, auth.user_id) if auth else None
     if body.image_path is not None:
         if image_store is None:  # no Storage yet (photo-check-in-room.md §2.4)
             return stubs.stream("image_reply")
+        state = room_state
+        # Local only until Storage (room-answers-db.md §2.1 item 2): elsewhere the ImageStore
+        # is a test double and the session may have no row.
+        if local and auth is not None and repo is not None and problems is not None:
+            db_state = await _db_room_state(session_id, auth, repo, problems, gateway, local)
+            if isinstance(db_state, JSONResponse):
+                return db_state
+            state, call_context = db_state, db_state.call_context
         return await _photo_message(
             str(session_id),
             body.image_path,
@@ -442,7 +488,7 @@ async def send_message(
             auth,
             gateway,
             image_store,
-            room_state,
+            state,
             call_context,
         )
 
@@ -622,6 +668,9 @@ async def confirm_ocr(
     auth: Annotated[AuthContext | None, Depends(get_auth)],
     image_store: Annotated[ImageStore | None, Depends(get_image_store)],
     room_state: Annotated[RoomState, Depends(get_room_state)],
+    local: Annotated[bool, Depends(get_local_mode)],
+    repo: Repo,
+    problems: Problems,
 ) -> Response:
     """Confirmed or edited lines of the last ocr_preview. SSE: verdict → token → done (AM-02).
 
@@ -637,6 +686,12 @@ async def confirm_ocr(
             )
         return stubs.stream("ocr_confirm")
 
+    call_context = AICallContext(auth.tenant_id, auth.user_id) if auth else None
+    if local and auth is not None and repo is not None and problems is not None:  # §2.1 item 3
+        db_state = await _db_room_state(session_id, auth, repo, problems, gateway, local)
+        if isinstance(db_state, JSONResponse):
+            return db_state
+        room_state, call_context = db_state, db_state.call_context
     key = room_key(stubs.tenant_of(auth), str(session_id))
     # Taken out now, so a second confirm sent at the same time gets 409 (one confirm per
     # preview); confirm_events puts it back if no verdict comes (spec §2.2 items 5, 7).
@@ -646,7 +701,6 @@ async def confirm_ocr(
     if len(body.lines) != len(preview.lines):
         await room_state.restore_preview(key, preview)
         return error_response(422, "ocr_lines_mismatch", f"send {len(preview.lines)} lines")
-    call_context = AICallContext(auth.tenant_id, auth.user_id) if auth else None
     return _sse(
         confirm_events(gateway, room_state, key, str(session_id), preview, body.lines, call_context)
     )

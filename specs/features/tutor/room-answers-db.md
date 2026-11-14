@@ -6,8 +6,8 @@
 | Requirements | TM-06 (พิมพ์ + รูป/canvas), AM-01, AM-02, AM-04, AM-05, AM-07, AM-13, PM-01, TM-10, TM-13, SA-06 |
 | Owner | Jam |
 | Reviewer | Jam · Junior ดูย้อนหลัง (`0006`, repository) |
-| Status | draft 2026-11-13 (PR #132) |
-| Related system spec | `room-problems-db.md` (#131 · โจทย์ในห้องบน DB) · `demo-room.md` §2 E, G–K (บทสนทนา, พิมพ์คำตอบ, วิธีทำ, hint ladder) · `photo-check-in-room.md` · `room-sessions-db.md` · api.md v1.17 · data-model.md รูป 3 · `docs/team/sprint-checklists.md` ⭐ demo ขั้น 7 |
+| Status | approved 2026-11-13 (Jam ok spec + test) · implemented 2026-11-14 (PR #132) |
+| Related system spec | `room-problems-db.md` (#131 · โจทย์ในห้องบน DB) · `demo-room.md` §2 E, G–K (บทสนทนา, พิมพ์คำตอบ, วิธีทำ, hint ladder) · `photo-check-in-room.md` · `room-sessions-db.md` · api.md v1.18 · data-model.md รูป 3 · `docs/team/sprint-checklists.md` ⭐ demo ขั้น 7 |
 
 ## 1. Context
 
@@ -18,8 +18,8 @@
 ### 2.1 ทางไหนใช้ `DbRoomState`
 
 1. **ข้อความพิมพ์** (`POST /sessions/{id}/messages` `{text}`, มี token, มี problem repository · #131): ตรวจ session ก่อน SSE ตามเดิม (404, 409, 503) · session มี**โจทย์ค้าง** (§2.2 ข้อ 1) → `text_message_events` (room_chat) กับ `DbRoomState` และ `typed_answer` ทำงาน **ทุก env** (เดิมเฉพาะในเครื่อง เพราะทางเดโม่ไม่มีโจทย์จริงนอกเครื่อง · demo-room §2 G ข้อ 7) · ไม่มีโจทย์ค้าง → ทางเดิมของ #131 (`tutor_reply` + บันทึก)
-2. **รูป / canvas** (`{image_path}`, มี token): มี `ImageStore` (ตอนนี้ = เดโม่ในเครื่อง `APP_ENV=local` · Storage ยังไม่มี) → `photo_events` กับ `DbRoomState` · ไม่มี → stub เดิม
-3. **ยืนยันลายมือ** (`POST /sessions/{id}/ocr/confirm`, มี token, มี `ImageStore`): `confirm_events` กับ `DbRoomState`
+2. **รูป / canvas** (`{image_path}`, มี token): มี `ImageStore` **และ** `APP_ENV=local` (เดโม่ในเครื่อง · Storage ยังไม่มี) → ตรวจ session (404, 409, 503) แล้ว `photo_events` กับ `DbRoomState` · นอก local → ทางเดิม (stub หรือ `ImageStore` ที่ test ใส่ · เปิดเมื่อมี Storage · S5) · ไม่มี `ImageStore` → stub เดิม
+3. **ยืนยันลายมือ** (`POST /sessions/{id}/ocr/confirm`, มี token, มี `ImageStore`, `APP_ENV=local` ตามข้อ 2): ตรวจ session แล้ว `confirm_events` กับ `DbRoomState`
 4. ไม่มี token → ทุกอย่างเหมือนเดิม (stub หรือเดโม่ในเครื่อง)
 
 ### 2.2 `DbRoomState` (`app/services/room_db_state.py` · 1 ตัวต่อ request · ผูกกับ session เดียว)

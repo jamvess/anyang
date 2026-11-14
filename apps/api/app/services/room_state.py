@@ -16,6 +16,7 @@ from typing import Annotated, Protocol
 
 from fastapi import Depends
 
+from app.domain.checker import CheckResult
 from app.models.room import ProgressCardEvent
 from app.services.checker import CheckProblem
 from app.services.dev_uploads import get_local_mode
@@ -112,6 +113,18 @@ class RoomState(Protocol):
         """Count the attempt (BKT) when ``pending`` is still the pending problem."""
         ...
 
+    async def record_answer(
+        self,
+        key: str,
+        pending: PendingProblem,
+        lines: list[str],
+        result: CheckResult,
+        independent: bool,
+    ) -> None:
+        """Save one answer that got a verdict (room-answers-db.md §2.3 · PM-01): the database
+        state writes an `attempts` row; the demo states keep none."""
+        ...
+
     async def ladder(self, key: str, pending: PendingProblem) -> LadderProgress | None:
         """The hint ladder of ``pending`` (demo-room.md §2 K), or None when this state has no
         ladder: then every finished answer gets the solution, as AM-07 says today."""
@@ -164,6 +177,16 @@ class InMemoryRoomState:
 
     async def record_check(
         self, key: str, pending: PendingProblem, is_correct: bool, independent: bool = True
+    ) -> None:
+        return None
+
+    async def record_answer(
+        self,
+        key: str,
+        pending: PendingProblem,
+        lines: list[str],
+        result: CheckResult,
+        independent: bool,
     ) -> None:
         return None
 

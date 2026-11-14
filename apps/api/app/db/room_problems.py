@@ -9,6 +9,7 @@ Any failure to reach or use the database becomes `DbUnavailableError`.
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Annotated, Any, Protocol
 from uuid import UUID
 
@@ -79,12 +80,13 @@ class ProblemRepository(Protocol):
         ...
 
     def open_problem(self, prep_id: UUID, topic_id: UUID) -> ProblemRecord | None:
-        """The latest problem of the topic in this prep with no attempt."""
+        """The latest problem of the topic in this prep that has not ended (`ended_at` null ·
+        room-answers-db.md §2.2 item 1)."""
         ...
 
     def session_problem(self, session_id: UUID) -> ProblemRecord | None:
-        """The problem on screen in this session: the latest problem with no attempt of the
-        session's prep, since a reopened room shows an open problem of an earlier session
+        """The problem on screen in this session: the latest problem of the session's prep that
+        has not ended, since a reopened room shows an open problem of an earlier session
         (AC-8 · self-review PR #131)."""
         ...
 
@@ -92,6 +94,23 @@ class ProblemRepository(Protocol):
     def add_problem(self, **fields: Any) -> ProblemRecord:
         """Insert a `problems` row from its columns; the saved row."""
         ...
+
+    # What an answer writes (room-answers-db.md §2.2 items 2-5, §2.3).
+
+    def add_attempt(self, **fields: Any) -> None:
+        """Insert an `attempts` row from its columns."""
+        ...
+
+    def count_wrong_attempts(self, problem_id: UUID) -> int:
+        """`attempts` rows of the problem with `verdict = incorrect` (the hint ladder)."""
+        ...
+
+    def end_problem(self, problem_id: UUID) -> None:
+        """Set `ended_at` to now, once; a problem that has ended keeps its first time."""
+        ...
+
+    def working_steps(self, problem_id: UUID) -> int: ...
+    def add_working_steps(self, problem_id: UUID, steps: int) -> None: ...
 
 
 def _uuid(value: Any) -> UUID | None:
@@ -238,24 +257,6 @@ class SupabaseProblemRepository:
 
         return self._run("source chunks", query)
 
-    def _without_attempts(self, rows: list[dict[str, Any]]) -> ProblemRecord | None:
-        if not rows:
-            return None
-        ids = [r["id"] for r in rows]
-        answered = {
-            a["problem_id"]
-            for a in self._db()
-            .table("attempts")
-            .select("problem_id")
-            .in_("problem_id", ids)
-            .execute()
-            .data
-        }
-        for row in rows:  # newest first
-            if row["id"] not in answered:
-                return _problem(row)
-        return None
-
     def open_problem(self, prep_id: UUID, topic_id: UUID) -> ProblemRecord | None:
         def query() -> ProblemRecord | None:
             rows = (
@@ -263,11 +264,13 @@ class SupabaseProblemRepository:
                 .table("problems")
                 .select("*")
                 .eq("topic_id", str(topic_id))
+                .is_("ended_at", "null")
                 .order("created_at", desc=True)
+                .limit(1)
                 .execute()
                 .data
             )
-            return self._without_attempts(rows)
+            return _problem(rows[0]) if rows else None
 
         return self._run("open problem", query)
 
@@ -296,11 +299,13 @@ class SupabaseProblemRepository:
                 .table("problems")
                 .select("*")
                 .in_("session_id", [s["id"] for s in sessions])
+                .is_("ended_at", "null")
                 .order("created_at", desc=True)
+                .limit(1)
                 .execute()
                 .data
             )
-            return self._without_attempts(rows)
+            return _problem(rows[0]) if rows else None
 
         return self._run("session problem", query)
 
@@ -331,6 +336,74 @@ class SupabaseProblemRepository:
             ),
         )
         return _problem(rows[0])
+
+    def add_attempt(self, **fields: Any) -> None:
+        self._run(
+            "insert attempt",
+            lambda: (
+                self._db()
+                .table("attempts")
+                .insert({k: _json(v) for k, v in fields.items()})
+                .execute()
+            ),
+        )
+
+    def count_wrong_attempts(self, problem_id: UUID) -> int:
+        rows = self._run(
+            "wrong attempts",
+            lambda: (
+                self._db()
+                .table("attempts")
+                .select("id")
+                .eq("problem_id", str(problem_id))
+                .eq("verdict", "incorrect")
+                .execute()
+                .data
+            ),
+        )
+        return len(rows)
+
+    def end_problem(self, problem_id: UUID) -> None:
+        self._run(
+            "end problem",
+            lambda: (
+                self._db()
+                .table("problems")
+                .update({"ended_at": datetime.now(UTC).isoformat()})
+                .eq("id", str(problem_id))
+                .is_("ended_at", "null")
+                .execute()
+            ),
+        )
+
+    def working_steps(self, problem_id: UUID) -> int:
+        rows = self._run(
+            "working steps",
+            lambda: (
+                self._db()
+                .table("problems")
+                .select("working_steps")
+                .eq("id", str(problem_id))
+                .execute()
+                .data
+            ),
+        )
+        return int(rows[0]["working_steps"]) if rows else 0
+
+    def add_working_steps(self, problem_id: UUID, steps: int) -> None:
+        # Read then write: one student answers one problem at a time, so two requests that add
+        # steps to the same problem at once are not a case of the demo (spec §2.2 item 3).
+        total = self.working_steps(problem_id) + steps
+        self._run(
+            "add working steps",
+            lambda: (
+                self._db()
+                .table("problems")
+                .update({"working_steps": total})
+                .eq("id", str(problem_id))
+                .execute()
+            ),
+        )
 
 
 def get_problem_repository(
