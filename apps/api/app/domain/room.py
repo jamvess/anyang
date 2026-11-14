@@ -194,3 +194,17 @@ def poses_a_problem(expression: str, reference_answer: str) -> bool:
     if all(_SOLVED.match(part) for part in expression.split(",")):
         return False  # `x=3, x=2`: solutions, not an equation to solve
     return bool(_LETTER.search(_LATEX_COMMAND.sub("", expression)))
+
+
+def _math_of(text: str) -> str:
+    return "".join(_SPACE.sub("", m.group(1) or m.group(2)) for m in _MATH.finditer(text))
+
+
+def same_problem(text: str, other: str) -> bool:
+    """§2.3 item 4 (v2 · PR #133): two problem texts ask the same thing when, with every space
+    taken out, all their `$…$` math is the same (other words around it do not make a new
+    problem) or, when neither has math, their whole text is the same."""
+    math, other_math = _math_of(text), _math_of(other)
+    if math or other_math:
+        return math == other_math
+    return _SPACE.sub("", text) == _SPACE.sub("", other)

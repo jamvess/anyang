@@ -92,6 +92,11 @@ class ProblemRepository(Protocol):
         ...
 
     def topic_has_problems(self, prep_id: UUID, topic_id: UUID) -> bool: ...
+    def recent_problems(self, prep_id: UUID, topic_id: UUID, limit: int) -> list[ProblemRecord]:
+        """Up to ``limit`` problems of the topic in this prep, newest first, ended or not
+        (§2.3 item 2 · v2)."""
+        ...
+
     def add_problem(self, **fields: Any) -> ProblemRecord:
         """Insert a `problems` row from its columns; the saved row."""
         ...
@@ -324,6 +329,24 @@ class SupabaseProblemRepository:
             ),
         )
         return bool(rows)
+
+    def recent_problems(self, prep_id: UUID, topic_id: UUID, limit: int) -> list[ProblemRecord]:
+        if limit <= 0:
+            return []
+        rows = self._run(
+            "recent problems",
+            lambda: (
+                self._db()
+                .table("problems")
+                .select("*")
+                .eq("topic_id", str(topic_id))  # a topic belongs to one prep
+                .order("created_at", desc=True)
+                .limit(limit)
+                .execute()
+                .data
+            ),
+        )
+        return [_problem(row) for row in rows]
 
     def add_problem(self, **fields: Any) -> ProblemRecord:
         rows = self._run(

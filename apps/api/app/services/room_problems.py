@@ -33,6 +33,7 @@ from app.domain.room import (
     choose_topic,
     focus_text,
     poses_a_problem,
+    same_problem,
     text_latex_of,
 )
 from app.math.sympy_service import check_lines
@@ -193,6 +194,8 @@ async def _problem_for(
         limit = get_settings().learning.session.grounding_chunks
         chunks = await run_in_threadpool(problems.source_chunks, topic.id, limit)
         practised = await run_in_threadpool(problems.topic_has_problems, prep_id, topic.id)
+        avoid = get_settings().learning.session.avoid_recent_problems
+        previous = await run_in_threadpool(problems.recent_problems, prep_id, topic.id, avoid)
     except DbUnavailableError:
         return None
 
@@ -208,6 +211,8 @@ async def _problem_for(
         "source_text": "\n\n".join(chunks) or NONE,
         "difficulty": str(difficulty),
         "answer_formats": ANSWER_FORMATS,
+        # v2: the latest problems of the topic, so the next one differs (§2.3 item 2).
+        "previous_problems": "\n".join(f"- {p.text}" for p in previous) or NONE,
     }
     for attempt in range(1 + cfg.checker.max_generate_retries):
         try:
@@ -215,6 +220,9 @@ async def _problem_for(
                 result = await gateway.call("generate_problem", values, GenerateProblemResult)
         except Exception as error:  # the model or the schema: counts as a try (spec AC-6)
             log.warning("generate_problem try %d failed: %s", attempt + 1, error)
+            continue
+        if any(same_problem(result.text, p.text) for p in previous):
+            log.warning("generate_problem try %d: the same as a problem before", attempt + 1)
             continue
         if not await verified(result):
             log.warning(

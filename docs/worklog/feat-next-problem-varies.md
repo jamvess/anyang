@@ -13,7 +13,7 @@
 
 - [x] 1. 🤖 (14 พ.ย. · Jam ok) `/spec-feature` → แก้ `specs/features/tutor/room-problems-db.md` §2.3 + AC ใหม่: input `previous_problems` (ข้อความของโจทย์ล่าสุดของหัวข้อใน prep นี้ ไม่เกิน N ข้อ · N ใน `config/learning.yaml` ไฟล์กลาง) · code ตัดโจทย์ที่ `text` หรือ `expression` (ตัดช่องว่างแล้ว) ซ้ำกับข้อเหล่านั้น → นับเป็นรอบที่ไม่ผ่าน · repository เพิ่ม `recent_problems(prep_id, topic_id, limit)` · 🙋 Jam review spec
 - [x] 2. 🤖 (14 พ.ย. · Jam ok) `/spec-to-tests` (fake provider + fake repository + SymPy จริง) · 🙋 Jam review test
-- [ ] 3. 🤖 prompt `generate_problem/v2` (ไม่ทับ v1) + `config/ai.yaml` `prompt: v2` + `config/learning.yaml` ค่า N (ไฟล์กลาง · ถาม Jam ก่อน) + `test_prompt_data_blocks.py` · implement จน green
+- [x] 3. 🤖 (14 พ.ย. · green 1686 · Jam ok) prompt `generate_problem/v2` (ไม่ทับ v1) + `config/ai.yaml` `prompt: v2` + `config/learning.yaml` ค่า N (ไฟล์กลาง · ถาม Jam ก่อน) + `test_prompt_data_blocks.py` · implement จน green
 - [ ] 4. 🤖 วัดใหม่บน Vertex: หัวข้อหลักของ demo (MTH10101) สร้างโจทย์ต่อกัน 3 ข้อต่อหัวข้อ · นับ % ที่ SymPy ยืนยันภายใน 3 รอบ (v1 = 71%) และจำนวนโจทย์ซ้ำ (v1 ซ้ำแทบทุกครั้ง) · 🙋 Jam รับผล
 - [ ] 5. 🤖 อัปเดต docs + checklist แล้ว `/work-done`
 
@@ -27,10 +27,12 @@
 ## Decisions
 
 - 2026-11-14 · prompt v2 + ตัดซ้ำใน code (Jam เลือกทาง 2a ใน PR #132)
+- 2026-11-14 · ไม่เทียบ `expression` (ไม่มีคอลัมน์) · ซ้ำ = คณิตใน `$…$` ตรงกันหลังตัดช่องว่าง · N = 5 [C] (Jam ok spec)
+- 2026-11-14 · เพิ่ม `recent_problems` ให้ fake `FakeProblemRepo` ของ test #131 (ไม่แตะ assert · Jam ok)
 
 ## Next step
 
-ขั้น 3: implement (Jam ok ไฟล์กลาง learning.yaml + ai.yaml)
+ขั้น 4: วัด v2 บน Vertex (หัวข้อหลักของ demo · 3 ข้อต่อกันต่อหัวข้อ)
 
 ## Waiting on
 

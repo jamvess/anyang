@@ -221,6 +221,7 @@ ratio     = need ÷ available
 | idle_minutes_to_end | 15 | [C] | หลัง Alpha: ดูการกระจายของช่วงเว้นระหว่างข้อความของผู้ใช้ใน session แล้วใช้ค่า p95 |
 | TTFT p95 | < 2 วินาที | [A]+[B] | Nielsen: ภายใน 1 วินาทีความคิดไม่ขาดตอน · LLM มี latency พื้นฐาน จึงใช้ 2 วินาทีกับ streaming |
 | context_recent_turns, grounding_chunks | 8, 4 | [C] | Liu et al. (2023): LLM ใช้ข้อมูลกลาง context ยาวได้แย่ลง จึงส่งเฉพาะที่เกี่ยวข้อง · **P3b:** `gemini-embedding-2` @768 หาหน้าคำตอบเจอใน 4 อันดับแรก 19/20 (อันดับ 1: 15/20) จึงคง 4 |
+| avoid_recent_problems | 5 | [C] | โจทย์ล่าสุดของหัวข้อที่ส่งให้ `generate_problem/v2` และที่ code ไม่รับให้ซ้ำ (`room-problems-db.md` §2.3 · PR #133) · รันจริงของ #132 ได้ข้อต่อไปซ้ำกับข้อที่เพิ่งจบทุกรอบ · ห้องหนึ่งให้โจทย์หัวข้อเดียวกันราว 3–5 ข้อ · calibrate ใน Alpha: จำนวนโจทย์ซ้ำที่ผู้ใช้เห็น และ % ที่ SymPy ยืนยัน |
 | token_budget | 6,000 | [calc] | ~2 เท่าของ prompt ~3,200 tokens (ai-orchestration 2.2.3) |
 | Circuit breaker | 50%, 10 calls, 60 วินาที | [B] | ค่า default ของ Resilience4j |
 | Buddy quota, ระยะห่าง, encourage | 1/2/3, 4 turns, 2 | [C] | Alpha: อัตรา mute buddy + survey "ช่วยไหม / กวนไหม" |
