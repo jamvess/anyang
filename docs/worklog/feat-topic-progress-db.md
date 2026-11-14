@@ -11,7 +11,7 @@
 
 งานนี้ทำเฉพาะขั้น 8 (ขั้น 9 สรุป session แยกงาน) · `attempts` บันทึกแล้วตั้งแต่ #132 และการ์ดตอนเปิดห้องอ่าน `topic_progress` อยู่แล้ว (#131) · ที่ขาดคือ **ไม่มีใครเขียน `topic_progress`** · `DbRoomState.record_check` (จุดที่ code ตัดสินว่าโจทย์จบ) ยังไม่ทำ BKT · เดโม่ในเครื่องทำ BKT ใน memory ได้แล้ว (`demo-room.md` §2 D · `domain/bkt.py`) · แผนคือย้าย BKT เดียวกันลง DB
 
-- [ ] 1. 🤖 `/spec-feature` → `specs/features/planner/topic-progress-db.md`: โจทย์จบ (ถูก, เฉลย, ยอมแพ้) → `record_attempt` ของ `domain/bkt.py` กับแถว `topic_progress` ของผู้ใช้ (ไม่มีแถว = `bkt.p_init`) → upsert `mastery`, `attempts_n`, `correct_n`, `d_max`, `level`, `last_seen_at` · `count_only_independent` ตามเดิม · migration `0007`: `topic_progress.d_max` (room-problems-db §10 ข้อ 2) · เปิดห้องใหม่ → การ์ดเห็นระดับและความพร้อมเปลี่ยน (PM-02, PM-03, PM-06) · 🙋 Jam review spec
+- [x] 1. 🤖 (14 พ.ย. · Jam ok) `/spec-feature` → `specs/features/planner/topic-progress-db.md`: โจทย์จบ (ถูก, เฉลย, ยอมแพ้) → `record_attempt` ของ `domain/bkt.py` กับแถว `topic_progress` ของผู้ใช้ (ไม่มีแถว = `bkt.p_init`) → upsert `mastery`, `attempts_n`, `correct_n`, `d_max`, `level`, `last_seen_at` · `count_only_independent` ตามเดิม · migration `0007`: `topic_progress.d_max` (room-problems-db §10 ข้อ 2) · เปิดห้องใหม่ → การ์ดเห็นระดับและความพร้อมเปลี่ยน (PM-02, PM-03, PM-06) · 🙋 Jam review spec
 - [ ] 2. 🤖 `/spec-to-tests` (fake repository + fake provider + SymPy จริง · integration บน Supabase: RLS ของ `topic_progress`) · 🙋 Jam review test
 - [ ] 3. 🤖 `/implement-feature` จน green · migration `0007` + `data-model.md`
 - [ ] 4. 🤖 รันจริงบน Vertex: เปิดห้อง → ตอบถูก 2 ข้อ → เปิดห้องใหม่ → การ์ด mastery/ระดับ/ความพร้อมขยับ · 🙋 Jam ดูผล
@@ -29,7 +29,7 @@
 
 ## Next step
 
-ขั้น 1: เขียน spec
+ขั้น 2: เขียน test (red) จาก AC-1 ถึง AC-8 + AC-tenant
 
 ## Waiting on
 
