@@ -5,7 +5,7 @@
 | Owner | Junior |
 | Branch | `docs/demo-d1-d2` |
 | Checklist item | ⭐ demo D1 + D2: ตัดสิน login ใน demo และ Supabase ในเครื่อง (ภายใน จ. 16 พ.ย.) · และ ⭐ demo ขั้น 1: env ของ API ชี้ `anyang-dev` (cloud · ไม่ต้องลง Docker · hook เปิดใน Dashboard แล้ว) · ยืนยัน `tenant_id` ใน token · `AUTH_REQUIRED=true` วนได้กับหน้า login ของ May (UM-01) |
-| Status | in progress · 2026-11-15 |
+| Status | paused · 2026-11-15 |
 
 ## Plan
 
@@ -34,17 +34,25 @@
 - 2026-11-14 · "demo วันจันทร์" = advisor update จ. 16 พ.ย. (โชว์ journey) · วิดีโอ 23 พ.ย. เป็น deadline แยก
 - 2026-11-14 · `db push`: Junior `link` เอง · Claude รัน dry-run / push / unlink หลัง Junior ok
 
+## Done today (2026-11-15)
+
+- ข้อ 6: check ขั้น 1 ผ่าน (`check_login.py` · บัญชี demo ยกเว้นกติกา ก) · token ของ `anyang-dev` มี `tenant_id` · API ในเครื่อง `AUTH_REQUIRED=true`: ไม่มี token → 401 `missing_token` · มี token → `GET /exam-preps` 200 จาก DB จริง (ไม่มี `X-Stub` · บัญชี demo ยังไม่มี exam prep จึงได้ `[]`)
+- ข้อ 7: `db push` `0007` ขึ้น `anyang-dev` (Junior review แล้ว) · remote ครบ `0001`–`0007` · unlink แล้ว
+- ข้อ 8: เพิ่มข้อ "reset database password ของ anyang-dev" ใน S4 ของ Junior · โน้ตใต้ขั้น 8 ว่า `0007` ขึ้น dev แล้ว
+
 ## Next step
 
-ข้อ 6: Junior แก้ `.env` ที่ root ตาม `setup.md` "env สำหรับ demo" แล้วรัน API (`cd apps/api && uv run fastapi dev app/main.py`) · Claude เขียน script ใน scratchpad: login `anyang-dev` (Junior พิมพ์อีเมล/รหัสเอง) → decode JWT ดู `tenant_id` → เรียก `GET /exam-preps` ไม่มี token ต้องได้ 401 `missing_token` · มี token ต้องได้ 200 · script: `check_login.py` ใน scratchpad (รันจาก `apps/api` ด้วย `uv run python`) · ใช้บัญชี demo (ยกเว้นกติกา ก)
+ทุกข้อใน Plan เสร็จแล้ว → `/work-done` ของ branch นี้ (PR #134 ยังเป็น draft) · ใน checklist ติ๊ก ⭐ D1 + D2 · ⭐ ขั้น 1: ฝั่ง API เสร็จ แต่ "วนได้กับหน้า login ของ May" ยังรอ May → ถาม Junior ตอน `/work-done` ว่าจะติ๊กหรือเขียนเป็นโน้ต "ฝั่ง API เสร็จ 15 พ.ย. · รอหน้า login ของ May" · **ถาม Junior ก่อน merge** · แล้วเริ่ม branch ใหม่ `feat/materials-storage` ⭐ demo ขั้น 3 (migration `0008`: bucket + storage policy + isolation test · endpoint 4 ตัวใน `apps/api/app/routers/exam_prep.py` ตอนนี้เป็น stub) ด้วย `/spec-feature`
 
 ## Waiting on
 
-- May: หน้า login ที่ส่ง `Authorization` (ขั้น 1 ฝั่งเว็บ)
+- May: หน้า login ที่ส่ง `Authorization` (ขั้น 1 ฝั่งเว็บ · ทำให้ "วนได้กับหน้า login" ครบ)
 
 ## Notes for next time
 
 - `db push` / `migration list` ใส่ `--remote` ทุกคำสั่ง · ไม่ใส่ CLI 3.x ชี้ local stack (เจอตอน `0003`) · push จริงใส่ `--yes`
 - `anyang-dev` ref = `mnwwhkbizjioibjvpnxl` (ไม่ใช่ secret)
-
-- งานต่อไป: ⭐ demo ขั้น 3 (materials + Storage · migration `0008`) branch ใหม่
+- `get_settings()` คืน `Settings` · ค่า env อยู่ใต้ `.env` (`get_settings().env.supabase_url`) ไม่ใช่ `get_settings().supabase_url` (script รอบแรกพังเพราะข้อนี้)
+- script check login: login ด้วย `POST {SUPABASE_URL}/auth/v1/token?grant_type=password` + header `apikey` = anon key · decode payload ของ JWT · อยู่ใน scratchpad ซึ่งอาจถูกลบ ถ้าต้องใช้อีกให้เขียนใหม่ตามนี้
+- secret key ของ `anyang-dev` rotate แล้ว 15 พ.ย. · DB password ยังเดิม (ข้อ reset ใน S4)
+- `.vscode/` เป็น untracked ในเครื่อง Junior · ไม่ได้ commit
