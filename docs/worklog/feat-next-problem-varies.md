@@ -11,7 +11,7 @@
 
 รันจริงของ #132 ได้ข้อต่อไปที่ข้อความเหมือนข้อที่เพิ่งจบทุกครั้ง เพราะ `generate_problem/v1` ไม่รู้ว่าเคยให้โจทย์อะไรไปแล้ว (หัวข้อ, ระดับยาก, เนื้อหาเหมือนเดิม → model ตอบแบบเดิม) · แก้ 2 ชั้น: บอก model ว่าเคยให้อะไรไปแล้ว และ code ไม่รับโจทย์ที่ซ้ำ
 
-- [ ] 1. 🤖 `/spec-feature` → แก้ `specs/features/tutor/room-problems-db.md` §2.3 + AC ใหม่: input `previous_problems` (ข้อความของโจทย์ล่าสุดของหัวข้อใน prep นี้ ไม่เกิน N ข้อ · N ใน `config/learning.yaml` ไฟล์กลาง) · code ตัดโจทย์ที่ `text` หรือ `expression` (ตัดช่องว่างแล้ว) ซ้ำกับข้อเหล่านั้น → นับเป็นรอบที่ไม่ผ่าน · repository เพิ่ม `recent_problems(prep_id, topic_id, limit)` · 🙋 Jam review spec
+- [ ] 1. 🤖 (14 พ.ย. · Jam ok) `/spec-feature` → แก้ `specs/features/tutor/room-problems-db.md` §2.3 + AC ใหม่: input `previous_problems` (ข้อความของโจทย์ล่าสุดของหัวข้อใน prep นี้ ไม่เกิน N ข้อ · N ใน `config/learning.yaml` ไฟล์กลาง) · code ตัดโจทย์ที่ `text` หรือ `expression` (ตัดช่องว่างแล้ว) ซ้ำกับข้อเหล่านั้น → นับเป็นรอบที่ไม่ผ่าน · repository เพิ่ม `recent_problems(prep_id, topic_id, limit)` · 🙋 Jam review spec
 - [ ] 2. 🤖 `/spec-to-tests` (fake provider + fake repository + SymPy จริง) · 🙋 Jam review test
 - [ ] 3. 🤖 prompt `generate_problem/v2` (ไม่ทับ v1) + `config/ai.yaml` `prompt: v2` + `config/learning.yaml` ค่า N (ไฟล์กลาง · ถาม Jam ก่อน) + `test_prompt_data_blocks.py` · implement จน green
 - [ ] 4. 🤖 วัดใหม่บน Vertex: หัวข้อหลักของ demo (MTH10101) สร้างโจทย์ต่อกัน 3 ข้อต่อหัวข้อ · นับ % ที่ SymPy ยืนยันภายใน 3 รอบ (v1 = 71%) และจำนวนโจทย์ซ้ำ (v1 ซ้ำแทบทุกครั้ง) · 🙋 Jam รับผล
@@ -30,7 +30,7 @@
 
 ## Next step
 
-ขั้น 1: เขียน spec
+ขั้น 2: เขียน test (red) จาก AC-15 ถึง AC-18
 
 ## Waiting on
 

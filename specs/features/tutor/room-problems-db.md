@@ -6,7 +6,7 @@
 | Requirements | TM-01 (กฎง่าย), TM-02, TM-03 (โจทย์แรกของหัวข้อเป็น probe), TM-15, AM-11, AM-13, TM-10, SA-06 |
 | Owner | Jam |
 | Reviewer | Jam · Junior ดูย้อนหลัง (repository ใน `app/db/room.py`) · May ดู §10 ข้อ 3 (การ์ดโจทย์ในประวัติ) |
-| Status | draft 2026-11-13 (PR #131) |
+| Status | implemented 2026-11-13 (PR #131) · §2.3 v2 draft 2026-11-14 (PR #133 · โจทย์ไม่ซ้ำ) |
 | Related system spec | `room-sessions-db.md` (#123 · ห้องบน DB) · `demo-room.md` §2 C, F (ทักก่อน, tutor รู้โจทย์) · `ingestion.md` (หัวข้อมาจากไหน) · ai-orchestration §2.2.2–2.2.4, §2.4.6 · learning-model §4 (ระดับยากเป้า) · api.md v1.16 · `docs/team/sprint-checklists.md` ⭐ demo ขั้น 6 |
 
 ## 1. Context
@@ -38,13 +38,14 @@ demo end to end (23 พ.ย.) เข้าห้องติวหลัง logi
 ### 2.3 สร้างโจทย์และยืนยันเฉลย (AM-11 · ai-orchestration §2.4.6)
 
 1. **ใช้โจทย์ค้างก่อน:** มีแถว `problems` ของ prep นี้ (session ไหนก็ได้ของ prep) ที่ยังไม่จบ (`ended_at` ว่าง · เดิม "ยังไม่มี `attempts`" · เปลี่ยนใน `room-answers-db.md` §2.2 ข้อ 1 เพราะคำตอบผิดที่ได้ใบ้มี attempt แต่โจทย์ยังไม่จบ) และ `topic_id` เป็นหัวข้อที่เลือก → ใช้แถวล่าสุดนั้น ไม่สร้างใหม่ (เปิดห้องใหม่แล้วโจทย์เดิมยังรออยู่ · TM-13) · `problem_id` เดิม
-2. **input ของ `generate_problem/v1`** (ทุกค่าเป็น string ใน data block):
+2. **input ของ `generate_problem/v2`** (ทุกค่าเป็น string ใน data block · v2 = v1 + `previous_problems` · PR #133):
    - `topic` = ชื่อหัวข้อ · `skills` = บรรทัดละ `s{n}: {ชื่อ skill}` ตามลำดับของ `topic_skills` ที่ไม่ `excluded`
    - `source_text` = ข้อความของ `chunks` ที่ช่วงหน้าทับกับ `topic_sources` ของหัวข้อ เรียงตามไฟล์และหน้า เอา `session.grounding_chunks` ก้อนแรก (learning.yaml · ไม่มี chunk → `none`) · โจทย์ต้องใช้วิธีและสัญลักษณ์ตามชีท (SM-11 · ai-orchestration §1.4)
    - `difficulty` = `target_difficulty(ดาว, "normal")` (learning-model §4 · ★★★ / ★★ = 3, ★ = 2) · `None` (หัวข้อถูกข้าม) ไม่เกิดเพราะ `importance ≥ 1`
    - `answer_formats` = `expression`, `factored`, `equation` (ที่ checker ตรวจได้ · `domain/checker.py`)
+   - **`previous_problems` (v2 · เพิ่ม 14 พ.ย.)** = `text` ของโจทย์ล่าสุดของหัวข้อนี้ใน prep (ทุก session · ทั้งที่จบแล้วและยังไม่จบ · ใหม่ก่อน) ไม่เกิน `session.avoid_recent_problems` ข้อ (learning.yaml) · บรรทัดละข้อ `- {text}` · ไม่มี → `none` · prompt สั่งให้โจทย์ใหม่ต่างจากทุกข้อ: เปลี่ยนตัวเลขหรือรูปแบบของนิพจน์ ไม่ใช่แค่เปลี่ยนคำ · เหตุผล: รันจริงของ #132 ได้ข้อต่อไปที่ข้อความเหมือนข้อที่เพิ่งจบทั้ง 2 รอบ (`room-answers-db.md` §8) เพราะ input เหมือนเดิมทุกครั้ง
 3. **output `GenerateProblemResult`:** `text` (โจทย์ภาษาไทยพร้อมสมการใน `$…$`) · `text_latex` (บรรทัดเดียวสำหรับการ์ด · ภาษาไทยอยู่ใน `\text{}`) · `expression` (นิพจน์ที่ SymPy คำนวณได้ของสิ่งที่โจทย์ถาม เช่น `\frac{d}{dx}(x^{2}\sin(x))`, `\lim_{x \to 2}\frac{x^2-4}{x-2}`, `x^{3}-x`, `x^{2}-5x+6=0`) · `answer_format` · `reference_answer` (LaTeX) · `solution_steps` (LaTeX ทีละขั้น · อย่างน้อย 1) · `skill` (`s{n}` หรือ null)
-4. **ยืนยันด้วย SymPy (code):** ก่อนอื่น `expression` ต้องเป็นตัวโจทย์ ไม่ใช่คำตอบที่ model คิดมาแล้ว (`poses_a_problem` ใน `app/domain/room.py`): ตัดคำสั่ง LaTeX ออกแล้วต้องยังมีตัวแปร และต้องไม่ใช่ข้อความเดียวกับเฉลย · ไม่งั้น SymPy เช็คได้แค่เลขคณิต (เพิ่ม 13 พ.ย. จากรันจริง: `5 + 1` = `6`, `2(2)^{3}-…` = `-15`) · แล้ว `evaluate_lines(answer_format, reference_answer, [expression])` ของ SymPy service ต้อง `parsed`, ไม่ `timed_out` และ `final_equal = true` · `factored` ต้อง `final_in_form` ของเฉลยเป็น true ด้วย (`evaluate_lines("factored", reference, [reference])`) · ไม่ผ่าน (รวม parse ไม่ได้, AI ล้ม, schema ผิดหลัง retry ของ gateway) → สร้างใหม่ · รวมไม่เกิน `1 + checker.max_generate_retries` ครั้ง (learning.yaml)
+4. **ยืนยันด้วย SymPy (code):** ก่อนอื่น `expression` ต้องเป็นตัวโจทย์ ไม่ใช่คำตอบที่ model คิดมาแล้ว (`poses_a_problem` ใน `app/domain/room.py`): ตัดคำสั่ง LaTeX ออกแล้วต้องยังมีตัวแปร และต้องไม่ใช่ข้อความเดียวกับเฉลย · ไม่งั้น SymPy เช็คได้แค่เลขคณิต (เพิ่ม 13 พ.ย. จากรันจริง: `5 + 1` = `6`, `2(2)^{3}-…` = `-15`) · แล้ว `evaluate_lines(answer_format, reference_answer, [expression])` ของ SymPy service ต้อง `parsed`, ไม่ `timed_out` และ `final_equal = true` · `factored` ต้อง `final_in_form` ของเฉลยเป็น true ด้วย (`evaluate_lines("factored", reference, [reference])`) · **ไม่ซ้ำ (code · v2):** `same_problem(text, previous)` ของ `app/domain/room.py` เป็นจริงกับข้อใดใน `previous_problems` → ไม่ผ่าน · ซ้ำ = ตัดช่องว่างทั้งหมดแล้ว: คณิตใน `$…$` ทั้งหมดของโจทย์ตรงกัน (เปลี่ยนแค่คำก็ยังซ้ำ) หรือ ถ้าโจทย์ไม่มี `$…$` ข้อความทั้งหมดตรงกัน · ไม่เทียบ `expression` เพราะ `problems` ไม่มีคอลัมน์นี้ · ไม่ผ่าน (รวม parse ไม่ได้, ซ้ำ, AI ล้ม, schema ผิดหลัง retry ของ gateway) → สร้างใหม่ · รวมไม่เกิน `1 + checker.max_generate_retries` ครั้ง (learning.yaml)
 5. ผ่าน → insert `problems` ด้วย JWT ของผู้ใช้ (RLS): `session_id` (session ใหม่), `topic_id`, `skill_id` (`s{n}` → id · ไม่รู้จัก → null), `source = 'generated'`, `text`, `reference_answer`, `solution_steps` (jsonb list), `answer_format`, `verified = true`, `difficulty` (ที่ขอ), `purpose` = `probe` ถ้าหัวข้อนี้ยังไม่มีแถว `problems` ใน prep เลย (TM-03: โจทย์แรกของหัวข้อวัดความรู้เดิม) ไม่งั้น `practice` · `problems` ไม่มีคอลัมน์ `text_latex` · โจทย์ใหม่ใช้ `text_latex` ของ model ใน event · โจทย์ที่ใช้ซ้ำ (ข้อ 1) แปลงจาก `text` ด้วย code (§10 ข้อ 4)
 6. event `problem` = `{problem_id, text_latex, difficulty, purpose}` · ไม่มีเฉลย (api.md · AM-13)
 7. **ไม่ได้โจทย์** (ครบรอบแล้วยังไม่ผ่าน หรือ insert ไม่ได้) → ไม่ส่ง `problem` · `open_session` ได้ `problem: none` · หลังคำทักส่ง `token` ข้อความ `config/messages.yaml` → `room.no_problem` (ไฟล์กลาง · เช่น "ตอนนี้เตรียมโจทย์ไม่ทัน ลองเปิดห้องใหม่อีกครั้งนะ") · log ทุกรอบที่ไม่ผ่านพร้อมเหตุผล (ไว้ calibrate `max_generate_retries` · learning.yaml บอกให้วัดตอนมี feature) · ทางสำรองแบบคลังโจทย์ (D3) อยู่ใน §10 ข้อ 5
@@ -80,6 +81,10 @@ fake provider · repository ปลอม (แถวที่ JWT ของผู
 - **AC-boundary (AM-11)** ไม่ผ่านทุกรอบ → เรียก `1 + max_generate_retries` ครั้งพอดี (config ทดสอบ: ค่า 0 → 1 ครั้ง · ค่า 2 → 3 ครั้ง) · ไม่มี `problem` · มี token `room.no_problem` หลังคำทัก · ไม่มีแถว `problems` · `open_session` ได้ `problem: none`
 - **AC-6 (AM-11)** `factored` ที่เฉลยยังแยกไม่สุด (`x(x^{2}-1)`) → ไม่ผ่าน · `expression` parse ไม่ได้ → ไม่ผ่าน · AI ล้ม → ไม่ผ่าน (นับรอบ)
 - **AC-14 (AM-11 · เพิ่ม 13 พ.ย.)** `expression` ที่เป็นคำตอบคิดมาแล้ว (`5 + 1` = `6`, ตัวเลขล้วน, เท่ากับเฉลย, มีแค่คำสั่ง LaTeX ไม่มีตัวแปร) → ไม่ผ่าน นับเป็น 1 รอบ · `\lim_{x…}`, `\frac{d}{dx}(…)`, `x^{3}-x` → ผ่านกฎนี้
+- **AC-15 (AM-11 · v2)** หัวข้อมีโจทย์แล้ว 3 ข้อใน prep (2 session · ข้อหนึ่งจบแล้ว) และหัวข้ออื่น 1 ข้อ · `session.avoid_recent_problems` = 2 → input `previous_problems` = 2 ข้อล่าสุดของหัวข้อนี้ ใหม่ก่อน บรรทัดละ `- {text}` · หัวข้อที่ยังไม่มีโจทย์ → `none`
+- **AC-16 (AM-11 · v2)** รอบแรกได้โจทย์ที่ซ้ำกับข้อใน `previous_problems` (ต่างแค่ช่องว่าง) → ไม่บันทึก นับเป็นรอบ · รอบสองไม่ซ้ำ → บันทึก · `generate_problem` ถูกเรียก 2 ครั้ง
+- **AC-17 (AM-11 · v2)** `same_problem` (table-driven): ต่างแค่ช่องว่าง → ซ้ำ · คณิตเหมือนกันแต่คำต่าง (`หาค่า` / `จงหาค่าของ`) → ซ้ำ · ตัวเลขต่าง (`x \to 1` / `x \to 2`) → ไม่ซ้ำ · ไม่มี `$…$` ข้อความเหมือนกัน → ซ้ำ · ไม่มี `$…$` ข้อความต่าง → ไม่ซ้ำ
+- **AC-18 (AM-11 · v2)** ซ้ำทุกรอบ → ไม่ได้โจทย์ (เหมือน AC-boundary · `room.no_problem` ตอนเปิดห้อง · ไม่มี `ข้อต่อไปนะ` หลังตอบ)
 - **AC-7** `skill` = `s9` (ไม่มี) หรือ null → `skill_id` null · ยังใช้โจทย์ได้
 - **AC-8 (TM-13)** prep มีโจทย์ค้าง (`ended_at` ว่าง) ของหัวข้อที่เลือกจาก session ก่อน → ไม่เรียก `generate_problem` · `problem.problem_id` = แถวเดิม · ไม่มีแถวใหม่
 - **AC-9 (TM-03)** หัวข้อที่เคยมีโจทย์ใน prep แล้ว (มี attempt) → โจทย์ใหม่ `purpose = practice`
@@ -110,7 +115,7 @@ fake provider · repository ปลอม (แถวที่ JWT ของผู
 
 | Purpose | Tier | Output schema | Prompt file |
 |---|---|---|---|
-| `generate_problem` (**prompt ใหม่**) | mid | `GenerateProblemResult` | `prompts/generate_problem/v1.md` (input `topic`, `skills`, `source_text`, `difficulty`, `answer_formats`) · `config/ai.yaml` มีแถวแล้ว (`max_tokens: 800`, ไม่ตั้ง `thinking`) · เสนอ `max_tokens` 2000 + `thinking: low` (§11) |
+| `generate_problem` (**prompt ใหม่**) | mid | `GenerateProblemResult` | `prompts/generate_problem/v2.md` (v1 + `previous_problems` · PR #133) · v1 (input `topic`, `skills`, `source_text`, `difficulty`, `answer_formats`) · `config/ai.yaml` มีแถวแล้ว (`max_tokens: 800`, ไม่ตั้ง `thinking`) · เสนอ `max_tokens` 2000 + `thinking: low` (§11) |
 | `open_session` | main | free text | `prompts/open_session/v2.md` (v1 + `focus` · `defaults: {focus: none}`) |
 | `tutor_reply` | main | free text | v2 เดิม · ได้ `problem` จาก DB |
 
@@ -119,11 +124,14 @@ fake provider · repository ปลอม (แถวที่ JWT ของผู
 | Test | ระดับ | ครอบคลุม AC |
 |---|---|---|
 | `tests/unit/test_room_problems.py` (domain `choose_topic`, เหตุผล, การ์ด) | unit (pure) | AC-2, AC-3 (ข้อความเหตุผล) |
+| `tests/unit/test_room_problems_v2.py` (ไฟล์ใหม่ · fake ของ #131 + `recent_problems` · `same_problem` table-driven) | unit | AC-15 ถึง AC-18 |
 | `tests/unit/test_room_problems_api.py` (FakeRoomRepo แบบ #123 + fake provider + SymPy จริง) | unit | AC-1, AC-3–AC-13 |
 | `tests/integration/test_room_problems_db.py` (Supabase ในเครื่อง · prep + หัวข้อ seed ด้วย service role) | integration | AC-tenant, AC-1 (แถวจริง) |
 | รันจริงบน Vertex: สร้างโจทย์ของหัวข้อ MTH10101 นับ % ที่ SymPy ยืนยันในรอบที่ 1, 2, 3 | eval (มือ · ขั้น 4 ของ worklog) | calibrate `max_generate_retries` |
 
 **ผลรันจริงบน Vertex (13 พ.ย. · ขั้น 4 ของ worklog · `generate_problem` กับ 34 หัวข้อของ MTH10101 จาก ingestion · ผลอยู่ใน `poc/P3/results/apps-api-ingestion/generate_problem.json`):** SymPy ยืนยันผ่านในรอบที่ 1 = 62% · ภายใน 2 รอบ = 68% · ภายใน 3 รอบ (`1 + max_generate_retries`) = 24/34 = **71%** · รอบแรกของการวัดพบ 4 หัวข้อที่ `expression` เป็นคำตอบคิดมาแล้ว (`5 + 1` = `6`) จึงเพิ่มกฎ `poses_a_problem` (§2.3 ข้อ 4 · AC-14) และแก้ prompt (ห้ามหาค่า ณ จุดแบบ `\left.…\right|`, ห้าม `y` / หลายตัวแปร / `f'(c)`) · รอบสองไม่มีหัวข้อที่ผ่านแบบนั้นแล้ว · หัวข้อหลักของ demo (ลิมิต, อนุพันธ์ทุกแบบพื้นฐาน, รูปแบบไม่กำหนด, เส้นกำกับ) ผ่านรอบแรกทุกหัวข้อ · ที่ไม่ผ่าน 10 หัวข้อ: SymPy service อ่านไม่ได้ (อนุพันธ์อันดับสูง `\frac{d^{n}}{dx^{n}}`, สมการที่มี `\frac{d^2}{dx^2}(…) = 0`, `\max`) หรือโจทย์ประยุกต์ที่ model แทนตัวเลขก่อน (อัตราสัมพัทธ์, ค่าประมาณ) · `max_generate_retries` คง 2 (รอบ 2–3 เพิ่ม 6% และ 3%) · **Jam รับผลนี้สำหรับ demo 13 พ.ย.**
+
+**วัด v2 บน Vertex (ขั้น 4 ของ worklog PR #133):** หัวข้อหลักของ demo สร้างโจทย์ต่อกัน 3 ข้อต่อหัวข้อ (ข้อก่อนหน้าเป็น `previous_problems`) · นับ % ที่ SymPy ยืนยันภายใน 3 รอบ เทียบ v1 (71%) และจำนวนข้อที่ซ้ำ
 
 ## 9. Out of scope
 
@@ -142,6 +150,8 @@ fake provider · repository ปลอม (แถวที่ JWT ของผู
 5. **(Jam · D3 · หลัง demo) คลังโจทย์สำรอง:** ผลรันจริง 71% (< 80%) · ทำสำหรับหัวข้อประยุกต์ที่ model แทนตัวเลขก่อน · ถ้าขั้น 4 พบว่า SymPy ยืนยันผ่านน้อย (เช่น < 80% ภายใน 3 รอบ) ค่อยทำคลังโจทย์ที่เขียนไว้ต่อชนิดหัวข้อ · ตอนนี้ไม่ได้โจทย์ → ข้อความ `room.no_problem`
 
 ## 11. Spec changes needed
+
+**PR #133 (v2):** `config/learning.yaml` → `session.avoid_recent_problems` (ไฟล์กลาง · [C] 5: ห้องหนึ่งให้โจทย์ของหัวข้อเดียวกันราว 3–5 ข้อ) + แถวใน `learning-model.md` · `config/ai.yaml` → `generate_problem` `prompt: v2` (ไฟล์กลาง) · repository `recent_problems(prep_id, topic_id, limit)` ใน `app/db/room_problems.py` (Junior ดูย้อนหลัง · ไม่มี migration)
 
 | ไฟล์ | แก้อะไร | ใคร |
 |---|---|---|
