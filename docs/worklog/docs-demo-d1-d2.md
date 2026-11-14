@@ -14,8 +14,8 @@
 - [x] 3. 🙋+🤖 (14 พ.ย. · `migration list --remote` ครบ `0001`–`0006` · unlink แล้ว) `db push` `0005`, `0006` ขึ้น `anyang-dev`: Junior `link` → Claude `migration list --remote` + `db push --remote --dry-run` → Junior ok → Claude `db push --remote --yes` → Claude `unlink`
 - [x] 4. 🙋 (14 พ.ย. · Confirm email ปิด · hook Enabled · บัญชี demo (ถาม Junior) มีแถวใน `profiles` พร้อม `tenant_id`) Dashboard `anyang-dev`: ปิด Confirm email · สร้างบัญชี demo · เช็คว่า Custom Access Token hook ยังเปิด
 - [x] 5. 🤖 `docs/team/setup.md` A5: แถว `AUTH_REQUIRED` + หัวข้อ "env สำหรับ demo" (`APP_ENV=local`, `AUTH_REQUIRED=true`, `AI_PROVIDER=live` ชี้ `anyang-dev`) · ไม่แก้ `.env.example`
-- [ ] 6. 🙋+🤖 ขั้น 1: Junior ตั้ง `.env` ที่ root ชี้ `anyang-dev` + `AUTH_REQUIRED=true` · Claude เขียน script เล็กใน scratchpad ที่ login ด้วย email/password (Junior พิมพ์รหัสเอง) แล้ว decode JWT ว่ามี `tenant_id` · เรียก API ไม่มี token → 401 · มี token → `GET /exam-preps` 200
-- [ ] 7. 🙋+🤖 `db push` `0007` ขึ้น `anyang-dev` (Jam ฝากไว้ · PR #135): Junior `link` → Claude `db push --remote --dry-run` → Junior ok → Claude `db push --remote --yes` → `migration list --remote` ครบ `0001`–`0007` → `unlink`
+- [ ] 6. 🙋+🤖 ขั้น 1: Junior ตั้ง `.env` ที่ root ชี้ `anyang-dev` + `AUTH_REQUIRED=true` · Claude เขียน script เล็กใน scratchpad ที่ login ด้วย email/password ของบัญชีทดสอบของ Junior (ไม่ใช่บัญชี demo · กติกา ก · Junior พิมพ์รหัสเอง) แล้ว decode JWT ว่ามี `tenant_id` · เรียก API ไม่มี token → 401 · มี token → `GET /exam-preps` 200
+- [x] 7. 🙋+🤖 (15 พ.ย. · `migration list --remote` ครบ `0001`–`0007` · unlink แล้ว · Junior review `0007` แล้ว) `db push` `0007` ขึ้น `anyang-dev` (Jam ฝากไว้ · PR #135): Junior `link` → Claude `db push --remote --dry-run` → Junior ok → Claude `db push --remote --yes` → `migration list --remote` ครบ `0001`–`0007` → `unlink`
 - [x] 8. 🤖 (15 พ.ย.) เพิ่มข้อ "reset database password ของ anyang-dev" ใน S4 ของ Junior (`sprint-checklists.md`)
 
 ## Definition of done
@@ -35,7 +35,7 @@
 
 ## Next step
 
-ข้อ 6: Junior แก้ `.env` ที่ root ตาม `setup.md` "env สำหรับ demo" แล้วรัน API (`cd apps/api && uv run fastapi dev app/main.py`) · Claude เขียน script ใน scratchpad: login `anyang-dev` (Junior พิมพ์อีเมล/รหัสเอง) → decode JWT ดู `tenant_id` → เรียก `GET /exam-preps` ไม่มี token ต้องได้ 401 `missing_token` · มี token ต้องได้ 200 · แล้วข้อ 7 (`db push` `0007`)
+ข้อ 6: Junior แก้ `.env` ที่ root ตาม `setup.md` "env สำหรับ demo" แล้วรัน API (`cd apps/api && uv run fastapi dev app/main.py`) · Claude เขียน script ใน scratchpad: login `anyang-dev` (Junior พิมพ์อีเมล/รหัสเอง) → decode JWT ดู `tenant_id` → เรียก `GET /exam-preps` ไม่มี token ต้องได้ 401 `missing_token` · มี token ต้องได้ 200 · script: `check_login.py` ใน scratchpad (รันจาก `apps/api` ด้วย `uv run python`) · ใช้บัญชีทดสอบของ Junior
 
 ## Waiting on
 

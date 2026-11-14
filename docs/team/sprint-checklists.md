@@ -167,6 +167,7 @@
   - ทำโดย Jam (14 พ.ย.) ช่วง solo
 - [x] ⭐ demo ขั้น 8: repository ของ `problems`, `attempts`, `topic_progress` (PM-01, PM-02, PM-06)
   - 13–14 พ.ย.: `problems` (PR #131), `attempts` + `ended_at` (PR #132), `topic_progress` + `d_max` (PR #135) อยู่ใน `app/db/room_problems.py` · migration `0006`, `0007` **Junior: ดูย้อนหลัง · `db push` `0007`**
+  - 15 พ.ย.: Junior review `0007` แล้ว · `db push` `0007` ขึ้น `anyang-dev` แล้ว (`anyang-staging` พร้อม journey บน staging ใน S5)
   - ทำโดย Jam (13–14 พ.ย.) ช่วง solo
 - [x] ⭐ demo ขั้น 9: `POST /sessions/{id}/end` จริง (`ended_at` + สรุป) (TM-13, PM-05)
   - 14 พ.ย. (PR #136 · `specs/features/tutor/session-end-db.md`): มี token → ปิด session ด้วย update ที่มีเงื่อนไข `ended_at is null` ก่อนเรียก AI (ชนกัน → 409) · `end_reason = 'user'` · สรุปจาก `session_summary/v1` บันทึก `tutor_sessions.summary` + ข้อความในแชท · AI ล้มใช้ template · ไม่มี migration · ทำตามข้อเสนอ api.md รอตัดสิน v1.9 ข้อ 1, 2, 6, 7 **Junior: ดูย้อนหลังแล้วยืนยันใน api.md**
