@@ -68,3 +68,20 @@ NOW = datetime(2026, 11, 14, 12, 0, tzinfo=UTC)
 def test_SM09_scope_status(active, changed_after, status):
     # §2.1 item 3 · AC-8
     assert scope().scope_status(active, NOW if active else None, changed_after) == status
+
+
+# --- added by the self-review of PR #137 -----------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("q_nos", "ordered"),
+    [
+        (["ก10", "ก2", "ก1.1"], ["ก1.1", "ก2", "ก10"]),
+        (["1.10", "1.2", "1"], ["1", "1.2", "1.10"]),
+        (["ข1", "ก3"], ["ก3", "ข1"]),
+    ],
+    ids=["thai_prefix", "sub_numbers", "thai_letters"],
+)
+def test_SM04_question_numbers_with_a_prefix_or_parts_are_in_number_order(q_nos, ordered):
+    # MTH10101 past exams number their questions ก1.1, ก2, ...
+    assert sorted(q_nos, key=scope().question_order) == ordered

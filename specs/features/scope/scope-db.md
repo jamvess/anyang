@@ -24,9 +24,11 @@
 3. `status` = `"confirmed"` เมื่อ `active_scope_version_id` ไม่ว่าง **และ** ไม่มีแถว `scope_changes` ของ prep ที่ `created_at` หลัง `confirmed_at` ของ version นั้น · ไม่งั้น `"draft"` (api.md รอตัดสินข้อ 1)
 4. `topics` = ทุกหัวข้อของ prep เรียง `order_index` **รวมที่ตัดออก** · `id` · `order` = `order_index` (นับจาก 1 · ingestion เขียนจาก 1) · `name` · `stars` = `importance` (หัวข้อ `status = 'excluded'` เป็น 0 เสมอ) · `reason` = `importance_reason` (ว่าง → `""`) · `origin`
 5. `source_label` (api.md รอตัดสินข้อ 2): ช่วงหน้าใน `topic_sources` ของหัวข้อ เรียงตามไฟล์ (`materials.created_at`) แล้ว `page_from` · แต่ละช่วงเป็น `{ชื่อไฟล์ไม่มีนามสกุล} น.{from}–{to}` (หน้าเดียว `น.{n}`) · หลายช่วงคั่นด้วย `, ` · ไม่มีช่วง (หัวข้อ `origin = 'user'`) → `""`
-6. `unmapped_questions` = `past_exam_questions` ของไฟล์ใน prep ที่ `topic_id is null` · เรียงตามไฟล์ (`materials.created_at`) แล้ว `page_no` แล้ว `q_no` (ตัวเลขเรียงแบบตัวเลข) · `label` = `{ชื่อไฟล์ไม่มีนามสกุล} ข้อ {q_no}` · `text` · `map_note` (null ได้)
+6. `unmapped_questions` = `past_exam_questions` ของไฟล์ใน prep ที่ `topic_id is null` · เรียงตามไฟล์ (`materials.created_at`) แล้ว `page_no` แล้ว `q_no` (เรียงแบบ natural: เลขในข้อความเทียบเป็นตัวเลข · `ก2` ก่อน `ก10` · `1.2` ก่อน `1.10` · self-review PR #137) · `label` = `{ชื่อไฟล์ไม่มีนามสกุล} ข้อ {q_no}` · `text` · `map_note` (null ได้)
 
 ### 2.2 `GET /topics/{id}/sources` → `TopicSources` (SM-04)
+
+หัวข้อต้องอยู่ใน prep ที่ผู้ใช้เห็น (`topics` ใช้ RLS `tenant_rows` แต่ `exam_preps` ใช้ `owner_rows` · ผู้ใช้อื่นใน tenant เดียวกันได้ `404` · self-review PR #137)
 
 1. `excerpts` = 1 รายการต่อ 1 หน้าในทุกช่วงของ `topic_sources` ของหัวข้อ · `material_name` = `materials.file_name` · `page` = `page_no` · `text` = `material_pages.text` ทั้งหน้า (api.md รอตัดสินข้อ 3) · เรียงตามไฟล์แล้วหน้า · หน้าที่ช่วงทับกันมาครั้งเดียว · หน้าที่ไม่มีแถว `material_pages` ข้ามไป · หัวข้อ `origin = 'user'` → `[]`
 2. `questions` = `past_exam_questions` ที่ `topic_id` = หัวข้อนี้ · เรียงเหมือน §2.1 ข้อ 6 · ไม่มี → `[]`
@@ -40,7 +42,7 @@
    2. ตั้ง `exam_preps.active_scope_version_id` = แถวใหม่
    3. หัวข้อ `status = 'draft'` ของ prep → `'confirmed'` (หัวข้อ `excluded` คงเดิม)
 4. **ยืนยันพร้อมกัน:** insert ข้อ 3.1 ชน `unique (exam_prep_id, version)` → `409 scope_already_confirmed` (อีก request ยืนยันไปก่อนแล้ว · ไม่เขียนข้อ 3.2–3.3)
-5. เขียนข้อ 3.2 หรือ 3.3 ไม่ได้ (DB ล่มกลางทาง) → `503` · ยืนยันใหม่ได้ (ได้ version ถัดไป · version ที่ไม่ได้ใช้ค้างเป็นแถวที่ไม่มีใครชี้)
+5. เขียนข้อ 3.2 หรือ 3.3 ไม่ได้ (DB ล่มกลางทาง) → `503` · ยืนยันใหม่ได้: ล่มก่อนข้อ 3.2 → ได้ version ถัดไป (version ที่ไม่ได้ใช้ค้างเป็นแถวที่ไม่มีใครชี้) · **ล่มหลังข้อ 3.2 (prep ชี้ version แล้วแต่ยังมีหัวข้อ `draft`) → ทำข้อ 3.3 ให้จบและตอบ version นั้น** แทน `409` (ไม่งั้นยืนยันใหม่ไม่ได้อีกเลย · self-review PR #137)
 6. ผล `{scope_version_id, version}` · หน้าเว็บใช้แค่ว่าได้ 2xx แล้วไปห้องติว (scope-review AC-15)
 7. session ที่เปิดหลังยืนยันผูก `scope_version_id` นี้ (#123 · `create_session` อ่าน `active_scope_version_id` อยู่แล้ว) · session ที่เปิดก่อนยืนยันคงเป็น null (0004)
 

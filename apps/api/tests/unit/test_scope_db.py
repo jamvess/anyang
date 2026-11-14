@@ -394,3 +394,29 @@ def test_SA06_a_database_that_is_down_is_503(scope: Scope):
     room_api.assert_error(scope.get(), 503, "db_unavailable")
     room_api.assert_error(scope.confirm(), 503, "db_unavailable")
     room_api.assert_error(scope.sources(LIMIT.id), 503, "db_unavailable")
+
+
+# --- added by the self-review of PR #137 -----------------------------------------------------
+
+
+def test_SA06_sources_of_a_topic_whose_prep_is_not_visible_are_404(scope: Scope):
+    # Topics follow the tenant, preps their user: another user of the tenant gets 404
+    del scope.repo.preps[PREP_ID]
+
+    room_api.assert_error(scope.sources(LIMIT.id), 404, "not_found")
+
+
+def test_SM09_a_confirm_that_stopped_halfway_finishes_on_retry(scope: Scope):
+    # §2.3 item 5: the prep points at the version, but its topics are still draft
+    scope.repo.confirm_topics = lambda prep_id: (_ for _ in ()).throw(  # type: ignore[method-assign]
+        DbUnavailableError("update topics")
+    )
+    room_api.assert_error(scope.confirm(), 503, "db_unavailable")
+    del scope.repo.confirm_topics  # back to the class method
+
+    response = scope.confirm()
+
+    assert response.status_code == 200
+    assert response.json()["version"] == 1
+    assert len(scope.repo.added) == 1
+    assert {t.status for t in scope.repo.topics} == {"confirmed", "excluded"}

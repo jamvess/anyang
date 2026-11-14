@@ -12,7 +12,13 @@ from uuid import UUID
 
 from app.db.scope import QuestionRow, ScopeRepository, SourceRange, TopicRow, VersionTakenError
 from app.domain.exam_prep import days_left
-from app.domain.scope import question_label, question_order, scope_status, source_label
+from app.domain.scope import (
+    ScopeStatus,
+    question_label,
+    question_order,
+    scope_status,
+    source_label,
+)
 from app.models.scope import (
     PastQuestion,
     Scope,
@@ -62,10 +68,8 @@ def _past_question(q: QuestionRow) -> PastQuestion:
     )
 
 
-def _status(repo: ScopeRepository, prep_id: UUID, active: UUID | None) -> str:
-    if active is None:
-        return "draft"
-    version = repo.scope_version(active)
+def _status(repo: ScopeRepository, prep_id: UUID, active: UUID | None) -> ScopeStatus:
+    version = repo.scope_version(active) if active is not None else None
     confirmed_at = version.confirmed_at if version else None
     changed = confirmed_at is not None and repo.has_changes_after(prep_id, confirmed_at)
     return scope_status(active, confirmed_at, changed)
@@ -86,7 +90,7 @@ def scope_of(repo: ScopeRepository, prep_id: UUID, today: date) -> Scope:
     return Scope(
         prep_name=prep.title,
         days_left=days_left(prep.exam_date, today=today),
-        status=_status(repo, prep_id, prep.active_scope_version_id),  # type: ignore[arg-type]
+        status=_status(repo, prep_id, prep.active_scope_version_id),
         topics=[
             ScopeTopic(
                 id=t.id,
@@ -108,7 +112,9 @@ def scope_of(repo: ScopeRepository, prep_id: UUID, today: date) -> Scope:
 def sources_of(repo: ScopeRepository, topic_id: UUID) -> TopicSources:
     """§2.2: GET /topics/{id}/sources · each page once, by file then page."""
     topic = repo.get_topic(topic_id)
-    if topic is None:
+    # The prep too: topics follow the tenant (RLS `tenant_rows`), preps their user
+    # (`owner_rows`), so a topic of another user of the tenant is not found (self-review).
+    if topic is None or repo.get_prep(topic.exam_prep_id) is None:
         raise _not_found()
     mine = sorted(
         (s for s in repo.list_sources(topic.exam_prep_id) if s.topic_id == topic_id),
@@ -116,15 +122,17 @@ def sources_of(repo: ScopeRepository, topic_id: UUID) -> TopicSources:
     )
     excerpts: list[SourceExcerpt] = []
     if topic.origin != "user":
-        files: dict[UUID, tuple[str, list[int]]] = {}
+        files: dict[UUID, tuple[str, set[int]]] = {}
         for s in mine:
-            name, pages = files.setdefault(s.material_id, (s.file_name, []))
-            pages.extend(n for n in range(s.page_from, s.page_to + 1) if n not in pages)
+            files.setdefault(s.material_id, (s.file_name, set()))[1].update(
+                range(s.page_from, s.page_to + 1)
+            )
         for material_id, (name, pages) in files.items():
-            texts = repo.pages(material_id, sorted(pages))
+            ordered = sorted(pages)
+            texts = repo.pages(material_id, ordered)
             excerpts += [
                 SourceExcerpt(material_name=name, page=n, text=texts[n])
-                for n in sorted(pages)
+                for n in ordered
                 if n in texts
             ]
     questions = sorted(
@@ -136,12 +144,19 @@ def sources_of(repo: ScopeRepository, topic_id: UUID) -> TopicSources:
 
 def confirm(repo: ScopeRepository, prep_id: UUID, tenant_id: UUID, now: datetime) -> ScopeConfirmed:
     """§2.3: refusals first, then the version, the prep, the topics. ``now`` is the clock of
-    the request (`get_now`), so `confirmed_at` and `scope_changes` compare on one clock."""
+    the request (`get_now`), testable like the other endpoints."""
     prep = repo.get_prep(prep_id)
     if prep is None:
         raise _not_found()
     topics = _ready_topics(repo, prep_id)
-    if _status(repo, prep_id, prep.active_scope_version_id) == "confirmed":
+    active = prep.active_scope_version_id
+    if _status(repo, prep_id, active) == "confirmed":
+        version_row = repo.scope_version(active) if active is not None else None
+        if active is not None and version_row and any(t.status == "draft" for t in topics):
+            # A confirm that failed after pointing the prep at its version: finish its topics
+            # instead of refusing a retry for good (§2.3 item 5 · self-review PR #137).
+            repo.confirm_topics(prep_id)
+            return ScopeConfirmed(scope_version_id=active, version=version_row.version)
         raise ScopeRefused(409, "scope_already_confirmed", "The scope is already confirmed")
     if not any(t.status != "excluded" and (t.importance or 0) >= 1 for t in topics):
         raise ScopeRefused(409, "scope_empty", "Every topic is excluded")

@@ -12,7 +12,7 @@ from uuid import UUID
 ScopeStatus = Literal["draft", "confirmed"]
 
 _EXTENSION = re.compile(r"\.[A-Za-z0-9]+$")
-_LEADING_NUMBER = re.compile(r"^(\d+)")
+_PARTS = re.compile(r"\d+|\D+")
 # A page range as the scope page reads it: an en dash, as api.md v1.6 writes it.
 _RANGE = chr(0x2013)
 
@@ -37,13 +37,12 @@ def question_label(file_name: str, q_no: str) -> str:
     return f"{file_stem(file_name)} ข้อ {q_no}"
 
 
-def question_order(q_no: str) -> tuple[int, int, str]:
-    """A sort key for `q_no`: its leading number as a number (2 before 10), then the rest as
-    text (`1` before `1b`); a `q_no` with no number comes after the numbered ones."""
-    match = _LEADING_NUMBER.match(q_no)
-    if match is None:
-        return (1, 0, q_no)
-    return (0, int(match.group(1)), q_no[match.end() :])
+def question_order(q_no: str) -> tuple[tuple[int, int, str], ...]:
+    """A natural sort key for `q_no`: runs of digits compare as numbers, the rest as text, so
+    `2` < `10`, `ก2` < `ก10`, `1.2` < `1.10` and `1` < `1b` (self-review PR #137)."""
+    return tuple(
+        (0, int(part), "") if part.isdigit() else (1, 0, part) for part in _PARTS.findall(q_no)
+    )
 
 
 def scope_status(

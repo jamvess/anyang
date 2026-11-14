@@ -155,6 +155,8 @@ class SupabaseScopeRepository:
     def __init__(self, connect: Callable[[], Client]) -> None:
         self._connect = connect
         self._client: Client | None = None
+        # One request reads the files of a prep once (sources and questions both need them).
+        self._files: dict[UUID, dict[str, dict[str, Any]]] = {}
 
     def _db(self) -> Client:
         if self._client is None:
@@ -205,15 +207,17 @@ class SupabaseScopeRepository:
         return self._run("topics", query)
 
     def _materials(self, prep_id: UUID) -> dict[str, dict[str, Any]]:
-        rows = (
-            self._db()
-            .table("materials")
-            .select("id,file_name,created_at")
-            .eq("exam_prep_id", str(prep_id))
-            .execute()
-            .data
-        )
-        return {str(r["id"]): r for r in rows}
+        if prep_id not in self._files:
+            rows = (
+                self._db()
+                .table("materials")
+                .select("id,file_name,created_at")
+                .eq("exam_prep_id", str(prep_id))
+                .execute()
+                .data
+            )
+            self._files[prep_id] = {str(r["id"]): r for r in rows}
+        return self._files[prep_id]
 
     def list_sources(self, prep_id: UUID) -> list[SourceRange]:
         def query() -> list[SourceRange]:
