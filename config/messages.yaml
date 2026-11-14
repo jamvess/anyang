@@ -2,7 +2,7 @@
 # the API loads and checks this file at start, so a missing key or an unknown placeholder fails
 # the deploy instead of a request. Placeholders are {name}; values are inserted as text.
 
-version: "1.0"                         # a string: unquoted, YAML reads 1.10 as the float 1.1
+version: "1.1"                         # a string: unquoted, YAML reads 1.10 as the float 1.1
 
 # The tutor's greeting when a session opens (specs/features/tutor/room-sessions-db.md §2.8).
 # greeting = hello + " " + one of the exam lines + " " + invite. AI greeting (prompt
@@ -18,3 +18,7 @@ room_greeting:
 # Room lines that code sends (specs/features/tutor/room-problems-db.md). Wording: May.
 room:
   no_problem: "ตอนนี้เตรียมโจทย์ไม่ทัน ลองเปิดห้องใหม่อีกครั้งนะ"   # no verified problem after every try (§2.3 item 7)
+  # The summary when session_summary fails (specs/features/tutor/session-end-db.md §2.3 item 3).
+  session_summary_answered: "วันนี้ตอบไป {answers} ครั้ง ถูก {right} ครั้ง ไว้มาฝึกต่อกันนะ"
+  session_summary_empty: "วันนี้ยังไม่ได้ทำโจทย์ ไว้มาเริ่มกันครั้งหน้านะ"
+  session_summary_unknown: "จบการติววันนี้แล้ว ไว้มาติวต่อกันนะ"   # the answers of the session could not be read

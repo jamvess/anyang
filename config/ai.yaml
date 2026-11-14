@@ -3,7 +3,7 @@
 # "vertex:" runs on Vertex AI when GOOGLE_CLOUD_PROJECT is set (specs/features/ai/gemini-vertex.md;
 # AI-07: no free tier for real users). AI_MODEL_OVERRIDE=gemini:<model> still uses the Gemini API key.
 
-version: "1.20"                        # a string: unquoted, YAML reads 1.10 as the float 1.1
+version: "1.21"                        # a string: unquoted, YAML reads 1.10 as the float 1.1
 
 tiers:
   small:  {primary: "vertex:gemini-3.5-flash",   fallback: "anthropic:TODO-claude-haiku"}  # P3a on Vertex (31 Oct): A4 43/43, A7 34/43 and 30/43 · flash-lite broke JSON with LaTeX (unescaped \\sqrt) on 1 of 2 exams (P3.md §7)
@@ -36,7 +36,7 @@ purposes:
   explain_check:          {tier: main,   temperature: 0.6, max_tokens: 2000, timeout_s: 30, prompt: v3, stream: true, thinking: minimal}  # v3 says what the code's directive says: continue, hint_1, hint_2, reveal, praise_and_show, ask_working (demo-room.md §2 K) · v2 shows the full worked solution every time and asks for working when it is missing (demo-room.md §2 H, I) · the tutor's explanation after a verdict (photo-check-in-room.md §2.2 item 6 · AM-07) · [C] same as tutor_reply until measured: no golden set yet, smoke on Vertex only
   dispute_recheck:       {tier: main,   temperature: 0.0, max_tokens: 1000, timeout_s: 30, prompt: v1}
   update_running_summary: {tier: small,  temperature: 0.2, max_tokens: 400,  timeout_s: 20, prompt: v1}
-  session_summary:        {tier: small,  temperature: 0.3, max_tokens: 150,  timeout_s: 15, prompt: v1}
+  session_summary:        {tier: small,  temperature: 0.3, max_tokens: 150,  timeout_s: 15, prompt: v1, thinking: minimal}  # 1-2 lines when the user ends the session (session-end-db.md §2.3 · PM-05) · [C] minimal thinking: Gemini 3 counts thinking in max_tokens
   # flow 2.7 / 2.8
   persona_extract:        {tier: small,  temperature: 0.0, max_tokens: 400,  timeout_s: 15, prompt: v1}
   persona_preview:        {tier: small,  temperature: 0.7, max_tokens: 150,  timeout_s: 15, prompt: v1}

@@ -1,4 +1,4 @@
-# API (v1.18)
+# API (v1.19)
 
 Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้างอัตโนมัติที่ `/docs` · frontend generate types จาก `/openapi.json`
 
@@ -364,6 +364,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 - สิ่งที่ backend ทำ: ตั้ง `tutor_sessions.ended_at = now()` และ `end_reason = 'user'` **ก่อน**เรียก AI ด้วยคำสั่งเดียวที่มีเงื่อนไข `ended_at is null` (request ที่มาพร้อมกันได้ 409 แทนการเรียก `session_summary` ซ้ำ) · คำนวณการเปลี่ยนแปลงของ mastery ตาม §2.2.9 (ยังไม่มีใน stub)
 - error: `409 session_already_ended` (`ended_at` ไม่เป็น null) · ตอบก่อนเริ่ม SSE
 - จบแบบอื่น (`time_budget`, `plan_done`, `idle`) เป็นของ backend เอง ไม่ผ่าน endpoint นี้
+- **v1.19 · ทางที่มี token ทำงานจริงแล้ว** (Jam ช่วง solo 2026-11-14 · `specs/features/tutor/session-end-db.md` · Junior ดูย้อนหลัง): ทำตามข้อเสนอรอตัดสินข้อ 1, 2, 6, 7 ข้างล่าง · session ไม่มีหรือของคนอื่น → `404` · จบแล้ว หรือ request อื่นปิดไปก่อน (update ที่มีเงื่อนไข `ended_at is null` ไม่ได้แก้แถว) → `409 session_already_ended` · DB ล่ม → `503 db_unavailable` · ทั้งหมดก่อน SSE · code นับคำตอบของ session (`attempts` ของผู้ใช้ตั้งแต่ `started_at` ของหัวข้อใน prep) ต่อหัวข้อพร้อมระดับตอนนี้จาก `topic_progress` → `session_summary/v1` (1–2 บรรทัด) · AI ล้ม → template ของ `config/messages.yaml` → `room.session_summary_*` · บันทึก `tutor_sessions.summary` และข้อความ `tutor` ใน `messages` ก่อน `done` (id ใน `done.message_ids`) · ไม่มี token → stub เดิม · ยังไม่ได้คำนวณ mastery ที่เปลี่ยนใน session
 
 **`GET /sessions/{id}/messages`** · ประวัติแชท (TM-13)
 
@@ -382,13 +383,13 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 **รอตัดสิน (v1.9 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-02 (PR #104) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
 
-1. **`/end` ตอบเป็น SSE:** เพราะ `session_end` เป็น event และสรุปมาจาก AI call · ทางเลือกคือตอบ JSON `{summary_lines}` ธรรมดา
-2. **`/end` ไม่นับใน rate limit** (`gateway-guards.md` §2.1 นับเฉพาะข้อความที่ผู้ใช้ส่ง) · ถึงจะเรียก AI แต่จบ session ได้ครั้งเดียว (ครั้งที่สองได้ 409)
+1. **`/end` ตอบเป็น SSE:** (ใช้แล้ว v1.19 · รอ Junior ยืนยัน) เพราะ `session_end` เป็น event และสรุปมาจาก AI call · ทางเลือกคือตอบ JSON `{summary_lines}` ธรรมดา
+2. **`/end` ไม่นับใน rate limit** (ใช้แล้ว v1.19 · รอ Junior ยืนยัน) (`gateway-guards.md` §2.1 นับเฉพาะข้อความที่ผู้ใช้ส่ง) · ถึงจะเรียก AI แต่จบ session ได้ครั้งเดียว (ครั้งที่สองได้ 409)
 3. ~~**`GET /sessions/{id}/messages` ยังไม่แบ่งหน้า**~~ **ตัดสินแล้ว** (Junior 2026-11-11 · v1.15): ยังไม่แบ่งหน้า · ต้องมีก่อน Beta ถ้า session ยาว
 4. **`GET /exam-preps/{id}/progress` ใช้รูปร่างเดียวกับ event** · หน้าเว็บใช้ component เดียวกันทั้งสองที่
 5. **error code ใหม่:** `session_already_ended`, `scope_not_confirmed` (มีในตัวอย่างของ Conventions อยู่แล้ว), `tts_unavailable`
-6. **จำนวนบรรทัดของสรุป** (self-review #104): ai-orchestration §2.2.9 และ §3.3 เขียนว่า "สรุป 2 บรรทัด" · ตาราง SSE เดิมเขียน `[..2]` · ข้อเสนอคือรับ 1–2 บรรทัด (session สั้นอาจมีเรื่องเดียว) · ถ้าต้อง 2 บรรทัดพอดี ให้แก้ `SessionEndEvent`
-7. **เก็บสรุปเป็นข้อความในแชทด้วย** (self-review #104): PM-05 ให้สรุป "ในรูปแบบ chat message" · ถ้าเก็บแค่ `tutor_sessions.summary` สรุปจะหายจาก `GET /sessions/{id}/messages` หลังโหลดหน้าใหม่ และไม่มี id ให้ `/tts` · ข้อเสนอคือเพิ่มแถวใน `messages` (role `tutor`) และส่ง id ใน `done.message_ids`
+6. **จำนวนบรรทัดของสรุป** (self-review #104 · ใช้ 1–2 บรรทัดแล้ว v1.19 · รอ Junior ยืนยัน): ai-orchestration §2.2.9 และ §3.3 เขียนว่า "สรุป 2 บรรทัด" · ตาราง SSE เดิมเขียน `[..2]` · ข้อเสนอคือรับ 1–2 บรรทัด (session สั้นอาจมีเรื่องเดียว) · ถ้าต้อง 2 บรรทัดพอดี ให้แก้ `SessionEndEvent`
+7. **เก็บสรุปเป็นข้อความในแชทด้วย** (self-review #104 · ใช้แล้ว v1.19 · รอ Junior ยืนยัน): PM-05 ให้สรุป "ในรูปแบบ chat message" · ถ้าเก็บแค่ `tutor_sessions.summary` สรุปจะหายจาก `GET /sessions/{id}/messages` หลังโหลดหน้าใหม่ และไม่มี id ให้ `/tts` · ข้อเสนอคือเพิ่มแถวใน `messages` (role `tutor`) และส่ง id ใน `done.message_ids`
 8. **TTS อ่านข้อความของ buddy ด้วยไหม:** TM-09 พูดถึงข้อความของ tutor เท่านั้น · ข้อเสนอคือตาม TM-09 (เพิ่ม buddy ต้องแก้ requirement)
 9. **(ข้อความ ตัดสินแล้ว v1.15: ของจริงเป็น uuid · fixture ยังเป็น `m0` · หัวข้อยังเปิด)** **id ของข้อความและหัวข้อใน fixture ของห้องติวไม่ใช่ uuid** (`m0`, `t1` · ของเดิมตั้งแต่ PR #38): `/messages/{id}/tts` และ `/topics/{id}/sources` รับ uuid · ของจริงเป็น uuid ทั้งหมด (`messages.id`, `topics.id`) · ข้อเสนอคือเปลี่ยน `Message.id` และ `ProgressTopic.id` เป็น uuid พร้อม fixture ใน PR ที่ต่อห้องติวกับ DB
 

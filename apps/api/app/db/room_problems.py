@@ -47,6 +47,15 @@ class ProgressFacts:
 
 
 @dataclass(frozen=True)
+class AttemptFacts:
+    """One checked answer of the user (`attempts` row · session-end-db.md §2.2 item 1)."""
+
+    topic_id: UUID
+    is_correct: bool
+    created_at: datetime
+
+
+@dataclass(frozen=True)
 class SkillFacts:
     id: UUID
     name: str
@@ -78,6 +87,11 @@ class ProblemRepository(Protocol):
 
     def save_topic_progress(self, **fields: Any) -> None:
         """Upsert the user's row by (user_id, topic_id) with these columns (§2.3 item 1)."""
+        ...
+
+    def attempts_since(self, since: datetime) -> list[AttemptFacts]:
+        """The user's attempts created at or after ``since``, of any prep (the caller keeps
+        the topics of its prep · session-end-db.md §2.2 item 1)."""
         ...
 
     def list_skills(self, topic_id: UUID) -> list[SkillFacts]:
@@ -405,6 +419,30 @@ class SupabaseProblemRepository:
             ),
         )
         return _problem(rows[0])
+
+    def attempts_since(self, since: datetime) -> list[AttemptFacts]:
+        rows = self._run(
+            "attempts since",
+            lambda: (
+                self._db()
+                .table("attempts")
+                .select("topic_id,is_correct,created_at")
+                .gte("created_at", since.isoformat())  # RLS: only the user's own rows
+                .execute()
+                .data
+            ),
+        )
+        return self._run(
+            "attempt rows",
+            lambda: [
+                AttemptFacts(
+                    topic_id=UUID(r["topic_id"]),
+                    is_correct=bool(r["is_correct"]),
+                    created_at=datetime.fromisoformat(r["created_at"]),
+                )
+                for r in rows
+            ],
+        )
 
     def add_attempt(self, **fields: Any) -> None:
         self._run(
