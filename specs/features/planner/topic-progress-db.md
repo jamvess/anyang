@@ -6,7 +6,7 @@
 | Requirements | PM-02, PM-03, PM-06, TM-15, SA-06 |
 | Owner | Jam |
 | Reviewer | Jam · Junior ดูย้อนหลัง (migration `0007`, repository) |
-| Status | draft 2026-11-14 (PR #135) |
+| Status | approved 2026-11-14 (Jam ok spec + test) · implemented 2026-11-14 (PR #135) |
 | Related system spec | `bkt-mastery.md` (BKT, ระดับ, ความพร้อม · `domain/bkt.py`) · `demo-room.md` §2 D, §2 K ข้อ 8 (BKT ในเดโม่ · นับครั้งเดียวต่อโจทย์) · `room-answers-db.md` §2.2 ข้อ 4 (`record_check` = โจทย์จบ) · `room-problems-db.md` §2.2 ข้อ 2 (การ์ดจาก `topic_progress`), §10 ข้อ 2 (`d_max`) · learning-model §1, §4, §5 · data-model.md รูป 3 · `docs/team/sprint-checklists.md` ⭐ demo ขั้น 8 |
 
 ## 1. Context

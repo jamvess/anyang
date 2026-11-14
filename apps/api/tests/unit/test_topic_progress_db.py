@@ -15,7 +15,7 @@ Interfaces these tests expect (to be built by /implement-feature):
 
 import json
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 import pytest
@@ -24,6 +24,7 @@ from fastapi.testclient import TestClient
 from app.db.exam_preps import DbUnavailableError
 from app.db.room_problems import ProgressFacts, get_problem_repository
 from app.domain.bkt import TopicProgress, level, target_difficulty, update_mastery
+from app.domain.room import TopicFacts
 from app.main import app
 from app.services.dev_uploads import get_local_mode
 from tests.unit import test_room_sessions_api as room_api
@@ -37,7 +38,16 @@ from tests.unit.test_room_answers_db import (
     factor_problem,
     typed,
 )
-from tests.unit.test_room_problems_api import LIMIT, OPEN, SETTINGS, event, generated, script
+from tests.unit.test_room_problems_api import (
+    FACTOR,
+    GRAPH,
+    LIMIT,
+    OPEN,
+    SETTINGS,
+    event,
+    generated,
+    script,
+)
 from tests.unit.test_room_sessions_api import PREP_ID, USER, FakeRoomRepo, send
 from tests.unit.test_tutor_reply_stream_api import parse_sse
 
@@ -58,6 +68,10 @@ class ProgressProblemRepo(AnswerProblemRepo):
 
     rows: dict[uuid.UUID, dict[str, Any]] = field(default_factory=dict)
     fail_progress: bool = False
+    # Readiness is weighted by signal_r, which is 0 in the topics of #131 (Jam ok 14 Nov).
+    topics: list[TopicFacts] = field(
+        default_factory=lambda: [replace(t, signal_r=1.0) for t in (LIMIT, FACTOR, GRAPH)]
+    )
 
     def list_progress(self, prep_id) -> list[ProgressFacts]:
         return [self._facts(row) for row in self.rows.values()]

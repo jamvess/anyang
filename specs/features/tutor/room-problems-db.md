@@ -143,7 +143,7 @@ fake provider · repository ปลอม (แถวที่ JWT ของผู
 ## 10. Open questions
 
 1. **(Junior) หัวข้อก่อนยืนยัน scope:** ข้อเสนอใช้ `topics` ที่ไม่ `excluded` ทั้ง `draft` และ `confirmed` · ทำให้ demo ไม่ต้องรอขั้น 5 · หลังมีการยืนยัน session ใหม่ผูก `scope_version_id` ตามกฎใน data-model.md อยู่แล้ว · หัวข้อหลังยืนยันเป็น `confirmed` จึงยังอยู่ในเงื่อนไข
-2. **(Junior · ขั้น 8) `topic_progress` ไม่มี `d_max`** (ระดับยากสูงสุดที่ทำถูกเอง · `mastery_eff` ของ learning-model §4 ต้องใช้) · feature นี้ไม่ต้องใช้เพราะยังไม่มีแถว · ขั้น 8 ต้องเพิ่มคอลัมน์ (migration) ก่อนเขียนแถวแรก
+2. ~~**(Junior · ขั้น 8) `topic_progress` ไม่มี `d_max`**~~ **ปิดแล้ว PR #135:** migration `0007` เพิ่ม `topic_progress.d_max` · การ์ดอ่านค่าจริง · BKT เขียนตอนโจทย์จบ (`topic-progress-db.md`)
 3. **(May) การ์ดโจทย์ในประวัติ:** `GET /sessions/{id}` คืนแค่ข้อความ · การ์ดโจทย์อยู่ใน SSE เท่านั้น · รีเฟรชหน้าแล้วการ์ดหาย (แต่เปิดห้องใหม่ได้โจทย์เดิม · AC-8) · ข้อเสนอ: บันทึกเป็น `messages` `role = "card"`, `card = {"problem": {problem_id, text_latex, difficulty, purpose}}` แล้วหน้าเว็บแสดงการ์ดโจทย์จาก `card.problem` · ตอนนี้หน้าเว็บอ่าน `card` ของประวัติเป็นการ์ดความคืบหน้า จึงยังไม่บันทึกใน feature นี้
 4. **`problems` ไม่มีคอลัมน์ `text_latex`:** โจทย์ที่ใช้ซ้ำ (AC-8) ต้องมี `text_latex` สำหรับการ์ด · ข้อเสนอ: เก็บใน `solution_steps` ไม่ได้ (ปนกับเฉลย) · ให้ใช้ `text` (มี `$…$`) แปลงเป็น `text_latex` ด้วย code: ส่วนนอก `$` ห่อด้วย `\text{}` · ทางอื่นคือ migration เพิ่มคอลัมน์ (Junior) · ข้อเสนอ: แปลงด้วย code ไปก่อน
 6. **(หลัง demo) SymPy service อ่านอนุพันธ์อันดับสูงและสมการของอนุพันธ์:** สาเหตุหลักของหัวข้อที่สร้างโจทย์ไม่ผ่าน (§8 ผลรันจริง) · แก้ใน `app/math/sympy_service.py` (`sympy-service.md`)

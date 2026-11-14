@@ -13,6 +13,7 @@ sees is already on screen (§2.2 item 6, §2.3 item 4).
 
 import logging
 from collections.abc import Callable
+from datetime import UTC, datetime
 from uuid import UUID
 
 from starlette.concurrency import run_in_threadpool
@@ -22,7 +23,8 @@ from app.ai.gateway import Gateway
 from app.auth import AuthContext
 from app.db.errors import DbUnavailableError
 from app.db.room import RoomRepository, SessionRecord
-from app.db.room_problems import ProblemRecord, ProblemRepository
+from app.db.room_problems import ProblemRecord, ProblemRepository, ProgressFacts
+from app.domain.bkt import TopicProgress, level, record_attempt, target_difficulty
 from app.domain.checker import CheckResult
 from app.domain.room import text_latex_of
 from app.models.room import ProgressCardEvent
@@ -168,9 +170,53 @@ class DbRoomState:
     ) -> None:
         """Called when code decides the problem is over (right, solution, give up): it ends
         now, before the explanation, so a tutor that fails or a client that leaves cannot leave
-        it open with its attempt saved (§2.2 items 4-5 · self-review). BKT is step 8."""
-        if await self._is_pending(key, pending):
-            await self._end(pending)
+        it open with its attempt saved (§2.2 items 4-5 · self-review). Then the topic's mastery
+        takes its one BKT step (topic-progress-db.md §2), only for a problem this request
+        ended: one that stays open could be answered again and counted twice."""
+        if await self._is_pending(key, pending) and await self._end(pending):
+            await self._record_progress(pending, is_correct, independent)
+
+    async def _record_progress(
+        self, pending: PendingProblem, is_correct: bool, independent: bool
+    ) -> None:
+        cfg = get_settings().learning
+        topic_id = UUID(str(pending.topic_id))
+        prep_id = self._session.exam_prep_id
+        failed = object()  # a read that failed: no write from a wrong start (§2.3 item 2)
+        row = await self._db(
+            "topic progress", lambda: self._problems.get_topic_progress(topic_id), failed
+        )
+        topics = await self._db("topics", lambda: self._problems.list_topics(prep_id), None)
+        if row is failed or topics is None:
+            return
+        topic = next((t for t in topics if t.id == topic_id), None)
+        before = (
+            TopicProgress(row.mastery, row.attempts_n, row.d_max or 0)
+            if isinstance(row, ProgressFacts)
+            else TopicProgress(cfg.bkt.p_init, 0, 0)
+        )
+        after = record_attempt(before, is_correct, pending.difficulty, independent, cfg)
+        if after is before:  # not independent: does not count (bkt.count_only_independent)
+            return
+        stars = topic.importance or 0 if topic else 0
+        d_target = target_difficulty(stars, room_problems.MODE, cfg)
+        correct_n = row.correct_n if isinstance(row, ProgressFacts) else 0
+        fields = {
+            "tenant_id": self._auth.tenant_id,
+            "user_id": self._auth.user_id,
+            "exam_prep_id": prep_id,
+            "topic_id": topic_id,
+            "mastery": after.mastery,
+            # Every skill counts as covered until skill coverage exists (§10 item 2).
+            "level": level(after, d_target, True, cfg),
+            "attempts_n": after.attempts,
+            "correct_n": correct_n + is_correct,
+            "d_max": after.d_max,
+            "last_seen_at": datetime.now(UTC),
+        }
+        await self._db(
+            "save topic progress", lambda: self._problems.save_topic_progress(**fields), None
+        )
 
     async def record_answer(
         self,
