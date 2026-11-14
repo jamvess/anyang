@@ -9,7 +9,7 @@
 #
 # Changing a value = PR that also updates learning-model.md §"ที่มาของตัวเลข".
 
-version: 1.6
+version: 1.7
 
 bkt:                                   # Bayesian Knowledge Tracing, per topic (learning-model.md §1)
   p_init: 0.3                          # [C] prior P(L0). Fit per skill with pyBKT (EM) after Alpha.
@@ -96,6 +96,7 @@ session:
   idle_minutes_to_end: 15              # [C] after Alpha: p95 of the gap between a user's messages in a session
   context_recent_turns: 8              # [C] keep context short (Liu et al. 2023 "Lost in the Middle")
   token_budget: 6000                   # [calc] ≈ 2× the ~3,200-token prompt of 2.2.3
+  avoid_recent_problems: 5             # [C] generate_problem/v2 gets the latest problems of the topic and code refuses a repeat (room-problems-db.md §2.3) · a room gives about 3-5 problems of one topic · calibrate in Alpha: repeats seen and the share SymPy verifies
   grounding_chunks: 4                  # [C] P3b: gemini-embedding-2 @768 finds the answer page in the top 4 for 19/20 questions (top 1: 15/20) · keep 4; reduce to 2 only when over budget
 
 tutoring:                              # hint ladder before the solution (demo-room.md §2 K · AM-07 change proposed)

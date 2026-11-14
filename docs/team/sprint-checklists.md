@@ -92,6 +92,7 @@
 - [x] สร้าง Supabase project `anyang-staging` · ref `sfapuygntxuelsxsgkay` Singapore (21 ต.ค., PR #28)
   - 21 ต.ค. Jam ตั้ง Vercel env ทั้ง **Production** และ **Preview** (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) ให้ชี้ `anyang-staging` (`sfapuygntxuelsxsgkay`) แบบ Config แล้ว redeploy production · มีผลเมื่อมีหน้าที่ import `lib/supabase.ts` (ตอนนี้ยังไม่มี production จึงไม่เคยพังจริง)
 - [ ] ให้สิทธิ์ทีม: GitHub collaborator + Supabase org (เจ้าของ repo ทำ, `setup.md` A0), GCP (Jam: Vertex AI User)
+  - 14 พ.ย.: Jam ให้ Vertex AI User แก่ May แล้ว (`roles/aiplatform.user` ใน `anyang-513006`)
   - 13 พ.ย. แผนใหม่: หลัง demo
   - 28 ต.ค. ส่วน GCP ไม่ต้องทำ: Jam สร้าง project เองจึงเป็น Owner อยู่แล้ว
 - [x] แก้ `.github/CODEOWNERS` เป็น username จริง · + เพิ่ม `/.github/` ให้ Junior ตาม `roles.md` (19 ต.ค.)
@@ -161,9 +162,15 @@
   - 14 พ.ย.: D1 email + password · D2 `anyang-dev` (cloud) ไม่ใช้ Supabase ในเครื่อง · กติกา (ก)–(ง) อยู่ในส่วน ⭐ Priority
 - [ ] ⭐ demo ขั้น 1: env ของ API ชี้ `anyang-dev` (cloud · ไม่ต้องลง Docker · hook เปิดใน Dashboard แล้ว) · ยืนยัน `tenant_id` ใน token · `AUTH_REQUIRED=true` วนได้กับหน้า login ของ May (UM-01)
 - [ ] ⭐ demo ขั้น 3: `POST /exam-preps/{id}/materials` + `POST /materials/{id}/uploaded` + `POST /exam-preps/{id}/materials/confirm` จริง · signed upload URL · bucket + storage policy (migration ใหม่ + isolation test) (CM-03, CM-07)
-- [ ] ⭐ demo ขั้น 5: `GET /exam-preps/{id}/scope` อ่าน DB · `POST /scope/confirm` เขียน `scope_versions` + `active_scope_version_id` (SM-09)
-- [ ] ⭐ demo ขั้น 8: repository ของ `problems`, `attempts`, `topic_progress` (PM-01, PM-02, PM-06)
-- [ ] ⭐ demo ขั้น 9: `POST /sessions/{id}/end` จริง (`ended_at` + สรุป) (TM-13, PM-05)
+- [x] ⭐ demo ขั้น 5: `GET /exam-preps/{id}/scope` อ่าน DB · `POST /scope/confirm` เขียน `scope_versions` + `active_scope_version_id` (SM-09)
+  - 14 พ.ย. (PR #137 · `specs/features/scope/scope-db.md`): มี token → `GET /scope` (หัวข้อ ดาว เหตุผล `source_label` ข้อสอบที่ map ไม่ได้ `status`) · `GET /topics/{id}/sources` (ข้อความทั้งหน้า + ข้อสอบของหัวข้อ) · `POST /scope/confirm` (`scope_versions` → `active_scope_version_id` → หัวข้อ `confirmed` · ยืนยันซ้ำหรือพร้อมกัน 409) · ไม่มี migration · ทำตามข้อเสนอ api.md v1.6 ข้อ 1–3, 5 **Junior: ดูย้อนหลังแล้วยืนยันใน api.md** (Junior ให้ตัดสินใจไปก่อน) · รันกับข้อมูลจริง MTH10101: 34 หัวข้อ · ยืนยัน version 1 · **หน้า scope ของ May ต่อ API จริงได้แล้ว**
+  - ทำโดย Jam (14 พ.ย.) ช่วง solo
+- [x] ⭐ demo ขั้น 8: repository ของ `problems`, `attempts`, `topic_progress` (PM-01, PM-02, PM-06)
+  - 13–14 พ.ย.: `problems` (PR #131), `attempts` + `ended_at` (PR #132), `topic_progress` + `d_max` (PR #135) อยู่ใน `app/db/room_problems.py` · migration `0006`, `0007` **Junior: ดูย้อนหลัง · `db push` `0007`**
+  - ทำโดย Jam (13–14 พ.ย.) ช่วง solo
+- [x] ⭐ demo ขั้น 9: `POST /sessions/{id}/end` จริง (`ended_at` + สรุป) (TM-13, PM-05)
+  - 14 พ.ย. (PR #136 · `specs/features/tutor/session-end-db.md`): มี token → ปิด session ด้วย update ที่มีเงื่อนไข `ended_at is null` ก่อนเรียก AI (ชนกัน → 409) · `end_reason = 'user'` · สรุปจาก `session_summary/v1` บันทึก `tutor_sessions.summary` + ข้อความในแชท · AI ล้มใช้ template · ไม่มี migration · ทำตามข้อเสนอ api.md รอตัดสิน v1.9 ข้อ 1, 2, 6, 7 **Junior: ดูย้อนหลังแล้วยืนยันใน api.md**
+  - ทำโดย Jam (14 พ.ย.) ช่วง solo
 - [ ] P8-lite ร่วมกับทีม (review test ของ `compute_importance`)
   - 13 พ.ย. แผนใหม่: หลัง demo (ทำใน S4 หลัง 23 พ.ย.)
   - 8 พ.ย. test พร้อมให้ review ย้อนหลัง (PR #113 · `apps/api/tests/unit/test_stars.py`) · จดเวลาที่ใช้ใน `poc/P8-lite/metrics.md` §4 · test ที่ผิดจดใน §3
@@ -340,8 +347,11 @@
   - 13 พ.ย. (PR #131 · `specs/features/tutor/room-problems-db.md`): เปิดห้องที่มี token + prep ที่มีหัวข้อ → การ์ดจาก DB → `open_session/v2` บอกหัวข้อและเหตุผล → โจทย์จาก `generate_problem/v1` ที่ SymPy ยืนยันเฉลยแล้ว ลง `problems` (โจทย์ค้างใช้ซ้ำ) · `tutor_reply` รู้โจทย์ค้าง · รันจริงกับ 34 หัวข้อ MTH10101: ยืนยันผ่าน 71% ภายใน 3 รอบ (หัวข้อหลักของ demo ผ่านรอบแรก · Jam รับผล) · คลังโจทย์สำรองและให้ SymPy อ่านอนุพันธ์อันดับสูงเป็นงานหลัง demo · **การ์ดโจทย์หายเมื่อรีเฟรชหน้า (May · spec §10 ข้อ 3)** · ตรวจคำตอบในทางนี้คือขั้น 7
 - [x] ⭐ demo ขั้น 7: `typed_answer` + ตรวจ + รูป/canvas ในทางที่มี token (TM-06 ส่วนพิมพ์และรูป, AM-01–07) · hint ladder เฉพาะ `APP_ENV=local` ตาม `demo-room.md` §2 K (AM-07 ยังเป็นข้อเดิมจนกว่าทีมตัดสิน)
   - 14 พ.ย. (PR #132 · `specs/features/tutor/room-answers-db.md`): ทางที่มี token ใช้ flow ตรวจของเดโม่ทั้งหมดผ่าน `DbRoomState` · พิมพ์คำตอบเมื่อมีโจทย์ค้าง → `typed_answer` (ทุก env) → ตรวจ → `explain_check` → ใบ้ (local) หรือเฉลย → ข้อต่อไปจาก `generate_problem` · รูป/canvas และยืนยันลายมือเฉพาะ `APP_ENV=local` · ทุกคำตอบที่ได้ verdict ลง `attempts` (PM-01) · บรรทัดภายในเป็น `messages.role = system` · migration `0006` (`problems.ended_at`, `working_steps`) ขึ้นแค่ในเครื่อง **Junior: ดูแล้ว `db push`** · api.md v1.18 · รันจริงบน Vertex ครบ flow (hint_1 → hint_2 → ยอมแพ้ → ข้อต่อไป → ถูก) · แก้ merge rule ที่ LLM ให้ `no_answer` แต่มีบรรทัด (เคยทำ stream จบด้วย `internal_error`) · BKT ลง `topic_progress` ยังเป็นขั้น 8
-- [ ] ⭐ demo: ข้อต่อไปไม่ซ้ำข้อที่เพิ่งจบ · `generate_problem/v2` รับโจทย์ล่าสุดของหัวข้อ + code ตัดโจทย์ข้อความซ้ำ (นับเป็นรอบที่ไม่ผ่าน) · วัดใหม่บน Vertex (AM-11 · **Jam** · เจอตอนรันจริงของ PR #132 · `room-answers-db.md` §10 ข้อ 4)
-- [ ] ⭐ demo ขั้น 8–9: BKT ลง `attempts` / `topic_progress` + การ์ดจาก DB (PM-01–04) · สรุป session ด้วย `session_summary` (PM-05)
+- [x] ⭐ demo: ข้อต่อไปไม่ซ้ำข้อที่เพิ่งจบ · `generate_problem/v2` รับโจทย์ล่าสุดของหัวข้อ + code ตัดโจทย์ข้อความซ้ำ (นับเป็นรอบที่ไม่ผ่าน) · วัดใหม่บน Vertex (AM-11 · **Jam** · เจอตอนรันจริงของ PR #132 · `room-answers-db.md` §10 ข้อ 4)
+  - 14 พ.ย. (PR #133 · `room-problems-db.md` §2.3 v2): `generate_problem/v2` ได้ `previous_problems` (โจทย์ล่าสุดของหัวข้อ ≤ `session.avoid_recent_problems` = 5 [C]) · code ตัดโจทย์ที่คณิตใน `$…$` ซ้ำ (`same_problem`) นับเป็นรอบที่ไม่ผ่าน · ใช้ทั้งตอนเปิดห้องและข้อต่อไป · วัดบน Vertex 34 หัวข้อ × 3 ข้อ: ไม่มีโจทย์ซ้ำ · SymPy ยืนยันภายใน 3 รอบ 65/71/68% (v1 71%) · หัวข้อหลักของ demo ผ่านรอบแรก (Jam รับผล)
+- [x] ⭐ demo ขั้น 8–9: BKT ลง `attempts` / `topic_progress` + การ์ดจาก DB (PM-01–04) · สรุป session ด้วย `session_summary` (PM-05)
+  - 14 พ.ย. (PR #136): **ขั้น 9 เสร็จ** · สรุป session ด้วย `session_summary/v1` (small · 1–2 บรรทัดจาก facts ของ code: คำตอบของ session ต่อหัวข้อ + ระดับจาก `topic_progress`) · รันจริงบน Vertex: สรุปตรงกับ facts · ภาษายังแข็งเล็กน้อย ปรับ v2 ได้ภายหลัง
+  - 14 พ.ย. (PR #135 · `specs/features/planner/topic-progress-db.md`): **ขั้น 8 เสร็จ** · โจทย์จบ (ถูก, เฉลย, ยอมแพ้) → BKT ของ `domain/bkt.py` ลง `topic_progress` ของผู้ใช้ (นับครั้งเดียวต่อโจทย์ · ถูกหลังใบ้สุดท้ายไม่นับ) · การ์ดตอนเปิดห้องอ่าน `d_max` จริง · migration `0007` (`topic_progress.d_max`) **Junior: ดูแล้ว `db push`** · รันจริงบน Vertex: ตอบถูก 2 ข้อ → ความพร้อม 0% → 31% · ลิมิต `developing` · **เหลือขั้น 9** (จบ session + `session_summary`)
 - [ ] เดโม่ห้องติวที่ใช้ได้จริงในเครื่อง ให้อาจารย์ดูก่อนทำต่อ (อาจารย์ขอ 9 พ.ย. · เพิ่มเอง)
   - 13 พ.ย. แผนใหม่: ⭐ demo ขั้น 6–7 · ของในเดโม่นี้ (คำทัก, ตรวจ, hint ladder, BKT) ต้องย้ายเข้าทางที่มี token (ข้อใหม่ข้างล่าง) · ที่เหลือเดิม (canvas ในเบราว์เซอร์, วิดีโอ) รวมเข้า demo end to end · iPad หลัง demo
   - 9 พ.ย. (PR #115 · `specs/features/tutor/demo-room.md` + `specs/features/planner/bkt-mastery.md`): `APP_ENV=local` วนได้จริงกับ Vertex · อัปโหลดรูปในเครื่อง · โจทย์ 5 ข้อ · BKT จริง (`app/domain/bkt.py`) ในการ์ดตอนเข้าห้อง · tutor ทักก่อน (`open_session`) · รู้โจทย์และจำบทสนทนา (`tutor_reply/v2`) · พิมพ์คำตอบแล้วตรวจ (`typed_answer`) · แสดงวิธีทำทีละขั้นทุกครั้ง (`explain_check/v2`) · ส่งแค่คำตอบยังไม่ผ่าน (`checker.min_working_lines`) · วิธีเปิดอยู่ใน spec §12 · staging ยังเป็น stub

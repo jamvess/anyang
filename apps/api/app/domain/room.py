@@ -194,3 +194,91 @@ def poses_a_problem(expression: str, reference_answer: str) -> bool:
     if all(_SOLVED.match(part) for part in expression.split(",")):
         return False  # `x=3, x=2`: solutions, not an equation to solve
     return bool(_LETTER.search(_LATEX_COMMAND.sub("", expression)))
+
+
+# Ways to write the same LaTeX (self-review PR #133): sizes of a fraction, `\left`/`\right`,
+# `\limits`, and braces around one character after `^` or `_` (`x^{2}` is `x^2`).
+_SAME_LATEX = (
+    (re.compile(r"\\[dt]frac"), r"\\frac"),
+    (re.compile(r"\\(?:left|right)(?![A-Za-z])|\\limits"), ""),
+    (re.compile(r"([\^_])\{(\\?[A-Za-z0-9])\}"), r"\1\2"),
+)
+# Spaces, and the zero-width ones that Thai text can carry.
+_ANY_SPACE = re.compile(r"[\s​‌‍﻿]+")
+
+
+def _plain(math: str) -> str:
+    math = _ANY_SPACE.sub("", math)
+    for pattern, replacement in _SAME_LATEX:
+        math = pattern.sub(replacement, math)
+    return math
+
+
+def _math_of(text: str) -> str:
+    return "".join(_plain(m.group(1) or m.group(2)) for m in _MATH.finditer(text))
+
+
+def same_problem(text: str, other: str) -> bool:
+    """§2.3 item 4 (v2 · PR #133): two problem texts ask the same thing when all their `$…$`
+    math is the same once spaces and other ways to write the same LaTeX are taken out (other
+    words around it do not make a new problem) or, when neither has math, their whole text is
+    the same without spaces."""
+    math, other_math = _math_of(text), _math_of(other)
+    if math or other_math:
+        return math == other_math
+    return _ANY_SPACE.sub("", text) == _ANY_SPACE.sub("", other)
+
+
+# --- the result of a session (specs/features/tutor/session-end-db.md §2.2) -------------------
+
+
+@dataclass(frozen=True)
+class TopicResult:
+    name: str
+    answers: int
+    right: int
+    level: str  # not_started | weak | developing | passed
+
+
+@dataclass(frozen=True)
+class SessionResult:
+    topics: list[TopicResult]
+    answers: int
+    right: int
+
+
+def session_result(
+    answers: Sequence[tuple[UUID, bool]],
+    topics: Sequence[TopicFacts],
+    levels: Mapping[UUID, str],
+) -> SessionResult:
+    """§2.2: the checked answers ``(topic_id, is_correct)`` of the session, per topic of the
+    prep (answers of other topics are left out), most answers first, then `order_index`. The
+    level is the one of `topic_progress` now (no row = not started)."""
+    by_id = {t.id: t for t in topics}
+    counts: dict[UUID, list[int]] = {}
+    for topic_id, is_correct in answers:
+        if topic_id in by_id:
+            count = counts.setdefault(topic_id, [0, 0])
+            count[0] += 1
+            count[1] += int(is_correct)
+    ordered = sorted(counts, key=lambda tid: (-counts[tid][0], by_id[tid].order_index))
+    results = [
+        TopicResult(by_id[tid].name, counts[tid][0], counts[tid][1], levels.get(tid, "not_started"))
+        for tid in ordered
+    ]
+    return SessionResult(results, sum(r.answers for r in results), sum(r.right for r in results))
+
+
+def topics_text(result: SessionResult) -> str | None:
+    """One line per topic for `session_summary` (§2.3 item 1); None when nothing was answered."""
+    if not result.topics:
+        return None
+    return "\n".join(
+        f"{t.name} · ตอบ {t.answers} ครั้ง ถูก {t.right} · ระดับตอนนี้ {LEVEL_NAMES[t.level]}"
+        for t in result.topics
+    )
+
+
+def totals_text(result: SessionResult) -> str:
+    return f"ตอบ {result.answers} ครั้ง ถูก {result.right}"

@@ -1,4 +1,4 @@
-# API (v1.18)
+# API (v1.20)
 
 Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้างอัตโนมัติที่ `/docs` · frontend generate types จาก `/openapi.json`
 
@@ -192,13 +192,15 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
   - `409 scope_already_confirmed` · `Scope.status` เป็น `"confirmed"` อยู่แล้ว
   - `409 scope_empty` · ไม่มีหัวข้อที่ไม่ได้ถูกตัดออก
 
+**v1.20 · ทางที่มี token ทำงานจริงแล้ว** (Jam ช่วง solo 2026-11-14 · Junior ให้ตัดสินใจไปก่อน · `specs/features/scope/scope-db.md` · Junior ดูย้อนหลัง): `GET /exam-preps/{id}/scope`, `GET /topics/{id}/sources`, `POST /exam-preps/{id}/scope/confirm` อ่านเขียนด้วย JWT ของผู้ใช้ (RLS) ตามข้อเสนอข้อ 1–3, 5 ข้างล่าง · DB ล่ม → `503 db_unavailable` · confirm เขียน 3 ขั้นทีละคำสั่ง (`scope_versions` → `active_scope_version_id` → หัวข้อ `draft` เป็น `confirmed`) · ยืนยันพร้อมกันชน `unique (exam_prep_id, version)` → `409 scope_already_confirmed` · `snapshot` = `{topic_id, name, order, stars, status, origin}` ต่อหัวข้อ · ไม่มี token → stub เดิม · `source_label` ใช้ชื่อไฟล์ไม่มีนามสกุล (ยังไม่มีชื่อย่อ)
+
 **รอตัดสิน (v1.6 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-01 (PR #100) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
 
-1. **รูปร่างของ `Scope` และ `status`** (scope-review OQ 5): ใช้ข้อเสนอของ May ตามที่เขียนไว้ · `status` ดูจาก `active_scope_version_id` เพราะ scope ที่ยืนยันแล้วคือ version ที่ prep ชี้อยู่ และไม่มีการแก้หลังยืนยัน · ส่งหัวข้อที่ตัดออกเป็น `stars: 0` เพราะ OQ 3 ต้องแสดงหัวข้อที่ถูกตัด · backend ต้องเปลี่ยน `status = 'excluded'` กับ `importance = 0` ไปด้วยกันเสมอ เพราะ 0 ดาว = ตัดออก (§2.3.5) · หัวข้อที่เพิ่มด้วย `add_topic` ต้องได้ดาวตอนเพิ่ม (ยังไม่ได้เขียนใน §2.3.6) ไม่งั้น `GET /scope` จะตอบ `scope_not_ready`
-2. **กฎของ `source_label` และ `label`** (OQ 6): ข้อเสนอคือ `{ชื่อไฟล์ไม่มีนามสกุล} น.{from}–{to}` (หน้าเดียวใช้ `น.{n}`) หลายช่วงคั่นด้วย `, ` · `label` = `{ชื่อไฟล์ไม่มีนามสกุล} ข้อ {q_no}` · ชื่อสั้นอย่าง "ch3" ใน fixture ของ May ต้องมีที่เก็บชื่อย่อ (ยังไม่มีใน schema) · หัวข้อ `origin = 'user'` ไม่มีช่วงหน้า ข้อเสนอคือส่ง `""` และหน้าเว็บไม่แสดงส่วนที่มา (ต้องถาม May ด้วย)
-3. **ข้อความต้นฉบับ** (OQ 6): `excerpts.text` เป็นข้อความทั้งหน้าจาก `material_pages` · ถ้ายาวเกินไปค่อยตัดเฉพาะส่วนที่เกี่ยวข้องภายหลัง
+1. **รูปร่างของ `Scope` และ `status`** (ใช้แล้ว v1.20 · รอ Junior ยืนยัน) (scope-review OQ 5): ใช้ข้อเสนอของ May ตามที่เขียนไว้ · `status` ดูจาก `active_scope_version_id` เพราะ scope ที่ยืนยันแล้วคือ version ที่ prep ชี้อยู่ และไม่มีการแก้หลังยืนยัน · ส่งหัวข้อที่ตัดออกเป็น `stars: 0` เพราะ OQ 3 ต้องแสดงหัวข้อที่ถูกตัด · backend ต้องเปลี่ยน `status = 'excluded'` กับ `importance = 0` ไปด้วยกันเสมอ เพราะ 0 ดาว = ตัดออก (§2.3.5) · หัวข้อที่เพิ่มด้วย `add_topic` ต้องได้ดาวตอนเพิ่ม (ยังไม่ได้เขียนใน §2.3.6) ไม่งั้น `GET /scope` จะตอบ `scope_not_ready`
+2. **กฎของ `source_label` และ `label`** (ใช้แล้ว v1.20 · รอ Junior ยืนยัน) (OQ 6): ข้อเสนอคือ `{ชื่อไฟล์ไม่มีนามสกุล} น.{from}–{to}` (หน้าเดียวใช้ `น.{n}`) หลายช่วงคั่นด้วย `, ` · `label` = `{ชื่อไฟล์ไม่มีนามสกุล} ข้อ {q_no}` · ชื่อสั้นอย่าง "ch3" ใน fixture ของ May ต้องมีที่เก็บชื่อย่อ (ยังไม่มีใน schema) · หัวข้อ `origin = 'user'` ไม่มีช่วงหน้า ข้อเสนอคือส่ง `""` และหน้าเว็บไม่แสดงส่วนที่มา (ต้องถาม May ด้วย)
+3. **ข้อความต้นฉบับ** (ใช้แล้ว v1.20 · รอ Junior ยืนยัน) (OQ 6): `excerpts.text` เป็นข้อความทั้งหน้าจาก `material_pages` · ถ้ายาวเกินไปค่อยตัดเฉพาะส่วนที่เกี่ยวข้องภายหลัง
 4. **`text` ของข้อสอบใช้ `$…$`** (OQ 7): Jam ตกลง (เป็นเจ้าของ prompt) · `split_past_exam/v1` รับสมการเป็น LaTeX ใน `$` อยู่แล้ว
-5. **error code ของ scope:** `scope_not_ready` (`GET /scope` และ confirm) · `scope_already_confirmed`, `scope_empty` (confirm อย่างเดียว) · 409 ทั้งหมด
+5. **error code ของ scope:** (ใช้แล้ว v1.20 · รอ Junior ยืนยัน) `scope_not_ready` (`GET /scope` และ confirm) · `scope_already_confirmed`, `scope_empty` (confirm อย่างเดียว) · 409 ทั้งหมด
 
 **ความคืบหน้า แชทแก้ขอบเขต และ change log (v1.11 · ข้อเสนอ รอ Junior ตัดสิน):** UC-02 ขั้น 6–12 (S11, S13, S14) · ai-orchestration §2.3.2 ขั้น 4–6, §2.3.4, §2.3.6 · ยังไม่มี feature spec ของหน้าจอ · ทุก field ต้องมี และไม่มี field อื่น · prep หรือไฟล์ที่ไม่มีหรือเป็นของ tenant อื่น → `404 not_found`
 
@@ -364,6 +366,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 - สิ่งที่ backend ทำ: ตั้ง `tutor_sessions.ended_at = now()` และ `end_reason = 'user'` **ก่อน**เรียก AI ด้วยคำสั่งเดียวที่มีเงื่อนไข `ended_at is null` (request ที่มาพร้อมกันได้ 409 แทนการเรียก `session_summary` ซ้ำ) · คำนวณการเปลี่ยนแปลงของ mastery ตาม §2.2.9 (ยังไม่มีใน stub)
 - error: `409 session_already_ended` (`ended_at` ไม่เป็น null) · ตอบก่อนเริ่ม SSE
 - จบแบบอื่น (`time_budget`, `plan_done`, `idle`) เป็นของ backend เอง ไม่ผ่าน endpoint นี้
+- **v1.19 · ทางที่มี token ทำงานจริงแล้ว** (Jam ช่วง solo 2026-11-14 · `specs/features/tutor/session-end-db.md` · Junior ดูย้อนหลัง): ทำตามข้อเสนอรอตัดสินข้อ 1, 2, 6, 7 ข้างล่าง · session ไม่มีหรือของคนอื่น → `404` · จบแล้ว หรือ request อื่นปิดไปก่อน (update ที่มีเงื่อนไข `ended_at is null` ไม่ได้แก้แถว) → `409 session_already_ended` · DB ล่ม → `503 db_unavailable` · ทั้งหมดก่อน SSE · code นับคำตอบของ session (`attempts` ของผู้ใช้ตั้งแต่ `started_at` ของหัวข้อใน prep) ต่อหัวข้อพร้อมระดับตอนนี้จาก `topic_progress` → `session_summary/v1` (1–2 บรรทัด) · AI ล้ม → template ของ `config/messages.yaml` → `room.session_summary_*` · บันทึก `tutor_sessions.summary` และข้อความ `tutor` ใน `messages` ก่อน `done` (id ใน `done.message_ids`) · ไม่มี token → stub เดิม · ยังไม่ได้คำนวณ mastery ที่เปลี่ยนใน session
 
 **`GET /sessions/{id}/messages`** · ประวัติแชท (TM-13)
 
@@ -382,13 +385,13 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 **รอตัดสิน (v1.9 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-02 (PR #104) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
 
-1. **`/end` ตอบเป็น SSE:** เพราะ `session_end` เป็น event และสรุปมาจาก AI call · ทางเลือกคือตอบ JSON `{summary_lines}` ธรรมดา
-2. **`/end` ไม่นับใน rate limit** (`gateway-guards.md` §2.1 นับเฉพาะข้อความที่ผู้ใช้ส่ง) · ถึงจะเรียก AI แต่จบ session ได้ครั้งเดียว (ครั้งที่สองได้ 409)
+1. **`/end` ตอบเป็น SSE:** (ใช้แล้ว v1.19 · รอ Junior ยืนยัน) เพราะ `session_end` เป็น event และสรุปมาจาก AI call · ทางเลือกคือตอบ JSON `{summary_lines}` ธรรมดา
+2. **`/end` ไม่นับใน rate limit** (ใช้แล้ว v1.19 · รอ Junior ยืนยัน) (`gateway-guards.md` §2.1 นับเฉพาะข้อความที่ผู้ใช้ส่ง) · ถึงจะเรียก AI แต่จบ session ได้ครั้งเดียว (ครั้งที่สองได้ 409)
 3. ~~**`GET /sessions/{id}/messages` ยังไม่แบ่งหน้า**~~ **ตัดสินแล้ว** (Junior 2026-11-11 · v1.15): ยังไม่แบ่งหน้า · ต้องมีก่อน Beta ถ้า session ยาว
 4. **`GET /exam-preps/{id}/progress` ใช้รูปร่างเดียวกับ event** · หน้าเว็บใช้ component เดียวกันทั้งสองที่
 5. **error code ใหม่:** `session_already_ended`, `scope_not_confirmed` (มีในตัวอย่างของ Conventions อยู่แล้ว), `tts_unavailable`
-6. **จำนวนบรรทัดของสรุป** (self-review #104): ai-orchestration §2.2.9 และ §3.3 เขียนว่า "สรุป 2 บรรทัด" · ตาราง SSE เดิมเขียน `[..2]` · ข้อเสนอคือรับ 1–2 บรรทัด (session สั้นอาจมีเรื่องเดียว) · ถ้าต้อง 2 บรรทัดพอดี ให้แก้ `SessionEndEvent`
-7. **เก็บสรุปเป็นข้อความในแชทด้วย** (self-review #104): PM-05 ให้สรุป "ในรูปแบบ chat message" · ถ้าเก็บแค่ `tutor_sessions.summary` สรุปจะหายจาก `GET /sessions/{id}/messages` หลังโหลดหน้าใหม่ และไม่มี id ให้ `/tts` · ข้อเสนอคือเพิ่มแถวใน `messages` (role `tutor`) และส่ง id ใน `done.message_ids`
+6. **จำนวนบรรทัดของสรุป** (self-review #104 · ใช้ 1–2 บรรทัดแล้ว v1.19 · รอ Junior ยืนยัน): ai-orchestration §2.2.9 และ §3.3 เขียนว่า "สรุป 2 บรรทัด" · ตาราง SSE เดิมเขียน `[..2]` · ข้อเสนอคือรับ 1–2 บรรทัด (session สั้นอาจมีเรื่องเดียว) · ถ้าต้อง 2 บรรทัดพอดี ให้แก้ `SessionEndEvent`
+7. **เก็บสรุปเป็นข้อความในแชทด้วย** (self-review #104 · ใช้แล้ว v1.19 · รอ Junior ยืนยัน): PM-05 ให้สรุป "ในรูปแบบ chat message" · ถ้าเก็บแค่ `tutor_sessions.summary` สรุปจะหายจาก `GET /sessions/{id}/messages` หลังโหลดหน้าใหม่ และไม่มี id ให้ `/tts` · ข้อเสนอคือเพิ่มแถวใน `messages` (role `tutor`) และส่ง id ใน `done.message_ids`
 8. **TTS อ่านข้อความของ buddy ด้วยไหม:** TM-09 พูดถึงข้อความของ tutor เท่านั้น · ข้อเสนอคือตาม TM-09 (เพิ่ม buddy ต้องแก้ requirement)
 9. **(ข้อความ ตัดสินแล้ว v1.15: ของจริงเป็น uuid · fixture ยังเป็น `m0` · หัวข้อยังเปิด)** **id ของข้อความและหัวข้อใน fixture ของห้องติวไม่ใช่ uuid** (`m0`, `t1` · ของเดิมตั้งแต่ PR #38): `/messages/{id}/tts` และ `/topics/{id}/sources` รับ uuid · ของจริงเป็น uuid ทั้งหมด (`messages.id`, `topics.id`) · ข้อเสนอคือเปลี่ยน `Message.id` และ `ProgressTopic.id` เป็น uuid พร้อม fixture ใน PR ที่ต่อห้องติวกับ DB
 

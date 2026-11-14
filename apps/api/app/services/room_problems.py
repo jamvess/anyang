@@ -33,6 +33,7 @@ from app.domain.room import (
     choose_topic,
     focus_text,
     poses_a_problem,
+    same_problem,
     text_latex_of,
 )
 from app.math.sympy_service import check_lines
@@ -48,7 +49,7 @@ from app.models.tutor_ai import GenerateProblemResult
 from app.services.room_db import _save_tutor
 from app.services.room_opening import greeting_events, topic_lines
 from app.services.tutor_turn import Event, call_scope
-from app.settings import get_settings
+from app.settings import LearningConfig, get_settings
 
 log = logging.getLogger(__name__)
 
@@ -67,6 +68,19 @@ def usable_topics(topics: Sequence[TopicFacts]) -> list[TopicFacts]:
     return usable if any((t.importance or 0) >= 1 for t in usable) else []
 
 
+def progress_state(row: ProgressFacts | None, cfg: LearningConfig) -> TopicProgress:
+    """A `topic_progress` row as BKT reads it; no row = not started at `bkt.p_init`."""
+    if row is None:
+        return TopicProgress(cfg.bkt.p_init, 0, 0)
+    return TopicProgress(row.mastery, row.attempts_n, row.d_max)
+
+
+def topic_level(state: TopicProgress, stars: int, cfg: LearningConfig) -> str:
+    """The level of the card and of `topic_progress.level` (topic-progress-db.md §2.2 item 3):
+    every skill counts as covered until skill coverage exists (§10 item 2)."""
+    return level(state, target_difficulty(stars, MODE, cfg), True, cfg)
+
+
 def _card(
     topics: list[TopicFacts], progress: list[ProgressFacts], days: int
 ) -> tuple[ProgressCardEvent, dict[UUID, str], dict[UUID, float]]:
@@ -78,14 +92,10 @@ def _card(
     for topic in topics:
         stars = topic.importance or 0
         row = rows.get(topic.id)
-        state = (
-            TopicProgress(row.mastery, row.attempts_n, row.d_max or 0)
-            if row
-            else TopicProgress(cfg.bkt.p_init, 0, 0)
-        )
+        state = progress_state(row, cfg)
         d_target = target_difficulty(stars, MODE, cfg)
-        topic_level = level(state, d_target, True, cfg) if row else "not_started"
-        levels[topic.id] = topic_level
+        this_level = topic_level(state, stars, cfg) if row else "not_started"
+        levels[topic.id] = this_level
         if row:
             mastery[topic.id] = row.mastery
         card_topics.append(
@@ -93,7 +103,7 @@ def _card(
                 id=str(topic.id),
                 name=topic.name,
                 stars=stars,
-                level=topic_level,
+                level=this_level,
                 review_due=False,
                 origin=topic.origin,
             )
@@ -185,21 +195,26 @@ async def _problem_for(
 ) -> tuple[ProblemRecord, str] | None:
     """The open problem of the topic, or a new verified one (spec §2.3); None when there is
     none. The second value is the card's LaTeX."""
+    cfg = get_settings().learning
+    difficulty = target_difficulty(topic.importance or 0, MODE, cfg)
     try:
         reused = await run_in_threadpool(problems.open_problem, prep_id, topic.id)
         if reused is not None:
             return reused, text_latex_of(reused.text)
+        if difficulty is None:  # a skipped topic is never chosen (importance >= 1 · §2.2 item 3)
+            return None
         skills = await run_in_threadpool(problems.list_skills, topic.id)
-        limit = get_settings().learning.session.grounding_chunks
+        limit = cfg.session.grounding_chunks
         chunks = await run_in_threadpool(problems.source_chunks, topic.id, limit)
-        practised = await run_in_threadpool(problems.topic_has_problems, prep_id, topic.id)
+        avoid = cfg.session.avoid_recent_problems
+        previous = await run_in_threadpool(problems.recent_problems, prep_id, topic.id, avoid)
+        # The latest problems already say whether the topic has one (self-review PR #133).
+        practised = bool(previous) or (
+            avoid == 0 and await run_in_threadpool(problems.topic_has_problems, prep_id, topic.id)
+        )
     except DbUnavailableError:
         return None
 
-    cfg = get_settings().learning
-    difficulty = target_difficulty(topic.importance or 0, MODE, cfg)
-    if difficulty is None:  # a skipped topic is never chosen (importance >= 1 · §2.2 item 3)
-        return None
     keys = {f"s{n}": skill.id for n, skill in enumerate(skills, start=1)}
     values = {
         "topic": topic.name,
@@ -208,6 +223,9 @@ async def _problem_for(
         "source_text": "\n\n".join(chunks) or NONE,
         "difficulty": str(difficulty),
         "answer_formats": ANSWER_FORMATS,
+        # v2: the latest problems of the topic, so the next one differs (§2.3 item 2).
+        # One line each, as the prompt reads them: a text with a line break stays one problem.
+        "previous_problems": "\n".join(f"- {' '.join(p.text.split())}" for p in previous) or NONE,
     }
     for attempt in range(1 + cfg.checker.max_generate_retries):
         try:
@@ -215,6 +233,16 @@ async def _problem_for(
                 result = await gateway.call("generate_problem", values, GenerateProblemResult)
         except Exception as error:  # the model or the schema: counts as a try (spec AC-6)
             log.warning("generate_problem try %d failed: %s", attempt + 1, error)
+            continue
+        if repeated := next((p for p in previous if same_problem(result.text, p.text)), None):
+            # Both texts, to calibrate session.avoid_recent_problems (learning.yaml).
+            log.warning(
+                "generate_problem try %d: %r is the same as problem %s %r",
+                attempt + 1,
+                result.text,
+                repeated.id,
+                repeated.text,
+            )
             continue
         if not await verified(result):
             log.warning(

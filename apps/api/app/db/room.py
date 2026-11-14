@@ -9,7 +9,7 @@ failure to reach or use the database becomes `DbUnavailableError` (503 db_unavai
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from typing import Annotated, Any, Protocol
 from uuid import UUID
 
@@ -92,6 +92,14 @@ class RoomRepository(Protocol):
     ) -> MessageRecord: ...
 
     def profile_facts(self) -> ProfileFacts: ...
+
+    def end_session(self, session_id: UUID, reason: str) -> bool:
+        """Set `ended_at = now()` and `end_reason` in one update that needs `ended_at is null`;
+        False when no row changed (ended already, or another request won · session-end-db.md
+        §2.1 item 3)."""
+        ...
+
+    def save_summary(self, session_id: UUID, summary: str) -> None: ...
 
 
 def _uuid(value: str | None) -> UUID | None:
@@ -257,6 +265,31 @@ class SupabaseRoomRepository:
         return self._run(
             "messages insert",
             lambda: _message(self._db.table("messages").insert(row).execute().data[0]),
+        )
+
+    def end_session(self, session_id: UUID, reason: str) -> bool:
+        rows = self._run(
+            "tutor_sessions end",
+            lambda: (
+                self._db.table("tutor_sessions")
+                .update({"ended_at": datetime.now(UTC).isoformat(), "end_reason": reason})
+                .eq("id", str(session_id))
+                .is_("ended_at", "null")
+                .execute()
+                .data
+            ),
+        )
+        return bool(rows)  # PostgREST returns the updated rows
+
+    def save_summary(self, session_id: UUID, summary: str) -> None:
+        self._run(
+            "tutor_sessions summary",
+            lambda: (
+                self._db.table("tutor_sessions")
+                .update({"summary": summary})
+                .eq("id", str(session_id))
+                .execute()
+            ),
         )
 
     def profile_facts(self) -> ProfileFacts:

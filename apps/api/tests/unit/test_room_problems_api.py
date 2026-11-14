@@ -76,12 +76,20 @@ class FakeProblemRepo:
     fail_insert: bool = False
     chunk_limits: list[int] = field(default_factory=list)
     inserted: list[dict[str, Any]] = field(default_factory=list)  # what add_problem got
+    saved_progress: list[dict[str, Any]] = field(default_factory=list)  # PR #135
 
     def list_topics(self, prep_id: uuid.UUID) -> list[TopicFacts]:
         return list(self.topics) if prep_id == PREP_ID else []
 
     def list_progress(self, prep_id: uuid.UUID) -> list[ProgressFacts]:
         return list(self.progress)
+
+    # Added for BKT into topic_progress (PR #135 · Jam ok 14 Nov); no assertion changed.
+    def get_topic_progress(self, topic_id: uuid.UUID) -> ProgressFacts | None:
+        return next((p for p in self.progress if p.topic_id == topic_id), None)
+
+    def save_topic_progress(self, **fields: Any) -> None:
+        self.saved_progress.append(dict(fields))
 
     def list_skills(self, topic_id: uuid.UUID) -> list[SkillFacts]:
         return list(self.skills.get(topic_id, []))
@@ -102,6 +110,11 @@ class FakeProblemRepo:
 
     def topic_has_problems(self, prep_id: uuid.UUID, topic_id: uuid.UUID) -> bool:
         return any(p.topic_id == topic_id for p in self.problems)
+
+    def recent_problems(self, prep_id: uuid.UUID, topic_id: uuid.UUID, limit: int) -> list:
+        # Added for generate_problem/v2 (PR #133 · Jam ok 14 Nov); no assertion changed.
+        mine = [p for p in self.problems if p.topic_id == topic_id]
+        return list(reversed(mine))[:limit]
 
     def add_problem(self, **fields: Any) -> ProblemRecord:
         """Keyword fields: the `problems` columns (tenant_id, session_id, topic_id, skill_id,

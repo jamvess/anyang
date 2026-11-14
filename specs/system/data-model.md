@@ -1,4 +1,4 @@
-# Data model (v1.6)
+# Data model (v1.7)
 
 SQL จริงอยู่ที่ `supabase/migrations/` เริ่มจาก `0001_init.sql` (ทดสอบรันบน PostgreSQL + pgvector แล้ว และทดสอบ RLS ว่า user A มองไม่เห็นข้อมูลของ user B) แล้วแก้ต่อด้วย migration ใหม่ทีละไฟล์ ไม่แก้ไฟล์เดิม ไฟล์นี้อธิบายภาพรวมและเหตุผล
 
@@ -8,6 +8,7 @@ SQL จริงอยู่ที่ `supabase/migrations/` เริ่มจ�
 | `0003_topic_sources.sql` | ตารางใหม่ `topic_sources` (ช่วงหน้าของหัวข้อ) + `past_exam_questions.map_note` · ผลจาก P3 ข้อ 1 และ 3 (2026-11-01) |
 | `0005_ingestion_jobs_prep.sql` | `ingestion_jobs.exam_prep_id` (ไม่ null · เติมจาก `materials` ของแถวเดิม) + `material_id` null ได้: แถวของขั้นรวม `topics`, `stars` ทำต่อ prep ไม่ใช่ต่อไฟล์ (`specs/features/scope/ingestion.md` §5 · api.md รอตัดสิน ข้อ 1 · Jam ช่วง solo 2026-11-13 · **ขึ้นแค่ Supabase ในเครื่อง · รอ Junior ดูแล้ว `db push`**) |
 | `0006_problems_ended.sql` | `problems.ended_at` (null = โจทย์ยังไม่จบ · คำตอบผิดที่ได้ใบ้มีแถว `attempts` แต่โจทย์ยังไม่จบ) + `problems.working_steps` (ขั้นที่ถูกของคำตอบที่ยังไม่จบ · `continue`) + index โจทย์ที่ยังไม่จบ (`specs/features/tutor/room-answers-db.md` §5 · Jam ช่วง solo 2026-11-14 · **ขึ้นแค่ Supabase ในเครื่อง · รอ Junior ดูแล้ว `db push`**) |
+| `0007_topic_progress_d_max.sql` | `topic_progress.d_max` (ระดับยากสูงสุดที่ตอบถูกเอง 0–3 · `mastery_eff` ของ learning-model §4 ใช้) (`specs/features/planner/topic-progress-db.md` §5 · Jam ช่วง solo 2026-11-14 · **ขึ้นแค่ Supabase ในเครื่อง · รอ Junior ดูแล้ว `db push`**) |
 | `0004_tutor_sessions_scope_nullable.sql` | `tutor_sessions.scope_version_id` เป็น null ได้: session ที่เริ่มก่อนยืนยัน scope (`room-sessions-db.md` · Junior 2026-11-11 · ขึ้น anyang-dev และ anyang-staging แล้ว) · FK เดิมยังอยู่ |
 
 ## กฎทั่วไป
@@ -315,6 +316,7 @@ erDiagram
     uuid topic_id PK, FK
     uuid exam_prep_id FK
     numeric mastery
+    smallint d_max "0-3"
     text level "not_started | weak | developing | passed"
     jsonb skill_coverage
     int review_step
@@ -377,7 +379,7 @@ Golden sets ของการวัดผล AI ไม่อยู่ใน DB 
 
 - `problems.source_ref` เป็น `uuid` ที่ไม่มี FK · `ai-orchestration.md` §3 ระบุแค่ชื่อ column ไม่ได้บอกว่าตอน `source = past_exam` หรือ `doc` ต้องชี้ไปตารางไหน (น่าจะเป็น `past_exam_questions` / `chunks` แต่ยังไม่ได้ตกลงกัน)
 - **(รอทีม · จากข้อเสนอแก้ AM-07 · PR #127)** ถ้าทีมรับ hint ladder: `attempts` ต้องเก็บจำนวน hint ต่อโจทย์ (AM-10 กลับมา active · PM-01) เช่น `hints_used smallint not null default 0` · ตอนนี้ `independent` ที่มีอยู่แล้วพอสำหรับกติกา BKT (ถูกหลัง hint ระดับสุดท้าย = `independent = false`) · migration ใหม่ทำเมื่อบันทึก `attempts` จริง (ตอนนี้ hint ladder อยู่ในเดโม่ในเครื่องที่เก็บใน memory เท่านั้น · `demo-room.md` §2 K)
-- ห้องติวบน DB เขียน `tutor_sessions` + `messages` (`room-sessions-db.md`), `problems` (`room-problems-db.md`), `attempts` + `problems.ended_at` / `working_steps` (`room-answers-db.md`) · ยังไม่มีโค้ดเขียน `topic_progress` (demo ขั้น 8) · mastery ในเดโม่อยู่ใน memory (`demo-room.md` §2 D)
+- ห้องติวบน DB เขียน `tutor_sessions` + `messages` (`room-sessions-db.md`), `problems` (`room-problems-db.md`), `attempts` + `problems.ended_at` / `working_steps` (`room-answers-db.md`) · `topic_progress` (`topic-progress-db.md` · BKT ตอนโจทย์จบ) · mastery ในเดโม่อยู่ใน memory (`demo-room.md` §2 D)
 
 ## สิ่งที่ยังรอผล PoC
 

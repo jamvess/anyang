@@ -109,7 +109,10 @@ export interface paths {
          * End Session
          * @description The user ends the session. SSE: session_end (1-2 summary lines) → done (PM-05).
          *
-         *     stub — always the same summary; nothing is saved
+         *     With a token (session-end-db.md): 404 / 409 / 503 before the stream; the session is closed
+         *     first, in one update that needs `ended_at is null`, so two ends at once cannot both reach
+         *     the AI. The summary is saved and is a chat message too. Without a token it is the stub:
+         *     always the same summary, nothing saved.
          */
         post: operations["end_session_sessions__id__end_post"];
         delete?: never;
@@ -274,7 +277,8 @@ export interface paths {
          * Get Scope
          * @description Draft topics with stars and reasons, in API order (SM-02, SM-03), excluded topics included.
          *
-         *     stub — replaced when ingestion and compute_importance exist
+         *     With a token: the rows of the user's JWT (specs/features/scope/scope-db.md §2.1). Without
+         *     one: the stub.
          */
         get: operations["get_scope_exam_preps__id__scope_get"];
         put?: never;
@@ -296,8 +300,9 @@ export interface paths {
          * Get Topic Sources
          * @description Source pages and past exam questions of one topic (SM-04).
          *
-         *     stub — replaced when ingestion exists; every topic id gets the sources of the
-         *     difference-of-squares topic (May's sources-t3.json)
+         *     With a token: the pages of the topic's ranges and its questions (scope-db.md §2.2). Without
+         *     one: the stub, the sources of the difference-of-squares topic for every id (May's
+         *     sources-t3.json).
          */
         get: operations["get_topic_sources_topics__id__sources_get"];
         put?: never;
@@ -321,7 +326,8 @@ export interface paths {
          * Confirm Scope
          * @description Lock the draft scope as a scope version (SM-09).
          *
-         *     stub — replaced when scope_versions are written
+         *     With a token: a `scope_versions` row, `active_scope_version_id`, draft topics confirmed
+         *     (scope-db.md §2.3). Without one: the stub.
          */
         post: operations["confirm_scope_exam_preps__id__scope_confirm_post"];
         delete?: never;
@@ -1832,7 +1838,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -2375,7 +2381,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -2433,7 +2439,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -2500,7 +2506,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;

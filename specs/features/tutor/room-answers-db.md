@@ -27,7 +27,7 @@
 1. `pending_problem` = โจทย์ที่**ยังไม่จบ** (`problems.ended_at is null`) ล่าสุดของ prep ของ session (#131 §2.4) → `PendingProblem` (`problem_id`, `CheckProblem(text, reference_answer, answer_format, solution_steps)`, `text_latex` จาก `text_latex_of`, `difficulty`, `topic_id`) · **"ค้าง" เปลี่ยนจาก "ไม่มี attempt" (#131) เป็น "`ended_at` ว่าง"** เพราะตอนนี้คำตอบที่ผิดก็มีแถว `attempts` แล้ว แต่โจทย์ยังไม่จบ (hint ladder)
 2. `ladder` · เฉพาะ `APP_ENV=local` (AM-07 · demo-room §2 K): `wrong_before` = จำนวนแถว `attempts` ของโจทย์ที่ `verdict = incorrect` · `steps_before` = `problems.working_steps` · นอก local → None (เฉลยทันที)
 3. `note_try(steps=n)` (ส่งขั้นที่ยังไม่จบ · `continue`) → `problems.working_steps += n` · `note_try(wrong=True)` → ไม่ทำอะไร (แถว `attempts` ของคำตอบนั้นนับให้แล้ว · §2.3)
-4. `record_check` (code ตัดสินว่าโจทย์จบ: ถูก, เฉลย, ยอมแพ้) → **ตั้ง `ended_at` ทันที ก่อนคำอธิบาย** (self-review PR #132: ถ้ารอให้คำอธิบายจบ tutor ล้มหรือ client ออกกลางทาง โจทย์จะค้างทั้งที่มีแถว `attempts` แล้ว · ตอบซ้ำได้ attempt ซ้ำ) · โจทย์ที่ไม่ใช่โจทย์ค้างแล้ว (พรีวิวรูปที่ค้าง) ไม่ทำอะไร · BKT ลง `topic_progress` เป็นขั้น 8
+4. `record_check` (code ตัดสินว่าโจทย์จบ: ถูก, เฉลย, ยอมแพ้) → **ตั้ง `ended_at` ทันที ก่อนคำอธิบาย** (self-review PR #132: ถ้ารอให้คำอธิบายจบ tutor ล้มหรือ client ออกกลางทาง โจทย์จะค้างทั้งที่มีแถว `attempts` แล้ว · ตอบซ้ำได้ attempt ซ้ำ) · โจทย์ที่ไม่ใช่โจทย์ค้างแล้ว (พรีวิวรูปที่ค้าง) ไม่ทำอะไร · แล้ว BKT ลง `topic_progress` เฉพาะเมื่อ request นี้ปิดโจทย์สำเร็จ (`topic-progress-db.md` · PR #135)
 5. `next_problem(answered)` → โจทย์ที่ตอบต้องจบแล้ว (ข้อ 4 · ยังไม่จบก็ตั้งตอนนี้) แล้วเลือกหัวข้อและสร้างโจทย์ใหม่ด้วยกฎและ generator ของ #131 (§2.2 ข้อ 3, §2.3) ใน session ปัจจุบัน → `PendingProblem` · ตั้ง `ended_at` ไม่สำเร็จ → None (ไม่งั้น generator ได้โจทย์เดิมกลับมาเป็นโจทย์ค้างของหัวข้อ) · สร้างไม่ได้ → None (flow ไม่ส่ง `ข้อต่อไปนะ` และ `problem`) · พรีวิวที่ค้าง (โจทย์ที่ตอบไม่ใช่โจทย์ค้างแล้ว) → None และ `ladder` / `note_try` ไม่ขยับอะไร (แบบเดโม่ · demo-room §2 K ข้อ 9)
 6. `remember(role, text)` → insert `messages` ของ session:
    - ข้อความที่พูดจริง → `role` = `user` (นักเรียน · `input_mode = "text"`) หรือ `tutor` · ข้อความที่นักเรียนพิมพ์ใน request นั้นเป็น `user` เสมอ แม้ขึ้นต้นด้วย `(ยืนยันคำตอบ)` (self-review)
@@ -115,7 +115,7 @@ fake room repository + fake problem repository (แถวที่ JWT เห็
 2. **`done.message_ids` เป็น `[]` ใน stream ตรวจคำตอบ:** หน้าเว็บไม่ใช้ id แสดงผล · ถ้า May ต้องใช้ (เช่น ลบข้อความชั่วคราว) ค่อยรวม id ของข้อความ `tutor` ที่บันทึกใน stream นั้น
 3. **`typed_answer` นอก local:** เพิ่มต้นทุน 1 call (tier small) ต่อข้อความเมื่อมีโจทย์ค้าง · ข้อเสนอ: เปิด เพราะเป็นทางจริงของผลิตภัณฑ์ (intent router เต็มรูปแบบมาแทนภายหลัง)
 
-4. **(Jam ตัดสิน 14 พ.ย. · PR ถัดไป) ข้อต่อไปซ้ำ:** `generate_problem/v2` รับโจทย์ล่าสุดของหัวข้อ และ code ตัดโจทย์ที่ข้อความซ้ำกับของ prep (นับเป็นรอบที่ไม่ผ่าน)
+4. ~~**(Jam ตัดสิน 14 พ.ย. · PR ถัดไป) ข้อต่อไปซ้ำ**~~ **ทำแล้ว PR #133** (`room-problems-db.md` §2.3 v2 · วัดบน Vertex ไม่มีโจทย์ซ้ำ): `generate_problem/v2` รับโจทย์ล่าสุดของหัวข้อเดียวกันใน prep ไม่เกิน `session.avoid_recent_problems` ข้อ และ code ไม่รับโจทย์ที่คณิตใน `$…$` ซ้ำกับข้อเหล่านั้น (`same_problem` · นับเป็นรอบที่ไม่ผ่าน) · โจทย์ที่เก่ากว่านั้น หรือของหัวข้ออื่น ไม่ได้เทียบ
 
 ## 11. Spec changes needed
 

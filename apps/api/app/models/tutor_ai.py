@@ -8,8 +8,16 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.models.room import SummaryLines
+
 # The formats the answer checker grades (app/domain/checker.py · spec §2.3 item 2).
 GradedFormat = Literal["expression", "factored", "equation"]
+
+
+class SessionSummaryResult(BaseModel):
+    """1-2 lines that end the session (session-end-db.md §2.3 · api.md v1.9 รอตัดสิน 6)."""
+
+    lines: SummaryLines
 
 
 class GenerateProblemResult(BaseModel):
