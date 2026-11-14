@@ -101,6 +101,8 @@ fake room repository + fake problem repository (แถวที่ JWT เห็
 | `tests/integration/test_room_answers_db.py` | integration | AC-tenant, AC-1 บนแถวจริง (ต้องมี `0006`) |
 | รันจริงบน Vertex (ขั้น 4 ของ worklog) | มือ | flow ครบ |
 
+**ผลรันจริงบน Vertex (14 พ.ย. · ขั้น 4 ของ worklog · API + repository ในหน่วยความจำ + `APP_ENV=local`):** เปิดห้อง → โจทย์ลิมิตที่มีรากที่ SymPy ยืนยันเฉลย (`probe`) → "ได้ 999" → `incorrect` + hint_1 + โจทย์เดิม → "ได้ 998" → hint_2 + โจทย์เดิม → ยอมแพ้ → เฉลยเต็ม → "ข้อต่อไปนะ" → โจทย์ใหม่ → ตอบถูกพร้อมวิธีทำ → `correct` → ข้อต่อไป · `attempts` 3 แถว (ผิด 2, ถูก 1) · `ended_at` 2 ข้อ · `messages` เป็น `user` / `tutor` / `system` ตาม §2.2 ข้อ 6 · **เจอตอนรัน:** (1) รอบแรก LLM จัด "999" เป็น `no_answer` แต่ SymPy ชี้บรรทัด 1 → `verdict` event ไม่รับ → `internal_error` · แก้ใน merge-rules.md (AC-16, AC-17 · Jam ok) (2) การ์ดโจทย์เดิมที่ขึ้นซ้ำเปลี่ยน `purpose` เป็น `practice` · แก้ให้ใช้ของแถว `problems` (3) **ข้อต่อไปซ้ำกับข้อที่เพิ่งจบ** (ทั้งสองรอบ · `generate_problem` ไม่รู้โจทย์ที่เคยให้) · Jam เลือก: prompt `generate_problem/v2` + input โจทย์ก่อนหน้า + ตัดโจทย์ซ้ำ · PR ถัดไปก่อน demo (§10 ข้อ 4)
+
 ## 9. Out of scope
 
 - BKT ลง `topic_progress` และการ์ดที่เปลี่ยนตาม mastery (ขั้น 8) · จบ session (ขั้น 9)
@@ -112,6 +114,8 @@ fake room repository + fake problem repository (แถวที่ JWT เห็
 1. **(Junior) migration `0006`:** `problems.ended_at` + `problems.working_steps` · ทางอื่น: "จบ" คิดจาก `attempts` (ถูก หรือผิดครบ) แต่ยอมแพ้ไม่มี attempt และกฎ ladder ต่างกันตาม env · ข้อเสนอ: `0006` · ขึ้นแค่ในเครื่องจน Junior `db push`
 2. **`done.message_ids` เป็น `[]` ใน stream ตรวจคำตอบ:** หน้าเว็บไม่ใช้ id แสดงผล · ถ้า May ต้องใช้ (เช่น ลบข้อความชั่วคราว) ค่อยรวม id ของข้อความ `tutor` ที่บันทึกใน stream นั้น
 3. **`typed_answer` นอก local:** เพิ่มต้นทุน 1 call (tier small) ต่อข้อความเมื่อมีโจทย์ค้าง · ข้อเสนอ: เปิด เพราะเป็นทางจริงของผลิตภัณฑ์ (intent router เต็มรูปแบบมาแทนภายหลัง)
+
+4. **(Jam ตัดสิน 14 พ.ย. · PR ถัดไป) ข้อต่อไปซ้ำ:** `generate_problem/v2` รับโจทย์ล่าสุดของหัวข้อ และ code ตัดโจทย์ที่ข้อความซ้ำกับของ prep (นับเป็นรอบที่ไม่ผ่าน)
 
 ## 11. Spec changes needed
 
