@@ -11,7 +11,7 @@
 
 - [x] 1. 🤖 บันทึก D1 + D2 + กติกา (ก)–(ง) ใน `docs/team/sprint-checklists.md` · ร่างข้อความกลุ่ม
 - [x] 2. 🙋 ส่งข้อความกลุ่ม (D1 + D2) · ส่งแล้ว 14 พ.ย.
-- [ ] 3. 🙋+🤖 `db push` `0005`, `0006` ขึ้น `anyang-dev`: Junior `link` → Claude `migration list --remote` + `db push --remote --dry-run` → Junior ok → Claude `db push --remote --yes` → Claude `unlink`
+- [x] 3. 🙋+🤖 (14 พ.ย. · `migration list --remote` ครบ `0001`–`0006` · unlink แล้ว) `db push` `0005`, `0006` ขึ้น `anyang-dev`: Junior `link` → Claude `migration list --remote` + `db push --remote --dry-run` → Junior ok → Claude `db push --remote --yes` → Claude `unlink`
 - [ ] 4. 🙋 Dashboard `anyang-dev`: ปิด Confirm email · สร้างบัญชี demo · เช็คว่า Custom Access Token hook ยังเปิด
 - [ ] 5. 🤖 `docs/team/setup.md` A5: env สำหรับ demo (`AUTH_REQUIRED=true` ชี้ `anyang-dev`) · `.env.example` (shared file · ถาม Junior ก่อน)
 - [ ] 6. 🙋+🤖 ขั้น 1: Junior ตั้ง `apps/api/.env` ชี้ `anyang-dev` + `AUTH_REQUIRED=true` · Claude เขียน script เล็กใน scratchpad ที่ login ด้วย email/password (Junior พิมพ์รหัสเอง) แล้ว decode JWT ว่ามี `tenant_id` · เรียก API ไม่มี token → 401 · มี token → `GET /exam-preps` 200
@@ -32,7 +32,7 @@
 
 ## Next step
 
-ข้อ 3: หลัง Junior `npx supabase link --project-ref mnwwhkbizjioibjvpnxl` (`anyang-dev`) → Claude เช็ค `supabase/.temp/project-ref` → `npx supabase migration list --remote` → `npx supabase db push --remote --dry-run` ให้ Junior ดู
+ข้อ 4: Junior ทำใน Dashboard `anyang-dev` (ปิด Confirm email · สร้างบัญชี demo · เช็ค hook) แล้วบอก Claude อีเมลของบัญชี demo (ไม่บอกรหัส)
 
 ## Waiting on
 
