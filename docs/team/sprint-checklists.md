@@ -44,9 +44,9 @@
 
 - **D1 · Junior + May:** login ใน demo เป็น **email + password** (UM-01) ไหม · Google (UM-02) ต้องตั้ง OAuth client ซึ่งรันในเครื่องยุ่งกว่า · **ตัดสินแล้ว 14 พ.ย. (Junior): email + password · Google ทำใน S5 (ยังเป็น Must)**
 - **D2 · Junior:** demo ใช้ Supabase ในเครื่อง (Docker) หรือ `anyang-dev` (cloud) · **ตัดสินแล้ว 14 พ.ย. (Junior): `anyang-dev`** · เหตุผล: ทีมไม่ใช้ Docker (`setup.md`), ข้อมูล demo (หัวข้อจาก ingestion) ใช้ร่วมกันได้ทั้งทีม, hook + RLS เปิดแล้ว · ข้อเสีย: ข้อมูลทดสอบปนกัน, migration ต้องรอ Junior push, อีเมลยืนยันของ SMTP ฟรีจำกัด · กติกา:
-  - (ก) บัญชี demo แยก ใช้โชว์และอัดวิดีโออย่างเดียว ห้ามใช้ทดสอบ · ทดสอบให้สมัครบัญชีของตัวเอง
-  - (ข) Junior push `0005`, `0006` ขึ้น `anyang-dev` 14 พ.ย. · migration ใหม่ทุกตัว (ตัวต่อไป `0007` Storage) แท็ก Junior ให้ push
-  - (ค) ปิด Confirm email ใน `anyang-dev` (Authentication → Sign In / Providers → Email) สมัครแล้วเข้าได้ทันที
+  - (ก) บัญชี demo (ถาม Junior · สร้างแล้ว 14 พ.ย.) ใช้โชว์และอัดวิดีโออย่างเดียว ห้ามใช้ทดสอบ · ทดสอบให้สมัครบัญชีของตัวเอง
+  - (ข) `0005`, `0006` ขึ้น `anyang-dev` แล้ว 14 พ.ย. · migration ใหม่ทุกตัว (ตัวต่อไป `0007` Storage) แท็ก Junior ให้ push
+  - (ค) ปิด Confirm email ใน `anyang-dev` (Authentication → Sign In / Providers → Email) สมัครแล้วเข้าได้ทันที · ปิดแล้ว 14 พ.ย.
   - (ง) API ในเครื่องใช้ `SUPABASE_URL` + `SUPABASE_ANON_KEY` ของ `anyang-dev` + `AUTH_REQUIRED=true` (ขั้นตอนใน `setup.md` A5)
 - **D3 · Jam:** โจทย์ในห้องมาจากไหน · (ก) `generate_problem` สร้างจากหัวข้อ + ตรวจเฉลยด้วย SymPy (AM-11 · ตรงกับ design) · (ข) คลังโจทย์เขียนไว้ต่อหัวข้อ · **ตัดสินแล้ว 13 พ.ย. (Jam): (ก) และใช้ (ข) เป็นทางสำรอง**
 - **D4 · May:** ลำดับในวิดีโอและความยาว (`docs/design/demo-flow.md` ของ May · ช่วง live เดิมเป็นห้องติวอย่างเดียว)

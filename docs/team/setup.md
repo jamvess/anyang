@@ -102,7 +102,7 @@ code .env
 | `SUPABASE_ANON_KEY` | Project Settings → **API Keys** → Publishable key (`sb_publishable_...`) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Project Settings → **API Keys** → Secret key (`sb_secret_...`) ⚠️ เทียบเท่ารหัส admin |
 | `DATABASE_URL` | ปุ่ม **Connect** → แท็บ Direct → **Session pooler** · แทน `[YOUR-PASSWORD]` ด้วย database password ที่ขอจากเจ้าของ repo ต่อหน้า |
-| `AUTH_REQUIRED` | ไม่ต้องแก้ ใช้ `false` ตาม `.env.example` จนกว่าหน้าเว็บจะ login และส่ง token · `true` = API ตอบ 401 ทุก request ที่ไม่มี Supabase JWT (`specs/features/platform/api-auth.md`) และต้องมี `SUPABASE_URL` + `SUPABASE_ANON_KEY` ไม่งั้น API ไม่ start |
+| `AUTH_REQUIRED` | `false` ตาม `.env.example` = ไม่ต้อง login (เดโม่ในเครื่องแบบไม่มี token) · `true` = API ตอบ 401 ทุก request ที่ไม่มี Supabase JWT (`specs/features/platform/api-auth.md`) และต้องมี `SUPABASE_URL` + `SUPABASE_ANON_KEY` ไม่งั้น API ไม่ start · ตอนรัน journey ของ demo ใช้ `true` (ดู "env สำหรับ demo" ข้างล่าง) |
 | `NEXT_PUBLIC_SUPABASE_URL` | ใช้ค่าเดียวกับ `SUPABASE_URL` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ใช้ค่าเดียวกับ `SUPABASE_ANON_KEY` |
 | `CORS_ALLOW_ORIGINS` | ไม่ต้องแก้ ใช้ค่าใน `.env.example` (`http://localhost:3000`) · origin ที่ browser เรียก API ได้ ต้องตรงทุกตัวอักษร คั่นด้วย `,` ห้ามมี `*` หรือ `/` ท้าย · ถ้ารันเว็บที่ port อื่นให้เพิ่มที่นี่ |
@@ -126,6 +126,31 @@ code .env
 3. `gcloud auth application-default set-quota-project anyang-513006`
 4. ทดสอบ (เรียก Vertex จริง 1 ครั้ง): `cd apps/api && uv run pytest tests/integration/test_vertex_live.py -m live -s` ต้องขึ้น `1 passed` และบรรทัด `vertex smoke: model=...`
 5. ถ้าขึ้น `PERMISSION_DENIED` ให้เจ้าของ project ให้สิทธิ์ **Vertex AI User** กับบัญชีของคุณ (IAM & Admin → IAM → Grant access)
+
+**env สำหรับ demo (journey login → จบ session · D1 + D2 ใน `sprint-checklists.md`)**
+
+ใช้ Supabase cloud `anyang-dev` ไม่ต้องลง Docker · แก้ `.env` ที่ root ตามนี้ (ค่า Supabase ตามตารางข้างบน)
+
+```
+APP_ENV=local
+AUTH_REQUIRED=true
+AI_PROVIDER=live
+GOOGLE_CLOUD_PROJECT=anyang-513006
+GOOGLE_CLOUD_LOCATION=global
+AI_MODEL_OVERRIDE=
+```
+
+`AI_PROVIDER=live` เรียก Gemini ผ่าน **Vertex AI** (`_build_gateway()` ใน `apps/api/app/ai/gateway.py` · ทุก tier ใน `config/ai.yaml` ขึ้นต้น `vertex:`) · ไม่ใช้ `GEMINI_API_KEY` · ต้องมี `GOOGLE_CLOUD_PROJECT` ไม่งั้น API ตอบ AI ไม่ได้ · `AI_MODEL_OVERRIDE` ต้องว่าง (ถ้าเป็น `gemini:...` จะไปใช้ AI Studio ซึ่งห้ามใช้กับข้อมูลผู้ใช้ · AI-07)
+
+ยืนยันตัวตนกับ Vertex ด้วย ADC (ทำครั้งเดียวต่อเครื่อง · รายละเอียดในหัวข้อ ADC ข้างบน):
+
+1. `gcloud auth application-default login` → login ด้วยบัญชีที่อยู่ใน project `anyang-513006` → **Allow**
+2. `gcloud auth application-default set-quota-project anyang-513006`
+3. ทดสอบ: `cd apps/api && uv run pytest tests/integration/test_vertex_live.py -m live -s` ต้องได้ `1 passed` · ถ้า `PERMISSION_DENIED` ขอ role **Vertex AI User** จาก Junior
+
+- login ด้วยบัญชีของตัวเอง (สมัครในหน้าเว็บได้เลย `anyang-dev` ปิด Confirm email แล้ว) · บัญชี demo (ถาม Junior) ใช้โชว์และอัดวิดีโออย่างเดียว ห้ามใช้ทดสอบ
+- token ของ `anyang-dev` มี claim `tenant_id` จาก custom access token hook · ถ้าได้ 401 `invalid_token` ให้เช็คว่า `SUPABASE_URL` ใน `.env` กับ `NEXT_PUBLIC_SUPABASE_URL` ของเว็บเป็น project เดียวกัน
+- migration ใหม่ต้องให้ Junior push ขึ้น `anyang-dev` ก่อน ไม่งั้น API จะเจอคอลัมน์หรือตารางที่ยังไม่มี
 
 **2) `apps/web/.env.local` ใช้กับ frontend**
 
