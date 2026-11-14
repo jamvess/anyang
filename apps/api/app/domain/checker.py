@@ -82,6 +82,13 @@ def merge_check(
         confidence: float = CERTAIN,
     ) -> CheckResult:
         right = verdict == "correct"
+        if error_type == "no_answer" and lines:
+            # The LLM calls lines with no working no_answer (a bare "999"): no line is wrong,
+            # and a right final answer is never no answer (merge-rules.md, 14 Nov).
+            if verdict == "incorrect":
+                first_wrong_line = None
+            elif verdict == "correct_with_flaw":
+                error_type = "calculation"
         disagreement = (
             decided_by == "sympy"
             and llm.verdict is not None

@@ -24,14 +24,15 @@ from app.services.dev_uploads import get_local_mode
 
 @dataclass(frozen=True)
 class PendingProblem:
-    """``text_latex`` and ``difficulty`` are what the problem card shows; ``topic_id`` is the
-    topic whose mastery an answer updates (demo-room.md §2 D)."""
+    """``text_latex``, ``difficulty`` and ``purpose`` are what the problem card shows;
+    ``topic_id`` is the topic whose mastery an answer updates (demo-room.md §2 D)."""
 
     problem_id: str
     problem: CheckProblem
     text_latex: str = ""
     difficulty: int = 1
     topic_id: str | None = None
+    purpose: str = "practice"  # problems.purpose; the demo's problems are practice
 
 
 @dataclass(frozen=True)

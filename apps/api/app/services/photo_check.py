@@ -434,5 +434,5 @@ def problem_event(pending: PendingProblem) -> ProblemEvent:
         problem_id=pending.problem_id,
         text_latex=pending.text_latex,
         difficulty=pending.difficulty,
-        purpose="practice",
+        purpose=pending.purpose,  # type: ignore[arg-type]  # problems.purpose check
     )

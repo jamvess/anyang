@@ -62,6 +62,7 @@ def _pending_of(record: ProblemRecord, text_latex: str | None = None) -> Pending
         text_latex=text_latex if text_latex is not None else text_latex_of(record.text),
         difficulty=record.difficulty,
         topic_id=str(record.topic_id),
+        purpose=record.purpose,
     )
 
 
