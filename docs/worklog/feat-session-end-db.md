@@ -14,7 +14,7 @@
 - [x] 1. 🤖 (14 พ.ย. · Jam ok) `/spec-feature` → `specs/features/tutor/session-end-db.md`: มี token → 404 / 409 / 503 ก่อน SSE · ตั้ง `ended_at` + `end_reason = 'user'` ด้วยคำสั่งเดียวที่มีเงื่อนไข `ended_at is null` (ชนกัน → 409) · code คิด facts ของ session (โจทย์ที่ทำ, ถูกกี่ข้อ, หัวข้อและระดับตอนนี้จาก `topic_progress`) → `session_summary/v1` (small · 1–2 บรรทัด) → `session_end` → บันทึก `tutor_sessions.summary` + ข้อความ `tutor` ใน `messages` (`done.message_ids`) · AI ล้ม → สรุปจาก template ของ code · ไม่มี token → stub เดิม · กลับมาเปิดห้องได้ session ใหม่ + โจทย์ค้างเดิม (TM-13) · 🙋 Jam review spec
 - [x] 2. 🤖 (14 พ.ย. · Jam ok) `/spec-to-tests` (fake repository + fake provider · integration: RLS + 409 ชนกัน) · 🙋 Jam review test
 - [x] 3. 🤖 (14 พ.ย. · green 1716 · Jam ok) prompt `prompts/session_summary/v1.md` + implement จน green · ไฟล์กลาง (`config/ai.yaml` ถ้าต้องตั้ง `thinking`, `config/messages.yaml` template สำรอง, `specs/system/api.md`) ถามก่อน
-- [ ] 4. 🤖 รันจริงบน Vertex: เปิดห้อง → ตอบ 2 ข้อ → จบ session → สรุป 2 บรรทัด → เปิดห้องใหม่ได้ session ใหม่ · 🙋 Jam ดูผล
+- [x] 4. 🤖 (14 พ.ย. · สรุป 2 บรรทัดตรงกับ facts · 409 · active 404 · เปิดใหม่ได้ session ใหม่ · Jam รับผล) รันจริงบน Vertex: เปิดห้อง → ตอบ 2 ข้อ → จบ session → สรุป 2 บรรทัด → เปิดห้องใหม่ได้ session ใหม่ · 🙋 Jam ดูผล
 - [ ] 5. 🤖 อัปเดต docs + checklist แล้ว `/work-done`
 
 ## Definition of done
@@ -32,7 +32,7 @@
 
 ## Next step
 
-ขั้น 4: รันจริงบน Vertex (เปิดห้อง → ตอบ 2 ข้อ → จบ → สรุป → เปิดใหม่)
+ขั้น 5: `/work-done` · ก่อน merge ส่งข้อความกลุ่ม (`api.md`, `ai.yaml`, `messages.yaml`)
 
 ## Waiting on
 

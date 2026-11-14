@@ -6,7 +6,7 @@
 | Requirements | PM-05, TM-13, SA-06 |
 | Owner | Jam (endpoint เป็นงานของ Junior · ทำช่วง solo) |
 | Reviewer | Jam · Junior ดูย้อนหลัง (การเขียน `tutor_sessions`, repository, api.md รอตัดสินข้อ 1, 6, 7) |
-| Status | draft 2026-11-14 (PR #136) |
+| Status | approved 2026-11-14 (Jam ok spec + test) · implemented 2026-11-14 (PR #136) |
 | Related system spec | api.md v1.9 "`POST /sessions/{id}/end`" + รอตัดสิน (v1.9) ข้อ 1, 2, 6, 7 · ai-orchestration §2.2.9 (จบ session), §3 T8 `session_summary` · `room-sessions-db.md` (#123 · ห้องบน DB) · `topic-progress-db.md` (#135 · ระดับของหัวข้อ) · `docs/team/sprint-checklists.md` ⭐ demo ขั้น 9 |
 
 ## 1. Context
@@ -93,6 +93,8 @@ fake room repository (+ ปิด session, บันทึกสรุป) + fak
 | `test_prompt_data_blocks.py` (เพิ่มแถว `session_summary/v1`) | unit | prompt ใหม่มี data block ครบ |
 | `tests/integration/test_session_end_db.py` | integration | AC-tenant, AC-6 บนแถวจริง |
 | รันจริงบน Vertex (ขั้น 4 ของ worklog) | มือ | เปิดห้อง → ตอบ 2 ข้อ → จบ → สรุป → เปิดใหม่ |
+
+**ผลรันจริงบน Vertex (14 พ.ย. · ขั้น 4 ของ worklog · API + repository ในหน่วยความจำ · ไม่ใช่ local):** เปิดห้อง → ตอบถูก → ตอบ "ได้ 999" (`incorrect` + `no_answer` · ไม่มี `internal_error` ตาม merge-rules AC-16) → จบ session → `200` `session_end` → `done` · สรุป: "วันนี้เราได้ทบทวนเรื่อง ลิมิต โดยตอบไปทั้งหมด 2 ครั้ง ถูกต้อง 1 ครั้ง ทำให้ระดับตอนนี้ยังอยู่ในระดับ อ่อน" / "ในเซสชันหน้าเรามาพยายามฝึกฝนเรื่อง ลิมิต เพิ่มเติมเพื่อพัฒนาทักษะให้คล่องแคล่วขึ้นกันนะครับ" (ตัวเลขและระดับตรงกับ facts) · `summary` และข้อความ `tutor` ตรงกัน · จบซ้ำ `409` · `sessions/active` `404` · เปิดห้องใหม่ได้ session ใหม่ + โจทย์ค้าง · การ์ดลิมิต `weak`, ความพร้อม 12% · ภาษายังแข็งเล็กน้อย ("เซสชัน", ช่องว่างก่อนชื่อหัวข้อ) · ปรับเป็น `session_summary/v2` ได้ภายหลัง · **Jam รับผล (14 พ.ย.)**
 
 ## 9. Out of scope
 
