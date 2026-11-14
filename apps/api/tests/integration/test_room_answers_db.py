@@ -24,6 +24,19 @@ make_user = room_db.make_user
 client = room_db.client
 
 LINES = [r"\lim_{x \to 2}\frac{x^{2}-4}{x-2}", r"= \lim_{x \to 2}(x+2)", "= 4"]
+# Not the same problem again (generate_problem/v2 refuses a repeat · PR #133, Jam ok).
+NEXT_PROBLEM = json.dumps(
+    {
+        "text": r"หาค่า $\lim_{x \to 3} \frac{x^2-9}{x-3}$",
+        "text_latex": r"\text{หาค่า } \lim_{x \to 3} \frac{x^{2}-9}{x-3}",
+        "expression": r"\lim_{x \to 3}\frac{x^{2}-9}{x-3}",
+        "answer_format": "expression",
+        "reference_answer": "6",
+        "solution_steps": ["= x+3", "= 6"],
+        "skill": "s1",
+    },
+    ensure_ascii=False,
+)
 CLASSIFY = json.dumps(
     {
         "error_type": None,
@@ -39,7 +52,7 @@ CLASSIFY = json.dumps(
 def scripted_gateway() -> Gateway:
     fake = FakeProvider(
         {
-            "generate_problem": [PROBLEM, PROBLEM],
+            "generate_problem": [PROBLEM, NEXT_PROBLEM],
             "open_session": ["สวัสดี เริ่มลิมิตกัน"],
             "typed_answer": [json.dumps({"is_answer": True, "lines": LINES})],
             "check_answer": [CLASSIFY],
