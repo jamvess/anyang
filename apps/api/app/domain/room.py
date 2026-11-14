@@ -194,3 +194,36 @@ def poses_a_problem(expression: str, reference_answer: str) -> bool:
     if all(_SOLVED.match(part) for part in expression.split(",")):
         return False  # `x=3, x=2`: solutions, not an equation to solve
     return bool(_LETTER.search(_LATEX_COMMAND.sub("", expression)))
+
+
+# Ways to write the same LaTeX (self-review PR #133): sizes of a fraction, `\left`/`\right`,
+# `\limits`, and braces around one character after `^` or `_` (`x^{2}` is `x^2`).
+_SAME_LATEX = (
+    (re.compile(r"\\[dt]frac"), r"\\frac"),
+    (re.compile(r"\\(?:left|right)(?![A-Za-z])|\\limits"), ""),
+    (re.compile(r"([\^_])\{(\\?[A-Za-z0-9])\}"), r"\1\2"),
+)
+# Spaces, and the zero-width ones that Thai text can carry.
+_ANY_SPACE = re.compile(r"[\s​‌‍﻿]+")
+
+
+def _plain(math: str) -> str:
+    math = _ANY_SPACE.sub("", math)
+    for pattern, replacement in _SAME_LATEX:
+        math = pattern.sub(replacement, math)
+    return math
+
+
+def _math_of(text: str) -> str:
+    return "".join(_plain(m.group(1) or m.group(2)) for m in _MATH.finditer(text))
+
+
+def same_problem(text: str, other: str) -> bool:
+    """§2.3 item 4 (v2 · PR #133): two problem texts ask the same thing when all their `$…$`
+    math is the same once spaces and other ways to write the same LaTeX are taken out (other
+    words around it do not make a new problem) or, when neither has math, their whole text is
+    the same without spaces."""
+    math, other_math = _math_of(text), _math_of(other)
+    if math or other_math:
+        return math == other_math
+    return _ANY_SPACE.sub("", text) == _ANY_SPACE.sub("", other)

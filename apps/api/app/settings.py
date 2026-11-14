@@ -124,6 +124,7 @@ class SessionConfig(_Strict):
     context_recent_turns: int = Field(ge=1)
     token_budget: int = Field(ge=1)
     grounding_chunks: int = Field(ge=0)
+    avoid_recent_problems: int = Field(ge=0)
 
 
 class TutoringConfig(_Strict):

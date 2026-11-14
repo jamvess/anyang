@@ -103,6 +103,11 @@ class FakeProblemRepo:
     def topic_has_problems(self, prep_id: uuid.UUID, topic_id: uuid.UUID) -> bool:
         return any(p.topic_id == topic_id for p in self.problems)
 
+    def recent_problems(self, prep_id: uuid.UUID, topic_id: uuid.UUID, limit: int) -> list:
+        # Added for generate_problem/v2 (PR #133 · Jam ok 14 Nov); no assertion changed.
+        mine = [p for p in self.problems if p.topic_id == topic_id]
+        return list(reversed(mine))[:limit]
+
     def add_problem(self, **fields: Any) -> ProblemRecord:
         """Keyword fields: the `problems` columns (tenant_id, session_id, topic_id, skill_id,
         source, text, reference_answer, solution_steps, answer_format, verified, difficulty,
