@@ -27,13 +27,13 @@
 1. `pending_problem` = โจทย์ที่**ยังไม่จบ** (`problems.ended_at is null`) ล่าสุดของ prep ของ session (#131 §2.4) → `PendingProblem` (`problem_id`, `CheckProblem(text, reference_answer, answer_format, solution_steps)`, `text_latex` จาก `text_latex_of`, `difficulty`, `topic_id`) · **"ค้าง" เปลี่ยนจาก "ไม่มี attempt" (#131) เป็น "`ended_at` ว่าง"** เพราะตอนนี้คำตอบที่ผิดก็มีแถว `attempts` แล้ว แต่โจทย์ยังไม่จบ (hint ladder)
 2. `ladder` · เฉพาะ `APP_ENV=local` (AM-07 · demo-room §2 K): `wrong_before` = จำนวนแถว `attempts` ของโจทย์ที่ `verdict = incorrect` · `steps_before` = `problems.working_steps` · นอก local → None (เฉลยทันที)
 3. `note_try(steps=n)` (ส่งขั้นที่ยังไม่จบ · `continue`) → `problems.working_steps += n` · `note_try(wrong=True)` → ไม่ทำอะไร (แถว `attempts` ของคำตอบนั้นนับให้แล้ว · §2.3)
-4. `record_check` (ตอนโจทย์จบ · BKT) → ไม่ทำอะไรในขั้นนี้ (ขั้น 8 เขียน `topic_progress`)
-5. `next_problem(answered)` → ตั้ง `ended_at = now` ของโจทย์ที่ตอบ (ก่อนอื่น · แม้สร้างข้อใหม่ไม่ได้ โจทย์เดิมก็จบแล้ว) แล้วเลือกหัวข้อและสร้างโจทย์ใหม่ด้วยกฎและ generator ของ #131 (§2.2 ข้อ 3, §2.3) ใน session ปัจจุบัน → `PendingProblem` · สร้างไม่ได้ → None (flow ไม่ส่ง `ข้อต่อไปนะ` และ `problem`)
+4. `record_check` (code ตัดสินว่าโจทย์จบ: ถูก, เฉลย, ยอมแพ้) → **ตั้ง `ended_at` ทันที ก่อนคำอธิบาย** (self-review PR #132: ถ้ารอให้คำอธิบายจบ tutor ล้มหรือ client ออกกลางทาง โจทย์จะค้างทั้งที่มีแถว `attempts` แล้ว · ตอบซ้ำได้ attempt ซ้ำ) · โจทย์ที่ไม่ใช่โจทย์ค้างแล้ว (พรีวิวรูปที่ค้าง) ไม่ทำอะไร · BKT ลง `topic_progress` เป็นขั้น 8
+5. `next_problem(answered)` → โจทย์ที่ตอบต้องจบแล้ว (ข้อ 4 · ยังไม่จบก็ตั้งตอนนี้) แล้วเลือกหัวข้อและสร้างโจทย์ใหม่ด้วยกฎและ generator ของ #131 (§2.2 ข้อ 3, §2.3) ใน session ปัจจุบัน → `PendingProblem` · ตั้ง `ended_at` ไม่สำเร็จ → None (ไม่งั้น generator ได้โจทย์เดิมกลับมาเป็นโจทย์ค้างของหัวข้อ) · สร้างไม่ได้ → None (flow ไม่ส่ง `ข้อต่อไปนะ` และ `problem`) · พรีวิวที่ค้าง (โจทย์ที่ตอบไม่ใช่โจทย์ค้างแล้ว) → None และ `ladder` / `note_try` ไม่ขยับอะไร (แบบเดโม่ · demo-room §2 K ข้อ 9)
 6. `remember(role, text)` → insert `messages` ของ session:
-   - ข้อความที่พูดจริง → `role` = `user` (นักเรียน · `input_mode = "text"`) หรือ `tutor`
+   - ข้อความที่พูดจริง → `role` = `user` (นักเรียน · `input_mode = "text"`) หรือ `tutor` · ข้อความที่นักเรียนพิมพ์ใน request นั้นเป็น `user` เสมอ แม้ขึ้นต้นด้วย `(ยืนยันคำตอบ)` (self-review)
    - **บรรทัดภายใน** ที่ขึ้นต้นด้วย `(ผลตรวจ)`, `(โจทย์)`, `(ยืนยันคำตอบ)`, `(ส่งรูปวิธีทำ)` → `role = "system"` (หน้าเว็บไม่แสดง · `MessageList` แสดงเฉพาะ `user`/`tutor`/`buddy`/`card`) แต่ tutor ยังเห็นในบทสนทนา (ข้อ 7)
    - บันทึกไม่ได้ (DB ล่ม) → log แล้วไปต่อ (คำตอบอยู่บนจอแล้ว · แบบ #123 AC-5)
-7. `conversation` = `session.context_recent_turns` turn ล่าสุดจาก `messages` ของ session (ไม่รวมข้อความที่กำลังตอบ · demo-room §2 E ข้อ 4) · `system` ที่ขึ้นต้นด้วย `(ยืนยันคำตอบ)` / `(ส่งรูปวิธีทำ)` เป็นของนักเรียน · `system` อื่นเป็นของติวเตอร์
+7. `conversation` = `session.context_recent_turns` turn ล่าสุดจาก `messages` ของ session (ไม่รวมข้อความที่กำลังตอบ · demo-room §2 E ข้อ 4) · `system` ที่ขึ้นต้นด้วย `(ยืนยันคำตอบ)` / `(ส่งรูปวิธีทำ)` เป็นของนักเรียน · `system` อื่นเป็นของติวเตอร์ · ทางเดิมของ #131 (ไม่มีโจทย์ค้าง) ใช้กฎเดียวกัน จึงเห็นบรรทัด `system` ของการตรวจด้วย (self-review)
 8. `set_preview` / `take_preview` / `restore_preview` → เก็บในหน่วยความจำของ process แบบเดิม (ภาพที่รอยืนยันอยู่ไม่กี่วินาที · instance เดียวพอสำหรับ demo · ตารางจริงหลัง demo)
 9. `progress_card` → None (การ์ดมาตอนเปิดห้อง · #131) · `start_session` → ไม่ทำอะไร
 

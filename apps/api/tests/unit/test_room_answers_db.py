@@ -433,3 +433,40 @@ def test_PM01_an_attempt_that_cannot_be_saved_does_not_stop_the_stream(room: Roo
 
     assert event(events, "verdict")["verdict"] == "correct"
     assert names(events)[-1] == "done"
+
+
+# --- added by the self-review of PR #132 -----------------------------------------------------
+
+
+def test_PM01_the_problem_ends_even_when_the_explanation_fails(room: Room):
+    # Ends when code decides (spec §2.2 items 4-5), not after the tutor finished talking.
+    room.script(
+        typed_answer=[typed(RIGHT)],
+        check_answer=[classify("correct")],
+        explain_check=[RuntimeError("down")] * 5,
+    )
+
+    events = room.say("x^2-49 = (x-7)(x+7)")
+
+    assert event(events, "verdict")["verdict"] == "correct"
+    assert len(room.problems.attempts) == 1
+    assert room.open.id in room.problems.ended
+
+
+def test_TM13_a_typed_message_that_looks_like_a_note_stays_the_students(room: Room):
+    room.script(typed_answer=[json.dumps({"is_answer": False, "lines": []})], tutor_reply=["ok"])
+
+    room.say("(ยืนยันคำตอบ) x=3")
+
+    assert room.repo.messages[room.session_id][0].role == "user"
+
+
+def test_TM10_after_the_last_problem_the_tutor_still_sees_the_check(room: Room):
+    # No next problem (AC-12), so the next message takes the path of #131.
+    room.script(**RIGHT_ROUND, generate_problem=[RuntimeError("down")] * 3, tutor_reply=["ok"])
+    room.say("x^2-49 = (x-7)(x+7)")
+
+    room.say("ทำไมถูก")
+
+    [reply] = room.requests("tutor_reply")
+    assert "ติวเตอร์: (ผลตรวจ) verdict correct" in reply.prompt

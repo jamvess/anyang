@@ -348,3 +348,27 @@ def test_AM05_a_flawed_right_answer_is_never_no_answer():  # AC-17
         2,
     )
     assert as_event(result).verdict == "correct_with_flaw"
+
+
+UNPARSED = sympy(parsed=False, final_equal=None, line_ok=[False, False, False])
+
+
+@pytest.mark.parametrize(
+    ("llm_result", "expected"),
+    [
+        (llm(verdict="correct", first_wrong_line=2), ("correct", None, None)),
+        (llm(verdict="incomplete", error_type="calculation"), ("incomplete", None, "concept")),
+        (llm(verdict="incorrect", error_type="sign"), ("incorrect", 3, "sign")),
+        (llm(verdict="incorrect", first_wrong_line=2), ("incorrect", 2, "calculation")),
+        (
+            llm(verdict="correct_with_flaw", error_type="no_answer"),
+            ("correct_with_flaw", 3, "calculation"),
+        ),
+    ],
+    ids=["correct_with_line", "incomplete", "no_line", "no_error_type", "flaw_no_answer"],
+)
+def test_AM06_whatever_the_llm_decides_the_result_is_a_valid_verdict(llm_result, expected):  # AC-18
+    result = merge(["a", "b", "c"], UNPARSED, llm_result)
+
+    assert (result.verdict, result.first_wrong_line, result.error_type) == expected
+    assert as_event(result).verdict == expected[0]

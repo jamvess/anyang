@@ -10,6 +10,7 @@ Every key is ``room_key(tenant_id, session_id)``: a session id alone is not enou
 no table says yet which tenant owns a session (SA-06).
 """
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Annotated, Protocol
@@ -17,6 +18,7 @@ from typing import Annotated, Protocol
 from fastapi import Depends
 
 from app.domain.checker import CheckResult
+from app.domain.room import recent_turns
 from app.models.room import ProgressCardEvent
 from app.services.checker import CheckProblem
 from app.services.dev_uploads import get_local_mode
@@ -85,6 +87,36 @@ def conversation_text(lines: list[tuple[str, str]]) -> str:
     if not lines:
         return NO_CONVERSATION
     return "\n".join(f"{role}: {text.replace('<', '&lt;')}" for role, text in lines)
+
+
+# Lines the server writes for the tutor's memory, not for the screen (room-answers-db.md §2.2
+# item 6): saved in `messages` with role `system`, which the room never shows. The first two
+# are the student's side of the conversation.
+STUDENT_NOTES = ("(ยืนยันคำตอบ)", "(ส่งรูปวิธีทำ)")
+TUTOR_NOTES = ("(ผลตรวจ)", "(โจทย์)")
+
+
+def speaker_of(role: str, text: str) -> str | None:
+    """Who said a saved `messages` line (§2.2 item 7); None leaves it out of the
+    conversation (buddy and card lines are not the tutor's conversation yet)."""
+    if role == "user":
+        return STUDENT
+    if role == "tutor":
+        return TUTOR
+    if role == "system":
+        return STUDENT if text.startswith(STUDENT_NOTES) else TUTOR
+    return None
+
+
+def saved_conversation(rows: Iterable[tuple[str, str | None]], turns: int) -> list[tuple[str, str]]:
+    """The last ``turns`` turns of saved `(role, content)` rows as `(speaker, text)`, oldest
+    first. Every turn starts at a line of the student's side (room-sessions-db.md §2.7 item 3)."""
+    lines = []
+    for role, text in rows:
+        speaker = speaker_of(role, text) if text is not None else None
+        if speaker is not None and text is not None:
+            lines.append(("user" if speaker == STUDENT else "tutor", text))
+    return [(STUDENT if r == "user" else TUTOR, t) for r, t in recent_turns(lines, turns)]
 
 
 class RoomState(Protocol):

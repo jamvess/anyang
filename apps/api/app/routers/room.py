@@ -245,14 +245,21 @@ async def _send_and_save(
         return checked
     session, found = checked
     if isinstance(found, ProblemRecord) and problems is not None:
-        state = DbRoomState(gateway, repo, problems, auth, session, local=local, open_problem=found)
+        state = DbRoomState(
+            gateway,
+            repo,
+            problems,
+            auth,
+            session,
+            local=local,
+            open_problem=found,
+            student_text=text,
+        )
         key = room_key(str(auth.tenant_id), str(session.id))
         # typed_answer in every env on this path (§2.1 item 1 · demo-room.md §2 G item 7).
         return _sse(text_message_events(gateway, state, key, text, True, state.call_context))
-    conversation = found if isinstance(found, str) else ""
-    return _sse(
-        room_db.reply_and_save(gateway, repo, auth, session, text, conversation, NO_PROBLEM)
-    )
+    assert isinstance(found, str)  # the conversation, when there is no open problem
+    return _sse(room_db.reply_and_save(gateway, repo, auth, session, text, found, NO_PROBLEM))
 
 
 @router.get(

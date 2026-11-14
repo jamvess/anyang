@@ -39,6 +39,12 @@ checker มี 3 ส่วน: SymPy ตัดสินถูก/ผิดแล
 - ผลเป็น `incorrect` (ข้อ 2 หรือ 6) → คง `no_answer` ของ LLM และ `first_wrong_line = null` (ไม่มีวิธีทำให้ชี้บรรทัด · tutor ขอวิธีทำ)
 - ผลเป็น `correct_with_flaw` (ข้อ 2 หรือ 4) → `error_type = calculation` (คำตอบสุดท้ายถูก จึงไม่ใช่ "ไม่มีคำตอบ" · ผิดสองทีหักล้างกันส่วนใหญ่เป็นการคำนวณ)
 
+**เพิ่มจาก self-review PR #132 (Jam ok ก่อน merge):** ผลรวมทุกแบบต้องเป็นคู่ของข้อ 1–6 เสมอ เพราะ event `verdict` ไม่รับคู่อื่น (stream จบด้วย `internal_error`) · ข้อ 2 ใช้ค่าของ LLM ทั้งหมด และ schema ของ `check_answer` ให้ `error_type` / `first_wrong_line` เป็น null ได้ · code จัดให้เข้ารูปดังนี้:
+
+- `correct` → `first_wrong_line = null`, `error_type = null` (ข้อ 3)
+- `incomplete` → `first_wrong_line = null`, `error_type = concept` (ข้อ 5)
+- `incorrect` หรือ `correct_with_flaw` ที่ไม่มี `error_type` → `calculation` · ไม่มี `first_wrong_line` → บรรทัดสุดท้าย (ข้อ 6)
+
 **นับ mastery** (`is_correct`): `true` เฉพาะ `correct` (รวม `method: other`) · `correct_with_flaw`, `incomplete`, `incorrect` เป็น `false` (§2.4.9 ข้อ 2)
 
 "อยู่ในรูปที่โจทย์สั่ง" ใช้เฉพาะ `factored` (เทียบ `factor_list` · §2.4.3) · `expression` และ `equation` ถือว่าอยู่ในรูปแล้วเสมอ
@@ -77,6 +83,7 @@ checker มี 3 ส่วน: SymPy ตัดสินถูก/ผิดแล
 - **AC-15 (AM-04)** Given SymPy ตัดสินได้ (AC-1, AC-5) และ LLM `confidence=0.6` When รวมผล Then `confidence=1.0`
 - **AC-14 (AM-06)** Given ผลใดก็ตามที่ verdict ไม่ใช่ `correct` When รวมผล Then `error_type` เป็นหนึ่งใน 6 ค่าของ AM-06 · Given verdict เป็น `correct` Then `error_type=null`
 - **AC-16 (AM-06)** Given `lines=["999"]`, `final_equal=False`, `line_ok=[False]`, LLM `error_type="no_answer"` (หรือ SymPy parse ไม่ได้และ LLM `verdict="incorrect"`, `first_wrong_line=1`) When รวมผล Then `verdict=incorrect`, `error_type=no_answer`, `first_wrong_line=null` และผลเป็น `verdict` event ได้
+- **AC-18 (AM-05, AM-06)** Given SymPy parse ไม่ได้ และ LLM ให้ (`correct`, บรรทัด 2) · (`incomplete`, `calculation`) · (`incorrect`, ไม่มีบรรทัด, `sign`) · (`incorrect`, บรรทัด 2, ไม่มี error_type) · (`correct_with_flaw`, ไม่มีบรรทัด, `no_answer`) When รวมผล Then ได้คู่ตามกฎด้านบน และผลเป็น `verdict` event ได้ทุกแบบ
 - **AC-17 (AM-05)** Given `final_equal=True`, `line_ok=[True, False, True]`, LLM `error_type="no_answer"` When รวมผล Then `verdict=correct_with_flaw`, `error_type=calculation`, `first_wrong_line=2` และผลเป็น `verdict` event ได้
 - **AC-boundary** ไม่มี threshold ใน feature นี้ (ดู §2)
 - **AC-tenant (SA-06)** ไม่เกี่ยว: เป็นฟังก์ชันล้วน ไม่อ่านหรือเขียนข้อมูล
@@ -97,7 +104,7 @@ checker มี 3 ส่วน: SymPy ตัดสินถูก/ผิดแล
 
 | Test | ระดับ | ครอบคลุม AC |
 |---|---|---|
-| `tests/unit/test_check_merge_rules.py` แบบ table-driven (`parametrize`) | unit | AC-1 ถึง AC-17 |
+| `tests/unit/test_check_merge_rules.py` แบบ table-driven (`parametrize`) | unit | AC-1 ถึง AC-18 |
 | `evals/run_eval.py --purpose check_answer` กับ golden set 50 ข้อ (เมื่อมี SymPy service + prompt) | eval | ทั้ง checker (§2.4.8) |
 
 ## 9. Out of scope

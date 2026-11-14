@@ -24,30 +24,24 @@ from app.db.errors import DbUnavailableError
 from app.db.room import RoomRepository, SessionRecord
 from app.db.room_problems import ProblemRecord, ProblemRepository
 from app.domain.checker import CheckResult
-from app.domain.room import recent_turns, text_latex_of
+from app.domain.room import text_latex_of
 from app.models.room import ProgressCardEvent
 from app.request_context import get_request_id
 from app.services import room_problems
 from app.services.checker import CheckProblem
 from app.services.room_state import (
     STUDENT,
-    TUTOR,
+    STUDENT_NOTES,
+    TUTOR_NOTES,
     LadderProgress,
     PendingPreview,
     PendingProblem,
+    _memory_state,
+    saved_conversation,
 )
 from app.settings import get_settings
 
 log = logging.getLogger(__name__)
-
-# Lines the server writes for the tutor's memory, not for the screen (§2.2 item 6): saved with
-# role `system`, which the room never shows. The first two are the student's side.
-STUDENT_NOTES = ("(ยืนยันคำตอบ)", "(ส่งรูปวิธีทำ)")
-TUTOR_NOTES = ("(ผลตรวจ)", "(โจทย์)")
-
-# A photo preview waits a few seconds for its confirm: kept in the memory of the process, like
-# the demo (§2.2 item 8 · one instance is enough for the demo, a table after it).
-_previews: dict[str, PendingPreview] = {}
 
 
 def _pending_of(record: ProblemRecord, text_latex: str | None = None) -> PendingProblem:
@@ -67,23 +61,11 @@ def _pending_of(record: ProblemRecord, text_latex: str | None = None) -> Pending
 
 
 def saved_role(speaker: str, text: str) -> str:
-    """`messages.role` of a remembered line (§2.2 item 6). Only the student's own notes can be
-    `system` on the student's side, so a typed message that starts with `(ผลตรวจ)` stays a
-    `user` line and never reads as the tutor."""
+    """`messages.role` of a line the server remembers (§2.2 item 6): its notes are `system`,
+    what is said is `user` or `tutor`. A note of the student's side is never the tutor's."""
     if speaker == STUDENT:
         return "system" if text.startswith(STUDENT_NOTES) else "user"
     return "system" if text.startswith(TUTOR_NOTES) else "tutor"
-
-
-def speaker_of(role: str, text: str) -> str | None:
-    """Who said a saved line in the conversation (§2.2 item 7); None leaves it out."""
-    if role == "user":
-        return STUDENT
-    if role == "tutor":
-        return TUTOR
-    if role == "system":
-        return STUDENT if text.startswith(STUDENT_NOTES) else TUTOR
-    return None  # buddy and card lines are not the tutor's conversation yet
 
 
 class DbRoomState:
@@ -97,17 +79,22 @@ class DbRoomState:
         *,
         local: bool,
         open_problem: ProblemRecord | None = None,
+        student_text: str | None = None,
     ) -> None:
+        """``student_text`` is the message the student typed in this request: saved as `user`
+        whatever it starts with, so typing `(ยืนยันคำตอบ)` does not hide it (self-review)."""
         self._gateway = gateway
         self._repo = repo
         self._problems = problems
         self._auth = auth
         self._session = session
         self._local = local
+        self._student_text = student_text
         # The pending problem once read; the router may already have it.
         self._pending: PendingProblem | None = None
         self._loaded = False
         self._records: dict[str, ProblemRecord] = {}
+        self._ended: set[str] = set()  # problems this request has ended
         if open_problem is not None:
             self._set_pending(open_problem)
 
@@ -135,6 +122,24 @@ class DbRoomState:
             )
             return default
 
+    async def _is_pending(self, key: str, problem: PendingProblem) -> bool:
+        """A confirm checks the problem of its photo, which may have ended since (a stale
+        preview): it is explained, but moves nothing (like the demo · demo-room.md §2 K 9)."""
+        current = await self.pending_problem(key)
+        return current is not None and current.problem_id == problem.problem_id
+
+    async def _end(self, problem: PendingProblem) -> bool:
+        if problem.problem_id not in self._ended:
+            problem_id = UUID(problem.problem_id)
+
+            def end() -> bool:
+                self._problems.end_problem(problem_id)
+                return True
+
+            if await self._db("end problem", end, False):
+                self._ended.add(problem.problem_id)
+        return problem.problem_id in self._ended
+
     async def pending_problem(self, key: str) -> PendingProblem | None:
         if not self._loaded:
             record = await self._db(
@@ -143,14 +148,17 @@ class DbRoomState:
             self._set_pending(record)
         return self._pending
 
+    # The preview waits a few seconds for its confirm: in the memory of the process, in the
+    # store of the default state (§2.2 item 8 · one instance is enough for the demo).
+
     async def set_preview(self, key: str, preview: PendingPreview) -> None:
-        _previews[key] = preview
+        await _memory_state().set_preview(key, preview)
 
     async def take_preview(self, key: str) -> PendingPreview | None:
-        return _previews.pop(key, None)
+        return await _memory_state().take_preview(key)
 
     async def restore_preview(self, key: str, preview: PendingPreview) -> None:
-        _previews.setdefault(key, preview)
+        await _memory_state().restore_preview(key, preview)
 
     async def start_session(self, key: str) -> None:
         return None
@@ -158,7 +166,11 @@ class DbRoomState:
     async def record_check(
         self, key: str, pending: PendingProblem, is_correct: bool, independent: bool = True
     ) -> None:
-        return None  # BKT into topic_progress is step 8 (§2.2 item 4)
+        """Called when code decides the problem is over (right, solution, give up): it ends
+        now, before the explanation, so a tutor that fails or a client that leaves cannot leave
+        it open with its attempt saved (§2.2 items 4-5 · self-review). BKT is step 8."""
+        if await self._is_pending(key, pending):
+            await self._end(pending)
 
     async def record_answer(
         self,
@@ -170,14 +182,14 @@ class DbRoomState:
     ) -> None:
         """One `attempts` row (§2.3 item 1)."""
         if pending.problem_id not in self._records:
-            await self.pending_problem(key)  # a confirm checks the problem of its photo
+            await self.pending_problem(key)  # the row of the problem, for its skill
         record = self._records.get(pending.problem_id)
         fields = {
             "tenant_id": self._auth.tenant_id,
             "user_id": self._auth.user_id,
             "problem_id": UUID(pending.problem_id),
             "topic_id": record.topic_id if record else UUID(str(pending.topic_id)),
-            "skill_id": record.skill_id if record else None,
+            "skill_id": record.skill_id if record else None,  # a stale preview's problem
             "answer_text": "\n".join(lines),
             "verdict": result.verdict,
             "is_correct": result.is_correct,
@@ -193,7 +205,8 @@ class DbRoomState:
         await self._db("insert attempt", lambda: self._problems.add_attempt(**fields), None)
 
     async def ladder(self, key: str, pending: PendingProblem) -> LadderProgress | None:
-        if not self._local:  # AM-07 as it is outside the local demo (§2.2 item 2)
+        # AM-07 as it is outside the local demo (§2.2 item 2); a stale preview gets no hint.
+        if not self._local or not await self._is_pending(key, pending):
             return None
         problem_id = UUID(pending.problem_id)
         wrong = await self._db(
@@ -206,7 +219,7 @@ class DbRoomState:
         self, key: str, pending: PendingProblem, *, wrong: bool = False, steps: int = 0
     ) -> None:
         # A wrong answer is counted by its attempts row (§2.2 item 3).
-        if steps:
+        if steps and await self._is_pending(key, pending):
             problem_id = UUID(pending.problem_id)
             await self._db(
                 "add working steps",
@@ -218,13 +231,11 @@ class DbRoomState:
         return None  # the card comes when the room opens (#131)
 
     async def next_problem(self, key: str, answered: PendingProblem) -> PendingProblem | None:
-        """§2.2 item 5: the answered problem ends first, then a new one in this session. An
-        answer to a problem that is no longer the pending one (a stale photo preview) ends it
-        and moves nothing else."""
-        current = await self.pending_problem(key)
-        problem_id = UUID(answered.problem_id)
-        await self._db("end problem", lambda: self._problems.end_problem(problem_id), None)
-        if current is None or current.problem_id != answered.problem_id:
+        """§2.2 item 5: a new problem in this session once the answered one has ended. An
+        answer to a problem that is no longer pending (a stale preview) moves nothing; a
+        problem that could not be ended gets no next one, or the generator would give it
+        again as the open problem of its topic (self-review)."""
+        if not await self._is_pending(key, answered) or not await self._end(answered):
             return None
         found = await room_problems.next_problem(
             self._gateway,
@@ -242,7 +253,8 @@ class DbRoomState:
         return self._pending
 
     async def remember(self, key: str, role: str, text: str) -> None:
-        saved = saved_role(role, text)
+        own_words = role == STUDENT and text == self._student_text
+        saved = "user" if own_words else saved_role(role, text)
         await self._db(
             "save message",
             lambda: self._repo.add_message(
@@ -259,16 +271,5 @@ class DbRoomState:
         messages = await self._db(
             "conversation", lambda: self._repo.list_messages(self._session.id), []
         )
-        lines: list[tuple[str, str]] = []
-        for message in messages:
-            if message.content is None:
-                continue
-            speaker = speaker_of(message.role, message.content)
-            if speaker is not None:
-                # recent_turns starts a turn at each "user" line (the student's side).
-                lines.append(("user" if speaker == STUDENT else "tutor", message.content))
         turns = get_settings().learning.session.context_recent_turns
-        return [
-            (STUDENT if role == "user" else TUTOR, text)
-            for role, text in recent_turns(lines, turns)
-        ]
+        return saved_conversation(((m.role, m.content) for m in messages), turns)

@@ -14,6 +14,7 @@ from typing import Annotated, Any, Protocol
 from uuid import UUID
 
 from fastapi import Depends
+from postgrest.types import CountMethod
 from supabase import Client
 
 from app.auth import AuthContext, get_auth
@@ -349,19 +350,19 @@ class SupabaseProblemRepository:
         )
 
     def count_wrong_attempts(self, problem_id: UUID) -> int:
-        rows = self._run(
+        count = self._run(
             "wrong attempts",
             lambda: (
                 self._db()
                 .table("attempts")
-                .select("id")
+                .select("id", count=CountMethod.exact, head=True)  # the count, no rows
                 .eq("problem_id", str(problem_id))
                 .eq("verdict", "incorrect")
                 .execute()
-                .data
+                .count
             ),
         )
-        return len(rows)
+        return int(count or 0)
 
     def end_problem(self, problem_id: UUID) -> None:
         self._run(
