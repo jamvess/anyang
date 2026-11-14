@@ -11,7 +11,7 @@
 
 `GET /exam-preps/{id}/scope`, `POST /exam-preps/{id}/scope/confirm` และ `GET /topics/{id}/sources` ยังเป็น stub · หัวข้อ, ดาว, เหตุผล, ช่วงหน้า และข้อสอบเก่าอยู่ใน DB แล้วจาก ingestion (#130) · api.md v1.6 เขียนรูปร่างและข้อเสนอไว้แล้ว (รอตัดสินข้อ 1–5 ของ Junior) · แผนคือทำตามข้อเสนอนั้นในทางที่มี token · หน้า scope ของ May (S12) ต่อ API จริงได้
 
-- [ ] 1. 🤖 `/spec-feature` → `specs/features/scope/scope-db.md`: มี token → `GET /scope` อ่าน `topics` (รวมที่ตัดออก · `stars` 0), `source_label` จาก `topic_sources` + `materials.file_name`, `unmapped_questions`, `status` จาก `active_scope_version_id` · ดาวยังไม่ครบ → `409 scope_not_ready` · `POST /scope/confirm` → `409` 3 แบบ · สร้าง `scope_versions` (version ถัดไป · `snapshot` ของหัวข้อ) → ตั้ง `active_scope_version_id` → หัวข้อ `draft` เป็น `confirmed` · ยืนยันพร้อมกัน 2 ครั้ง → `409` (unique ของ version) · `GET /topics/{id}/sources` อ่านหน้าใน `material_pages` + ข้อสอบของหัวข้อ · ไม่มี token → stub เดิม · 🙋 Jam review spec
+- [x] 1. 🤖 (14 พ.ย. · Jam ok) `/spec-feature` → `specs/features/scope/scope-db.md`: มี token → `GET /scope` อ่าน `topics` (รวมที่ตัดออก · `stars` 0), `source_label` จาก `topic_sources` + `materials.file_name`, `unmapped_questions`, `status` จาก `active_scope_version_id` · ดาวยังไม่ครบ → `409 scope_not_ready` · `POST /scope/confirm` → `409` 3 แบบ · สร้าง `scope_versions` (version ถัดไป · `snapshot` ของหัวข้อ) → ตั้ง `active_scope_version_id` → หัวข้อ `draft` เป็น `confirmed` · ยืนยันพร้อมกัน 2 ครั้ง → `409` (unique ของ version) · `GET /topics/{id}/sources` อ่านหน้าใน `material_pages` + ข้อสอบของหัวข้อ · ไม่มี token → stub เดิม · 🙋 Jam review spec
 - [ ] 2. 🤖 `/spec-to-tests` (fake repository · integration: RLS + ยืนยันแล้วห้องติวใช้ scope version) · 🙋 Jam review test
 - [ ] 3. 🤖 `/implement-feature` จน green · ไฟล์กลาง (`specs/system/api.md`) ถามก่อน
 - [ ] 4. 🤖 รันกับข้อมูลจริงของ MTH10101 (ingestion ในเครื่อง → `GET /scope` → confirm → เปิดห้อง) · 🙋 Jam ดูผล
@@ -25,11 +25,12 @@
 
 ## Decisions
 
+- 2026-11-14 · รวม `GET /topics/{id}/sources` ใน PR นี้ (Jam ok)
 - 2026-11-14 · Junior ให้ Jam ตัดสินใจเรื่อง DB ของ scope ไปก่อน (ตามข้อเสนอ api.md v1.6) แล้วมาเช็คทีหลัง
 
 ## Next step
 
-ขั้น 1: เขียน spec
+ขั้น 2: เขียน test (red) จาก AC-1 ถึง AC-12 + AC-tenant
 
 ## Waiting on
 
