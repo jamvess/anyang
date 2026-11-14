@@ -157,8 +157,12 @@
 - [ ] ⭐ demo D1 + D2: ตัดสิน login ใน demo และ Supabase ในเครื่อง (ภายใน จ. 16 พ.ย.)
 - [ ] ⭐ demo ขั้น 1: env ของ API ชี้ Supabase ในเครื่อง (hook เปิดใน `supabase/config.toml` แล้ว) · ยืนยัน `tenant_id` ใน token · `AUTH_REQUIRED=true` วนได้กับหน้า login ของ May (UM-01)
 - [ ] ⭐ demo ขั้น 3: `POST /exam-preps/{id}/materials` + `POST /materials/{id}/uploaded` + `POST /exam-preps/{id}/materials/confirm` จริง · signed upload URL · bucket + storage policy (migration ใหม่ + isolation test) (CM-03, CM-07)
-- [ ] ⭐ demo ขั้น 5: `GET /exam-preps/{id}/scope` อ่าน DB · `POST /scope/confirm` เขียน `scope_versions` + `active_scope_version_id` (SM-09)
-- [ ] ⭐ demo ขั้น 8: repository ของ `problems`, `attempts`, `topic_progress` (PM-01, PM-02, PM-06)
+- [x] ⭐ demo ขั้น 5: `GET /exam-preps/{id}/scope` อ่าน DB · `POST /scope/confirm` เขียน `scope_versions` + `active_scope_version_id` (SM-09)
+  - 14 พ.ย. (PR #137 · `specs/features/scope/scope-db.md`): มี token → `GET /scope` (หัวข้อ ดาว เหตุผล `source_label` ข้อสอบที่ map ไม่ได้ `status`) · `GET /topics/{id}/sources` (ข้อความทั้งหน้า + ข้อสอบของหัวข้อ) · `POST /scope/confirm` (`scope_versions` → `active_scope_version_id` → หัวข้อ `confirmed` · ยืนยันซ้ำหรือพร้อมกัน 409) · ไม่มี migration · ทำตามข้อเสนอ api.md v1.6 ข้อ 1–3, 5 **Junior: ดูย้อนหลังแล้วยืนยันใน api.md** (Junior ให้ตัดสินใจไปก่อน) · รันกับข้อมูลจริง MTH10101: 34 หัวข้อ · ยืนยัน version 1 · **หน้า scope ของ May ต่อ API จริงได้แล้ว**
+  - ทำโดย Jam (14 พ.ย.) ช่วง solo
+- [x] ⭐ demo ขั้น 8: repository ของ `problems`, `attempts`, `topic_progress` (PM-01, PM-02, PM-06)
+  - 13–14 พ.ย.: `problems` (PR #131), `attempts` + `ended_at` (PR #132), `topic_progress` + `d_max` (PR #135) อยู่ใน `app/db/room_problems.py` · migration `0006`, `0007` **Junior: ดูย้อนหลัง · `db push` `0007`**
+  - ทำโดย Jam (13–14 พ.ย.) ช่วง solo
 - [x] ⭐ demo ขั้น 9: `POST /sessions/{id}/end` จริง (`ended_at` + สรุป) (TM-13, PM-05)
   - 14 พ.ย. (PR #136 · `specs/features/tutor/session-end-db.md`): มี token → ปิด session ด้วย update ที่มีเงื่อนไข `ended_at is null` ก่อนเรียก AI (ชนกัน → 409) · `end_reason = 'user'` · สรุปจาก `session_summary/v1` บันทึก `tutor_sessions.summary` + ข้อความในแชท · AI ล้มใช้ template · ไม่มี migration · ทำตามข้อเสนอ api.md รอตัดสิน v1.9 ข้อ 1, 2, 6, 7 **Junior: ดูย้อนหลังแล้วยืนยันใน api.md**
   - ทำโดย Jam (14 พ.ย.) ช่วง solo
