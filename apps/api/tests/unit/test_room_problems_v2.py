@@ -220,3 +220,20 @@ def test_AM11_the_next_problem_after_an_answer_is_not_the_same_again(
     assert ("token", {"speaker": "tutor", "text": NEXT}) in events
     assert problems.problems[-1].text == TO_1[0]
     assert event(events, "problem")["problem_id"] == str(problems.problems[-1].id)
+
+
+# --- added by the self-review of PR #133 -----------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("text", "other"),
+    [
+        (r"หาค่า $\lim_{x \to 2} \frac{x^2-4}{x-2}$", r"หาค่า $\lim_{x\to 2}\dfrac{x^{2}-4}{x-2}$"),
+        (r"หาค่า $\lim_{x \to 2} (x+1)$", r"หาค่า $\lim\limits_{x \to 2} \left(x+1\right)$"),
+        ("แยกตัวประกอบพหุนามของข้อที่แล้ว", "แยกตัวประกอบ​พหุนามของข้อที่แล้ว"),
+    ],
+    ids=["dfrac_and_braces", "left_right_limits", "zero_width_space"],
+)
+def test_AM11_the_same_latex_written_another_way_is_the_same_problem(text, other):
+    assert domain_room.same_problem(text, other)
+    assert not domain_room.same_problem(text, r"หาค่า $\lim_{x \to 3} (x+1)$")

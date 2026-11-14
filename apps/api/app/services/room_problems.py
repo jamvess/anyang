@@ -186,23 +186,26 @@ async def _problem_for(
 ) -> tuple[ProblemRecord, str] | None:
     """The open problem of the topic, or a new verified one (spec §2.3); None when there is
     none. The second value is the card's LaTeX."""
+    cfg = get_settings().learning
+    difficulty = target_difficulty(topic.importance or 0, MODE, cfg)
     try:
         reused = await run_in_threadpool(problems.open_problem, prep_id, topic.id)
         if reused is not None:
             return reused, text_latex_of(reused.text)
+        if difficulty is None:  # a skipped topic is never chosen (importance >= 1 · §2.2 item 3)
+            return None
         skills = await run_in_threadpool(problems.list_skills, topic.id)
-        limit = get_settings().learning.session.grounding_chunks
+        limit = cfg.session.grounding_chunks
         chunks = await run_in_threadpool(problems.source_chunks, topic.id, limit)
-        practised = await run_in_threadpool(problems.topic_has_problems, prep_id, topic.id)
-        avoid = get_settings().learning.session.avoid_recent_problems
+        avoid = cfg.session.avoid_recent_problems
         previous = await run_in_threadpool(problems.recent_problems, prep_id, topic.id, avoid)
+        # The latest problems already say whether the topic has one (self-review PR #133).
+        practised = bool(previous) or (
+            avoid == 0 and await run_in_threadpool(problems.topic_has_problems, prep_id, topic.id)
+        )
     except DbUnavailableError:
         return None
 
-    cfg = get_settings().learning
-    difficulty = target_difficulty(topic.importance or 0, MODE, cfg)
-    if difficulty is None:  # a skipped topic is never chosen (importance >= 1 · §2.2 item 3)
-        return None
     keys = {f"s{n}": skill.id for n, skill in enumerate(skills, start=1)}
     values = {
         "topic": topic.name,
@@ -212,7 +215,8 @@ async def _problem_for(
         "difficulty": str(difficulty),
         "answer_formats": ANSWER_FORMATS,
         # v2: the latest problems of the topic, so the next one differs (§2.3 item 2).
-        "previous_problems": "\n".join(f"- {p.text}" for p in previous) or NONE,
+        # One line each, as the prompt reads them: a text with a line break stays one problem.
+        "previous_problems": "\n".join(f"- {' '.join(p.text.split())}" for p in previous) or NONE,
     }
     for attempt in range(1 + cfg.checker.max_generate_retries):
         try:
@@ -221,8 +225,15 @@ async def _problem_for(
         except Exception as error:  # the model or the schema: counts as a try (spec AC-6)
             log.warning("generate_problem try %d failed: %s", attempt + 1, error)
             continue
-        if any(same_problem(result.text, p.text) for p in previous):
-            log.warning("generate_problem try %d: the same as a problem before", attempt + 1)
+        if repeated := next((p for p in previous if same_problem(result.text, p.text)), None):
+            # Both texts, to calibrate session.avoid_recent_problems (learning.yaml).
+            log.warning(
+                "generate_problem try %d: %r is the same as problem %s %r",
+                attempt + 1,
+                result.text,
+                repeated.id,
+                repeated.text,
+            )
             continue
         if not await verified(result):
             log.warning(
