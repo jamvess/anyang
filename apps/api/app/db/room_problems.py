@@ -35,14 +35,15 @@ __all__ = [
 
 @dataclass(frozen=True)
 class ProgressFacts:
-    """The user's `topic_progress` row of a topic. `d_max` has no column yet (spec §10 item 2):
-    None until step 8 adds it."""
+    """The user's `topic_progress` row of a topic (`d_max` since migration 0007 ·
+    topic-progress-db.md §5)."""
 
     topic_id: UUID
     mastery: float
     attempts_n: int
     level: str
-    d_max: int | None = None
+    d_max: int = 0
+    correct_n: int = 0
 
 
 @dataclass(frozen=True)
@@ -71,6 +72,14 @@ class ProblemRepository(Protocol):
         ...
 
     def list_progress(self, prep_id: UUID) -> list[ProgressFacts]: ...
+    def get_topic_progress(self, topic_id: UUID) -> ProgressFacts | None:
+        """The user's row of the topic, or None (topic-progress-db.md §2.2 item 1)."""
+        ...
+
+    def save_topic_progress(self, **fields: Any) -> None:
+        """Upsert the user's row by (user_id, topic_id) with these columns (§2.3 item 1)."""
+        ...
+
     def list_skills(self, topic_id: UUID) -> list[SkillFacts]:
         """Skills that are not excluded."""
         ...
@@ -111,8 +120,10 @@ class ProblemRepository(Protocol):
         """`attempts` rows of the problem with `verdict = incorrect` (the hint ladder)."""
         ...
 
-    def end_problem(self, problem_id: UUID) -> None:
-        """Set `ended_at` to now, once; a problem that has ended keeps its first time."""
+    def end_problem(self, problem_id: UUID) -> bool | None:
+        """Set `ended_at` to now, once; a problem that has ended keeps its first time. True
+        when this call ended it, False when it had ended already (another request won), None
+        when the store cannot say (self-review PR #135)."""
         ...
 
     def working_steps(self, problem_id: UUID) -> int: ...
@@ -138,9 +149,25 @@ def _problem(row: dict[str, Any]) -> ProblemRecord:
     )
 
 
+_PROGRESS_COLUMNS = "topic_id,mastery,attempts_n,correct_n,level,d_max"
+
+
+def _progress(row: dict[str, Any]) -> ProgressFacts:
+    return ProgressFacts(
+        topic_id=UUID(row["topic_id"]),
+        mastery=float(row["mastery"]),
+        attempts_n=int(row["attempts_n"]),
+        level=row["level"],
+        d_max=int(row.get("d_max") or 0),
+        correct_n=int(row.get("correct_n") or 0),
+    )
+
+
 def _json(value: Any) -> Any:
     if isinstance(value, UUID):
         return str(value)
+    if isinstance(value, datetime):
+        return value.isoformat()
     if isinstance(value, list):
         return [_json(v) for v in value]
     return value
@@ -194,21 +221,39 @@ class SupabaseProblemRepository:
             lambda: (
                 self._db()
                 .table("topic_progress")
-                .select("topic_id,mastery,attempts_n,level")
+                .select(_PROGRESS_COLUMNS)
                 .eq("exam_prep_id", str(prep_id))
                 .execute()
                 .data
             ),
         )
-        return [
-            ProgressFacts(
-                topic_id=UUID(r["topic_id"]),
-                mastery=float(r["mastery"]),
-                attempts_n=int(r["attempts_n"]),
-                level=r["level"],
-            )
-            for r in rows
-        ]
+        return self._run("progress rows", lambda: [_progress(r) for r in rows])
+
+    def get_topic_progress(self, topic_id: UUID) -> ProgressFacts | None:
+        rows = self._run(
+            "topic progress",
+            lambda: (
+                self._db()
+                .table("topic_progress")
+                .select(_PROGRESS_COLUMNS)
+                .eq("topic_id", str(topic_id))  # RLS: only the user's own row
+                .execute()
+                .data
+            ),
+        )
+        # An unexpected row shape is a store failure too, so the room goes on (§2.3 item 2).
+        return self._run("topic progress row", lambda: _progress(rows[0]) if rows else None)
+
+    def save_topic_progress(self, **fields: Any) -> None:
+        self._run(
+            "save topic progress",
+            lambda: (
+                self._db()
+                .table("topic_progress")
+                .upsert({k: _json(v) for k, v in fields.items()}, on_conflict="user_id,topic_id")
+                .execute()
+            ),
+        )
 
     def list_skills(self, topic_id: UUID) -> list[SkillFacts]:
         rows = self._run(
@@ -387,8 +432,8 @@ class SupabaseProblemRepository:
         )
         return int(count or 0)
 
-    def end_problem(self, problem_id: UUID) -> None:
-        self._run(
+    def end_problem(self, problem_id: UUID) -> bool | None:
+        rows = self._run(
             "end problem",
             lambda: (
                 self._db()
@@ -397,8 +442,10 @@ class SupabaseProblemRepository:
                 .eq("id", str(problem_id))
                 .is_("ended_at", "null")
                 .execute()
+                .data
             ),
         )
+        return bool(rows)  # PostgREST returns the updated rows: none = it had ended already
 
     def working_steps(self, problem_id: UUID) -> int:
         rows = self._run(

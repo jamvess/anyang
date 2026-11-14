@@ -49,7 +49,7 @@ from app.models.tutor_ai import GenerateProblemResult
 from app.services.room_db import _save_tutor
 from app.services.room_opening import greeting_events, topic_lines
 from app.services.tutor_turn import Event, call_scope
-from app.settings import get_settings
+from app.settings import LearningConfig, get_settings
 
 log = logging.getLogger(__name__)
 
@@ -68,6 +68,19 @@ def usable_topics(topics: Sequence[TopicFacts]) -> list[TopicFacts]:
     return usable if any((t.importance or 0) >= 1 for t in usable) else []
 
 
+def progress_state(row: ProgressFacts | None, cfg: LearningConfig) -> TopicProgress:
+    """A `topic_progress` row as BKT reads it; no row = not started at `bkt.p_init`."""
+    if row is None:
+        return TopicProgress(cfg.bkt.p_init, 0, 0)
+    return TopicProgress(row.mastery, row.attempts_n, row.d_max)
+
+
+def topic_level(state: TopicProgress, stars: int, cfg: LearningConfig) -> str:
+    """The level of the card and of `topic_progress.level` (topic-progress-db.md §2.2 item 3):
+    every skill counts as covered until skill coverage exists (§10 item 2)."""
+    return level(state, target_difficulty(stars, MODE, cfg), True, cfg)
+
+
 def _card(
     topics: list[TopicFacts], progress: list[ProgressFacts], days: int
 ) -> tuple[ProgressCardEvent, dict[UUID, str], dict[UUID, float]]:
@@ -79,14 +92,10 @@ def _card(
     for topic in topics:
         stars = topic.importance or 0
         row = rows.get(topic.id)
-        state = (
-            TopicProgress(row.mastery, row.attempts_n, row.d_max or 0)
-            if row
-            else TopicProgress(cfg.bkt.p_init, 0, 0)
-        )
+        state = progress_state(row, cfg)
         d_target = target_difficulty(stars, MODE, cfg)
-        topic_level = level(state, d_target, True, cfg) if row else "not_started"
-        levels[topic.id] = topic_level
+        this_level = topic_level(state, stars, cfg) if row else "not_started"
+        levels[topic.id] = this_level
         if row:
             mastery[topic.id] = row.mastery
         card_topics.append(
@@ -94,7 +103,7 @@ def _card(
                 id=str(topic.id),
                 name=topic.name,
                 stars=stars,
-                level=topic_level,
+                level=this_level,
                 review_due=False,
                 origin=topic.origin,
             )
