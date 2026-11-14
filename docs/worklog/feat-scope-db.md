@@ -14,7 +14,7 @@
 - [x] 1. 🤖 (14 พ.ย. · Jam ok) `/spec-feature` → `specs/features/scope/scope-db.md`: มี token → `GET /scope` อ่าน `topics` (รวมที่ตัดออก · `stars` 0), `source_label` จาก `topic_sources` + `materials.file_name`, `unmapped_questions`, `status` จาก `active_scope_version_id` · ดาวยังไม่ครบ → `409 scope_not_ready` · `POST /scope/confirm` → `409` 3 แบบ · สร้าง `scope_versions` (version ถัดไป · `snapshot` ของหัวข้อ) → ตั้ง `active_scope_version_id` → หัวข้อ `draft` เป็น `confirmed` · ยืนยันพร้อมกัน 2 ครั้ง → `409` (unique ของ version) · `GET /topics/{id}/sources` อ่านหน้าใน `material_pages` + ข้อสอบของหัวข้อ · ไม่มี token → stub เดิม · 🙋 Jam review spec
 - [x] 2. 🤖 (14 พ.ย. · Jam ok) `/spec-to-tests` (fake repository · integration: RLS + ยืนยันแล้วห้องติวใช้ scope version) · 🙋 Jam review test
 - [x] 3. 🤖 (14 พ.ย. · green 1742 · Jam ok) `/implement-feature` จน green · ไฟล์กลาง (`specs/system/api.md`) ถามก่อน
-- [ ] 4. 🤖 รันกับข้อมูลจริงของ MTH10101 (ingestion ในเครื่อง → `GET /scope` → confirm → เปิดห้อง) · 🙋 Jam ดูผล
+- [x] 4. 🤖 (14 พ.ย. · 34 หัวข้อ · ที่มา 9 หน้า · ยืนยัน version 1 · ซ้ำ 409 · Jam รับผล) รันกับข้อมูลจริงของ MTH10101 (ingestion ในเครื่อง → `GET /scope` → confirm → เปิดห้อง) · 🙋 Jam ดูผล
 - [ ] 5. 🤖 อัปเดต docs + checklist แล้ว `/work-done`
 
 ## Definition of done
@@ -32,7 +32,7 @@
 
 ## Next step
 
-ขั้น 4: รันกับข้อมูลจริงของ MTH10101 (ingestion ในเครื่อง → GET /scope → ยืนยัน → เปิดห้อง)
+ขั้น 5: `/work-done` · ก่อน merge ส่งข้อความกลุ่ม (`specs/system/api.md` v1.20)
 
 ## Waiting on
 

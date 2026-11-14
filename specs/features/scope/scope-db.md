@@ -6,7 +6,7 @@
 | Requirements | SM-02, SM-03, SM-04, SM-09, SA-06 |
 | Owner | Jam (งานของ Junior · Junior ให้ตัดสินใจไปก่อน 14 พ.ย.) |
 | Reviewer | Jam · Junior ดูย้อนหลัง (การเขียน `scope_versions`, `exam_preps`, `topics` · api.md v1.6 รอตัดสินข้อ 1–5) |
-| Status | draft 2026-11-14 (PR #137) |
+| Status | approved 2026-11-14 (Jam ok spec + test) · implemented 2026-11-14 (PR #137) |
 | Related system spec | api.md v1.6 "หน้าตรวจขอบเขต" + รอตัดสิน (v1.6) · `scope-review.md` (หน้าเว็บของ May · S12) · `ingestion.md` (#130 · ที่มาของหัวข้อ ดาว ช่วงหน้า ข้อสอบ) · ai-orchestration §2.3.2 ขั้น 7 (ยืนยัน), §2.3.5 (ดาว) · data-model.md รูป 2 · `docs/team/sprint-checklists.md` ⭐ demo ขั้น 5 |
 
 ## 1. Context
@@ -91,6 +91,8 @@ fake repository (แถวที่ JWT ของผู้ใช้เห็น)
 | test เดิม (`test_scope_api_contract.py`, `test_scope_stubs.py`) | unit | AC-12 |
 | `tests/integration/test_scope_db.py` | integration | AC-tenant, AC-6 บนแถวจริง |
 | รันกับข้อมูลจริงของ MTH10101 (ขั้น 4 ของ worklog) | มือ | ingestion → scope → ยืนยัน → เปิดห้อง |
+
+**ผลรันกับข้อมูลจริงของ MTH10101 (14 พ.ย. · ขั้น 4 ของ worklog · ผล ingestion ของ #130 ใน `poc/P3/results/apps-api-ingestion/` + ข้อความจาก PDF จริง · repository ในหน่วยความจำ):** `GET /scope` `200` จาก DB · `draft` · 34 หัวข้อ (★★★ 13 · ★★ 13 · ★ 8) · `source_label` เช่น "sheet-01 น.2–9, sheet-03 น.1" · ข้อสอบที่ map ไม่ได้ 0 ข้อ · `GET /topics/<ลิมิต>/sources` 9 หน้าพร้อมข้อความทั้งหน้า + ข้อสอบ 2 ข้อ ("midterm-2559-1 ข้อ ก1.1", "midterm-2561-1 ข้อ ก2") · confirm `200` version 1 · `snapshot` 34 หัวข้อ `confirmed` · `active_scope_version_id` ชี้ version นั้น · `GET /scope` เป็น `confirmed` · confirm ซ้ำ `409 scope_already_confirmed` · ข้อความข้อสอบในการรันนี้เป็นข้อความแทน (ไฟล์ผล map ไม่เก็บข้อความ) · การผูก session กับ version ตรวจใน integration test · **Jam รับผล (14 พ.ย.)**
 
 ## 9. Out of scope
 
