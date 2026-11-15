@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { apiUrl, createHttpOcrConfirm, createHttpTransport } from "@/lib/httpTransport";
-import { postSSE, type SSEEvent } from "@/lib/sse";
+import { apiFetch, apiSSE } from "@/lib/auth";
+import { createHttpOcrConfirm, createHttpTransport } from "@/lib/httpTransport";
+import type { SSEEvent } from "@/lib/sse";
 import { ChatRoom } from "./ChatRoom";
 import { roomStrings as t } from "./strings";
 import type { RoomData } from "./types";
@@ -25,7 +26,7 @@ class ApiError extends Error {
 }
 
 async function getJSON<T>(path: string, signal: AbortSignal): Promise<T> {
-  const res = await fetch(apiUrl(path), { signal });
+  const res = await apiFetch(path, { signal });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
     throw new ApiError(res.status, body?.error?.code);
@@ -45,7 +46,7 @@ async function openRoom(prepId: string, signal: AbortSignal): Promise<Extract<St
     if (!(e instanceof ApiError && e.status === 404 && e.code === "no_active_session")) throw e;
   }
 
-  const stream = postSSE(apiUrl(`/exam-preps/${prepId}/sessions`), {}, { signal });
+  const stream = apiSSE(`/exam-preps/${prepId}/sessions`, {}, { signal });
   const first = await stream.next();
   if (first.done || first.value.event !== "session") throw new Error("session stream did not start with `session`");
   const { session_id } = first.value.data as { session_id: string };

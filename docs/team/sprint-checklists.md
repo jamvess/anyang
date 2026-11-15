@@ -261,7 +261,9 @@
   - 11 พ.ย. (PR #118) May review ย้อนหลังแล้ว (1 นาที · อ่านตาราง AC → test ที่ Claude สรุป ไม่ได้อ่านโค้ด test เอง): 27 AC มี test ครบ · ช่องโหว่ 2 (§10 ข้อ 9, 10 ไม่มี test) · comment ทำให้เข้าใจผิด 1 (AC-13) · เสนอ Jam แก้ใน PR ใหม่ · จดใน `metrics.md` §3, §4
 - [x] Use case UC ติว และ UC ส่งคำตอบ ให้ครบ 4 UC (D7)
   - ทำก่อนกำหนด 21 ต.ค. (PR #36) · มีข้อเสนอแก้ AM-02, ai-orchestration และ api.md v1.3 รอ Junior + Jam review
-- [ ] ⭐ demo ขั้น 1: หน้า login (email + password ตาม D1) · เก็บ session · ส่ง `Authorization` ทุก request (UM-01)
+- [x] ⭐ demo ขั้น 1: หน้า login (email + password ตาม D1) · เก็บ session · ส่ง `Authorization` ทุก request (UM-01)
+  - 15 พ.ย. (PR #138 · `specs/features/platform/web-login.md`): หน้า `/login` (email + password · Supabase) · login แล้วกลับไปหน้า `?next=` (เฉพาะ path ในเว็บ) · `/logout` · ทุก request ไป API แนบ `Authorization` จาก session (`lib/auth.ts` `apiFetch` / `apiSSE`) · API ตอบ 401 → พาไปหน้า login · ไม่มี session (เครื่อง dev ที่ใช้ stub) ไม่แนบ · ลองกับ `anyang-dev` แล้วผ่าน · ไม่มีหน้าสมัคร (S5) · **May: ดูหน้าตาและข้อความใน `components/auth/strings.ts`**
+  - ทำโดย Jam (15 พ.ย.) ช่วง solo
 - [ ] ⭐ demo ขั้น 2: หน้ารายการการเตรียมสอบ + ฟอร์มสร้าง แทนหน้า template ของ Next (CM-01, CM-02)
 - [ ] ⭐ demo ขั้น 3: หน้าอัปโหลดหลายไฟล์ + สถานะรายไฟล์ (CM-03, CM-07)
 - [ ] ⭐ demo ขั้น 5: หน้า scope ต่อ API จริง + ยืนยัน (SM-09)

@@ -3,17 +3,7 @@
 
 import type { ConfirmOcr, SendMessage } from "@/components/chat/types";
 import type { components } from "./api";
-import { postSSE } from "./sse";
-
-/**
- * Base URL of the API. Read per call, not at module load, so `next build`
- * works without the env (same as lib/supabase.ts).
- */
-export function apiUrl(path: string): string {
-  const base = process.env.NEXT_PUBLIC_API_URL;
-  if (!base) throw new Error("NEXT_PUBLIC_API_URL must be set");
-  return `${base.replace(/\/$/, "")}${path}`;
-}
+import { apiFetch, apiSSE } from "./auth";
 
 /**
  * Gets a signed URL from POST /sessions/{id}/uploads, PUTs the photo there and returns its path
@@ -27,7 +17,7 @@ async function uploadPhoto(sessionId: string, image: File, signal: AbortSignal):
     file_name: image.name,
     size_bytes: image.size,
   };
-  const res = await fetch(apiUrl(`/sessions/${sessionId}/uploads`), {
+  const res = await apiFetch(`/sessions/${sessionId}/uploads`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
@@ -55,7 +45,7 @@ export function createHttpTransport(sessionId: string): SendMessage {
     const body: components["schemas"]["SendMessageRequest"] = image
       ? { ...(text !== null && { text }), image_path: await uploadPhoto(sessionId, image, signal) }
       : { text };
-    yield* postSSE(apiUrl(`/sessions/${sessionId}/messages`), body, { signal });
+    yield* apiSSE(`/sessions/${sessionId}/messages`, body, { signal });
   };
 }
 
@@ -63,6 +53,6 @@ export function createHttpTransport(sessionId: string): SendMessage {
 export function createHttpOcrConfirm(sessionId: string): ConfirmOcr {
   return function confirm(lines, signal) {
     const body: components["schemas"]["OcrConfirmRequest"] = { lines };
-    return postSSE(apiUrl(`/sessions/${sessionId}/ocr/confirm`), body, { signal });
+    return apiSSE(`/sessions/${sessionId}/ocr/confirm`, body, { signal });
   };
 }

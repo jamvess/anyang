@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { MessageText } from "@/components/chat/MessageText";
-import { apiUrl } from "@/lib/httpTransport";
+import { apiFetch } from "@/lib/auth";
 import { scopeStrings as t } from "./strings";
 
 // Spec: specs/features/scope/scope-review.md · wireframe S12, S38.
@@ -38,7 +38,7 @@ type SourcesState = { kind: "loading" } | { kind: "ready"; sources: Sources } | 
 const MAX_STARS = 3;
 
 async function getJSON<T>(path: string): Promise<T> {
-  const res = await fetch(apiUrl(path));
+  const res = await apiFetch(path);
   if (!res.ok) throw Object.assign(new Error(`API ${res.status}`), { status: res.status });
   return res.json();
 }
@@ -162,7 +162,7 @@ export function ScopeReview({ prepId, navigate }: { prepId: string; navigate: (h
     setConfirming(true);
     setConfirmFailed(false);
     try {
-      const res = await fetch(apiUrl(`/exam-preps/${prepId}/scope/confirm`), { method: "POST" });
+      const res = await apiFetch(`/exam-preps/${prepId}/scope/confirm`, { method: "POST" });
       if (!res.ok) throw new Error(`API ${res.status}`);
       navigate(room);
     } catch {

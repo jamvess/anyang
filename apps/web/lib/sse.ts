@@ -76,7 +76,10 @@ export async function* postSSE(
     signal: init.signal,
   });
   if (!res.ok || !res.body) {
-    throw new Error(`SSE request failed: ${res.status} ${res.statusText}`);
+    // The status lets the caller tell a 401 from other failures (lib/auth.ts apiSSE).
+    throw Object.assign(new Error(`SSE request failed: ${res.status} ${res.statusText}`), {
+      status: res.status,
+    });
   }
   yield* parseSSE(res.body);
 }
