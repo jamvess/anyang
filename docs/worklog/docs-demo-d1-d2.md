@@ -17,7 +17,7 @@
 - [x] 6. 🙋+🤖 (15 พ.ย. · PASS: login OK role `authenticated` · มี `tenant_id` · ไม่มี token → 401 `missing_token` · มี token → 200 ไม่มี `X-Stub` · `[]`) ขั้น 1: Junior ตั้ง `.env` ที่ root ชี้ `anyang-dev` + `AUTH_REQUIRED=true` · Claude เขียน script เล็กใน scratchpad ที่ login ด้วย email/password ของบัญชี demo (ยกเว้นกติกา ก ครั้งเดียว · ดู Decisions · Junior พิมพ์รหัสเอง) แล้ว decode JWT ว่ามี `tenant_id` · เรียก API ไม่มี token → 401 · มี token → `GET /exam-preps` 200
 - [x] 7. 🙋+🤖 (15 พ.ย. · `migration list --remote` ครบ `0001`–`0007` · unlink แล้ว · Junior review `0007` แล้ว) `db push` `0007` ขึ้น `anyang-dev` (Jam ฝากไว้ · PR #135): Junior `link` → Claude `db push --remote --dry-run` → Junior ok → Claude `db push --remote --yes` → `migration list --remote` ครบ `0001`–`0007` → `unlink`
 - [x] 8. 🤖 (15 พ.ย.) เพิ่มข้อ "reset database password ของ anyang-dev" ใน S4 ของ Junior (`sprint-checklists.md`)
-- [ ] 9. 🙋+🤖 (16 พ.ย. · ซ้อม login ก่อน advisor update) ขั้น 1 ผ่านหน้าเว็บของ May (#138 merge แล้ว): API `AUTH_REQUIRED=true` + `pnpm dev` ชี้ `anyang-dev` · ไม่มี session → `/login?next=…` · login บัญชี demo → กลับหน้าเดิม · หน้าเว็บส่ง `Authorization` แล้ว API ตอบ 200 · `/logout` → `/login`
+- [x] 9. 🙋+🤖 (16 พ.ย. · ซ้อม login ก่อน advisor update · PASS ทุกข้อ: redirect → `/login?next=…` · กลับหน้า scope "ไม่พบการเตรียมสอบนี้" (API 404) · รหัสผิดขึ้นข้อความถูก · `/logout` → `/login` แล้ว scope เด้งไป login อีก (API 401)) ขั้น 1 ผ่านหน้าเว็บของ May (#138 merge แล้ว): API `AUTH_REQUIRED=true` + `pnpm dev` ชี้ `anyang-dev` · ไม่มี session → `/login?next=…` · login บัญชี demo → กลับหน้าเดิม · หน้าเว็บส่ง `Authorization` แล้ว API ตอบ 200 · `/logout` → `/login`
 
 ## Definition of done
 
@@ -41,13 +41,17 @@
 - ข้อ 7: `db push` `0007` ขึ้น `anyang-dev` (Junior review แล้ว) · remote ครบ `0001`–`0007` · unlink แล้ว
 - ข้อ 8: เพิ่มข้อ "reset database password ของ anyang-dev" ใน S4 ของ Junior · โน้ตใต้ขั้น 8 ว่า `0007` ขึ้น dev แล้ว
 
+## Done today (2026-11-16)
+
+- merge `origin/main` (หน้า login ของ May #138) · ข้อ 9 ซ้อม login ผ่านหน้าเว็บ ผ่านทุกข้อ · ติ๊ก ⭐ ขั้น 1 ใน checklist พร้อมโน้ต
+
 ## Next step
 
-ทุกข้อใน Plan เสร็จแล้ว → `/work-done` ของ branch นี้ (PR #134 ยังเป็น draft) · ใน checklist ติ๊ก ⭐ D1 + D2 · ⭐ ขั้น 1: ฝั่ง API เสร็จ แต่ "วนได้กับหน้า login ของ May" ยังรอ May → ถาม Junior ตอน `/work-done` ว่าจะติ๊กหรือเขียนเป็นโน้ต "ฝั่ง API เสร็จ 15 พ.ย. · รอหน้า login ของ May" · **ถาม Junior ก่อน merge** · แล้วเริ่ม branch ใหม่ `feat/materials-storage` ⭐ demo ขั้น 3 (migration `0008`: bucket + storage policy + isolation test · endpoint 4 ตัวใน `apps/api/app/routers/exam_prep.py` ตอนนี้เป็น stub) ด้วย `/spec-feature`
+ทุกข้อใน Plan เสร็จแล้ว · ติ๊ก D1 + D2 และขั้น 1 แล้ว → `/work-done` (PR #134 ยังเป็น draft) · **ถาม Junior ก่อน merge** · แล้วเริ่ม branch ใหม่ `feat/materials-storage` ⭐ demo ขั้น 3 (migration `0008`: bucket + storage policy + isolation test · endpoint 4 ตัวใน `apps/api/app/routers/exam_prep.py` ตอนนี้เป็น stub) ด้วย `/spec-feature`
 
 ## Waiting on
 
-- May: หน้า login ที่ส่ง `Authorization` (ขั้น 1 ฝั่งเว็บ · ทำให้ "วนได้กับหน้า login" ครบ)
+- (ไม่มี · หน้า login ของ May merge แล้ว #138)
 
 ## Notes for next time
 
