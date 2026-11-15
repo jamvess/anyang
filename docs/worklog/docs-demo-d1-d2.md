@@ -5,7 +5,7 @@
 | Owner | Junior |
 | Branch | `docs/demo-d1-d2` |
 | Checklist item | ⭐ demo D1 + D2: ตัดสิน login ใน demo และ Supabase ในเครื่อง (ภายใน จ. 16 พ.ย.) · และ ⭐ demo ขั้น 1: env ของ API ชี้ `anyang-dev` (cloud · ไม่ต้องลง Docker · hook เปิดใน Dashboard แล้ว) · ยืนยัน `tenant_id` ใน token · `AUTH_REQUIRED=true` วนได้กับหน้า login ของ May (UM-01) |
-| Status | paused · 2026-11-15 |
+| Status | in progress · 2026-11-16 |
 
 ## Plan
 
@@ -17,6 +17,7 @@
 - [x] 6. 🙋+🤖 (15 พ.ย. · PASS: login OK role `authenticated` · มี `tenant_id` · ไม่มี token → 401 `missing_token` · มี token → 200 ไม่มี `X-Stub` · `[]`) ขั้น 1: Junior ตั้ง `.env` ที่ root ชี้ `anyang-dev` + `AUTH_REQUIRED=true` · Claude เขียน script เล็กใน scratchpad ที่ login ด้วย email/password ของบัญชี demo (ยกเว้นกติกา ก ครั้งเดียว · ดู Decisions · Junior พิมพ์รหัสเอง) แล้ว decode JWT ว่ามี `tenant_id` · เรียก API ไม่มี token → 401 · มี token → `GET /exam-preps` 200
 - [x] 7. 🙋+🤖 (15 พ.ย. · `migration list --remote` ครบ `0001`–`0007` · unlink แล้ว · Junior review `0007` แล้ว) `db push` `0007` ขึ้น `anyang-dev` (Jam ฝากไว้ · PR #135): Junior `link` → Claude `db push --remote --dry-run` → Junior ok → Claude `db push --remote --yes` → `migration list --remote` ครบ `0001`–`0007` → `unlink`
 - [x] 8. 🤖 (15 พ.ย.) เพิ่มข้อ "reset database password ของ anyang-dev" ใน S4 ของ Junior (`sprint-checklists.md`)
+- [ ] 9. 🙋+🤖 (16 พ.ย. · ซ้อม login ก่อน advisor update) ขั้น 1 ผ่านหน้าเว็บของ May (#138 merge แล้ว): API `AUTH_REQUIRED=true` + `pnpm dev` ชี้ `anyang-dev` · ไม่มี session → `/login?next=…` · login บัญชี demo → กลับหน้าเดิม · หน้าเว็บส่ง `Authorization` แล้ว API ตอบ 200 · `/logout` → `/login`
 
 ## Definition of done
 
