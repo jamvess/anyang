@@ -79,7 +79,7 @@ describe("lib/auth", () => {
     expect(await authHeaders()).toEqual({});
   });
 
-  it("api.md Auth: no Supabase env (dev, tests) gives no headers and the API is still called (AC-8)", async () => {
+  it("SA06 no Supabase env (dev, tests) gives no headers and the API is still called (AC-8)", async () => {
     supabase.broken = true;
     const calls = mockFetch(() => new Response("[]"));
     const { apiFetch, authHeaders } = await auth();
