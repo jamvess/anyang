@@ -5,9 +5,6 @@ import type { ConfirmOcr, SendMessage } from "@/components/chat/types";
 import type { components } from "./api";
 import { apiFetch, apiSSE } from "./auth";
 
-// Kept here too: the pages import it from this module.
-export { apiUrl } from "./apiUrl";
-
 /**
  * Gets a signed URL from POST /sessions/{id}/uploads, PUTs the photo there and returns its path
  * for `image_path` (specs/features/tutor/room-photo-send.md §2). Any failure throws, so nothing

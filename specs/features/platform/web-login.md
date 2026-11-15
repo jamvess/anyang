@@ -20,15 +20,15 @@ API ตรวจ token แล้ว (#134: token ของ `anyang-dev` มี `
 1. ช่อง **อีเมล** (`type="email"`, required) · **รหัสผ่าน** (`type="password"`, required) · ปุ่ม **เข้าสู่ระบบ** · ทุกช่องมี label (เข้าถึงด้วยคีย์บอร์ดได้ · `apps/web/CLAUDE.md`)
 2. กดเข้าสู่ระบบ → `supabase.auth.signInWithPassword({email, password})` · ระหว่างรอ: ปุ่มกดไม่ได้และเขียนว่า "กำลังเข้าสู่ระบบ…"
 3. ผ่าน → ไป `next` (query `?next=`) หรือ `/` ถ้าไม่มี
-4. **`next` ที่ใช้ได้:** path ภายในเว็บเท่านั้น (ขึ้นต้นด้วย `/` แต่ไม่ใช่ `//` และไม่มี `\`) · ไม่งั้นใช้ `/` (กัน open redirect)
-5. ผิด: อีเมลหรือรหัสผ่านไม่ถูก (Supabase `invalid_credentials` หรือ status 400) → "อีเมลหรือรหัสผ่านไม่ถูกต้อง" · อย่างอื่น (เครือข่าย, Supabase ล่ม) → "เข้าสู่ระบบไม่ได้ตอนนี้ ลองใหม่อีกครั้ง" · ข้อความอยู่ใน `role="alert"` · รหัสผ่านที่พิมพ์ไว้ถูกล้าง อีเมลคงไว้
+4. **`next` ที่ใช้ได้:** path ภายในเว็บเท่านั้น (ขึ้นต้นด้วย `/` แต่ไม่ใช่ `//` และไม่มี `\`) · ไม่มีตัวอักษรควบคุม (tab, CR, LF ฯลฯ ที่ URL parser ตัดทิ้งจน `/\t/evil` กลายเป็น `//evil`) · parse แล้วต้องเป็น origin เดียวกัน · ไม่งั้นใช้ `/` (กัน open redirect · self-review PR #138)
+5. ผิด: อีเมลหรือรหัสผ่านไม่ถูก (Supabase code `invalid_credentials` เท่านั้น · 400 อื่น เช่นยังไม่ยืนยันอีเมล ใช้ข้อความ "ลองใหม่" · self-review PR #138) → "อีเมลหรือรหัสผ่านไม่ถูกต้อง" · อย่างอื่น (เครือข่าย, Supabase ล่ม) → "เข้าสู่ระบบไม่ได้ตอนนี้ ลองใหม่อีกครั้ง" · ข้อความอยู่ใน `role="alert"` · รหัสผ่านที่พิมพ์ไว้ถูกล้าง อีเมลคงไว้
 6. มี session อยู่แล้วตอนเปิดหน้า → ไป `next` เลย
 7. ไม่มีลิงก์สมัคร (UM-01 ส่วนสมัคร + onboarding อยู่ S5 · บัญชี demo สร้างใน dashboard · D1)
 8. ข้อความทั้งหมดอยู่ใน `components/auth/strings.ts` (ภาษาไทย · May แก้ที่เดียว)
 
 ### 2.2 ออกจากระบบ (`/logout`)
 
-เปิด `/logout` → `supabase.auth.signOut()` → ไป `/login` · ล้มก็ไป `/login` (session ใน cookie ถูกล้างโดย client อยู่แล้ว) · หน้าอื่นลิงก์มาที่นี่ได้ (ปุ่มในหน้ารายการ prep ของ demo ขั้น 2)
+เปิด `/logout` → `supabase.auth.signOut({scope: "local"})` (เฉพาะเบราว์เซอร์นี้ · อุปกรณ์อื่นของผู้ใช้ยัง login อยู่ · self-review PR #138) → ไป `/login` · ล้มก็ไป `/login` (session ใน cookie ถูกล้างโดย client อยู่แล้ว) · หน้าอื่นลิงก์มาที่นี่ได้ (ปุ่มในหน้ารายการ prep ของ demo ขั้น 2)
 
 ### 2.3 แนบ token ทุก request (`lib/auth.ts`)
 
@@ -36,7 +36,7 @@ API ตรวจ token แล้ว (#134: token ของ `anyang-dev` มี `
 2. `apiFetch(path, init)` = `fetch(apiUrl(path), init + authHeaders())` · ใช้แทน `fetch(apiUrl(…))` ทุกที่: `TutorRoom` (`getJSON`), `ScopeReview` (`getJSON`, confirm), `httpTransport` (ขอ URL อัปโหลด)
 3. `postSSE` ที่ไป API (เปิดห้อง, ส่งข้อความ, ยืนยันลายมือ) ได้ `authHeaders()` ใน `headers` · `postSSE` เองไม่รู้เรื่อง auth (ใช้กับ URL ใดก็ได้)
 4. **ไม่แนบ** กับ URL ที่ไม่ใช่ API: `PUT` รูปไป signed URL ของ Storage (มี test เดิมยืนยันแล้ว · room-photo-send AC-6)
-5. **API ตอบ `401`** (token หมดอายุหรือไม่มี) ที่ `apiFetch` หรือ SSE ของ API → พาไป `/login?next=<path ปัจจุบัน + query>` · หน้าที่เรียกยังได้ error ตามเดิม (ไม่ค้าง)
+5. **API ตอบ `401`** (token หมดอายุหรือไม่มี) ที่ `apiFetch` หรือ SSE ของ API → ล้าง session ของเบราว์เซอร์นี้ก่อน (`signOut({scope: "local"})` · ไม่งั้นหน้า login เห็น session เดิมแล้วส่งกลับมาวนไม่จบ · self-review PR #138) → พาไป `/login?next=<path ปัจจุบัน + query>` · หน้าที่เรียกยังได้ error ตามเดิม (ไม่ค้าง)
 6. token หมดอายุ: `@supabase/ssr` ต่ออายุ session เองตอน `getSession()` · ต่อไม่ได้ → ไม่มี session → API ตอบ 401 → ข้อ 5
 
 ### 2.4 สิ่งที่ไม่เปลี่ยน
@@ -85,8 +85,8 @@ Vitest + Testing Library · Supabase client ปลอม (`vi.mock("@/lib/supaba
 |---|---|---|
 | `tests/auth/LoginForm.test.tsx` (ใหม่) | component | AC-1 ถึง AC-6 |
 | `tests/auth/apiAuth.test.ts` (ใหม่ · `lib/auth.ts`) | unit | AC-7 ถึง AC-9 |
-| `tests/auth/authHeadersEverywhere.test.tsx` (ใหม่ · ห้องติว + scope + transport กับ session ปลอม) | component | AC-10 |
-| `tests/auth/Logout.test.tsx` (ใหม่) | component | AC-11 |
+| `tests/auth/pagesAuth.test.tsx` (ใหม่ · หน้า scope + ห้องติวกับ session ปลอม) และ `tests/auth/apiAuth.test.ts` (transport) | component / unit | AC-10 |
+| `tests/auth/LoginForm.test.tsx` (describe `Logout`) | component | AC-11 |
 | test เดิมทั้งหมด | | AC-12 |
 | ลองในเบราว์เซอร์กับ `anyang-dev` (ขั้น 4 ของ worklog · Jam) | มือ | login → หน้า scope / ห้องติวได้ข้อมูลจริง |
 

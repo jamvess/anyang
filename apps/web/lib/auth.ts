@@ -25,13 +25,34 @@ export async function authHeaders(): Promise<Record<string, string>> {
   }
 }
 
+// Tab, CR and LF are dropped by the URL parser, so `/\t/evil` would become `//evil`.
+// eslint-disable-next-line no-control-regex
+const CONTROL = /[\u0000-\u001f\u007f]/;
+const BASE = "http://next.invalid";
+
 /** `next` only when it is a path of this site, so a link cannot send the user elsewhere. */
 export function safeNext(next: string | undefined): string {
   if (!next || !next.startsWith("/") || next.startsWith("//") || next.includes("\\")) return "/";
+  if (CONTROL.test(next)) return "/";
+  try {
+    // The same origin once parsed, as the router will parse it (self-review PR #138).
+    if (new URL(next, BASE).origin !== BASE) return "/";
+  } catch {
+    return "/";
+  }
   return next;
 }
 
-function toLogin(): void {
+/**
+ * The API refused the token: drop the session of this browser first, or the login page would see
+ * it and send the user straight back (a loop · self-review PR #138), then go to the login page.
+ */
+async function toLogin(): Promise<void> {
+  try {
+    await createClient().auth.signOut({ scope: "local" });
+  } catch {
+    // No Supabase env, or nothing to drop: go on.
+  }
   const here = `${window.location.pathname}${window.location.search}`;
   loginRedirect.go(`/login?next=${encodeURIComponent(here)}`);
 }
@@ -41,7 +62,7 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
   const headers = new Headers(init.headers);
   for (const [name, value] of Object.entries(await authHeaders())) headers.set(name, value);
   const res = await fetch(apiUrl(path), { ...init, headers });
-  if (res.status === 401) toLogin();
+  if (res.status === 401) await toLogin();
   return res;
 }
 
@@ -55,7 +76,7 @@ export async function* apiSSE(
   try {
     yield* postSSE(apiUrl(path), body, { ...init, headers });
   } catch (error) {
-    if ((error as { status?: number }).status === 401) toLogin();
+    if ((error as { status?: number }).status === 401) await toLogin();
     throw error;
   }
 }

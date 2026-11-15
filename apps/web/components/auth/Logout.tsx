@@ -13,7 +13,8 @@ export function Logout({ navigate }: { navigate: (href: string) => void }) {
     let alive = true;
     (async () => {
       try {
-        await createClient().auth.signOut();
+        // This browser only: the student's other devices stay signed in (self-review PR #138).
+        await createClient().auth.signOut({ scope: "local" });
       } catch {
         // Go to the login page all the same.
       }

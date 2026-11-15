@@ -5,9 +5,10 @@ import { safeNext } from "@/lib/auth";
 import { createClient } from "@/lib/supabase";
 import { authStrings as t } from "./strings";
 
-/** Supabase says the email or the password is wrong (the other errors ask to try again). */
-function isWrongCredentials(error: { code?: string; status?: number }): boolean {
-  return error.code === "invalid_credentials" || error.status === 400;
+/** Supabase says the email or the password is wrong; other 400s (an unconfirmed email, a bad
+ * request) ask to try again instead of blaming the password (self-review PR #138). */
+function isWrongCredentials(error: { code?: string }): boolean {
+  return error.code === "invalid_credentials";
 }
 
 /**

@@ -157,3 +157,37 @@ describe("the API calls of the pages carry the token (AC-10)", () => {
     expect(byUrl("storage.test").map(authOf)).toEqual([null]);
   });
 });
+
+
+// --- added by the self-review of PR #138 -----------------------------------------------------
+
+describe("lib/auth after the self-review", () => {
+  it.each(["/\t/evil.example", "/\n/evil.example", "/\r/evil.example", "/%00"])(
+    "SA06 a next with a control character %j stays on the site",
+    async (next) => {
+      const { safeNext } = await import("@/lib/auth");
+
+      expect(safeNext(next)).toBe(next === "/%00" ? "/%00" : "/");
+    },
+  );
+
+  it("UM01 a 401 drops the session of this browser before the login page, so it does not loop", async () => {
+    const signOut = vi.fn(async () => ({ error: null }));
+    vi.doMock("@/lib/supabase", () => ({
+      createClient: () => ({
+        auth: {
+          getSession: async () => ({ data: { session: { access_token: "t-old" } }, error: null }),
+          signOut,
+        },
+      }),
+    }));
+    mockFetch(() => new Response("{}", { status: 401 }));
+    const { apiFetch, loginRedirect } = await auth();
+
+    await apiFetch("/exam-preps");
+
+    expect(signOut).toHaveBeenCalledWith({ scope: "local" });
+    expect(loginRedirect.go).toHaveBeenCalled();
+    vi.doUnmock("@/lib/supabase");
+  });
+});
