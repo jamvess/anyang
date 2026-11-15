@@ -30,7 +30,7 @@
 
 | # | ขั้น | ผ่านเมื่อ | มีแล้ว | ที่ขาด (เจ้าของ) | ถ้าไม่ทัน |
 |---|---|---|---|---|---|
-| 1 | Login (UM-01) | สมัคร / เข้าด้วย email + password แล้วหน้าเว็บส่ง token ทุก request · API ได้ `tenant_id` จาก token | API ตรวจ JWT (`api-auth.md`) · trigger สร้าง tenant + profile (`0001`) · `custom_access_token_hook` เปิดแล้วใน `supabase/config.toml` | หน้า login + เก็บ session + ส่ง `Authorization` (**May**) · env ของ API ให้ชี้ `anyang-dev` (`SUPABASE_URL`, `SUPABASE_ANON_KEY` จาก Dashboard · D2) แล้วยืนยันว่า token มี `tenant_id` (**Junior**) | บัญชีที่สร้างไว้ก่อน แล้ว login ในวิดีโอ |
+| 1 | Login (UM-01) | สมัคร / เข้าด้วย email + password แล้วหน้าเว็บส่ง token ทุก request · API ได้ `tenant_id` จาก token | API ตรวจ JWT (`api-auth.md`) · trigger สร้าง tenant + profile (`0001`) · `custom_access_token_hook` เปิดแล้วใน Dashboard ของ `anyang-dev` (D2 · `supabase/config.toml` มีผลกับ Supabase ในเครื่องเท่านั้น) | หน้า login + เก็บ session + ส่ง `Authorization` (**May**) · env ของ API ให้ชี้ `anyang-dev` (`SUPABASE_URL`, `SUPABASE_ANON_KEY` จาก Dashboard · D2) แล้วยืนยันว่า token มี `tenant_id` (**Junior**) | บัญชีที่สร้างไว้ก่อน แล้ว login ในวิดีโอ |
 | 2 | สร้างการเตรียมสอบ (CM-01, CM-02) | กรอกชื่อวิชา + วันสอบ → เห็นในรายการพร้อมวันที่เหลือ | `POST` / `GET /exam-preps` บน DB (#121) | หน้ารายการ + ฟอร์มสร้าง แทนหน้า template ของ Next (**May**) | ฟอร์มเดียวไม่มีรายการ |
 | 3 | อัปโหลดชีท + ข้อสอบเก่า (CM-03, CM-07) | เลือกหลายไฟล์ → ขึ้น Storage → เห็นสถานะรายไฟล์ | สัญญา API ของ materials (api.md v1.10 · ยังเป็นข้อเสนอ) · stub | `/exam-preps/{id}/materials` จริง + signed upload URL + bucket และ policy (migration ใหม่) (**Junior**) · หน้าอัปโหลด (**May**) | ไฟล์เดียว · ไม่มีการแก้ประเภทไฟล์ |
 | 4 | ระบบอ่านไฟล์ → หัวข้อ + ดาว (SM-01, SM-03, SM-04, CM-06) | หลังยืนยันไฟล์ ระบบสกัดหัวข้อ ดาว และหน้าที่มา ลง `topics`, `topic_sources` | pipeline ใน `poc/P3/` (★★★ ตรง 83%) · `domain/stars.py` (#113) | ย้าย pipeline เข้า `apps/api` เป็นงานเบื้องหลัง + เรียก `compute_importance` + `GET /exam-preps/{id}/ingestion` จริง (**Jam** · DB write ร่วมกับ **Junior**) | รัน ingestion จริงก่อนอัด แล้วตัดช่วงรอในวิดีโอ |
@@ -43,7 +43,7 @@
 ### ต้องตัดสินก่อนเริ่ม (ภายใน จ. 16 พ.ย.)
 
 - **D1 · Junior + May:** login ใน demo เป็น **email + password** (UM-01) ไหม · Google (UM-02) ต้องตั้ง OAuth client ซึ่งรันในเครื่องยุ่งกว่า · **ตัดสินแล้ว 14 พ.ย. (Junior): email + password · Google ทำใน S5 (ยังเป็น Must)**
-- **D2 · Junior:** demo ใช้ Supabase ในเครื่อง (Docker) หรือ `anyang-dev` (cloud) · **ตัดสินแล้ว 14 พ.ย. (Junior): `anyang-dev`** · เหตุผล: ทีมไม่ใช้ Docker (`setup.md`), ข้อมูล demo (หัวข้อจาก ingestion) ใช้ร่วมกันได้ทั้งทีม, hook + RLS เปิดแล้ว · ข้อเสีย: ข้อมูลทดสอบปนกัน, migration ต้องรอ Junior push, อีเมลยืนยันของ SMTP ฟรีจำกัด · กติกา:
+- **D2 · Junior:** demo ใช้ Supabase ในเครื่อง (Docker) หรือ `anyang-dev` (cloud) · **ตัดสินแล้ว 14 พ.ย. (Junior): `anyang-dev`** · เหตุผล: ทีมไม่ใช้ Docker (`setup.md`), ข้อมูล demo (หัวข้อจาก ingestion) ใช้ร่วมกันได้ทั้งทีม, hook + RLS เปิดแล้ว · ข้อเสีย: ข้อมูลทดสอบปนกัน, migration ต้องรอ Junior push, อีเมลยืนยันของ SMTP ฟรีจำกัด, ปิด Confirm email แล้วใครที่รู้ URL + publishable key (อยู่ในเว็บ) สมัครได้และใช้ AI จริงได้ (มี rate limit ต่อนาที) → หลังทีมสร้างบัญชีครบให้ปิด "Allow new users to sign up" แล้วสร้างบัญชีใน Dashboard แทน · กติกา:
   - (ก) บัญชี demo (ถาม Junior · สร้างแล้ว 14 พ.ย.) ใช้โชว์และอัดวิดีโออย่างเดียว ห้ามใช้ทดสอบ · ทดสอบให้สมัครบัญชีของตัวเอง
   - (ข) `0005`, `0006` ขึ้น `anyang-dev` แล้ว 14 พ.ย. · migration ใหม่ทุกตัว (ตัวต่อไป `0008` Storage · `0007` ขึ้นแล้ว 15 พ.ย.) แท็ก Junior ให้ push
   - (ค) ปิด Confirm email ใน `anyang-dev` (Authentication → Sign In / Providers → Email) สมัครแล้วเข้าได้ทันที · ปิดแล้ว 14 พ.ย.
@@ -158,7 +158,7 @@
 
 ### S4 · 16–27 พ.ย.
 
-- [x] ⭐ demo D1 + D2: ตัดสิน login ใน demo และ Supabase ในเครื่อง (ภายใน จ. 16 พ.ย.)
+- [x] ⭐ demo D1 + D2: ตัดสิน login ใน demo และ Supabase ในเครื่อง (ภายใน จ. 16 พ.ย.) → ตัดสินแล้ว: email + password · `anyang-dev` (ไม่ใช่ในเครื่อง)
   - 14 พ.ย.: D1 email + password · D2 `anyang-dev` (cloud) ไม่ใช้ Supabase ในเครื่อง · กติกา (ก)–(ง) อยู่ในส่วน ⭐ Priority
 - [x] ⭐ demo ขั้น 1: env ของ API ชี้ `anyang-dev` (cloud · ไม่ต้องลง Docker · hook เปิดใน Dashboard แล้ว) · ยืนยัน `tenant_id` ใน token · `AUTH_REQUIRED=true` วนได้กับหน้า login ของ May (UM-01)
   - 15–16 พ.ย. (PR #134 · `docs/team/setup.md` "env สำหรับ demo"): token ของ `anyang-dev` มี `tenant_id` · API ในเครื่อง `AUTH_REQUIRED=true` ไม่มี token → 401 `missing_token` · มี token → `GET /exam-preps` 200 จาก DB · 16 พ.ย. Junior ซ้อม login ผ่านหน้าเว็บของ May (#138) ก่อน advisor update ผ่านทุกข้อ: ไม่มี session → `/login?next=…` · login → กลับหน้าเดิม (API 404 ไม่ใช่ 401) · รหัสผิด → "อีเมลหรือรหัสผ่านไม่ถูกต้อง" · `/logout` → `/login` แล้วหน้า scope เด้งไป login อีกครั้ง
@@ -190,8 +190,8 @@
   - 11 พ.ย. เป้าเปลี่ยนเป็น advisor update จันทร์ 16 พ.ย. (journey เดียวบน staging: login → exam prep → upload → topics → ห้องติว AI จริง → resume) · ลำดับ: 1) login + #120 2) exam prep API 3) บันทึก messages + resume 4) upload + Storage 5) ingestion (Jam)
   - 11 พ.ย. (PR #121 · `specs/features/exam-prep/create-exam-prep.md`): `POST`/`GET /exam-preps` บันทึกและอ่าน `exam_preps` จริงผ่าน JWT ของผู้ใช้ (RLS) · ไม่มี token + `AUTH_REQUIRED=false` ยังได้ stub (`X-Stub`) · api.md v1.14 · `503 db_unavailable` · เหลือ: #120 (รอหน้า login ของ May), ลำดับ 3–5
   - 12 พ.ย. (PR #123 · `specs/features/tutor/room-sessions-db.md`): ลำดับ 3 เสร็จ · ห้องติวที่มี token บันทึก `tutor_sessions` + `messages` จริง (RLS) และกลับมาเห็นประวัติได้ (TM-13) · เปิดห้องทักด้วย template ใน `config/messages.yaml` ไม่เรียก AI · ยังไม่มี `progress_card` / `problem` จนกว่าจะมี scope ที่ยืนยันแล้ว · api.md v1.15 · `0004` ขึ้น anyang-dev และ anyang-staging แล้ว · unit test ออก network ไม่ได้แล้ว (`tests/unit/conftest.py`) · แก้ 3 test ของ Jam ตาม AC-auth-real / AC-23 (Jam ยังไม่ ok) · เหลือ: #120 (รอหน้า login ของ May), ลำดับ 4–5
-- [ ] หลัง advisor update: reset database password ของ anyang-dev (รหัสเดิมเดาง่าย) ด้วยรหัสสุ่ม แล้วแจ้งทีม
-  - 15 พ.ย.: rotate secret key ของ `anyang-dev` แล้ว (Junior) · DB password ยังเป็นรหัสเดิม
+- [ ] หลัง advisor update: reset database password ของ anyang-dev ด้วยรหัสสุ่ม แล้วแจ้งทีม
+  - 15 พ.ย.: rotate secret key ของ `anyang-dev` แล้ว (Junior) · DB password ยังไม่ได้ reset
 
 ### S5 · 30 พ.ย.–11 ธ.ค.
 

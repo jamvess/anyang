@@ -102,15 +102,15 @@ code .env
 | `SUPABASE_ANON_KEY` | Project Settings → **API Keys** → Publishable key (`sb_publishable_...`) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Project Settings → **API Keys** → Secret key (`sb_secret_...`) ⚠️ เทียบเท่ารหัส admin |
 | `DATABASE_URL` | ปุ่ม **Connect** → แท็บ Direct → **Session pooler** · แทน `[YOUR-PASSWORD]` ด้วย database password ที่ขอจากเจ้าของ repo ต่อหน้า |
-| `AUTH_REQUIRED` | `false` ตาม `.env.example` = ไม่ต้อง login (เดโม่ในเครื่องแบบไม่มี token) · `true` = API ตอบ 401 ทุก request ที่ไม่มี Supabase JWT (`specs/features/platform/api-auth.md`) และต้องมี `SUPABASE_URL` + `SUPABASE_ANON_KEY` ไม่งั้น API ไม่ start · ตอนรัน journey ของ demo ใช้ `true` (ดู "env สำหรับ demo" ข้างล่าง) |
+| `AUTH_REQUIRED` | `false` ตาม `.env.example` = request ที่ไม่มี token ได้ stub (`X-Stub`) หรือเดโม่ในเครื่องแบบไม่มี token · endpoint ที่อ่าน DB จริง (scope, ห้องติว, จบ session) ยังต้องมี token เสมอ (401 `missing_token`) · `true` = API ตอบ 401 ทุก request ที่ไม่มี Supabase JWT (`specs/features/platform/api-auth.md`) และต้องมี `SUPABASE_URL` + `SUPABASE_ANON_KEY` ไม่งั้น API ไม่ start · ตอนรัน journey ของ demo ใช้ `true` (ดู "env สำหรับ demo" ข้างล่าง) |
 | `NEXT_PUBLIC_SUPABASE_URL` | ใช้ค่าเดียวกับ `SUPABASE_URL` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ใช้ค่าเดียวกับ `SUPABASE_ANON_KEY` |
 | `CORS_ALLOW_ORIGINS` | ไม่ต้องแก้ ใช้ค่าใน `.env.example` (`http://localhost:3000`) · origin ที่ browser เรียก API ได้ ต้องตรงทุกตัวอักษร คั่นด้วย `,` ห้ามมี `*` หรือ `/` ท้าย · ถ้ารันเว็บที่ port อื่นให้เพิ่มที่นี่ |
 | `CORS_ALLOW_ORIGIN_REGEX` | ไม่ต้องแก้ · ให้ Vercel preview ของ project เรา (`anyang-<hash>-anyang4.vercel.app`) เรียก API ได้ · URL branch alias (`anyang-git-…`) เรียกไม่ได้ · ว่าง = ปิด |
 
-บรรทัดอื่น (`AI_PROVIDER=fake`, GCP, Anthropic, Sentry) ปล่อยไว้ตามเดิมก่อน
+บรรทัดอื่น (`AI_PROVIDER=fake`, GCP, Anthropic, Sentry) ปล่อยไว้ตามเดิมก่อน · **ยกเว้นตอนรัน journey ของ demo** ให้ใช้ "env สำหรับ demo" ข้างล่าง (`AI_PROVIDER=live` + GCP)
 
-**เฉพาะคนที่รัน PoC กับ Gemini จริง** (ตอนนี้คือ Jam) ให้ใส่ค่าในตารางนี้ ส่วนคนอื่นปล่อยว่างไว้ได้ · ไม่ต้องเปลี่ยน `AI_PROVIDER` เพราะ script ของ PoC สร้าง gateway แบบ live เอง · ส่วน test ใช้ fake provider เสมอ
+**คนที่รัน PoC กับ Gemini จริง หรือรัน journey ของ demo** ให้ใส่ค่าในตารางนี้ ส่วนคนอื่นปล่อยว่างไว้ได้ · ไม่ต้องเปลี่ยน `AI_PROVIDER` เพราะ script ของ PoC สร้าง gateway แบบ live เอง · ส่วน test ใช้ fake provider เสมอ
 
 | ตัวแปร | ค่า |
 |---|---|
@@ -142,14 +142,10 @@ AI_MODEL_OVERRIDE=
 
 `AI_PROVIDER=live` เรียก Gemini ผ่าน **Vertex AI** (`_build_gateway()` ใน `apps/api/app/ai/gateway.py` · ทุก tier ใน `config/ai.yaml` ขึ้นต้น `vertex:`) · ไม่ใช้ `GEMINI_API_KEY` · ต้องมี `GOOGLE_CLOUD_PROJECT` ไม่งั้น API ตอบ AI ไม่ได้ · `AI_MODEL_OVERRIDE` ต้องว่าง (ถ้าเป็น `gemini:...` จะไปใช้ AI Studio ซึ่งห้ามใช้กับข้อมูลผู้ใช้ · AI-07)
 
-ยืนยันตัวตนกับ Vertex ด้วย ADC (ทำครั้งเดียวต่อเครื่อง · รายละเอียดในหัวข้อ ADC ข้างบน):
+ยืนยันตัวตนกับ Vertex ด้วย ADC ตามหัวข้อ ADC ข้างบน (ทำครั้งเดียวต่อเครื่อง)
 
-1. `gcloud auth application-default login` → login ด้วยบัญชีที่อยู่ใน project `anyang-513006` → **Allow**
-2. `gcloud auth application-default set-quota-project anyang-513006`
-3. ทดสอบ: `cd apps/api && uv run pytest tests/integration/test_vertex_live.py -m live -s` ต้องได้ `1 passed` · ถ้า `PERMISSION_DENIED` ขอ role **Vertex AI User** จาก Junior
-
-- login ด้วยบัญชีของตัวเอง (สมัครในหน้าเว็บได้เลย `anyang-dev` ปิด Confirm email แล้ว) · บัญชี demo (ถาม Junior) ใช้โชว์และอัดวิดีโออย่างเดียว ห้ามใช้ทดสอบ
-- token ของ `anyang-dev` มี claim `tenant_id` จาก custom access token hook · ถ้าได้ 401 `invalid_token` ให้เช็คว่า `SUPABASE_URL` ใน `.env` กับ `NEXT_PUBLIC_SUPABASE_URL` ของเว็บเป็น project เดียวกัน
+- login ด้วยบัญชีของตัวเอง · เว็บยังไม่มีหน้าสมัคร (S5) จึงขอ Junior สร้างให้ใน Dashboard (Authentication → Users → **Add user**) · บัญชี demo (ถาม Junior) ใช้โชว์และอัดวิดีโออย่างเดียว ห้ามใช้ทดสอบ
+- token ของ `anyang-dev` มี claim `tenant_id` จาก custom access token hook · ถ้าได้ 401 `invalid_token`: (1) เช็คว่า `SUPABASE_URL` ใน `.env` กับ `NEXT_PUBLIC_SUPABASE_URL` ของเว็บเป็น project เดียวกัน (2) token ไม่มี `tenant_id` (login ก่อน hook เปิด หรือ project ที่ hook ปิด) → `/logout` แล้ว login ใหม่ ถ้ายังได้ ให้ Junior เช็ค hook ใน Dashboard
 - migration ใหม่ต้องให้ Junior push ขึ้น `anyang-dev` ก่อน ไม่งั้น API จะเจอคอลัมน์หรือตารางที่ยังไม่มี
 
 **2) `apps/web/.env.local` ใช้กับ frontend**
