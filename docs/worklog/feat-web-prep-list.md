@@ -11,7 +11,7 @@
 
 หลัง login (#138) หน้า `/` ยังเป็นหน้า template ของ Next · `GET /exam-preps` และ `POST /exam-preps` อ่านเขียน DB จริงแล้ว (`create-exam-prep.md` · Junior) · ทำหน้าหลักที่แสดงการเตรียมสอบของผู้ใช้ และฟอร์มสร้าง ต่อ API ผ่าน `apiFetch` (token แนบอัตโนมัติ)
 
-- [ ] 1. 🤖 `/spec-feature` → `specs/features/exam-prep/prep-list-page.md`: หน้า `/` (S07/S27) = การ์ดของ `GET /exam-preps` (ชื่อ, เหลือกี่วันจาก `days_left` ของ API, ขั้นจาก `stage`) · การ์ดพาไปหน้าตาม `stage` (`scope` → หน้า scope · `tutoring` → ห้องติว · `materials` / `processing` ยังไม่มีหน้า (ขั้น 3) จึงบอกสถานะอย่างเดียว) · ไม่มีรายการ → ข้อความเชิญสร้าง · ปุ่ม "สร้างการเตรียมสอบ" → `/preps/new` (S08): ชื่อ, วันสอบ, เวลาต่อวัน (ไม่บังคับ) → `POST` → กลับหน้า `/` · error 422 (`exam_date_past`, ชื่อว่าง/ยาวเกิน) และ 503 เป็นข้อความไทย · ลิงก์ออกจากระบบ · ข้อความอยู่ใน `strings.ts` · 🙋 Jam review spec
+- [x] 1. 🤖 (15 พ.ย. · Jam ok) `/spec-feature` → `specs/features/exam-prep/prep-list-page.md`: หน้า `/` (S07/S27) = การ์ดของ `GET /exam-preps` (ชื่อ, เหลือกี่วันจาก `days_left` ของ API, ขั้นจาก `stage`) · การ์ดพาไปหน้าตาม `stage` (`scope` → หน้า scope · `tutoring` → ห้องติว · `materials` / `processing` ยังไม่มีหน้า (ขั้น 3) จึงบอกสถานะอย่างเดียว) · ไม่มีรายการ → ข้อความเชิญสร้าง · ปุ่ม "สร้างการเตรียมสอบ" → `/preps/new` (S08): ชื่อ, วันสอบ, เวลาต่อวัน (ไม่บังคับ) → `POST` → กลับหน้า `/` · error 422 (`exam_date_past`, ชื่อว่าง/ยาวเกิน) และ 503 เป็นข้อความไทย · ลิงก์ออกจากระบบ · ข้อความอยู่ใน `strings.ts` · 🙋 Jam review spec
 - [ ] 2. 🤖 `/spec-to-tests` (Vitest + `fetch` ปลอม) · 🙋 Jam review test
 - [ ] 3. 🤖 `/implement-feature` จน green · `lint`, `typecheck`, `test`, `build`
 - [ ] 4. 🙋 Jam ลองในเบราว์เซอร์กับ `anyang-dev`: login → หน้าหลักว่าง → สร้าง prep → เห็นการ์ด
@@ -25,11 +25,12 @@
 
 ## Decisions
 
+- 2026-11-15 · ไม่แสดงจำนวนวันที่เหลือก่อนสร้าง (ตัวเลขมาจาก API · รอ May ตัดสิน §10 ข้อ 1) · หลังสร้างกลับ `/` จนกว่าจะมีหน้าอัปโหลด (Jam ok spec)
 - 2026-11-15 · Jam หยิบงานของ May ช่วง solo (ทำแบบเดียวกับ #138 · May มา review หน้าตาทีหลัง)
 
 ## Next step
 
-ขั้น 1: เขียน spec
+ขั้น 2: เขียน test (red) จาก AC-1 ถึง AC-13
 
 ## Waiting on
 
