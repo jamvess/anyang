@@ -13,8 +13,8 @@ API ฝั่ง token พร้อมแล้ว (#134: `anyang-dev` ออก
 
 - [x] 1. 🤖 (15 พ.ย. · Jam ok) `/spec-feature` → `specs/features/platform/web-login.md`: หน้า `/login` (email + password · `supabase.auth.signInWithPassword` · บัญชีใน `anyang-dev` ตาม D1) · login ผ่าน → ไปหน้าที่มาจาก (`?next=`) หรือ `/` · ผิด → ข้อความไทย · ทุก request ไป API แนบ `Authorization: Bearer <access_token>` จาก session ของ Supabase (ที่เดียว · `lib/`) · API ตอบ 401 → พาไปหน้า login พร้อม `next` · ไม่มี session + `AUTH_REQUIRED=false` (เครื่อง dev) → ไม่แนบ header ทำงานกับ stub แบบเดิม · ปุ่มออกจากระบบ · ไม่มีหน้าสมัคร (UM-01 สมัครเอง · S5) · 🙋 Jam review spec
 - [x] 2. 🤖 (15 พ.ย. · Jam ok) `/spec-to-tests` (Vitest + Testing Library · Supabase client ปลอม) · 🙋 Jam review test
-- [ ] 3. 🤖 `/implement-feature` จน green · `pnpm lint`, `typecheck`, `test`, `build`
-- [ ] 4. 🙋 Jam ลองในเบราว์เซอร์: API ในเครื่อง `AUTH_REQUIRED=true` ชี้ `anyang-dev` + `pnpm dev` → login ด้วยบัญชีของตัวเอง → เปิดหน้า scope / ห้องติวของ prep ได้ข้อมูลจริง · (ขั้นละเอียดจะเขียนให้ตอนถึงขั้นนี้)
+- [x] 3. 🤖 (15 พ.ย. · web test 331 ผ่าน · build ผ่าน · Jam ok) `/implement-feature` จน green · `pnpm lint`, `typecheck`, `test`, `build`
+- [x] 4. 🙋 (15 พ.ย. · ผ่านทุกข้อ: 401 → login → กลับหน้าเดิม · 404 ของ prep ปลอม · รหัสผิด · logout) Jam ลองในเบราว์เซอร์: API ในเครื่อง `AUTH_REQUIRED=true` ชี้ `anyang-dev` + `pnpm dev` → login ด้วยบัญชีของตัวเอง → เปิดหน้า scope / ห้องติวของ prep ได้ข้อมูลจริง · (ขั้นละเอียดจะเขียนให้ตอนถึงขั้นนี้)
 - [ ] 5. 🤖 อัปเดต docs + checklist แล้ว `/work-done`
 
 ## Definition of done
@@ -29,7 +29,7 @@ API ฝั่ง token พร้อมแล้ว (#134: `anyang-dev` ออก
 
 ## Next step
 
-ขั้น 3: implement
+ขั้น 5: `/work-done` · ไม่แตะไฟล์กลาง (ไม่ต้องส่งข้อความกลุ่มก่อน merge)
 
 ## Waiting on
 
@@ -37,4 +37,6 @@ API ฝั่ง token พร้อมแล้ว (#134: `anyang-dev` ออก
 
 ## Notes for next time
 
-- web test ของหน้าห้องติวพังในเครื่อง 66 ข้อ (หา label "พิมพ์ตอบ" ไม่เจอ · timeout) ตั้งแต่ก่อนงานนี้ · CI ผ่าน · ต้องดูตอนรัน `pnpm test`
+- ลองในเบราว์เซอร์: สมัครบัญชีของตัวเองใน `anyang-dev` ด้วย `POST {SUPABASE_URL}/auth/v1/signup` + header `apikey` (Confirm email ปิดอยู่ · trigger สร้าง tenant + profile ให้) · prep id ปลอมใช้ทดสอบ token ได้ (404 = token ถึง API)
+
+- web test 66 ข้อที่เคยพังในเครื่อง (หา label "พิมพ์ตอบ" ไม่เจอ · timeout) ผ่านเมื่อรันตอนเครื่องว่าง · น่าจะ timeout เพราะรัน test ของ API พร้อมกัน

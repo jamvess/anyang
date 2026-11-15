@@ -6,7 +6,7 @@
 | Requirements | UM-01 (เข้าสู่ระบบด้วย email + password ตาม D1 · ส่วนสมัครอยู่ S5), SA-06 |
 | Owner | Jam (งานของ May · May ให้ทำได้เลย 15 พ.ย.) |
 | Reviewer | May (หน้าตา ข้อความ flow · ดูย้อนหลัง) · Jam |
-| Status | draft 2026-11-15 (PR #138) |
+| Status | approved 2026-11-15 (Jam ok spec + test) · implemented 2026-11-15 (PR #138) · รอ May review หน้าตา |
 | Related system spec | `api-auth.md` (API ตรวจ token · 401 `missing_token` / `invalid_token`) · api.md "Auth" · `docs/team/sprint-checklists.md` D1 (email + password บน `anyang-dev`) · `room-http.md`, `scope-review.md` (หน้าที่เรียก API) · `apps/web/CLAUDE.md` |
 
 ## 1. Context
@@ -89,6 +89,8 @@ Vitest + Testing Library · Supabase client ปลอม (`vi.mock("@/lib/supaba
 | `tests/auth/Logout.test.tsx` (ใหม่) | component | AC-11 |
 | test เดิมทั้งหมด | | AC-12 |
 | ลองในเบราว์เซอร์กับ `anyang-dev` (ขั้น 4 ของ worklog · Jam) | มือ | login → หน้า scope / ห้องติวได้ข้อมูลจริง |
+
+**ผลลองในเบราว์เซอร์กับ `anyang-dev` (15 พ.ย. · ขั้น 4 ของ worklog · Jam · API ในเครื่อง `AUTH_REQUIRED=true` + `pnpm dev` · บัญชีของ Jam ที่สมัครผ่าน `/auth/v1/signup`):** ไม่มี session เปิดหน้า scope → API `401` → เด้งไป `/login?next=…` · login → กลับหน้าเดิม · prep id ที่ไม่มีอยู่ → "ไม่พบการเตรียมสอบนี้" (API ตอบ `404` · token ถึง API แล้ว) · รหัสผิด → "อีเมลหรือรหัสผ่านไม่ถูกต้อง" · อีเมลคงไว้ รหัสว่าง · login ไม่มี `next` → `/` · `/logout` → `/login` · เปิดหน้า scope อีกครั้ง → เด้งไป login · **ผ่านทุกข้อ (Jam)** · ยังไม่ได้ลองกับ prep ที่มีหัวข้อจริง (รอหน้ารายการ prep และหน้าอัปโหลด · demo ขั้น 2–3)
 
 ## 9. Out of scope
 
