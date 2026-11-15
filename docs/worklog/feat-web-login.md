@@ -12,7 +12,7 @@
 API ฝั่ง token พร้อมแล้ว (#134: `anyang-dev` ออก token ที่มี `tenant_id` · `AUTH_REQUIRED=true` ตอบ 401 เมื่อไม่มี token) แต่หน้าเว็บยังไม่มีหน้า login และทุก request (`TutorRoom`, `ScopeReview`, `httpTransport`, `postSSE`) ยังไม่ส่ง `Authorization` · journey ที่ใช้ข้อมูลจริงจึงติดตั้งแต่หน้าแรก
 
 - [x] 1. 🤖 (15 พ.ย. · Jam ok) `/spec-feature` → `specs/features/platform/web-login.md`: หน้า `/login` (email + password · `supabase.auth.signInWithPassword` · บัญชีใน `anyang-dev` ตาม D1) · login ผ่าน → ไปหน้าที่มาจาก (`?next=`) หรือ `/` · ผิด → ข้อความไทย · ทุก request ไป API แนบ `Authorization: Bearer <access_token>` จาก session ของ Supabase (ที่เดียว · `lib/`) · API ตอบ 401 → พาไปหน้า login พร้อม `next` · ไม่มี session + `AUTH_REQUIRED=false` (เครื่อง dev) → ไม่แนบ header ทำงานกับ stub แบบเดิม · ปุ่มออกจากระบบ · ไม่มีหน้าสมัคร (UM-01 สมัครเอง · S5) · 🙋 Jam review spec
-- [ ] 2. 🤖 `/spec-to-tests` (Vitest + Testing Library · Supabase client ปลอม) · 🙋 Jam review test
+- [x] 2. 🤖 (15 พ.ย. · Jam ok) `/spec-to-tests` (Vitest + Testing Library · Supabase client ปลอม) · 🙋 Jam review test
 - [ ] 3. 🤖 `/implement-feature` จน green · `pnpm lint`, `typecheck`, `test`, `build`
 - [ ] 4. 🙋 Jam ลองในเบราว์เซอร์: API ในเครื่อง `AUTH_REQUIRED=true` ชี้ `anyang-dev` + `pnpm dev` → login ด้วยบัญชีของตัวเอง → เปิดหน้า scope / ห้องติวของ prep ได้ข้อมูลจริง · (ขั้นละเอียดจะเขียนให้ตอนถึงขั้นนี้)
 - [ ] 5. 🤖 อัปเดต docs + checklist แล้ว `/work-done`
@@ -29,7 +29,7 @@ API ฝั่ง token พร้อมแล้ว (#134: `anyang-dev` ออก
 
 ## Next step
 
-ขั้น 2: เขียน test (red) จาก AC-1 ถึง AC-12
+ขั้น 3: implement
 
 ## Waiting on
 
