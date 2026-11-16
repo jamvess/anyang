@@ -269,7 +269,9 @@
   - 16 พ.ย. (PR #139 · `specs/features/exam-prep/prep-list-page.md`): หน้า `/` แสดงการเตรียมสอบจาก `GET /exam-preps` (ชื่อ · อีก n วัน · ขั้น · ความพร้อมเมื่อ API ส่งมา) · การ์ดขั้น `scope` / `tutoring` ลิงก์ไปหน้า scope / ห้องติว (`prepHref` · ขั้นอัปโหลดยังไม่มีหน้า) · ฟอร์ม `/preps/new` → `POST /exam-preps` · error เป็นข้อความไทย · ลองกับ `anyang-dev` ผ่าน · **May: ดูหน้าตาและข้อความใน `components/preps/strings.ts` · ตัดสิน §10 (วันที่เหลือก่อนสร้าง · หลังสร้างไปไหน)** · หน้าอัปโหลด (ขั้น 3) เพิ่มที่ `prepHref`
   - ทำโดย Jam (15–16 พ.ย.) ช่วง solo
 - [ ] ⭐ demo ขั้น 3: หน้าอัปโหลดหลายไฟล์ + สถานะรายไฟล์ (CM-03, CM-07)
-- [ ] ⭐ demo ขั้น 5: หน้า scope ต่อ API จริง + ยืนยัน (SM-09)
+- [x] ⭐ demo ขั้น 5: หน้า scope ต่อ API จริง + ยืนยัน (SM-09)
+  - 16 พ.ย. (PR #141 · `specs/features/scope/scope-review.md` §2 "ต่อ API จริง" · AC-21 ถึง AC-24): หน้า scope บน API ของ #137 · `409 scope_not_ready` → "ระบบยังอ่านไฟล์ไม่เสร็จ" · ยืนยันซ้ำ (`scope_already_confirmed`) → ไปห้องติว · `scope_empty` → "ไม่มีหัวข้อให้ติว…" · 401 ไม่แสดง error · กลับมาหน้าที่ Next ซ่อนไว้โหลด scope ใหม่ · type จาก OpenAPI · ลองในเบราว์เซอร์บน `anyang-dev` ผ่าน (รายการ → scope 34 หัวข้อ → ยืนยัน → ห้องติว → back อ่านอย่างเดียว) · prep ทดสอบใส่ข้อมูลด้วย `apps/api/scripts/seed_scope_demo.py` (ผล ingestion ของ MTH10101 · ใช้เป็นทางสำรองของวิดีโอได้ถ้าขั้น 3 ไม่ทัน) · May ดูข้อความใหม่ 2 ข้อความ (OQ 9)
+  - ทำโดย Jam (16 พ.ย.) ช่วง solo
 - [ ] เตรียมลำดับหน้าจอสำหรับ demo รวม
   - 13 พ.ย. แผนใหม่: ⭐ demo D4 + อัดวิดีโอ 21–22 พ.ย. (#125 เตรียมของช่วง live ใช้ต่อได้)
   - 21 ต.ค. ร่างแล้ว `docs/design/demo-flow.md` (PR #61): 15 นาที 7 ช่วง · ห้องติว live + wireframe คู่ผล PoC · คนพูดแบ่งตามงาน · ทางสำรอง + checklist ก่อน demo · เหลือเติมตัวเลข P2, P4-lite, P8-lite หลัง S3–S4 และให้ทีมตกลงลำดับ
