@@ -49,6 +49,7 @@ demo ขั้น 3: หลังสร้างการเตรียมส�
    - `uploaded` → "AI กำลังดูไฟล์…"
    - `classified` → ประเภทเป็นภาษาไทย (`sheet` ชีทเรียน · `slides` สไลด์ · `past_exam` ข้อสอบเก่า · `notes` โน้ต · `other` อื่นๆ) + "มั่นใจ {round(kind_confidence × 100)}%" (ไม่มี `kind_confidence` → ไม่แสดงส่วนนี้)
    - `failed` → `error` จาก API (ไม่มี → "อ่านไฟล์นี้ไม่ได้") สีแดง · ไม่ส่งไปยืนยัน (api.md: "ไฟล์ `failed` ไม่ต้องส่ง")
+   - ไฟล์ที่อัปโหลดไม่สำเร็จในขั้นใส่ไฟล์ (2.1.1 ข้อ 6) แสดงต่อท้ายพร้อมข้อความเดิม ไม่ส่งไปยืนยัน · ผู้ใช้ต้องเห็นว่าไฟล์ไหนไม่ได้ส่ง (เพิ่มตอนเขียน test 16 พ.ย.)
 4. หยุด poll เมื่อไม่มีไฟล์ `uploaded` เหลือ
 5. ปุ่ม "ยืนยันแล้วเริ่มประมวลผล" กดได้เมื่อไม่มีไฟล์ `uploaded` และมีไฟล์ `classified` อย่างน้อย 1 ไฟล์ → `POST /exam-preps/{id}/materials/confirm` body `{materials: [{id, kind}]}` ของทุกไฟล์ `classified` ด้วย `kind` ที่ AI เดา (ยังแก้ไม่ได้ · §9) · ระหว่างรอปุ่มกดไม่ได้
    - `202` → ไป `/preps/{id}/progress`
@@ -93,7 +94,7 @@ type ทั้งหมดใช้ที่ generate จาก OpenAPI (`lib/ap
 
 ## 4. Acceptance criteria
 
-fetch จำลองทั้งหมด (ไม่ใช้ API จริง) · ไฟล์จำลองด้วย `File` ของ jsdom · `POLL_MS` ใน test ใช้ fake timers
+fetch จำลองทั้งหมด (ไม่ใช้ API จริง) · ไฟล์จำลองด้วย `File` ของ jsdom · test แทน `POLL_MS` ด้วยค่าสั้น (20 ms · `vi.mock` ของ `components/materials/poll.ts`) แทน fake timers เพราะ `waitFor` ใช้กับ fake timers ของ vitest ไม่ได้
 
 **ใส่ไฟล์ (S09)**
 
@@ -102,7 +103,7 @@ fetch จำลองทั้งหมด (ไม่ใช้ API จริง)
 - **AC-3 (CM03)** Given 2 ไฟล์ และ API ไม่ใช่ stub When กดส่ง Then request ตามลำดับ: `POST /exam-preps/p1/materials` (body ตาม §2.1.1 ข้อ 5.1) → `PUT {upload_url}` (body เป็นไฟล์ · `Content-Type` ของไฟล์ · ไม่มี `Authorization`) → `POST /materials/m1/uploaded` body `{}` → แล้วไฟล์ที่ 2 แบบเดียวกัน · ระหว่างส่งปุ่มกดไม่ได้ และแถวที่กำลังส่งแสดง "กำลังอัปโหลด…"
 - **AC-4 (CM03)** Given `POST /materials` ตอบ header `X-Stub: true` Then ไม่มี `PUT` และยังเรียก `/uploaded`
 - **AC-5 (CM03)** Given ไฟล์ `file.type` ว่าง Then `content_type` เป็น `"application/octet-stream"`
-- **AC-6 (CM03)** Given ไฟล์แรกได้ `422 unsupported_type` ไฟล์ที่สองได้ `422 file_too_large` ไฟล์ที่สามสำเร็จ Then แถวแรก "ไฟล์ชนิดนี้ยังไม่รองรับ" แถวที่สอง "ไฟล์ใหญ่เกินไป" ไม่มี `PUT` ของสองไฟล์นั้น และไฟล์ที่สามยังถูกส่ง แล้วไปขั้นตรวจประเภท
+- **AC-6 (CM03)** Given ไฟล์แรกได้ `422 unsupported_type` ไฟล์ที่สองได้ `422 file_too_large` ไฟล์ที่สามสำเร็จ Then แถวแรก "ไฟล์ชนิดนี้ยังไม่รองรับ" แถวที่สอง "ไฟล์ใหญ่เกินไป" ไม่มี `PUT` ของสองไฟล์นั้น และไฟล์ที่สามยังถูกส่ง แล้วไปขั้นตรวจประเภท ซึ่งยังเห็นสองแถวแรกพร้อมข้อความเดิม
 - **AC-7 (CM03)** Given `PUT` ตอบ 403 หรือ network ล้ม Then แถวนั้น "อัปโหลดไม่สำเร็จ" ไม่เรียก `/uploaded` ของไฟล์นั้น
 - **AC-8 (CM03)** Given ทุกไฟล์ล้ม Then อยู่ขั้นใส่ไฟล์ · ข้อความในแถวยังอยู่ · เลือกไฟล์เพิ่มแล้วกดส่ง Then ส่งเฉพาะแถวที่ยังไม่สำเร็จ
 - **AC-9 (UM01)** Given `POST /materials` ของไฟล์แรกตอบ `401` Then ไม่ส่งไฟล์ที่เหลือ และไม่มีข้อความ error ในหน้า

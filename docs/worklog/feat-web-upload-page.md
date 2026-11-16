@@ -17,7 +17,7 @@
   - S11: poll `GET /exam-preps/{id}/ingestion` แสดงสถานะรายไฟล์ + ขั้นรวม → `scope_ready` แล้วไปหน้า scope
   - หน้ารายการ: การ์ด `materials` / `processing` ลิงก์มาหน้าใหม่ (`prepHref`) · หลังสร้าง prep ไปหน้าอัปโหลด (`prep-list-page.md` §10 ข้อ 2)
   - → 🙋 Jam review spec (เรื่องหน้าจอเป็นของ May: Jam ตัดสินไปก่อน May ดูย้อนหลัง)
-- [ ] 2. 🤖 `/spec-to-tests` (fetch จำลอง · test เดิมที่ review แล้วไม่แตะ) → 🙋 Jam review test
+- [x] 2. 🤖 `/spec-to-tests` (fetch จำลอง · test เดิมที่ review แล้วไม่แตะ) → 🙋 Jam review test
 - [ ] 3. 🤖 `/implement-feature` จน green · lint · typecheck · build · test ทั้งชุด
 - [ ] 4. 🙋 ลองในเบราว์เซอร์บน stub (เลือกไฟล์ → สถานะรายไฟล์ → ประเภท → ยืนยัน → หน้ารอ) · Claude ให้ขั้นตอนตอนถึงขั้นนี้
 - [ ] 5. 🤖 จดผลลง spec · ส่วนที่ต้องรอ #140 (อัปโหลดเข้า Storage จริง → ingestion → scope) จดไว้ใน Waiting on
@@ -35,7 +35,7 @@
 
 ## Next step
 
-ข้อ 1 รอ Jam review spec `specs/features/exam-prep/upload-page.md` (โดยเฉพาะ §10 ข้อ 1: แก้ test ที่ review แล้ว 3 ตัว) · ok แล้วทำข้อ 2 `/spec-to-tests`
+ข้อ 2 รอ Jam review test (`tests/materials/` 37 test แดง · แก้ test ที่ review แล้ว 3 ตัวใน `tests/preps/` ตาม §10 ข้อ 1 แดงเช่นกัน) · ok แล้วทำข้อ 3 `/implement-feature`
 
 ## Waiting on
 
