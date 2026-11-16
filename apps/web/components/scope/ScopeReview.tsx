@@ -164,6 +164,9 @@ export function ScopeReview({ prepId, navigate }: { prepId: string; navigate: (h
     try {
       const res = await apiFetch(`/exam-preps/${prepId}/scope/confirm`, { method: "POST" });
       if (!res.ok) throw new Error(`API ${res.status}`);
+      // Next keeps this page hidden with its state: a later visit must not find the button stuck
+      // (self-review PR #139, as the create form).
+      setConfirming(false);
       navigate(room);
     } catch {
       setConfirmFailed(true);
