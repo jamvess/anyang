@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Any
 
 from supabase import create_client
+from supabase_auth.errors import AuthApiError
 
 from app.domain.ingestion import resolve_sources
 from app.settings import get_settings
@@ -108,6 +109,8 @@ def build_rows(tenant: str, prep: str) -> dict[str, list[dict[str, Any]]]:
 
     mapping = _load(RESULTS / "mapping.json")
     for path in sorted(QUESTIONS.glob("*.json")):
+        if path.stem not in keys:
+            raise SystemExit(f"{path} has no page file {PAGES / path.name}")
         for q in _load(path)["questions"]:
             m = mapping.get(f"{path.stem}:{q['q_no']}") or {}
             rows["past_exam_questions"].append(
@@ -140,10 +143,12 @@ def _pick(preps: list[dict[str, Any]], wanted: str | None) -> dict[str, Any] | N
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("--prep", help="the exam prep id; without it, pick from a list")
+    parser.add_argument(
+        "--prep", type=uuid.UUID, help="the exam prep id; without it, pick from a list"
+    )
     parser.add_argument("--dry-run", action="store_true", help="print the row counts only")
     args = parser.parse_args()
-    wanted = str(uuid.UUID(args.prep)) if args.prep else None
+    wanted = str(args.prep) if args.prep else None
 
     if args.dry_run:
         print("dry run:", _counts(build_rows(str(uuid.uuid4()), str(uuid.uuid4()))))
@@ -154,14 +159,17 @@ def main() -> int:
         print("SUPABASE_URL / SUPABASE_ANON_KEY are not set in apps/api/.env", file=sys.stderr)
         return 1
     db = create_client(env.supabase_url, env.supabase_anon_key.get_secret_value())
-    session = db.auth.sign_in_with_password(
-        {
-            "email": input("email (not the demo account): ").strip(),
-            "password": getpass.getpass("password: "),
-        }
-    ).session
+    try:
+        session = db.auth.sign_in_with_password(
+            {
+                "email": input("email (not the demo account): ").strip(),
+                "password": getpass.getpass("password: "),
+            }
+        ).session
+    except AuthApiError as error:
+        session = None
+        print(f"sign-in failed: {error.message}", file=sys.stderr)
     if session is None:
-        print("sign-in failed", file=sys.stderr)
         return 1
     db.postgrest.auth(session.access_token)
 
@@ -184,9 +192,17 @@ def main() -> int:
         return 1
 
     rows = build_rows(found["tenant_id"], prep)
-    for table in TABLES:
-        for start in range(0, len(rows[table]), 200):
-            db.table(table).insert(rows[table][start : start + 200]).execute()
+    try:
+        for table in TABLES:
+            for start in range(0, len(rows[table]), 200):
+                db.table(table).insert(rows[table][start : start + 200]).execute()
+    except Exception as error:
+        # No transaction over PostgREST: remove what went in, so the prep can be seeded again.
+        # Pages, sources and questions go with their file or topic (on delete cascade).
+        db.table("topics").delete().eq("exam_prep_id", prep).execute()
+        db.table("materials").delete().eq("exam_prep_id", prep).execute()
+        print(f"seed failed, nothing kept ({type(error).__name__}: {error})", file=sys.stderr)
+        return 1
     print(f"seeded '{found['title']}':", _counts(rows))
     print(f"open http://localhost:3000/preps/{prep}/scope (or the card on /)")
     return 0

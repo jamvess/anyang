@@ -48,7 +48,7 @@ async function getJSON<T>(path: string, signal?: AbortSignal): Promise<T> {
 }
 
 /** 401: `apiFetch` is already on its way to the login page, so the page shows no error (AC-23). */
-const toLogin = (e: unknown) => e instanceof ApiError && e.status === 401;
+const isAuthRedirect = (e: unknown) => e instanceof ApiError && e.status === 401;
 
 function Stars({ stars }: { stars: number | null }) {
   const known = typeof stars === "number" && stars >= 0 && stars <= MAX_STARS;
@@ -138,12 +138,18 @@ export function ScopeReview({ prepId, navigate }: { prepId: string; navigate: (h
   useEffect(() => {
     const controller = new AbortController();
     getJSON<Scope>(`/exam-preps/${prepId}/scope`, controller.signal).then(
-      (scope) => setLoad({ kind: "ready", scope }),
+      (scope) => {
+        if (controller.signal.aborted) return;
+        setLoad({ kind: "ready", scope });
+        // A message of an earlier visit does not belong to this scope (self-review PR #141).
+        setConfirmError(null);
+      },
       (e) => {
-        if (controller.signal.aborted || toLogin(e)) return;
+        if (controller.signal.aborted || isAuthRedirect(e)) return;
         if (e instanceof ApiError && e.status === 404) setLoad({ kind: "notFound" });
         else if (e instanceof ApiError && e.code === "scope_not_ready") setLoad({ kind: "notReady" });
-        else setLoad({ kind: "failed" });
+        // A failed refresh of a page shown again keeps the scope on screen (self-review PR #141).
+        else setLoad((prev) => (prev.kind === "ready" ? prev : { kind: "failed" }));
       },
     );
     return () => controller.abort();
@@ -158,7 +164,18 @@ export function ScopeReview({ prepId, navigate }: { prepId: string; navigate: (h
     setSources((prev) => ({ ...prev, [id]: { kind: "loading" } }));
     getJSON<Sources>(`/topics/${id}/sources`).then(
       (s) => setSources((prev) => ({ ...prev, [id]: { kind: "ready", sources: s } })),
-      (e) => toLogin(e) || setSources((prev) => ({ ...prev, [id]: { kind: "failed" } })),
+      (e) => {
+        if (isAuthRedirect(e)) {
+          // Not "failed" (AC-23), and not left "loading": reopening the topic asks again.
+          setSources((prev) => {
+            const next = { ...prev };
+            delete next[id];
+            return next;
+          });
+          return;
+        }
+        setSources((prev) => ({ ...prev, [id]: { kind: "failed" } }));
+      },
     );
   }
 
@@ -180,6 +197,9 @@ export function ScopeReview({ prepId, navigate }: { prepId: string; navigate: (h
     setConfirmError(null);
     try {
       const res = await apiFetch(`/exam-preps/${prepId}/scope/confirm`, { method: "POST" });
+      // 401: the button stays disabled while apiFetch leaves for the login page (AC-23), so a
+      // second click cannot send another confirm (self-review PR #141).
+      if (res.status === 401) return;
       const code = res.ok ? null : (await errorOf(res)).code;
       // Next keeps this page hidden with its state: a later visit must not find the button stuck
       // (self-review PR #139, as the create form).
@@ -187,7 +207,7 @@ export function ScopeReview({ prepId, navigate }: { prepId: string; navigate: (h
       // Confirmed already (another tab, a second click): that is what the user wanted (AC-22).
       if (res.ok || code === "scope_already_confirmed") navigate(room);
       else if (code === "scope_empty") setConfirmError("empty");
-      else if (res.status !== 401) setConfirmError("failed");
+      else setConfirmError("failed");
     } catch {
       setConfirmError("failed");
       setConfirming(false);
