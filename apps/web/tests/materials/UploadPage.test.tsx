@@ -463,3 +463,54 @@ describe("UploadPage · opening", () => {
   });
 });
 
+
+// --- added by the self-review of PR #142 -----------------------------------------------------
+
+describe("UploadPage after a send and under Next's preserved pages", () => {
+  it("CM06 right after a send, before the list arrives, nothing says no file could be read", async () => {
+    const list = pending();
+    const utils = await open({
+      [CREATE]: ticket("m1", true),
+      [uploaded("m1")]: accepted("m1"),
+      [LIST]: [() => json([]), list.handler],
+    });
+    await utils.findByText("ใส่สิ่งที่จะใช้สอบ");
+    choose(utils.container, file("sheet.pdf", 1_000, "application/pdf"));
+
+    send(utils.container);
+
+    expect(await utils.findByText("AI เดาไว้แบบนี้")).toBeTruthy();
+    expect(utils.queryByText("ไม่มีไฟล์ที่อ่านได้")).toBeNull();
+    expect(utils.queryByRole("button", { name: "ใส่ไฟล์ใหม่" })).toBeNull();
+    expect(utils.getByRole("button", { name: "ยืนยันแล้วเริ่มประมวลผล" })).toHaveProperty("disabled", true);
+    await list.release(json([material("m1")]));
+    expect(await utils.findByText("AI กำลังดูไฟล์…")).toBeTruthy();
+  });
+
+  it("CM07 a page shown again after a confirm starts at choosing files", async () => {
+    const { Activity } = await import("react");
+    const api = mockApi({
+      [LIST]: [
+        () => json([material("m1", { status: "classified", kind: "sheet", kind_confidence: 0.8 })]),
+        () => json([material("m1", { status: "confirmed", kind: "sheet", kind_confirmed: true })]),
+      ],
+      [CONFIRM]: () => json({ queued: 1 }, 202),
+    });
+    const navigate = vi.fn();
+    const page = (mode: "visible" | "hidden") => (
+      <Activity mode={mode}>
+        <UploadPage prepId={PREP} navigate={navigate} />
+      </Activity>
+    );
+    const utils = render(page("visible"));
+    fireEvent.click(await utils.findByRole("button", { name: "ยืนยันแล้วเริ่มประมวลผล" }));
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith(`/preps/${PREP}/progress`));
+
+    utils.rerender(page("hidden"));
+    utils.rerender(page("visible"));
+
+    expect(await utils.findByText("ใส่สิ่งที่จะใช้สอบ")).toBeTruthy();
+    expect(utils.queryByText("ไม่มีไฟล์ที่อ่านได้")).toBeNull();
+    expect(api.count(LIST)).toBe(2);
+  });
+});

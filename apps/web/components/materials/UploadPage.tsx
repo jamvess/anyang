@@ -35,7 +35,14 @@ export function UploadPage({ prepId, navigate }: { prepId: string; navigate: (hr
   const [attempt, setAttempt] = useState(0);
   const [rows, setRows] = useState<Row[]>([]);
   const [sending, setSending] = useState(false);
-  const [materials, setMaterials] = useState<Material[]>([]);
+  // null: not read for this step yet (after a send, or after a 409), so the kinds step asks at once
+  // and shows no final state meanwhile (self-review PR #142).
+  const [materials, setMaterialsState] = useState<Material[] | null>(null);
+  const materialsRef = useRef<Material[] | null>(null);
+  const setMaterials = (list: Material[] | null) => {
+    materialsRef.current = list;
+    setMaterialsState(list);
+  };
   const [round, setRound] = useState(0);
   const [confirming, setConfirming] = useState(false);
   const [confirmFailed, setConfirmFailed] = useState(false);
@@ -58,12 +65,14 @@ export function UploadPage({ prepId, navigate }: { prepId: string; navigate: (hr
     getJSON<Material[]>(listPath, controller.signal).then(
       (list) => {
         if (controller.signal.aborted) return;
-        const open = list.filter((m) => !m.kind_confirmed);
-        if (open.length > 0) {
-          setMaterials(list);
+        setMaterials(list);
+        if (list.some((m) => !m.kind_confirmed)) {
           setPhase({ kind: "kinds" });
         } else {
-          setPhase((prev) => (prev.kind === "kinds" ? prev : { kind: "files" }));
+          // Also when the page comes back after a confirm (Next's <Activity>): the files are in, so
+          // choosing files starts fresh, keeping only rows not sent (self-review PR #142).
+          setRows((prev) => prev.filter((r) => r.state !== "sent"));
+          setPhase({ kind: "files" });
         }
       },
       (e) => {
@@ -75,6 +84,7 @@ export function UploadPage({ prepId, navigate }: { prepId: string; navigate: (hr
   }, [listPath, attempt]);
 
   // The kinds step: ask again every POLL_MS while AI has not looked at a file yet (§2.1.2 item 2).
+  // A list just read by the opening load is not asked for again at once (self-review PR #142).
   const inKinds = phase.kind === "kinds";
   useEffect(() => {
     if (!inKinds) return;
@@ -91,7 +101,9 @@ export function UploadPage({ prepId, navigate }: { prepId: string; navigate: (hr
         timer = setTimeout(run, POLL_MS); // a failed poll is asked again
       }
     };
-    run();
+    const known = materialsRef.current;
+    if (known === null) run();
+    else if (known.some(waiting)) timer = setTimeout(run, POLL_MS);
     return () => {
       controller.abort();
       clearTimeout(timer);
@@ -108,15 +120,13 @@ export function UploadPage({ prepId, navigate }: { prepId: string; navigate: (hr
     setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...change } : r)));
 
   async function sendOne(file: File): Promise<Sent> {
+    // The same type for the ticket and the PUT, so Storage keeps what the API registered.
+    const contentType = file.type || "application/octet-stream";
     try {
       const res = await apiFetch(listPath, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          file_name: file.name,
-          content_type: file.type || "application/octet-stream",
-          size_bytes: file.size,
-        }),
+        body: JSON.stringify({ file_name: file.name, content_type: contentType, size_bytes: file.size }),
       });
       if (res.status === 401) return { auth: true };
       if (!res.ok) {
@@ -131,7 +141,7 @@ export function UploadPage({ prepId, navigate }: { prepId: string; navigate: (hr
         // A signed URL: no Authorization, not through apiFetch.
         const put = await fetch(ticket.upload_url, {
           method: "PUT",
-          headers: file.type ? { "Content-Type": file.type } : {},
+          headers: { "Content-Type": contentType },
           body: file,
         });
         if (!put.ok) return { ok: false, error: t.uploadFailed };
@@ -169,7 +179,7 @@ export function UploadPage({ prepId, navigate }: { prepId: string; navigate: (hr
     }
     setSending(false);
     if (anySent && visible.current) {
-      setRound((n) => n + 1);
+      setMaterials(null); // read the new files at once, nothing final until then
       setPhase({ kind: "kinds" });
     }
   }
@@ -191,8 +201,12 @@ export function UploadPage({ prepId, navigate }: { prepId: string; navigate: (hr
         return;
       }
       // A file changed meanwhile: read the list again, no message (§2.1.2 item 5).
-      if (res.status === 409 && (await errorCode(res)) === "not_classified") setRound((n) => n + 1);
-      else setConfirmFailed(true);
+      if (res.status === 409 && (await errorCode(res)) === "not_classified") {
+        setMaterials(null);
+        setRound((n) => n + 1);
+      } else {
+        setConfirmFailed(true);
+      }
     } catch {
       setConfirming(false);
       setConfirmFailed(true);
@@ -201,7 +215,7 @@ export function UploadPage({ prepId, navigate }: { prepId: string; navigate: (hr
 
   function startOver() {
     setRows([]);
-    setMaterials([]);
+    setMaterials(null);
     setPhase({ kind: "files" });
   }
 
@@ -222,7 +236,10 @@ export function UploadPage({ prepId, navigate }: { prepId: string; navigate: (hr
         <p className="mb-2">{t.loadFailed}</p>
         <button
           type="button"
-          onClick={() => (setPhase({ kind: "loading" }), setAttempt((n) => n + 1))}
+          onClick={() => {
+            setPhase({ kind: "loading" });
+            setAttempt((n) => n + 1);
+          }}
           className="underline"
         >
           {t.retry}
@@ -234,9 +251,10 @@ export function UploadPage({ prepId, navigate }: { prepId: string; navigate: (hr
   const failedUploads = rows.filter((r) => r.state === "failed");
 
   if (phase.kind === "kinds") {
-    const open = materials.filter((m) => !m.kind_confirmed);
+    const open = (materials ?? []).filter((m) => !m.kind_confirmed);
     const classified = open.filter((m) => m.status === "classified");
-    const stillLooking = open.some(waiting);
+    // Not read yet counts as still looking: no final state, no "start over" (self-review PR #142).
+    const stillLooking = materials === null || open.some(waiting);
     const noneReadable = !stillLooking && classified.length === 0;
     return (
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-8">
@@ -244,6 +262,7 @@ export function UploadPage({ prepId, navigate }: { prepId: string; navigate: (hr
           <h1 className="text-lg font-semibold">{t.kindsTitle}</h1>
           <p className="text-sm text-zinc-500">{t.kindsSubtitle}</p>
         </div>
+        {materials === null && <p className="text-sm text-zinc-600">{t.loading}</p>}
         <ul className="flex flex-col gap-2">
           {open.map((m) => (
             <li key={m.id} data-material-id={m.id} className="rounded-lg border border-zinc-200 px-4 py-3 text-sm">
