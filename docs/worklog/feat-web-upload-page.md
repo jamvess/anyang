@@ -19,8 +19,8 @@
   - → 🙋 Jam review spec (เรื่องหน้าจอเป็นของ May: Jam ตัดสินไปก่อน May ดูย้อนหลัง)
 - [x] 2. 🤖 `/spec-to-tests` (fetch จำลอง · test เดิมที่ review แล้วไม่แตะ) → 🙋 Jam review test
 - [x] 3. 🤖 `/implement-feature` จน green · lint · typecheck · build · test ทั้งชุด
-- [ ] 4. 🙋 ลองในเบราว์เซอร์บน stub (เลือกไฟล์ → สถานะรายไฟล์ → ประเภท → ยืนยัน → หน้ารอ) · Claude ให้ขั้นตอนตอนถึงขั้นนี้
-- [ ] 5. 🤖 จดผลลง spec · ส่วนที่ต้องรอ #140 (อัปโหลดเข้า Storage จริง → ingestion → scope) จดไว้ใน Waiting on
+- [x] 4. 🙋 (16 พ.ย. · ผ่านทุกข้อที่ลองได้บน stub) ลองในเบราว์เซอร์บน stub (เลือกไฟล์ → สถานะรายไฟล์ → ประเภท → ยืนยัน → หน้ารอ) · Claude ให้ขั้นตอนตอนถึงขั้นนี้
+- [x] 5. 🤖 จดผลลง spec · ส่วนที่ต้องรอ #140 (อัปโหลดเข้า Storage จริง → ingestion → scope) จดไว้ใน Waiting on
 
 ## Definition of done
 
@@ -35,7 +35,7 @@
 
 ## Next step
 
-ข้อ 4: Jam ลองในเบราว์เซอร์บน stub (สร้าง prep → หน้าอัปโหลด → สถานะรายไฟล์ → ประเภท → ยืนยัน → หน้ารออ่าน)
+ทุกข้อเสร็จ · พิมพ์ `/work-done`
 
 ## Waiting on
 
