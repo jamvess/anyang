@@ -11,7 +11,7 @@
 
 สิ่งที่มีแล้ว: สัญญา API ของ materials ใน api.md v1.10 + v1.13 (ข้อเสนอ · รอ Junior) · stub ครบทุก endpoint (`X-Stub: true` · URL อัปโหลดของ stub ใช้จริงไม่ได้ ข้าม `PUT` แบบห้องติว `room-photo-send.md`) · `GET /exam-preps/{id}/ingestion` อ่าน DB แล้ว (v1.16) · Junior ทำ API จริงอยู่ใน #140 · ยังไม่มี feature spec ของหน้าจอ S09–S11
 
-- [ ] 1. 🤖 `/spec-feature` → `specs/features/exam-prep/upload-page.md` (CM-03, CM-07 · CM-06 ส่วนแสดงประเภทที่ AI เดา + ยืนยันโดยไม่แก้ · SA-06):
+- [x] 1. 🤖 `/spec-feature` → `specs/features/exam-prep/upload-page.md` (CM-03, CM-07 · CM-06 ส่วนแสดงประเภทที่ AI เดา + ยืนยันโดยไม่แก้ · SA-06):
   - S09 เลือกหลายไฟล์ → ต่อไฟล์: `POST /exam-preps/{id}/materials` → `PUT` (ข้ามเมื่อ `X-Stub`) → `POST /materials/{id}/uploaded` · สถานะรายไฟล์ · error `unsupported_type` / `file_too_large` เป็นภาษาไทย
   - S10 แบบย่อ: poll `GET /exam-preps/{id}/materials` จนทุกไฟล์มี `kind` → แสดงประเภท + confidence → ปุ่มยืนยัน (`POST /materials/confirm` ด้วยประเภทที่ AI เดา · แก้ประเภทเป็น S5)
   - S11: poll `GET /exam-preps/{id}/ingestion` แสดงสถานะรายไฟล์ + ขั้นรวม → `scope_ready` แล้วไปหน้า scope
@@ -35,7 +35,7 @@
 
 ## Next step
 
-ข้อ 1: `/spec-feature` เขียน `specs/features/exam-prep/upload-page.md` ตามแผน แล้วให้ Jam review
+ข้อ 1 รอ Jam review spec `specs/features/exam-prep/upload-page.md` (โดยเฉพาะ §10 ข้อ 1: แก้ test ที่ review แล้ว 3 ตัว) · ok แล้วทำข้อ 2 `/spec-to-tests`
 
 ## Waiting on
 

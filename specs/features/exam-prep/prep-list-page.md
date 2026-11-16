@@ -6,7 +6,7 @@
 | Requirements | CM-01, CM-02, SA-06 |
 | Owner | Jam (งานของ May · ทำช่วง solo) |
 | Reviewer | May (หน้าตา ข้อความ flow · ดูย้อนหลัง) · Jam |
-| Status | approved 2026-11-15 (Jam ok spec + test) · implemented 2026-11-16 (PR #139) · รอ May review หน้าตา |
+| Status | approved 2026-11-15 (Jam ok spec + test) · implemented 2026-11-16 (PR #139) · รอ May review หน้าตา · 16 พ.ย. การ์ด `materials`/`processing` และหลังสร้าง เปลี่ยนตาม `upload-page.md` §2.4 (PR #142 · Jam ok แก้ AC-3, AC-8) |
 | Related system spec | `create-exam-prep.md` (API `POST` / `GET /exam-preps` · `stage`, `days_left`) · api.md v1.14 `ExamPrep` · `web-login.md` (#138 · `apiFetch` แนบ token · 401 ไปหน้า login) · `docs/design/use-cases.md` UC-02 ขั้น 1–2 (S07, S08), UC-03 ขั้น 12 (S27) · `apps/web/CLAUDE.md` |
 
 ## 1. Context
@@ -25,7 +25,7 @@
    - วันที่เหลือจาก `days_left` ของ API: ≥ 1 → "อีก {n} วัน" · 0 → "สอบวันนี้" · < 0 → "สอบผ่านไปแล้ว"
    - ขั้นจาก `stage`: `materials` "รออัปโหลดไฟล์" · `processing` "กำลังอ่านไฟล์" · `scope` "รอตรวจขอบเขต" · `tutoring` "พร้อมติว"
    - `readiness` ไม่เป็น null → "ความพร้อม {readiness × 100 ปัดเป็นจำนวนเต็ม}%" · `topics_not_passed` ไม่เป็น null → "ยังไม่ผ่าน {n} หัวข้อ" · เป็น null (ตอนนี้ API ส่ง null เสมอ) → ไม่แสดง
-5. **การ์ดพาไปที่ไหน** (ฟังก์ชันเดียว `prepHref(prep)` · ขั้น 3 เพิ่มหน้าได้ที่นี่): `scope` → `/preps/{id}/scope` · `tutoring` → `/preps/{id}/room` · `materials`, `processing` → ยังไม่มีหน้า (demo ขั้น 3) → การ์ดไม่เป็นลิงก์ บอกสถานะอย่างเดียว
+5. **การ์ดพาไปที่ไหน** (ฟังก์ชันเดียว `prepHref(prep)` · ขั้น 3 เพิ่มหน้าได้ที่นี่): `scope` → `/preps/{id}/scope` · `tutoring` → `/preps/{id}/room` · `materials` → `/preps/{id}/upload` · `processing` → `/preps/{id}/progress` (หน้าของ `upload-page.md` · PR #142) · ทุกการ์ดเป็นลิงก์
 6. ลิงก์ "ออกจากระบบ" → `/logout` (#138)
 7. ไม่มี token บนเครื่อง dev (`AUTH_REQUIRED=false`) → API ตอบ stub ของ `GET /exam-preps` · หน้าแสดงรายการของ stub (ไม่ต้อง login)
 
@@ -33,7 +33,7 @@
 
 1. ช่อง **ชื่อการสอบ** (text, required) · **วันสอบ** (`type="date"`, required) · **เวลาต่อวัน (นาที)** (`type="number"`, ไม่บังคับ, `min=1`, `max=1440`) · ปุ่ม **สร้าง** · ลิงก์ **ยกเลิก** → `/` · ทุกช่องมี label
 2. กดสร้าง → `POST /exam-preps` body `{title, exam_date}` และ `daily_minutes` (integer) เฉพาะเมื่อกรอก · ระหว่างรอปุ่มเป็น "กำลังสร้าง…" และกดไม่ได้
-3. `201` → ล้างฟอร์ม (ช่องว่าง · ปุ่มกลับเป็น "สร้าง") แล้วไป `/` · ถ้าผู้ใช้ออกจากหน้านี้ไปแล้วตอนคำตอบมาถึง → ไม่พากลับ (Next 16 `cacheComponents` ซ่อนหน้าที่ออกด้วย React `<Activity>` และเก็บ state ไว้ · ไม่ล้างจะเจอปุ่มค้าง "กำลังสร้าง…" ตอนกลับมา · พบตอนลองในเบราว์เซอร์ 15 พ.ย. · self-review PR #139) · หน้าอัปโหลดยังไม่มี · demo ขั้น 3 เปลี่ยนเป็นไปหน้าอัปโหลดของ prep ใหม่
+3. `201` → ล้างฟอร์ม (ช่องว่าง · ปุ่มกลับเป็น "สร้าง") แล้วไปหน้าอัปโหลดของ prep ใหม่ `/preps/{id}/upload` (`id` จาก response · `upload-page.md` §2.4 · PR #142) · ถ้าผู้ใช้ออกจากหน้านี้ไปแล้วตอนคำตอบมาถึง → ไม่พากลับ (Next 16 `cacheComponents` ซ่อนหน้าที่ออกด้วย React `<Activity>` และเก็บ state ไว้ · ไม่ล้างจะเจอปุ่มค้าง "กำลังสร้าง…" ตอนกลับมา · พบตอนลองในเบราว์เซอร์ 15 พ.ย. · self-review PR #139)
 4. error (ข้อความใน `role="alert"` · ค่าที่กรอกคงไว้):
    - `422 exam_date_past` → "วันสอบต้องไม่ก่อนวันนี้"
    - `422` อื่น (`validation_error`: ชื่อว่าง ยาวเกิน มีอักขระควบคุม เวลาเกินช่วง) → "ตรวจชื่อ วันสอบ และเวลาต่อวันอีกครั้ง"
@@ -59,12 +59,12 @@ Vitest + Testing Library · `fetch` ปลอม (`NEXT_PUBLIC_API_URL` = `http:
 
 - **AC-1 (CM-01)** `GET /exam-preps` ได้ 4 รายการ (ทุก `stage`) → การ์ด 4 ใบตามลำดับของ API · ชื่อแต่ละใบ · ขั้นเป็นข้อความไทยตาม §2.1 ข้อ 4
 - **AC-2 (CM-02)** `days_left` 12 → "อีก 12 วัน" · 0 → "สอบวันนี้" · −3 → "สอบผ่านไปแล้ว"
-- **AC-3** การ์ด `scope` เป็นลิงก์ไป `/preps/{id}/scope` · `tutoring` → `/preps/{id}/room` · `materials`, `processing` ไม่เป็นลิงก์
+- **AC-3** การ์ด `scope` เป็นลิงก์ไป `/preps/{id}/scope` · `tutoring` → `/preps/{id}/room` · `materials` → `/preps/{id}/upload` · `processing` → `/preps/{id}/progress` (เปลี่ยน 16 พ.ย. · PR #142)
 - **AC-4** `readiness` 0.416 และ `topics_not_passed` 5 → "ความพร้อม 42%" และ "ยังไม่ผ่าน 5 หัวข้อ" · null → ไม่มีทั้งสองข้อความ
 - **AC-5 (CM-01)** `[]` → "ยังไม่มีการเตรียมสอบ" + ปุ่มสร้างไป `/preps/new`
 - **AC-6** `GET` ได้ `503` → "โหลดรายการไม่สำเร็จ" · กด "ลองอีกครั้ง" → โหลดใหม่และแสดงรายการ
 - **AC-7** มีลิงก์ "ออกจากระบบ" ไป `/logout`
-- **AC-8 (CM-01)** กรอกชื่อ วันสอบ เวลา 60 กดสร้าง → `POST /exam-preps` body `{title, exam_date, daily_minutes: 60}` · ระหว่างรอปุ่ม "กำลังสร้าง…" กดไม่ได้ · `201` → `navigate("/")`
+- **AC-8 (CM-01)** กรอกชื่อ วันสอบ เวลา 60 กดสร้าง → `POST /exam-preps` body `{title, exam_date, daily_minutes: 60}` · ระหว่างรอปุ่ม "กำลังสร้าง…" กดไม่ได้ · `201` → `navigate("/preps/{id}/upload")` ของ prep ใหม่ (เปลี่ยน 16 พ.ย. · PR #142 · เดิม `/`)
 - **AC-9** ไม่กรอกเวลาต่อวัน → body ไม่มี `daily_minutes`
 - **AC-10** `422 exam_date_past` → "วันสอบต้องไม่ก่อนวันนี้" · `422 validation_error` → "ตรวจชื่อ วันสอบ และเวลาต่อวันอีกครั้ง" · `503` → "บันทึกไม่ได้ตอนนี้ ลองใหม่อีกครั้ง" · ทุกแบบอยู่ใน `role="alert"` · ค่าที่กรอกคงไว้ · ไม่ navigate · ปุ่มกดได้อีก
 - **AC-11** ทุกช่องมี label · ชื่อและวันสอบ required · เวลา `min=1` `max=1440` · ลิงก์ยกเลิกไป `/`
@@ -105,7 +105,7 @@ Vitest + Testing Library · `fetch` ปลอม (`NEXT_PUBLIC_API_URL` = `http:
 ## 10. Open questions
 
 1. **(May) จำนวนวันที่เหลือก่อนสร้าง (UC-02 ขั้น 2):** ทางเลือก (ก) ไม่แสดงจนสร้างเสร็จ (ข้อเสนอ · ตัวเลขมาจาก API) (ข) คิดในเบราว์เซอร์จากวันที่ที่เลือก (ขัดกฎ "ตัวเลขมาจาก API" และวัน "วันนี้" ต้องเป็นเวลา Bangkok) (ค) API endpoint ใหม่ที่คืน `days_left` ของวันที่ที่เลือก
-2. **(May) หลังสร้างไปไหน:** ตอนนี้ `/` · หลัง demo ขั้น 3 เสนอไปหน้าอัปโหลดของ prep ใหม่
+2. **(May) หลังสร้างไปไหน:** ~~ตอนนี้ `/`~~ · 16 พ.ย. ไปหน้าอัปโหลดของ prep ใหม่ (Jam ตัดสินไปก่อนช่วง solo · `upload-page.md` §2.4 · May ดูย้อนหลัง)
 
 ## 11. Spec changes needed
 
