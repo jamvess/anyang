@@ -23,8 +23,8 @@
 - [x] 2. 🤖 `/spec-to-tests`: test ใหม่ใน `tests/scope/scopeLive.test.tsx` (ไม่แตะ `ScopeReview.test.tsx` ที่ review แล้ว) → 🙋 Jam review test
 - [x] 3. 🤖 `/implement-feature` จน green · lint · typecheck · build · test ทั้งชุด
 - [x] 4. 🤖 + 🙋 (16 พ.ย. · Jam รันแล้ว seed ครบ) ทำ prep ขั้น `scope` บน `anyang-dev` ในบัญชีทดสอบของ Jam (ไม่ใช่บัญชี demo): สคริปต์เขียนผล ingestion ของ MTH10101 (`poc/P3/results/apps-api-ingestion/` + `poc/P3/out/pages`) ลง `materials`, `material_pages`, `topics`, `topic_sources`, `past_exam_questions` ของ prep ที่ระบุ · ต้องใช้ `SUPABASE_SERVICE_ROLE_KEY` ใน `.env` ของ Jam (Claude ไม่อ่าน `.env` · Jam เช็คเองว่ามี) · วิธีละเอียดตัดสินตอนถึงขั้นนี้
-- [ ] 5. 🙋 ลองในเบราว์เซอร์บน `anyang-dev` (API ในเครื่อง `AUTH_REQUIRED=true` + `pnpm dev`): รายการ → การ์ด "รอตรวจขอบเขต" → หัวข้อจริง + ดาว + ที่มา → เปิดรายละเอียด → ยืนยัน → ห้องติว → กลับมาหน้า scope เห็น "ยืนยันขอบเขตแล้ว" · Claude ให้ขั้นตอนทีละคลิกตอนถึงขั้นนี้
-- [ ] 6. 🤖 จดผลลง spec §8 · อัปเดตตาราง demo ใน `sprint-checklists.md` ตอน `/work-done`
+- [x] 5. 🙋 (16 พ.ย. · ผ่านทุกข้อ) ลองในเบราว์เซอร์บน `anyang-dev` (API ในเครื่อง `AUTH_REQUIRED=true` + `pnpm dev`): รายการ → การ์ด "รอตรวจขอบเขต" → หัวข้อจริง + ดาว + ที่มา → เปิดรายละเอียด → ยืนยัน → ห้องติว → กลับมาหน้า scope เห็น "ยืนยันขอบเขตแล้ว" · Claude ให้ขั้นตอนทีละคลิกตอนถึงขั้นนี้
+- [x] 6. 🤖 จดผลลง spec §8 · อัปเดตตาราง demo ใน `sprint-checklists.md` ตอน `/work-done`
 
 ## Definition of done
 
@@ -38,7 +38,7 @@
 
 ## Next step
 
-ข้อ 5: Jam ลองในเบราว์เซอร์กับ prep `MTH10101 seed` (บัญชีทดสอบของ Jam) · รายการ → scope → รายละเอียด → ยืนยัน → ห้องติว → back เห็น "ยืนยันขอบเขตแล้ว" → การ์ด "พร้อมติว"
+ทุกข้อเสร็จ · พิมพ์ `/work-done`
 
 ## Waiting on
 
