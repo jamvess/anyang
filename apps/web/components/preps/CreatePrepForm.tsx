@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useLayoutEffect, useRef, useState } from "react";
 import type { components } from "@/lib/api";
 import { apiFetch } from "@/lib/auth";
 import { prepStrings as t } from "./strings";
@@ -25,6 +25,15 @@ export function CreatePrepForm({ navigate }: { navigate: (href: string) => void 
   const [minutes, setMinutes] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Next keeps a page it leaves hidden (React <Activity>, `cacheComponents`), with its state. A
+  // create that ends after the user left must not pull them back (self-review PR #139).
+  const visible = useRef(true);
+  useLayoutEffect(() => {
+    visible.current = true;
+    return () => {
+      visible.current = false;
+    };
+  }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -40,11 +49,17 @@ export function CreatePrepForm({ navigate }: { navigate: (href: string) => void 
         body: JSON.stringify(body),
       });
       if (res.ok) {
-        // No upload page yet (demo step 3): back to the list (spec §2.2 item 3).
-        navigate("/");
+        // A fresh form for the next visit: the hidden page keeps its state (browser check, 15 Nov:
+        // the second create stayed on "กำลังสร้าง…"). Then back to the list (no upload page yet).
+        setTitle("");
+        setExamDate("");
+        setMinutes("");
+        setBusy(false);
+        if (visible.current) navigate("/");
         return;
       }
-      setError(await messageOf(res));
+      // 401: apiFetch is already on its way to the login page (web-login.md §2.3).
+      if (res.status !== 401) setError(await messageOf(res));
     } catch {
       setError(t.saveFailed);
     }

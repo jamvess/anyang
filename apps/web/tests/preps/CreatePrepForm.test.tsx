@@ -141,3 +141,75 @@ describe("CreatePrepForm", () => {
     expect(utils.getByRole("link", { name: "ยกเลิก" }).getAttribute("href")).toBe("/");
   });
 });
+
+
+// --- added by the self-review of PR #139 -----------------------------------------------------
+
+describe("CreatePrepForm under Next's preserved pages", () => {
+  it("CM01 a page hidden after a create comes back as a fresh, usable form", async () => {
+    // Next 16 with cacheComponents hides the page it leaves (React <Activity>) and keeps its state:
+    // in the browser check (15 Nov) the second create stayed on "กำลังสร้าง…".
+    const { Activity } = await import("react");
+    mockPost(created);
+    const navigate = vi.fn();
+    const utils = render(
+      <Activity mode="visible">
+        <CreatePrepForm navigate={navigate} />
+      </Activity>,
+    );
+    fireEvent.change(utils.getByLabelText("ชื่อการสอบ"), { target: { value: "MTH10101" } });
+    fireEvent.change(utils.getByLabelText("วันสอบ"), { target: { value: "2026-12-08" } });
+    fireEvent.click(utils.getByRole("button", { name: "สร้าง" }));
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith("/"));
+
+    utils.rerender(
+      <Activity mode="hidden">
+        <CreatePrepForm navigate={navigate} />
+      </Activity>,
+    );
+    utils.rerender(
+      <Activity mode="visible">
+        <CreatePrepForm navigate={navigate} />
+      </Activity>,
+    );
+
+    expect(utils.getByRole("button", { name: "สร้าง" })).toHaveProperty("disabled", false);
+    expect((utils.getByLabelText("ชื่อการสอบ") as HTMLInputElement).value).toBe("");
+    expect((utils.getByLabelText("วันสอบ") as HTMLInputElement).value).toBe("");
+  });
+
+  it("CM01 a create that ends after the user left does not pull them back", async () => {
+    const { Activity } = await import("react");
+    let finish!: (r: Response) => void;
+    const calls = mockPost(() => new Promise((r) => (finish = r)));
+    const navigate = vi.fn();
+    const utils = render(
+      <Activity mode="visible">
+        <CreatePrepForm navigate={navigate} />
+      </Activity>,
+    );
+    fireEvent.change(utils.getByLabelText("ชื่อการสอบ"), { target: { value: "MTH10101" } });
+    fireEvent.change(utils.getByLabelText("วันสอบ"), { target: { value: "2026-12-08" } });
+    fireEvent.click(utils.getByRole("button", { name: "สร้าง" }));
+    await waitFor(() => expect(calls).toHaveLength(1)); // the POST is on its way
+
+    utils.rerender(
+      <Activity mode="hidden">
+        <CreatePrepForm navigate={navigate} />
+      </Activity>,
+    );
+    await act(async () => finish(created()));
+
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("UM01 a 401 shows no error: the login page is on its way", async () => {
+    mockPost(() => json({ error: { code: "invalid_token", message: "x" } }, 401));
+    const utils = openForm();
+
+    fill(utils);
+
+    await waitFor(() => expect(utils.getByRole("button", { name: "สร้าง" })).toHaveProperty("disabled", false));
+    expect(utils.queryByRole("alert")).toBeNull();
+  });
+});

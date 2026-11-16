@@ -62,21 +62,22 @@ export function PrepList() {
   const [load, setLoad] = useState<Load>({ kind: "loading" });
   const [attempt, setAttempt] = useState(0);
 
+  // Runs again each time the page is shown (Next hides pages with <Activity>), so a prep created
+  // meanwhile appears; leaving the page aborts the request.
   useEffect(() => {
-    let alive = true;
+    const controller = new AbortController();
     (async () => {
       try {
-        const res = await apiFetch("/exam-preps");
+        const res = await apiFetch("/exam-preps", { signal: controller.signal });
+        if (res.status === 401) return; // apiFetch is on its way to the login page
         if (!res.ok) throw new Error(`API ${res.status}`);
         const preps: ExamPrep[] = await res.json();
-        if (alive) setLoad({ kind: "ready", preps });
+        setLoad({ kind: "ready", preps });
       } catch {
-        if (alive) setLoad({ kind: "failed" });
+        if (!controller.signal.aborted) setLoad({ kind: "failed" });
       }
     })();
-    return () => {
-      alive = false;
-    };
+    return () => controller.abort();
   }, [attempt]);
 
   function retry() {
