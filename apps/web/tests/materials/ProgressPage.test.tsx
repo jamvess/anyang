@@ -176,7 +176,8 @@ describe("ProgressPage under Next's preserved pages", () => {
 
     utils.show();
 
-    await waitFor(() => expect(utils.api.count(INGESTION)).toBe(hidden + 1));
+    // Not toBe(hidden + 1): the page polls every 20 ms here, faster than waitFor checks (Jam ok 16 Nov).
+    await waitFor(() => expect(utils.api.count(INGESTION)).toBeGreaterThan(hidden));
   });
 
   // AC-23

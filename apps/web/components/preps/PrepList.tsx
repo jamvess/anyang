@@ -9,12 +9,13 @@ import { prepStrings as t } from "./strings";
 type ExamPrep = components["schemas"]["ExamPrep"];
 type Load = { kind: "loading" } | { kind: "ready"; preps: ExamPrep[] } | { kind: "failed" };
 
-/**
- * Where a card goes, by its stage (spec §2.1 item 5). `materials` and `processing` have no page
- * yet (demo step 3): add them here.
- */
+/** Where a card goes, by its stage (spec §2.1 item 5 · upload-page.md §2.4). */
 export function prepHref(prep: ExamPrep): string | null {
   switch (prep.stage) {
+    case "materials":
+      return `/preps/${prep.id}/upload`;
+    case "processing":
+      return `/preps/${prep.id}/progress`;
     case "scope":
       return `/preps/${prep.id}/scope`;
     case "tutoring":
