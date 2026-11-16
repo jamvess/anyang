@@ -19,7 +19,7 @@
 - type ยังเขียนเอง ทั้งที่ OpenAPI มี `Scope`, `TopicSources` แล้ว (spec §6 บอกให้เปลี่ยนเมื่อมี)
 - ยังไม่มี prep ขั้น `scope` บน `anyang-dev` ให้ลองในเบราว์เซอร์ (ingestion จริงต้องรออัปโหลดของ #140)
 
-- [ ] 1. 🤖 อัปเดต spec `specs/features/scope/scope-review.md` (spec ของ May): OQ 5–8 ตัดสินแล้วใน api.md v1.20 (#137) · เพิ่ม §2 "ต่อ API จริง" + AC-21 ถึง AC-24 (409 ยังไม่พร้อม · 409 ยืนยันแล้ว → ไปห้องติว · 401 ไม่แสดง error · หน้าที่ถูกซ่อนแล้วกลับมาโหลดใหม่) · ใช้ type ที่ generate → 🙋 Jam review spec
+- [x] 1. 🤖 อัปเดต spec `specs/features/scope/scope-review.md` (spec ของ May): OQ 5–8 ตัดสินแล้วใน api.md v1.20 (#137) · เพิ่ม §2 "ต่อ API จริง" + AC-21 ถึง AC-24 (409 ยังไม่พร้อม · 409 ยืนยันแล้ว → ไปห้องติว · 401 ไม่แสดง error · หน้าที่ถูกซ่อนแล้วกลับมาโหลดใหม่) · ใช้ type ที่ generate → 🙋 Jam review spec
 - [ ] 2. 🤖 `/spec-to-tests`: test ใหม่ใน `tests/scope/scopeLive.test.tsx` (ไม่แตะ `ScopeReview.test.tsx` ที่ review แล้ว) → 🙋 Jam review test
 - [ ] 3. 🤖 `/implement-feature` จน green · lint · typecheck · build · test ทั้งชุด
 - [ ] 4. 🤖 + 🙋 ทำ prep ขั้น `scope` บน `anyang-dev` ในบัญชีทดสอบของ Jam (ไม่ใช่บัญชี demo): สคริปต์เขียนผล ingestion ของ MTH10101 (`poc/P3/results/apps-api-ingestion/` + `poc/P3/out/pages`) ลง `materials`, `material_pages`, `topics`, `topic_sources`, `past_exam_questions` ของ prep ที่ระบุ · ต้องใช้ `SUPABASE_SERVICE_ROLE_KEY` ใน `.env` ของ Jam (Claude ไม่อ่าน `.env` · Jam เช็คเองว่ามี) · วิธีละเอียดตัดสินตอนถึงขั้นนี้
@@ -38,7 +38,7 @@
 
 ## Next step
 
-ข้อ 1: แก้ `specs/features/scope/scope-review.md` ตามแผน แล้วให้ Jam review
+ข้อ 1 รอ Jam review spec (§2 "ต่อ API จริง" · AC-21 ถึง AC-24) · ok แล้วทำข้อ 2 `/spec-to-tests`
 
 ## Waiting on
 
