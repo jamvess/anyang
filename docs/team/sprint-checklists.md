@@ -265,7 +265,9 @@
 - [x] ⭐ demo ขั้น 1: หน้า login (email + password ตาม D1) · เก็บ session · ส่ง `Authorization` ทุก request (UM-01)
   - 15 พ.ย. (PR #138 · `specs/features/platform/web-login.md`): หน้า `/login` (email + password · Supabase) · login แล้วกลับไปหน้า `?next=` (เฉพาะ path ในเว็บ) · `/logout` · ทุก request ไป API แนบ `Authorization` จาก session (`lib/auth.ts` `apiFetch` / `apiSSE`) · API ตอบ 401 → พาไปหน้า login · ไม่มี session (เครื่อง dev ที่ใช้ stub) ไม่แนบ · ลองกับ `anyang-dev` แล้วผ่าน · ไม่มีหน้าสมัคร (S5) · **May: ดูหน้าตาและข้อความใน `components/auth/strings.ts`**
   - ทำโดย Jam (15 พ.ย.) ช่วง solo
-- [ ] ⭐ demo ขั้น 2: หน้ารายการการเตรียมสอบ + ฟอร์มสร้าง แทนหน้า template ของ Next (CM-01, CM-02)
+- [x] ⭐ demo ขั้น 2: หน้ารายการการเตรียมสอบ + ฟอร์มสร้าง แทนหน้า template ของ Next (CM-01, CM-02)
+  - 16 พ.ย. (PR #139 · `specs/features/exam-prep/prep-list-page.md`): หน้า `/` แสดงการเตรียมสอบจาก `GET /exam-preps` (ชื่อ · อีก n วัน · ขั้น · ความพร้อมเมื่อ API ส่งมา) · การ์ดขั้น `scope` / `tutoring` ลิงก์ไปหน้า scope / ห้องติว (`prepHref` · ขั้นอัปโหลดยังไม่มีหน้า) · ฟอร์ม `/preps/new` → `POST /exam-preps` · error เป็นข้อความไทย · ลองกับ `anyang-dev` ผ่าน · **May: ดูหน้าตาและข้อความใน `components/preps/strings.ts` · ตัดสิน §10 (วันที่เหลือก่อนสร้าง · หลังสร้างไปไหน)** · หน้าอัปโหลด (ขั้น 3) เพิ่มที่ `prepHref`
+  - ทำโดย Jam (15–16 พ.ย.) ช่วง solo
 - [ ] ⭐ demo ขั้น 3: หน้าอัปโหลดหลายไฟล์ + สถานะรายไฟล์ (CM-03, CM-07)
 - [ ] ⭐ demo ขั้น 5: หน้า scope ต่อ API จริง + ยืนยัน (SM-09)
 - [ ] เตรียมลำดับหน้าจอสำหรับ demo รวม
