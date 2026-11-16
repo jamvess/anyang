@@ -14,7 +14,7 @@
 - [x] 1. 🤖 (15 พ.ย. · Jam ok) `/spec-feature` → `specs/features/exam-prep/prep-list-page.md`: หน้า `/` (S07/S27) = การ์ดของ `GET /exam-preps` (ชื่อ, เหลือกี่วันจาก `days_left` ของ API, ขั้นจาก `stage`) · การ์ดพาไปหน้าตาม `stage` (`scope` → หน้า scope · `tutoring` → ห้องติว · `materials` / `processing` ยังไม่มีหน้า (ขั้น 3) จึงบอกสถานะอย่างเดียว) · ไม่มีรายการ → ข้อความเชิญสร้าง · ปุ่ม "สร้างการเตรียมสอบ" → `/preps/new` (S08): ชื่อ, วันสอบ, เวลาต่อวัน (ไม่บังคับ) → `POST` → กลับหน้า `/` · error 422 (`exam_date_past`, ชื่อว่าง/ยาวเกิน) และ 503 เป็นข้อความไทย · ลิงก์ออกจากระบบ · ข้อความอยู่ใน `strings.ts` · 🙋 Jam review spec
 - [x] 2. 🤖 (15 พ.ย. · Jam ok) `/spec-to-tests` (Vitest + `fetch` ปลอม) · 🙋 Jam review test
 - [x] 3. 🤖 (15 พ.ย. · web test 354 ผ่าน · build ผ่าน · Jam ok) `/implement-feature` จน green · `lint`, `typecheck`, `test`, `build`
-- [ ] 4. 🙋 Jam ลองในเบราว์เซอร์กับ `anyang-dev`: login → หน้าหลักว่าง → สร้าง prep → เห็นการ์ด
+- [x] 4. 🙋 (16 พ.ย. · ผ่านทุกข้อหลังรีเฟรช · ค้าง 1 ครั้งที่ปุ่มสร้างในรอบแรก ยังไม่รู้สาเหตุ) Jam ลองในเบราว์เซอร์กับ `anyang-dev`: login → หน้าหลักว่าง → สร้าง prep → เห็นการ์ด
 - [ ] 5. 🤖 อัปเดต docs + checklist แล้ว `/work-done`
 
 ## Definition of done
@@ -30,7 +30,7 @@
 
 ## Next step
 
-ขั้น 4: Jam ลองในเบราว์เซอร์กับ anyang-dev (ขั้นละเอียดอยู่ในข้อความรายงาน)
+ขั้น 5: `/work-done` · ใน self-review ดูสาเหตุที่ปุ่มสร้างค้าง (ค้างก่อนถึง API ตอนอ่าน session หรือหลังได้คำตอบตอน `router.push`) · ไม่แตะไฟล์กลาง
 
 ## Waiting on
 

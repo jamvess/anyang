@@ -6,7 +6,7 @@
 | Requirements | CM-01, CM-02, SA-06 |
 | Owner | Jam (งานของ May · ทำช่วง solo) |
 | Reviewer | May (หน้าตา ข้อความ flow · ดูย้อนหลัง) · Jam |
-| Status | draft 2026-11-15 (PR #139) |
+| Status | approved 2026-11-15 (Jam ok spec + test) · implemented 2026-11-16 (PR #139) · รอ May review หน้าตา |
 | Related system spec | `create-exam-prep.md` (API `POST` / `GET /exam-preps` · `stage`, `days_left`) · api.md v1.14 `ExamPrep` · `web-login.md` (#138 · `apiFetch` แนบ token · 401 ไปหน้า login) · `docs/design/use-cases.md` UC-02 ขั้น 1–2 (S07, S08), UC-03 ขั้น 12 (S27) · `apps/web/CLAUDE.md` |
 
 ## 1. Context
@@ -92,6 +92,8 @@ Vitest + Testing Library · `fetch` ปลอม (`NEXT_PUBLIC_API_URL` = `http:
 | `tests/preps/prepsAuth.test.tsx` (ใหม่ · session ปลอม) | component | AC-12 |
 | test เดิมทั้งหมด | | AC-13 |
 | ลองในเบราว์เซอร์กับ `anyang-dev` (ขั้น 4 ของ worklog · Jam) | มือ | login → หน้าหลักว่าง → สร้าง → เห็นการ์ด |
+
+**ผลลองในเบราว์เซอร์กับ `anyang-dev` (15–16 พ.ย. · ขั้น 4 ของ worklog · Jam · API ในเครื่อง `AUTH_REQUIRED=true` + `pnpm dev`):** ไม่มี session เปิด `/` → เด้งไปหน้า login · login → หน้ารายการว่างพร้อมหัวข้อ ลิงก์ออกจากระบบ ปุ่มสร้าง ข้อความเชิญ · สร้าง → กลับ `/` เห็นการ์ด (ชื่อ · อีก n วัน · รออัปโหลดไฟล์ · ไม่เป็นลิงก์) · วันสอบเมื่อวาน → "วันสอบต้องไม่ก่อนวันนี้" ค่าคงไว้ · ยกเลิก → กลับ `/` · ออกจากระบบ → login · **ผ่านทุกข้อ (Jam)** · **ค้าง 1 ครั้ง:** การสร้างครั้งที่ 2 ในรอบแรกค้างที่ "กำลังสร้าง…" · ไม่ได้เก็บ log ของ API และ Network จึงยังไม่รู้ว่าค้างก่อนถึง API หรือหลังได้คำตอบแล้ว · รีเฟรชแล้วลองใหม่ผ่านทั้งหมด · ดูต่อใน self-review ของ PR #139
 
 ## 9. Out of scope
 
