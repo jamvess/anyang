@@ -15,7 +15,7 @@
 - [x] 4. 🙋 Junior review test (อ่านตาราง AC → test ที่ Claude สรุป)
 - [x] 5. 🤖 `supabase/migrations/0008_materials_storage.sql`: bucket `materials` แบบ private · `file_size_limit` = `guards.max_material_mb` · `allowed_mime_types` ตาม api.md · policy บน `storage.objects` (insert/select/update/delete) เฉพาะเมื่อโฟลเดอร์แรกของ path = `current_tenant_id()` · แล้ว `/implement-feature`: `app/db/materials.py` (JWT ของผู้ใช้) + ตัวขอ signed URL + router + งานเบื้องหลัง classify จนทุก test ผ่าน
 - [x] 6. 🙋 Junior review SQL ของ `0008` แล้วรัน `npx supabase db push` ขึ้น `anyang-dev` (ข้อความบอกกลุ่มเรื่อง migration + RLS · Claude ร่างให้)
-- [ ] 7. 🤖 รัน integration บน `anyang-dev` + ลองครบ flow ในเครื่องกับ Gemini บน Vertex: สร้าง prep → ขอ URL → `PUT` PDF จาก `evals/topics/mth10101/raw/` → `/uploaded` → `kind` ขึ้น → confirm → `GET /ingestion` จนหัวข้อ + ดาวขึ้น → `GET /scope` · ใช้บัญชีทดสอบของตัวเอง (ไม่ใช่บัญชี demo · กติกา D2 (ก))
+- [x] 7. 🤖 รัน integration บน `anyang-dev` + ลองครบ flow ในเครื่องกับ Gemini บน Vertex: สร้าง prep → ขอ URL → `PUT` PDF จาก `evals/topics/mth10101/raw/` → `/uploaded` → `kind` ขึ้น → confirm → `GET /ingestion` จนหัวข้อ + ดาวขึ้น → `GET /scope` · ใช้บัญชีทดสอบของตัวเอง (ไม่ใช่บัญชี demo · กติกา D2 (ก))
 - [ ] 8. 🙋 บอกกลุ่ม (migration `0008`, api.md) + บอก May ว่าหน้าอัปโหลดต่อ API จริงได้แล้ว → `/work-done`
 
 ## Definition of done
@@ -28,6 +28,8 @@
 - CI ผ่าน · `0008` ขึ้น `anyang-dev` แล้ว · เสร็จภายใน พฤ. 19 พ.ย. (ทุกขั้นต่อกันได้ในเครื่องเดียว)
 
 ## Decisions
+
+- 2026-11-17 · **ข้อ 7 ผ่าน** (Junior · บัญชีทดสอบ · anyang-dev · Vertex · config 1.22): `try_materials_flow` ครบ 6 ไฟล์ (~9 MB) → classify ถูกทุกไฟล์ใน 4 s → confirm → ingestion 250 s (โจทย์ข้อสอบ 23 + 20 ข้อ) → scope 35 หัวข้อ ดาวกระจาย มีหน้าที่มา · unmapped 2 · prep `daa76b88-7107-4f9c-8972-a510ef36a8c0` · A6 `merge_topics` ผ่านบน Vertex (P3a บน free tier ล้ม) → prep นี้ให้ Jam ใช้ให้คะแนนกับ label เป็นตัวเลข P3a ใหม่ได้
 
 - 2026-11-17 · Junior: ใส่ `thinking: low` ให้ `classify_material` ใน #140 (`config/ai.yaml` 1.22 · comment บอกเหตุผลและผลที่วัด) · **proposed — Jam ยืนยันตอน review** · follow-up หลัง #140 ลง checklist ของ Junior แล้ว: ingestion อ่าน `content_type` (§10 ข้อ 1) และ gateway ไม่ retry เมื่อ `MAX_TOKENS`
 
@@ -45,7 +47,7 @@
 
 ## Next step
 
-Junior restart API (โหลด `config/ai.yaml` 1.22) แล้วรัน `uv run python -m scripts.try_materials_flow sheet-03.pdf midterm-2561-1.pdf` แล้วรันครบ 6 ไฟล์ · วางผลในแชท
+ข้อ 8: บอกกลุ่ม (migration `0008` · api.md v1.21 · `config/ai.yaml` 1.22) + บอก May ว่าหน้าอัปโหลดต่อ API จริงได้ · `/work-done`
 
 ## Waiting on
 
