@@ -101,7 +101,7 @@ fake room repository (+ ปิด session, บันทึกสรุป) + fak
 - จบแบบอื่น: หมดเวลา (`time_budget`), ทำครบแผน (`plan_done`), idle 15 นาที (`idle`) · ระบบเสนอให้จบเอง (TM-12 · S5)
 - mastery ที่เปลี่ยนใน session (ต้องเก็บค่าก่อน session · หลัง demo) · `running_summary` (`update_running_summary` ยังไม่มี)
 - ใช้ `summary` ตอนเปิดห้องครั้งหน้า (ai-orchestration §2.2.9 · `open_session` v3 หลัง demo)
-- หน้าเว็บ: ปุ่มจบ + การ์ดสรุป (May · ใช้ event เดิมของ stub)
+- หน้าเว็บ: ปุ่มจบ + สรุปเป็น bubble ของ tutor (May · `session-end-ui.md` · 17 พ.ย.)
 
 ## 10. Open questions
 
