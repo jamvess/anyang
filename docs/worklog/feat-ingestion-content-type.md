@@ -11,7 +11,7 @@
 
 ตอนนี้ `_image_type` ดูนามสกุลของ `file_name` และรู้จักแค่ `.png`, `.jpg`, `.jpeg` · อย่างอื่นถือเป็น PDF · API รับ PDF, JPEG, PNG, WEBP, HEIC, PPTX, DOCX และ #140 เก็บ `materials.content_type` ที่ตรวจกับ object จริงแล้ว · ผล: WEBP, HEIC, PPTX, DOCX และรูปที่ชื่อไม่มีนามสกุลล้มด้วย "เปิดไฟล์นี้ไม่ได้" · ห้องติวส่ง WEBP/HEIC ให้ Gemini vision อยู่แล้ว (`app/models/room.py`)
 
-- [ ] 1. 🤖 แก้ spec `specs/features/scope/ingestion.md` (spec ของ Jam): ชนิดไฟล์มาจาก `content_type` · PDF → ทางเดิม · JPEG/PNG/WEBP/HEIC → `vision_extract` 1 หน้า (ข้อเสนอ: อ่าน WEBP/HEIC ได้เลยแทนที่จะล้มตาม checklist) · PPTX/DOCX → ล้มตั้งแต่ classify ด้วยข้อความใหม่ที่บอกให้ส่ง PDF หรือรูป · `content_type` null (แถวเก่า) → นามสกุลเหมือนเดิม · ตอบ `materials-db.md` §10 ข้อ 1 (spec ของ Junior · ถามก่อนแก้) → 🙋 Jam review
+- [x] 1. 🤖 แก้ spec `specs/features/scope/ingestion.md` (spec ของ Jam): ชนิดไฟล์มาจาก `content_type` · PDF → ทางเดิม · JPEG/PNG/WEBP/HEIC → `vision_extract` 1 หน้า (ข้อเสนอ: อ่าน WEBP/HEIC ได้เลยแทนที่จะล้มตาม checklist) · PPTX/DOCX → ล้มตั้งแต่ classify ด้วยข้อความใหม่ที่บอกให้ส่ง PDF หรือรูป · `content_type` null (แถวเก่า) → นามสกุลเหมือนเดิม · ตอบ `materials-db.md` §10 ข้อ 1 (spec ของ Junior · ถามก่อนแก้) → 🙋 Jam review
 - [ ] 2. 🤖 `/spec-to-tests` (unit · `InMemoryIngestionStore` + fake provider) → 🙋 Jam review test
 - [ ] 3. 🤖 `/implement-feature`: `MaterialRow.content_type` + `_material` + `add_material(content_type=…)` + ตัดสินชนิดใน `ingestion.py` · ruff · pytest ทั้งชุด
 - [ ] 4. 🙋 (ถ้าอยาก) ลองในเบราว์เซอร์: อัปโหลดรูป PNG 1 ไฟล์ + DOCX 1 ไฟล์ · PNG ต้องผ่าน · DOCX ต้องขึ้นข้อความใหม่
@@ -27,7 +27,7 @@
 
 ## Next step
 
-ข้อ 1: แก้ spec `ingestion.md` แล้วให้ Jam review
+ข้อ 1 รอ Jam review spec (`ingestion.md` §2.5 ข้อ 3 · AC-35 ถึง AC-39) และ ok แก้ `materials-db.md` §10 ข้อ 1 (spec ของ Junior) · ok แล้วทำข้อ 2
 
 ## Waiting on
 

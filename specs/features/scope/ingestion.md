@@ -6,7 +6,7 @@
 | Requirements | SM-01, SM-03, SM-04, CM-06, CM-07, AI-08, SA-06 |
 | Owner | Jam |
 | Reviewer | Jam · Junior ดูส่วน DB และตัวรัน job (§10) |
-| Status | approved 2026-11-13 (Jam · §10 ข้อ 1–5 ตามข้อเสนอ · ข้อ 1–3 เป็นของ Junior ใช้ข้อเสนอไปก่อนเพื่อให้ทัน demo · Junior ดูย้อนหลัง) · 17 พ.ย. §2.2 ข้อ 5 + AC-29 ถึง AC-34 (PR #154 · classify ไม่ค้าง) |
+| Status | approved 2026-11-13 (Jam · §10 ข้อ 1–5 ตามข้อเสนอ · ข้อ 1–3 เป็นของ Junior ใช้ข้อเสนอไปก่อนเพื่อให้ทัน demo · Junior ดูย้อนหลัง) · 17 พ.ย. §2.2 ข้อ 5 + AC-29 ถึง AC-34 (PR #154 · classify ไม่ค้าง) · §2.5 ข้อ 3 + AC-35 ถึง AC-39 (PR #156 · ชนิดไฟล์จาก `content_type`) |
 | Related system spec | ai-orchestration.md §2.3.2–2.3.9 · api.md v1.11 `Ingestion` · data-model.md รูป 2 · `compute-importance.md` · PoC `specs/poc/reports/P3.md` · `docs/team/sprint-checklists.md` ⭐ demo ขั้น 4 |
 
 ## 1. Context
@@ -38,7 +38,7 @@ demo end to end (23 พ.ย.) ต้องให้ไฟล์ที่ผู�
 
 ลำดับต่อไฟล์ (เขียนแถว `ingestion_jobs` ของ stage นั้นเป็น `running` ก่อนเริ่ม และ `done` เมื่อจบ · `materials.status = 'ingesting'` ตั้งแต่ขั้นแรกจนจบ):
 
-1. **extract** · PDF: อ่าน text layer ทีละหน้าด้วย PyMuPDF · คำนวณสัดส่วนตัวอักษรไทย = ไทย ÷ (ไทย + ละติน) ของทั้งไฟล์ (P3 `thai_share`) · ≥ `ingestion.min_thai_share` → ใช้ text layer (`extract_method = 'text_layer'`) · น้อยกว่า → render ทุกหน้าที่ `ingestion.render_dpi` แล้วเรียก `vision_extract_pages` ครั้งเดียวทั้งไฟล์ (A2b · `extract_method = 'vision'`) · จำนวนหน้าที่คืนต้องเท่าที่ส่ง ไม่งั้นไฟล์ล้ม · ไฟล์รูปเดี่ยว: `vision_extract` (A2) เป็นหน้า 1 · เขียน `material_pages` ทุกหน้า (`page_no` เริ่ม 1 ตามหน้า PDF)
+1. **extract** · PDF: อ่าน text layer ทีละหน้าด้วย PyMuPDF · คำนวณสัดส่วนตัวอักษรไทย = ไทย ÷ (ไทย + ละติน) ของทั้งไฟล์ (P3 `thai_share`) · ≥ `ingestion.min_thai_share` → ใช้ text layer (`extract_method = 'text_layer'`) · น้อยกว่า → render ทุกหน้าที่ `ingestion.render_dpi` แล้วเรียก `vision_extract_pages` ครั้งเดียวทั้งไฟล์ (A2b · `extract_method = 'vision'`) · จำนวนหน้าที่คืนต้องเท่าที่ส่ง ไม่งั้นไฟล์ล้ม · ไฟล์รูปเดี่ยว (ชนิดตาม §2.5 ข้อ 3): `vision_extract` (A2) เป็นหน้า 1 · เขียน `material_pages` ทุกหน้า (`page_no` เริ่ม 1 ตามหน้า PDF)
 2. **split_exam** (เฉพาะ `kind = past_exam`) · `split_past_exam` (A4) กับข้อความทุกหน้าในรูป `[p.N]` · เขียน `past_exam_questions` (`q_no`, `page_no`, `text`) ยังไม่มี `topic_id`
 3. **chunk** (ไฟล์ที่ไม่ใช่ข้อสอบเก่า) · ตัดตามกฎของ P3 (`poc/P3/chunking.py`): ต่อหน้าตามลำดับจนถึง `ingestion.chunk_min_tokens` ไม่เกิน `ingestion.chunk_max_tokens` และไม่คร่อมเกิน `ingestion.chunk_max_pages` หน้า · หน้าที่ยาวเกินตัดที่บรรทัด · นับ token ภาษาไทยที่ `ingestion.thai_chars_per_token` ตัวต่อ token (ai-orchestration §2.3.3) · `content_hash` = sha256 ของ `text`
 4. **embed** · `gateway.embed` ทีละ `embedding.batch_size` · เขียน `chunks` (`page_from`, `page_to`, `text`, `content_hash`, `embedding`) **text อยู่คู่ vector ทุกแถว (AI-08)** · ขนาด vector ผิด → gateway error → ไฟล์ล้ม
@@ -66,6 +66,13 @@ demo end to end (23 พ.ย.) ต้องให้ไฟล์ที่ผู�
 
 1. **ชื่อไฟล์** (ai-orchestration §2.3.3 · Jam 2026-11-07): ก่อนเข้า prompt ใดๆ แทนตัวขึ้นบรรทัดและตัวควบคุม (Unicode category `Cc`, `Cf`, `Zl`, `Zp`) ด้วยช่องว่าง แล้วยุบช่องว่างซ้ำ · ยาวเกิน `guards.max_attachment_name_chars` (นับ grapheme) → ตัดแบบเก็บนามสกุลเหมือน `messages.attachment_name` (data-model กฎทั่วไป)
 2. ข้อความจากไฟล์และ `user_note` เข้า prompt ใน data block เสมอ (ทุก prompt ของ flow นี้ทำอยู่แล้ว · CLAUDE.md ข้อ 8)
+3. **ชนิดของไฟล์มาจาก `materials.content_type`** (เพิ่ม 17 พ.ย. · PR #156 · ตอบ `materials-db.md` §10 ข้อ 1 · CM-03): API ตรวจชนิดนี้กับ object จริงแล้วตอน `/uploaded` (#140) · ชื่อไฟล์ใช้แสดงผลอย่างเดียว
+   - `application/pdf` → PDF (text layer หรือ vision ทั้งไฟล์ · §2.3 ข้อ 1)
+   - `image/jpeg`, `image/png`, `image/webp`, `image/heic` → รูป 1 หน้า: classify ไม่อ่าน text layer · extract ใช้ `vision_extract` ด้วย mime type นั้น (Gemini อ่าน WEBP และ HEIC ได้ · ห้องติวส่งสองชนิดนี้อยู่แล้ว `app/models/room.py`)
+   - PPTX (`application/vnd.openxmlformats-officedocument.presentationml.presentation`), DOCX (`application/vnd.openxmlformats-officedocument.wordprocessingml.document`) → **ล้มตั้งแต่ classify** ไม่เรียก AI · `error` = "ไฟล์ชนิดนี้ยังอ่านไม่ได้ ส่งเป็น PDF หรือรูปแทนได้" · ยังไม่มีตัวอ่าน (§9)
+   - ชนิดอื่น (ไม่ควรเกิด: API ไม่รับ) → ล้มด้วย "เปิดไฟล์นี้ไม่ได้"
+   - `content_type` เป็น null (แถวก่อน #140) → นามสกุลของ `file_name` เหมือนเดิม: `.png`, `.jpg`, `.jpeg` เป็นรูป · อย่างอื่นเป็น PDF
+   - ตัวพิมพ์และ parameter (`; charset=…`) ไม่มีผล (API เก็บแบบตัวเล็กไม่มี parameter อยู่แล้ว · ตัดซ้ำได้ไม่เสียหาย)
 
 ### 2.6 `GET /exam-preps/{id}/ingestion` จริง (CM-07)
 
@@ -142,6 +149,14 @@ AI (A1, A2/A2b, A4, A5, A6, A7) ให้แค่ข้อความ หั�
 - **AC-33 (CM-07)** DB ล่มทั้งหมด (`down = True`) Then `classify_material` ไม่ raise · มี log ERROR ที่มี id ของไฟล์และ `stays at uploaded`
 - **AC-34 (CM-07)** หลัง AC-29 When `retry_material` และ A1 ตอบได้ Then `status = 'classified'` (ลองใหม่ได้จริง)
 
+**ชนิดไฟล์จาก `content_type`** (§2.5 ข้อ 3 · PR #156)
+
+- **AC-35 (CM-03)** Given ไฟล์ `content_type` ∈ {`image/jpeg`, `image/png`, `image/webp`, `image/heic`} ชื่อ "scan" (ไม่มีนามสกุล) When classify Then prompt ไม่มีข้อความหน้า (`[p.` 0 ครั้ง) และไม่อ่าน text layer · When ingest Then `vision_extract` 1 ครั้งด้วย mime type เดียวกับ `content_type` · `material_pages` 1 แถว `vision`
+- **AC-36 (CM-03)** Given ไฟล์ `content_type = application/pdf` ชื่อ "photo.png" When classify Then อ่าน text layer (ชื่อไฟล์ไม่มีผล) · When ingest Then ทาง PDF
+- **AC-37 (CM-03)** Given ไฟล์ PPTX หรือ DOCX When classify Then `status = 'failed'`, `error` = "ไฟล์ชนิดนี้ยังอ่านไม่ได้ ส่งเป็น PDF หรือรูปแทนได้" · ไม่เรียก A1 · ไม่อ่าน text layer
+- **AC-38 (CM-03)** Given `content_type` null When classify/ingest Then ตามนามสกุลเดิม: "sheet.JPG" เป็นรูป (`image/jpeg`) · "sheet" เป็น PDF
+- **AC-39 (CM-03)** Given `content_type = "Image/PNG; x=1"` Then เป็นรูป `image/png`
+
 **API**
 
 - **AC-23 (CM-07)** มี token · ไฟล์ 3 ไฟล์ (done, running, failed) → `files` เรียงตามเวลาสร้าง สถานะตามแถวของ `ingestion_jobs` · `detail` "14 หน้า" / "กำลังแยกรายข้อ" / null · `error` ของไฟล์ที่ล้มเป็นข้อความสั้น ไม่มี stack · `scope_ready = false`
@@ -193,6 +208,7 @@ AI (A1, A2/A2b, A4, A5, A6, A7) ให้แค่ข้อความ หั�
 | `tests/unit/test_ingestion_domain.py` (สัดส่วนไทย, chunk, ชื่อไฟล์, key → material, source ที่ผิด, สถานะรวมของไฟล์และ step) | unit (pure) | AC-boundary-thai, AC-5, AC-boundary-chunk, AC-9, AC-11, AC-23–25 (ส่วนคิดสถานะ) |
 | `tests/unit/test_ingestion_pipeline.py` (fake provider + repository ในหน่วยความจำ + PDF เล็กที่สร้างใน test ด้วย PyMuPDF) | unit | AC-1–4, AC-6–8, AC-10, AC-12–22, AC-27 |
 | `tests/unit/test_ingestion_api.py` (dependency override) | unit | AC-23–26 |
+| `tests/unit/test_ingestion_content_type.py` (ใหม่ · PR #156 · repository ในหน่วยความจำ + fake provider · ตาราง content_type) | unit | AC-35–39 |
 | `tests/unit/test_classify_never_stuck.py` (ใหม่ · PR #154 · repository ในหน่วยความจำห่อด้วยตัวที่ล้มตามสั่ง) | unit | AC-29–34 |
 | `tests/integration/test_ingestion_db.py` (Supabase ในเครื่อง · 2 tenants) | integration | AC-tenant, AC-18 |
 | รันจริงบน Vertex กับ MTH10101 เทียบ P3 (`poc/P3/score.py` อ่านผลจาก DB) | eval (มือ · ขั้น 4 ของ worklog) | เป้า: ★★★ ≥ 10/12 · ≤ 3 นาทีต่อไฟล์ |
