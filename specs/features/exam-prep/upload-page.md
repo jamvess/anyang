@@ -166,7 +166,11 @@ fetch จำลองทั้งหมด (ไม่ใช้ API จริง)
 - หน้าอัปโหลดเปิดที่ S10 เพราะ `GET /materials` ของ stub ส่งไฟล์ตายตัว 3 ไฟล์ที่ยังไม่ยืนยันเสมอ: ประเภท + "มั่นใจ n%" · "AI กำลังดูไฟล์…" · ข้อความสีแดง · ปุ่มยืนยันกดไม่ได้ (ไฟล์ของ stub ไม่เคยดูเสร็จ) · **S09 และการยืนยันจริงยังเห็นในเบราว์เซอร์ไม่ได้ จนกว่า #140 จะเสร็จ** (มี test AC-1 ถึง AC-14)
 - `/progress` ของ prep ใหม่ (อ่าน DB จริง · v1.16) → "ยังไม่มีไฟล์ที่ส่งให้อ่าน" + ลิงก์ "ใส่ไฟล์" (AC-20)
 - `/progress` ของ prep ที่ใส่ผล ingestion ด้วย `apps/api/scripts/seed_scope_demo.py` → ไปหน้า scope เอง และเห็นหัวข้อ 34 แถว (AC-18)
-- **รอ #140:** เลือกไฟล์จริง → Storage → classify → ยืนยัน → ingestion → หน้า scope · ลองซ้ำทั้งเส้นเมื่อ #140 merge
+- ~~**รอ #140:** เลือกไฟล์จริง → Storage → classify → ยืนยัน → ingestion → หน้า scope · ลองซ้ำทั้งเส้นเมื่อ #140 merge~~ · ลองแล้ว 17 พ.ย. ผ่าน (ด้านล่าง)
+
+**ผลลองเส้นจริง (Jam · 17 พ.ย. · PR #151 · หลัง #140 merge และ `0008`, `0009` ขึ้น `anyang-dev` · API ในเครื่อง `AUTH_REQUIRED=true` `AI_PROVIDER=live` + `pnpm dev` · บัญชีทดสอบของ Jam):** ผ่านทั้งเส้น
+- สร้าง prep → `/upload` → เลือก `sheet-03.pdf`, `sheet-04.pdf`, `midterm-2561-1.pdf` (`evals/topics/mth10101/raw/`) → "ส่งทั้งหมดให้ AI อ่าน" → `PUT` เข้า Storage จริงผ่าน signed URL + `/uploaded` `202` ทุกไฟล์ → S10 ประเภทที่ AI เดา + "มั่นใจ n%" (`classify_material` บน Vertex `call_status: ok`) → ยืนยัน → `/progress` สถานะรายไฟล์ + ขั้นรวม → เด้งไป `/scope` เอง พร้อมหัวข้อและดาว
+- 3 รอบแรกล้มเพราะเครื่องของ Jam ตั้งค่าไม่ตรง ไม่ใช่บั๊กของ #140 หรือ #142: `SUPABASE_SERVICE_ROLE_KEY` ใน `.env` (root) ไม่ใช่ key ของ `anyang-dev` (`Unregistered API key`) · `AI_PROVIDER` ไม่ใช่ `live` · ADC login ด้วยบัญชีที่ไม่มีสิทธิ์ Vertex ใน `anyang-513006` (`403 PERMISSION_DENIED`) · ผลข้างเคียงที่ควรแก้ (งานต่อของ Jam): DB ล้มก่อน `try` ใน `classify_material` ทำให้ไฟล์ค้าง "AI กำลังดูไฟล์…" ตลอด · fake provider ไม่มีคำตอบตั้งต้นของ `classify_material`
 
 ## 9. Out of scope
 
