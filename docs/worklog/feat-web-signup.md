@@ -11,11 +11,11 @@
 
 Requirement: UM-01 (สมัครด้วย email + password) · ต่อจาก `specs/features/platform/web-login.md` (#138) · Supabase `anyang-dev` (D2)
 
-- [ ] 1. 🙋 May ถาม Junior: เปิด "Allow new users to sign up" ใน `anyang-dev` ไว้ถึงหลัง 23 พ.ย. ได้ไหม (D2 วางแผนจะปิด) · Confirm email ปิดอยู่แล้ว (D2 ค) สมัครแล้วเข้าได้ทันที
+- [x] 1. 🙋 May ถาม Junior: เปิด "Allow new users to sign up" ใน `anyang-dev` ไว้ถึงหลัง 23 พ.ย. ได้ไหม (D2 วางแผนจะปิด) · Confirm email ปิดอยู่แล้ว (D2 ค) สมัครแล้วเข้าได้ทันที · 17 พ.ย. Junior เปิดชั่วคราวให้ลอง (ตอนอัดวิดีโอ 21–22 พ.ย. ต้องขอเปิดอีกครั้ง)
 - [x] 2. 🤖 `/spec-feature` → `specs/features/platform/web-signup.md` · 🙋 May ตัดสินหน้าตาและ flow ผ่านตัวเลือก แล้ว ok spec · 17 พ.ย. ok (ช่องยืนยันรหัส · ไปหน้าหลัก · ลิงก์ทั้งสองทาง · กฎรหัสให้ Supabase)
 - [x] 3. 🤖 `/spec-to-tests` → 🙋 May review test · 17 พ.ย. ok (22 test · red)
 - [x] 4. 🤖 `/implement-feature` จน test ผ่าน + lint + typecheck · 17 พ.ย. 445/445 · 1 รอบ red → green
-- [ ] 5. 🙋 May ลองในเบราว์เซอร์กับ `anyang-dev`: สมัครบัญชีทดสอบใหม่ → เข้าหน้าหลัก → logout → login ด้วยบัญชีนั้น
+- [x] 5. 🙋 May ลองในเบราว์เซอร์กับ `anyang-dev`: สมัครบัญชีทดสอบใหม่ → เข้าหน้าหลัก → logout → login ด้วยบัญชีนั้น · 17 พ.ย. ผ่านครบ (+ สมัครอีเมลซ้ำ → "อีเมลนี้มีบัญชีแล้ว" · ปิดรับสมัคร → "ตอนนี้ปิดรับสมัครอยู่")
 - [ ] 6. 🤖 `/work-done`
 
 ## Definition of done
@@ -29,11 +29,11 @@ Requirement: UM-01 (สมัครด้วย email + password) · ต่อ�
 
 ## Next step
 
-รอ Junior เปิด "Allow new users to sign up" ใน `anyang-dev` ชั่วคราว → May ทำขั้น 5 ต่อ (สมัคร → หน้าหลัก → logout → login → สมัครซ้ำ)
+`/work-done`
 
 ## Waiting on
 
-- Junior: เปิดการสมัครใน `anyang-dev` ชั่วคราว (ตอนลอง + ตอนอัดวิดีโอ 21–22 พ.ย.) แล้วปิดกลับ (ขั้น 1 · 17 พ.ย. ตอนนี้ปิดอยู่)
+- ไม่มี · (ตอนอัดวิดีโอ 21–22 พ.ย. ขอ Junior เปิดรับสมัครอีกครั้ง)
 
 ## Notes for next time
 
