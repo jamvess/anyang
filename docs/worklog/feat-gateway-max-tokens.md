@@ -11,7 +11,7 @@
 
 ตอนนี้: `Gateway.call` ได้ JSON ที่ขาดเพราะ Gemini หยุดที่ `max_output_tokens` (thinking นับรวม) → `ValidationError` → retry schema 1 ครั้งด้วย `max_tokens` เท่าเดิม + prompt ยาวขึ้น (แนบคำตอบเดิม) → ขาดอีก → `AISchemaError` · เสีย 2 call และ log เป็น `schema_error` เหมือน model ตอบผิดรูป · `ProviderResponse` ไม่มี `finish_reason` · ข้อ checklist นี้อยู่ใน `docs/team/sprint-checklists.md` ของ #140 (ยังไม่ merge)
 
-- [ ] 1. 🤖 `/spec-feature` → `specs/features/ai/gateway-truncation.md` (AI-01, AI-04):
+- [x] 1. 🤖 `/spec-feature` → `specs/features/ai/gateway-truncation.md` (AI-01, AI-04):
   - provider ส่ง `truncated` (Gemini: `finish_reason == MAX_TOKENS`) ใน `ProviderResponse` · fake provider ตั้งได้
   - `call`: คำตอบถูกตัดและ parse ไม่ผ่าน → ไม่ retry schema · raise error ใหม่ที่เป็นลูกของ `AISchemaError` (caller เดิมไม่ต้องแก้) · ถูกตัดแต่ parse ผ่าน → ใช้ได้ตามเดิม
   - `CallRecord.status` ค่าใหม่ `truncated` → `ai_calls.status = 'error'` (ไม่ต้องมี migration) · บรรทัด log ของ `app.ai.calls` บอก `truncated` แยกจาก schema error
@@ -36,7 +36,7 @@
 
 ## Next step
 
-ข้อ 1: `/spec-feature` เขียน `specs/features/ai/gateway-truncation.md` ตามแผน แล้วให้ Jam review
+ข้อ 1 รอ Jam review spec `specs/features/ai/gateway-truncation.md` (§10 ข้อ 1 และ 3) · ok แล้วทำข้อ 2 `/spec-to-tests`
 
 ## Waiting on
 

@@ -45,12 +45,13 @@ Map `status` (check ของตาราง: `ok`, `schema_retry`, `fallback`, 
 | `ok` | ≥ 1 | `schema_retry` (ได้ผลแต่ต้อง retry schema) |
 | `schema_error` | ใดๆ | `error` |
 | `provider_error` | ใดๆ | `error` |
+| `truncated` | ใดๆ | `error` (คำตอบถูกตัดที่ `max_tokens` · `gateway-truncation.md` · 17 พ.ย.) |
 
 `fallback` และ `degraded` ยังไม่มีใครส่ง (gateway lite ไม่มี fallback · template "ระบบช้า" เป็นของ `tutor_turn` ไม่ใช่ gateway) · §10 ข้อ 3
 
 **3. Listener `AICallLog`** (`app/db/ai_calls.py` · ผูกกับ gateway ด้วย `add_listener`)
 
-1. ทุก record: เขียน log 1 บรรทัดที่ logger `app.ai.calls` ระดับ INFO · message เป็น JSON ของแถวจากข้อ 2 (UUID เป็น string) บวก `schema_retries` · ไม่มีข้อความ prompt หรือคำตอบ · Cloud Run ส่ง stdout เข้า Cloud Logging (§2.11 Monitoring)
+1. ทุก record: เขียน log 1 บรรทัดที่ logger `app.ai.calls` ระดับ INFO · message เป็น JSON ของแถวจากข้อ 2 (UUID เป็น string) บวก `schema_retries` และ `call_status` (= `CallRecord.status` · แยก `truncated` ออกจาก `schema_error` ได้ · `gateway-truncation.md` §2.4 · 17 พ.ย.) · ไม่มีข้อความ prompt หรือคำตอบ · Cloud Run ส่ง stdout เข้า Cloud Logging (§2.11 Monitoring)
 2. ถ้า context มี `tenant_id` **และ** listener มี writer: insert แถวลง `ai_calls` · ถ้าไม่มี tenant: ไม่ insert (มีแค่ log ข้อ 1)
 3. การ insert **ไม่ทำให้ AI call รอ**: listener ส่งงานไปทำเบื้องหลังแล้วคืนทันที (NFR-P1 · ไม่เพิ่ม TTFT) · gateway คืนผลหรือส่ง chunk ต่อได้โดยไม่ขึ้นกับ DB
 4. Insert ล้ม (DB ล่ม, network, constraint): log ระดับ WARNING พร้อม `request_id` และ purpose แล้วจบ · ไม่ retry · ไม่ raise กลับไปที่ call (gateway จับ exception ของ listener อยู่แล้ว แต่งานเบื้องหลังต้องจับเองด้วย)
