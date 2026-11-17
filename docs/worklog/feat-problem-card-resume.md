@@ -13,7 +13,7 @@
 
 - [x] 1. 🙋 May ส่งข้อความถาม Jam (+ Junior) เลือกทาง: (ก) `GET /sessions/{id}` ส่ง `open_problem` (โจทย์ค้างจากตาราง `problems`) แล้วหน้าเว็บแสดงการ์ดท้ายแชท · (ข) บันทึกการ์ดโจทย์เป็น `messages` `role = card` ทุกที่ที่ส่ง event `problem` · และใครทำส่วน API · **17 พ.ย. Jam เลือก (ข) · Jam ทำ API · เราทำหน้าเว็บ**
 - [x] 2. 🤖 `/spec-feature` (หน้าเว็บ + สัญญาข้อมูล `card.problem` ให้ Jam ทำ API ตาม) → 🙋 May ok spec · 17 พ.ย. ok
-- [ ] 3. 🤖 `/spec-to-tests` (หน้าเว็บ) → 🙋 May review test
+- [x] 3. 🤖 `/spec-to-tests` (หน้าเว็บ) → 🙋 May review test · 17 พ.ย. ok (8 red · AC-2 ผ่านตั้งแต่ต้น · เจอว่าหน้าเว็บวันนี้พังถ้าประวัติมี `card.problem` → merge ก่อน API ของ Jam)
 - [ ] 4. 🤖 `/implement-feature` หน้าเว็บจน test ผ่าน (lint + typecheck + test)
 - [ ] 5. 🙋 ลองเส้นจริงหลัง Jam ทำ API เสร็จ: เปิดห้อง → ได้การ์ดโจทย์ → รีเฟรช → การ์ดโจทย์ + canvas ยังอยู่ (ต้องมี prep ที่มีหัวข้อ · บัญชี May หรือ Jam ลองให้)
 - [ ] 6. 🤖 `/work-done` (merge หน้าเว็บได้ก่อน API · ไม่มี `card.problem` = ทำงานเหมือนเดิม)
@@ -30,7 +30,7 @@
 
 ## Next step
 
-`/spec-to-tests` (ขั้น 3)
+`/implement-feature` (ขั้น 4)
 
 ## Waiting on
 
