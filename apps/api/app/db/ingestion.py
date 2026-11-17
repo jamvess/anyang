@@ -177,6 +177,7 @@ class InMemoryIngestionStore:
         status: str = "confirmed",
         kind_confirmed: bool = True,
         relevance_weight: float = 1.0,
+        content_type: str | None = None,
     ) -> UUID:
         material_id = uuid.uuid4()
         self._table("materials").append(
@@ -193,6 +194,7 @@ class InMemoryIngestionStore:
                 "relevance_weight": relevance_weight,
                 "status": status,
                 "error": None,
+                "content_type": content_type,
                 "created_at": self._now(),
             }
         )
