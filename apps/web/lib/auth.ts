@@ -26,7 +26,6 @@ export async function authHeaders(): Promise<Record<string, string>> {
 }
 
 // Tab, CR and LF are dropped by the URL parser, so `/\t/evil` would become `//evil`.
-// eslint-disable-next-line no-control-regex
 const CONTROL = /[\u0000-\u001f\u007f]/;
 const BASE = "http://next.invalid";
 
