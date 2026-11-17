@@ -11,7 +11,7 @@
 
 ข้อนี้ยังไม่ติ๊กเพราะตอน #142 ลองได้แค่บน stub · ตอนนี้ #140 merge แล้ว · `0008`, `0009` ขึ้น `anyang-dev` แล้ว (Junior 17 พ.ย.) · สัญญาตรงกับหน้าเว็บ (ไม่มี `X-Stub` · `PUT` ไป `upload_url` ได้เลยไม่ต้องมี token · `materials-db.md` §2 ข้อ 6, §10 ข้อ 7)
 
-- [ ] 1. 🙋 รีสตาร์ต API ในเครื่อง (ให้ใช้โค้ดของ #140) + `pnpm dev`
+- [x] 1. 🙋 (17 พ.ย.) รีสตาร์ต API ในเครื่อง (ให้ใช้โค้ดของ #140) + `pnpm dev`
 - [ ] 2. 🙋 ลองในเบราว์เซอร์ด้วยบัญชีทดสอบของ Jam: สร้าง prep → เลือก PDF ของ MTH10101 2–3 ไฟล์ → ส่ง → ประเภทที่ AI เดา → ยืนยัน → หน้ารออ่าน → หน้า scope · Claude ให้ขั้นตอนทีละคลิก
 - [ ] 3. 🤖 ถ้าเจอปัญหา: หาสาเหตุ แล้วเสนอวิธีแก้ (แก้ใน PR นี้ถ้าเล็ก · ใหญ่แยก PR)
 - [ ] 4. 🤖 จดผลลง `upload-page.md` §8 · ติ๊ก checklist ของ May พร้อมบรรทัดย่อย
@@ -27,11 +27,17 @@
 
 ## Next step
 
-ข้อ 1: Jam รีสตาร์ต API แล้วเปิด `pnpm dev`
+ข้อ 2: Jam แก้ `SUPABASE_SERVICE_ROLE_KEY` ใน `apps/api/.env` เป็น secret key ของ `anyang-dev` แล้วลองใหม่ด้วย prep ใหม่
 
 ## Waiting on
 
 ไม่มี
+
+## Findings
+
+- 17 พ.ย. รอบแรก: เลือกไฟล์ + อัปโหลดเข้า Storage + `/uploaded` ผ่าน (`200`, `202`) · AI ดูไฟล์ค้างที่ "AI กำลังดูไฟล์…" · สาเหตุ: `SUPABASE_SERVICE_ROLE_KEY` ใน `.env` ของ Jam ไม่ใช่ key ของ `anyang-dev` (`Unregistered API key` · ตัวเดียวกับที่ทำให้ integration test ในเครื่องล้ม) · ไม่ใช่บั๊กของ #140 หรือ #142
+- งานต่อ (ไฟล์ของ Jam): `classify_material` อ่านแถวและตั้ง job ก่อน `try` · DB ล้มตรงนั้น → ไฟล์ค้าง `uploaded` ตลอด ไม่มี error ให้ผู้ใช้และไม่มีทางลองใหม่ (`/uploaded` ซ้ำได้ `409`, `/retry` รับแต่ `failed`)
+- Next.js 16.4.3 ขึ้นคำถาม upgrade policy `security` (มี advisory · แนะนำ 16.4.6) · ยังไม่อัปเกรด · งานต่อ: PR อัปเกรดแยก (ไฟล์ของ May · บอกกลุ่ม)
 
 ## Notes for next time
 
