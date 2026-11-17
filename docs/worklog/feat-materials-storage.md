@@ -9,7 +9,7 @@
 
 ## Plan
 
-- [ ] 1. 🤖 `/spec-feature` → `specs/features/exam-prep/materials-db.md` (CM-03, CM-06, CM-07, SA-06) · มี token แล้ว 4 endpoint ใช้ DB + Storage จริง: `POST /exam-preps/{id}/materials` (แถว `materials` + signed upload URL จาก JWT ของผู้ใช้) · `POST /materials/{id}/uploaded` (เช็คว่ามีไฟล์จริงใน Storage + ขนาดจริง → เรียก `classify_material` เบื้องหลัง) · `GET /exam-preps/{id}/materials` (หน้า S10 poll) · `POST /materials/confirm` (`kind`, `kind_confirmed`, `status = confirmed` → `get_ingestion_runner().start()`) · ไม่มี token ยังได้ stub เหมือนเดิม · `retry` และ `DELETE` ยังเป็น stub (หลัง demo) · ใส่ข้อเสนอเพื่อปิดคำถามที่ยังเปิดของ api.md v1.10 ข้อ 2, 5, 6
+- [x] 1. 🤖 `/spec-feature` → `specs/features/exam-prep/materials-db.md` (CM-03, CM-06, CM-07, SA-06) · มี token แล้ว 4 endpoint ใช้ DB + Storage จริง: `POST /exam-preps/{id}/materials` (แถว `materials` + signed upload URL จาก JWT ของผู้ใช้) · `POST /materials/{id}/uploaded` (เช็คว่ามีไฟล์จริงใน Storage + ขนาดจริง → เรียก `classify_material` เบื้องหลัง) · `GET /exam-preps/{id}/materials` (หน้า S10 poll) · `POST /materials/confirm` (`kind`, `kind_confirmed`, `status = confirmed` → `get_ingestion_runner().start()`) · ไม่มี token ยังได้ stub เหมือนเดิม · `retry` และ `DELETE` ยังเป็น stub (หลัง demo) · ใส่ข้อเสนอเพื่อปิดคำถามที่ยังเปิดของ api.md v1.10 ข้อ 2, 5, 6
 - [ ] 2. 🙋 Junior review spec + ตัดสินคำถามที่ยังเปิด (§10) · api.md เป็นไฟล์กลาง: ถ้า ok ให้แก้ใน PR นี้แล้วบอกกลุ่ม
 - [ ] 3. 🤖 `/spec-to-tests` · unit (repo + storage ปลอม · ทางมี/ไม่มี token · 404 ของ tenant อื่น · 409 · 422) + integration บน `anyang-dev` (อัปโหลดผ่าน signed URL ได้จริง · user B อ่าน/เขียน/ขอ URL ใน prefix ของ A ไม่ได้ · แถว `materials` แยก tenant) · test เริ่มต้นด้วย requirement ID
 - [ ] 4. 🙋 Junior review test (อ่านตาราง AC → test ที่ Claude สรุป)
@@ -30,15 +30,16 @@
 ## Decisions
 
 - 2026-11-16 · ขอบเขต: 4 endpoint (รวม `GET /materials` เพราะหน้า S10 ต้อง poll) · `retry` และ `DELETE` ยังเป็น stub จนหลัง demo · เป้า: เสร็จ 19 พ.ย. เพื่อวิดีโอ 23 พ.ย. (Junior)
+- 2026-11-16 · ตรวจโค้ดของ Jam ก่อนเขียน spec (Junior ขอ): bucket `materials` (`MATERIALS_BUCKET`) และ path `{tenant_id}/{exam_prep_id}/{material_id}` ไม่มีนามสกุล ตรงกับที่ ingestion อ่านจาก `storage_path` · ใช้ชื่อเดิมของ Jam · bucket เดียว private ใช้ร่วมกับรูป/เสียงของห้องติว · เพดาน `guards.max_material_mb` / `max_image_mb` · bucket 50 MB เป็นเพดานแข็ง · path ใช้ uuid ล้วน ชื่อไฟล์ใช้แสดงผลอย่างเดียว
 - 2026-11-16 · reset DB password ของ `anyang-dev` แล้ว + ปิด "Allow new users to sign up" ใน Dashboard แล้ว (Junior) · `.env` อัปเดตแล้ว · ติ๊กข้อ "reset database password" ใน checklist ใน PR นี้ · advisor update เลื่อนออกไป
 
 ## Next step
 
-ข้อ 1: รัน `/spec-feature` สร้าง `specs/features/exam-prep/materials-db.md` จาก api.md "สร้างการเตรียมสอบและใส่ไฟล์" (v1.10 · v1.13), `ingestion.md` §2.1 + §9, `data-model.md` (Storage path) และ `create-exam-prep.md` (รูปแบบมี/ไม่มี token)
+ข้อ 2: Junior review `specs/features/exam-prep/materials-db.md` และตอบ §10 ข้อ 1–7 (ข้อ 1 ต้องถาม Jam ด้วย) · ok แล้วตั้ง Status ของ spec เป็น approved แล้วไปข้อ 3 `/spec-to-tests`
 
 ## Waiting on
 
-ไม่มี
+- Jam: spec §10 ข้อ 1 (`_image_type` อ่านนามสกุลจากชื่อไฟล์ · WEBP/HEIC/PPTX/DOCX ล้มตอน classify) · ข้อ 5 (`relevance_weight` เมื่อผู้ใช้แก้ kind) · ไม่ขวางวิดีโอที่ใช้ PDF
 
 ## Notes for next time
 
