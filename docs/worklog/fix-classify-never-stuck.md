@@ -12,7 +12,7 @@
 ตอนนี้ (`app/services/ingestion.py` · `classify_material`): `get_material` และ `set_job(running)` อยู่นอก `try` · เขียนผลตอนจบ (`update_material` classified, `set_job` done) ก็อยู่นอก `try` · ล้มตรงนั้น → `IngestionRunner._classify` แค่ log · ไฟล์ค้าง `uploaded` · หน้าเว็บ poll "AI กำลังดูไฟล์…" ตลอด · `/uploaded` ซ้ำได้ `409` และ `/retry` รับแต่ `failed` จึงไม่มีทางออก (เจอจริงใน #151 ตอน key ผิด)
 
 - [x] 1. 🤖 แก้ spec `specs/features/scope/ingestion.md` §2.2 (spec ของ Jam): ทุกความล้มหลัง `/uploaded` จบที่ `status = failed` + ข้อความที่ลองใหม่ได้ · อ่านแถวไม่ได้ → ยังตั้ง `failed` ด้วย id ได้ · DB ล่มทั้งหมด → log ระดับ ERROR ที่บอกว่าไฟล์ค้าง · AC-29 ขึ้นไป (#152 ใช้ AC-28 แล้ว) → 🙋 Jam review
-- [ ] 2. 🤖 `/spec-to-tests` (unit · `InMemoryIngestionStore` + fake provider) → 🙋 Jam review test
+- [x] 2. 🤖 `/spec-to-tests` (unit · `InMemoryIngestionStore` + fake provider) → 🙋 Jam review test
 - [ ] 3. 🤖 `/implement-feature` จน green · ruff · pytest ทั้งชุด
 
 ## Definition of done
@@ -26,7 +26,7 @@
 
 ## Next step
 
-ข้อ 1 รอ Jam review spec (§2.2 ข้อ 5 · AC-29 ถึง AC-34) · ok แล้วทำข้อ 2
+ข้อ 2 รอ Jam review test (`tests/unit/test_classify_never_stuck.py` · 6 test แดงทั้งหมด) · ok แล้วทำข้อ 3
 
 ## Waiting on
 
