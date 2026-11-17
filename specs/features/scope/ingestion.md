@@ -6,7 +6,7 @@
 | Requirements | SM-01, SM-03, SM-04, CM-06, CM-07, AI-08, SA-06 |
 | Owner | Jam |
 | Reviewer | Jam · Junior ดูส่วน DB และตัวรัน job (§10) |
-| Status | approved 2026-11-13 (Jam · §10 ข้อ 1–5 ตามข้อเสนอ · ข้อ 1–3 เป็นของ Junior ใช้ข้อเสนอไปก่อนเพื่อให้ทัน demo · Junior ดูย้อนหลัง) |
+| Status | approved 2026-11-13 (Jam · §10 ข้อ 1–5 ตามข้อเสนอ · ข้อ 1–3 เป็นของ Junior ใช้ข้อเสนอไปก่อนเพื่อให้ทัน demo · Junior ดูย้อนหลัง) · 17 พ.ย. §2.2 ข้อ 5 + AC-29 ถึง AC-34 (PR #154 · classify ไม่ค้าง) |
 | Related system spec | ai-orchestration.md §2.3.2–2.3.9 · api.md v1.11 `Ingestion` · data-model.md รูป 2 · `compute-importance.md` · PoC `specs/poc/reports/P3.md` · `docs/team/sprint-checklists.md` ⭐ demo ขั้น 4 |
 
 ## 1. Context
@@ -20,7 +20,7 @@ demo end to end (23 พ.ย.) ต้องให้ไฟล์ที่ผู�
 1. `classify_material(material_id)` · เรียกหลัง `POST /materials/{id}/uploaded` (ai-orchestration §2.3.8 ข้อ 3) · ทำขั้น A1 (§2.2) แล้วจบ
 2. `start_ingestion(exam_prep_id)` · เรียกหลัง `POST /exam-preps/{id}/materials/confirm` (ข้อ 5) · ไฟล์ทุกไฟล์ของ prep ที่ `kind_confirmed = true` และ `status = 'confirmed'` เข้าคิว · คืนทันที (job รันเบื้องหลัง · §2.7) · endpoint ตอบ `202` เอง
 3. `retry_material(material_id)` · สำหรับ `POST /materials/{id}/retry` (api.md) · ล้มตอน classify → ทำ §2.2 ใหม่ · ล้มตอน ingest → ทำ §2.3 ของไฟล์นั้นใหม่ แล้วทำ §2.4 ถ้าทุกไฟล์พร้อม
-4. ทุกทางเข้าทำงานด้วย service role และใส่ `tenant_id` ของ prep เองทุกแถว (apps/api/CLAUDE.md "Database" · ไม่มี JWT ของผู้ใช้ในงานเบื้องหลัง) · service role ข้าม storage policy จึง**ตรวจ `storage_path` ก่อนอ่านทุกครั้ง**: ต้องขึ้นต้นด้วย `{tenant_id}/{exam_prep_id}/` ของแถวนั้นและตามด้วยชื่อเดียวที่ไม่มี `/` · ไม่ผ่าน → ไม่อ่าน ไฟล์ `failed` "เปิดไฟล์นี้ไม่ได้" (`materials-db.md` §2.2 ข้อ 8 · AC-31 · Junior 2026-11-17 · บอก Jam)
+4. ทุกทางเข้าทำงานด้วย service role และใส่ `tenant_id` ของ prep เองทุกแถว (apps/api/CLAUDE.md "Database" · ไม่มี JWT ของผู้ใช้ในงานเบื้องหลัง) · service role ข้าม storage policy จึง**ตรวจ `storage_path` ก่อนอ่านทุกครั้ง**: ต้องขึ้นต้นด้วย `{tenant_id}/{exam_prep_id}/` ของแถวนั้นและตามด้วยชื่อเดียวที่ไม่มี `/` · ไม่ผ่าน → ไม่อ่าน ไฟล์ `failed` "เปิดไฟล์นี้ไม่ได้" (`materials-db.md` §2.2 ข้อ 8 · AC-31 · Junior 2026-11-17 · บอก Jam) · **อ่าน Storage ซ้ำเมื่อ error ชั่วคราว (Junior 2026-11-17 · บอก Jam):** `SupabaseMaterialFiles.read` เจอ error ระดับการเชื่อมต่อ (`httpx.TransportError` เช่น `Server disconnected`, connect error, timeout) → ทิ้ง client ที่ใช้ร่วมกัน สร้างใหม่ แล้วอ่านอีกครั้ง รวมไม่เกิน `ingestion.storage_read_attempts` ครั้ง รอ `ingestion.storage_read_backoff_s` × ลำดับครั้ง ก่อนลองใหม่ · Storage ตอบกลับเป็น error (`StorageApiError` เช่นไม่มีไฟล์) → ไม่อ่านซ้ำ · **เปลี่ยน client แบบ thread-safe:** หลาย thread ที่ล้มพร้อมกันจาก connection เดียวกันทำให้สร้าง client ใหม่ได้ครั้งเดียว (ล็อก + นับรุ่นของ client · thread ที่ล้มกับรุ่นเก่าไม่ทิ้ง client รุ่นใหม่ที่ thread อื่นสร้างแล้ว) · ที่มา: seed บัญชี demo 17 พ.ย. classify ล้ม 2 ใน 6 ไฟล์ เวลาเดียวกันทุกหลักด้วย `Server disconnected` (storage3 ใช้ HTTP/2 · ดาวน์โหลดพร้อมกันวิ่งบน connection เดียว) · **การเรียก DB ของ ingestion ใช้กติกาเดียวกัน (Junior 2026-11-17 · บอก Jam):** `SupabaseIngestionStore` เจอ `httpx.TransportError` → ทิ้ง client สร้างใหม่ (thread-safe แบบเดียวกัน · ใช้ค่า `storage_read_attempts` / `storage_read_backoff_s` ชุดเดียวกัน) แล้วทำคำสั่งเดิมซ้ำ · error อื่น (เช่น `APIError` ของ PostgREST) ไม่ทำซ้ำ · ครบจำนวนครั้ง → `DbUnavailableError` ตามเดิม · **การเขียนต้องทำซ้ำได้:** select, update ตาม id, delete, upsert ตาม id และ `set_job` (ลบแล้ว insert ใหม่ · ใช้ id เดียวทุกครั้ง และครั้งที่ทำซ้ำเป็น upsert ที่ข้าม id เดิม เพื่อกันแถวซ้ำเมื่อครั้งแรกยังค้างอยู่ฝั่ง server หลัง timeout) ให้ผลเดิมเมื่อทำซ้ำ · error ตอนสร้าง client ก็เป็น `DbUnavailableError` · `insert` ใส่ `id` (uuid4) ให้ทุกแถวที่ไม่มีก่อนครั้งแรก แล้วครั้งที่ทำซ้ำใช้ `upsert(on_conflict="id", ignore_duplicates=True)` ด้วยแถวและ id ชุดเดิม (แถวที่ commit ไปแล้วแต่คำตอบหายจะไม่ซ้ำ) · ที่มา: seed บัญชี demo รอบสอง 17 พ.ย. `classify of … stopped` 2 ไฟล์ด้วย httpx transport error ฝั่ง DB (sheet-02 เขียนแถวแล้วแต่ job ค้าง `running` · sheet-04 ไม่ได้เริ่ม)
 
 ### 2.2 ขั้น A1 · classify (CM-06)
 
@@ -28,6 +28,11 @@ demo end to end (23 พ.ย.) ต้องให้ไฟล์ที่ผู�
 2. `classify_material/v1` คืน `{kind, confidence, other_instructor, reason}` · `kind` ∈ `sheet | slides | past_exam | notes | other` · `other_instructor` = note หรือเนื้อหาบอกว่าข้อสอบชุดนี้เป็นของอาจารย์คนละคน
 3. code เขียน `materials.kind`, `kind_confidence = confidence`, `relevance_weight` = `stars.weight_other_instructor` ถ้า `kind = past_exam` และ `other_instructor` ไม่งั้น `stars.weight_same_instructor` (AI ไม่ให้ตัวเลขน้ำหนักเอง · CLAUDE.md ข้อ 1) · `status = 'classified'` · ผู้ใช้ยืนยัน/แก้ใน S10 (ของ Junior + May)
 4. AI ล้มหลัง retry ของ gateway → `status = 'failed'`, `error` = ข้อความสั้นสำหรับผู้ใช้ (§2.6 `error`)
+5. **ไม่มีทางค้างที่ `uploaded`** (เพิ่ม 17 พ.ย. · PR #154 · เจอใน #151: อ่านแถวด้วย service role key ผิด → ไฟล์ค้าง "AI กำลังดูไฟล์…" ตลอด · `/uploaded` ซ้ำได้ `409` และ `/retry` รับแต่ `failed`):
+   1. ทุกขั้นหลังรับงานอยู่ในทางล้มเดียวกัน: อ่านแถว `materials` · ตั้ง job `running` · อ่านไฟล์ · เรียก A1 · เขียนผล · ล้มขั้นไหน → job `failed` (ถ้ารู้ tenant) + `materials.status = 'failed'` + `error` = "อ่านไฟล์นี้ไม่สำเร็จ ลองใหม่ได้" (ไฟล์ที่เปิดไม่ได้ยังใช้ข้อความของตัวเองตามเดิม) · `/retry` ลองใหม่ได้ (§2.1 ข้อ 3)
+   2. อ่านแถวไม่ได้ (ยังไม่รู้ tenant): ตั้ง `materials.status = 'failed'` + `error` ด้วย id อย่างเดียว · ไม่เขียนแถว job · แถวไม่มีจริง (ถูกลบ) → log WARNING และจบเหมือนเดิม
+   3. เขียน `classified` สำเร็จแต่ตั้ง job `done` ไม่ได้ → ไฟล์คง `classified` (ผลใช้ได้ ผู้ใช้ไปต่อได้) · log WARNING · ไม่เขียนทับเป็น `failed`
+   4. ตั้ง `failed` ก็ไม่ได้ (DB ล่มทั้งหมด) → ไม่ raise ออกจาก `classify_material` · log ระดับ ERROR 1 บรรทัดที่มี id ของไฟล์และคำว่า `stays at uploaded` ให้หาเจอใน log
 
 ### 2.3 ขั้นรายไฟล์ · อ่าน → ตัดรายข้อ → chunk → embed (SM-01, AI-08)
 
@@ -128,6 +133,15 @@ AI (A1, A2/A2b, A4, A5, A6, A7) ให้แค่ข้อความ หั�
 - **AC-21 (CM-06)** A1 คืน `{kind: "past_exam", confidence: 0.82, other_instructor: false}` → `materials.kind = past_exam`, `kind_confidence = 0.82`, `relevance_weight = weight_same_instructor`, `status = 'classified'` · input มีชื่อไฟล์ที่ทำความสะอาดแล้ว, ข้อความ `classify_pages` หน้าแรก และ note
 - **AC-22 (CM-06)** A1 ล้ม → `status = 'failed'` + error
 
+**classify ไม่ค้าง** (§2.2 ข้อ 5 · PR #154 · AC-28 เป็นของ #152 · repository ในหน่วยความจำห่อด้วยตัวที่ทำให้ method ที่เลือกล้ม 1 ครั้ง)
+
+- **AC-29 (CM-07)** อ่านแถว `materials` ล้ม 1 ครั้ง When classify Then `status = 'failed'`, `error` = "อ่านไฟล์นี้ไม่สำเร็จ ลองใหม่ได้" · ไม่มีแถว job ของ classify · provider ไม่ถูกเรียก · ไม่ raise
+- **AC-30 (CM-07)** ตั้ง job `running` ล้ม Then `status = 'failed'` + error เดียวกัน · job `failed` · provider ไม่ถูกเรียก
+- **AC-31 (CM-07)** เขียนผล `classified` ล้ม 1 ครั้ง Then `status = 'failed'` + error เดียวกัน · job `failed`
+- **AC-32 (CM-07)** เขียน `classified` สำเร็จ ตั้ง job `done` ล้ม Then `status = 'classified'`, `error` null · มี log WARNING
+- **AC-33 (CM-07)** DB ล่มทั้งหมด (`down = True`) Then `classify_material` ไม่ raise · มี log ERROR ที่มี id ของไฟล์และ `stays at uploaded`
+- **AC-34 (CM-07)** หลัง AC-29 When `retry_material` และ A1 ตอบได้ Then `status = 'classified'` (ลองใหม่ได้จริง)
+
 **API**
 
 - **AC-23 (CM-07)** มี token · ไฟล์ 3 ไฟล์ (done, running, failed) → `files` เรียงตามเวลาสร้าง สถานะตามแถวของ `ingestion_jobs` · `detail` "14 หน้า" / "กำลังแยกรายข้อ" / null · `error` ของไฟล์ที่ล้มเป็นข้อความสั้น ไม่มี stack · `scope_ready = false`
@@ -139,6 +153,11 @@ AI (A1, A2/A2b, A4, A5, A6, A7) ให้แค่ข้อความ หั�
 **ตัวรัน**
 
 - **AC-27** `start_ingestion` คืนก่อน job จบ · เรียกซ้ำระหว่างรัน → task เดิม (ไม่ ingest ซ้ำ)
+
+**อ่านไฟล์จาก Storage (Junior 2026-11-17)**
+
+- **AC-28 (CM-07, AI-08)** Given `SupabaseMaterialFiles` ที่ download ครั้งแรกล้มด้วย `httpx.RemoteProtocolError` When `read` Then สร้าง client ใหม่ อ่านซ้ำได้ bytes · Given ล้มทุกครั้ง Then เรียก download `storage_read_attempts` ครั้งแล้วโยน error เดิม (classify/ingest ทำเป็นไฟล์ `failed` "อ่านไฟล์นี้ไม่สำเร็จ ลองใหม่ได้" ตามเดิม) · Given `StorageApiError` Then ไม่อ่านซ้ำ (1 ครั้ง) · Given 2 `read` พร้อมกันจาก 2 thread บน client เดียวกันและล้มพร้อมกัน Then ทั้งคู่ได้ bytes และ `connect` ถูกเรียก 2 ครั้งรวม (ครั้งแรก + สร้างใหม่ 1 ครั้ง ไม่ใช่ครั้งละ thread)
+- **AC-29 (CM-07, AI-08)** Given `SupabaseIngestionStore` ที่ `execute` ครั้งแรกล้มด้วย `httpx.RemoteProtocolError` When select Then สร้าง client ใหม่แล้วได้แถว · Given ล้มทุกครั้ง Then `execute` `storage_read_attempts` ครั้งแล้ว `DbUnavailableError` · Given `APIError` Then ไม่ทำซ้ำ (1 ครั้ง) และ `DbUnavailableError` · Given `insert` ที่ครั้งแรกล้มหลังส่งไปแล้ว Then ครั้งที่สองเป็น `upsert` `ignore_duplicates=True`, `on_conflict="id"` ด้วยแถวชุดเดิม id เดิม · แถวที่ไม่มี `id` ได้ id ก่อนครั้งแรก · แถวที่มี `id` คงเดิม · list ของผู้เรียกไม่ถูกแก้ · Given 2 thread ล้มพร้อมกันบน client เดียว Then ทั้งคู่ได้ผลและ `connect` 2 ครั้งรวม
 
 ## 5. Data changes
 
@@ -179,7 +198,11 @@ AI (A1, A2/A2b, A4, A5, A6, A7) ให้แค่ข้อความ หั�
 | `tests/unit/test_ingestion_domain.py` (สัดส่วนไทย, chunk, ชื่อไฟล์, key → material, source ที่ผิด, สถานะรวมของไฟล์และ step) | unit (pure) | AC-boundary-thai, AC-5, AC-boundary-chunk, AC-9, AC-11, AC-23–25 (ส่วนคิดสถานะ) |
 | `tests/unit/test_ingestion_pipeline.py` (fake provider + repository ในหน่วยความจำ + PDF เล็กที่สร้างใน test ด้วย PyMuPDF) | unit | AC-1–4, AC-6–8, AC-10, AC-12–22, AC-27 |
 | `tests/unit/test_ingestion_api.py` (dependency override) | unit | AC-23–26 |
+| `tests/unit/test_classify_never_stuck.py` (ใหม่ · PR #154 · repository ในหน่วยความจำห่อด้วยตัวที่ล้มตามสั่ง) | unit | AC-29–34 |
 | `tests/integration/test_ingestion_db.py` (Supabase ในเครื่อง · 2 tenants) | integration | AC-tenant, AC-18 |
+| `tests/unit/test_material_files_retry.py` (client ปลอม · thread จริง 2 ตัว) | unit | AC-28 |
+| `tests/unit/test_ingestion_store_retry.py` (client ปลอมที่จด query · thread จริง 2 ตัว) | unit | AC-29 |
+| `tests/integration/test_ingestion_store_retry_db.py` (PostgREST จริงบน `anyang-dev` · หลุดหลัง commit / ก่อนส่ง → แต่ละแถวมีครั้งเดียว) | integration | AC-29 |
 | รันจริงบน Vertex กับ MTH10101 เทียบ P3 (`poc/P3/score.py` อ่านผลจาก DB) | eval (มือ · ขั้น 4 ของ worklog) | เป้า: ★★★ ≥ 10/12 · ≤ 3 นาทีต่อไฟล์ |
 
 **ผลรันจริงบน Vertex (13 พ.ย. · ขั้น 4 ของ worklog · store ในหน่วยความจำ + PDF จริงของ MTH10101 · ให้คะแนนด้วย `poc/P3/score.py` · ผลอยู่ใน `poc/P3/results/apps-api-ingestion/`):** หัวข้อตรง label 20/27 = 74% (P3 20/27) · ★★★ 9/12 = 75% (P3 10/12 · เป้า 80%) · map ข้อสอบ 30/43 = 70% (P3 70%) · สูงสุด 1.44 นาทีต่อไฟล์ (เป้า ≤ 3) · chunk 116 (เท่า P3b) · **Jam ตัดสิน 13 พ.ย.: รับผลนี้ไปก่อน** · สาเหตุที่ ★★★ ต่ำกว่า 1 หัวข้อยังไม่ได้แยก: ผลต่างระหว่างรอบ (P3 เคยได้ 8–10/12) หรือ `material_kind` = `sheet` แทน `exercise` ของไฟล์แบบฝึกหัด (§10 ข้อ 5 · หัวข้อของ AI ที่ไม่ตรง label 14 หัวข้อ ส่วนมากมาจากแบบฝึกหัด) · ลองหลัง demo

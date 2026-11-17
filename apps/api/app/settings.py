@@ -232,6 +232,8 @@ class IngestionConfig(_Strict):
     chunk_max_tokens: int = Field(ge=1)
     chunk_max_pages: int = Field(ge=1)
     thai_chars_per_token: float = Field(gt=0)
+    storage_read_attempts: int = Field(ge=1)
+    storage_read_backoff_s: float = Field(ge=0)
 
     @model_validator(mode="after")
     def _min_below_max(self) -> "IngestionConfig":
