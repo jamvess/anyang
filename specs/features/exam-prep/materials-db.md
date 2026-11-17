@@ -6,7 +6,7 @@
 | Requirements | CM-03, CM-06, CM-07, SA-06 |
 | Owner | Junior |
 | Reviewer | Junior · Jam (ทางเข้า ingestion §2.4, §2.6 · ข้อ §10.1) · May (รูปร่าง API ที่หน้าอัปโหลดใช้) |
-| Status | approved (Junior 2026-11-17) · §10 ข้อ 1 และ 8 รอ Jam (ไม่ขวางวิดีโอที่ใช้ PDF) |
+| Status | approved (Junior 2026-11-17) · §2.2 ข้อ 7–9 และ AC-29–AC-32 เพิ่มหลัง self-review (Junior 2026-11-17) · §10 ข้อ 1 และ 8 รอ Jam (ไม่ขวางวิดีโอที่ใช้ PDF) |
 | Related system spec | `api.md` "สร้างการเตรียมสอบและใส่ไฟล์" (v1.10 · v1.13 · `Material`, `/materials…`) · `ai-orchestration.md` §2.3.2 ขั้น 1–3, §2.3.8 ข้อ 1–5 · `data-model.md` (Storage path, กฎ `attachment_name`) · `0001_init.sql` `materials`, policy `tenant_rows` · `specs/features/scope/ingestion.md` §2.1, §9, §10 ข้อ 3 · `create-exam-prep.md` §2.1 (ทางมี/ไม่มี token) · `api-auth.md` §2.5 (`get_user_db`) · `config/ai.yaml` `guards.max_material_mb`, `max_image_mb`, `max_attachment_name_chars`, `max_message_chars` |
 
 ## 1. Context
@@ -31,9 +31,17 @@ journey ของวิดีโอ 23 พ.ย. ขั้น 3 ให้ผู�
 1. **bucket เดียวชื่อ `materials`** แบบ private (ไม่มี public URL) · ชื่อนี้ตรงกับ `MATERIALS_BUCKET` ที่ ingestion ของ Jam อ่านอยู่แล้ว (`app/services/ingestion.py` · `SupabaseMaterialFiles`) · ใช้ร่วมกับรูปและเสียงของห้องติวเมื่อ `/sessions/{id}/uploads` จริงมาถึง (S5) ตามที่ตัดสินไว้: ไฟล์ทุกชนิดอยู่ bucket เดียว แยกกันด้วย prefix
 2. **object path ใช้ uuid ล้วน:** `{tenant_id}/{exam_prep_id}/{material_id}` · **ไม่มีนามสกุล** · ตรงกับ comment ใน `0001_init.sql`, `data-model.md` และ path ที่ ingestion อ่านจาก `materials.storage_path` ทุกตัวอักษร · `tenant_id` มาจาก token, `exam_prep_id` จาก path ของ URL หลังตรวจว่าเป็นของผู้ใช้ (§2.3 ข้อ 2), `material_id` เป็น uuid4 ที่ API สร้าง · path ของห้องติวในอนาคต (`{tenant_id}/sessions/{session_id}/{uuid}.{ext}` · api.md v1.7) ไม่ชนกันเพราะ prep id เป็น uuid ไม่ใช่คำว่า `sessions`
 3. **ชื่อไฟล์ของผู้ใช้ใช้แสดงผลอย่างเดียว** (กฎเดียวกับ `attachment_name` · `data-model.md`): เก็บใน `materials.file_name` หลังทำความสะอาดด้วย `clean_file_name` ตัวเดียวกับที่ ingestion ใช้ (ตัดอักขระควบคุม · ยาวเกิน `guards.max_attachment_name_chars` grapheme cluster → **ตัดให้สั้น ไม่ปฏิเสธ** · เก็บนามสกุล) · **ไม่เคยใช้ประกอบ path** และไม่ใช้ตัดสินชนิดไฟล์ฝั่ง API (§2.3 ข้อ 5, §10 ข้อ 1)
-4. **policy บน `storage.objects`** (role `authenticated`): `select`, `insert`, `delete` ได้เมื่อ `bucket_id = 'materials'` และโฟลเดอร์แรกของ `name` = `public.current_tenant_id()::text` · ไม่มี policy `update` (signed upload ไม่ upsert) · ไม่มี policy ให้ `anon` · ingestion อ่านด้วย service role ซึ่งข้าม RLS และใช้ `storage_path` ที่ code เขียนเอง (`ingestion.md` §2.1 ข้อ 4)
+4. **policy บน `storage.objects`** (role `authenticated`): `select`, `insert`, `delete` ได้เมื่อ `bucket_id = 'materials'` และโฟลเดอร์แรกของ `name` = `public.current_tenant_id()::text` · ไม่มี policy `update` (signed upload ไม่ upsert) · ไม่มี policy ให้ `anon` · ingestion อ่านด้วย service role ซึ่งข้าม storage policy จึงต้องเชื่อ `storage_path` ได้ (ข้อ 7–8)
 5. **ขนาด:** เพดานแข็งคือ `file_size_limit` ของ bucket = `guards.max_material_mb` × 1,048,576 bytes (50 MB · เพดานของ Supabase Free) · API ตรวจละเอียดกว่านั้นตามชนิด (PDF/PPTX/DOCX ใช้ `max_material_mb`, รูปใช้ `max_image_mb`) สองรอบ: ค่าที่ client แจ้งตอนขอ URL (§2.3 ข้อ 4 · มีอยู่แล้ว) และขนาดจริงของ object ตอน `/uploaded` (§2.4 ข้อ 4) · SQL อ่าน yaml ไม่ได้ จึงมี test ที่ตรวจว่าเลขใน `0008` ตรงกับ `config/ai.yaml` (§8)
 6. **ชนิดไฟล์ของ bucket** (`allowed_mime_types`): ชนิดที่ `POST /materials` รับ (`MATERIAL_CONTENT_TYPES`) รวมกับชนิดของ `/sessions/{id}/uploads` (`UPLOAD_CONTENT_TYPES` รูป + เสียง) เพื่อให้ห้องติวใช้ bucket เดียวกันได้โดยไม่ต้องแก้ migration · มี test ตรวจว่าตรงกับสองชุดนี้ใน code
+
+7. **`storage_path` ต้องเชื่อได้ (SA-06 · พบใน self-review 2026-11-17):** policy `tenant_rows` ของ `materials` ตรวจแค่ `tenant_id` ผู้ใช้จึง insert หรือ update แถวของตัวเองผ่าน PostgREST ตรงๆ (anon key + JWT) ให้ `storage_path` ชี้ไปที่ object ของ tenant อื่นได้ แล้ว ingestion (service role) จะอ่านไฟล์นั้นเข้าหัวข้อของผู้โจมตี · migration `0009` เพิ่ม trigger `before insert or update` บน `materials` ที่ทำงาน**เฉพาะเมื่อ role ที่เรียกคือ `authenticated`**:
+   - insert: `storage_path` ต้องเท่ากับ `{tenant_id}/{exam_prep_id}/{id}` ของแถวนั้นทุกตัวอักษร · ไม่ตรง → error `42501` (PostgREST ตอบ `403`) และไม่มีแถว
+   - update: `storage_path`, `tenant_id`, `exam_prep_id` เปลี่ยนไม่ได้ · เปลี่ยน → error `42501` และแถวคงเดิม · column อื่น (`user_note`, `uploaded_at`, `kind`, `status` ฯลฯ) แก้ได้ตาม RLS เดิม
+   - service role และ migration ไม่ถูกตรวจ (ingestion, seed, test ที่ insert ด้วย admin ใช้ path อื่นได้ตามเดิม)
+   - `repo.create` ของ §2.3 เขียน path ตามรูปนี้อยู่แล้ว จึงไม่ต้องแก้ API
+8. **ingestion ตรวจซ้ำก่อนอ่าน (defense in depth · ไฟล์ของ Jam · บอก Jam):** ก่อน `files.read` ด้วย service role ทั้งตอน classify และตอน ingest · `storage_path` ต้องขึ้นต้นด้วย `{tenant_id}/{exam_prep_id}/` ของแถวนั้น และส่วนที่เหลือเป็นชื่อเดียวที่ไม่ว่างและไม่มี `/` · ไม่ผ่าน → ไม่อ่าน · ไฟล์ `failed` ด้วยข้อความ "เปิดไฟล์นี้ไม่ได้" (`UNREADABLE` ตัวเดิม) · log warning พร้อม material id (ไม่ log path เต็มของ tenant อื่นใน error ที่ผู้ใช้เห็น)
+9. **แถวเก่าไม่มี `uploaded_at`:** แถวที่มีก่อน `0008` และแถวของ `seed_scope_demo.py` มี `uploaded_at` null จึงไม่ขึ้นใน `GET` (§2.5) และ confirm ตอบ `unknown_material` · `0009` เติม `uploaded_at = created_at` ให้แถวที่ `uploaded_at` null และ `status <> 'uploaded'` (แถวที่ขอ URL แล้วยังไม่แจ้งยังเป็น null ตามเดิม) · seed script ใส่ `uploaded_at` ให้ทุกแถวที่สร้าง
 
 ### 2.3 `POST /exam-preps/{id}/materials` · ขอที่อัปโหลด (CM-03)
 
@@ -146,6 +154,10 @@ journey ของวิดีโอ 23 พ.ย. ขั้น 3 ให้ผู�
 - **AC-24 (SA-06)** Given object ของ A When B (JWT ของตัวเอง) ดาวน์โหลด, list โฟลเดอร์ของ A, ลบ, หรือขอ signed upload URL ใน prefix ของ A Then ไม่ได้ทุกทาง · client ที่ไม่มี JWT (anon) ก็ไม่ได้ · A ทำกับ object ของตัวเองได้
 - **AC-25 (SA-06)** Given แถว `materials` ของ A When B select หรือ update ด้วย JWT ของตัวเอง Then ไม่เห็นและแก้ไม่ได้ (เพิ่มใน `test_rls_isolation.py` ถ้ายังไม่ครอบ column ใหม่)
 - **AC-26 (CM-03)** Given bucket ใน `anyang-dev` หลัง `0008` When อ่าน `storage.buckets` Then `public = false`, `file_size_limit` = `guards.max_material_mb` × 1,048,576 · ส่ง object ใหญ่เกินผ่าน signed URL → Storage ปฏิเสธ
+- **AC-29 (SA-06)** Given user A และ B · B มี prep และ object ใน prefix ของ B When A insert แถว `materials` ผ่าน PostgREST ด้วย JWT ของ A (prep ของ A) โดย `storage_path` = (ก) path ของ object ของ B (ข) `{tenant A}/{prep อื่นของ A}/{id}` (ค) `{tenant A}/{prep A}/{uuid อื่น}` Then ถูกปฏิเสธทุกกรณี (`42501`) และไม่มีแถวเกิดขึ้น · Given `storage_path` = `{tenant A}/{prep A}/{id}` ที่ตรงกับ `id` ที่ส่ง Then insert ได้
+- **AC-30 (SA-06)** Given แถว `materials` ของ A ที่สร้างผ่าน API When A PATCH ผ่าน PostgREST ให้ (ก) `storage_path` = path ของ object ของ B (ข) `exam_prep_id` = prep อื่นของ A (ค) `tenant_id` = tenant ของ B Then ถูกปฏิเสธทุกกรณีและแถวคงเดิม · When A PATCH `user_note` Then ได้ · Given service role When update `storage_path` Then ได้ (trigger ไม่ตรวจ)
+- **AC-31 (SA-06)** Given แถว `materials` ที่ `storage_path` ไม่ผ่าน §2.2 ข้อ 8 (parametrize: prefix ของ tenant อื่น · prep อื่น · ไม่มี prefix · มี `/` หลัง prefix · ว่างหลัง prefix) และ object ที่ path นั้นมีอยู่จริง When `classify_material` หรือ `ingest_material` Then ไม่อ่าน object · ไฟล์ `failed` ด้วย "เปิดไฟล์นี้ไม่ได้" · ไม่มี AI call · Given path ถูกต้อง Then อ่านตามเดิม
+- **AC-32 (CM-07)** Given `0009` When อ่าน SQL Then มี `update` ที่เติม `uploaded_at = created_at` เฉพาะ `uploaded_at is null and status <> 'uploaded'` · trigger ผูกกับ `insert` และ `update` · Given `seed_scope_demo.build_rows` When สร้างแถว Then ทุกแถว `materials` มี `uploaded_at` และ `storage_path` = `{tenant}/{prep}/{id}`
 
 ## 5. Data changes
 
@@ -159,6 +171,15 @@ journey ของวิดีโอ 23 พ.ย. ขั้น 3 ให้ผู�
 | `storage.objects` | policy `materials_tenant_select`, `materials_tenant_insert`, `materials_tenant_delete` สำหรับ `authenticated`: `bucket_id = 'materials' and (storage.foldername(name))[1] = public.current_tenant_id()::text` | เพิ่ม |
 
 RLS ของ `materials` (`tenant_rows`) ครอบ column ใหม่อยู่แล้ว · **ต้อง `db push` ขึ้น `anyang-dev` (Junior)** · `anyang-staging` ทำพร้อม journey บน staging ใน S5
+
+`supabase/migrations/0009_materials_path_guard.sql` (§2.2 ข้อ 7, 9)
+
+| Table | Column / index / policy | เพิ่ม / แก้ |
+|---|---|---|
+| `materials` | function `public.materials_path_guard()` (`security invoker`, `search_path = ''`) + trigger `materials_path_guard` `before insert or update` · ตรวจเมื่อ `current_user = 'authenticated'` | เพิ่ม |
+| `materials` | `update ... set uploaded_at = created_at where uploaded_at is null and status <> 'uploaded'` | ข้อมูล |
+
+**ต้อง `db push` ขึ้น `anyang-dev` ก่อน merge (Junior)**
 
 ## 6. API / SSE changes
 
@@ -207,6 +228,10 @@ RLS ของ `materials` (`tenant_rows`) ครอบ column ใหม่อย
 | `test_SA06_storage_prefix_isolation` (parametrize: download, list, delete, sign upload · B และ anon) | integration | AC-24 |
 | `test_SA06_materials_rows_isolation` (หรือเพิ่มใน `test_rls_isolation.py`) | integration | AC-25 |
 | `test_CM03_bucket_is_private_with_size_limit` | integration | AC-26 |
+| `test_SA06_user_cannot_insert_material_pointing_elsewhere` (parametrize ก/ข/ค + ทางที่ถูก) | integration | AC-29 |
+| `test_SA06_user_cannot_repoint_own_material` (parametrize ก/ข/ค) · `test_SA06_user_can_still_edit_note` · `test_SA06_service_role_is_not_guarded` | integration | AC-30 |
+| `test_SA06_ingestion_refuses_path_outside_its_prep` (parametrize 5 path × classify/ingest) · `test_SA06_ingestion_reads_a_good_path` | unit | AC-31 |
+| `test_CM07_0009_backfills_announced_rows_only` · `test_SA06_0009_guards_insert_and_update` · `test_CM07_seed_rows_are_announced` | unit | AC-32 |
 
 integration ใช้ `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` ของ `anyang-dev` แบบ test เดิม · สร้าง user ด้วย admin API (ปิด sign-up แล้วไม่กระทบ) · ลบ object และ user ที่สร้างตอนจบ
 
@@ -238,5 +263,6 @@ integration ใช้ `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROL
 |---|---|---|
 | `specs/system/api.md` (ไฟล์กลาง · ถาม Junior ก่อน · บอกกลุ่ม) | ปิดข้อเสนอ materials v1.10 ข้อ `POST /materials`, `/uploaded`, `GET`, `confirm` เป็น "ตัดสินแล้ว" · ข้อ 2 (ขนาดจริงตรวจที่ bucket + `/uploaded`) · ข้อ 5 (ใช้ enum ของ schema) · ข้อ 6 (error code) · เพิ่ม `409 not_uploaded` · bucket `materials` และ path ไม่มีนามสกุล · `GET` ไม่รวมไฟล์ที่ยังไม่แจ้ง · เพดาน `user_note` · `user_note` เป็นข้อมูลใน data block · v1.21 | PR นี้ (Junior ok 2026-11-17 · บอกกลุ่มก่อน merge) |
 | `specs/system/data-model.md` | `materials.content_type`, `uploaded_at` · bucket `materials` + policy | PR นี้ |
-| `specs/features/scope/ingestion.md` | §10 ข้อ 3 ตอบแล้ว: bucket ชื่อ `materials` · ข้อ 1 ของ spec นี้ส่งให้ Jam | PR นี้ (บอก Jam) |
+| `specs/features/scope/ingestion.md` | §10 ข้อ 3 ตอบแล้ว: bucket ชื่อ `materials` · ข้อ 1 ของ spec นี้ส่งให้ Jam · §2.1 ข้อ 4: ตรวจ `storage_path` ก่อนอ่าน (§2.2 ข้อ 8) | PR นี้ (บอก Jam) |
+| `specs/system/data-model.md` | แถว `0009` (trigger + backfill) | PR นี้ |
 | `config/ai.yaml` | ไม่แก้ ถ้ารับข้อ §10.4 | — |

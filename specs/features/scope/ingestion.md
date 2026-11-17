@@ -20,7 +20,7 @@ demo end to end (23 พ.ย.) ต้องให้ไฟล์ที่ผู�
 1. `classify_material(material_id)` · เรียกหลัง `POST /materials/{id}/uploaded` (ai-orchestration §2.3.8 ข้อ 3) · ทำขั้น A1 (§2.2) แล้วจบ
 2. `start_ingestion(exam_prep_id)` · เรียกหลัง `POST /exam-preps/{id}/materials/confirm` (ข้อ 5) · ไฟล์ทุกไฟล์ของ prep ที่ `kind_confirmed = true` และ `status = 'confirmed'` เข้าคิว · คืนทันที (job รันเบื้องหลัง · §2.7) · endpoint ตอบ `202` เอง
 3. `retry_material(material_id)` · สำหรับ `POST /materials/{id}/retry` (api.md) · ล้มตอน classify → ทำ §2.2 ใหม่ · ล้มตอน ingest → ทำ §2.3 ของไฟล์นั้นใหม่ แล้วทำ §2.4 ถ้าทุกไฟล์พร้อม
-4. ทุกทางเข้าทำงานด้วย service role และใส่ `tenant_id` ของ prep เองทุกแถว (apps/api/CLAUDE.md "Database" · ไม่มี JWT ของผู้ใช้ในงานเบื้องหลัง)
+4. ทุกทางเข้าทำงานด้วย service role และใส่ `tenant_id` ของ prep เองทุกแถว (apps/api/CLAUDE.md "Database" · ไม่มี JWT ของผู้ใช้ในงานเบื้องหลัง) · service role ข้าม storage policy จึง**ตรวจ `storage_path` ก่อนอ่านทุกครั้ง**: ต้องขึ้นต้นด้วย `{tenant_id}/{exam_prep_id}/` ของแถวนั้นและตามด้วยชื่อเดียวที่ไม่มี `/` · ไม่ผ่าน → ไม่อ่าน ไฟล์ `failed` "เปิดไฟล์นี้ไม่ได้" (`materials-db.md` §2.2 ข้อ 8 · AC-31 · Junior 2026-11-17 · บอก Jam)
 
 ### 2.2 ขั้น A1 · classify (CM-06)
 
