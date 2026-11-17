@@ -6,7 +6,7 @@
 | Requirements | SM-01, SM-03, SM-04, CM-06, CM-07, AI-08, SA-06 |
 | Owner | Jam |
 | Reviewer | Jam · Junior ดูส่วน DB และตัวรัน job (§10) |
-| Status | approved 2026-11-13 (Jam · §10 ข้อ 1–5 ตามข้อเสนอ · ข้อ 1–3 เป็นของ Junior ใช้ข้อเสนอไปก่อนเพื่อให้ทัน demo · Junior ดูย้อนหลัง) |
+| Status | approved 2026-11-13 (Jam · §10 ข้อ 1–5 ตามข้อเสนอ · ข้อ 1–3 เป็นของ Junior ใช้ข้อเสนอไปก่อนเพื่อให้ทัน demo · Junior ดูย้อนหลัง) · 17 พ.ย. §2.2 ข้อ 5 + AC-29 ถึง AC-34 (PR #154 · classify ไม่ค้าง) |
 | Related system spec | ai-orchestration.md §2.3.2–2.3.9 · api.md v1.11 `Ingestion` · data-model.md รูป 2 · `compute-importance.md` · PoC `specs/poc/reports/P3.md` · `docs/team/sprint-checklists.md` ⭐ demo ขั้น 4 |
 
 ## 1. Context
@@ -28,6 +28,11 @@ demo end to end (23 พ.ย.) ต้องให้ไฟล์ที่ผู�
 2. `classify_material/v1` คืน `{kind, confidence, other_instructor, reason}` · `kind` ∈ `sheet | slides | past_exam | notes | other` · `other_instructor` = note หรือเนื้อหาบอกว่าข้อสอบชุดนี้เป็นของอาจารย์คนละคน
 3. code เขียน `materials.kind`, `kind_confidence = confidence`, `relevance_weight` = `stars.weight_other_instructor` ถ้า `kind = past_exam` และ `other_instructor` ไม่งั้น `stars.weight_same_instructor` (AI ไม่ให้ตัวเลขน้ำหนักเอง · CLAUDE.md ข้อ 1) · `status = 'classified'` · ผู้ใช้ยืนยัน/แก้ใน S10 (ของ Junior + May)
 4. AI ล้มหลัง retry ของ gateway → `status = 'failed'`, `error` = ข้อความสั้นสำหรับผู้ใช้ (§2.6 `error`)
+5. **ไม่มีทางค้างที่ `uploaded`** (เพิ่ม 17 พ.ย. · PR #154 · เจอใน #151: อ่านแถวด้วย service role key ผิด → ไฟล์ค้าง "AI กำลังดูไฟล์…" ตลอด · `/uploaded` ซ้ำได้ `409` และ `/retry` รับแต่ `failed`):
+   1. ทุกขั้นหลังรับงานอยู่ในทางล้มเดียวกัน: อ่านแถว `materials` · ตั้ง job `running` · อ่านไฟล์ · เรียก A1 · เขียนผล · ล้มขั้นไหน → job `failed` (ถ้ารู้ tenant) + `materials.status = 'failed'` + `error` = "อ่านไฟล์นี้ไม่สำเร็จ ลองใหม่ได้" (ไฟล์ที่เปิดไม่ได้ยังใช้ข้อความของตัวเองตามเดิม) · `/retry` ลองใหม่ได้ (§2.1 ข้อ 3)
+   2. อ่านแถวไม่ได้ (ยังไม่รู้ tenant): ตั้ง `materials.status = 'failed'` + `error` ด้วย id อย่างเดียว · ไม่เขียนแถว job · แถวไม่มีจริง (ถูกลบ) → log WARNING และจบเหมือนเดิม
+   3. เขียน `classified` สำเร็จแต่ตั้ง job `done` ไม่ได้ → ไฟล์คง `classified` (ผลใช้ได้ ผู้ใช้ไปต่อได้) · log WARNING · ไม่เขียนทับเป็น `failed`
+   4. ตั้ง `failed` ก็ไม่ได้ (DB ล่มทั้งหมด) → ไม่ raise ออกจาก `classify_material` · log ระดับ ERROR 1 บรรทัดที่มี id ของไฟล์และคำว่า `stays at uploaded` ให้หาเจอใน log
 
 ### 2.3 ขั้นรายไฟล์ · อ่าน → ตัดรายข้อ → chunk → embed (SM-01, AI-08)
 
@@ -128,6 +133,15 @@ AI (A1, A2/A2b, A4, A5, A6, A7) ให้แค่ข้อความ หั�
 - **AC-21 (CM-06)** A1 คืน `{kind: "past_exam", confidence: 0.82, other_instructor: false}` → `materials.kind = past_exam`, `kind_confidence = 0.82`, `relevance_weight = weight_same_instructor`, `status = 'classified'` · input มีชื่อไฟล์ที่ทำความสะอาดแล้ว, ข้อความ `classify_pages` หน้าแรก และ note
 - **AC-22 (CM-06)** A1 ล้ม → `status = 'failed'` + error
 
+**classify ไม่ค้าง** (§2.2 ข้อ 5 · PR #154 · AC-28 เป็นของ #152 · repository ในหน่วยความจำห่อด้วยตัวที่ทำให้ method ที่เลือกล้ม 1 ครั้ง)
+
+- **AC-29 (CM-07)** อ่านแถว `materials` ล้ม 1 ครั้ง When classify Then `status = 'failed'`, `error` = "อ่านไฟล์นี้ไม่สำเร็จ ลองใหม่ได้" · ไม่มีแถว job ของ classify · provider ไม่ถูกเรียก · ไม่ raise
+- **AC-30 (CM-07)** ตั้ง job `running` ล้ม Then `status = 'failed'` + error เดียวกัน · job `failed` · provider ไม่ถูกเรียก
+- **AC-31 (CM-07)** เขียนผล `classified` ล้ม 1 ครั้ง Then `status = 'failed'` + error เดียวกัน · job `failed`
+- **AC-32 (CM-07)** เขียน `classified` สำเร็จ ตั้ง job `done` ล้ม Then `status = 'classified'`, `error` null · มี log WARNING
+- **AC-33 (CM-07)** DB ล่มทั้งหมด (`down = True`) Then `classify_material` ไม่ raise · มี log ERROR ที่มี id ของไฟล์และ `stays at uploaded`
+- **AC-34 (CM-07)** หลัง AC-29 When `retry_material` และ A1 ตอบได้ Then `status = 'classified'` (ลองใหม่ได้จริง)
+
 **API**
 
 - **AC-23 (CM-07)** มี token · ไฟล์ 3 ไฟล์ (done, running, failed) → `files` เรียงตามเวลาสร้าง สถานะตามแถวของ `ingestion_jobs` · `detail` "14 หน้า" / "กำลังแยกรายข้อ" / null · `error` ของไฟล์ที่ล้มเป็นข้อความสั้น ไม่มี stack · `scope_ready = false`
@@ -179,6 +193,7 @@ AI (A1, A2/A2b, A4, A5, A6, A7) ให้แค่ข้อความ หั�
 | `tests/unit/test_ingestion_domain.py` (สัดส่วนไทย, chunk, ชื่อไฟล์, key → material, source ที่ผิด, สถานะรวมของไฟล์และ step) | unit (pure) | AC-boundary-thai, AC-5, AC-boundary-chunk, AC-9, AC-11, AC-23–25 (ส่วนคิดสถานะ) |
 | `tests/unit/test_ingestion_pipeline.py` (fake provider + repository ในหน่วยความจำ + PDF เล็กที่สร้างใน test ด้วย PyMuPDF) | unit | AC-1–4, AC-6–8, AC-10, AC-12–22, AC-27 |
 | `tests/unit/test_ingestion_api.py` (dependency override) | unit | AC-23–26 |
+| `tests/unit/test_classify_never_stuck.py` (ใหม่ · PR #154 · repository ในหน่วยความจำห่อด้วยตัวที่ล้มตามสั่ง) | unit | AC-29–34 |
 | `tests/integration/test_ingestion_db.py` (Supabase ในเครื่อง · 2 tenants) | integration | AC-tenant, AC-18 |
 | รันจริงบน Vertex กับ MTH10101 เทียบ P3 (`poc/P3/score.py` อ่านผลจาก DB) | eval (มือ · ขั้น 4 ของ worklog) | เป้า: ★★★ ≥ 10/12 · ≤ 3 นาทีต่อไฟล์ |
 
