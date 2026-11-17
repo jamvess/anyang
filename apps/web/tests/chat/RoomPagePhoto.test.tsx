@@ -239,7 +239,8 @@ describe("TutorRoom · sending a photo, after review", () => {
     await waitFor(() => expect(within(card).queryByRole("button", { name: CONFIRM })).toBeNull());
 
     const names = utils.getAllByRole("button").map((b) => b.getAttribute("aria-label") ?? b.textContent);
-    expect([...new Set(names)].sort()).toEqual(["ส่ง", "แนบรูป"].sort());
+    // "จบการติว" ends the session, it is not an answer choice (session-end-ui.md §2.1 item 2 · May 17 Nov).
+    expect([...new Set(names)].sort()).toEqual(["ส่ง", "แนบรูป", "จบการติว"].sort());
   });
 
   it("AM02 the card's buttons wait until the reply that brought it has ended (AC-20)", async () => {

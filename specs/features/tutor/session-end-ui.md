@@ -17,7 +17,7 @@ API จบ session ได้จริงแล้ว (#136): ปิด session �
 
 ### 2.1 ปุ่ม "จบการติว"
 
-1. หัวห้องมีปุ่ม "จบการติว" (`<button>`) อยู่ก่อนลิงก์ "ออกจากห้องติว" **เฉพาะเมื่อ `ChatRoom` ได้ `endSession`** (แบบเดียวกับไมค์ที่ขึ้นเฉพาะเมื่อมี `transcribe` · voice-input.md) · `TutorRoom` ส่ง `endSession` ของ session ที่เปิดอยู่เสมอ · test เดิมที่นับปุ่มของห้อง (ChatRoomVoice AC-17, Composer) ไม่ส่ง `endSession` จึงไม่เปลี่ยน
+1. หัวห้องมีปุ่ม "จบการติว" (`<button>`) อยู่ก่อนลิงก์ "ออกจากห้องติว" **เฉพาะเมื่อ `ChatRoom` ได้ `endSession`** (แบบเดียวกับไมค์ที่ขึ้นเฉพาะเมื่อมี `transcribe` · voice-input.md) · `TutorRoom` ส่ง `endSession` ของ session ที่เปิดอยู่เสมอ · test เดิมที่นับปุ่มของห้อง (ChatRoomVoice AC-17, Composer) ไม่ส่ง `endSession` จึงไม่เปลี่ยน · **ยกเว้น** `RoomPagePhoto.test.tsx` "no answer choice buttons in the whole room" (Jam · เปิดผ่าน `TutorRoom`) · เพิ่ม "จบการติว" ในรายการปุ่มที่อนุญาต (May 17 พ.ย. ตอน implement · บอก Jam)
 2. ปุ่มนี้ไม่ใช่ตัวเลือกคำตอบ (TM-06 ห้ามปุ่ม choice ให้กดตอบ · การจบ session ไม่ใช่คำตอบ)
 3. ปุ่มกดไม่ได้ (`disabled`) ขณะห้องกำลังรับคำตอบอยู่ (`busy` เดียวกับ Composer · รวมตอนเปิดห้องที่ stream คำทักอยู่ และตอนยืนยันลายมือ) และหลังจบแล้ว
 4. กดแล้วจบทันที ไม่มีกล่องถามยืนยัน (May 17 พ.ย.: ทุกคำตอบบันทึกแล้ว · เริ่มรอบใหม่ได้ทันที)
@@ -32,7 +32,7 @@ API จบ session ได้จริงแล้ว (#136): ปิด session �
 
 ### 2.3 สถานะ "จบแล้ว"
 
-1. Composer ทั้งหมดกดไม่ได้ (ช่องพิมพ์, ส่ง, แนบรูป, ไมค์ถ้ามี) · canvas ใต้การ์ดโจทย์กดส่งไม่ได้ · การ์ดยืนยันลายมือที่ยังรอ (`pending`) กดยืนยัน / ถ่ายใหม่ / แก้ไม่ได้ · ปุ่ม "จบการติว" กดไม่ได้
+1. Composer ทั้งหมดกดไม่ได้ (ช่องพิมพ์, ส่ง, แนบรูป, ไมค์ถ้ามี) · **canvas ท้ายแชทหายไป** (May 17 พ.ย. ตอน implement: canvas อยู่ท้ายแชทเสมอ · answer-canvas.md §2 B · ถ้ายังอยู่จะอยู่ใต้สรุป ขัดกับ AC-1 · ห้องที่จบแล้วไม่มีอะไรให้เขียน) · การ์ดยืนยันลายมือที่ยังรอ (`pending`) กดยืนยัน / ถ่ายใหม่ / แก้ไม่ได้ · ปุ่ม "จบการติว" กดไม่ได้
 2. ใต้แชท (ตำแหน่งเดียวกับข้อความแจ้งผิดพลาด เหนือ Composer) มีบรรทัด `role="status"` "จบการติวรอบนี้แล้ว" พร้อมลิงก์ 2 อัน:
    - "กลับหน้าหลัก" → `/` (ข้อความเดิม `roomStrings.backHome`)
    - "ติวรอบใหม่" → เปิดห้องของ prep เดิมใหม่: `TutorRoom` โหลดใหม่ (`sessions/active` → `404 no_active_session` → `POST /exam-preps/{id}/sessions` → คำทัก + การ์ดความคืบหน้าใหม่ · room-http.md · session-end-db.md §2.5) · เป็นลิงก์ไป URL ของห้องเดิม (`/preps/{id}/room`) ที่กดแล้วโหลดห้องใหม่ในหน้าเดิม
@@ -79,7 +79,7 @@ test ใช้ `endSession` ปลอมที่ส่ง event ตามที
 - **AC-1 (PM-05)** Given ห้องที่มี `endSession` และไม่ busy When กด "จบการติว" และได้ `session_end {summary_lines: [L1, L2]}` → `done` Then แชทมี bubble ของ tutor ใหม่ 1 อันท้ายสุด เนื้อหา `L1\nL2` (ข้อความทั้งสองบรรทัดอยู่ใน bubble เดียว)
 - **AC-2 (PM-05)** Given `summary_lines` มี 1 บรรทัด When จบ Then bubble มีบรรทัดเดียว
 - **AC-3 (TM-13)** Given จบสำเร็จ Then ช่องพิมพ์, ปุ่มส่ง, แนบรูป และปุ่ม "จบการติว" กดไม่ได้ · มี `role="status"` "จบการติวรอบนี้แล้ว" · มีลิงก์ "กลับหน้าหลัก" (`href="/"`) และ "ติวรอบใหม่" · ลิงก์ "ออกจากห้องติว" ยังอยู่
-- **AC-4 (TM-13)** Given จบสำเร็จและมีการ์ดโจทย์ค้าง (canvas อยู่ท้ายแชท) Then ปุ่ม "ส่งคำตอบ" ของ canvas กดไม่ได้
+- **AC-4 (TM-13)** Given มีการ์ดโจทย์ค้าง (canvas อยู่ท้ายแชท) When จบสำเร็จ Then ไม่มี canvas (ไม่มีพื้นที่ "เขียนวิธีทำตรงนี้" และปุ่ม "ส่งคำตอบ") · การ์ดโจทย์ยังอยู่ (แก้ 17 พ.ย. ตอน implement · เดิม: canvas อยู่แต่ส่งไม่ได้ · ขัดกับ AC-1)
 - **AC-5 (TM-13)** Given การ์ดยืนยันลายมือรออยู่ (`pending`) When จบสำเร็จ Then ปุ่ม "ถูกแล้ว ตรวจเลย", "ถ่ายใหม่" และ "แก้บรรทัด n" ของการ์ดนั้นกดไม่ได้
 - **AC-6** Given ห้องกำลัง stream คำตอบอยู่ (busy) Then ปุ่ม "จบการติว" กดไม่ได้ · When stream จบด้วย `done` Then กดได้
 - **AC-7** Given กดจบแล้ว stream ยังไม่ส่ง event Then ปุ่มจบ, ช่องพิมพ์, ส่ง กดไม่ได้ และเห็นตัวบอกกำลังพิมพ์ ("กำลังพิมพ์") · When ได้ `session_end` Then ตัวบอกหาย bubble สรุปขึ้น
@@ -114,7 +114,7 @@ test ใช้ `endSession` ปลอมที่ส่ง event ตามที
 | `apps/web/tests/chat/ChatRoomSessionEnd.test.tsx` (ใหม่ · `ChatRoom` + `endSession` ปลอม) | unit (Vitest) | AC-1 ถึง AC-13 |
 | `apps/web/tests/chat/RoomPageSessionEnd.test.tsx` (ใหม่ · `TutorRoom` + `fetch` ปลอม) | unit (Vitest) | AC-14 ถึง AC-16 |
 | `apps/web/tests/fixtures/sse/session_end.txt` (ใหม่) | fixture | AC-14, AC-15 |
-| test เดิมทั้งหมดของ `tests/chat/` ผ่านโดยไม่แก้ | unit | AC-12 |
+| test เดิมทั้งหมดของ `tests/chat/` ผ่าน · แก้ 1 บรรทัดใน `RoomPagePhoto.test.tsx` (ปุ่ม "จบการติว" · §2.1 ข้อ 1) | unit | AC-12 |
 | ลองในเบราว์เซอร์กับ API ในเครื่อง + `anyang-dev` (login → ห้อง → ตอบ 1 ข้อ → จบ → สรุป → ติวรอบใหม่ → การ์ดเปลี่ยน) | มือ | ทั้งหมด |
 
 ## 9. Out of scope

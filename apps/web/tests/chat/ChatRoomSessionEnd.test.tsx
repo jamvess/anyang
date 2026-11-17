@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ChatRoom } from "@/components/chat/ChatRoom";
-import type { RoomData, SendPayload } from "@/components/chat/types";
+import type { EndSession, RoomData, SendMessage } from "@/components/chat/types";
 import type { SSEEvent } from "@/lib/sse";
 import fixture from "../fixtures/room/session-s15.json";
 import { draw, installFakeCanvas } from "../helpers/fakeCanvas";
@@ -82,8 +82,8 @@ type Setup = {
 };
 
 async function setup({ end = () => stream(summary(L1, L2), DONE), opening = stream(PROBLEM, DONE), replies = [], withEnd = true }: Setup = {}) {
-  const endSession = vi.fn((_signal: AbortSignal) => end());
-  const sendMessage = vi.fn((_p: SendPayload, _s: AbortSignal) => (replies.shift() ?? (() => stream(DONE)))());
+  const endSession = vi.fn<EndSession>(() => end());
+  const sendMessage = vi.fn<SendMessage>(() => (replies.shift() ?? (() => stream(DONE)))());
   const utils = render(
     <ChatRoom room={room} opening={opening} sendMessage={sendMessage} {...(withEnd ? { endSession } : {})} />,
   );
@@ -152,14 +152,17 @@ describe("ChatRoom · ending the session", () => {
     expectEnded(t);
   });
 
-  it("TM13 after the end the canvas cannot send (AC-4)", async () => {
+  // Changed 2026-11-17 (May): the canvas goes away after the end, so the summary stays last (AC-1).
+  it("TM13 after the end the canvas is gone and the problem card stays (AC-4)", async () => {
     const t = await setup();
     draw(t.getByLabelText("เขียนวิธีทำตรงนี้"));
     expect(t.button("ส่งคำตอบ").disabled).toBe(false);
 
     await t.pressEnd();
 
-    expect(t.button("ส่งคำตอบ").disabled).toBe(true);
+    expect(t.queryByLabelText("เขียนวิธีทำตรงนี้")).toBeNull();
+    expect(t.queryByRole("button", { name: "ส่งคำตอบ" })).toBeNull();
+    expect(t.getByText("x^2 - 49", { exact: false })).toBeTruthy();
   });
 
   it("TM13 after the end a waiting handwriting card cannot be pressed (AC-5)", async () => {

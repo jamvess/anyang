@@ -23,6 +23,8 @@ type Props = {
   status: OcrStatus;
   onConfirm: (lines: string[]) => void;
   onRetake: () => void;
+  /** The session has ended: a waiting card can no longer be pressed (session-end-ui.md §2.3). */
+  disabled?: boolean;
 };
 
 const BUTTON = "rounded-lg border border-zinc-300 px-3 py-1 text-xs disabled:opacity-40";
@@ -31,7 +33,7 @@ const BUTTON = "rounded-lg border border-zinc-300 px-3 py-1 text-xs disabled:opa
  * "อ่านได้แบบนี้ ถูกไหม" card (wireframe S21). Shown for every photo answer; confidence is
  * never read (AM-02 · P1). Lines can be edited one at a time, not added or removed (OQ 2, 3).
  */
-export function OcrConfirmCard({ preview, status, onConfirm, onRetake }: Props) {
+export function OcrConfirmCard({ preview, status, onConfirm, onRetake, disabled = false }: Props) {
   const [lines, setLines] = useState(() => preview.lines.map((l) => l.latex));
   const [edited, setEdited] = useState<boolean[]>(() => preview.lines.map(() => false));
   const [editing, setEditing] = useState<{ index: number; draft: string } | null>(null);
@@ -39,7 +41,7 @@ export function OcrConfirmCard({ preview, status, onConfirm, onRetake }: Props) 
   if (lines.length === 0) return null;
 
   const locked = status === "confirmed" || status === "retaken";
-  const sending = status === "sending" || status === "arriving";
+  const sending = disabled || status === "sending" || status === "arriving";
 
   function save() {
     if (!editing || editing.draft.trim() === "") return;

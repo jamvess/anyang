@@ -1,7 +1,7 @@
 // Tutor room over HTTP (spec: specs/features/tutor/room-http.md).
 // Paths and bodies: specs/system/api.md "ห้องติว".
 
-import type { ConfirmOcr, SendMessage } from "@/components/chat/types";
+import type { ConfirmOcr, EndSession, SendMessage } from "@/components/chat/types";
 import type { components } from "./api";
 import { apiFetch, apiSSE } from "./auth";
 
@@ -54,5 +54,12 @@ export function createHttpOcrConfirm(sessionId: string): ConfirmOcr {
   return function confirm(lines, signal) {
     const body: components["schemas"]["OcrConfirmRequest"] = { lines };
     return apiSSE(`/sessions/${sessionId}/ocr/confirm`, body, { signal });
+  };
+}
+
+/** Ends the session with POST /sessions/{id}/end (no body) and yields the SSE reply (session-end-ui.md §2.2). */
+export function createHttpSessionEnd(sessionId: string): EndSession {
+  return function end(signal) {
+    return apiSSE(`/sessions/${sessionId}/end`, undefined, { signal });
   };
 }
