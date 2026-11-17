@@ -29,6 +29,8 @@
 
 ## Decisions
 
+- 2026-11-17 · Junior: ใส่ `thinking: low` ให้ `classify_material` ใน #140 (`config/ai.yaml` 1.22 · comment บอกเหตุผลและผลที่วัด) · **proposed — Jam ยืนยันตอน review** · follow-up หลัง #140 ลง checklist ของ Junior แล้ว: ingestion อ่าน `content_type` (§10 ข้อ 1) และ gateway ไม่ retry เมื่อ `MAX_TOKENS`
+
 - 2026-11-17 · ลองข้อ 7 บน Vertex ครั้งแรก: อัปโหลดและ `/uploaded` ผ่าน แต่ classify ล้มทั้ง 2 ไฟล์ (`output did not match ClassifyMaterialResult after 1 schema retries`) · ทำซ้ำด้วย prompt จริง + `sheet-03.pdf`: **ต้นเหตุคือ config ไม่ใช่ prompt หรือ schema** · `classify_material` มี `max_tokens: 300` และไม่ได้ตั้ง `thinking` · gemini-3.5-flash คิด 291 token จาก 300 เหลือคำตอบ 5 token (`finish_reason=MAX_TOKENS` · ข้อความ `'Here is the'` ไม่ใช่ JSON) · ให้ 2000 token → thoughts 401 + JSON ถูก · ตั้ง `thinking: low` ที่ 300 → JSON ถูก (answer 70 token) · ค่าใน `config/ai.yaml` เป็นไฟล์กลางและเป็นการตัดสินของ Jam → ส่งข้อความถาม Jam · ไม่ได้แก้ prompt หรือ test ของ Jam
 - 2026-11-17 · `ai_calls` ของ classify เบื้องหลังมี `tenant_id`/`user_id` null (AI-04): router ไม่ได้ตั้ง `ai_call_context` ก่อนสร้าง task · แก้ใน PR นี้ (Junior ขอ): spec §2.4 ข้อ 6, §2.6 ข้อ 6 + AC-28 · test ใหม่ `test_materials_ai_context.py` (แยกไฟล์ ไม่แตะ test ที่ review แล้ว · **รอ Junior review test**) · router ครอบ `runner.classify` / `runner.start` ด้วย `ai_call_context(tenant, user)` · unit ทั้งชุด 1840 ผ่าน
 
@@ -43,11 +45,11 @@
 
 ## Next step
 
-รอ Jam ตัดสิน config ของ `classify_material` (`thinking: low` หรือเพิ่ม `max_tokens`) · ได้แล้วรัน `scripts/try_materials_flow.py` ใหม่ (2 ไฟล์ก่อน แล้วครบ 6) · Junior review `tests/unit/test_materials_ai_context.py`
+Junior restart API (โหลด `config/ai.yaml` 1.22) แล้วรัน `uv run python -m scripts.try_materials_flow sheet-03.pdf midterm-2561-1.pdf` แล้วรันครบ 6 ไฟล์ · วางผลในแชท
 
 ## Waiting on
 
-- Jam: config ของ `classify_material` ใน `config/ai.yaml` (ขวางข้อ 7 · ขวางวิดีโอ) · ข้อความส่ง 2026-11-17
+- Jam: ยืนยัน `thinking: low` ของ `classify_material` (`config/ai.yaml` 1.22) ตอน review #140 · ตรวจ purpose อื่นบน Gemini 3 (ข้อความ 2026-11-17)
 
 - Jam: spec §10 ข้อ 1 (`_image_type` อ่านนามสกุลจากชื่อไฟล์ · WEBP/HEIC/PPTX/DOCX ล้มตอน classify) · ข้อ 8 (note หลายบรรทัดใน A6) · ตรวจ prompt A1/A6 ตาม §2.4 ข้อ 9 · รับทราบข้อ 5 · ส่งข้อความแล้ว 2026-11-17 · ไม่ขวางวิดีโอที่ใช้ PDF
 
