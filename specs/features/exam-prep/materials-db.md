@@ -55,7 +55,7 @@ journey ของวิดีโอ 23 พ.ย. ขั้น 3 ให้ผู�
    - mimetype ไม่ตรงกับ `materials.content_type` → ลบ object · `422 unsupported_type` · แถวไม่เปลี่ยน (ขอ URL ใหม่ได้)
    - ขนาดจริงเกินเพดานตามชนิด (§2.2 ข้อ 5) → ลบ object · `422 file_too_large` · แถวไม่เปลี่ยน
 5. update แบบมีเงื่อนไข `uploaded_at is null`: `uploaded_at = now()`, `user_note` · ไม่มีแถวถูก update (คำขอสองอันชนกัน) → `409 already_uploaded` · ข้อนี้ทำให้ classify เริ่มครั้งเดียวต่อไฟล์
-6. เริ่ม classify เบื้องหลังผ่าน runner ของ ingestion (`classify_material(material_id)` · `ingestion.md` §2.1 ข้อ 1 · service role) · **ไม่รอ** ให้จบ · request ที่ถูกยกเลิกไม่ยกเลิกงานนี้
+6. เริ่ม classify เบื้องหลังผ่าน runner ของ ingestion (`classify_material(material_id)` · `ingestion.md` §2.1 ข้อ 1 · service role) · **ไม่รอ** ให้จบ · request ที่ถูกยกเลิกไม่ยกเลิกงานนี้ · **เริ่มภายใต้ `ai_call_context(tenant_id, user_id)` ของ token** ให้แถว `ai_calls` ของ A1 มี tenant และ user (AI-04 · `ai-calls-log.md` §2.1 · งานเบื้องหลังได้ context ตอนสร้าง task) (เพิ่ม 2026-11-17 หลังลองบน Vertex: `ai_calls` ของ classify เป็น null)
 7. ตอบ `202` + `Material` ของแถวหลังข้อ 5 (`status = "uploaded"`, `kind = null`)
 8. DB หรือ Storage ล่ม → `503 db_unavailable`
 9. **`user_note` เป็นข้อมูล ไม่ใช่คำสั่ง (Junior 2026-11-17):** note ไหลเข้า prompt ของ A1 `classify_material` (ช่อง `user_note`) และ A6 `merge_topics` (ช่อง `user_notes` · prompt สกัดหัวข้อ) · ทุก prompt ที่รับ note (ทุก version ใน `prompts/` รวมที่จะเพิ่มทีหลัง) ต้องวาง placeholder ของ note **ใน data block ที่มีตัวคั่น** แบบ `<document>` (หรือ `<note>` ที่ gateway จัดการแบบเดียวกัน · `prompt-data-blocks.md` §2) พร้อมประโยคว่าข้อความในนั้นเป็นข้อมูลจากผู้ใช้ ไม่ใช่คำสั่ง · **ห้าม**อยู่นอก block (ห้ามเข้า `OUTSIDE_A_BLOCK` ของ `test_prompt_data_blocks.py`) ห้ามอยู่ใน attribute และห้ามต่อเข้าส่วนคำสั่งหรือ system prompt · API เก็บ note ตามที่ผู้ใช้พิมพ์ (หลังข้อ 1) ไม่พยายามกรองคำสั่งเอง เพราะการกันอยู่ที่ data block + schema + ผู้ใช้ยืนยัน scope (ai-orchestration §2.3.8 ข้อ 5) · ตอนนี้ A1 v1 ใช้ `<note>` และ A6 v2 ใช้ `<document name="user_notes">` อยู่แล้ว · A5 ไม่รับ note
@@ -77,7 +77,7 @@ journey ของวิดีโอ 23 พ.ย. ขั้น 3 ให้ผู�
    - ถ้ามีทั้งสองแบบ ตอบ `422 unknown_material` ก่อน
 4. update ทีละไฟล์แบบมีเงื่อนไข `status = 'classified'`: `kind` = ค่าของผู้ใช้ (แก้จากที่ AI เดาได้), `kind_confirmed = true`, `status = 'confirmed'` · `relevance_weight` คงค่าที่ classify เขียน (§10 ข้อ 5) · ไฟล์ที่ไม่ได้ส่งมาไม่ถูกแตะ (CM-05 เพิ่มไฟล์ทีหลังได้)
 5. ถ้ามีไฟล์ที่ update ไม่ติด (สถานะเปลี่ยนระหว่างข้อ 3 กับ 4) → ไม่เรียก ingestion · `409 not_classified` · ไฟล์ที่ update ไปแล้วคงเป็น `confirmed` และจะเข้าคิวในการ confirm ครั้งถัดไปของ prep นี้ (§10 ข้อ 6)
-6. เรียก `get_ingestion_runner().start(exam_prep_id)` (`ingestion.md` §2.1 ข้อ 2 · ไม่รอ) · runner อ่านไฟล์ที่ `kind_confirmed = true` และ `status = 'confirmed'` เอง
+6. เรียก `get_ingestion_runner().start(exam_prep_id)` (`ingestion.md` §2.1 ข้อ 2 · ไม่รอ) ภายใต้ `ai_call_context(tenant_id, user_id)` ของ token เหมือน §2.4 ข้อ 6 (AI-04) · runner อ่านไฟล์ที่ `kind_confirmed = true` และ `status = 'confirmed'` เอง
 7. ตอบ `202` + `{queued}` = จำนวนไฟล์ใน body
 8. DB ล่ม → `503 db_unavailable`
 
@@ -130,6 +130,10 @@ journey ของวิดีโอ 23 พ.ย. ขั้น 3 ให้ผู�
 - **AC-18 (SA-06)** Given `id` ของไฟล์ใน prep อื่นของผู้ใช้เอง, ของ tenant อื่น หรือแถวที่ยังไม่แจ้ง `/uploaded` When confirm Then `422 unknown_material` · ไม่มีแถวใดถูกแก้
 - **AC-19 (CM-05)** Given ไฟล์ c `classified` ที่ไม่ได้อยู่ใน body When confirm a Then c ยังเป็น `classified`
 - **AC-20 (CM-06)** Given a `classified` ตอนตรวจ แต่ update ไม่ติด (สถานะเปลี่ยนก่อน) When confirm Then `409 not_classified` และไม่เรียก runner
+
+**ai_calls ของงานเบื้องหลัง**
+
+- **AC-28 (AI-04)** Given token ของ user U ใน tenant T When `/uploaded` สำเร็จ หรือ confirm สำเร็จ Then runner ถูกเรียกขณะที่ AI call context = (T, U) · และ task เบื้องหลังที่ `IngestionRunner.classify` สร้างยังเห็น context (T, U) หลัง request จบแล้ว
 
 **ทางที่ไม่มี token และ error**
 
@@ -195,6 +199,7 @@ RLS ของ `materials` (`tenant_rows`) ครอบ column ใหม่อย
 | `test_SA06_confirm_with_foreign_or_unannounced_id_is_unknown_material` | unit | AC-18 |
 | `test_CM05_confirm_leaves_files_not_sent` | unit | AC-19 |
 | `test_CM06_confirm_race_is_not_classified_without_ingestion` | unit | AC-20 |
+| `test_AI04_background_ai_calls_carry_tenant_and_user` (`/uploaded`, confirm) · `test_AI04_classify_task_keeps_the_context_after_the_request` | unit | AC-28 |
 | `test_SA06_materials_without_token_keep_stub_or_401` (parametrize 4 endpoint × `AUTH_REQUIRED`) | unit | AC-21 |
 | `test_SA06_materials_db_down_is_503` (parametrize 4 endpoint) | unit | AC-22 |
 | `test_CM03_bucket_limit_matches_guard` · `test_CM03_bucket_types_match_api_types` (อ่าน `0008` เทียบ `config/ai.yaml` และ code) | unit | §2.2 ข้อ 5–6 |

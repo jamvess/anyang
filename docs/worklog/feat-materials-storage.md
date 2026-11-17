@@ -29,6 +29,9 @@
 
 ## Decisions
 
+- 2026-11-17 · ลองข้อ 7 บน Vertex ครั้งแรก: อัปโหลดและ `/uploaded` ผ่าน แต่ classify ล้มทั้ง 2 ไฟล์ (`output did not match ClassifyMaterialResult after 1 schema retries`) · ทำซ้ำด้วย prompt จริง + `sheet-03.pdf`: **ต้นเหตุคือ config ไม่ใช่ prompt หรือ schema** · `classify_material` มี `max_tokens: 300` และไม่ได้ตั้ง `thinking` · gemini-3.5-flash คิด 291 token จาก 300 เหลือคำตอบ 5 token (`finish_reason=MAX_TOKENS` · ข้อความ `'Here is the'` ไม่ใช่ JSON) · ให้ 2000 token → thoughts 401 + JSON ถูก · ตั้ง `thinking: low` ที่ 300 → JSON ถูก (answer 70 token) · ค่าใน `config/ai.yaml` เป็นไฟล์กลางและเป็นการตัดสินของ Jam → ส่งข้อความถาม Jam · ไม่ได้แก้ prompt หรือ test ของ Jam
+- 2026-11-17 · `ai_calls` ของ classify เบื้องหลังมี `tenant_id`/`user_id` null (AI-04): router ไม่ได้ตั้ง `ai_call_context` ก่อนสร้าง task · แก้ใน PR นี้ (Junior ขอ): spec §2.4 ข้อ 6, §2.6 ข้อ 6 + AC-28 · test ใหม่ `test_materials_ai_context.py` (แยกไฟล์ ไม่แตะ test ที่ review แล้ว · **รอ Junior review test**) · router ครอบ `runner.classify` / `runner.start` ด้วย `ai_call_context(tenant, user)` · unit ทั้งชุด 1840 ผ่าน
+
 - 2026-11-17 · `0008` ขึ้น anyang-dev แล้ว (Junior link · Claude รัน dry-run ซึ่งมีแค่ `0008` → Junior ok → `db push --remote --yes` → `migration list --remote` ตรงกันครบ 0001–0008 → unlink) · `0005`–`0007` ขึ้นไปแล้วตั้งแต่ 14–15 พ.ย. (แก้ `data-model.md` ใน PR นี้) · integration บน anyang-dev: `test_materials_storage_db.py` 8/8 · `test_rls_isolation` + `test_exam_prep_db` + `test_ingestion_db` 23/23
 
 - 2026-11-16 · ขอบเขต: 4 endpoint (รวม `GET /materials` เพราะหน้า S10 ต้อง poll) · `retry` และ `DELETE` ยังเป็น stub จนหลัง demo · เป้า: เสร็จ 19 พ.ย. เพื่อวิดีโอ 23 พ.ย. (Junior)
@@ -40,9 +43,11 @@
 
 ## Next step
 
-ข้อ 7 ส่วนที่เหลือ: ลองครบ flow ในเครื่องกับ Gemini บน Vertex (สร้าง prep → ขอ URL → `PUT` PDF → `/uploaded` → `kind` ขึ้น → confirm → `GET /ingestion` จนหัวข้อ + ดาวขึ้น → `GET /scope`) ด้วยบัญชีทดสอบของ Junior · integration ส่วนของ materials ผ่านแล้ว
+รอ Jam ตัดสิน config ของ `classify_material` (`thinking: low` หรือเพิ่ม `max_tokens`) · ได้แล้วรัน `scripts/try_materials_flow.py` ใหม่ (2 ไฟล์ก่อน แล้วครบ 6) · Junior review `tests/unit/test_materials_ai_context.py`
 
 ## Waiting on
+
+- Jam: config ของ `classify_material` ใน `config/ai.yaml` (ขวางข้อ 7 · ขวางวิดีโอ) · ข้อความส่ง 2026-11-17
 
 - Jam: spec §10 ข้อ 1 (`_image_type` อ่านนามสกุลจากชื่อไฟล์ · WEBP/HEIC/PPTX/DOCX ล้มตอน classify) · ข้อ 8 (note หลายบรรทัดใน A6) · ตรวจ prompt A1/A6 ตาม §2.4 ข้อ 9 · รับทราบข้อ 5 · ส่งข้อความแล้ว 2026-11-17 · ไม่ขวางวิดีโอที่ใช้ PDF
 

@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 
 from app import stubs
+from app.ai.call_context import ai_call_context
 from app.auth import AuthContext, get_auth
 from app.clock import get_now
 from app.db.errors import DB_DOWN_MESSAGE
@@ -323,7 +324,10 @@ async def material_uploaded(
         return _db_unavailable()
     if isinstance(result, JSONResponse):
         return result
-    runner.classify(material_id)  # not awaited: a cancelled request cannot cancel it
+    # The task copies this context when it is made, so ai_calls of A1 carry tenant and user
+    # (AI-04). Not awaited: a cancelled request cannot cancel it.
+    with ai_call_context(auth.tenant_id, auth.user_id):
+        runner.classify(material_id)
     return _material(result)
 
 
@@ -399,7 +403,9 @@ async def confirm_materials(
         return _db_unavailable()
     if refused is not None:
         return refused
-    runner.start(prep_id)  # not awaited; the runner reads the confirmed files itself
+    # Not awaited; the runner reads the confirmed files itself. Tenant and user for ai_calls.
+    with ai_call_context(auth.tenant_id, auth.user_id):
+        runner.start(prep_id)
     return MaterialsQueued(queued=len(body.materials))
 
 
