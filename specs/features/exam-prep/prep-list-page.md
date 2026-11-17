@@ -6,7 +6,7 @@
 | Requirements | CM-01, CM-02, SA-06 |
 | Owner | Jam (งานของ May · ทำช่วง solo) |
 | Reviewer | May (หน้าตา ข้อความ flow · ดูย้อนหลัง) · Jam |
-| Status | approved 2026-11-15 (Jam ok spec + test) · implemented 2026-11-16 (PR #139) · รอ May review หน้าตา · 16 พ.ย. การ์ด `materials`/`processing` และหลังสร้าง เปลี่ยนตาม `upload-page.md` §2.4 (PR #142 · Jam ok แก้ AC-3, AC-8) |
+| Status | approved 2026-11-15 (Jam ok spec + test) · implemented 2026-11-16 (PR #139) · 16 พ.ย. การ์ด `materials`/`processing` และหลังสร้าง เปลี่ยนตาม `upload-page.md` §2.4 (PR #142 · Jam ok แก้ AC-3, AC-8) · May review หน้าตาและข้อความแล้ว (May 17 พ.ย. · PR #153 · ไม่แก้) |
 | Related system spec | `create-exam-prep.md` (API `POST` / `GET /exam-preps` · `stage`, `days_left`) · api.md v1.14 `ExamPrep` · `web-login.md` (#138 · `apiFetch` แนบ token · 401 ไปหน้า login) · `docs/design/use-cases.md` UC-02 ขั้น 1–2 (S07, S08), UC-03 ขั้น 12 (S27) · `apps/web/CLAUDE.md` |
 
 ## 1. Context
@@ -104,8 +104,8 @@ Vitest + Testing Library · `fetch` ปลอม (`NEXT_PUBLIC_API_URL` = `http:
 
 ## 10. Open questions
 
-1. **(May) จำนวนวันที่เหลือก่อนสร้าง (UC-02 ขั้น 2):** ทางเลือก (ก) ไม่แสดงจนสร้างเสร็จ (ข้อเสนอ · ตัวเลขมาจาก API) (ข) คิดในเบราว์เซอร์จากวันที่ที่เลือก (ขัดกฎ "ตัวเลขมาจาก API" และวัน "วันนี้" ต้องเป็นเวลา Bangkok) (ค) API endpoint ใหม่ที่คืน `days_left` ของวันที่ที่เลือก
-2. **(May) หลังสร้างไปไหน:** ~~ตอนนี้ `/`~~ · 16 พ.ย. ไปหน้าอัปโหลดของ prep ใหม่ (Jam ตัดสินไปก่อนช่วง solo · `upload-page.md` §2.4 · May ดูย้อนหลัง)
+1. ~~**(May) จำนวนวันที่เหลือก่อนสร้าง (UC-02 ขั้น 2)**~~ **ตัดสินแล้ว (May 17 พ.ย. · PR #153): (ก) ไม่แสดงจนสร้างเสร็จ** (ตัวเลขมาจาก API) · ทางที่ไม่เลือก: (ข) คิดในเบราว์เซอร์จากวันที่ที่เลือก (ขัดกฎ "ตัวเลขมาจาก API" และวัน "วันนี้" ต้องเป็นเวลา Bangkok) (ค) API endpoint ใหม่ที่คืน `days_left` ของวันที่ที่เลือก
+2. **(May) หลังสร้างไปไหน:** ~~ตอนนี้ `/`~~ · 16 พ.ย. ไปหน้าอัปโหลดของ prep ใหม่ (Jam ตัดสินไปก่อนช่วง solo · `upload-page.md` §2.4) · **May 17 พ.ย. · PR #153: ยืนยัน**
 
 ## 11. Spec changes needed
 
