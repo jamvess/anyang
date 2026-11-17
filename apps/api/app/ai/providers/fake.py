@@ -16,7 +16,9 @@ _WORD = re.compile(r"\S+\s*|\s+")
 
 
 class Truncated(str):
-    """Placeholder for the red run of gateway-truncation.md; built by /implement-feature."""
+    """A scripted answer the provider cut at max_tokens (gateway-truncation.md §2.1 item 3):
+    ``generate`` returns it with ``truncated=True``; ``stream`` sends it word by word, then marks
+    the usage as truncated."""
 
 
 def _tokens(text: str) -> int:
@@ -64,7 +66,10 @@ class FakeProvider:
         if isinstance(item, list):
             raise TypeError("fake provider: a chunk list is only for stream()")
         response = ProviderResponse(
-            text=item, tokens_in=_tokens(request.prompt), tokens_out=_tokens(item)
+            text=str(item),
+            tokens_in=_tokens(request.prompt),
+            tokens_out=_tokens(item),
+            truncated=isinstance(item, Truncated),
         )
         if self._record:
             self.responses_sent.append(response)
@@ -92,8 +97,5 @@ class FakeProvider:
             sent += step
             usage.tokens_out = _tokens(sent)
             yield step
-
-
-class Truncated(str):
-    """Placeholder for the red run of /spec-to-tests (gateway-truncation.md); built by
-    /implement-feature."""
+        if isinstance(item, Truncated):
+            usage.truncated = True

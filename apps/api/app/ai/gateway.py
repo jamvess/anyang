@@ -89,7 +89,13 @@ class AISchemaError(ValueError):
 
 
 class AITruncatedError(AISchemaError):
-    """Placeholder for the red run of gateway-truncation.md; built by /implement-feature."""
+    """The provider cut the answer at max_tokens and it does not parse. Not retried: the same
+    budget cannot fit it (gateway-truncation.md §2.2). A kind of ``AISchemaError``, so callers
+    that catch that need no change."""
+
+
+# "truncated": the provider cut the answer at max_tokens (gateway-truncation.md §2.4).
+CallStatus = Literal["ok", "schema_error", "provider_error", "truncated"]
 
 
 @dataclass(frozen=True)
@@ -98,7 +104,7 @@ class CallRecord:
     provider: str
     model: str
     prompt_version: str
-    status: Literal["ok", "schema_error", "provider_error"]
+    status: CallStatus
     tokens_in: int
     tokens_out: int
     latency_ms: float
@@ -269,7 +275,7 @@ class Gateway:
         started = time.perf_counter()
         tokens_in = tokens_out = 0
         attempt_prompt = text
-        status: Literal["ok", "schema_error", "provider_error"] = "provider_error"
+        status: CallStatus = "provider_error"
         provider_failed = False
         schema_retries = 0
         try:
@@ -289,6 +295,14 @@ class Gateway:
                 try:
                     result = _parse(response.text, schema)
                 except ValidationError as error:
+                    if response.truncated:
+                        # The same budget cannot fit it: no schema retry (gateway-truncation.md
+                        # §2.2 item 3). The model answered, so this is not a provider failure.
+                        status = "truncated"
+                        raise AITruncatedError(
+                            f"{purpose}: answer cut at max_tokens={settings.max_tokens} "
+                            f"(tokens_out={response.tokens_out})"
+                        ) from error
                     attempt_prompt = _retry_prompt(text, response.text, error)
                     continue
                 status = "ok"
@@ -363,7 +377,7 @@ class Gateway:
 
         chunks: AsyncIterator[str] | None = None
         started = time.perf_counter()
-        status: Literal["ok", "schema_error", "provider_error"] = "provider_error"
+        status: CallStatus = "provider_error"
         provider_failed = False
         answered = False  # a caller that stops reading after a chunk is not a provider failure
         breaker, generation = self._acquire(provider_name, purpose)
@@ -382,7 +396,18 @@ class Gateway:
                     ) from error
                 except Exception as error:  # provider SDKs raise many error types
                     raise AIProviderError(f"{purpose}: {type(error).__name__}: {error}") from error
-            status = "ok"
+            # Cut at max_tokens: the chunks already went out, so only the record and a warning
+            # tell (gateway-truncation.md §2.3).
+            if usage.truncated:
+                status = "truncated"
+                log.warning(
+                    "%s: stream cut at max_tokens=%s (tokens_out=%s)",
+                    purpose,
+                    settings.max_tokens,
+                    usage.tokens_out,
+                )
+            else:
+                status = "ok"
         except AIProviderError:
             provider_failed = True
             raise
@@ -418,7 +443,7 @@ class Gateway:
         settings = self._config.embedding
         started = time.perf_counter()
         tokens_in = 0
-        status: Literal["ok", "schema_error", "provider_error"] = "provider_error"
+        status: CallStatus = "provider_error"
         provider_failed = False
         vectors: list[list[float]] = []
         try:
@@ -625,8 +650,3 @@ async def call[T: BaseModel](purpose: str, input: dict[str, Any], schema: type[T
 def stream(purpose: str, input: dict[str, Any]) -> AsyncIterator[str]:
     """``async for chunk in ai.stream(purpose, input)`` with the gateway built from settings."""
     return get_gateway().stream(purpose, input)
-
-
-class AITruncatedError(AISchemaError):
-    """Placeholder for the red run of /spec-to-tests (gateway-truncation.md); built by
-    /implement-feature."""
