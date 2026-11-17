@@ -29,12 +29,13 @@ Requirement: UM-01 (สมัครด้วย email + password) · ต่อ�
 
 ## Next step
 
-ขั้น 5: May ลองกับ `anyang-dev` · ขั้น 1 ยังรอ Junior
+รอ Junior เปิด "Allow new users to sign up" ใน `anyang-dev` ชั่วคราว → May ทำขั้น 5 ต่อ (สมัคร → หน้าหลัก → logout → login → สมัครซ้ำ)
 
 ## Waiting on
 
-- Junior: เปิดการสมัครใน `anyang-dev` ไว้ (ขั้น 1)
+- Junior: เปิดการสมัครใน `anyang-dev` ชั่วคราว (ตอนลอง + ตอนอัดวิดีโอ 21–22 พ.ย.) แล้วปิดกลับ (ขั้น 1 · 17 พ.ย. ตอนนี้ปิดอยู่)
 
 ## Notes for next time
 
+- 17 พ.ย. ลองกับ `anyang-dev` ตอนปิดรับสมัคร: หน้าเว็บขึ้น "ตอนนี้ปิดรับสมัครอยู่" ถูกต้อง (code `signup_disabled` ยืนยันแล้ว)
 - บัญชี demo ห้ามใช้ทดสอบ (D2 ก) · ทดสอบให้สมัครบัญชีของตัวเอง
