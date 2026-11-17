@@ -20,7 +20,7 @@ demo end to end (23 พ.ย.) ต้องให้ไฟล์ที่ผู�
 1. `classify_material(material_id)` · เรียกหลัง `POST /materials/{id}/uploaded` (ai-orchestration §2.3.8 ข้อ 3) · ทำขั้น A1 (§2.2) แล้วจบ
 2. `start_ingestion(exam_prep_id)` · เรียกหลัง `POST /exam-preps/{id}/materials/confirm` (ข้อ 5) · ไฟล์ทุกไฟล์ของ prep ที่ `kind_confirmed = true` และ `status = 'confirmed'` เข้าคิว · คืนทันที (job รันเบื้องหลัง · §2.7) · endpoint ตอบ `202` เอง
 3. `retry_material(material_id)` · สำหรับ `POST /materials/{id}/retry` (api.md) · ล้มตอน classify → ทำ §2.2 ใหม่ · ล้มตอน ingest → ทำ §2.3 ของไฟล์นั้นใหม่ แล้วทำ §2.4 ถ้าทุกไฟล์พร้อม
-4. ทุกทางเข้าทำงานด้วย service role และใส่ `tenant_id` ของ prep เองทุกแถว (apps/api/CLAUDE.md "Database" · ไม่มี JWT ของผู้ใช้ในงานเบื้องหลัง)
+4. ทุกทางเข้าทำงานด้วย service role และใส่ `tenant_id` ของ prep เองทุกแถว (apps/api/CLAUDE.md "Database" · ไม่มี JWT ของผู้ใช้ในงานเบื้องหลัง) · service role ข้าม storage policy จึง**ตรวจ `storage_path` ก่อนอ่านทุกครั้ง**: ต้องขึ้นต้นด้วย `{tenant_id}/{exam_prep_id}/` ของแถวนั้นและตามด้วยชื่อเดียวที่ไม่มี `/` · ไม่ผ่าน → ไม่อ่าน ไฟล์ `failed` "เปิดไฟล์นี้ไม่ได้" (`materials-db.md` §2.2 ข้อ 8 · AC-31 · Junior 2026-11-17 · บอก Jam)
 
 ### 2.2 ขั้น A1 · classify (CM-06)
 
@@ -200,7 +200,7 @@ AI (A1, A2/A2b, A4, A5, A6, A7) ให้แค่ข้อความ หั�
 
 1. **(Junior) migration `0005`:** `ingestion_jobs.material_id` null ได้ + `exam_prep_id` สำหรับแถวของขั้นรวม · ข้อเสนอเดิมของ api.md รอตัดสิน ข้อ 1 · Junior ok แล้ว Jam เขียน migration ใน PR นี้ได้ (demo ในเครื่องใช้ `db reset` · ขึ้น dev/staging เป็นของ Junior) · ทางสำรองถ้าไม่ ok: เก็บสถานะขั้นรวมไว้ในแถว stage `topics` / `stars` ของทุกไฟล์
 2. **(Junior) ตัวรัน job:** demo ใช้ `asyncio` task ใน process ของ API (§2.7) · บน Cloud Run ต้องเปิด CPU ตลอดเวลา หรือแยกเป็น Cloud Run Job / Cloud Tasks · ตัดสินใน S5 ตอนทำ journey บน staging
-3. **(Junior) `MaterialFiles` บน Storage:** ใครเขียนตัวที่อ่าน Supabase Storage · ข้อเสนอ: Jam เขียนใน PR นี้ (service role อ่าน bucket ของ demo ขั้น 3) แล้ว Junior ดูย้อนหลัง · ชื่อ bucket ตามที่ Junior ตั้ง
+3. **ตอบแล้ว (Junior 2026-11-17 · `materials-db.md` §2.2):** bucket ชื่อ `materials` (ตรงกับ `MATERIALS_BUCKET`) · path ตาม `storage_path` · migration `0008` · `SupabaseMaterialFiles` ของ Jam ใช้ได้เลย · `IngestionRunner.classify(material_id)` เพิ่มใน PR นั้นให้ `/uploaded` เรียก · คำถามเดิม: **(Junior) `MaterialFiles` บน Storage:** ใครเขียนตัวที่อ่าน Supabase Storage · ข้อเสนอ: Jam เขียนใน PR นี้ (service role อ่าน bucket ของ demo ขั้น 3) แล้ว Junior ดูย้อนหลัง · ชื่อ bucket ตามที่ Junior ตั้ง
 4. **(Jam · prompt) A1 คืน `other_instructor` แทน `relevance_weight`:** ให้ code เลือกน้ำหนักจาก config (CLAUDE.md ข้อ 1, 5) · แก้ตาราง ai-orchestration §2.3.7 (§11)
 5. **(Jam · ผลรันจริงอยู่ใน §8: ★★★ 9/12 · ลองหลัง demo) `material_kind` ของ A5 = `materials.kind`** (`sheet`, `slides`, `notes`, `other`) · P3 ส่ง `lecture` / `exercise` ตามที่รู้จากชื่อไฟล์ · kind ใน DB ไม่มี "แบบฝึกหัด" · ข้อเสนอ: ส่ง `materials.kind` ตรงๆ แล้วดูผลในขั้น 4 ของ worklog (เทียบ P3) · ถ้าแย่ลงค่อยเพิ่มค่า `exercise` (migration) หรือให้ A1 บอกว่าเป็นแบบฝึกหัด
 6. **ไฟล์ `failed` บล็อกขั้นรวม** จนผู้ใช้ลองใหม่หรือลบ (api.md รอตัดสิน ข้อ 2 · ข้อเสนอเดิม) · ใน demo ไม่ควรเกิด · ถ้าเกิดตอนอัดใช้ retry

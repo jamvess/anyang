@@ -23,6 +23,7 @@ import getpass
 import json
 import sys
 import uuid
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -49,6 +50,7 @@ def _load(path: Path) -> Any:
 def build_rows(tenant: str, prep: str) -> dict[str, list[dict[str, Any]]]:
     """Every row to insert, with fresh ids (pure: reads the P3 files, writes nothing)."""
     rows: dict[str, list[dict[str, Any]]] = {t: [] for t in TABLES}
+    now = datetime.now(UTC).isoformat()
     keys: dict[str, str] = {}  # file key ("sheet-01") -> material id
     page_counts: dict[str, int] = {}
     for path in sorted(PAGES.glob("*.json")):
@@ -67,6 +69,7 @@ def build_rows(tenant: str, prep: str) -> dict[str, list[dict[str, Any]]]:
                 "kind": "past_exam" if exam else "sheet",
                 "kind_confirmed": True,
                 "status": "ready",
+                "uploaded_at": now,  # GET /materials shows announced files only (0008)
             }
         )
         rows["material_pages"] += [

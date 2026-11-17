@@ -440,16 +440,14 @@ export interface paths {
         /**
          * List Materials
          * @description Files of this exam prep, oldest first; S10 polls until every file has a kind (CM-07).
-         *
-         *     stub — a classified, a still uploaded and a failed file
+         *     A file whose upload was never announced is left out.
          */
         get: operations["list_materials_exam_preps__id__materials_get"];
         put?: never;
         /**
          * Create Material
-         * @description Signed upload URL for one file (CM-03). Type and size are checked before the upload.
-         *
-         *     stub — the URL is not a real Storage URL and no materials row is made
+         * @description Signed upload URL for one file (CM-03). Type and size are checked before the upload and
+         *     before the database; the real size is checked again at /uploaded.
          */
         post: operations["create_material_exam_preps__id__materials_post"];
         delete?: never;
@@ -469,9 +467,8 @@ export interface paths {
         put?: never;
         /**
          * Material Uploaded
-         * @description The browser finished the upload; classification starts (CM-04, §2.3.2 step 2).
-         *
-         *     stub — answers with the fixture file that is still being classified
+         * @description The browser finished the upload: the real object is checked, then classification starts
+         *     in the background (CM-04, CM-06, CM-07 · §2.3.2 step 2).
          */
         post: operations["material_uploaded_materials__id__uploaded_post"];
         delete?: never;
@@ -492,8 +489,6 @@ export interface paths {
         /**
          * Confirm Materials
          * @description The user's kind for each file sent; ingestion starts (CM-06, §2.3.2 step 3).
-         *
-         *     stub — queues every file sent; nothing is checked against the fixture
          */
         post: operations["confirm_materials_exam_preps__id__materials_confirm_post"];
         delete?: never;
@@ -2858,7 +2853,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -2920,7 +2915,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -2973,7 +2968,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description already_uploaded */
+            /** @description already_uploaded, not_uploaded */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -2982,7 +2977,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Invalid path or body */
+            /** @description Invalid path or body, unsupported_type or file_too_large */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -2991,7 +2986,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -3062,7 +3057,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable */
             503: {
                 headers: {
                     [name: string]: unknown;

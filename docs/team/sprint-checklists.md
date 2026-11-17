@@ -44,12 +44,12 @@
 
 - **D1 · Junior + May:** login ใน demo เป็น **email + password** (UM-01) ไหม · Google (UM-02) ต้องตั้ง OAuth client ซึ่งรันในเครื่องยุ่งกว่า · **ตัดสินแล้ว 14 พ.ย. (Junior): email + password · Google ทำใน S5 (ยังเป็น Must)**
 - **D2 · Junior:** demo ใช้ Supabase ในเครื่อง (Docker) หรือ `anyang-dev` (cloud) · **ตัดสินแล้ว 14 พ.ย. (Junior): `anyang-dev`** · เหตุผล: ทีมไม่ใช้ Docker (`setup.md`), ข้อมูล demo (หัวข้อจาก ingestion) ใช้ร่วมกันได้ทั้งทีม, hook + RLS เปิดแล้ว · ข้อเสีย: ข้อมูลทดสอบปนกัน, migration ต้องรอ Junior push, อีเมลยืนยันของ SMTP ฟรีจำกัด, ปิด Confirm email แล้วใครที่รู้ URL + publishable key (อยู่ในเว็บ) สมัครได้และใช้ AI จริงได้ (มี rate limit ต่อนาที) → หลังทีมสร้างบัญชีครบให้ปิด "Allow new users to sign up" แล้วสร้างบัญชีใน Dashboard แทน · กติกา:
-  - (ก) บัญชี demo (ถาม Junior · สร้างแล้ว 14 พ.ย.) ใช้โชว์และอัดวิดีโออย่างเดียว ห้ามใช้ทดสอบ · ทดสอบให้สมัครบัญชีของตัวเอง
+  - (ก) บัญชี demo (ถาม Junior · สร้างแล้ว 14 พ.ย.) ใช้โชว์และอัดวิดีโออย่างเดียว ห้ามใช้ทดสอบ · ทดสอบให้สมัครบัญชีของตัวเอง · **17 พ.ย. (D4):** วิดีโอสมัครบัญชีใหม่ในฉาก 1 · บัญชีนี้เป็นทางสำรองเมื่อปิดรับสมัคร (`docs/design/demo-video.md`)
   - (ข) `0005`, `0006` ขึ้น `anyang-dev` แล้ว 14 พ.ย. · migration ใหม่ทุกตัว (ตัวต่อไป `0008` Storage · `0007` ขึ้นแล้ว 15 พ.ย.) แท็ก Junior ให้ push
   - (ค) ปิด Confirm email ใน `anyang-dev` (Authentication → Sign In / Providers → Email) สมัครแล้วเข้าได้ทันที · ปิดแล้ว 14 พ.ย.
   - (ง) API ในเครื่องใช้ `SUPABASE_URL` + `SUPABASE_ANON_KEY` ของ `anyang-dev` + `AUTH_REQUIRED=true` (ขั้นตอนใน `setup.md` A5)
 - **D3 · Jam:** โจทย์ในห้องมาจากไหน · (ก) `generate_problem` สร้างจากหัวข้อ + ตรวจเฉลยด้วย SymPy (AM-11 · ตรงกับ design) · (ข) คลังโจทย์เขียนไว้ต่อหัวข้อ · **ตัดสินแล้ว 13 พ.ย. (Jam): (ก) และใช้ (ข) เป็นทางสำรอง**
-- **D4 · May:** ลำดับในวิดีโอและความยาว (`docs/design/demo-flow.md` ของ May · ช่วง live เดิมเป็นห้องติวอย่างเดียว)
+- **D4 · May:** ลำดับในวิดีโอและความยาว (`docs/design/demo-flow.md` ของ May · ช่วง live เดิมเป็นห้องติวอย่างเดียว) · **ร่างแล้ว 17 พ.ย. (May · PR #147 · `docs/design/demo-video.md`):** ~8 นาที 8 ฉากตาม goal อาจารย์ 4 ข้อ · May พูดบรรยาย · สมัครบัญชีใหม่ในวิดีโอ · ตัดช่วงรออ่านไฟล์ + caption · รอทีมตกลง
 
 ### งานของแต่ละคนสำหรับ demo (เรียงตามที่คนอื่นรอ)
 
@@ -162,7 +162,9 @@
   - 14 พ.ย.: D1 email + password · D2 `anyang-dev` (cloud) ไม่ใช้ Supabase ในเครื่อง · กติกา (ก)–(ง) อยู่ในส่วน ⭐ Priority
 - [x] ⭐ demo ขั้น 1: env ของ API ชี้ `anyang-dev` (cloud · ไม่ต้องลง Docker · hook เปิดใน Dashboard แล้ว) · ยืนยัน `tenant_id` ใน token · `AUTH_REQUIRED=true` วนได้กับหน้า login ของ May (UM-01)
   - 15–16 พ.ย. (PR #134 · `docs/team/setup.md` "env สำหรับ demo"): token ของ `anyang-dev` มี `tenant_id` · API ในเครื่อง `AUTH_REQUIRED=true` ไม่มี token → 401 `missing_token` · มี token → `GET /exam-preps` 200 จาก DB · 16 พ.ย. Junior ซ้อม login ผ่านหน้าเว็บของ May (#138) ก่อน advisor update ผ่านทุกข้อ: ไม่มี session → `/login?next=…` · login → กลับหน้าเดิม (API 404 ไม่ใช่ 401) · รหัสผิด → "อีเมลหรือรหัสผ่านไม่ถูกต้อง" · `/logout` → `/login` แล้วหน้า scope เด้งไป login อีกครั้ง
-- [ ] ⭐ demo ขั้น 3: `POST /exam-preps/{id}/materials` + `POST /materials/{id}/uploaded` + `POST /exam-preps/{id}/materials/confirm` จริง · signed upload URL · bucket + storage policy (migration ใหม่ + isolation test) (CM-03, CM-07)
+- [x] ⭐ demo ขั้น 3: `POST /exam-preps/{id}/materials` + `POST /materials/{id}/uploaded` + `POST /exam-preps/{id}/materials/confirm` จริง · signed upload URL · bucket + storage policy (migration ใหม่ + isolation test) (CM-03, CM-07)
+- [ ] หลัง #140 · ingestion ตัดสินชนิดไฟล์จาก `materials.content_type` แทนนามสกุลของ `file_name` (`_image_type` ใน `app/services/ingestion.py` · ไฟล์ของ Jam: บอก Jam) · ชนิดที่ยังอ่านไม่ได้ (WEBP, HEIC, PPTX, DOCX) ล้มด้วยข้อความที่บอกให้ส่ง PDF/JPG/PNG · แถวเก่าที่ `content_type` null ใช้นามสกุลเหมือนเดิม (`materials-db.md` §10 ข้อ 1 · CM-03)
+- [ ] หลัง #140 · gateway ไม่ retry schema ด้วยงบเดิมเมื่อ provider ตัดคำตอบเพราะ `MAX_TOKENS` (retry แบบนี้ไม่มีทางผ่าน · จดไว้ใน review #15) · log สาเหตุแยกจาก schema error · ต้องเปิด `finish_reason` จาก provider (AI-01, AI-04 · พบตอนลอง `classify_material` บน Vertex 17 พ.ย. · ส่วนของ gateway: ตกลงกับ Jam)
 - [x] ⭐ demo ขั้น 5: `GET /exam-preps/{id}/scope` อ่าน DB · `POST /scope/confirm` เขียน `scope_versions` + `active_scope_version_id` (SM-09)
   - 14 พ.ย. (PR #137 · `specs/features/scope/scope-db.md`): มี token → `GET /scope` (หัวข้อ ดาว เหตุผล `source_label` ข้อสอบที่ map ไม่ได้ `status`) · `GET /topics/{id}/sources` (ข้อความทั้งหน้า + ข้อสอบของหัวข้อ) · `POST /scope/confirm` (`scope_versions` → `active_scope_version_id` → หัวข้อ `confirmed` · ยืนยันซ้ำหรือพร้อมกัน 409) · ไม่มี migration · ทำตามข้อเสนอ api.md v1.6 ข้อ 1–3, 5 **Junior: ดูย้อนหลังแล้วยืนยันใน api.md** (Junior ให้ตัดสินใจไปก่อน) · รันกับข้อมูลจริง MTH10101: 34 หัวข้อ · ยืนยัน version 1 · **หน้า scope ของ May ต่อ API จริงได้แล้ว**
   - ทำโดย Jam (14 พ.ย.) ช่วง solo
@@ -278,8 +280,11 @@
   - 17 พ.ย. (PR #143 · `specs/features/tutor/session-end-ui.md`): ปุ่มบนหัวห้อง (ยังไม่มี `route_intent` จึงยังพิมพ์ "พอแล้ว" ไม่ได้) · ไม่ถามยืนยัน · สรุปเป็น bubble ของ tutor · หลังจบ canvas หาย ห้องล็อก + "กลับหน้าหลัก" / "ติวรอบใหม่" (session ใหม่) · 409 = จบแล้ว · ลองในห้องเดโม่ (stub) ผ่าน · **เส้นจริงบน DB ยังไม่ได้ลอง** (ลองตอนต่อทุกขั้น 19 พ.ย. หรือ Jam)
 - [x] ⭐ goal อาจารย์ข้อ 1: หน้าสมัครสมาชิก (email + password) + ลิงก์ไปมากับหน้า login (UM-01 ส่วนสมัคร · เดิมอยู่ S5)
   - 17 พ.ย. (PR #144 · `specs/features/platform/web-signup.md`): `/signup` อีเมล + รหัส + ยืนยันรหัส · สมัครแล้วเข้าระบบทันทีและไปหน้าหลัก (onboarding S5) · กฎรหัสให้ Supabase ตัดสิน · ข้อความ error ตาม code (อีเมลซ้ำ, รหัสอ่อน, ปิดรับสมัคร ฯลฯ) · ลองกับ `anyang-dev` ผ่าน · ⚠️ `anyang-dev` ปิดรับสมัครไว้ (D2) · **ตอนอัดวิดีโอ 21–22 พ.ย. ขอ Junior เปิดชั่วคราว**
+- [ ] ⭐ goal อาจารย์ข้อ 4: การ์ดโจทย์ไม่หายเมื่อรีเฟรช / กลับเข้าห้อง (TM-13 · `room-problems-db.md` §10 ข้อ 3)
+  - 17 พ.ย. ส่วนหน้าเว็บเสร็จ (PR #145 · `specs/features/tutor/problem-card-history.md`): ข้อความ `role = card` ที่มี `card.problem` ในประวัติแสดงเป็นการ์ดโจทย์ + canvas · ข้อมูลไม่ครบไม่แสดง · การ์ดอื่นยังเป็นการ์ดความคืบหน้า · **ยังไม่ติ๊ก: รอ Jam ทำ API** บันทึกการ์ดโจทย์ใน `messages` ทุกครั้งที่ส่ง `problem` (spec §6 · Jam เลือกทางนี้ 17 พ.ย.) แล้วลองเส้นจริง: เปิดห้อง → รีเฟรช → การ์ด + canvas ยังอยู่ · หน้าเว็บเก่าพังถ้าประวัติมี `card.problem` จึง merge หน้าเว็บก่อน
 - [ ] เตรียมลำดับหน้าจอสำหรับ demo รวม
   - 13 พ.ย. แผนใหม่: ⭐ demo D4 + อัดวิดีโอ 21–22 พ.ย. (#125 เตรียมของช่วง live ใช้ต่อได้)
+  - 17 พ.ย. (PR #147) D4 ร่างแล้ว: `docs/design/demo-video.md` ลำดับ 8 ฉาก · บทพูด · สิ่งที่ต้องพร้อมต่อคน (Junior: #140 + เปิดรับสมัครตอนอัด · Jam: API การ์ดโจทย์ + ไฟล์ชีท MTH10101) · checklist วันอัด · **ยังไม่ติ๊ก:** รอทีมตกลง แล้วอัดวิดีโอ 21–22 พ.ย.
   - 21 ต.ค. ร่างแล้ว `docs/design/demo-flow.md` (PR #61): 15 นาที 7 ช่วง · ห้องติว live + wireframe คู่ผล PoC · คนพูดแบ่งตามงาน · ทางสำรอง + checklist ก่อน demo · เหลือเติมตัวเลข P2, P4-lite, P8-lite หลัง S3–S4 และให้ทีมตกลงลำดับ
   - 11 พ.ย. (PR #119) ร่างรอบ 2: live ย้ายมาห้องเดโม่ในเครื่อง May (staging เป็นโบนัส) · รวมช่วง 3+4 เป็น live 5:30 · ตัวเลข P1–P4-lite, P6-lite, P8-lite เติมแล้ว (P8-lite ยังไม่มี report · TTFT staging ยังไม่วัด) · **เหลือ: ทีมตกลงลำดับ** (ถามในกลุ่มแล้ว) · Jam ให้ role Vertex AI User แก่ May ก่อนซ้อม · May เตรียมรูปลายมือข้อ 2 ที่เขียนเอง
 
