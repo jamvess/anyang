@@ -182,7 +182,8 @@ async def classify_material(material_id: UUID, deps: IngestionDeps) -> None:
                 "error": None,
             },
         )
-    except Exception as error:
+    except Exception as error:  # with the stack, as the other database failure above
+        log.exception("ingestion: classify of %s could not write its result", material.id)
         await _fail_file(deps, material, "classify", TRY_AGAIN, f"classify: {error!r}")
         return
     try:
@@ -359,6 +360,16 @@ async def _fail_file(
     deps: IngestionDeps, material: MaterialRow, stage: str, message: str, detail: str
 ) -> None:
     log.warning("ingestion: %s of %s failed: %s", stage, material.id, detail)
+    # The file first, each write on its own: a job table that cannot be written must not keep
+    # the file from "failed", which is what the user sees and /retry needs (self-review #154).
+    try:
+        await _db(deps.store.update_material, material.id, {"status": "failed", "error": message})
+    except Exception:
+        log.exception(
+            "ingestion: could not mark %s as failed, so it stays at %s",
+            material.id,
+            material.status,
+        )
     try:
         await _db(
             deps.store.set_job,
@@ -369,13 +380,8 @@ async def _fail_file(
             status="failed",
             error=detail[:_JOB_ERROR_CHARS],
         )
-        await _db(deps.store.update_material, material.id, {"status": "failed", "error": message})
     except Exception:
-        log.exception(
-            "ingestion: could not mark %s as failed, so it stays at %s",
-            material.id,
-            material.status,
-        )
+        log.exception("ingestion: could not mark the %s job of %s as failed", stage, material.id)
 
 
 async def _fail_unread(deps: IngestionDeps, material_id: UUID, detail: str) -> None:

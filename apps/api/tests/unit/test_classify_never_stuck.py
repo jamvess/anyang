@@ -154,3 +154,19 @@ async def test_CM07_file_failed_on_a_lost_row_can_be_retried():
 
     row = material(world, sheet)
     assert (row["status"], row["error"], row["kind"]) == ("classified", None, "sheet")
+
+
+# --- added by the self-review of PR #154 -------------------------------------------------------
+
+
+async def test_CM07_file_ends_failed_even_when_the_job_table_cannot_be_written():
+    # The job cannot be started, and its "failed" cannot be written either: the file must still
+    # end at failed, which is what the page and /retry read.
+    world, flaky, sheet = uploaded_file([classified("sheet")])
+    flaky.fail("set_job", when=lambda *a, **k: k.get("status") == "running")
+    flaky.fail("set_job", when=lambda *a, **k: k.get("status") == "failed")
+
+    await classify_material(sheet, world.deps)
+
+    row = material(world, sheet)
+    assert (row["status"], row["error"]) == ("failed", TRY_AGAIN)
