@@ -67,7 +67,7 @@
 | `apps/web/.env.local` ชี้ `anyang-dev` (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` · เว็บไม่อ่าน `.env` ที่ root) | 1–6 | May | พฤ. 19 พ.ย. | ลองแล้วตอนทำหน้าสมัคร ✅ |
 | ต่อทุกฉากในเครื่อง May ครบ 1 รอบ | ทุกฉาก | ทั้งทีม | พฤ. 19 พ.ย. | — |
 | ซ้อมเดินครบพร้อมจับเวลา + แก้บั๊ก | ทุกฉาก | May (+ ทีม) | ศ. 20 พ.ย. | — |
-| สไลด์เปิดและปิด (ฉาก 0, 7) | 0, 7 | May | ศ. 20 พ.ย. | — |
+| สไลด์เปิดและปิด (ฉาก 0, 7) · https://claude.ai/artifact/ACyVDVi2kuDURLZLgqSv2L (Artifact ของ May · ทีมเปิดได้เมื่อ May กด Share) | 0, 7 | May | ศ. 20 พ.ย. | ✅ 17 พ.ย. · หน้า 2 แก้ `[Update on 21 Nov]` ของ goal 3, 4 ก่อนอัด |
 
 ## วิธีเปิดบนเครื่อง May (PowerShell)
 
