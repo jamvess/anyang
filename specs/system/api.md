@@ -1,4 +1,4 @@
-# API (v1.20)
+# API (v1.21)
 
 Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้างอัตโนมัติที่ `/docs` · frontend generate types จาก `/openapi.json`
 
@@ -90,7 +90,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | GET | `/exam-preps/{id}/scope/changes` | change log (S14) |
 | POST | `/exam-preps/{id}/scope/confirm` | lock เป็น scope version |
 
-**สร้างการเตรียมสอบและใส่ไฟล์ (v1.10 · `POST`/`GET /exam-preps` ตัดสินแล้ว v1.14 · Junior 2026-11-11 · ส่วน materials ยังเป็นข้อเสนอ รอ Junior ตัดสิน):** UC-02 ขั้น 1–5 (S07–S10) · ai-orchestration §2.3.2 ขั้น 1–3 · ยังไม่มี feature spec ของหน้าจอ · ทุก field ต้องมี และไม่มี field อื่น · prep หรือไฟล์ที่ไม่มีหรือเป็นของ tenant อื่น → `404 not_found`
+**สร้างการเตรียมสอบและใส่ไฟล์ (v1.10 · `POST`/`GET /exam-preps` ตัดสินแล้ว v1.14 · Junior 2026-11-11 · `POST /materials`, `/uploaded`, `GET /materials`, `confirm` ตัดสินแล้ว v1.21 · Junior 2026-11-17):** UC-02 ขั้น 1–5 (S07–S10) · ai-orchestration §2.3.2 ขั้น 1–3 · ยังไม่มี feature spec ของหน้าจอ · ทุก field ต้องมี และไม่มี field อื่น · prep หรือไฟล์ที่ไม่มีหรือเป็นของ tenant อื่น → `404 not_found`
 
 **`ExamPrep`** (response ของ `POST /exam-preps` และแต่ละแถวของ `GET /exam-preps`)
 
@@ -129,21 +129,24 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 - **`POST /exam-preps/{id}/materials`** · body `{file_name: string (ไม่ว่าง), content_type: string, size_bytes: integer ≥ 1}` (CM-03) · response `{material_id, upload_url, path}` · `path` = `{tenant_id}/{exam_prep_id}/{material_id}` (data-model.md · §2.3.2 ขั้น 1) · สร้างแถว `materials` ที่ `status = "uploaded"` · เกิน `guards.max_material_mb` หรือ `guards.max_image_mb` ถ้าเป็นรูป (1 MB = 1,048,576 bytes · v1.13) → `422 file_too_large` เหมือน `/sessions/{id}/uploads` · ชนิดไฟล์เช็คก่อนขนาด
   - `content_type` ที่รับ (ไม่สนตัวพิมพ์ ตัด parameter หลัง `;` แบบเดียวกับ `/sessions/{id}/uploads`): `application/pdf`, `image/jpeg`, `image/png`, `image/webp`, `image/heic`, PPTX `application/vnd.openxmlformats-officedocument.presentationml.presentation`, DOCX `application/vnd.openxmlformats-officedocument.wordprocessingml.document` · นอกนั้น `422 unsupported_type`
-- **`POST /materials/{id}/uploaded`** · body `{user_note?: string}` · `202` + `Material` · เริ่ม classify (§2.3.2 ขั้น 2) · ไฟล์นี้แจ้งไปแล้ว → `409 already_uploaded`
-- **`GET /exam-preps/{id}/materials`** · `Material[]` เรียงตามเวลาที่สร้าง · หน้า S10 poll จนทุกไฟล์มี `kind`
+- **`POST /materials/{id}/uploaded`** · body `{user_note?: string}` · `202` + `Material` · เริ่ม classify (§2.3.2 ขั้น 2) · ไฟล์นี้แจ้งไปแล้ว → `409 already_uploaded` · ยังไม่มีไฟล์ใน Storage → `409 not_uploaded` (v1.21 · ส่งใหม่หรือเรียกซ้ำได้) · ขนาดหรือชนิดจริงของไฟล์ไม่ผ่าน → ลบไฟล์ + `422 file_too_large` / `422 unsupported_type` (v1.21) · `user_note`: ตัดช่องว่างหัวท้าย ว่าง → null · ห้ามอักขระควบคุมนอกจาก `
+` · ไม่เกิน `guards.max_message_chars` grapheme cluster · ไม่ผ่าน → `422 validation_error` (v1.21) · **note เป็นข้อมูล ไม่ใช่คำสั่ง:** ทุก prompt ที่รับ note (A1 `classify_material`, A6 `merge_topics`) วางไว้ใน data block แบบ `<document>` เท่านั้น (v1.21 · `materials-db.md` §2.4 ข้อ 9)
+- **`GET /exam-preps/{id}/materials`** · `Material[]` เรียงตามเวลาที่สร้าง · หน้า S10 poll จนทุกไฟล์มี `kind` · ไม่รวมไฟล์ที่ขอที่อัปโหลดแล้วแต่ยังไม่แจ้ง `/uploaded` (v1.21)
 - **`POST /exam-preps/{id}/materials/confirm`** · body `{materials: [{id, kind}]}` (ไฟล์ที่จะยืนยัน อย่างน้อย 1 ไฟล์ · `id` ไม่ซ้ำ · ไฟล์ `failed` ไม่ต้องส่ง · `kind` ตาม enum ของ `Material`) · `202` + `{queued: integer}` (จำนวนไฟล์ที่เริ่ม ingest · ขั้น 3) · ตั้ง `kind_confirmed = true` · ไฟล์ใน body ที่ `status` ไม่ใช่ `classified` (ยัง classify ไม่เสร็จ หรือยืนยันไปแล้ว) → `409 not_classified` · ไฟล์ที่ไม่ได้ส่งมาไม่ถูกเช็ค จึงเพิ่มไฟล์ทีหลังได้ (CM-05) · `id` ซ้ำ → `422 validation_error` · `id` ที่ไม่ใช่ไฟล์ของ prep นี้ → `422 unknown_material`
+
+**v1.21 · ทางที่มี token ทำงานจริง** (Junior 2026-11-17 · `specs/features/exam-prep/materials-db.md`): 4 endpoint ข้างบนอ่านเขียน `materials` ด้วย JWT ของผู้ใช้ (RLS) และ Supabase Storage จริง · ไม่มี token → แบบ v1.14 (`AUTH_REQUIRED=false` → stub เดิม + `X-Stub` · `true` → `401`) · bucket private ชื่อ `materials` · object path `{tenant_id}/{exam_prep_id}/{material_id}` เป็น uuid ล้วน **ไม่มีนามสกุล** · ชื่อไฟล์ใช้แสดงผลอย่างเดียว · storage policy ให้ `authenticated` อ่าน/เขียน/ลบได้เฉพาะ prefix ของ tenant ตัวเอง · `upload_url` คือ signed upload URL ของ Supabase ที่ browser `PUT` ไฟล์ได้ตรงๆ พร้อม `Content-Type` ไม่ต้องมี token · confirm ตรวจทุกไฟล์ใน body ก่อนเขียน (มีทั้งสองแบบ → `422 unknown_material` ก่อน `409 not_classified`) · Storage ล่ม → `503 db_unavailable` ตัวเดิม · `/retry` และ `DELETE` ยังเป็น stub
 
 **รอตัดสิน (v1.10 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-02 (PR #105) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
 
-1. **ชนิดไฟล์ที่รับ** (UC-02 คำถามเปิด 1): PDF, รูป, PPTX, DOCX ตาม ai-orchestration §2.3.3 · ไฟล์ที่ไม่รับปฏิเสธตอนขอที่อัปโหลด (ก่อน browser ส่งไฟล์)
+1. ~~**ชนิดไฟล์ที่รับ** (UC-02 คำถามเปิด 1)~~ **ตัดสินแล้ว** (Junior 2026-11-17 · v1.21): ตามข้อเสนอ · ingestion ยังอ่าน WEBP, HEIC, PPTX, DOCX ไม่ได้ (`materials-db.md` §10 ข้อ 1 · รอ Jam) · ข้อเสนอเดิม: PDF, รูป, PPTX, DOCX ตาม ai-orchestration §2.3.3 · ไฟล์ที่ไม่รับปฏิเสธตอนขอที่อัปโหลด (ก่อน browser ส่งไฟล์)
 2. ~~**ขนาดไฟล์สูงสุด** (UC-02 คำถามเปิด 1)~~ **ตัดสินแล้ว** (Jam 2026-11-07 · PR #109): `guards.max_material_mb: 50` ตามเพดานของ Supabase Free · รูปใช้ `guards.max_image_mb` เดิม เพราะเข้า `vision_extract` ทั้งก้อนเหมือนรูปในห้องแชท · ข้อที่ยังเปิด:
    - **ไฟล์สแกนล้มก่อนถึงเพดานนี้มาก (Jam):** A2b มี `max_tokens: 16000` และ P3 วัดได้ 3,199–7,943 token จาก 12–14 หน้า · ประมาณจาก 2 ไฟล์ได้ว่าไฟล์สแกนเกินราว 28–70 หน้าจะได้ JSON ขาด แล้ว `failed` หลังอัปโหลดสำเร็จ · ต้องมีเพดานจำนวนหน้าหรือแบ่งไฟล์ก่อนเปิด ingest จริง
-   - **`size_bytes` คือค่าที่ client แจ้ง (Junior):** เรียก API ตรงด้วย `size_bytes: 1` แล้วส่งไฟล์ใหญ่ได้ · ของจริงต้องตั้ง `file_size_limit` ของ bucket ให้ตรงค่านี้ หรือตรวจขนาดจริงตอน `/uploaded` · `/sessions/{id}/uploads` ก็เหมือนกัน
+   - ~~**`size_bytes` คือค่าที่ client แจ้ง (Junior)**~~ **ตัดสินแล้ว** (Junior 2026-11-17 · v1.21): ทำทั้งสองอย่าง · `file_size_limit` ของ bucket = `max_material_mb` และ `/uploaded` ตรวจขนาดจริงตามชนิด · เดิม: เรียก API ตรงด้วย `size_bytes: 1` แล้วส่งไฟล์ใหญ่ได้ · ของจริงต้องตั้ง `file_size_limit` ของ bucket ให้ตรงค่านี้ หรือตรวจขนาดจริงตอน `/uploaded` · `/sessions/{id}/uploads` ก็เหมือนกัน
    - **หน้าเว็บจะรู้ค่านี้จากไหน:** ยังไม่กำหนด (May · ตอนเขียน spec ของ S09)
 3. ~~**วันสอบ** (UC-02 คำถามเปิด 2)~~ **ตัดสินแล้ว** (Junior 2026-11-11 · v1.14): วันนี้ได้ · ก่อนวันนี้ได้ `422 exam_date_past`
 4. ~~**`stage`, `readiness`, `topics_not_passed` ใน `ExamPrep`**~~ **ตัดสินแล้ว** (Junior 2026-11-11 · v1.14): ใช้ตามข้อเสนอ · `readiness` และ `topics_not_passed` เป็น null ได้จนกว่า backend จะคำนวณ PM-03, PM-04 จริง
-5. **ประเภทไฟล์:** UC-02 ขั้น 4 พูดถึง "แบบฝึกหัด" แต่ check ของ `materials.kind` ไม่มีค่านี้ · ข้อเสนอคือใช้ enum ของ schema (`sheet`, `slides`, `past_exam`, `notes`, `other`) และนับแบบฝึกหัดเป็น `sheet`
-6. **error code ใหม่:** ~~`exam_date_past`~~ (ตัดสินแล้ว v1.14), `unsupported_type` และ `file_too_large` (เหมือนห้องติว), `already_uploaded`, `not_classified`, `unknown_material`
+5. ~~**ประเภทไฟล์**~~ **ตัดสินแล้ว** (Junior 2026-11-17 · v1.21): ใช้ enum ของ schema · เดิม: UC-02 ขั้น 4 พูดถึง "แบบฝึกหัด" แต่ check ของ `materials.kind` ไม่มีค่านี้ · ข้อเสนอคือใช้ enum ของ schema (`sheet`, `slides`, `past_exam`, `notes`, `other`) และนับแบบฝึกหัดเป็น `sheet`
+6. ~~**error code ใหม่**~~ **ตัดสินแล้ว** (Junior 2026-11-17 · v1.21): `exam_date_past` (v1.14), `unsupported_type` และ `file_too_large` (เหมือนห้องติว), `already_uploaded`, `not_classified`, `unknown_material` ตามข้อเสนอ · เพิ่ม `409 not_uploaded`
 
 **หน้าตรวจขอบเขต (v1.6 · ข้อเสนอ รอ Junior ตัดสิน):** รูปร่างตามข้อเสนอของ May ใน `specs/features/scope/scope-review.md` §3 (OQ 5–8) · ตัวอย่าง: `apps/web/tests/fixtures/scope/scope-s12.json`, `sources-t3.json` (id ในไฟล์ของเว็บเป็น `t3` ฯลฯ ของจริงเป็น uuid) · ทุก field ต้องมี และไม่มี field อื่น · prep หรือหัวข้อที่ไม่มี หรือเป็นของ tenant อื่น (RLS มองไม่เห็น) → `404` code `not_found`
 
