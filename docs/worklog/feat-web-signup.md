@@ -13,7 +13,7 @@ Requirement: UM-01 (สมัครด้วย email + password) · ต่อ�
 
 - [ ] 1. 🙋 May ถาม Junior: เปิด "Allow new users to sign up" ใน `anyang-dev` ไว้ถึงหลัง 23 พ.ย. ได้ไหม (D2 วางแผนจะปิด) · Confirm email ปิดอยู่แล้ว (D2 ค) สมัครแล้วเข้าได้ทันที
 - [x] 2. 🤖 `/spec-feature` → `specs/features/platform/web-signup.md` · 🙋 May ตัดสินหน้าตาและ flow ผ่านตัวเลือก แล้ว ok spec · 17 พ.ย. ok (ช่องยืนยันรหัส · ไปหน้าหลัก · ลิงก์ทั้งสองทาง · กฎรหัสให้ Supabase)
-- [ ] 3. 🤖 `/spec-to-tests` → 🙋 May review test
+- [x] 3. 🤖 `/spec-to-tests` → 🙋 May review test · 17 พ.ย. ok (22 test · red)
 - [ ] 4. 🤖 `/implement-feature` จน test ผ่าน + lint + typecheck
 - [ ] 5. 🙋 May ลองในเบราว์เซอร์กับ `anyang-dev`: สมัครบัญชีทดสอบใหม่ → เข้าหน้าหลัก → logout → login ด้วยบัญชีนั้น
 - [ ] 6. 🤖 `/work-done`
@@ -29,7 +29,7 @@ Requirement: UM-01 (สมัครด้วย email + password) · ต่อ�
 
 ## Next step
 
-`/spec-to-tests` · ขั้น 1 ยังรอ Junior
+`/implement-feature` · ขั้น 1 ยังรอ Junior
 
 ## Waiting on
 
