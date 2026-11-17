@@ -12,7 +12,7 @@
 Spec: `specs/features/tutor/session-end-ui.md` · API ทำแล้ว (#136 · `session-end-db.md`)
 
 - [x] 1. 🤖 `/spec-feature` → 🙋 May ok spec (17 พ.ย.)
-- [ ] 2. 🤖 `/spec-to-tests` (`ChatRoomSessionEnd.test.tsx`, `RoomPageSessionEnd.test.tsx`, fixture `session_end.txt`) → 🙋 May review test
+- [x] 2. 🤖 `/spec-to-tests` (`ChatRoomSessionEnd.test.tsx`, `RoomPageSessionEnd.test.tsx`, fixture `session_end.txt`) → 🙋 May review test · May ok test 17 พ.ย. (17 red · AC-12 ผ่านตั้งแต่ต้นเพราะยังไม่มีปุ่ม)
 - [ ] 3. 🤖 `/implement-feature` จน test ผ่าน + `pnpm lint && pnpm typecheck`
 - [ ] 4. 🙋 May ลองในเบราว์เซอร์ (ห้อง → ตอบ → จบ → สรุป → ติวรอบใหม่)
 - [ ] 5. 🤖 `/work-done`
@@ -29,7 +29,7 @@ Spec: `specs/features/tutor/session-end-ui.md` · API ทำแล้ว (#136 �
 
 ## Next step
 
-`/spec-to-tests`
+`/implement-feature`
 
 ## Waiting on
 
