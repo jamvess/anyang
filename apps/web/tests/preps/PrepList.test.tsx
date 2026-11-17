@@ -88,7 +88,8 @@ describe("PrepList", () => {
     expect(cards(utils.container)[0].textContent).toContain(text);
   });
 
-  it("CM01 a prep at scope or tutoring links to its page, the others do not (AC-3)", async () => {
+  // Changed 16 Nov (upload-page.md §2.4 · AC-24 · Jam ok, PR #142): materials and processing link too.
+  it("CM01 every card links to the page of its stage (AC-3 · upload-page AC-24)", async () => {
     const utils = await open(() =>
       json([
         prep("a", { stage: "scope" }),
@@ -104,8 +105,8 @@ describe("PrepList", () => {
       null;
     expect(href("a")).toBe("/preps/a/scope");
     expect(href("b")).toBe("/preps/b/room");
-    expect(href("c")).toBeNull();
-    expect(href("d")).toBeNull();
+    expect(href("c")).toBe("/preps/c/upload");
+    expect(href("d")).toBe("/preps/d/progress");
   });
 
   it("PM04 readiness and topics not passed show only when the API gives them (AC-4)", async () => {

@@ -7,6 +7,7 @@ import { apiFetch } from "@/lib/auth";
 import { prepStrings as t } from "./strings";
 
 type CreateExamPrepRequest = components["schemas"]["CreateExamPrepRequest"];
+type ExamPrep = components["schemas"]["ExamPrep"];
 
 /** The Thai message for a refused create (spec §2.2 item 4); the API decides the rules. */
 async function messageOf(res: Response): Promise<string> {
@@ -49,13 +50,17 @@ export function CreatePrepForm({ navigate }: { navigate: (href: string) => void 
         body: JSON.stringify(body),
       });
       if (res.ok) {
+        // Created already: a body that cannot be read must not look like a failure, or a second
+        // press makes a second prep (self-review PR #142). Without an id, back to the list.
+        const prep: ExamPrep | null = await res.json().catch(() => null);
         // A fresh form for the next visit: the hidden page keeps its state (browser check, 15 Nov:
-        // the second create stayed on "กำลังสร้าง…"). Then back to the list (no upload page yet).
+        // the second create stayed on "กำลังสร้าง…"). Then to the new prep's upload page
+        // (upload-page.md §2.4).
         setTitle("");
         setExamDate("");
         setMinutes("");
         setBusy(false);
-        if (visible.current) navigate("/");
+        if (visible.current) navigate(prep?.id ? `/preps/${prep.id}/upload` : "/");
         return;
       }
       // 401: apiFetch is already on its way to the login page (web-login.md §2.3).

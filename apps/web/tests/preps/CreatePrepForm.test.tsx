@@ -61,7 +61,8 @@ afterEach(() => {
 });
 
 describe("CreatePrepForm", () => {
-  it("CM01 creates the prep with what was typed, then goes home (AC-8)", async () => {
+  // Changed 16 Nov (upload-page.md §2.4 · AC-25 · Jam ok, PR #142): to the new prep's upload page, not home.
+  it("CM01 creates the prep with what was typed, then goes to its upload page (AC-8 · upload-page AC-25)", async () => {
     let finish!: (r: Response) => void;
     const calls = mockPost(() => new Promise((r) => (finish = r)));
     const utils = openForm();
@@ -79,7 +80,7 @@ describe("CreatePrepForm", () => {
     });
     expect(utils.getByRole("button", { name: "กำลังสร้าง…" })).toHaveProperty("disabled", true);
     await act(async () => finish(created()));
-    await waitFor(() => expect(utils.navigate).toHaveBeenCalledWith("/"));
+    await waitFor(() => expect(utils.navigate).toHaveBeenCalledWith("/preps/p1/upload"));
   });
 
   it("CM01 no daily minutes sends none (AC-9)", async () => {
@@ -160,7 +161,8 @@ describe("CreatePrepForm under Next's preserved pages", () => {
     fireEvent.change(utils.getByLabelText("ชื่อการสอบ"), { target: { value: "MTH10101" } });
     fireEvent.change(utils.getByLabelText("วันสอบ"), { target: { value: "2026-12-08" } });
     fireEvent.click(utils.getByRole("button", { name: "สร้าง" }));
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith("/"));
+    // Changed 16 Nov (upload-page.md AC-25 · Jam ok, PR #142): the upload page, not home.
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith("/preps/p1/upload"));
 
     utils.rerender(
       <Activity mode="hidden">
