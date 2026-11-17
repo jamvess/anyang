@@ -39,27 +39,37 @@ function imageOrigin(messages: ChatMessage[]): { source?: ChatMessage["image_sou
   return { source: sent?.image_source, problemId: sent?.image_problem_id };
 }
 
-/** A saved problem card's payload: the `problem` event's shape (problem-card-history.md §2.1 item 1). */
+const PURPOSES: readonly string[] = ["probe", "verify", "practice", "review"] satisfies ProblemData["purpose"][];
+
+/**
+ * A saved problem card's payload: the `problem` event's shape, with LaTeX to show
+ * (problem-card-history.md §2.1 item 1 · an empty one would bring a canvas with no card, self-review PR #145).
+ */
 function isProblem(value: unknown): value is ProblemData {
   if (typeof value !== "object" || value === null) return false;
   const p = value as Record<string, unknown>;
   return (
     typeof p.problem_id === "string" &&
     typeof p.text_latex === "string" &&
-    typeof p.difficulty === "number" &&
-    typeof p.purpose === "string"
+    p.text_latex !== "" &&
+    Number.isFinite(p.difficulty) &&
+    typeof p.purpose === "string" &&
+    PURPOSES.includes(p.purpose)
   );
 }
 
 /**
- * A history message as the room shows it: a saved `{problem}` card becomes a problem card, like one
- * from the stream; a broken one is dropped (an empty card is not shown); any other card stays a
- * progress card (problem-card-history.md §2.1).
+ * History messages as the room shows them: a saved `{problem}` card becomes a problem card, like one
+ * from the stream; a broken one is dropped; any other card stays a progress card
+ * (problem-card-history.md §2.1).
  */
-function fromHistory(m: ChatMessage): ChatMessage {
-  if (m.role !== "card" || !m.card || !("problem" in m.card)) return m;
-  const problem = (m.card as { problem: unknown }).problem;
-  return isProblem(problem) ? { ...m, card: null, problem } : { ...m, card: null };
+function fromHistory(messages: ChatMessage[]): ChatMessage[] {
+  return messages.flatMap((m) => {
+    // A jsonb card may be anything; `in` on a non-object would throw (self-review PR #145).
+    if (m.role !== "card" || typeof m.card !== "object" || m.card === null || !("problem" in m.card)) return [m];
+    const problem = (m.card as { problem: unknown }).problem;
+    return isProblem(problem) ? [{ ...m, card: null, problem }] : [];
+  });
 }
 
 export function ChatRoom({
@@ -88,7 +98,7 @@ export function ChatRoom({
   /** Where "ติวรอบใหม่" leads, and what opens the new session in place (§2.3). Without it the link reloads the page. */
   newSession?: { href: string; onOpen: () => void };
 }) {
-  const [messages, setMessages] = useState<ChatMessage[]>(() => room.messages.map(fromHistory));
+  const [messages, setMessages] = useState<ChatMessage[]>(() => fromHistory(room.messages));
   const [busy, setBusy] = useState(false);
   const [typing, setTyping] = useState(false);
   const [streamingId, setStreamingId] = useState<string | null>(null);
@@ -99,6 +109,9 @@ export function ChatRoom({
   const newSessionLink = useRef<HTMLAnchorElement>(null);
 
   const nextId = useRef(0);
+  // Messages made here sort after the history even when this device's clock is behind the server's:
+  // the list is sorted by created_at, and the canvas follows the latest problem card (self-review PR #145).
+  const lastTime = useRef(Math.max(0, ...room.messages.map((m) => Date.parse(m.created_at) || 0)));
   const abort = useRef<AbortController | null>(null);
   const log = useRef<HTMLElement>(null);
   const stick = useRef(true);
@@ -126,6 +139,11 @@ export function ChatRoom({
     if (el) stick.current = el.scrollHeight - el.clientHeight - el.scrollTop <= NEAR_BOTTOM_PX;
   }
 
+  function nextTime(): string {
+    lastTime.current = Math.max(Date.now(), lastTime.current + 1);
+    return new Date(lastTime.current).toISOString();
+  }
+
   function newMessage(role: MessageRole, content: string | null, extra: Partial<ChatMessage> = {}): ChatMessage {
     return {
       id: `local-${nextId.current++}`,
@@ -133,7 +151,7 @@ export function ChatRoom({
       content,
       input_mode: null,
       attachment_path: null,
-      created_at: new Date().toISOString(),
+      created_at: nextTime(),
       ...extra,
     };
   }

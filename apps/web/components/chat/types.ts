@@ -16,7 +16,7 @@ type Schemas = components["schemas"];
  */
 export type ChatMessage = Omit<Schemas["Message"], "card" | "attachment_name"> &
   Partial<Pick<Schemas["Message"], "card" | "attachment_name">> & {
-    /** Browser-only: a problem from the SSE `problem` event (problem-card.md). Not part of the API. */
+    /** A problem card: from the SSE `problem` event (problem-card.md), or a saved `card.problem` of the history (problem-card-history.md). */
     problem?: ProblemData;
     /** Browser-only: lines read from a photo, waiting for the user (ocr-confirm-card.md). Not part of the API. */
     ocr?: { preview: OcrPreviewData; status: OcrStatus; source?: ImageSource; problemId?: string };
