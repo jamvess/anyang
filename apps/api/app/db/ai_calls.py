@@ -80,7 +80,10 @@ class AICallLog:
     def __call__(self, record: CallRecord) -> None:
         context = current_call_context()
         row = to_row(record, context, get_request_id())
-        log.info(json.dumps(row | {"schema_retries": record.schema_retries}, ensure_ascii=False))
+        # call_status tells a cut answer from a schema error; the row keeps the table's values
+        # (gateway-truncation.md §2.4 item 3).
+        line = row | {"schema_retries": record.schema_retries, "call_status": record.status}
+        log.info(json.dumps(line, ensure_ascii=False))
         if context is None or self.writer is None:
             return
         # The gateway emits records from async code only, so a running loop is always there.

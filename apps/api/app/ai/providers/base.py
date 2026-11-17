@@ -28,6 +28,9 @@ class ProviderResponse:
     text: str
     tokens_in: int
     tokens_out: int
+    # The provider stopped at max_tokens (Gemini: finish_reason MAX_TOKENS), so the text may be
+    # cut short; the gateway does not retry such an answer (gateway-truncation.md §2.1).
+    truncated: bool = False
 
 
 @dataclass(frozen=True)
@@ -62,10 +65,12 @@ class ProviderRateLimited(Exception):
 
 @dataclass
 class StreamUsage:
-    """Token counts of one stream; the provider fills it in while it streams."""
+    """Token counts of one stream; the provider fills it in while it streams. ``truncated``:
+    the stream stopped at max_tokens (gateway-truncation.md §2.1)."""
 
     tokens_in: int = 0
     tokens_out: int = 0
+    truncated: bool = False
 
 
 class Provider(Protocol):

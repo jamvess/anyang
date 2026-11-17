@@ -1,4 +1,4 @@
-# Data model (v1.7)
+# Data model (v1.8)
 
 SQL จริงอยู่ที่ `supabase/migrations/` เริ่มจาก `0001_init.sql` (ทดสอบรันบน PostgreSQL + pgvector แล้ว และทดสอบ RLS ว่า user A มองไม่เห็นข้อมูลของ user B) แล้วแก้ต่อด้วย migration ใหม่ทีละไฟล์ ไม่แก้ไฟล์เดิม ไฟล์นี้อธิบายภาพรวมและเหตุผล
 
@@ -6,9 +6,11 @@ SQL จริงอยู่ที่ `supabase/migrations/` เริ่มจ�
 |---|---|
 | `0002_messages_attachment_name.sql` | เพิ่ม `messages.attachment_name` (api.md v1.3 · 2026-10-21) |
 | `0003_topic_sources.sql` | ตารางใหม่ `topic_sources` (ช่วงหน้าของหัวข้อ) + `past_exam_questions.map_note` · ผลจาก P3 ข้อ 1 และ 3 (2026-11-01) |
-| `0005_ingestion_jobs_prep.sql` | `ingestion_jobs.exam_prep_id` (ไม่ null · เติมจาก `materials` ของแถวเดิม) + `material_id` null ได้: แถวของขั้นรวม `topics`, `stars` ทำต่อ prep ไม่ใช่ต่อไฟล์ (`specs/features/scope/ingestion.md` §5 · api.md รอตัดสิน ข้อ 1 · Jam ช่วง solo 2026-11-13 · **ขึ้นแค่ Supabase ในเครื่อง · รอ Junior ดูแล้ว `db push`**) |
-| `0006_problems_ended.sql` | `problems.ended_at` (null = โจทย์ยังไม่จบ · คำตอบผิดที่ได้ใบ้มีแถว `attempts` แต่โจทย์ยังไม่จบ) + `problems.working_steps` (ขั้นที่ถูกของคำตอบที่ยังไม่จบ · `continue`) + index โจทย์ที่ยังไม่จบ (`specs/features/tutor/room-answers-db.md` §5 · Jam ช่วง solo 2026-11-14 · **ขึ้นแค่ Supabase ในเครื่อง · รอ Junior ดูแล้ว `db push`**) |
-| `0007_topic_progress_d_max.sql` | `topic_progress.d_max` (ระดับยากสูงสุดที่ตอบถูกเอง 0–3 · `mastery_eff` ของ learning-model §4 ใช้) (`specs/features/planner/topic-progress-db.md` §5 · Jam ช่วง solo 2026-11-14 · **ขึ้นแค่ Supabase ในเครื่อง · รอ Junior ดูแล้ว `db push`**) |
+| `0005_ingestion_jobs_prep.sql` | `ingestion_jobs.exam_prep_id` (ไม่ null · เติมจาก `materials` ของแถวเดิม) + `material_id` null ได้: แถวของขั้นรวม `topics`, `stars` ทำต่อ prep ไม่ใช่ต่อไฟล์ (`specs/features/scope/ingestion.md` §5 · api.md รอตัดสิน ข้อ 1 · Jam ช่วง solo 2026-11-13 · ขึ้น anyang-dev แล้ว (14–15 พ.ย.)) |
+| `0006_problems_ended.sql` | `problems.ended_at` (null = โจทย์ยังไม่จบ · คำตอบผิดที่ได้ใบ้มีแถว `attempts` แต่โจทย์ยังไม่จบ) + `problems.working_steps` (ขั้นที่ถูกของคำตอบที่ยังไม่จบ · `continue`) + index โจทย์ที่ยังไม่จบ (`specs/features/tutor/room-answers-db.md` §5 · Jam ช่วง solo 2026-11-14 · ขึ้น anyang-dev แล้ว (14–15 พ.ย.)) |
+| `0007_topic_progress_d_max.sql` | `topic_progress.d_max` (ระดับยากสูงสุดที่ตอบถูกเอง 0–3 · `mastery_eff` ของ learning-model §4 ใช้) (`specs/features/planner/topic-progress-db.md` §5 · Jam ช่วง solo 2026-11-14 · ขึ้น anyang-dev แล้ว (14–15 พ.ย.)) |
+| `0008_materials_storage.sql` | `materials.content_type` (ชนิดที่ API ตรวจแล้ว · null ในแถวเก่า) + `materials.uploaded_at` (null = ขอ URL แล้วยังไม่แจ้ง `/uploaded`) · bucket private `materials` (`file_size_limit` = `guards.max_material_mb` · ชนิดไฟล์ = ของ materials + ห้องติว) · storage policy `select`/`insert`/`delete` ของ `authenticated` เฉพาะโฟลเดอร์แรก = `current_tenant_id()` · ไม่มี `update` และไม่มีของ `anon` (`specs/features/exam-prep/materials-db.md` §2.2, §5 · Junior 2026-11-17 · ขึ้น anyang-dev แล้ว (17 พ.ย.)) |
+| `0009_materials_path_guard.sql` | trigger `materials_path_guard` บน `materials` (เฉพาะ role `authenticated`): insert ต้องมี `storage_path` = `{tenant_id}/{exam_prep_id}/{id}` · update เปลี่ยน `storage_path`, `tenant_id`, `exam_prep_id` ไม่ได้ · เติม `uploaded_at = created_at` ให้แถวเก่าที่ `status <> 'uploaded'` (`specs/features/exam-prep/materials-db.md` §2.2 ข้อ 7, 9 · Junior 2026-11-17 · ขึ้น anyang-dev แล้ว (17 พ.ย.)) |
 | `0004_tutor_sessions_scope_nullable.sql` | `tutor_sessions.scope_version_id` เป็น null ได้: session ที่เริ่มก่อนยืนยัน scope (`room-sessions-db.md` · Junior 2026-11-11 · ขึ้น anyang-dev และ anyang-staging แล้ว) · FK เดิมยังอยู่ |
 
 ## กฎทั่วไป
@@ -19,7 +21,7 @@ SQL จริงอยู่ที่ `supabase/migrations/` เริ่มจ�
 - สมัครสมาชิกแล้ว trigger `handle_new_user` สร้าง personal tenant + membership + profile ให้อัตโนมัติ
 - งานเบื้องหลัง (ingestion) ใช้ service role ซึ่งข้าม RLS จึงต้องใส่ `tenant_id` เองทุกครั้ง
 - ค่า threshold ไม่อยู่ใน DB ทั้งหมดอยู่ใน `config/learning.yaml`
-- Storage path: `{tenant_id}/{exam_prep_id}/{material_id}` และตั้ง storage policy ให้อ่านได้เฉพาะ prefix ของ tenant ตัวเอง
+- Storage path: `{tenant_id}/{exam_prep_id}/{material_id}` (uuid ล้วน ไม่มีนามสกุล) ใน bucket `materials` และตั้ง storage policy ให้อ่านได้เฉพาะ prefix ของ tenant ตัวเอง (`0008`) · ผู้ใช้ตั้ง `materials.storage_path` เองไม่ได้ (trigger ของ `0009`)
 - `tutor_sessions.scope_version_id` เป็น null ได้ (`0004` · Junior 2026-11-11): null = **session ที่เริ่มก่อนยืนยัน scope** (ทางของ demo ระหว่างที่ ingestion และ `scope/confirm` ยังไม่จริง · `specs/features/tutor/room-sessions-db.md`) · **กฎของ planner (Jam):** เมื่อ ingestion + confirm จริงแล้ว session ใหม่ต้องผูก `exam_preps.active_scope_version_id` เสมอ ถ้า prep มี scope ที่ยืนยันแล้ว และ planner ต้องรับมือ session เก่าที่เป็น null (เช่น ไม่เลือกหัวข้อจาก scope ให้ session นั้น หรือผูก version ที่ active ตอนเปิด session ครั้งถัดไป)
 - **RLS ของ `messages` กรองแค่ tenant** (`tenant_rows` ไม่ดู `user_id` · ต่างจาก `tutor_sessions` ที่เป็น `owner_rows`): พอสำหรับ tenant ส่วนตัวที่มี user เดียว · API อ่านข้อความผ่าน session ที่ RLS ของ `tutor_sessions` เห็นแล้วเท่านั้น (`room-sessions-db.md`) · **เมื่อมี tenant แบบกลุ่ม:** user ในกลุ่มเดียวกันจะอ่านข้อความของกันได้ถ้า query `messages` ตรง ต้องเปลี่ยน policy ให้ตรวจผ่าน `tutor_sessions.user_id = auth.uid()` (migration ใหม่) ก่อนเปิดกลุ่ม
 - `messages.attachment_name` คือชื่อไฟล์เดิมที่ user เห็น (เช่น "วิธีทำ.jpg") · ค่ามาจาก user จึงใช้แสดงผลอย่างเดียว **ห้ามใช้ประกอบ path ใน Storage** · `attachment_path` ตั้งชื่อด้วย uuid เสมอ · ความยาวสูงสุดคือ `config/ai.yaml` → `guards.max_attachment_name_chars` (นับเป็น grapheme cluster) ตรวจที่ API ไม่มี `CHECK` ใน SQL · ชื่อที่ยาวเกินให้ **ตัดให้สั้น ไม่ปฏิเสธ**: ตัดเป็น grapheme cluster (สระและวรรณยุกต์ไทยต้องติดกับพยัญชนะ ไม่ตัดตาม code point) และเก็บนามสกุลไฟล์ไว้ (2026-10-21 · ข้อความใน api.md จะตามมาพร้อม PR ของ api.md ข้อ 5 · guard จริงทำพร้อม endpoint uploads ใน S3)
@@ -133,6 +135,8 @@ erDiagram
     uuid id PK
     uuid exam_prep_id FK
     text storage_path
+    text content_type
+    timestamptz uploaded_at
     text kind "sheet | slides | past_exam | notes | other"
     numeric relevance_weight
     text status
