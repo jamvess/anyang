@@ -715,6 +715,21 @@ class IngestionRunner:
     def __init__(self, deps: IngestionDeps) -> None:
         self._deps = deps
         self._tasks: dict[UUID, asyncio.Task[None]] = {}
+        self._classifying: set[asyncio.Task[None]] = set()  # strong refs until each ends
+
+    def classify(self, material_id: UUID) -> asyncio.Task[None]:
+        """`POST /materials/{id}/uploaded`: A1 in the background, not awaited by the request
+        (specs/features/exam-prep/materials-db.md §2.4 item 6 · Junior)."""
+        task = asyncio.create_task(self._classify(material_id), name=f"classify {material_id}")
+        self._classifying.add(task)
+        task.add_done_callback(self._classifying.discard)
+        return task
+
+    async def _classify(self, material_id: UUID) -> None:
+        try:
+            await classify_material(material_id, self._deps)
+        except Exception:
+            log.exception("classify of %s stopped", material_id)
 
     def start(self, prep_id: UUID) -> asyncio.Task[None]:
         running = self._tasks.get(prep_id)

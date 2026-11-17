@@ -12,8 +12,8 @@
 - [x] 1. 🤖 `/spec-feature` → `specs/features/exam-prep/materials-db.md` (CM-03, CM-06, CM-07, SA-06) · มี token แล้ว 4 endpoint ใช้ DB + Storage จริง: `POST /exam-preps/{id}/materials` (แถว `materials` + signed upload URL จาก JWT ของผู้ใช้) · `POST /materials/{id}/uploaded` (เช็คว่ามีไฟล์จริงใน Storage + ขนาดจริง → เรียก `classify_material` เบื้องหลัง) · `GET /exam-preps/{id}/materials` (หน้า S10 poll) · `POST /materials/confirm` (`kind`, `kind_confirmed`, `status = confirmed` → `get_ingestion_runner().start()`) · ไม่มี token ยังได้ stub เหมือนเดิม · `retry` และ `DELETE` ยังเป็น stub (หลัง demo) · ใส่ข้อเสนอเพื่อปิดคำถามที่ยังเปิดของ api.md v1.10 ข้อ 2, 5, 6
 - [x] 2. 🙋 Junior review spec + ตัดสินคำถามที่ยังเปิด (§10) · api.md เป็นไฟล์กลาง: ถ้า ok ให้แก้ใน PR นี้แล้วบอกกลุ่ม
 - [x] 3. 🤖 `/spec-to-tests` · unit (repo + storage ปลอม · ทางมี/ไม่มี token · 404 ของ tenant อื่น · 409 · 422) + integration บน `anyang-dev` (อัปโหลดผ่าน signed URL ได้จริง · user B อ่าน/เขียน/ขอ URL ใน prefix ของ A ไม่ได้ · แถว `materials` แยก tenant) · test เริ่มต้นด้วย requirement ID
-- [ ] 4. 🙋 Junior review test (อ่านตาราง AC → test ที่ Claude สรุป)
-- [ ] 5. 🤖 `supabase/migrations/0008_materials_storage.sql`: bucket `materials` แบบ private · `file_size_limit` = `guards.max_material_mb` · `allowed_mime_types` ตาม api.md · policy บน `storage.objects` (insert/select/update/delete) เฉพาะเมื่อโฟลเดอร์แรกของ path = `current_tenant_id()` · แล้ว `/implement-feature`: `app/db/materials.py` (JWT ของผู้ใช้) + ตัวขอ signed URL + router + งานเบื้องหลัง classify จนทุก test ผ่าน
+- [x] 4. 🙋 Junior review test (อ่านตาราง AC → test ที่ Claude สรุป)
+- [x] 5. 🤖 `supabase/migrations/0008_materials_storage.sql`: bucket `materials` แบบ private · `file_size_limit` = `guards.max_material_mb` · `allowed_mime_types` ตาม api.md · policy บน `storage.objects` (insert/select/update/delete) เฉพาะเมื่อโฟลเดอร์แรกของ path = `current_tenant_id()` · แล้ว `/implement-feature`: `app/db/materials.py` (JWT ของผู้ใช้) + ตัวขอ signed URL + router + งานเบื้องหลัง classify จนทุก test ผ่าน
 - [ ] 6. 🙋 Junior review SQL ของ `0008` แล้วรัน `npx supabase db push` ขึ้น `anyang-dev` (ข้อความบอกกลุ่มเรื่อง migration + RLS · Claude ร่างให้)
 - [ ] 7. 🤖 รัน integration บน `anyang-dev` + ลองครบ flow ในเครื่องกับ Gemini บน Vertex: สร้าง prep → ขอ URL → `PUT` PDF จาก `evals/topics/mth10101/raw/` → `/uploaded` → `kind` ขึ้น → confirm → `GET /ingestion` จนหัวข้อ + ดาวขึ้น → `GET /scope` · ใช้บัญชีทดสอบของตัวเอง (ไม่ใช่บัญชี demo · กติกา D2 (ก))
 - [ ] 8. 🙋 บอกกลุ่ม (migration `0008`, api.md) + บอก May ว่าหน้าอัปโหลดต่อ API จริงได้แล้ว → `/work-done`
@@ -38,13 +38,16 @@
 
 ## Next step
 
-ข้อ 4: Junior review test (ตาราง AC → test ใน PR description / ข้อความ session 2026-11-17) · ไฟล์: `tests/unit/test_materials_db_api.py`, `tests/unit/test_materials_storage_rules.py`, `tests/integration/test_materials_storage_db.py` · ok แล้วไปข้อ 5 (`0008` + `/implement-feature`)
+ข้อ 6: Junior อ่าน SQL ของ `supabase/migrations/0008_materials_storage.sql` แล้วรัน `npx supabase db push` ขึ้น `anyang-dev` (บอกกลุ่มก่อน · ข้อความร่างอยู่ในแชท session 2026-11-17) · จากนั้นข้อ 7 รัน integration `tests/integration/test_materials_storage_db.py`
 
 ## Waiting on
 
 - Jam: spec §10 ข้อ 1 (`_image_type` อ่านนามสกุลจากชื่อไฟล์ · WEBP/HEIC/PPTX/DOCX ล้มตอน classify) · ข้อ 8 (note หลายบรรทัดใน A6) · ตรวจ prompt A1/A6 ตาม §2.4 ข้อ 9 · รับทราบข้อ 5 · ส่งข้อความแล้ว 2026-11-17 · ไม่ขวางวิดีโอที่ใช้ PDF
 
 ## Notes for next time
+
+- 2026-11-17 · ข้อ 5 เสร็จ: unit ทั้งชุด 1837 ผ่าน + ruff ผ่าน เมื่อรันแบบ CI · policy ใน `0008` ไม่มี `update` ตาม spec (signed upload ไม่ upsert) แผนข้อ 5 เดิมเขียน insert/select/update/delete แต่ spec ที่ approved ชนะ
+- **ต้นเหตุที่ test เดิมราว 350 ตัวล้มในเครื่อง:** shell ของ Junior มี `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `AUTH_REQUIRED`, `APP_ENV`, `GOOGLE_CLOUD_*` เป็นตัวแปรของ process ซึ่งทับค่า `setdefault` ใน `tests/conftest.py` · น่าจะมาจาก `.vscode/settings.json` (`python.terminal.useEnvFile: true`) ที่โหลด `.env` เข้าทุก terminal ของ VS Code (Junior 2026-11-17) · ปิด setting นั้น หรือใช้คำสั่งข้างล่าง · รันแบบ CI: `env -u SUPABASE_URL -u SUPABASE_ANON_KEY -u SUPABASE_SERVICE_ROLE_KEY -u AUTH_REQUIRED -u APP_ENV -u GOOGLE_CLOUD_PROJECT -u GOOGLE_CLOUD_LOCATION AI_PROVIDER=fake uv run pytest tests/unit -q`
 
 - test ที่ต้องการ interface ใหม่ (เขียนไว้ใน docstring ของ `test_materials_db_api.py`): `app.db.materials` (repo) · `app.services.material_storage` (Storage adapter) · `IngestionRunner.classify(material_id)` (เพิ่มในไฟล์ของ Jam · บอก Jam) · `get_ingestion_runner` เป็น dependency ของ router
 - AC-27 (`test_CM04_user_note_*`) ผ่านอยู่แล้วเพราะ prompt A1 v1 / A6 v2 ถูกต้อง · เป็น test กันถอยหลัง ไม่ใช่ test แดง
