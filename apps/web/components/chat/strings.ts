@@ -3,6 +3,10 @@
 export const roomStrings = {
   daysLeft: (n: number) => `สอบใน ${n} วัน`,
   exitRoom: "ออกจากห้องติว",
+  // Ending the session (specs/features/tutor/session-end-ui.md §2.6).
+  endSession: "จบการติว",
+  sessionEnded: "จบการติวรอบนี้แล้ว",
+  newSession: "ติวรอบใหม่",
   you: "คุณ",
   inputLabel: "พิมพ์ตอบ",
   inputPlaceholder: "พิมพ์ตอบ...",

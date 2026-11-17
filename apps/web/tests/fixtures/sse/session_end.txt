@@ -1,0 +1,6 @@
+event: session_end
+data: {"summary_lines": ["วันนี้ทำลิมิต 3 ข้อ ถูก 2 ข้อ ตอนนี้อยู่ระดับกำลังดีแล้ว", "ครั้งหน้าลองลิมิตที่มีรากอีกสักข้อ"]}
+
+event: done
+data: {"message_ids": ["7b1e2f3a-4c5d-4e6f-8a9b-0c1d2e3f4a5b"]}
+

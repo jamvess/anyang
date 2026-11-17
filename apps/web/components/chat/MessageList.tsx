@@ -65,6 +65,8 @@ type Props = {
   /** Buttons of a handwriting confirm card, by message id (ocr-confirm-card.md). */
   onOcrConfirm?: (id: string, lines: string[]) => void;
   onOcrRetake?: (id: string) => void;
+  /** The session has ended: confirm cards cannot be pressed (session-end-ui.md §2.3). */
+  ocrDisabled?: boolean;
   /** The answer canvas at the end of the chat while a problem is open (answer-canvas.md §2 B); none when not given. */
   answerCanvas?: AnswerCanvasProps;
 };
@@ -92,6 +94,7 @@ export function MessageList({
   typing = false,
   onOcrConfirm,
   onOcrRetake,
+  ocrDisabled = false,
   answerCanvas,
 }: Props) {
   const names: Record<Speaker, string> = {
@@ -123,6 +126,7 @@ export function MessageList({
                   status={m.ocr.status}
                   onConfirm={(lines) => onOcrConfirm?.(m.id, lines)}
                   onRetake={() => onOcrRetake?.(m.id)}
+                  disabled={ocrDisabled}
                 />
               ) : m.problem ? (
                 <ProblemCard problem={m.problem} />
