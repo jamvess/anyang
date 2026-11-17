@@ -6,7 +6,7 @@
 | Requirements | UM-01 (เข้าสู่ระบบด้วย email + password ตาม D1 · ส่วนสมัครอยู่ S5), SA-06 |
 | Owner | Jam (งานของ May · May ให้ทำได้เลย 15 พ.ย.) |
 | Reviewer | May (หน้าตา ข้อความ flow · ดูย้อนหลัง) · Jam |
-| Status | approved 2026-11-15 (Jam ok spec + test) · implemented 2026-11-15 (PR #138) · May review หน้าตาและข้อความแล้ว 17 พ.ย. (ไม่แก้) |
+| Status | approved 2026-11-15 (Jam ok spec + test) · implemented 2026-11-15 (PR #138) · May review หน้าตาและข้อความแล้ว (May 17 พ.ย. · PR #153 · ข้อความเดิมไม่แก้ · 17 พ.ย. เพิ่มลิงก์สมัครตาม `web-signup.md` #144) |
 | Related system spec | `api-auth.md` (API ตรวจ token · 401 `missing_token` / `invalid_token`) · api.md "Auth" · `docs/team/sprint-checklists.md` D1 (email + password บน `anyang-dev`) · `room-http.md`, `scope-review.md` (หน้าที่เรียก API) · `apps/web/CLAUDE.md` |
 
 ## 1. Context
@@ -101,8 +101,8 @@ Vitest + Testing Library · Supabase client ปลอม (`vi.mock("@/lib/supaba
 
 ## 10. Open questions
 
-1. **(May) หน้าตาและข้อความ:** ใช้ Tailwind แบบหน้าที่มีอยู่ · ข้อความใน `strings.ts` · May ปรับทีหลังได้โดยไม่แตะ logic
-2. **(May) หลัง login ไปไหน:** `next` หรือ `/` · ตอนนี้ `/` ยังเป็นหน้า template ของ Next จนกว่าหน้ารายการ prep (demo ขั้น 2) เสร็จ
+1. ~~**(May) หน้าตาและข้อความ**~~ **ตัดสินแล้ว (May 17 พ.ย. · PR #153): ใช้ตามนี้** · ใช้ Tailwind แบบหน้าที่มีอยู่ · ข้อความใน `strings.ts` · May ปรับทีหลังได้โดยไม่แตะ logic
+2. ~~**(May) หลัง login ไปไหน**~~ **ตัดสินแล้ว (May 17 พ.ย. · PR #153): `next` หรือ `/`** · `/` เป็นหน้ารายการ prep แล้ว (#139)
 
 ## 11. Spec changes needed
 
