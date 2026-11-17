@@ -11,29 +11,30 @@
 
 ปัญหา: `GET /sessions/{id}` คืนแค่ข้อความ · การ์ดโจทย์ (และการ์ดความคืบหน้า) มาทาง SSE เท่านั้น ไม่ได้บันทึก · รีเฟรชหรือกลับเข้าห้อง (`sessions/active`) แล้วการ์ดโจทย์หาย → ไม่มี canvas และไม่เห็นว่าค้างโจทย์ข้อไหน (API ยังจำโจทย์ค้างได้ · พิมพ์ตอบยังตรวจได้)
 
-- [ ] 1. 🙋 May ส่งข้อความถาม Jam (+ Junior) เลือกทาง: (ก) `GET /sessions/{id}` ส่ง `open_problem` (โจทย์ค้างจากตาราง `problems`) แล้วหน้าเว็บแสดงการ์ดท้ายแชท · (ข) บันทึกการ์ดโจทย์เป็น `messages` `role = card` ทุกที่ที่ส่ง event `problem` · และใครทำส่วน API
-- [ ] 2. 🤖 `/spec-feature` ตามทางที่เลือก → 🙋 May ok spec (api.md เป็นไฟล์กลาง · บอกกลุ่มก่อน merge)
-- [ ] 3. 🤖 `/spec-to-tests` (API + หน้าเว็บ) → 🙋 May review test
-- [ ] 4. 🤖 `/implement-feature` จน test ผ่าน (api: ruff + pytest · web: lint + typecheck + test) · `pnpm gen:api`
-- [ ] 5. 🙋 ลองเส้นจริง: เปิดห้อง → ได้การ์ดโจทย์ → รีเฟรช → การ์ดโจทย์ + canvas ยังอยู่ (ต้องมี prep ที่มีหัวข้อ · บัญชี May หรือ Jam ลองให้)
-- [ ] 6. 🤖 `/work-done` (ไฟล์กลาง api.md → ข้อความกลุ่มก่อน merge)
+- [x] 1. 🙋 May ส่งข้อความถาม Jam (+ Junior) เลือกทาง: (ก) `GET /sessions/{id}` ส่ง `open_problem` (โจทย์ค้างจากตาราง `problems`) แล้วหน้าเว็บแสดงการ์ดท้ายแชท · (ข) บันทึกการ์ดโจทย์เป็น `messages` `role = card` ทุกที่ที่ส่ง event `problem` · และใครทำส่วน API · **17 พ.ย. Jam เลือก (ข) · Jam ทำ API · เราทำหน้าเว็บ**
+- [ ] 2. 🤖 `/spec-feature` (หน้าเว็บ + สัญญาข้อมูล `card.problem` ให้ Jam ทำ API ตาม) → 🙋 May ok spec
+- [ ] 3. 🤖 `/spec-to-tests` (หน้าเว็บ) → 🙋 May review test
+- [ ] 4. 🤖 `/implement-feature` หน้าเว็บจน test ผ่าน (lint + typecheck + test)
+- [ ] 5. 🙋 ลองเส้นจริงหลัง Jam ทำ API เสร็จ: เปิดห้อง → ได้การ์ดโจทย์ → รีเฟรช → การ์ดโจทย์ + canvas ยังอยู่ (ต้องมี prep ที่มีหัวข้อ · บัญชี May หรือ Jam ลองให้)
+- [ ] 6. 🤖 `/work-done` (merge หน้าเว็บได้ก่อน API · ไม่มี `card.problem` = ทำงานเหมือนเดิม)
 
 ## Definition of done
 
 - รีเฟรช / กลับเข้าห้องที่มีโจทย์ค้าง → เห็นการ์ดโจทย์ข้อนั้นและ canvas ตอบได้ (TM-13)
-- test ผ่านทั้ง api และ web · api.md อัปเดต · ลองเส้นจริงแล้ว
+- test หน้าเว็บผ่าน · ลองเส้นจริงแล้ว (หลัง API ของ Jam)
 
 ## Decisions
 
+- 2026-11-17 · Jam: ทาง (ข) บันทึกการ์ดโจทย์เป็น `messages` `role = card` · Jam ทำ API · เราทำหน้าเว็บ
 - 2026-11-17 · May เลือกทำเพราะเป็นส่วน "กลับมาเรียนต่อได้" ของ goal 4 ที่ยังขาด (ปุ่มจบเสร็จแล้ว #143)
 
 ## Next step
 
-May ส่งข้อความถาม Jam (ขั้น 1) แล้วบอกคำตอบ
+`/spec-feature` (ขั้น 2)
 
 ## Waiting on
 
-- Jam (+ Junior): เลือกทาง (ก) / (ข) และใครทำส่วน API
+- Jam: API บันทึกการ์ดโจทย์ใน `messages` (ก่อนขั้น 5)
 
 ## Notes for next time
 
