@@ -53,8 +53,8 @@ ingestion:                             # files → pages → chunks (specs/featu
   chunk_max_tokens: 800                # ai-orchestration §2.3.3 · P3b (recall@4 95%)
   chunk_max_pages: 2                   # ai-orchestration §2.3.3
   thai_chars_per_token: 1.7            # [C] P3b: count_tokens of gemini-embedding-2 gave 1.47–1.82 Thai chars per token
-  storage_read_attempts: 3             # [C] v1.23 · reads of one file from Storage when the connection drops (httpx.TransportError), first try included · seeding the demo account 17 Nov: 2 of 6 classify reads failed together with "Server disconnected" (storage3 uses HTTP/2) · ingestion.md AC-28 · after Alpha: from logs
-  storage_read_backoff_s: 0.5          # [C] v1.23 · wait before read n+1 = this × n (0.5 s, then 1 s) · at most 1.5 s more per file
+  storage_read_attempts: 3             # [C] v1.23 · tries of one Storage read, and of one ingestion DB call (same HTTP/2 cause · ingestion.md AC-29), when the connection drops (httpx.TransportError), first try included · seeding the demo account 17 Nov: 2 of 6 classify reads failed together with "Server disconnected" (storage3 uses HTTP/2) · ingestion.md AC-28 · after Alpha: from logs
+  storage_read_backoff_s: 0.5          # [C] v1.23 · wait before try n+1 = this × n (0.5 s, then 1 s) · at most 1.5 s more per read or DB call
 
 embedding:                             # A3 embed (ai-orchestration §2.3.3), tier `embed` · no prompt
   timeout_s: 60                        # [C] one batch request · P3b: 116 chunks in 21.6 s (~1.8 s per batch of 10), so 60 leaves a wide margin · after Alpha: from ai_calls

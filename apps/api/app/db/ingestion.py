@@ -493,7 +493,10 @@ class SupabaseIngestionStore:
     ) -> T:
         """`query` on the shared client; `repeat` (default `query`) for the later attempts."""
         for attempt in range(1, self._attempts + 1):
-            client, generation = self._client.current()
+            try:
+                client, generation = self._client.current()
+            except Exception as error:  # making the client: bad URL or key, still a 503
+                raise unavailable(f"ingestion {what}", error) from error
             try:
                 return (query if attempt == 1 or repeat is None else repeat)(client)
             except httpx.TransportError as error:
@@ -556,7 +559,22 @@ class SupabaseIngestionStore:
         material_id: UUID | None = None,
         error: str | None = None,
     ) -> None:
-        def query(db: Client) -> None:
+        # One id for every attempt: a repeat that runs while the first insert is still in
+        # flight (a timeout) waits on that id and skips it, so there is one row, not two.
+        row = _json(
+            {
+                "id": uuid.uuid4(),
+                "tenant_id": tenant_id,
+                "exam_prep_id": exam_prep_id,
+                "material_id": material_id,
+                "stage": stage,
+                "status": status,
+                "error": error,
+                "updated_at": datetime.now(UTC),
+            }
+        )
+
+        def query(db: Client, *, repeat: bool = False) -> None:
             jobs = db.table("ingestion_jobs")
             old = jobs.delete().eq("exam_prep_id", str(exam_prep_id)).eq("stage", stage)
             old = (
@@ -565,21 +583,12 @@ class SupabaseIngestionStore:
                 else old.is_("material_id", "null")
             )
             old.execute()
-            jobs.insert(
-                _json(
-                    {
-                        "tenant_id": tenant_id,
-                        "exam_prep_id": exam_prep_id,
-                        "material_id": material_id,
-                        "stage": stage,
-                        "status": status,
-                        "error": error,
-                        "updated_at": datetime.now(UTC),
-                    }
-                )
-            ).execute()
+            if repeat:
+                jobs.upsert(row, on_conflict="id", ignore_duplicates=True).execute()
+            else:
+                jobs.insert(row).execute()
 
-        self._run("job", query)
+        self._run("job", query, repeat=lambda db: query(db, repeat=True))
 
     def clear_file(self, material_id: UUID) -> None:
         def query(db: Client) -> None:

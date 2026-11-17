@@ -193,3 +193,43 @@ def test_CM07_store_retry_uses_the_config_by_default(monkeypatch: pytest.MonkeyP
         SupabaseIngestionStore(clients.connect).select("topics")
 
     assert len(clients.executed) == get_settings().ai.ingestion.storage_read_attempts
+
+
+# --- added in the second self-review of #152 (after the tests above were reviewed) -------------
+
+
+def test_CM07_store_client_that_cannot_be_made_is_db_unavailable() -> None:
+    def connect() -> Any:
+        raise ValueError("Invalid URL")
+
+    with pytest.raises(DbUnavailableError):
+        SupabaseIngestionStore(connect, attempts=3, backoff_s=0).select("topics")
+
+
+def test_CM07_set_job_repeat_keeps_one_id_and_skips_it() -> None:
+    """A repeat that runs while the first insert is still in flight (a timeout) must not add a
+    second job row: same id, and the repeat is an upsert that skips it."""
+
+    def write(calls: list[Call]) -> Call | None:
+        """The insert or upsert of a chain (`set_job` deletes and writes on one chain)."""
+        return next((c for c in calls if c[0] in ("insert", "upsert")), None)
+
+    def answer(client: int, calls: list[Call]) -> Any:
+        found = write(calls)
+        if client == 1 and found is not None and found[0] == "insert":
+            raise httpx.ReadTimeout("timed out")
+        return []
+
+    clients = Clients(answer)
+    prep = uuid.uuid4()
+
+    store(clients).set_job(tenant_id=uuid.uuid4(), exam_prep_id=prep, stage="topics", status="done")
+
+    # The fake keeps each chain's call list by reference, and `set_job` executes one chain twice
+    # (delete, then the write): count each chain once.
+    chains = list({id(calls): calls for _, calls in clients.executed}.values())
+    writes = [w for calls in chains if (w := write(calls)) is not None]
+    (first_name, (first_row,), _), (second_name, (second_row,), second_kwargs) = writes
+    assert (first_name, second_name) == ("insert", "upsert")
+    assert second_kwargs == {"on_conflict": "id", "ignore_duplicates": True}
+    assert second_row == first_row and first_row["id"]
