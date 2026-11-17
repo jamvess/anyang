@@ -15,7 +15,7 @@ from fastapi import Depends
 from storage3._sync.file_api import SyncBucketProxy
 from supabase import Client
 
-from app.auth import AuthContext, get_auth, get_user_db
+from app.auth import get_optional_user_db
 from app.request_context import get_request_id
 from app.services.ingestion import MATERIALS_BUCKET
 
@@ -87,9 +87,8 @@ class SupabaseMaterialStorage:
 
 
 def get_material_storage(
-    auth: Annotated[AuthContext | None, Depends(get_auth)],
+    db: Annotated[Client | None, Depends(get_optional_user_db)],
 ) -> MaterialStorage | None:
-    """Storage for this user, or None without a user (the router serves the stub)."""
-    if auth is None:
-        return None
-    return SupabaseMaterialStorage(get_user_db(auth))
+    """Storage for this user, or None without a user (the router serves the stub). Shares the
+    request's client with `get_material_repository`."""
+    return None if db is None else SupabaseMaterialStorage(db)

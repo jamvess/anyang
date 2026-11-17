@@ -14,7 +14,7 @@ from uuid import UUID
 from fastapi import Depends
 from supabase import Client
 
-from app.auth import AuthContext, get_auth, get_user_db
+from app.auth import get_optional_user_db
 from app.db.errors import unavailable
 
 _COLUMNS = (
@@ -191,9 +191,7 @@ class SupabaseMaterialRepository:
 
 
 def get_material_repository(
-    auth: Annotated[AuthContext | None, Depends(get_auth)],
+    db: Annotated[Client | None, Depends(get_optional_user_db)],
 ) -> MaterialRepository | None:
     """The repository for this user, or None without a user (the router serves the stub)."""
-    if auth is None:
-        return None
-    return SupabaseMaterialRepository(get_user_db(auth))
+    return None if db is None else SupabaseMaterialRepository(db)
