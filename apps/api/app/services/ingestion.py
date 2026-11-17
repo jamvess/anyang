@@ -126,8 +126,15 @@ def _text_layer(deps: IngestionDeps, data: bytes) -> list[str]:
 
 
 async def classify_material(material_id: UUID, deps: IngestionDeps) -> None:
-    """A1: kind, confidence and the weight of a past exam; the user confirms them in S10."""
-    material = await _db(deps.store.get_material, material_id)
+    """A1: kind, confidence and the weight of a past exam; the user confirms them in S10.
+
+    Never leaves the file at "uploaded": every step, the database ones too, ends in "failed"
+    that /retry can take again (spec §2.2 item 5 · seen in #151)."""
+    try:
+        material = await _db(deps.store.get_material, material_id)
+    except Exception as error:
+        await _fail_unread(deps, material_id, f"classify: {error!r}")
+        return
     if material is None:
         log.warning("classify: material %s not found", material_id)
         return
@@ -137,8 +144,8 @@ async def classify_material(material_id: UUID, deps: IngestionDeps) -> None:
         "exam_prep_id": material.exam_prep_id,
         "material_id": material.id,
     }
-    await _db(deps.store.set_job, stage="classify", status="running", **job)
     try:
+        await _db(deps.store.set_job, stage="classify", status="running", **job)
         data = await _read(deps, material)
         first = _first_pages(deps, material, data)
         result = await deps.gateway.call(
@@ -163,18 +170,28 @@ async def classify_material(material_id: UUID, deps: IngestionDeps) -> None:
     stars = settings.learning.stars
     other = result.kind == "past_exam" and result.other_instructor
     weight = stars.weight_other_instructor if other else stars.weight_same_instructor
-    await _db(
-        deps.store.update_material,
-        material.id,
-        {
-            "kind": result.kind,
-            "kind_confidence": result.confidence,
-            "relevance_weight": weight,
-            "status": "classified",
-            "error": None,
-        },
-    )
-    await _db(deps.store.set_job, stage="classify", status="done", **job)
+    try:
+        await _db(
+            deps.store.update_material,
+            material.id,
+            {
+                "kind": result.kind,
+                "kind_confidence": result.confidence,
+                "relevance_weight": weight,
+                "status": "classified",
+                "error": None,
+            },
+        )
+    except Exception as error:
+        await _fail_file(deps, material, "classify", TRY_AGAIN, f"classify: {error!r}")
+        return
+    try:
+        await _db(deps.store.set_job, stage="classify", status="done", **job)
+    except Exception:
+        # The kind is written and usable: keep "classified" (spec §2.2 item 5.3).
+        log.warning(
+            "ingestion: classify of %s is done, but its job could not be closed", material.id
+        )
 
 
 def _first_pages(deps: IngestionDeps, material: MaterialRow, data: bytes) -> list[tuple[int, str]]:
@@ -354,7 +371,23 @@ async def _fail_file(
         )
         await _db(deps.store.update_material, material.id, {"status": "failed", "error": message})
     except Exception:
-        log.exception("ingestion: could not mark %s as failed", material.id)
+        log.exception(
+            "ingestion: could not mark %s as failed, so it stays at %s",
+            material.id,
+            material.status,
+        )
+
+
+async def _fail_unread(deps: IngestionDeps, material_id: UUID, detail: str) -> None:
+    """The row could not be read, so the tenant is unknown: mark the file failed by its id only,
+    with no job row (spec §2.2 item 5.2)."""
+    log.warning("ingestion: classify of %s failed: %s", material_id, detail)
+    try:
+        await _db(deps.store.update_material, material_id, {"status": "failed", "error": TRY_AGAIN})
+    except Exception:
+        log.exception(
+            "ingestion: could not mark %s as failed, so it stays at uploaded", material_id
+        )
 
 
 # --- §2.4 · the prep: topics, question map, stars (SM-01, SM-03, SM-04)

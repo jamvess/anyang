@@ -13,7 +13,7 @@
 
 - [x] 1. 🤖 แก้ spec `specs/features/scope/ingestion.md` §2.2 (spec ของ Jam): ทุกความล้มหลัง `/uploaded` จบที่ `status = failed` + ข้อความที่ลองใหม่ได้ · อ่านแถวไม่ได้ → ยังตั้ง `failed` ด้วย id ได้ · DB ล่มทั้งหมด → log ระดับ ERROR ที่บอกว่าไฟล์ค้าง · AC-29 ขึ้นไป (#152 ใช้ AC-28 แล้ว) → 🙋 Jam review
 - [x] 2. 🤖 `/spec-to-tests` (unit · `InMemoryIngestionStore` + fake provider) → 🙋 Jam review test
-- [ ] 3. 🤖 `/implement-feature` จน green · ruff · pytest ทั้งชุด
+- [x] 3. 🤖 `/implement-feature` จน green · ruff · pytest ทั้งชุด
 
 ## Definition of done
 
@@ -26,7 +26,7 @@
 
 ## Next step
 
-ข้อ 2 รอ Jam review test (`tests/unit/test_classify_never_stuck.py` · 6 test แดงทั้งหมด) · ok แล้วทำข้อ 3
+ทุกข้อเสร็จ · พิมพ์ `/work-done`
 
 ## Waiting on
 
