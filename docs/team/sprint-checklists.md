@@ -44,7 +44,7 @@
 
 - **D1 · Junior + May:** login ใน demo เป็น **email + password** (UM-01) ไหม · Google (UM-02) ต้องตั้ง OAuth client ซึ่งรันในเครื่องยุ่งกว่า · **ตัดสินแล้ว 14 พ.ย. (Junior): email + password · Google ทำใน S5 (ยังเป็น Must)**
 - **D2 · Junior:** demo ใช้ Supabase ในเครื่อง (Docker) หรือ `anyang-dev` (cloud) · **ตัดสินแล้ว 14 พ.ย. (Junior): `anyang-dev`** · เหตุผล: ทีมไม่ใช้ Docker (`setup.md`), ข้อมูล demo (หัวข้อจาก ingestion) ใช้ร่วมกันได้ทั้งทีม, hook + RLS เปิดแล้ว · ข้อเสีย: ข้อมูลทดสอบปนกัน, migration ต้องรอ Junior push, อีเมลยืนยันของ SMTP ฟรีจำกัด, ปิด Confirm email แล้วใครที่รู้ URL + publishable key (อยู่ในเว็บ) สมัครได้และใช้ AI จริงได้ (มี rate limit ต่อนาที) → หลังทีมสร้างบัญชีครบให้ปิด "Allow new users to sign up" แล้วสร้างบัญชีใน Dashboard แทน · กติกา:
-  - (ก) บัญชี demo (ถาม Junior · สร้างแล้ว 14 พ.ย.) ใช้โชว์และอัดวิดีโออย่างเดียว ห้ามใช้ทดสอบ · ทดสอบให้สมัครบัญชีของตัวเอง
+  - (ก) บัญชี demo (ถาม Junior · สร้างแล้ว 14 พ.ย.) ใช้โชว์และอัดวิดีโออย่างเดียว ห้ามใช้ทดสอบ · ทดสอบให้สมัครบัญชีของตัวเอง · **17 พ.ย. (D4):** วิดีโอสมัครบัญชีใหม่ในฉาก 1 · บัญชีนี้เป็นทางสำรองเมื่อปิดรับสมัคร (`docs/design/demo-video.md`)
   - (ข) `0005`, `0006` ขึ้น `anyang-dev` แล้ว 14 พ.ย. · migration ใหม่ทุกตัว (ตัวต่อไป `0008` Storage · `0007` ขึ้นแล้ว 15 พ.ย.) แท็ก Junior ให้ push
   - (ค) ปิด Confirm email ใน `anyang-dev` (Authentication → Sign In / Providers → Email) สมัครแล้วเข้าได้ทันที · ปิดแล้ว 14 พ.ย.
   - (ง) API ในเครื่องใช้ `SUPABASE_URL` + `SUPABASE_ANON_KEY` ของ `anyang-dev` + `AUTH_REQUIRED=true` (ขั้นตอนใน `setup.md` A5)
