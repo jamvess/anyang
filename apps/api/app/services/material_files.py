@@ -6,10 +6,17 @@ user JWT (spec §2.1 item 4). Tests use `InMemoryMaterialFiles`.
 """
 
 import asyncio
+import logging
+import threading
 from collections.abc import Callable, Mapping
 from typing import Protocol
 
+import httpx
 from supabase import Client
+
+from app.settings import get_settings
+
+log = logging.getLogger(__name__)
 
 
 class MaterialFiles(Protocol):
@@ -31,20 +38,65 @@ class InMemoryMaterialFiles:
 
 class SupabaseMaterialFiles:
     """Reads `materials/<storage_path>` from Supabase Storage (bucket name from Junior's demo
-    step 3 · spec §10 item 3)."""
+    step 3 · spec §10 item 3).
 
-    def __init__(self, connect: Callable[[], Client], bucket: str) -> None:
+    One client for the process, like the store's. storage3 talks HTTP/2, so downloads that run
+    at the same time share its connection, and all of them fail when the server closes it. A
+    dropped connection (`httpx.TransportError`) is read again on a new client, up to `attempts`
+    in all; an answer from Storage (`StorageApiError`, e.g. not found) is not (spec §2.1 item 4 ·
+    AC-28). Threads that fail together replace the client once: the client has a generation
+    number, and only a thread that failed on the current generation drops it."""
+
+    def __init__(
+        self,
+        connect: Callable[[], Client],
+        bucket: str,
+        *,
+        attempts: int | None = None,
+        backoff_s: float | None = None,
+    ) -> None:
+        config = get_settings().ai.ingestion
         self._connect = connect
         self._bucket = bucket
-        self._client: Client | None = None  # one client for the process, like the store's
+        self._attempts = config.storage_read_attempts if attempts is None else attempts
+        self._backoff_s = config.storage_read_backoff_s if backoff_s is None else backoff_s
+        self._lock = threading.Lock()
+        self._client: Client | None = None
+        self._generation = 0  # of self._client; goes up each time a client is made
 
-    def _db(self) -> Client:
-        if self._client is None:
-            self._client = self._connect()
-        return self._client
+    def _current(self) -> tuple[Client, int]:
+        with self._lock:
+            if self._client is None:
+                self._client = self._connect()
+                self._generation += 1
+            return self._client, self._generation
+
+    def _drop(self, generation: int) -> None:
+        """Forget the client that failed, unless another thread has already replaced it."""
+        with self._lock:
+            if generation == self._generation:
+                self._client = None
 
     async def read(self, storage_path: str) -> bytes:
-        def download() -> bytes:
-            return self._db().storage.from_(self._bucket).download(storage_path)
+        for attempt in range(1, self._attempts + 1):
+            client, generation = self._current()
 
-        return await asyncio.to_thread(download)
+            def download(client: Client = client) -> bytes:
+                return client.storage.from_(self._bucket).download(storage_path)
+
+            try:
+                return await asyncio.to_thread(download)
+            except httpx.TransportError as error:
+                if attempt == self._attempts:
+                    raise
+                log.warning(
+                    "storage read %s dropped (attempt %d of %d): %s: %s",
+                    storage_path,
+                    attempt,
+                    self._attempts,
+                    type(error).__name__,
+                    error,
+                )
+                self._drop(generation)
+                await asyncio.sleep(self._backoff_s * attempt)
+        raise AssertionError("unreachable: the last attempt returns or raises")
