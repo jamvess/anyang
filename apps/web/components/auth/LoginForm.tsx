@@ -3,6 +3,7 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { safeNext } from "@/lib/auth";
 import { createClient } from "@/lib/supabase";
+import { AuthSwitch } from "./AuthSwitch";
 import { authStrings as t } from "./strings";
 
 /** Supabase says the email or the password is wrong; other 400s (an unconfirmed email, a bad
@@ -94,6 +95,7 @@ export function LoginForm({ next, navigate }: { next?: string; navigate: (href: 
       >
         {busy ? t.submitting : t.submit}
       </button>
+      <AuthSwitch question={t.noAccount} label={t.toSignup} path="/signup" next={next} />
     </form>
   );
 }
