@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { type FormEvent, type ReactNode, useEffect, useState } from "react";
-import { safeNext } from "@/lib/auth";
+import { type FormEvent, type ReactNode, useState } from "react";
+import { safeNext, withNext } from "@/lib/auth";
 import { createClient } from "@/lib/supabase";
-import { AuthSwitch, withNext } from "./AuthSwitch";
+import { AuthSwitch } from "./AuthSwitch";
 import { authStrings as t } from "./strings";
+import { useRedirectIfSignedIn } from "./useRedirectIfSignedIn";
 
 const INPUT = "rounded-md border border-zinc-300 px-3 py-2 text-base text-zinc-900";
 
@@ -16,7 +17,12 @@ const MESSAGES: Record<string, string> = {
   weak_password: t.weakPassword,
   email_address_invalid: t.emailInvalid,
   signup_disabled: t.signupDisabled,
+  // Sign-ups closed by turning the Email provider off (self-review PR #144).
+  email_provider_disabled: t.signupDisabled,
 };
+
+type Failure = { message: string; toLogin: boolean };
+const taken: Failure = { message: t.emailTaken, toLogin: true };
 
 /**
  * Email + password sign-up (spec: specs/features/platform/web-signup.md §2.1). The password rule
@@ -29,30 +35,18 @@ export function SignupForm({ next, navigate }: { next?: string; navigate: (href:
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Failure | null>(null);
   const [checkEmail, setCheckEmail] = useState(false);
 
   // Signed in already: go on at once (§2.1 item 7).
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const { data } = await createClient().auth.getSession();
-        if (alive && data.session) navigate(target);
-      } catch {
-        // No Supabase env (a dev machine on the stubs): stay on the form.
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [navigate, target]);
+  useRedirectIfSignedIn(target, navigate);
 
-  /** Shows the message, keeps the email and clears both passwords (§2.1 item 5). */
-  function fail(message: string) {
-    setError(message);
+  /** Shows the message, keeps the email, clears both passwords and lets the user try again (§2.1 item 5). */
+  function fail(failure: Failure) {
+    setError(failure);
     setPassword("");
     setConfirm("");
+    setBusy(false);
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -60,23 +54,29 @@ export function SignupForm({ next, navigate }: { next?: string; navigate: (href:
     if (busy) return;
     setError(null);
     if (password !== confirm) {
-      fail(t.passwordMismatch);
+      fail({ message: t.passwordMismatch, toLogin: false });
       return;
     }
     setBusy(true);
     try {
       const { data, error: failure } = await createClient().auth.signUp({ email, password });
-      if (!failure) {
-        // Confirm email is off on anyang-dev, so a session comes back (§2.1 item 3); without one the email must be confirmed (item 4).
-        if (data.session) navigate(target);
-        else setCheckEmail(true);
+      if (failure) {
+        const message = MESSAGES[failure.code ?? ""] ?? t.signupFailed;
+        fail({ message, toLogin: message === t.emailTaken });
         return;
       }
-      fail(MESSAGES[failure.code ?? ""] ?? t.signupFailed);
+      if (data.session) {
+        // Confirm email is off on anyang-dev, so a session comes back (§2.1 item 3). The button stays
+        // busy while the next page loads, so it cannot sign up twice (self-review PR #144).
+        navigate(target);
+        return;
+      }
+      // With Confirm email on, Supabase hides a taken email as a user with no identities and no
+      // error (self-review PR #144); otherwise the email must be confirmed (item 4).
+      if (data.user?.identities?.length === 0) fail(taken);
+      else setCheckEmail(true);
     } catch {
-      fail(t.signupFailed);
-    } finally {
-      setBusy(false);
+      fail({ message: t.signupFailed, toLogin: false });
     }
   }
 
@@ -118,8 +118,8 @@ export function SignupForm({ next, navigate }: { next?: string; navigate: (href:
       )}
       {error && (
         <p role="alert" className="text-sm text-red-700">
-          {error}
-          {error === t.emailTaken && (
+          {error.message}
+          {error.toLogin && (
             // A taken email: the way on is to sign in (wireframe S29 · AC-5).
             <>
               {" "}

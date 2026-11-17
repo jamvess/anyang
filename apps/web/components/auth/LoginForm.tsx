@@ -1,10 +1,11 @@
 "use client";
 
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { safeNext } from "@/lib/auth";
 import { createClient } from "@/lib/supabase";
 import { AuthSwitch } from "./AuthSwitch";
 import { authStrings as t } from "./strings";
+import { useRedirectIfSignedIn } from "./useRedirectIfSignedIn";
 
 /** Supabase says the email or the password is wrong; other 400s (an unconfirmed email, a bad
  * request) ask to try again instead of blaming the password (self-review PR #138). */
@@ -24,20 +25,7 @@ export function LoginForm({ next, navigate }: { next?: string; navigate: (href: 
   const [error, setError] = useState<string | null>(null);
 
   // Signed in already: go on at once (§2.1 item 6).
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const { data } = await createClient().auth.getSession();
-        if (alive && data.session) navigate(target);
-      } catch {
-        // No Supabase env (a dev machine on the stubs): stay on the form.
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [navigate, target]);
+  useRedirectIfSignedIn(target, navigate);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
