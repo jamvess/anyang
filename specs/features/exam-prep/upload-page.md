@@ -4,9 +4,9 @@
 |---|---|
 | Area | platform (หน้าเว็บ · exam prep) |
 | Requirements | CM-03 (อัปโหลดหลายไฟล์ PDF รูป เอกสาร) · CM-07 (สถานะรายไฟล์ + ความคืบหน้าระหว่างรอ) · CM-06 (ส่วนแสดงประเภทที่ AI เดาพร้อม confidence + ยืนยัน · แก้ประเภทอยู่ใน S5) · SA-06 (ทุก request ผ่าน `apiFetch` พร้อม token) |
-| Owner | May (Jam ทำช่วง solo 16 พ.ย. · PR #142 · May ดูย้อนหลัง) |
-| Reviewer | Jam · May ดูหน้าตาและ §10 ย้อนหลัง · Junior ดูสัญญา API (#140) |
-| Status | approved 2026-11-16 (Jam ok spec · §10 ข้อ 1 เลือก (ก)) |
+| Owner | May (Jam ทำช่วง solo 16 พ.ย. · PR #142 · May ดูแล้ว 17 พ.ย.) |
+| Reviewer | Jam · May ดูหน้าตาและ §10 แล้ว (May 17 พ.ย. · PR #153) · Junior ดูสัญญา API (#140) |
+| Status | approved 2026-11-16 (Jam ok spec · §10 ข้อ 1 เลือก (ก)) · May ok §10 ข้อ 2–6 และข้อความ (May 17 พ.ย. · PR #153) |
 | Related system spec | api.md "สร้างการเตรียมสอบและใส่ไฟล์" v1.10 + v1.13 (materials · ข้อเสนอ รอ Junior) และ "ความคืบหน้า…" v1.11 + v1.16 (`Ingestion` อ่าน DB แล้ว) · ai-orchestration.md §2.3.2 ขั้น 1–4 · use-cases.md UC-02 ขั้น 3–6, A3, E5, E6 · wireframe S09, S10, S11 · `room-photo-send.md` §2 ข้อ 2 (ข้าม `PUT` เมื่อ `X-Stub`) · `prep-list-page.md` (การ์ดและหลังสร้าง) · `web-login.md` §2.3 (401) |
 
 ## 1. Context
@@ -186,7 +186,7 @@ fetch จำลองทั้งหมด (ไม่ใช้ API จริง)
 
 1. **ตัดสินแล้ว (Jam 16 พ.ย.): (ก) แก้ใน PR นี้** · **แก้ test ที่ review แล้ว 3 ตัว** เพื่อ §2.4: `PrepList.test.tsx` "CM01 a prep at scope or tutoring links to its page, the others do not (AC-3)" (การ์ด `materials`, `processing` จะเป็นลิงก์) · `CreatePrepForm.test.tsx` "CM01 creates the prep with what was typed, then goes home (AC-8)" และ "CM01 a page hidden after a create comes back as a fresh, usable form" (ไป `/preps/p1/upload` แทน `/`) · ข้อเสนอ: แก้ใน PR นี้ (ชื่อ test เปลี่ยนตาม) · ทางเลือก: ไม่แก้ §2.4 ใน PR นี้ แล้วหน้าใหม่เข้าได้จาก URL อย่างเดียว (demo เดินไม่ต่อ)
 
-ให้ May ดูย้อนหลัง (เรื่องหน้าจอ)
+ให้ May ดูย้อนหลัง (เรื่องหน้าจอ) · **May 17 พ.ย. · PR #153: ข้อ 2–6 ใช้ตามนี้ทั้งหมด** ("มั่นใจ n%" ตามเดิม · ข้อความใน `components/materials/strings.ts` ไม่แก้)
 
 2. **S10 แบบย่อ:** ไม่มีปุ่ม "ถูกหมดแล้ว ข้ามเลย" แยก และยังแก้ประเภทไม่ได้จนถึง S5 · confidence แสดงเป็น % จาก API (wireframe ใช้คำว่า "มั่นใจ" / "ไม่ค่อยมั่นใจ" ซึ่งต้องมีเส้นแบ่ง · ยังไม่มีใน spec ไหน)
 3. **`POLL_MS`:** ข้อเสนอ 2 วินาที เป็นค่าคงที่ใน `components/materials/` (ไม่ใช่ค่าของ learning model จึงไม่อยู่ใน `config/learning.yaml`) · api.md ไม่ได้กำหนด

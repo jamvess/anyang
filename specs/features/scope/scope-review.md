@@ -6,7 +6,7 @@
 | Requirements | SM-03 (แสดงดาว 1–3 ที่ code คำนวณ) · SM-04 (ที่มา: ชื่อไฟล์ + เลขหน้า + กดดูข้อความต้นฉบับ) · SM-02 (เรียงตามลำดับจาก API) · SM-09 (ยืนยันโดยไม่แก้ · UC-02 A5) |
 | Owner | May |
 | Reviewer | Junior (OQ 5–8 · api.md) |
-| Status | approved by May 2026-10-28 (owner · OQ 1–4) · OQ 5–8 ตัดสินแล้ว (api.md v1.20 · #137) · 16 พ.ย. เพิ่ม §2 "ต่อ API จริง" + AC-21 ถึง AC-24 (demo ขั้น 5 · Jam ช่วง solo · PR #141 · รอ May ดูย้อนหลัง · OQ 9) |
+| Status | approved by May 2026-10-28 (owner · OQ 1–4) · OQ 5–8 ตัดสินแล้ว (api.md v1.20 · #137) · 16 พ.ย. เพิ่ม §2 "ต่อ API จริง" + AC-21 ถึง AC-24 (demo ขั้น 5 · Jam ช่วง solo · PR #141) · OQ 9 May ok (May 17 พ.ย. · PR #153) |
 | Related system spec | ai-orchestration.md §2.3.4 (5d code คำนวณดาว), §2.3.5 (สูตรดาว · เหตุผลจาก template), §2.3.6 (`origin = user` ติดป้าย "นอกเอกสาร"), §2.3.8 (API 7, 8, 11) · api.md "Exam prep และ scope" · data-model.md `topics`, `past_exam_questions`, "รอผล" ข้อ 1 (ช่วงหน้า), ข้อ 3 (`map_note`) · use-cases.md UC-02 ขั้น 7–8, A4, A5, E1 · wireframe S12, S38 · `config/learning.yaml` → `stars` (ฝั่ง backend เท่านั้น) |
 
 ## 1. Context
@@ -177,7 +177,7 @@
 7. **`text` ของข้อสอบเก่า:** ใช้ `$…$` แบบข้อความในห้อง
 8. **`map_note`:** เก็บที่ `past_exam_questions.map_note`
 
-ให้ May ตัดสิน (16 พ.ย. · Jam ใช้ค่าเหล่านี้ไปก่อนช่วง solo)
+ให้ May ตัดสิน (16 พ.ย. · Jam ใช้ค่าเหล่านี้ไปก่อนช่วง solo) · **May 17 พ.ย. · PR #153: ข้อ 9 ใช้ข้อความตามนี้**
 
 9. **ข้อความใหม่** ใน §2 "ต่อ API จริง": "ระบบยังอ่านไฟล์ไม่เสร็จ" และ "ไม่มีหัวข้อให้ติว ทุกหัวข้อถูกตัดออก" · แก้ได้ใน `components/scope/strings.ts`
 
