@@ -39,6 +39,29 @@ function imageOrigin(messages: ChatMessage[]): { source?: ChatMessage["image_sou
   return { source: sent?.image_source, problemId: sent?.image_problem_id };
 }
 
+/** A saved problem card's payload: the `problem` event's shape (problem-card-history.md §2.1 item 1). */
+function isProblem(value: unknown): value is ProblemData {
+  if (typeof value !== "object" || value === null) return false;
+  const p = value as Record<string, unknown>;
+  return (
+    typeof p.problem_id === "string" &&
+    typeof p.text_latex === "string" &&
+    typeof p.difficulty === "number" &&
+    typeof p.purpose === "string"
+  );
+}
+
+/**
+ * A history message as the room shows it: a saved `{problem}` card becomes a problem card, like one
+ * from the stream; a broken one is dropped (an empty card is not shown); any other card stays a
+ * progress card (problem-card-history.md §2.1).
+ */
+function fromHistory(m: ChatMessage): ChatMessage {
+  if (m.role !== "card" || !m.card || !("problem" in m.card)) return m;
+  const problem = (m.card as { problem: unknown }).problem;
+  return isProblem(problem) ? { ...m, card: null, problem } : { ...m, card: null };
+}
+
 export function ChatRoom({
   room,
   sendMessage = noReply,
@@ -65,7 +88,7 @@ export function ChatRoom({
   /** Where "ติวรอบใหม่" leads, and what opens the new session in place (§2.3). Without it the link reloads the page. */
   newSession?: { href: string; onOpen: () => void };
 }) {
-  const [messages, setMessages] = useState<ChatMessage[]>(room.messages);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => room.messages.map(fromHistory));
   const [busy, setBusy] = useState(false);
   const [typing, setTyping] = useState(false);
   const [streamingId, setStreamingId] = useState<string | null>(null);

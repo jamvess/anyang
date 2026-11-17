@@ -14,7 +14,7 @@
 - [x] 1. 🙋 May ส่งข้อความถาม Jam (+ Junior) เลือกทาง: (ก) `GET /sessions/{id}` ส่ง `open_problem` (โจทย์ค้างจากตาราง `problems`) แล้วหน้าเว็บแสดงการ์ดท้ายแชท · (ข) บันทึกการ์ดโจทย์เป็น `messages` `role = card` ทุกที่ที่ส่ง event `problem` · และใครทำส่วน API · **17 พ.ย. Jam เลือก (ข) · Jam ทำ API · เราทำหน้าเว็บ**
 - [x] 2. 🤖 `/spec-feature` (หน้าเว็บ + สัญญาข้อมูล `card.problem` ให้ Jam ทำ API ตาม) → 🙋 May ok spec · 17 พ.ย. ok
 - [x] 3. 🤖 `/spec-to-tests` (หน้าเว็บ) → 🙋 May review test · 17 พ.ย. ok (8 red · AC-2 ผ่านตั้งแต่ต้น · เจอว่าหน้าเว็บวันนี้พังถ้าประวัติมี `card.problem` → merge ก่อน API ของ Jam)
-- [ ] 4. 🤖 `/implement-feature` หน้าเว็บจน test ผ่าน (lint + typecheck + test)
+- [x] 4. 🤖 `/implement-feature` หน้าเว็บจน test ผ่าน (lint + typecheck + test) · 17 พ.ย. 454/454 · 2 รอบ red → green · test AC-5 ใช้เวลาประวัติเป็นอดีต (เดิม 09:00 UTC วันนี้ = อนาคตตอนรัน · May ok)
 - [ ] 5. 🙋 ลองเส้นจริงหลัง Jam ทำ API เสร็จ: เปิดห้อง → ได้การ์ดโจทย์ → รีเฟรช → การ์ดโจทย์ + canvas ยังอยู่ (ต้องมี prep ที่มีหัวข้อ · บัญชี May หรือ Jam ลองให้)
 - [ ] 6. 🤖 `/work-done` (merge หน้าเว็บได้ก่อน API · ไม่มี `card.problem` = ทำงานเหมือนเดิม)
 
@@ -25,12 +25,13 @@
 
 ## Decisions
 
+- 2026-11-17 · May: test AC-5 ใช้เวลาประวัติ 1 ชม. ก่อนเวลารัน (เดิมเป็นเวลาตายตัวในอนาคต ผลขึ้นกับเวลาที่รัน)
 - 2026-11-17 · Jam: ทาง (ข) บันทึกการ์ดโจทย์เป็น `messages` `role = card` · Jam ทำ API · เราทำหน้าเว็บ
 - 2026-11-17 · May เลือกทำเพราะเป็นส่วน "กลับมาเรียนต่อได้" ของ goal 4 ที่ยังขาด (ปุ่มจบเสร็จแล้ว #143)
 
 ## Next step
 
-`/implement-feature` (ขั้น 4)
+`/work-done` (merge หน้าเว็บก่อน API ของ Jam · ขั้น 5 ลองหลัง API)
 
 ## Waiting on
 

@@ -35,7 +35,9 @@ function message(role: ChatMessage["role"], extra: Partial<ChatMessage> = {}): C
     input_mode: null,
     attachment_path: null,
     attachment_name: null,
-    created_at: new Date(Date.UTC(2026, 10, 17, 9, 0, clock)).toISOString(),
+    // In the past of the run (an hour ago, a second apart): messages made in the browser now come after
+    // them. A fixed date would be in the future before it, and the order would flip (changed with May 17 Nov).
+    created_at: new Date(Date.now() - 3_600_000 + clock * 1000).toISOString(),
     ...extra,
   };
 }
