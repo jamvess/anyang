@@ -13,6 +13,8 @@ to reach or use the database becomes `DbUnavailableError` (details in the log).
 
 import copy
 import itertools
+import logging
+import time
 import uuid
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
@@ -20,12 +22,17 @@ from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any, Protocol
 from uuid import UUID
 
+import httpx
 from fastapi import Depends
 from postgrest.types import CountMethod
 from supabase import Client
 
 from app.auth import AuthContext, get_auth, get_user_db
 from app.db.errors import DbUnavailableError, unavailable
+from app.db.shared_client import SharedClient
+from app.settings import get_settings
+
+log = logging.getLogger(__name__)
 
 # Tables the job owns rows of, child first (what a re-run of one file clears · spec §2.3 item 6).
 FILE_TABLES = ("material_pages", "chunks", "past_exam_questions")
@@ -456,33 +463,61 @@ def _ids(row: dict[str, Any]) -> dict[str, Any]:
 
 
 class SupabaseIngestionStore:
-    """The store with the service role (spec §2.1 item 4 · ingestion is a background job)."""
+    """The store with the service role (spec §2.1 item 4 · ingestion is a background job).
 
-    def __init__(self, connect: Callable[[], Client]) -> None:
-        self._connect = connect
-        self._client: Client | None = None
+    Its methods run in worker threads (`ingestion._db`) and share one client. A dropped
+    connection (`httpx.TransportError`) is run again on a new client, up to `attempts` in all;
+    any other error is not (spec §2.1 item 4 · AC-29). Every write is safe to repeat: an insert
+    gives each row an id before the first try and repeats as an upsert that skips ids already
+    there, so an insert committed before its answer was lost is not written twice."""
 
-    def _db(self) -> Client:
-        if self._client is None:
-            self._client = self._connect()
-        return self._client
+    def __init__(
+        self,
+        connect: Callable[[], Client],
+        *,
+        attempts: int | None = None,
+        backoff_s: float | None = None,
+    ) -> None:
+        config = get_settings().ai.ingestion
+        self._attempts = config.storage_read_attempts if attempts is None else attempts
+        if self._attempts < 1:
+            raise ValueError(f"attempts must be at least 1, got {self._attempts}")
+        self._backoff_s = config.storage_read_backoff_s if backoff_s is None else backoff_s
+        self._client = SharedClient(connect, warm=lambda client: client.postgrest)
 
-    def _run[T](self, what: str, query: Callable[[], T]) -> T:
-        try:
-            return query()
-        except Exception as error:  # network, PostgREST, unexpected row shape
-            raise unavailable(f"ingestion {what}", error) from error
+    def _run[T](
+        self,
+        what: str,
+        query: Callable[[Client], T],
+        repeat: Callable[[Client], T] | None = None,
+    ) -> T:
+        """`query` on the shared client; `repeat` (default `query`) for the later attempts."""
+        for attempt in range(1, self._attempts + 1):
+            client, generation = self._client.current()
+            try:
+                return (query if attempt == 1 or repeat is None else repeat)(client)
+            except httpx.TransportError as error:
+                if attempt == self._attempts:
+                    raise unavailable(f"ingestion {what}", error) from error
+                log.warning(
+                    "ingestion %s dropped (attempt %d of %d): %s: %s",
+                    what,
+                    attempt,
+                    self._attempts,
+                    type(error).__name__,
+                    error,
+                )
+                self._client.drop(generation)
+                time.sleep(self._backoff_s * attempt)
+            except Exception as error:  # PostgREST, unexpected row shape
+                raise unavailable(f"ingestion {what}", error) from error
+        raise AssertionError("unreachable: the last attempt returns or raises")
 
     def prep_tenant(self, prep_id: UUID) -> UUID | None:
         rows = self._run(
             "prep",
-            lambda: (
-                self._db()
-                .table("exam_preps")
-                .select("tenant_id")
-                .eq("id", str(prep_id))
-                .execute()
-                .data
+            lambda db: (
+                db.table("exam_preps").select("tenant_id").eq("id", str(prep_id)).execute().data
             ),
         )
         return UUID(rows[0]["tenant_id"]) if rows else None
@@ -490,18 +525,15 @@ class SupabaseIngestionStore:
     def get_material(self, material_id: UUID) -> MaterialRow | None:
         rows = self._run(
             "material",
-            lambda: (
-                self._db().table("materials").select("*").eq("id", str(material_id)).execute().data
-            ),
+            lambda db: db.table("materials").select("*").eq("id", str(material_id)).execute().data,
         )
         return _material(rows[0]) if rows else None
 
     def list_materials(self, prep_id: UUID) -> list[MaterialRow]:
         rows = self._run(
             "materials",
-            lambda: (
-                self._db()
-                .table("materials")
+            lambda db: (
+                db.table("materials")
                 .select("*")
                 .eq("exam_prep_id", str(prep_id))
                 .order("created_at")
@@ -524,8 +556,8 @@ class SupabaseIngestionStore:
         material_id: UUID | None = None,
         error: str | None = None,
     ) -> None:
-        def query() -> None:
-            jobs = self._db().table("ingestion_jobs")
+        def query(db: Client) -> None:
+            jobs = db.table("ingestion_jobs")
             old = jobs.delete().eq("exam_prep_id", str(exam_prep_id)).eq("stage", stage)
             old = (
                 old.eq("material_id", str(material_id))
@@ -550,12 +582,11 @@ class SupabaseIngestionStore:
         self._run("job", query)
 
     def clear_file(self, material_id: UUID) -> None:
-        def query() -> None:
+        def query(db: Client) -> None:
             for table in FILE_TABLES:
-                self._db().table(table).delete().eq("material_id", str(material_id)).execute()
+                db.table(table).delete().eq("material_id", str(material_id)).execute()
             (
-                self._db()
-                .table("ingestion_jobs")
+                db.table("ingestion_jobs")
                 .delete()
                 .eq("material_id", str(material_id))
                 .neq("stage", "classify")
@@ -566,19 +597,24 @@ class SupabaseIngestionStore:
 
     def upsert(self, table: str, rows: list[dict[str, Any]]) -> None:
         if rows:
-            self._run(
-                f"upsert {table}", lambda: self._db().table(table).upsert(_json(rows)).execute()
-            )
+            self._run(f"upsert {table}", lambda db: db.table(table).upsert(_json(rows)).execute())
 
     def insert(self, table: str, rows: list[dict[str, Any]]) -> None:
-        if rows:
-            self._run(
-                f"insert {table}", lambda: self._db().table(table).insert(_json(rows)).execute()
-            )
+        if not rows:
+            return
+        # Ids before the first try, so a repeat can tell which rows are already there.
+        payload = _json([{**row, "id": row.get("id") or uuid.uuid4()} for row in rows])
+        self._run(
+            f"insert {table}",
+            lambda db: db.table(table).insert(payload).execute(),
+            repeat=lambda db: (
+                db.table(table).upsert(payload, on_conflict="id", ignore_duplicates=True).execute()
+            ),
+        )
 
     def select(self, table: str, **match: Any) -> list[dict[str, Any]]:
-        def query() -> list[dict[str, Any]]:
-            q = self._db().table(table).select("*")
+        def query(db: Client) -> list[dict[str, Any]]:
+            q = db.table(table).select("*")
             for key, value in match.items():
                 q = q.is_(key, "null") if value is None else q.eq(key, _json(value))
             return q.execute().data
@@ -588,7 +624,7 @@ class SupabaseIngestionStore:
     def update(self, table: str, row_id: UUID, fields: dict[str, Any]) -> None:
         self._run(
             f"update {table}",
-            lambda: self._db().table(table).update(_json(fields)).eq("id", str(row_id)).execute(),
+            lambda db: db.table(table).update(_json(fields)).eq("id", str(row_id)).execute(),
         )
 
     def delete_topics(self, topic_ids: Iterable[UUID]) -> None:
@@ -596,7 +632,7 @@ class SupabaseIngestionStore:
         if ids:
             self._run(
                 "delete topics",
-                lambda: self._db().table("topics").delete().in_("id", ids).execute(),
+                lambda db: db.table("topics").delete().in_("id", ids).execute(),
             )
 
 

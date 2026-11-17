@@ -7,13 +7,13 @@ user JWT (spec §2.1 item 4). Tests use `InMemoryMaterialFiles`.
 
 import asyncio
 import logging
-import threading
 from collections.abc import Callable, Mapping
 from typing import Protocol
 
 import httpx
 from supabase import Client
 
+from app.db.shared_client import SharedClient
 from app.settings import get_settings
 
 log = logging.getLogger(__name__)
@@ -59,36 +59,16 @@ class SupabaseMaterialFiles:
         self._attempts = config.storage_read_attempts if attempts is None else attempts
         if self._attempts < 1:
             raise ValueError(f"attempts must be at least 1, got {self._attempts}")
-        self._connect = connect
         self._bucket = bucket
         self._backoff_s = config.storage_read_backoff_s if backoff_s is None else backoff_s
-        self._lock = threading.Lock()
-        self._client: Client | None = None
-        self._generation = 0  # of self._client; goes up each time a client is made
-
-    def _current(self) -> tuple[Client, int]:
-        """Called in a worker thread: making a client blocks, so it stays off the event loop."""
-        with self._lock:
-            if self._client is None:
-                client = self._connect()
-                # `Client.storage` is built lazily and without a lock: build it here, once.
-                client.storage  # noqa: B018
-                self._client = client
-                self._generation += 1
-            return self._client, self._generation
-
-    def _drop(self, generation: int) -> None:
-        """Forget the client that failed, unless another thread has already replaced it."""
-        with self._lock:
-            if generation == self._generation:
-                self._client = None
+        self._client = SharedClient(connect, warm=lambda client: client.storage)
 
     async def read(self, storage_path: str) -> bytes:
         for attempt in range(1, self._attempts + 1):
             used: list[int] = []  # the generation the worker thread read with
 
             def download(used: list[int] = used) -> bytes:
-                client, generation = self._current()
+                client, generation = self._client.current()  # blocks: worker thread
                 used.append(generation)
                 return client.storage.from_(self._bucket).download(storage_path)
 
@@ -106,6 +86,6 @@ class SupabaseMaterialFiles:
                     error,
                 )
                 if used:
-                    self._drop(used[0])
+                    self._client.drop(used[0])
                 await asyncio.sleep(self._backoff_s * attempt)
         raise AssertionError("unreachable: the last attempt returns or raises")
