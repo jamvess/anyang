@@ -86,7 +86,6 @@ export function TutorRoom({ prepId }: { prepId: string }) {
   if (state.kind === "ready") {
     return (
       <ChatRoom
-        key={state.room.session_id}
         room={state.room}
         sendMessage={sendMessage}
         confirmOcr={confirmOcr}

@@ -9,6 +9,7 @@ import type { OcrPreviewData, OcrStatus } from "./OcrConfirmCard";
 import type { ProblemData } from "./ProblemCard";
 import { roomStrings as t } from "./strings";
 import { hasVerdictMark, type VerdictData } from "./VerdictMark";
+import type { components } from "@/lib/api";
 import type { SSEEvent } from "@/lib/sse";
 import type { ChatMessage, ConfirmOcr, EndSession, MessageRole, RoomData, SendMessage, SendPayload, Transcribe } from "./types";
 
@@ -21,6 +22,7 @@ const noReply: SendMessage & ConfirmOcr = async function* () {
 };
 
 type Token = { speaker: "tutor" | "buddy"; text: string };
+type SessionEndData = components["schemas"]["SessionEndEvent"];
 
 /**
  * Tutor room (specs: chat-room-ui.md, chat-streaming.md).
@@ -248,7 +250,7 @@ export function ChatRoom({
           setStreamingId(null);
         } else if (event === "session_end") {
           // The summary is one tutor bubble, a line per line (PM-05 · session-end-ui.md §2.2 item 3).
-          const { summary_lines } = data as { summary_lines: string[] };
+          const { summary_lines } = data as SessionEndData;
           append(newMessage("tutor", summary_lines.join("\n")));
           current = null;
           setStreamingId(null);
@@ -333,7 +335,8 @@ export function ChatRoom({
               // ("" would do the same, but React drops an empty href and the link would lose its role.)
               href={newSession?.href ?? "?"}
               onClick={(e) => {
-                if (!newSession) return;
+                // A modified click (new tab, new window) keeps the browser's own behaviour (self-review PR #143).
+                if (!newSession || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) return;
                 e.preventDefault();
                 newSession.onOpen();
               }}

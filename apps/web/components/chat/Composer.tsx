@@ -101,6 +101,7 @@ export function Composer({
           <button
             type="button"
             aria-label={t.removePhoto}
+            disabled={locked}
             onClick={() => setImage(null)}
             className="rounded-full px-2 py-1 hover:bg-zinc-100"
           >

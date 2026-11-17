@@ -63,7 +63,7 @@ export function OcrConfirmCard({ preview, status, onConfirm, onRetake, disabled 
       <ol>
         {lines.map((latex, i) => {
           const n = i + 1;
-          const open = !locked && editing?.index === i;
+          const open = !locked && !disabled && editing?.index === i;
           return (
             <li key={i} data-ocr-line={n} className="flex items-center gap-3 py-1">
               <span className="w-4 shrink-0 font-mono text-xs text-zinc-400">{n}</span>
