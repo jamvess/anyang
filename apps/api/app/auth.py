@@ -202,3 +202,11 @@ def get_user_db(auth: Annotated[AuthContext | None, Depends(get_auth)]) -> Clien
         postgrest_client_timeout=USER_DB_TIMEOUT_S,
     )
     return create_client(env.supabase_url, env.supabase_anon_key.get_secret_value(), options)
+
+
+def get_optional_user_db(
+    auth: Annotated[AuthContext | None, Depends(get_auth)],
+) -> Client | None:
+    """`get_user_db`, or None without a user (the endpoint serves its stub). A dependency, so
+    the providers of one request share a single client (FastAPI caches it per request)."""
+    return None if auth is None else get_user_db(auth)

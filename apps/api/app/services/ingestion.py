@@ -95,7 +95,20 @@ def _name(material: MaterialRow) -> str:
     return clean_file_name(material.file_name, get_settings().ai.guards.max_attachment_name_chars)
 
 
+def _path_is_own(material: MaterialRow) -> bool:
+    """`{tenant_id}/{exam_prep_id}/` of the row, then one non-empty name with no `/`
+    (materials-db.md §2.2 item 8 · SA-06). The service role skips the storage policies, so a
+    path a user managed to write must not reach another tenant's object. Migration 0009 already
+    stops such writes; this is the second line."""
+    prefix = f"{material.tenant_id}/{material.exam_prep_id}/"
+    name = material.storage_path.removeprefix(prefix)
+    return material.storage_path.startswith(prefix) and name != "" and "/" not in name
+
+
 async def _read(deps: IngestionDeps, material: MaterialRow) -> bytes:
+    if not _path_is_own(material):
+        # The path itself stays out of the job error: it may name another tenant.
+        raise _FileFailed(UNREADABLE, "storage_path outside its tenant and prep: not read")
     try:
         return await deps.files.read(material.storage_path)
     except Exception as error:  # Storage down or the object is missing
@@ -715,6 +728,21 @@ class IngestionRunner:
     def __init__(self, deps: IngestionDeps) -> None:
         self._deps = deps
         self._tasks: dict[UUID, asyncio.Task[None]] = {}
+        self._classifying: set[asyncio.Task[None]] = set()  # strong refs until each ends
+
+    def classify(self, material_id: UUID) -> asyncio.Task[None]:
+        """`POST /materials/{id}/uploaded`: A1 in the background, not awaited by the request
+        (specs/features/exam-prep/materials-db.md §2.4 item 6 · Junior)."""
+        task = asyncio.create_task(self._classify(material_id), name=f"classify {material_id}")
+        self._classifying.add(task)
+        task.add_done_callback(self._classifying.discard)
+        return task
+
+    async def _classify(self, material_id: UUID) -> None:
+        try:
+            await classify_material(material_id, self._deps)
+        except Exception:
+            log.exception("classify of %s stopped", material_id)
 
     def start(self, prep_id: UUID) -> asyncio.Task[None]:
         running = self._tasks.get(prep_id)
