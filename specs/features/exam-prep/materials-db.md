@@ -179,7 +179,7 @@ RLS ของ `materials` (`tenant_rows`) ครอบ column ใหม่อย
 | `materials` | function `public.materials_path_guard()` (`security invoker` · ตรวจ prep ด้วย `exists` ภายใต้ RLS ของผู้เรียก · `search_path = ''`) + trigger `materials_path_guard` `before insert or update` · ตรวจเมื่อ `current_user = 'authenticated'` | เพิ่ม |
 | `materials` | `update ... set uploaded_at = created_at where uploaded_at is null and status <> 'uploaded'` | ข้อมูล |
 
-**ต้อง `db push` ขึ้น `anyang-dev` ก่อน merge (Junior)**
+**ขึ้น `anyang-dev` แล้ว (Junior 2026-11-17)**
 
 ## 6. API / SSE changes
 
