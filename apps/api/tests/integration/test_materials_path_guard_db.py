@@ -50,9 +50,8 @@ def _own_row(user: User, prep: str) -> dict[str, Any]:
     return user.client().table("materials").insert(row).execute().data[0]
 
 
-def _victim_object(admin: Client, victim: User) -> str:
-    """B's prep with a real object in B's prefix; returns its path."""
-    prep = _prep(victim)
+def _victim_object(admin: Client, victim: User, prep: str) -> str:
+    """A real object in B's prefix, under B's prep; returns its path."""
     path = f"{victim.tenant_id}/{prep}/{uuid.uuid4()}"
     admin.storage.from_(MATERIALS_BUCKET).upload(
         path, PDF_BYTES, {"content-type": "application/pdf"}
@@ -70,16 +69,20 @@ def _rows(admin: Client, **match: str) -> list[dict[str, Any]]:
 @pytest.fixture(scope="module")
 def world(admin: Client, make_user: Callable[[], User]) -> dict[str, Any]:
     a, b = make_user(), make_user()
+    prep_b = _prep(b)
     return {
         "a": a,
         "b": b,
         "prep_a": _prep(a),
         "other_prep_a": _prep(a),
-        "victim_path": _victim_object(admin, b),
+        "prep_b": prep_b,
+        "victim_path": _victim_object(admin, b, prep_b),
     }
 
 
-@pytest.mark.parametrize("case", ["victim object", "own tenant, other prep", "other id"])
+@pytest.mark.parametrize(
+    "case", ["victim object", "own tenant, other prep", "other id", "other tenant's prep"]
+)
 def test_SA06_user_cannot_insert_material_pointing_elsewhere(
     admin: Client, world: dict[str, Any], case: str
 ) -> None:
@@ -89,11 +92,14 @@ def test_SA06_user_cannot_insert_material_pointing_elsewhere(
         "victim object": world["victim_path"],
         "own tenant, other prep": f"{a.tenant_id}/{world['other_prep_a']}/{material}",
         "other id": f"{a.tenant_id}/{world['prep_a']}/{uuid.uuid4()}",
+        # the path has the right shape, but the prep belongs to B (an FK ignores RLS)
+        "other tenant's prep": f"{a.tenant_id}/{world['prep_b']}/{material}",
     }[case]
+    prep = world["prep_b"] if case == "other tenant's prep" else world["prep_a"]
     row = {
         "id": material,
         "tenant_id": a.tenant_id,
-        "exam_prep_id": world["prep_a"],
+        "exam_prep_id": prep,
         "storage_path": path,
         "file_name": "attack.pdf",
         "status": "confirmed",

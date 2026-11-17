@@ -93,6 +93,13 @@ def test_SA06_0009_guards_insert_and_update() -> None:
     # update: the three columns cannot change
     for column in ("storage_path", "tenant_id", "exam_prep_id"):
         assert f"new.{column} is distinct from old.{column}" in sql
+    # insert: the prep must be visible to the caller in the same tenant (RLS of exam_preps)
+    assert re.search(
+        r"exists \( ?select 1 from public\.exam_preps \w* ?where \w*\.?id = new\.exam_prep_id "
+        r"and \w*\.?tenant_id = new\.tenant_id ?\)",
+        sql,
+    ), "an EXISTS over public.exam_preps for new.exam_prep_id and new.tenant_id"
+    assert "security definer" not in sql, "the caller's rights, so RLS hides other tenants' preps"
     assert "errcode = '42501'" in sql
 
 

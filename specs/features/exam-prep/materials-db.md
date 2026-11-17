@@ -36,7 +36,7 @@ journey ของวิดีโอ 23 พ.ย. ขั้น 3 ให้ผู�
 6. **ชนิดไฟล์ของ bucket** (`allowed_mime_types`): ชนิดที่ `POST /materials` รับ (`MATERIAL_CONTENT_TYPES`) รวมกับชนิดของ `/sessions/{id}/uploads` (`UPLOAD_CONTENT_TYPES` รูป + เสียง) เพื่อให้ห้องติวใช้ bucket เดียวกันได้โดยไม่ต้องแก้ migration · มี test ตรวจว่าตรงกับสองชุดนี้ใน code
 
 7. **`storage_path` ต้องเชื่อได้ (SA-06 · พบใน self-review 2026-11-17):** policy `tenant_rows` ของ `materials` ตรวจแค่ `tenant_id` ผู้ใช้จึง insert หรือ update แถวของตัวเองผ่าน PostgREST ตรงๆ (anon key + JWT) ให้ `storage_path` ชี้ไปที่ object ของ tenant อื่นได้ แล้ว ingestion (service role) จะอ่านไฟล์นั้นเข้าหัวข้อของผู้โจมตี · migration `0009` เพิ่ม trigger `before insert or update` บน `materials` ที่ทำงาน**เฉพาะเมื่อ role ที่เรียกคือ `authenticated`**:
-   - insert: `storage_path` ต้องเท่ากับ `{tenant_id}/{exam_prep_id}/{id}` ของแถวนั้นทุกตัวอักษร · ไม่ตรง → error `42501` (PostgREST ตอบ `403`) และไม่มีแถว
+   - insert: `storage_path` ต้องเท่ากับ `{tenant_id}/{exam_prep_id}/{id}` ของแถวนั้นทุกตัวอักษร · และต้องมี `exam_preps` ที่ `id = exam_prep_id` และ `tenant_id` เดียวกัน **มองด้วยสิทธิ์ของผู้เรียก** (trigger เป็น `security invoker` · RLS ของ `exam_preps` ซ่อน prep ของ tenant อื่นอยู่แล้ว · ไม่ใช้ `security definer`) · ไม่ผ่านข้อใด → error `42501` (PostgREST ตอบ `403`) และไม่มีแถว · กันการเอาไฟล์ของตัวเองไปใส่ใน prep ของคนอื่น (FK ไม่สน RLS)
    - update: `storage_path`, `tenant_id`, `exam_prep_id` เปลี่ยนไม่ได้ · เปลี่ยน → error `42501` และแถวคงเดิม · column อื่น (`user_note`, `uploaded_at`, `kind`, `status` ฯลฯ) แก้ได้ตาม RLS เดิม
    - service role และ migration ไม่ถูกตรวจ (ingestion, seed, test ที่ insert ด้วย admin ใช้ path อื่นได้ตามเดิม)
    - `repo.create` ของ §2.3 เขียน path ตามรูปนี้อยู่แล้ว จึงไม่ต้องแก้ API
@@ -154,7 +154,7 @@ journey ของวิดีโอ 23 พ.ย. ขั้น 3 ให้ผู�
 - **AC-24 (SA-06)** Given object ของ A When B (JWT ของตัวเอง) ดาวน์โหลด, list โฟลเดอร์ของ A, ลบ, หรือขอ signed upload URL ใน prefix ของ A Then ไม่ได้ทุกทาง · client ที่ไม่มี JWT (anon) ก็ไม่ได้ · A ทำกับ object ของตัวเองได้
 - **AC-25 (SA-06)** Given แถว `materials` ของ A When B select หรือ update ด้วย JWT ของตัวเอง Then ไม่เห็นและแก้ไม่ได้ (เพิ่มใน `test_rls_isolation.py` ถ้ายังไม่ครอบ column ใหม่)
 - **AC-26 (CM-03)** Given bucket ใน `anyang-dev` หลัง `0008` When อ่าน `storage.buckets` Then `public = false`, `file_size_limit` = `guards.max_material_mb` × 1,048,576 · ส่ง object ใหญ่เกินผ่าน signed URL → Storage ปฏิเสธ
-- **AC-29 (SA-06)** Given user A และ B · B มี prep และ object ใน prefix ของ B When A insert แถว `materials` ผ่าน PostgREST ด้วย JWT ของ A (prep ของ A) โดย `storage_path` = (ก) path ของ object ของ B (ข) `{tenant A}/{prep อื่นของ A}/{id}` (ค) `{tenant A}/{prep A}/{uuid อื่น}` Then ถูกปฏิเสธทุกกรณี (`42501`) และไม่มีแถวเกิดขึ้น · Given `storage_path` = `{tenant A}/{prep A}/{id}` ที่ตรงกับ `id` ที่ส่ง Then insert ได้
+- **AC-29 (SA-06)** Given user A และ B · B มี prep และ object ใน prefix ของ B When A insert แถว `materials` ผ่าน PostgREST ด้วย JWT ของ A (prep ของ A) โดย `storage_path` = (ก) path ของ object ของ B (ข) `{tenant A}/{prep อื่นของ A}/{id}` (ค) `{tenant A}/{prep A}/{uuid อื่น}` (ง) `exam_prep_id` = prep ของ B และ `storage_path` = `{tenant A}/{prep B}/{id}` (path ตรงรูป แต่ prep เป็นของ tenant อื่น) Then ถูกปฏิเสธทุกกรณี (`42501`) และไม่มีแถวเกิดขึ้น · Given `storage_path` = `{tenant A}/{prep A}/{id}` ที่ตรงกับ `id` ที่ส่ง Then insert ได้
 - **AC-30 (SA-06)** Given แถว `materials` ของ A ที่สร้างผ่าน API When A PATCH ผ่าน PostgREST ให้ (ก) `storage_path` = path ของ object ของ B (ข) `exam_prep_id` = prep อื่นของ A (ค) `tenant_id` = tenant ของ B Then ถูกปฏิเสธทุกกรณีและแถวคงเดิม · When A PATCH `user_note` Then ได้ · Given service role When update `storage_path` Then ได้ (trigger ไม่ตรวจ)
 - **AC-31 (SA-06)** Given แถว `materials` ที่ `storage_path` ไม่ผ่าน §2.2 ข้อ 8 (parametrize: prefix ของ tenant อื่น · prep อื่น · ไม่มี prefix · มี `/` หลัง prefix · ว่างหลัง prefix) และ object ที่ path นั้นมีอยู่จริง When `classify_material` หรือ `ingest_material` Then ไม่อ่าน object · ไฟล์ `failed` ด้วย "เปิดไฟล์นี้ไม่ได้" · ไม่มี AI call · Given path ถูกต้อง Then อ่านตามเดิม
 - **AC-32 (CM-07)** Given `0009` When อ่าน SQL Then มี `update` ที่เติม `uploaded_at = created_at` เฉพาะ `uploaded_at is null and status <> 'uploaded'` · trigger ผูกกับ `insert` และ `update` · Given `seed_scope_demo.build_rows` When สร้างแถว Then ทุกแถว `materials` มี `uploaded_at` และ `storage_path` = `{tenant}/{prep}/{id}`
@@ -176,7 +176,7 @@ RLS ของ `materials` (`tenant_rows`) ครอบ column ใหม่อย
 
 | Table | Column / index / policy | เพิ่ม / แก้ |
 |---|---|---|
-| `materials` | function `public.materials_path_guard()` (`security invoker`, `search_path = ''`) + trigger `materials_path_guard` `before insert or update` · ตรวจเมื่อ `current_user = 'authenticated'` | เพิ่ม |
+| `materials` | function `public.materials_path_guard()` (`security invoker` · ตรวจ prep ด้วย `exists` ภายใต้ RLS ของผู้เรียก · `search_path = ''`) + trigger `materials_path_guard` `before insert or update` · ตรวจเมื่อ `current_user = 'authenticated'` | เพิ่ม |
 | `materials` | `update ... set uploaded_at = created_at where uploaded_at is null and status <> 'uploaded'` | ข้อมูล |
 
 **ต้อง `db push` ขึ้น `anyang-dev` ก่อน merge (Junior)**
@@ -228,7 +228,7 @@ RLS ของ `materials` (`tenant_rows`) ครอบ column ใหม่อย
 | `test_SA06_storage_prefix_isolation` (parametrize: download, list, delete, sign upload · B และ anon) | integration | AC-24 |
 | `test_SA06_materials_rows_isolation` (หรือเพิ่มใน `test_rls_isolation.py`) | integration | AC-25 |
 | `test_CM03_bucket_is_private_with_size_limit` | integration | AC-26 |
-| `test_SA06_user_cannot_insert_material_pointing_elsewhere` (parametrize ก/ข/ค + ทางที่ถูก) | integration | AC-29 |
+| `test_SA06_user_cannot_insert_material_pointing_elsewhere` (parametrize ก/ข/ค/ง) · `test_SA06_user_can_insert_the_path_of_the_row` | integration | AC-29 |
 | `test_SA06_user_cannot_repoint_own_material` (parametrize ก/ข/ค) · `test_SA06_user_can_still_edit_note` · `test_SA06_service_role_is_not_guarded` | integration | AC-30 |
 | `test_SA06_ingestion_refuses_path_outside_its_prep` (parametrize 5 path × classify/ingest) · `test_SA06_ingestion_reads_a_good_path` | unit | AC-31 |
 | `test_CM07_0009_backfills_announced_rows_only` · `test_SA06_0009_guards_insert_and_update` · `test_CM07_seed_rows_are_announced` | unit | AC-32 |
