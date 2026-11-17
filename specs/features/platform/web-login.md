@@ -35,7 +35,7 @@ API ตรวจ token แล้ว (#134: token ของ `anyang-dev` มี `
 1. `authHeaders()` → `{Authorization: "Bearer <access_token>"}` จาก `supabase.auth.getSession()` · ไม่มี session หรืออ่านไม่ได้ (ไม่มี env ของ Supabase เช่นใน test หรือเครื่อง dev ที่ไม่ตั้ง) → `{}` (ไม่แนบ · API ที่ `AUTH_REQUIRED=false` ตอบ stub เหมือนเดิม)
 2. `apiFetch(path, init)` = `fetch(apiUrl(path), init + authHeaders())` · ใช้แทน `fetch(apiUrl(…))` ทุกที่: `TutorRoom` (`getJSON`), `ScopeReview` (`getJSON`, confirm), `httpTransport` (ขอ URL อัปโหลด)
 3. `postSSE` ที่ไป API (เปิดห้อง, ส่งข้อความ, ยืนยันลายมือ) ได้ `authHeaders()` ใน `headers` · `postSSE` เองไม่รู้เรื่อง auth (ใช้กับ URL ใดก็ได้)
-4. **ไม่แนบ** กับ URL ที่ไม่ใช่ API: `PUT` รูปไป signed URL ของ Storage (มี test เดิมยืนยันแล้ว · room-photo-send AC-6)
+4. **ไม่แนบ** กับ URL ที่ไม่ใช่ API: `PUT` รูปไป signed URL ของ Storage (มี test เดิมยืนยันแล้ว · room-photo-send AC-6) · **`upload_url` ที่ขึ้นต้นด้วย URL ของ API** (`NEXT_PUBLIC_API_URL` + `/` · เครื่องที่ `APP_ENV=local` ได้ `/dev/uploads/…` ของ API เอง · demo-room.md §2 A) **แนบ** `authHeaders()` เพราะเป็น request ไป API (`AUTH_REQUIRED=true` ต้องมี token ทุก path · api-auth.md) · เทียบทั้ง origin และ path ไม่ใช่แค่ขึ้นต้นด้วยข้อความ (`http://api.test.evil` ไม่นับ) (เพิ่ม 17 พ.ย. · ผลซ้อม `demo-video.md` · Jam ให้แก้ฝั่งเว็บ · May)
 5. **API ตอบ `401`** (token หมดอายุหรือไม่มี) ที่ `apiFetch` หรือ SSE ของ API → ล้าง session ของเบราว์เซอร์นี้ก่อน (`signOut({scope: "local"})` · ไม่งั้นหน้า login เห็น session เดิมแล้วส่งกลับมาวนไม่จบ · self-review PR #138) → พาไป `/login?next=<path ปัจจุบัน + query>` · หน้าที่เรียกยังได้ error ตามเดิม (ไม่ค้าง)
 6. token หมดอายุ: `@supabase/ssr` ต่ออายุ session เองตอน `getSession()` · ต่อไม่ได้ → ไม่มี session → API ตอบ 401 → ข้อ 5
 
@@ -66,6 +66,7 @@ Vitest + Testing Library · Supabase client ปลอม (`vi.mock("@/lib/supaba
 - **AC-10** ห้องติวและหน้า scope แนบ `Authorization` ทุก request ไป API เมื่อมี session (เปิดห้อง · ส่งข้อความ · ขอ URL อัปโหลด · ยืนยันลายมือ · อ่าน scope · ยืนยัน scope) · `PUT` ไป Storage ไม่มี
 - **AC-11** `/logout` → `signOut()` แล้วไป `/login` · `signOut` ล้มก็ยังไป `/login`
 - **AC-12** test เดิมทั้งหมดผ่านโดยไม่แก้ (ไม่มี session ใน test → ไม่มี header)
+- **AC-13 (TM-06, SA-06)** มี session (`t-1`) · `POST /sessions/{id}/uploads` ตอบ `upload_url` = `<API>/dev/uploads/<path>` (ไม่มี `X-Stub`) → `PUT` ไป URL นั้นมี `Authorization: Bearer t-1` และ `Content-Type` ของรูป · `upload_url` = `https://storage.example/…` → `PUT` ไม่มี `Authorization` · `upload_url` ที่ขึ้นต้นด้วยข้อความของ API แต่ต่าง origin (เช่น `<API>.evil.example/…`) → ไม่มี `Authorization` · ไม่มี session → ไม่มี `Authorization` ทุกกรณี (เพิ่ม 17 พ.ย.)
 
 ## 5. Data changes
 
