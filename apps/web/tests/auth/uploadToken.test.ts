@@ -47,9 +47,8 @@ async function sendPhoto() {
   const { createHttpTransport } = await import("@/lib/httpTransport");
   const send = createHttpTransport(SESSION);
   const image = new File(["x"], "คำตอบ.png", { type: "image/png" });
-  for await (const _ of send({ text: null, image }, new AbortController().signal)) {
-    // drain the reply
-  }
+  const events = [];
+  for await (const event of send({ text: null, image }, new AbortController().signal)) events.push(event);
 }
 
 beforeEach(() => {

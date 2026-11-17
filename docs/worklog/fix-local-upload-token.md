@@ -13,7 +13,7 @@
 
 - [x] 1. 🤖 spec: `web-login.md` §2.3 ข้อ 4 ชัดขึ้น (`upload_url` ที่ขึ้นต้นด้วย URL ของ API → แนบ · อื่น → ไม่แนบ) + AC ใหม่ · (spec ของ Jam · Jam ให้แก้ฝั่งเว็บ) → 🙋 May ok
 - [x] 2. 🤖 test (red) → 🙋 May review · 17 พ.ย. ok (1 red · 3 ผ่านตั้งแต่ต้น = พฤติกรรมเดิมที่ต้องคงไว้)
-- [ ] 3. 🤖 แก้ `uploadPhoto` จน test ผ่าน + lint + typecheck
+- [x] 3. 🤖 แก้ `uploadPhoto` จน test ผ่าน + lint + typecheck · 17 พ.ย. 458/458 · 1 รอบ red → green · `isApiUrl` เทียบ origin + path
 - [ ] 4. 🙋 ลองในเบราว์เซอร์: login → ห้องติว → วาด canvas → ส่งคำตอบ → การ์ด "อ่านได้แบบนี้ ถูกไหม" ขึ้น
 - [ ] 5. 🤖 `/work-done`
 
@@ -27,7 +27,7 @@
 
 ## Next step
 
-ขั้น 3: แก้ `uploadPhoto`
+ขั้น 4: May ลองวาด canvas แล้วส่งตอน login
 
 ## Waiting on
 
