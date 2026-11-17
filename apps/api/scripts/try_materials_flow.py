@@ -13,6 +13,7 @@ Usage, from apps/api, with the API running (`uv run fastapi dev app/main.py`, AI
     uv run python -m scripts.try_materials_flow sheet-03.pdf midterm-2561-1.pdf
     uv run python -m scripts.try_materials_flow --api http://localhost:8000 --prep <id>
     uv run python -m scripts.try_materials_flow --title "MTH10101 กลางภาค"   # a fallback prep
+    uv run python -m scripts.try_materials_flow --prep <id> --no-upload       # finish a prep
 
 The default title says it is a test. Pass --title for a prep that may appear on screen, such as
 the fallback prep of the demo account (docs/design/demo-video.md).
@@ -73,11 +74,18 @@ def main() -> None:
     parser.add_argument("--api", default="http://localhost:8000")
     parser.add_argument("--prep", help="use this prep instead of creating one")
     parser.add_argument("--title", default=TEST_TITLE, help="title of the prep it creates")
+    parser.add_argument(
+        "--no-upload",
+        action="store_true",
+        help="with --prep: skip the upload and go on from the kinds of the files already there",
+    )
     args = parser.parse_args()
+    if args.no_upload and args.prep is None:
+        sys.exit("--no-upload needs --prep")
 
     paths = [RAW / f for f in args.files] if args.files else sorted(RAW.glob("*.pdf"))
-    paths = [p for p in paths if HELD_OUT not in p.name]
-    if not paths:
+    paths = [] if args.no_upload else [p for p in paths if HELD_OUT not in p.name]
+    if not paths and not args.no_upload:
         sys.exit(f"no PDF in {RAW}")
     for path in paths:
         if not path.is_file():
@@ -93,7 +101,7 @@ def main() -> None:
         prep_id = check(api.post("/exam-preps", json=body), 201)["id"]
     print(f"prep {prep_id}")
 
-    print("1. upload")
+    print("1. upload" + (" (skipped: --no-upload)" if args.no_upload else ""))
     for path in paths:
         data = path.read_bytes()
         ticket = check(
