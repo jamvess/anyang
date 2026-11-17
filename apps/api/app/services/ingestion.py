@@ -95,7 +95,20 @@ def _name(material: MaterialRow) -> str:
     return clean_file_name(material.file_name, get_settings().ai.guards.max_attachment_name_chars)
 
 
+def _path_is_own(material: MaterialRow) -> bool:
+    """`{tenant_id}/{exam_prep_id}/` of the row, then one non-empty name with no `/`
+    (materials-db.md §2.2 item 8 · SA-06). The service role skips the storage policies, so a
+    path a user managed to write must not reach another tenant's object. Migration 0009 already
+    stops such writes; this is the second line."""
+    prefix = f"{material.tenant_id}/{material.exam_prep_id}/"
+    name = material.storage_path.removeprefix(prefix)
+    return material.storage_path.startswith(prefix) and name != "" and "/" not in name
+
+
 async def _read(deps: IngestionDeps, material: MaterialRow) -> bytes:
+    if not _path_is_own(material):
+        # The path itself stays out of the job error: it may name another tenant.
+        raise _FileFailed(UNREADABLE, "storage_path outside its tenant and prep: not read")
     try:
         return await deps.files.read(material.storage_path)
     except Exception as error:  # Storage down or the object is missing
