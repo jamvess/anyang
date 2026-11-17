@@ -60,3 +60,6 @@ export type SendMessage = (payload: SendPayload, signal: AbortSignal) => AsyncIt
 export type Transcribe = (audio: Blob, signal: AbortSignal) => Promise<{ text: string }>;
 
 export type ConfirmOcr = (lines: string[], signal: AbortSignal) => AsyncIterable<SSEEvent>;
+
+/** Ends the session and yields `session_end` → `done` (spec: specs/features/tutor/session-end-ui.md §2.2). */
+export type EndSession = (signal: AbortSignal) => AsyncIterable<SSEEvent>;

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { apiFetch, apiSSE } from "@/lib/auth";
-import { createHttpOcrConfirm, createHttpTransport } from "@/lib/httpTransport";
+import { createHttpOcrConfirm, createHttpSessionEnd, createHttpTransport } from "@/lib/httpTransport";
 import type { SSEEvent } from "@/lib/sse";
 import { ChatRoom } from "./ChatRoom";
 import { roomStrings as t } from "./strings";
@@ -76,9 +76,25 @@ export function TutorRoom({ prepId }: { prepId: string }) {
   const sessionId = state.kind === "ready" ? state.room.session_id : null;
   const sendMessage = useMemo(() => (sessionId ? createHttpTransport(sessionId) : undefined), [sessionId]);
   const confirmOcr = useMemo(() => (sessionId ? createHttpOcrConfirm(sessionId) : undefined), [sessionId]);
+  const endSession = useMemo(() => (sessionId ? createHttpSessionEnd(sessionId) : undefined), [sessionId]);
+
+  function reopen() {
+    setState({ kind: "loading" });
+    setAttempt((n) => n + 1);
+  }
 
   if (state.kind === "ready") {
-    return <ChatRoom room={state.room} sendMessage={sendMessage} confirmOcr={confirmOcr} opening={state.opening} />;
+    return (
+      <ChatRoom
+        room={state.room}
+        sendMessage={sendMessage}
+        confirmOcr={confirmOcr}
+        opening={state.opening}
+        endSession={endSession}
+        // After the end, open the prep's room again: no open session, so a new one starts (session-end-ui.md §2.3).
+        newSession={{ href: `/preps/${prepId}/room`, onOpen: reopen }}
+      />
+    );
   }
 
   return (
@@ -92,10 +108,7 @@ export function TutorRoom({ prepId }: { prepId: string }) {
             {state.kind === "failed" && (
               <button
                 type="button"
-                onClick={() => {
-                  setState({ kind: "loading" });
-                  setAttempt((n) => n + 1);
-                }}
+                onClick={reopen}
                 className="rounded-full bg-zinc-900 px-4 py-1.5 text-white"
               >
                 {t.retry}

@@ -9,8 +9,9 @@ import type { OcrPreviewData, OcrStatus } from "./OcrConfirmCard";
 import type { ProblemData } from "./ProblemCard";
 import { roomStrings as t } from "./strings";
 import { hasVerdictMark, type VerdictData } from "./VerdictMark";
+import type { components } from "@/lib/api";
 import type { SSEEvent } from "@/lib/sse";
-import type { ChatMessage, ConfirmOcr, MessageRole, RoomData, SendMessage, SendPayload, Transcribe } from "./types";
+import type { ChatMessage, ConfirmOcr, EndSession, MessageRole, RoomData, SendMessage, SendPayload, Transcribe } from "./types";
 
 /** How close to the bottom (px) still counts as "following" the stream. A UI value, not a learning-model one. */
 export const NEAR_BOTTOM_PX = 80;
@@ -21,6 +22,7 @@ const noReply: SendMessage & ConfirmOcr = async function* () {
 };
 
 type Token = { speaker: "tutor" | "buddy"; text: string };
+type SessionEndData = components["schemas"]["SessionEndEvent"];
 
 /**
  * Tutor room (specs: chat-room-ui.md, chat-streaming.md).
@@ -45,6 +47,8 @@ export function ChatRoom({
   imagesEnabled,
   transcribe,
   voiceEnabled,
+  endSession,
+  newSession,
 }: {
   room: RoomData;
   sendMessage?: SendMessage;
@@ -56,12 +60,20 @@ export function ChatRoom({
   /** POST /sessions/{id}/transcribe; the mic shows only when given (voice-input.md). */
   transcribe?: Transcribe;
   voiceEnabled?: boolean;
+  /** POST /sessions/{id}/end; the end button shows only when given (session-end-ui.md §2.1). */
+  endSession?: EndSession;
+  /** Where "ติวรอบใหม่" leads, and what opens the new session in place (§2.3). Without it the link reloads the page. */
+  newSession?: { href: string; onOpen: () => void };
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>(room.messages);
   const [busy, setBusy] = useState(false);
   const [typing, setTyping] = useState(false);
   const [streamingId, setStreamingId] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  // ending: POST /end streams · ended: the session is over in this page (session-end-ui.md §2.2, §2.3).
+  const [ending, setEnding] = useState(false);
+  const [ended, setEnded] = useState(false);
+  const newSessionLink = useRef<HTMLAnchorElement>(null);
 
   const nextId = useRef(0);
   const abort = useRef<AbortController | null>(null);
@@ -72,6 +84,10 @@ export function ChatRoom({
   const busyRef = useRef(false);
 
   useEffect(() => () => abort.current?.abort(), []);
+  // The pressed button is disabled now: focus goes to the way on (§2.5 item 3).
+  useEffect(() => {
+    if (ended) newSessionLink.current?.focus();
+  }, [ended]);
   // Object URLs of photos sent in this session (thumbnails · answer-canvas.md §2 D item 24).
   const previewUrls = useRef<string[]>([]);
   useEffect(() => () => previewUrls.current.forEach((url) => URL.revokeObjectURL(url)), []);
@@ -153,6 +169,27 @@ export function ChatRoom({
     composer.current?.pickPhoto();
   }
 
+  /** Ends the session: summary bubble, then the room locks (session-end-ui.md §2.2–§2.4). */
+  async function end() {
+    if (!endSession || busyRef.current || ended) return;
+    setEnding(true);
+    const controller = new AbortController();
+    abort.current = controller;
+    // 409 before the stream: the session was already ended elsewhere, so end here too without a summary (§2.4 item 1).
+    async function* events(): AsyncGenerator<SSEEvent> {
+      try {
+        yield* endSession!(controller.signal);
+      } catch (e) {
+        if ((e as { status?: number }).status !== 409) throw e;
+        yield { event: "done", data: {} };
+      }
+    }
+    const done = await play(events(), controller.signal);
+    if (controller.signal.aborted) return;
+    setEnding(false);
+    if (done) setEnded(true);
+  }
+
   /** Shows one SSE reply as bubbles (chat-streaming.md §2). Resolves true when it ended with `done`. */
   async function play(events: AsyncIterable<SSEEvent>, signal: AbortSignal): Promise<boolean> {
     busyRef.current = true;
@@ -211,13 +248,20 @@ export function ChatRoom({
           append(newMessage("card", null, { card: data as ChatMessage["card"] }));
           current = null;
           setStreamingId(null);
+        } else if (event === "session_end") {
+          // The summary is one tutor bubble, a line per line (PM-05 · session-end-ui.md §2.2 item 3).
+          const { summary_lines } = data as SessionEndData;
+          append(newMessage("tutor", summary_lines.join("\n")));
+          current = null;
+          setStreamingId(null);
+          setTyping(false);
         } else if (event === "done") {
           done = true;
           break;
         } else if (event === "error") {
           break;
         }
-        // Other events (session_end, ...) are separate features.
+        // Other events (scope_patch, ...) are separate features.
       }
     } catch {
       // A network failure is shown like an error event.
@@ -250,9 +294,16 @@ export function ChatRoom({
         <span>
           <b className="font-medium text-zinc-600">{room.prep_name}</b> · <span>{t.daysLeft(room.days_left)}</span>
         </span>
-        <Link href="/" className="hover:text-zinc-600">
-          {t.exitRoom}
-        </Link>
+        <span className="flex items-center gap-4">
+          {endSession && (
+            <button type="button" onClick={() => void end()} disabled={busy || ended} className="hover:text-zinc-600 disabled:opacity-40">
+              {t.endSession}
+            </button>
+          )}
+          <Link href="/" className="hover:text-zinc-600">
+            {t.exitRoom}
+          </Link>
+        </span>
       </header>
       <main ref={log} role="log" onScroll={onScroll} className="-mx-8 flex-1 overflow-y-auto px-8">
         <div className="mx-auto w-full max-w-2xl pb-3">
@@ -265,11 +316,36 @@ export function ChatRoom({
             typing={typing}
             onOcrConfirm={confirm}
             onOcrRetake={retake}
-            answerCanvas={{ onSend: send, disabled: busy, maxImageMb: room.limits.max_image_mb, handle: canvas }}
+            ocrDisabled={ending || ended}
+            // Gone after the end, so the summary stays the last thing in the chat (session-end-ui.md §2.3 · AC-1, AC-4).
+            answerCanvas={ended ? undefined : { onSend: send, disabled: busy, maxImageMb: room.limits.max_image_mb, handle: canvas }}
           />
         </div>
       </main>
       <div className="bg-white pt-3">
+        {ended && (
+          <p role="status" className="mx-auto mb-2 flex w-full max-w-2xl flex-wrap items-center gap-x-4 gap-y-1 pl-4 text-xs text-zinc-500">
+            <span>{t.sessionEnded}</span>
+            <Link href="/" className="text-zinc-700 underline hover:text-zinc-900">
+              {t.backHome}
+            </Link>
+            <a
+              ref={newSessionLink}
+              // No href from the room page: "?" is this page, so the link reloads the room (§2.3 item 2).
+              // ("" would do the same, but React drops an empty href and the link would lose its role.)
+              href={newSession?.href ?? "?"}
+              onClick={(e) => {
+                // A modified click (new tab, new window) keeps the browser's own behaviour (self-review PR #143).
+                if (!newSession || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                newSession.onOpen();
+              }}
+              className="text-zinc-700 underline hover:text-zinc-900"
+            >
+              {t.newSession}
+            </a>
+          </p>
+        )}
         {failed && (
           <p role="alert" className="mx-auto mb-2 w-full max-w-2xl pl-4 text-xs text-red-700">
             {t.sendFailed}
@@ -279,6 +355,7 @@ export function ChatRoom({
           limits={room.limits}
           onSend={send}
           disabled={busy}
+          locked={ending || ended}
           imagesEnabled={imagesEnabled}
           handle={composer}
           transcribe={transcribe}

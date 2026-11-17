@@ -43,6 +43,15 @@ export function safeNext(next: string | undefined): string {
 }
 
 /**
+ * `path` with the raw `?next=` passed on, only when it is a safe path other than "/"
+ * (specs/features/platform/web-signup.md §2.3 · the link between the login and sign-up pages).
+ */
+export function withNext(path: string, next: string | undefined): string {
+  const target = safeNext(next);
+  return target === "/" ? path : `${path}?next=${encodeURIComponent(target)}`;
+}
+
+/**
  * The API refused the token: drop the session of this browser first, or the login page would see
  * it and send the user straight back (a loop · self-review PR #138), then go to the login page.
  */
