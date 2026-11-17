@@ -11,7 +11,7 @@
 
 อ้างอิง `docs/design/demo-flow.md` ช่วง 3 + ตาราง "สิ่งที่ต้องพร้อม" · ห้องเดโม่ `specs/features/tutor/demo-room.md` §3 (โจทย์ข้อ 2 = `demo-2` ลิมิต เฉลย `4`) และ §12 (วิธีเปิด) · รูปลายมือ**ไม่ขึ้น git** (เก็บในเครื่อง / Drive)
 
-- [ ] 1. 🙋 May เช็คว่าได้ role Vertex AI User จาก Jam หรือยัง · ถ้าได้: `gcloud auth application-default login` บนเครื่องตัวเอง
+- [x] 1. 🙋 May เช็คว่าได้ role Vertex AI User จาก Jam หรือยัง · ถ้าได้: `gcloud auth application-default login` บนเครื่องตัวเอง · 2026-11-17 Jam ให้ role แล้ว · ติดตั้ง Google Cloud CLI (winget) + ADC login ผ่าน · `set-quota-project` ไม่ผ่าน (ไม่มี `serviceusage.services.use`) · ข้ามไปก่อน เพราะ gateway ส่ง project เองทุกคำขอ (`gemini.py` `vertex()`) · ถ้าขั้น 3 เจอ 403 → ขอ Jam เพิ่ม role Service Usage Consumer
 - [ ] 2. 🙋 May เขียนวิธีทำข้อ 2 ที่ผิด 1 บรรทัด (Claude ให้ตัวอย่าง) แล้วถ่ายรูปหรือแคปจาก tablet · เก็บนอก repo
 - [ ] 3. 🙋 May เปิดห้องเดโม่ (AI จริงถ้ามีสิทธิ์ · ไม่งั้น AI จำลอง) แล้วไล่ขั้น 1–5 ของช่วง 3 ครั้งหนึ่ง พร้อมจับเวลาแต่ละขั้น · จดว่าการ์ดยืนยันอ่านลายมือถูกไหม และผลตรวจชี้บรรทัดที่ผิดถูกไหม
 - [ ] 4. 🤖 จดผลลง `demo-flow.md`: สถานะในตาราง "สิ่งที่ต้องพร้อม", เวลาที่ซ้อมได้เทียบ 5:30, ปัญหาที่เจอ
@@ -28,11 +28,11 @@
 
 ## Next step
 
-May ทำขั้น 1
+May ทำขั้น 2 (เขียนรูปลายมือข้อ 2)
 
 ## Waiting on
 
-- Jam: role Vertex AI User (ขอไว้ใน PR #119)
+- ไม่มี (Jam ให้ role Vertex AI User แล้ว 2026-11-17)
 
 ## Notes for next time
 
