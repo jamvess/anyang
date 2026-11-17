@@ -20,8 +20,8 @@
   - → 🙋 Jam review spec
 - [x] 2. 🤖 `/spec-to-tests` (unit · fake provider · Gemini response จำลอง) → 🙋 Jam review test
 - [x] 3. 🤖 `/implement-feature` จน green · ruff · pytest ทั้งชุด
-- [ ] 4. 🤖 + 🙋 test แบบ `@pytest.mark.live` (ไม่เข้า CI): เรียก Gemini บน Vertex ด้วย `max_tokens` เล็กมาก → ได้ error ใหม่หลัง provider call 1 ครั้ง · Jam รันด้วย ADC ของตัวเอง (`gcloud auth application-default login` ทำไว้แล้ว)
-- [ ] 5. 🤖 จดผลลง spec
+- [x] 4. 🤖 + 🙋 (17 พ.ย. · ผ่าน · tokens_out 12 · 10.2 s) test แบบ `@pytest.mark.live` (ไม่เข้า CI): เรียก Gemini บน Vertex ด้วย `max_tokens` เล็กมาก → ได้ error ใหม่หลัง provider call 1 ครั้ง · Jam รันด้วย ADC ของตัวเอง (`gcloud auth application-default login` ทำไว้แล้ว)
+- [x] 5. 🤖 จดผลลง spec
 
 ## Definition of done
 
@@ -36,7 +36,7 @@
 
 ## Next step
 
-ข้อ 3: implement เสร็จ · unit 1766 ผ่าน · รอ Jam ok แล้วทำข้อ 4 (Jam รัน live test บน Vertex)
+ทุกข้อเสร็จ · พิมพ์ `/work-done`
 
 ## Waiting on
 

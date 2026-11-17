@@ -113,6 +113,8 @@ fake provider ทั้งหมด (AI-03) · Gemini ทดสอบด้ว�
 | `tests/unit/test_ai_calls_log_truncation.py` (ใหม่ · ไม่แก้ `test_ai_calls_log.py`) | unit | AC-11, AC-12 |
 | `tests/integration/test_gateway_truncation_live.py` (`@pytest.mark.live` · แบบ `test_vertex_live.py`) | live | AC-14 |
 
+**ผล live (Jam · 17 พ.ย. · PR #146 · Vertex `gemini-3.5-flash` · ADC ของ Jam):** ผ่าน · `classify_material` ที่ `max_tokens` 16 → `AITruncatedError` · record เดียว `truncated` `schema_retries = 0` (เรียก provider 1 ครั้ง · ก่อนแก้เป็น 2 ครั้ง) · `tokens_in` 518 · `tokens_out` 12 · 10.2 วินาที
+
 ## 9. Out of scope
 
 - เพิ่ม `max_tokens` อัตโนมัติแล้วลองใหม่ (ต้นทุนไม่แน่นอน · ค่า `max_tokens` เป็นของ config ที่ Jam ตัดสินต่อ purpose)
