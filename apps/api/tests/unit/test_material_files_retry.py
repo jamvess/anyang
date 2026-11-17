@@ -140,3 +140,30 @@ def test_CM07_read_attempts_and_backoff_come_from_config() -> None:
     ingestion = get_settings().ai.ingestion
     assert ingestion.storage_read_attempts >= 2  # a retry needs a second attempt
     assert ingestion.storage_read_backoff_s >= 0
+
+
+# --- added in the self-review of #152 (after the tests above were reviewed) --------------------
+
+
+async def test_CM07_the_client_is_made_off_the_event_loop() -> None:
+    """Making a client blocks (SSL context, auth client), so it must run in the worker thread,
+    not on the loop that serves every other request."""
+    loop_thread = threading.current_thread()
+    made_in: list[threading.Thread] = []
+    clients = Clients(lambda client, path: b"ok")
+    connect = clients.connect
+
+    def recording_connect() -> Any:
+        made_in.append(threading.current_thread())
+        return connect()
+
+    files = SupabaseMaterialFiles(recording_connect, BUCKET, attempts=1, backoff_s=0)
+
+    await files.read("t/p/m")
+
+    assert made_in and made_in[0] is not loop_thread
+
+
+def test_CM07_attempts_below_one_are_refused() -> None:
+    with pytest.raises(ValueError, match="attempts"):
+        SupabaseMaterialFiles(Clients(lambda client, path: b"").connect, BUCKET, attempts=0)

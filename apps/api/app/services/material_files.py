@@ -56,18 +56,24 @@ class SupabaseMaterialFiles:
         backoff_s: float | None = None,
     ) -> None:
         config = get_settings().ai.ingestion
+        self._attempts = config.storage_read_attempts if attempts is None else attempts
+        if self._attempts < 1:
+            raise ValueError(f"attempts must be at least 1, got {self._attempts}")
         self._connect = connect
         self._bucket = bucket
-        self._attempts = config.storage_read_attempts if attempts is None else attempts
         self._backoff_s = config.storage_read_backoff_s if backoff_s is None else backoff_s
         self._lock = threading.Lock()
         self._client: Client | None = None
         self._generation = 0  # of self._client; goes up each time a client is made
 
     def _current(self) -> tuple[Client, int]:
+        """Called in a worker thread: making a client blocks, so it stays off the event loop."""
         with self._lock:
             if self._client is None:
-                self._client = self._connect()
+                client = self._connect()
+                # `Client.storage` is built lazily and without a lock: build it here, once.
+                client.storage  # noqa: B018
+                self._client = client
                 self._generation += 1
             return self._client, self._generation
 
@@ -79,9 +85,11 @@ class SupabaseMaterialFiles:
 
     async def read(self, storage_path: str) -> bytes:
         for attempt in range(1, self._attempts + 1):
-            client, generation = self._current()
+            used: list[int] = []  # the generation the worker thread read with
 
-            def download(client: Client = client) -> bytes:
+            def download(used: list[int] = used) -> bytes:
+                client, generation = self._current()
+                used.append(generation)
                 return client.storage.from_(self._bucket).download(storage_path)
 
             try:
@@ -97,6 +105,7 @@ class SupabaseMaterialFiles:
                     type(error).__name__,
                     error,
                 )
-                self._drop(generation)
+                if used:
+                    self._drop(used[0])
                 await asyncio.sleep(self._backoff_s * attempt)
         raise AssertionError("unreachable: the last attempt returns or raises")
