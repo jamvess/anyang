@@ -3,7 +3,7 @@
 # "vertex:" runs on Vertex AI when GOOGLE_CLOUD_PROJECT is set (specs/features/ai/gemini-vertex.md;
 # AI-07: no free tier for real users). AI_MODEL_OVERRIDE=gemini:<model> still uses the Gemini API key.
 
-version: "1.22"                        # a string: unquoted, YAML reads 1.10 as the float 1.1
+version: "1.23"                        # a string: unquoted, YAML reads 1.10 as the float 1.1
 
 tiers:
   small:  {primary: "vertex:gemini-3.5-flash",   fallback: "anthropic:TODO-claude-haiku"}  # P3a on Vertex (31 Oct): A4 43/43, A7 34/43 and 30/43 · flash-lite broke JSON with LaTeX (unescaped \\sqrt) on 1 of 2 exams (P3.md §7)
@@ -53,6 +53,8 @@ ingestion:                             # files → pages → chunks (specs/featu
   chunk_max_tokens: 800                # ai-orchestration §2.3.3 · P3b (recall@4 95%)
   chunk_max_pages: 2                   # ai-orchestration §2.3.3
   thai_chars_per_token: 1.7            # [C] P3b: count_tokens of gemini-embedding-2 gave 1.47–1.82 Thai chars per token
+  storage_read_attempts: 3             # [C] v1.23 · tries of one Storage read, and of one ingestion DB call (same HTTP/2 cause · ingestion.md AC-29), when the connection drops (httpx.TransportError), first try included · seeding the demo account 17 Nov: 2 of 6 classify reads failed together with "Server disconnected" (storage3 uses HTTP/2) · ingestion.md AC-28 · after Alpha: from logs
+  storage_read_backoff_s: 0.5          # [C] v1.23 · wait before try n+1 = this × n (0.5 s, then 1 s) · at most 1.5 s more per read or DB call
 
 embedding:                             # A3 embed (ai-orchestration §2.3.3), tier `embed` · no prompt
   timeout_s: 60                        # [C] one batch request · P3b: 116 chunks in 21.6 s (~1.8 s per batch of 10), so 60 leaves a wide margin · after Alpha: from ai_calls
