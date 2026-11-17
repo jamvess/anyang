@@ -143,3 +143,43 @@ async def test_CM03_content_type_with_capitals_and_a_parameter_is_still_a_photo(
 
     [request] = world.requests("vision_extract")
     assert request.images[0].mime_type == "image/png"
+
+
+# --- added by the self-review of PR #156 -------------------------------------------------------
+
+
+def test_CM03_every_type_the_api_accepts_has_a_way_through_ingestion():
+    # The sets come from the API's own, so a new accepted type cannot fall to "เปิดไฟล์นี้ไม่ได้".
+    from app.models.exam_prep import MATERIAL_CONTENT_TYPES
+    from app.services import ingestion
+
+    ways = {ingestion._PDF} | ingestion._PHOTO_TYPES | ingestion._NOT_YET_TYPES
+    assert ways == MATERIAL_CONTENT_TYPES
+    assert {PPTX, DOCX} == ingestion._NOT_YET_TYPES
+
+
+async def test_CM03_row_without_a_content_type_is_classified_by_its_extension():
+    # AC-38 at classify: a photo named .JPG skips the text layer, a PDF reads it.
+    world = World({"classify_material": [classified("notes"), classified("sheet")]})
+    photo = upload(world, "board.JPG", None)
+    no_text_layer(world, photo)
+    sheet = upload(world, "sheet", None)
+
+    await classify_material(photo, world.deps)
+    await classify_material(sheet, world.deps)
+
+    assert row(world, photo)["status"] == row(world, sheet)["status"] == "classified"
+    prompts = [r.prompt for r in world.requests("classify_material")]
+    assert [p.count("[p.") >= 1 for p in prompts] == [False, True]
+
+
+@pytest.mark.parametrize("content_type", [PPTX, DOCX], ids=["pptx", "docx"])
+async def test_CM03_slides_and_documents_also_fail_when_read(content_type: str):
+    # AC-37 at ingest: a file confirmed before this change, read again, gets the same message.
+    world = World({})
+    deck = confirmed(world, "lecture", content_type)
+    no_text_layer(world, deck)
+
+    await ingest_material(deck, world.deps)
+
+    assert (row(world, deck)["status"], row(world, deck)["error"]) == ("failed", NOT_YET)

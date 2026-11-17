@@ -66,7 +66,7 @@ demo end to end (23 พ.ย.) ต้องให้ไฟล์ที่ผู�
 
 1. **ชื่อไฟล์** (ai-orchestration §2.3.3 · Jam 2026-11-07): ก่อนเข้า prompt ใดๆ แทนตัวขึ้นบรรทัดและตัวควบคุม (Unicode category `Cc`, `Cf`, `Zl`, `Zp`) ด้วยช่องว่าง แล้วยุบช่องว่างซ้ำ · ยาวเกิน `guards.max_attachment_name_chars` (นับ grapheme) → ตัดแบบเก็บนามสกุลเหมือน `messages.attachment_name` (data-model กฎทั่วไป)
 2. ข้อความจากไฟล์และ `user_note` เข้า prompt ใน data block เสมอ (ทุก prompt ของ flow นี้ทำอยู่แล้ว · CLAUDE.md ข้อ 8)
-3. **ชนิดของไฟล์มาจาก `materials.content_type`** (เพิ่ม 17 พ.ย. · PR #156 · ตอบ `materials-db.md` §10 ข้อ 1 · CM-03): API ตรวจชนิดนี้กับ object จริงแล้วตอน `/uploaded` (#140) · ชื่อไฟล์ใช้แสดงผลอย่างเดียว
+3. **ชนิดของไฟล์มาจาก `materials.content_type`** (เพิ่ม 17 พ.ย. · PR #156 · ตอบ `materials-db.md` §10 ข้อ 1 · CM-03): ค่านี้คือชนิดที่ browser แจ้งตอนขอที่อัปโหลด และ `/uploaded` เทียบกับ mimetype ของ object ใน Storage แล้ว (#140) · **ไม่ได้ตรวจเนื้อไฟล์** · ไฟล์ที่แจ้งชนิดผิด (เช่น PDF แจ้งเป็น PNG) จะล้มตอนอ่าน · ชื่อไฟล์ใช้แสดงผลอย่างเดียว · ชุดชนิดมาจาก `MATERIAL_CONTENT_TYPES` และ `UPLOAD_CONTENT_TYPES["image"]` ของ API (ไม่ก๊อปซ้ำ · self-review #156)
    - `application/pdf` → PDF (text layer หรือ vision ทั้งไฟล์ · §2.3 ข้อ 1)
    - `image/jpeg`, `image/png`, `image/webp`, `image/heic` → รูป 1 หน้า: classify ไม่อ่าน text layer · extract ใช้ `vision_extract` ด้วย mime type นั้น (Gemini อ่าน WEBP และ HEIC ได้ · ห้องติวส่งสองชนิดนี้อยู่แล้ว `app/models/room.py`)
    - PPTX (`application/vnd.openxmlformats-officedocument.presentationml.presentation`), DOCX (`application/vnd.openxmlformats-officedocument.wordprocessingml.document`) → **ล้มตั้งแต่ classify** ไม่เรียก AI · `error` = "ไฟล์ชนิดนี้ยังอ่านไม่ได้ ส่งเป็น PDF หรือรูปแทนได้" · ยังไม่มีตัวอ่าน (§9)

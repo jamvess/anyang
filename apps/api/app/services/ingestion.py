@@ -42,6 +42,8 @@ from app.domain.ingestion import (
     thai_share,
 )
 from app.domain.stars import ExamIn, TopicIn, compute_importance
+from app.models.exam_prep import MATERIAL_CONTENT_TYPES
+from app.models.room import UPLOAD_CONTENT_TYPES, bare_content_type
 from app.models.scope import Ingestion, IngestionFile, IngestionStep
 from app.models.scope_ai import (
     ClassifyMaterialResult,
@@ -67,16 +69,12 @@ NOT_YET = "ไฟล์ชนิดนี้ยังอ่านไม่ได
 NO_NOTE = "ไม่มี"  # the prompts' word for "none"
 # Bucket of uploaded files (ai-orchestration §2.3.2 step 1 · Junior names it in demo step 3).
 MATERIALS_BUCKET = "materials"
-# The file type (spec §2.5 item 3): photos go to vision as they are (Gemini reads WEBP and HEIC,
-# as the room does), slides and documents have no reader yet.
+# The file type (spec §2.5 item 3), from the API's own sets so they cannot drift apart: photos
+# go to vision as they are (the room's image types: Gemini reads WEBP and HEIC), every other type
+# the API accepts for a material, apart from PDF, has no reader yet (PPTX, DOCX · self-review #156).
 _PDF = "application/pdf"
-_PHOTO_TYPES = frozenset({"image/jpeg", "image/png", "image/webp", "image/heic"})
-_NOT_YET_TYPES = frozenset(
-    {
-        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    }
-)
+_PHOTO_TYPES = UPLOAD_CONTENT_TYPES["image"] & MATERIAL_CONTENT_TYPES
+_NOT_YET_TYPES = MATERIAL_CONTENT_TYPES - _PHOTO_TYPES - {_PDF}
 # Rows from before #140 have no content type: their file name's extension decides, as before.
 _IMAGE_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
 _JOB_ERROR_CHARS = 500  # an internal note in ingestion_jobs.error, not shown to the user
@@ -281,9 +279,7 @@ async def ingest_material(material_id: UUID, deps: IngestionDeps) -> None:
 
 def _content_type(material: MaterialRow) -> str | None:
     """The stored type, bare and lower case (the API stores it so already; again does no harm)."""
-    if not material.content_type:
-        return None
-    return material.content_type.split(";", 1)[0].strip().lower()
+    return bare_content_type(material.content_type) if material.content_type else None
 
 
 def _image_type(material: MaterialRow) -> str | None:
