@@ -14,7 +14,7 @@
 - [x] 3. 🤖 `/spec-to-tests` · unit (repo + storage ปลอม · ทางมี/ไม่มี token · 404 ของ tenant อื่น · 409 · 422) + integration บน `anyang-dev` (อัปโหลดผ่าน signed URL ได้จริง · user B อ่าน/เขียน/ขอ URL ใน prefix ของ A ไม่ได้ · แถว `materials` แยก tenant) · test เริ่มต้นด้วย requirement ID
 - [x] 4. 🙋 Junior review test (อ่านตาราง AC → test ที่ Claude สรุป)
 - [x] 5. 🤖 `supabase/migrations/0008_materials_storage.sql`: bucket `materials` แบบ private · `file_size_limit` = `guards.max_material_mb` · `allowed_mime_types` ตาม api.md · policy บน `storage.objects` (insert/select/update/delete) เฉพาะเมื่อโฟลเดอร์แรกของ path = `current_tenant_id()` · แล้ว `/implement-feature`: `app/db/materials.py` (JWT ของผู้ใช้) + ตัวขอ signed URL + router + งานเบื้องหลัง classify จนทุก test ผ่าน
-- [ ] 6. 🙋 Junior review SQL ของ `0008` แล้วรัน `npx supabase db push` ขึ้น `anyang-dev` (ข้อความบอกกลุ่มเรื่อง migration + RLS · Claude ร่างให้)
+- [x] 6. 🙋 Junior review SQL ของ `0008` แล้วรัน `npx supabase db push` ขึ้น `anyang-dev` (ข้อความบอกกลุ่มเรื่อง migration + RLS · Claude ร่างให้)
 - [ ] 7. 🤖 รัน integration บน `anyang-dev` + ลองครบ flow ในเครื่องกับ Gemini บน Vertex: สร้าง prep → ขอ URL → `PUT` PDF จาก `evals/topics/mth10101/raw/` → `/uploaded` → `kind` ขึ้น → confirm → `GET /ingestion` จนหัวข้อ + ดาวขึ้น → `GET /scope` · ใช้บัญชีทดสอบของตัวเอง (ไม่ใช่บัญชี demo · กติกา D2 (ก))
 - [ ] 8. 🙋 บอกกลุ่ม (migration `0008`, api.md) + บอก May ว่าหน้าอัปโหลดต่อ API จริงได้แล้ว → `/work-done`
 
@@ -29,6 +29,8 @@
 
 ## Decisions
 
+- 2026-11-17 · `0008` ขึ้น anyang-dev แล้ว (Junior link · Claude รัน dry-run ซึ่งมีแค่ `0008` → Junior ok → `db push --remote --yes` → `migration list --remote` ตรงกันครบ 0001–0008 → unlink) · `0005`–`0007` ขึ้นไปแล้วตั้งแต่ 14–15 พ.ย. (แก้ `data-model.md` ใน PR นี้) · integration บน anyang-dev: `test_materials_storage_db.py` 8/8 · `test_rls_isolation` + `test_exam_prep_db` + `test_ingestion_db` 23/23
+
 - 2026-11-16 · ขอบเขต: 4 endpoint (รวม `GET /materials` เพราะหน้า S10 ต้อง poll) · `retry` และ `DELETE` ยังเป็น stub จนหลัง demo · เป้า: เสร็จ 19 พ.ย. เพื่อวิดีโอ 23 พ.ย. (Junior)
 - 2026-11-16 · ตรวจโค้ดของ Jam ก่อนเขียน spec (Junior ขอ): bucket `materials` (`MATERIALS_BUCKET`) และ path `{tenant_id}/{exam_prep_id}/{material_id}` ไม่มีนามสกุล ตรงกับที่ ingestion อ่านจาก `storage_path` · ใช้ชื่อเดิมของ Jam · bucket เดียว private ใช้ร่วมกับรูป/เสียงของห้องติว · เพดาน `guards.max_material_mb` / `max_image_mb` · bucket 50 MB เป็นเพดานแข็ง · path ใช้ uuid ล้วน ชื่อไฟล์ใช้แสดงผลอย่างเดียว
 - 2026-11-16 · reset DB password ของ `anyang-dev` แล้ว + ปิด "Allow new users to sign up" ใน Dashboard แล้ว (Junior) · `.env` อัปเดตแล้ว · ติ๊กข้อ "reset database password" ใน checklist ใน PR นี้ · advisor update เลื่อนออกไป
@@ -38,7 +40,7 @@
 
 ## Next step
 
-ข้อ 6: Junior อ่าน SQL ของ `supabase/migrations/0008_materials_storage.sql` แล้วรัน `npx supabase db push` ขึ้น `anyang-dev` (บอกกลุ่มก่อน · ข้อความร่างอยู่ในแชท session 2026-11-17) · จากนั้นข้อ 7 รัน integration `tests/integration/test_materials_storage_db.py`
+ข้อ 7 ส่วนที่เหลือ: ลองครบ flow ในเครื่องกับ Gemini บน Vertex (สร้าง prep → ขอ URL → `PUT` PDF → `/uploaded` → `kind` ขึ้น → confirm → `GET /ingestion` จนหัวข้อ + ดาวขึ้น → `GET /scope`) ด้วยบัญชีทดสอบของ Junior · integration ส่วนของ materials ผ่านแล้ว
 
 ## Waiting on
 
