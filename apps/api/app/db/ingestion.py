@@ -52,6 +52,8 @@ class MaterialRow:
     status: str
     error: str | None
     created_at: datetime
+    # Checked against the stored object at /uploaded (#140); null on rows from before it.
+    content_type: str | None = None
 
 
 def _material(row: dict[str, Any]) -> MaterialRow:
@@ -68,6 +70,7 @@ def _material(row: dict[str, Any]) -> MaterialRow:
         status=row["status"],
         error=row.get("error"),
         created_at=_time(row.get("created_at")),
+        content_type=row.get("content_type"),
     )
 
 
@@ -184,6 +187,7 @@ class InMemoryIngestionStore:
         status: str = "confirmed",
         kind_confirmed: bool = True,
         relevance_weight: float = 1.0,
+        content_type: str | None = None,
     ) -> UUID:
         material_id = uuid.uuid4()
         self._table("materials").append(
@@ -200,6 +204,7 @@ class InMemoryIngestionStore:
                 "relevance_weight": relevance_weight,
                 "status": status,
                 "error": None,
+                "content_type": content_type,
                 "created_at": self._now(),
             }
         )
