@@ -6,7 +6,7 @@
 | Requirements | UM-01 (เข้าสู่ระบบด้วย email + password ตาม D1 · ส่วนสมัครอยู่ S5), SA-06 |
 | Owner | Jam (งานของ May · May ให้ทำได้เลย 15 พ.ย.) |
 | Reviewer | May (หน้าตา ข้อความ flow · ดูย้อนหลัง) · Jam |
-| Status | approved 2026-11-15 (Jam ok spec + test) · implemented 2026-11-15 (PR #138) · รอ May review หน้าตา |
+| Status | approved 2026-11-15 (Jam ok spec + test) · implemented 2026-11-15 (PR #138) · May review หน้าตาและข้อความแล้ว 17 พ.ย. (ไม่แก้) |
 | Related system spec | `api-auth.md` (API ตรวจ token · 401 `missing_token` / `invalid_token`) · api.md "Auth" · `docs/team/sprint-checklists.md` D1 (email + password บน `anyang-dev`) · `room-http.md`, `scope-review.md` (หน้าที่เรียก API) · `apps/web/CLAUDE.md` |
 
 ## 1. Context

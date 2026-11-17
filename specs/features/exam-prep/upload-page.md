@@ -182,7 +182,7 @@ fetch จำลองทั้งหมด (ไม่ใช้ API จริง)
 
 1. **ตัดสินแล้ว (Jam 16 พ.ย.): (ก) แก้ใน PR นี้** · **แก้ test ที่ review แล้ว 3 ตัว** เพื่อ §2.4: `PrepList.test.tsx` "CM01 a prep at scope or tutoring links to its page, the others do not (AC-3)" (การ์ด `materials`, `processing` จะเป็นลิงก์) · `CreatePrepForm.test.tsx` "CM01 creates the prep with what was typed, then goes home (AC-8)" และ "CM01 a page hidden after a create comes back as a fresh, usable form" (ไป `/preps/p1/upload` แทน `/`) · ข้อเสนอ: แก้ใน PR นี้ (ชื่อ test เปลี่ยนตาม) · ทางเลือก: ไม่แก้ §2.4 ใน PR นี้ แล้วหน้าใหม่เข้าได้จาก URL อย่างเดียว (demo เดินไม่ต่อ)
 
-ให้ May ดูย้อนหลัง (เรื่องหน้าจอ)
+ให้ May ดูย้อนหลัง (เรื่องหน้าจอ) · **May 17 พ.ย.: ข้อ 2–6 ใช้ตามนี้ทั้งหมด** ("มั่นใจ n%" ตามเดิม · ข้อความใน `components/materials/strings.ts` ไม่แก้)
 
 2. **S10 แบบย่อ:** ไม่มีปุ่ม "ถูกหมดแล้ว ข้ามเลย" แยก และยังแก้ประเภทไม่ได้จนถึง S5 · confidence แสดงเป็น % จาก API (wireframe ใช้คำว่า "มั่นใจ" / "ไม่ค่อยมั่นใจ" ซึ่งต้องมีเส้นแบ่ง · ยังไม่มีใน spec ไหน)
 3. **`POLL_MS`:** ข้อเสนอ 2 วินาที เป็นค่าคงที่ใน `components/materials/` (ไม่ใช่ค่าของ learning model จึงไม่อยู่ใน `config/learning.yaml`) · api.md ไม่ได้กำหนด

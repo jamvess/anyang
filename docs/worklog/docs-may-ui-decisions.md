@@ -9,9 +9,9 @@
 
 ## Plan
 
-- [ ] 1. 🙋 May ตัดสินผ่านตัวเลือก: `prep-list-page.md` §10 ข้อ 1–2 · `upload-page.md` §10 ข้อ 2–6 · `scope-review.md` OQ 9 · ข้อความใน `components/{auth,preps,materials,scope}/strings.ts`
-- [ ] 2. 🤖 จดผลใน §10 ของแต่ละ spec · แก้ข้อความที่ May เปลี่ยน (เช็คก่อนว่า test ที่ review แล้วอ้างข้อความนั้นไหม)
-- [ ] 3. 🤖 test + lint + typecheck (ถ้าแก้ข้อความ)
+- [x] 1. 🙋 May ตัดสินผ่านตัวเลือก: `prep-list-page.md` §10 ข้อ 1–2 · `upload-page.md` §10 ข้อ 2–6 · `scope-review.md` OQ 9 · ข้อความใน `components/{auth,preps,materials,scope}/strings.ts`
+- [x] 2. 🤖 จดผลใน §10 ของแต่ละ spec · แก้ข้อความที่ May เปลี่ยน (เช็คก่อนว่า test ที่ review แล้วอ้างข้อความนั้นไหม)
+- [x] 3. 🤖 (ไม่ต้อง · ไม่ได้แก้ข้อความ) test + lint + typecheck (ถ้าแก้ข้อความ)
 - [ ] 4. 🤖 `/work-done`
 
 ## Definition of done
@@ -20,9 +20,11 @@
 
 ## Decisions
 
+- 2026-11-17 · May: วันที่เหลือไม่แสดงจนสร้างเสร็จ · หลังสร้างไปหน้าอัปโหลด (ยืนยันของ Jam) · "มั่นใจ n%" ตามเดิม · ข้อความทุกหน้าโอเค ไม่แก้
+
 ## Next step
 
-ขั้น 1
+`/work-done`
 
 ## Waiting on
 
