@@ -56,7 +56,7 @@
 | หน้าสมัคร | 1 | May | — | ✅ #144 |
 | เปิด "Allow new users to sign up" ใน `anyang-dev` ตอนอัด แล้วปิดกลับ | 1 | Junior | ส. 21 พ.ย. | ปิดอยู่ (D2) · ขอแล้วจะบอกวันอัด |
 | หน้ารายการ + สร้างการเตรียมสอบ | 2 | — | — | ✅ #139 |
-| materials + Storage จริง (#140) + `db push` migration ใหม่ | 3 | Junior | พฤ. 19 พ.ย. | draft |
+| materials + Storage จริง (#140) + `db push` migration ใหม่ | 3 | Junior | พฤ. 19 พ.ย. | ✅ merge 17 พ.ย. · `0009` ขึ้น `anyang-dev` แล้ว · เส้นอัปโหลด → อ่านไฟล์ → scope บนเครื่อง May ยังไม่ได้ลอง |
 | ไฟล์ชีท MTH10101 ที่จะอัปโหลด บนเครื่อง May (ชุดเดียวกับ P3) | 3 | Jam ส่ง → May | พฤ. 19 พ.ย. | ยังไม่มีบนเครื่อง May |
 | ทางสำรองฉาก 3: ไฟล์ input ของ `seed_scope_demo.py` (`poc/P3/out/`, `poc/P3/results/apps-api-ingestion/` · ไม่อยู่ใน git) บนเครื่อง May · May รันเอง | 3 | Jam ส่ง → May | ศ. 20 พ.ย. 18:00 (go/no-go ของ #140) | สคริปต์มีแล้ว (#141) |
 | ห้องติวบน DB: คำทัก, โจทย์, ตรวจ, BKT, จบ session | 4, 6 | — | — | ✅ #131–#136, #143 |
