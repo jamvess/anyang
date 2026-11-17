@@ -18,7 +18,7 @@
   - stream (`tutor_reply` ฯลฯ): ถูกตัดกลางคำตอบ → log อย่างเดียว (ข้อความที่ส่งไปแล้วเอาคืนไม่ได้) · ตัดสินตอน review
   - เสนอ 1 บรรทัดใน `specs/system/ai-orchestration.md` §2.10 "Output" (spec ระบบ · ถามก่อน)
   - → 🙋 Jam review spec
-- [ ] 2. 🤖 `/spec-to-tests` (unit · fake provider · Gemini response จำลอง) → 🙋 Jam review test
+- [x] 2. 🤖 `/spec-to-tests` (unit · fake provider · Gemini response จำลอง) → 🙋 Jam review test
 - [ ] 3. 🤖 `/implement-feature` จน green · ruff · pytest ทั้งชุด
 - [ ] 4. 🤖 + 🙋 test แบบ `@pytest.mark.live` (ไม่เข้า CI): เรียก Gemini บน Vertex ด้วย `max_tokens` เล็กมาก → ได้ error ใหม่หลัง provider call 1 ครั้ง · Jam รันด้วย ADC ของตัวเอง (`gcloud auth application-default login` ทำไว้แล้ว)
 - [ ] 5. 🤖 จดผลลง spec
@@ -36,7 +36,7 @@
 
 ## Next step
 
-ข้อ 1 รอ Jam review spec `specs/features/ai/gateway-truncation.md` (§10 ข้อ 1 และ 3) · ok แล้วทำข้อ 2 `/spec-to-tests`
+ข้อ 2 รอ Jam review test (19 test ใหม่ · 14 แดง 5 ผ่านอยู่แล้ว · live 1 ตัว) · ok แล้วทำข้อ 3 `/implement-feature`
 
 ## Waiting on
 

@@ -88,6 +88,10 @@ class AISchemaError(ValueError):
     """The model kept answering outside the schema after all schema retries."""
 
 
+class AITruncatedError(AISchemaError):
+    """Placeholder for the red run of gateway-truncation.md; built by /implement-feature."""
+
+
 @dataclass(frozen=True)
 class CallRecord:
     purpose: str
@@ -621,3 +625,8 @@ async def call[T: BaseModel](purpose: str, input: dict[str, Any], schema: type[T
 def stream(purpose: str, input: dict[str, Any]) -> AsyncIterator[str]:
     """``async for chunk in ai.stream(purpose, input)`` with the gateway built from settings."""
     return get_gateway().stream(purpose, input)
+
+
+class AITruncatedError(AISchemaError):
+    """Placeholder for the red run of /spec-to-tests (gateway-truncation.md); built by
+    /implement-feature."""

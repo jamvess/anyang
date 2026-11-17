@@ -15,6 +15,10 @@ ScriptItem = str | Exception | list[StreamStep]
 _WORD = re.compile(r"\S+\s*|\s+")
 
 
+class Truncated(str):
+    """Placeholder for the red run of gateway-truncation.md; built by /implement-feature."""
+
+
 def _tokens(text: str) -> int:
     # Rough token estimate (~4 characters per token) so cost logging has numbers in tests.
     return len(text) // 4 + 1
@@ -88,3 +92,8 @@ class FakeProvider:
             sent += step
             usage.tokens_out = _tokens(sent)
             yield step
+
+
+class Truncated(str):
+    """Placeholder for the red run of /spec-to-tests (gateway-truncation.md); built by
+    /implement-feature."""
