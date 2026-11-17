@@ -368,6 +368,11 @@ class Gateway:
             deadline = loop.time() + settings.timeout_s
             try:
                 first = await _next_chunk(attempt)
+                if first is None and usage.truncated:
+                    # Thinking used the whole budget: the same request cannot do better, so no
+                    # retry (gateway-truncation.md §2.3 item 2 · self-review PR #146).
+                    await _close(attempt)
+                    return attempt, deadline, None
                 if first is None:
                     raise AIProviderError(f"{purpose}: the model returned no text")
                 return attempt, deadline, first
@@ -386,6 +391,17 @@ class Gateway:
                 first_chunk, purpose, settings.timeout_s
             )
             answered = True
+            if chunk is None:
+                # Cut before any text: callers still get AIProviderError (the room's degrade
+                # path), but it is a config limit, not a provider failure (§2.3 item 2).
+                status = "truncated"
+                log.warning(
+                    "%s: stream cut at max_tokens=%s before any text (tokens_out=%s)",
+                    purpose,
+                    settings.max_tokens,
+                    usage.tokens_out,
+                )
+                raise AIProviderError(f"{purpose}: cut at max_tokens before any text")
             while chunk is not None:
                 yield chunk
                 try:
@@ -409,7 +425,7 @@ class Gateway:
             else:
                 status = "ok"
         except AIProviderError:
-            provider_failed = True
+            provider_failed = status != "truncated"
             raise
         finally:
             breaker.record(_outcome(answered, provider_failed), generation)

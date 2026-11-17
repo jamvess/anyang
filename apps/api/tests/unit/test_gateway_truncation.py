@@ -7,7 +7,7 @@ import logging
 import pytest
 
 import app.ai.gateway as gateway_module
-from app.ai.gateway import AISchemaError, AITruncatedError, CallRecord, Gateway
+from app.ai.gateway import AIProviderError, AISchemaError, AITruncatedError, CallRecord, Gateway
 from app.ai.providers.base import ProviderRequest
 from app.ai.providers.fake import FakeProvider, Truncated
 from app.models.scope_ai import ClassifyMaterialResult
@@ -168,4 +168,23 @@ async def test_NFRR1_cut_answers_do_not_open_the_breaker():
         with pytest.raises(AITruncatedError):
             await gateway.call(PURPOSE, INPUT, ClassifyMaterialResult)
 
+    assert gateway.breaker("fake").state == "closed"
+
+
+# --- added by the self-review of PR #146 (spec §2.3 item 2 · AC-10b) ---------------------------
+
+
+@pytest.mark.skipif(CONFIG.gateway.retries < 1, reason="needs a provider retry in config")
+async def test_AI04_stream_cut_before_any_text_is_not_retried():
+    cb = CONFIG.gateway.circuit_breaker
+    fake = FakeProvider({"tutor_reply": [Truncated("")] * cb.minimum_calls})
+    gateway, records = make_gateway(fake)
+
+    for _ in range(cb.minimum_calls):
+        with pytest.raises(AIProviderError):
+            async for _chunk in gateway.stream("tutor_reply", {"message": "ทำยังไง"}):
+                pass
+
+    assert len(calls_of(fake, "tutor_reply")) == cb.minimum_calls  # one request per stream
+    assert {r.status for r in records} == {"truncated"}
     assert gateway.breaker("fake").state == "closed"

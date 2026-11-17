@@ -35,7 +35,9 @@ Gemini 3 นับ thinking รวมใน `max_output_tokens` · ถ้า pur
 ### 2.3 `Gateway.stream` (free text)
 
 1. stream ที่ถูกตัดกลางคำตอบ: chunk ที่ส่งแล้วส่งต่อตามเดิม ไม่ raise (ผู้ใช้ได้ข้อความไปแล้ว · retry ไม่ได้หลัง chunk แรก · `gateway-guards.md`) · record `status = "truncated"` · log ระดับ WARNING 1 บรรทัดที่ logger `app.ai.gateway` บอก purpose และ `max_tokens`
-2. stream ที่ไม่มี text เลย (thinking ใช้หมด) ยังเป็น `AIProviderError` "the model returned no text" ตามเดิม (retry ได้ก่อน chunk แรก)
+2. stream ที่ไม่มี text เลย:
+   - **ถูกตัด** (`usage.truncated` · thinking ใช้งบหมด): **ไม่ retry** (งบเท่าเดิมไม่มีทางผ่าน) · caller ยังได้ `AIProviderError` เหมือนเดิม (ทาง degrade ของห้องติวไม่ต้องแก้) · record `status = "truncated"` · log WARNING · circuit breaker ไม่นับเป็น provider ล้ม (เปลี่ยน 17 พ.ย. ตาม self-review PR #146 · Jam ok · เดิมให้ retry)
+   - **ไม่ถูกตัด:** `AIProviderError` "the model returned no text" ตามเดิม (retry ได้ก่อน chunk แรก)
 
 ### 2.4 การบันทึก (AI-04)
 
@@ -74,6 +76,8 @@ fake provider ทั้งหมด (AI-03) · Gemini ทดสอบด้ว�
 **stream (AI-04)**
 
 - **AC-10 (AI04)** Given `tutor_reply` ได้ `Truncated("ลองแยกตัวประกอบดู")` When อ่าน `gateway.stream` จนจบ Then ได้ chunk ทุกคำ ไม่ raise · record `status = "truncated"` · มี log WARNING ที่ `app.ai.gateway` บอก `tutor_reply`
+
+- **AC-10b (AI04 · self-review PR #146)** Given `tutor_reply` ได้ `Truncated("")` (ถูกตัดก่อนมี text) When อ่าน `gateway.stream` Then `AIProviderError` · provider ถูกเรียก **1 ครั้ง** แม้ config ให้ retry · record `status = "truncated"` · และ `minimum_calls` ครั้งแบบนี้ breaker ยังปิด
 
 **การบันทึก (AI-04)**
 
