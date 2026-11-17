@@ -71,6 +71,13 @@ def _usage(usage) -> tuple[int, int]:
     return usage.prompt_token_count or 0, tokens_out
 
 
+def _cut(response: types.GenerateContentResponse) -> bool:
+    """The first candidate stopped at max_output_tokens (gateway-truncation.md §2.1 item 2)."""
+    # getattr: a response without candidates (or a test stub of one) is not cut.
+    candidates = getattr(response, "candidates", None) or []
+    return bool(candidates) and candidates[0].finish_reason == types.FinishReason.MAX_TOKENS
+
+
 def _rate_limited(error: errors.APIError) -> ProviderRateLimited | None:
     if error.code != 429:
         return None
@@ -109,7 +116,10 @@ class GeminiProvider:
             raise
         tokens_in, tokens_out = _usage(response.usage_metadata)
         return ProviderResponse(
-            text=response.text or "", tokens_in=tokens_in, tokens_out=tokens_out
+            text=response.text or "",
+            tokens_in=tokens_in,
+            tokens_out=tokens_out,
+            truncated=_cut(response),
         )
 
     async def stream(self, request: ProviderRequest, usage: StreamUsage) -> AsyncIterator[str]:
@@ -125,6 +135,8 @@ class GeminiProvider:
                 async for chunk in chunks:
                     if chunk.usage_metadata:
                         usage.tokens_in, usage.tokens_out = _usage(chunk.usage_metadata)
+                    if _cut(chunk):
+                        usage.truncated = True
                     if chunk.text:
                         yield chunk.text
             finally:
