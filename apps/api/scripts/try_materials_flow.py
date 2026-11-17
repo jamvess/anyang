@@ -12,6 +12,10 @@ Usage, from apps/api, with the API running (`uv run fastapi dev app/main.py`, AI
     uv run python -m scripts.try_materials_flow                 # every PDF in raw/
     uv run python -m scripts.try_materials_flow sheet-03.pdf midterm-2561-1.pdf
     uv run python -m scripts.try_materials_flow --api http://localhost:8000 --prep <id>
+    uv run python -m scripts.try_materials_flow --title "MTH10101 กลางภาค"   # a fallback prep
+
+The default title says it is a test. Pass --title for a prep that may appear on screen, such as
+the fallback prep of the demo account (docs/design/demo-video.md).
 """
 
 from __future__ import annotations
@@ -31,6 +35,7 @@ from app.settings import get_settings
 
 RAW = Path(__file__).resolve().parents[3] / "evals" / "topics" / "mth10101" / "raw"
 HELD_OUT = "2562"
+TEST_TITLE = "MTH10101 กลางภาค (ทดสอบอัปโหลด)"
 NOTES = {"midterm-2559-1.pdf": "ข้อสอบกลางภาคปี 2559", "midterm-2561-1.pdf": "ข้อสอบกลางภาคปี 2561"}
 
 
@@ -67,6 +72,7 @@ def main() -> None:
     parser.add_argument("files", nargs="*", help="file names in raw/ (default: every PDF)")
     parser.add_argument("--api", default="http://localhost:8000")
     parser.add_argument("--prep", help="use this prep instead of creating one")
+    parser.add_argument("--title", default=TEST_TITLE, help="title of the prep it creates")
     args = parser.parse_args()
 
     paths = [RAW / f for f in args.files] if args.files else sorted(RAW.glob("*.pdf"))
@@ -83,7 +89,7 @@ def main() -> None:
     prep_id = args.prep
     if prep_id is None:
         exam = date.today() + timedelta(days=14)
-        body = {"title": "MTH10101 กลางภาค (ทดสอบอัปโหลด)", "exam_date": exam.isoformat()}
+        body = {"title": args.title, "exam_date": exam.isoformat()}
         prep_id = check(api.post("/exam-preps", json=body), 201)["id"]
     print(f"prep {prep_id}")
 
