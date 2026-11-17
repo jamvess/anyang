@@ -14,7 +14,7 @@
 - [x] 1. 🤖 แก้ spec `specs/features/scope/ingestion.md` (spec ของ Jam): ชนิดไฟล์มาจาก `content_type` · PDF → ทางเดิม · JPEG/PNG/WEBP/HEIC → `vision_extract` 1 หน้า (ข้อเสนอ: อ่าน WEBP/HEIC ได้เลยแทนที่จะล้มตาม checklist) · PPTX/DOCX → ล้มตั้งแต่ classify ด้วยข้อความใหม่ที่บอกให้ส่ง PDF หรือรูป · `content_type` null (แถวเก่า) → นามสกุลเหมือนเดิม · ตอบ `materials-db.md` §10 ข้อ 1 (spec ของ Junior · ถามก่อนแก้) → 🙋 Jam review
 - [x] 2. 🤖 `/spec-to-tests` (unit · `InMemoryIngestionStore` + fake provider) → 🙋 Jam review test
 - [x] 3. 🤖 `/implement-feature`: `MaterialRow.content_type` + `_material` + `add_material(content_type=…)` + ตัดสินชนิดใน `ingestion.py` · ruff · pytest ทั้งชุด
-- [ ] 4. 🙋 (ถ้าอยาก) ลองในเบราว์เซอร์: อัปโหลดรูป PNG 1 ไฟล์ + DOCX 1 ไฟล์ · PNG ต้องผ่าน · DOCX ต้องขึ้นข้อความใหม่
+- [x] 4. 🙋 (17 พ.ย. · Jam ข้าม · unit test ครอบคลุม) (ถ้าอยาก) ลองในเบราว์เซอร์: อัปโหลดรูป PNG 1 ไฟล์ + DOCX 1 ไฟล์ · PNG ต้องผ่าน · DOCX ต้องขึ้นข้อความใหม่
 
 ## Definition of done
 
@@ -27,7 +27,7 @@
 
 ## Next step
 
-ข้อ 3: implement เสร็จ · API ทั้งชุด 1958 ผ่าน 1 ล้ม (`test_SA06_the_job_writes_rows_of_the_preps_tenant_only` · รันซ้ำเดี่ยว 1 ครั้งและทั้งไฟล์ 2 ครั้งผ่านหมด · ไม่ได้เก็บ error ของรอบที่ล้ม) · รอ Jam ok แล้วข้อ 4 (ถ้าอยากลองในเบราว์เซอร์)
+ทุกข้อเสร็จ (ข้อ 4 ข้าม) · พิมพ์ `/work-done`
 
 ## Waiting on
 
