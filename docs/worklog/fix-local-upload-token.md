@@ -12,7 +12,7 @@
 สาเหตุ: `APP_ENV=local` ให้ `upload_url` เป็น URL ของ API เอง (`/dev/uploads/…` · demo-room.md §2 A) · `AUTH_REQUIRED=true` ต้องมี token ทุก path · `lib/httpTransport.ts` `PUT` ไป `upload_url` ด้วย `fetch` เปล่า (ตั้งใจสำหรับ signed URL ของ Storage) → 401 · `web-login.md` §2.3 ข้อ 4 บอกว่า "ไม่แนบ กับ URL ที่ไม่ใช่ API" แปลว่า URL ของ API ต้องแนบ · โค้ดยังไม่ทำตาม
 
 - [x] 1. 🤖 spec: `web-login.md` §2.3 ข้อ 4 ชัดขึ้น (`upload_url` ที่ขึ้นต้นด้วย URL ของ API → แนบ · อื่น → ไม่แนบ) + AC ใหม่ · (spec ของ Jam · Jam ให้แก้ฝั่งเว็บ) → 🙋 May ok
-- [ ] 2. 🤖 test (red) → 🙋 May review
+- [x] 2. 🤖 test (red) → 🙋 May review · 17 พ.ย. ok (1 red · 3 ผ่านตั้งแต่ต้น = พฤติกรรมเดิมที่ต้องคงไว้)
 - [ ] 3. 🤖 แก้ `uploadPhoto` จน test ผ่าน + lint + typecheck
 - [ ] 4. 🙋 ลองในเบราว์เซอร์: login → ห้องติว → วาด canvas → ส่งคำตอบ → การ์ด "อ่านได้แบบนี้ ถูกไหม" ขึ้น
 - [ ] 5. 🤖 `/work-done`
@@ -27,7 +27,7 @@
 
 ## Next step
 
-ขั้น 2: test
+ขั้น 3: แก้ `uploadPhoto`
 
 ## Waiting on
 
