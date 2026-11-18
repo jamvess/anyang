@@ -4,16 +4,20 @@
 import type { ConfirmOcr, EndSession, SendMessage } from "@/components/chat/types";
 import type { components } from "./api";
 import { apiUrl } from "./apiUrl";
-import { apiFetch, apiSSE, authHeaders } from "./auth";
+import { apiFetch, apiSSE } from "./auth";
 
-/** The URL is on the API: same origin and under its base path, not just the same leading text. */
-function isApiUrl(url: string): boolean {
+/**
+ * The URL's path for `apiFetch` when it is on the API (same origin and under its base path, not
+ * just the same leading text), or null for any other URL.
+ */
+function apiPath(url: string): string | null {
   try {
     const base = new URL(apiUrl("/"));
     const target = new URL(url);
-    return target.origin === base.origin && target.pathname.startsWith(base.pathname);
+    if (target.origin !== base.origin || !target.pathname.startsWith(base.pathname)) return null;
+    return `/${target.pathname.slice(base.pathname.length)}${target.search}`;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -40,15 +44,11 @@ async function uploadPhoto(sessionId: string, image: File, signal: AbortSignal):
 
   // The stub's URL cannot be used (spec OQ 2). Delete this check when /uploads talks to Storage.
   if (res.headers.get("X-Stub") !== "true") {
-    // The API's own /dev/uploads (APP_ENV=local) needs the token; a Storage signed URL never gets it
-    // (web-login.md §2.3 item 4 · AC-13).
-    const auth = isApiUrl(ticket.upload_url) ? await authHeaders() : {};
-    const put = await fetch(ticket.upload_url, {
-      method: "PUT",
-      headers: { ...auth, "Content-Type": image.type },
-      body: image,
-      signal,
-    });
+    // The API's own /dev/uploads (APP_ENV=local) goes through apiFetch: the token, and a 401 goes to
+    // the login page. A Storage signed URL never gets the token (web-login.md §2.3 item 4 · AC-13).
+    const init: RequestInit = { method: "PUT", headers: { "Content-Type": image.type }, body: image, signal };
+    const path = apiPath(ticket.upload_url);
+    const put = path !== null ? await apiFetch(path, init) : await fetch(ticket.upload_url, init);
     if (!put.ok) throw new Error(`upload failed: ${put.status}`);
   }
   return ticket.path;
