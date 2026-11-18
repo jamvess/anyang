@@ -42,6 +42,8 @@ from app.domain.ingestion import (
     thai_share,
 )
 from app.domain.stars import ExamIn, TopicIn, compute_importance
+from app.models.exam_prep import MATERIAL_CONTENT_TYPES
+from app.models.room import UPLOAD_CONTENT_TYPES, bare_content_type
 from app.models.scope import Ingestion, IngestionFile, IngestionStep
 from app.models.scope_ai import (
     ClassifyMaterialResult,
@@ -63,9 +65,17 @@ UNREADABLE = "เปิดไฟล์นี้ไม่ได้"
 TRY_AGAIN = "อ่านไฟล์นี้ไม่สำเร็จ ลองใหม่ได้"
 NO_SHEET = "ยังไม่มีชีทหรือสไลด์ให้หาหัวข้อ"
 SCOPE_FAILED = "หาหัวข้อไม่สำเร็จ ลองใหม่ได้"
+NOT_YET = "ไฟล์ชนิดนี้ยังอ่านไม่ได้ ส่งเป็น PDF หรือรูปแทนได้"
 NO_NOTE = "ไม่มี"  # the prompts' word for "none"
 # Bucket of uploaded files (ai-orchestration §2.3.2 step 1 · Junior names it in demo step 3).
 MATERIALS_BUCKET = "materials"
+# The file type (spec §2.5 item 3), from the API's own sets so they cannot drift apart: photos
+# go to vision as they are (the room's image types: Gemini reads WEBP and HEIC), every other type
+# the API accepts for a material, apart from PDF, has no reader yet (PPTX, DOCX · self-review #156).
+_PDF = "application/pdf"
+_PHOTO_TYPES = UPLOAD_CONTENT_TYPES["image"] & MATERIAL_CONTENT_TYPES
+_NOT_YET_TYPES = MATERIAL_CONTENT_TYPES - _PHOTO_TYPES - {_PDF}
+# Rows from before #140 have no content type: their file name's extension decides, as before.
 _IMAGE_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
 _JOB_ERROR_CHARS = 500  # an internal note in ingestion_jobs.error, not shown to the user
 
@@ -146,6 +156,7 @@ async def classify_material(material_id: UUID, deps: IngestionDeps) -> None:
     }
     try:
         await _db(deps.store.set_job, stage="classify", status="running", **job)
+        _check_readable(material)
         data = await _read(deps, material)
         first = _first_pages(deps, material, data)
         result = await deps.gateway.call(
@@ -266,14 +277,34 @@ async def ingest_material(material_id: UUID, deps: IngestionDeps) -> None:
     await _db(deps.store.update_material, material.id, {"status": "ready", "error": None})
 
 
+def _content_type(material: MaterialRow) -> str | None:
+    """The stored type, bare and lower case (the API stores it so already; again does no harm)."""
+    return bare_content_type(material.content_type) if material.content_type else None
+
+
 def _image_type(material: MaterialRow) -> str | None:
-    """A photo by the extension of the user's file name: `storage_path` is
-    `{tenant}/{prep}/{material}` with no extension (0001_init.sql · self-review PR #130)."""
+    """The mime type of a photo, or None for a PDF (spec §2.5 item 3). By `content_type`; a row
+    without one falls back to the extension of the user's file name, as before #140
+    (`storage_path` has no extension · self-review PR #130)."""
+    content_type = _content_type(material)
+    if content_type is not None:
+        return content_type if content_type in _PHOTO_TYPES else None
     name = material.file_name.strip().lower()
     return _IMAGE_TYPES.get("." + name.rsplit(".", 1)[-1]) if "." in name else None
 
 
+def _check_readable(material: MaterialRow) -> None:
+    """Fail at once a type there is no reader for, before any read or AI call (spec §2.5 item 3)."""
+    content_type = _content_type(material)
+    if content_type is None or content_type == _PDF or content_type in _PHOTO_TYPES:
+        return
+    if content_type in _NOT_YET_TYPES:
+        raise _FileFailed(NOT_YET, f"content_type {content_type}: no reader yet")
+    raise _FileFailed(UNREADABLE, f"content_type {content_type}: not accepted")
+
+
 async def _extract(deps: IngestionDeps, material: MaterialRow) -> tuple[list[tuple[int, str]], str]:
+    _check_readable(material)
     data = await _read(deps, material)
     image_type = _image_type(material)
     if image_type is not None:  # a single photo of a page: A2
