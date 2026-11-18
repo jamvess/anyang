@@ -3,7 +3,23 @@
 
 import type { ConfirmOcr, EndSession, SendMessage } from "@/components/chat/types";
 import type { components } from "./api";
+import { apiUrl } from "./apiUrl";
 import { apiFetch, apiSSE } from "./auth";
+
+/**
+ * The URL's path for `apiFetch` when it is on the API (same origin and under its base path, not
+ * just the same leading text), or null for any other URL.
+ */
+function apiPath(url: string): string | null {
+  try {
+    const base = new URL(apiUrl("/"));
+    const target = new URL(url);
+    if (target.origin !== base.origin || !target.pathname.startsWith(base.pathname)) return null;
+    return `/${target.pathname.slice(base.pathname.length)}${target.search}`;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Gets a signed URL from POST /sessions/{id}/uploads, PUTs the photo there and returns its path
@@ -28,12 +44,11 @@ async function uploadPhoto(sessionId: string, image: File, signal: AbortSignal):
 
   // The stub's URL cannot be used (spec OQ 2). Delete this check when /uploads talks to Storage.
   if (res.headers.get("X-Stub") !== "true") {
-    const put = await fetch(ticket.upload_url, {
-      method: "PUT",
-      headers: { "Content-Type": image.type },
-      body: image,
-      signal,
-    });
+    // The API's own /dev/uploads (APP_ENV=local) goes through apiFetch: the token, and a 401 goes to
+    // the login page. A Storage signed URL never gets the token (web-login.md §2.3 item 4 · AC-13).
+    const init: RequestInit = { method: "PUT", headers: { "Content-Type": image.type }, body: image, signal };
+    const path = apiPath(ticket.upload_url);
+    const put = path !== null ? await apiFetch(path, init) : await fetch(ticket.upload_url, init);
     if (!put.ok) throw new Error(`upload failed: ${put.status}`);
   }
   return ticket.path;
