@@ -18,6 +18,7 @@ from fastapi.responses import JSONResponse
 from sse_starlette import EventSourceResponse
 
 from app import stubs
+from app.ai.call_context import ai_call_context
 from app.auth import AuthContext, get_auth
 from app.clock import get_now
 from app.db.errors import DB_DOWN_MESSAGE, DbUnavailableError
@@ -37,7 +38,12 @@ from app.models.scope import (
 )
 from app.rate_limit import RATE_LIMITED_DOCS, chat_rate_limit
 from app.services import scope_db
-from app.services.ingestion import ingestion_view
+from app.services.ingestion import (
+    RETRIED_STEPS,
+    IngestionRunner,
+    get_ingestion_runner,
+    ingestion_view,
+)
 
 router = APIRouter(tags=["scope"])
 
@@ -156,6 +162,44 @@ async def get_ingestion(
     if snapshot is None:
         return error_response(404, "not_found", "Not found")
     return ingestion_view(snapshot)
+
+
+@router.post(
+    "/exam-preps/{id}/ingestion/retry",
+    status_code=202,
+    response_class=Response,
+    responses={
+        **error_docs("Invalid path", "not_failed"),
+        **unavailable_docs("db_unavailable"),
+    },
+)
+async def retry_ingestion_steps(
+    prep_id: PrepId,
+    auth: Annotated[AuthContext | None, Depends(get_auth)],
+    reader: Annotated[IngestionReader | None, Depends(get_ingestion_reader)],
+    runner: Annotated[IngestionRunner, Depends(get_ingestion_runner)],
+) -> Response:
+    """ "Try again" on a failed step of S11: build the topics and stars again
+    (specs/features/exam-prep/ingestion-retry.md §2.3). Only when a step failed and no file did
+    (a failed file is retried on its own row). No body; the page polls GET /ingestion.
+
+    Without a token: 202 + X-Stub, nothing happens.
+    """
+    if auth is None or reader is None:
+        return Response(status_code=202, headers=stubs.HEADERS)
+    try:
+        snapshot = await run_in_threadpool(reader.snapshot, prep_id)
+        if snapshot is None:
+            return error_response(404, "not_found", "Not found")
+        step_failed = "failed" in (snapshot.prep_jobs.get(s) for s in RETRIED_STEPS)
+        file_failed = any(f.status == "failed" for f in ingestion_view(snapshot).files)
+        if not step_failed or file_failed:
+            return error_response(409, "not_failed", "no step to try again")
+        with ai_call_context(auth.tenant_id, auth.user_id):
+            await runner.retry_steps(prep_id)
+    except DbUnavailableError:
+        return error_response(503, "db_unavailable", DB_DOWN_MESSAGE)
+    return Response(status_code=202)
 
 
 _CHAT_EVENTS = (ScopePatchEvent, TokenEvent, DoneEvent, ErrorEvent)

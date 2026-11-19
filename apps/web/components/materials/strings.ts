@@ -48,6 +48,10 @@ export const materialStrings = {
   readFailed: "อ่านไฟล์นี้ไม่สำเร็จ",
   nothingSent: "ยังไม่มีไฟล์ที่ส่งให้อ่าน",
   addFiles: "ใส่ไฟล์",
+  // "ลองใหม่" on a failed file or step (ingestion-retry.md §2.1 · May 19 Nov)
+  retryFile: (fileName: string) => `ลองอ่าน ${fileName} ใหม่`,
+  retryStep: (label: string) => `ลองขั้น ${label} ใหม่`,
+  retryFailed: "ลองใหม่ไม่สำเร็จ ลองอีกครั้งได้",
   status: {
     queued: "รอ",
     pending: "รอ",

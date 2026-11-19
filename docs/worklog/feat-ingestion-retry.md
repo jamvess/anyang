@@ -12,9 +12,9 @@
 - [x] 1. 🤖 `/spec-feature` → `specs/features/exam-prep/ingestion-retry.md` (CM-07 · UC-02 E5): หน้าเว็บ S11 (ปุ่มที่ขั้นรวมและแถวไฟล์ที่ล้ม) + API (endpoint ใหม่สำหรับขั้นรวม · ต่อ `/materials/{id}/retry` ที่เป็น stub กับ `IngestionRunner.retry` ที่มีแล้ว) + ข้อที่ต้องแก้ใน `api.md` (shared)
 - [x] 2. 🙋 May อ่าน spec + ตอบ open questions (ถามเป็นตัวเลือก)
 - [x] 3. 🤖 `/spec-to-tests` ทั้ง `apps/api` และ `apps/web` → test แดง
-- [ ] 4. 🙋 May review test
-- [ ] 5. 🤖 `/implement-feature` ฝั่ง API (router ของ Junior · service ของ Jam) + แก้ `api.md`
-- [ ] 6. 🤖 `/implement-feature` ฝั่งหน้าเว็บ + `pnpm gen:api`
+- [x] 4. 🙋 May review test
+- [x] 5. 🤖 `/implement-feature` ฝั่ง API (router ของ Junior · service ของ Jam) + แก้ `api.md`
+- [x] 6. 🤖 `/implement-feature` ฝั่งหน้าเว็บ + `pnpm gen:api`
 - [ ] 7. 🙋 ลองในเบราว์เซอร์: prep ของ May ที่ "หาหัวข้อ" ล้ม 19 พ.ย. → กดลองใหม่ → ไปหน้า scope
 - [ ] 8. 🙋 ส่งข้อความกลุ่ม: แก้ router ของ Junior, `api.md` (shared), เรียก service ของ Jam
 
@@ -34,13 +34,17 @@
 
 ## Next step
 
-ขั้น 4: รอ May review test 3 ไฟล์ (`apps/web/tests/materials/ProgressRetry.test.tsx`, `apps/api/tests/unit/test_ingestion_retry_api.py`, `test_ingestion_retry_runner.py`) · ok แล้ว commit `test(...)` แล้ว `/implement-feature` (API ก่อน: `IngestionRunner.retry_file`, `retry_steps`, router 2 ตัว)
+ขั้น 7 (🙋 May): เปิด API (Terminal 1 · `fastapi run` · `AUTH_REQUIRED="true"`) + เว็บ (Terminal 2) จาก branch นี้ · login · ไปหน้า `/preps/<id>/progress` ของ prep ที่ "หาหัวข้อ" ล้ม 19 พ.ย. (หน้าหลัก → การ์ดที่ขึ้น "กำลังอ่านไฟล์") · ขั้น "หาหัวข้อและลำดับการเรียน" มี ✕ และปุ่ม "ลองใหม่" → กด → ขั้นกลับเป็น ○/◐ → ไปหน้า scope เอง · ถ้า 429 อีก ปุ่มกลับมา กดได้อีก
 
 ## Waiting on
 
 ไม่มี
 
 ## Notes for next time
+
+- 19 พ.ย. implement: red → green 5 รอบ (runner · router ไฟล์ · router ขั้นรวม · หน้าเว็บ · ปุ่มเป็น component ซ้อนใน render ทำให้ปุ่มถูกสร้างใหม่ทุก render แก้เป็นฟังก์ชันธรรมดา) · API unit 2024 ผ่าน · เว็บ 470 ผ่าน · lint (11 warning เดิม), typecheck, build ผ่าน
+- `tests/integration/test_ingestion_db.py::test_SA06_the_job_writes_rows_of_the_preps_tenant_only` ล้มบนเครื่อง May ทั้งก่อนและหลังแก้ (`material_pages: nothing written` · ต้องใช้ Supabase ในเครื่อง) ไม่เกี่ยวกับงานนี้
+- `lib/api-schema.ts` สร้างจาก `app.openapi()` ลงไฟล์แล้วใช้ `openapi-typescript` กับไฟล์ (ไม่ต้องเปิด API)
 
 - test ไม่ผ่าน 19 พ.ย. ด้วยเหตุผลที่ถูก: เว็บ 12 ตัวหาปุ่มไม่เจอ · API 22 ตัว (`/materials/{id}/retry` ยังเป็น stub · endpoint ขั้นรวม 404 · ไม่มี `retry_file`/`retry_steps`) · 2 ตัวผ่านอยู่แล้ว (stub ไม่มี token · 404 ของ prep tenant อื่น ซึ่งผ่านเพราะยังไม่มี route · จะผ่านจริงหลังทำ)
 - `IngestionRunner.retry` เดิมไม่แตะ: test ที่ review แล้ว (`test_classify_never_stuck.py` AC-34, `test_ingestion_pipeline.py`) await มันแล้วคาดว่า classify เสร็จ · ของใหม่ใช้ `retry_file` ที่ไม่รอ
