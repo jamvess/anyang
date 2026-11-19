@@ -3,7 +3,7 @@
 # "vertex:" runs on Vertex AI when GOOGLE_CLOUD_PROJECT is set (specs/features/ai/gemini-vertex.md;
 # AI-07: no free tier for real users). AI_MODEL_OVERRIDE=gemini:<model> still uses the Gemini API key.
 
-version: "1.24"                        # a string: unquoted, YAML reads 1.10 as the float 1.1
+version: "1.25"                        # a string: unquoted, YAML reads 1.10 as the float 1.1
 
 tiers:
   small:  {primary: "vertex:gemini-3.5-flash",   fallback: "anthropic:TODO-claude-haiku"}  # P3a on Vertex (31 Oct): A4 43/43, A7 34/43 and 30/43 · flash-lite broke JSON with LaTeX (unescaped \\sqrt) on 1 of 2 exams (P3.md §7)
@@ -19,7 +19,9 @@ purposes:
   # v1.22 · proposed by Junior, Jam to confirm in review (#140): Gemini 3 counts thinking inside
   # max_output_tokens. Measured on Vertex with v1 + sheet-03.pdf (2026-11-17): no thinking level
   # → 291 thinking + 5 answer tokens, MAX_TOKENS, invalid JSON; thinking: low → 70 tokens, valid.
-  classify_material:      {tier: small,  temperature: 0.0, max_tokens: 300,  timeout_s: 20, prompt: v1, thinking: low}
+  # v1.25 · Junior (2026-11-19): 300 cut a scanned exam (midterm-2559-1.pdf, bad OCR text layer:
+  # tokens_out 284 of 300, more thinking) → "ลองใหม่ได้". Normal files use ~70. [C] 1000 for headroom.
+  classify_material:      {tier: small,  temperature: 0.0, max_tokens: 1000, timeout_s: 20, prompt: v1, thinking: low}
   vision_extract:         {tier: vision, temperature: 0.0, max_tokens: 4000, timeout_s: 60, prompt: v1, thinking: low}
   vision_extract_pages:   {tier: vision, temperature: 0.0, max_tokens: 16000, timeout_s: 180, prompt: v1, thinking: low}  # PoC P3: whole scanned file in one call
   split_past_exam:        {tier: small,  temperature: 0.0, max_tokens: 16000, timeout_s: 120, prompt: v1, thinking: low}
