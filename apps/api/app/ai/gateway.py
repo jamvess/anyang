@@ -3,7 +3,8 @@
 Every AI call in the backend goes through here (AI-01). The gateway loads the prompt version
 named in config/ai.yaml, fills its ``{{placeholders}}``, routes to the model of the purpose's
 tier (AI-02), validates the output with Pydantic and retries with the error (AI-05), retries
-provider errors and timeouts after a backoff (§2.10), and reports one ``CallRecord`` per call
+provider errors and timeouts after a backoff (§2.10; a 429 has its own table of waits,
+specs/features/ai/gateway-rate-limit-backoff.md), and reports one ``CallRecord`` per call
 to listeners (AI-04). Lost LaTeX backslashes are repaired by the output models' field types
 (``app/ai/latex.py``), not here.
 
@@ -51,6 +52,7 @@ __all__ = [
     "AIConfigError",
     "AIInputError",
     "AIProviderError",
+    "AIRateLimitedError",
     "AISchemaError",
     "CallRecord",
     "Gateway",
@@ -82,6 +84,12 @@ class AIInputError(ValueError):
 
 class AIProviderError(RuntimeError):
     """The model could not be reached or timed out after all retries."""
+
+
+class AIRateLimitedError(AIProviderError):
+    """The provider kept answering 429 through the gateway's table of waits
+    (gateway-rate-limit-backoff.md §2.2 item 4). An ``AIProviderError``, so callers that catch
+    that need no change; a caller that would try again itself should not (§2.3)."""
 
 
 class AISchemaError(ValueError):
@@ -388,7 +396,10 @@ class Gateway:
         breaker, generation = self._acquire(provider_name, purpose)
         try:
             chunks, deadline, chunk = await self._with_retries(
-                first_chunk, purpose, settings.timeout_s
+                first_chunk,
+                purpose,
+                settings.timeout_s,
+                self._config.gateway.rate_limit_waits_stream_seconds,
             )
             answered = True
             if chunk is None:
@@ -471,7 +482,10 @@ class Gateway:
                     dimensions=settings.dimensions,
                 )
                 response = await self._with_retries(
-                    lambda request=request: provider.embed(request), "embed", settings.timeout_s
+                    lambda request=request: provider.embed(request),
+                    "embed",
+                    settings.timeout_s,
+                    self._config.gateway.rate_limit_waits_seconds,
                 )
                 if len(response.vectors) != len(request.texts):
                     raise AIProviderError(
@@ -529,32 +543,57 @@ class Gateway:
         self, provider: Provider, request: ProviderRequest, timeout_s: float
     ) -> ProviderResponse:
         return await self._with_retries(
-            lambda: provider.generate(request), request.purpose, timeout_s
+            lambda: provider.generate(request),
+            request.purpose,
+            timeout_s,
+            self._config.gateway.rate_limit_waits_seconds,
         )
 
     async def _with_retries[R](
-        self, attempt_call: Callable[[], Awaitable[R]], purpose: str, timeout_s: float
+        self,
+        attempt_call: Callable[[], Awaitable[R]],
+        purpose: str,
+        timeout_s: float,
+        rate_limit_waits: list[float],
     ) -> R:
-        """Run ``attempt_call`` with the timeout, retrying provider errors after a backoff."""
+        """Run ``attempt_call`` with the timeout, retrying after a wait.
+
+        A 429 (``ProviderRateLimited``) and other errors have separate budgets
+        (gateway-rate-limit-backoff.md §2.2): the n-th 429 waits ``max(rate_limit_waits[n-1],
+        retry_after)`` and gives up when ``retry_after`` is above the largest slot; other errors
+        get ``gateway.retries`` retries after ``retry_backoff_seconds`` (§2.10)."""
         gateway = self._config.gateway
-        attempts = gateway.retries + 1
-        last_error = ""
-        for attempt in range(attempts):
-            asked_wait: float | None = None
+        largest_slot = max(rate_limit_waits, default=0.0)
+        rate_limited = other_errors = 0
+        while True:
             try:
                 return await asyncio.wait_for(attempt_call(), timeout_s)
-            except TimeoutError:
-                last_error = f"timeout after {timeout_s}s"
             except ProviderRateLimited as error:
                 last_error = f"{type(error).__name__}: {error}"
-                asked_wait = error.retry_after
-            except Exception as error:  # provider SDKs raise many error types
-                last_error = f"{type(error).__name__}: {error}"
-            if attempt == attempts - 1:
-                break
-            wait = gateway.retry_backoff_seconds if asked_wait is None else asked_wait
-            if wait > gateway.max_retry_wait_seconds:
-                break  # waiting that long inside a chat turn is worse than failing now
+                rate_limited += 1
+                asked = error.retry_after
+                if rate_limited > len(rate_limit_waits) or (
+                    asked is not None and asked > largest_slot
+                ):
+                    raise AIRateLimitedError(f"{purpose}: {last_error}") from None
+                wait = max(rate_limit_waits[rate_limited - 1], asked or 0.0)
+                log.warning(
+                    "%s: waiting %ss after 429 number %d (retry_after=%s)",
+                    purpose,
+                    wait,
+                    rate_limited,
+                    asked,
+                )
+            except Exception as error:  # a timeout, or one of the provider SDKs' many errors
+                last_error = (
+                    f"timeout after {timeout_s}s"
+                    if isinstance(error, TimeoutError)
+                    else f"{type(error).__name__}: {error}"
+                )
+                other_errors += 1
+                wait = gateway.retry_backoff_seconds
+                if other_errors > gateway.retries or wait > gateway.max_retry_wait_seconds:
+                    break
             await _sleep(wait)
         raise AIProviderError(f"{purpose}: {last_error}")
 

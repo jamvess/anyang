@@ -12,15 +12,15 @@
 - [x] 1. 🤖 spec `specs/features/ai/gateway-rate-limit-backoff.md` (NFR-R1, AM-11)
 - [x] 2. 🙋 Junior review spec + ตอบ §10 ข้อ 1–2 (19 พ.ย.)
 - [x] 3. 🤖 `/spec-to-tests`: test แดงของ AC-1 ถึง AC-10 (`tests/unit/test_gateway_rate_limit.py` + `tests/unit/test_room_problems_rate_limit.py`)
-- [ ] 4. 🙋 Junior review tests
-- [ ] 5. 🤖 implement: `config/ai.yaml` (2 key ใหม่ · v bump) + `GatewayConfig` + `_with_retries` + `AIRateLimitedError` + `room_problems` · แก้ §2.10 ของ ai-orchestration.md ถ้า §10 ข้อ 1 ok · ruff + pytest ทั้งชุด
+- [x] 4. 🙋 Junior review tests (19 พ.ย. · ok + แก้ test เดิม 2 ตัวตาม spec §10 ข้อ 3)
+- [x] 5. 🤖 implement: `config/ai.yaml` (2 key ใหม่ · v bump) + `GatewayConfig` + `_with_retries` + `AIRateLimitedError` + `room_problems` · แก้ §2.10 ของ ai-orchestration.md ถ้า §10 ข้อ 1 ok · ruff + pytest ทั้งชุด
 - [ ] 6. 🙋 บอกกลุ่ม (แก้ `config/ai.yaml` ซึ่งเป็น shared file + ไฟล์ของ Jam) · `/work-done` → **ถาม Junior ก่อน merge**
 - [ ] 7. 🙋 เย็นนี้: journey เต็มบน `main` หลัง merge (งานข้อ 4 ของ work-start) · Claude ไล่ `ai_calls` + log 429
 
 ## Definition of done
 
 - 429 ของ call ที่ไม่ใช่ stream รอ `[5, 15, 30]` s, stream รอ `[5]` s ก่อนยอมแพ้ · ค่าอยู่ใน `config/ai.yaml` ไม่มีตัวเลขในโค้ด
-- error อื่นยัง retry ตาม `gateway.retries` เดิม · test เดิมทั้งหมดผ่านโดยไม่แก้
+- error อื่นยัง retry ตาม `gateway.retries` เดิม · test เดิมทั้งหมดผ่าน · แก้แค่ 2 ตัวของ §2.10 ที่ Junior ok (boundary ของ 429 = ค่ามากสุดของตาราง · spec §10 ข้อ 3) และแจ้ง Jam ใน PR
 - `room_problems` ไม่ลองสร้างโจทย์ใหม่เมื่อ gateway ยอมแพ้เพราะ 429
 - PR แยกบน `main` · Jam เป็น reviewer · CI เขียว
 
@@ -33,7 +33,7 @@
 
 ## Next step
 
-Junior review test แดง (ข้อ 4) + ตัดสิน test เดิม 2 ตัวใน spec §10 ข้อ 3 → แล้ว `/implement-feature`
+ข้อ 6: Junior บอกกลุ่ม (ข้อความร่างในคำอธิบาย PR #159) → `/work-done` (รัน `/code-review`) → ถาม Junior ก่อน merge
 
 ## Waiting on
 
@@ -41,4 +41,5 @@ Junior review test แดง (ข้อ 4) + ตัดสิน test เดิ�
 
 ## Notes for next time
 
+- รัน pytest ในเครื่อง Junior: shell มี `AI_PROVIDER`, `APP_ENV`, `AUTH_REQUIRED` export ไว้ (จาก `.env` ผ่าน VS Code `python.terminal.useEnvFile`) ทำให้ 342 test ล้มแม้บน `main` · รันด้วย `env -u AI_PROVIDER -u APP_ENV -u AUTH_REQUIRED -u GOOGLE_CLOUD_PROJECT -u GOOGLE_CLOUD_LOCATION uv run pytest` ได้ 2010 passed (19 พ.ย.)
 - Jam เป็นเจ้าของ `app/ai/gateway.py`, `app/services/room_problems.py`, `ai-orchestration.md` · ระบุในคำอธิบาย PR ว่าแตะอะไร

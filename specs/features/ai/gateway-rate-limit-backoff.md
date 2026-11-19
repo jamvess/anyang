@@ -6,7 +6,7 @@
 | Requirements | NFR-R1 (provider หลักมีปัญหา ระบบยังตอบได้ · ai-orchestration §2.10) · AM-11 (โจทย์ในห้องจาก `generate_problem` ที่ SymPy ยืนยันแล้ว) |
 | Owner | Junior |
 | Reviewer | Jam (เจ้าของ gateway และ `room_problems` · ให้ Junior ตัดสิน 19 พ.ย.) |
-| Status | approved 2026-11-19 (Junior ok · §10 ข้อ 1 ตามข้อเสนอ · ข้อ 2 ปรับตาม Junior) |
+| Status | implemented 2026-11-19 (PR #159 · Junior ok spec: §10 ข้อ 1 ตามข้อเสนอ · ข้อ 2 ปรับตาม Junior · ข้อ 3 ตามข้อเสนอ) |
 | Related system spec | ai-orchestration.md §2.10 "Fallback chain" · `config/ai.yaml` `gateway.*` · `room-problems-db.md` §2 ข้อ 4, 7 · `gateway-guards.md` §2.2 (circuit breaker) · `gateway-truncation.md` (#146 · ไม่แตะส่วนเดียวกัน ดู §9) |
 
 ## 1. Context
@@ -80,7 +80,7 @@ feature นี้: (A) 429 มีตารางรอของตัวเอ�
 
 1. **ai-orchestration.md §2.10 "Fallback chain" (ไฟล์ของ Jam):** แก้ประโยค "retry 1 ครั้ง (backoff …)" ให้บอกว่า 429 ใช้ `rate_limit_waits_*` ใน PR เดียวกัน · ข้อเสนอ: แก้ใน PR นี้แล้วบอก Jam ในคำอธิบาย PR
 2. ~~`retry_after` เกิน step~~ · **ตัดสินแล้ว 19 พ.ย. (Junior):** รอ `max(step, retry_after)` · ยอมแพ้เมื่อ `retry_after > max(waits)` · `max_retry_wait_seconds` ใช้กับ error ที่ไม่ใช่ 429 เท่านั้น (§2.2 ข้อ 2)
-3. **test เดิมของ §2.10 ที่ขัดกับข้อ 2 (ยังไม่แก้ · รอ Junior):**
+3. **test เดิมของ §2.10 ที่ขัดกับข้อ 2 · ตัดสินแล้ว 19 พ.ย. (Junior): แก้ตามข้อเสนอ (boundary = ค่ามากสุดของตารางที่เกี่ยว) · บอก Jam ใน PR #159:**
    - `tests/unit/test_ai_gateway.py::test_ai_orchestration_2_10_no_retry_when_provider_asks_to_wait_too_long` · 429 ของ `call` ขอรอ `max_retry_wait_seconds + 1` = 11 s แล้วคาดว่ายอมแพ้ · กฎใหม่: 11 ≤ 30 → รอ 11 แล้วลองใหม่ · ข้อเสนอ: เปลี่ยน `retry_after` เป็น `max(rate_limit_waits_seconds) + 1` (ความหมายของ test เหมือนเดิม: ขอรอนานเกินเพดาน → ไม่ retry)
    - `tests/unit/test_ai_gateway_stream.py::test_AI01_stream_rate_limit_wait_boundary[0-True]` · stream ได้ 429 ขอรอ `max_retry_wait_seconds` = 10 s แล้วคาดว่ารอ 10 แล้วผ่าน · กฎใหม่: 10 > 5 (`max(rate_limit_waits_stream_seconds)`) → ยอมแพ้ · ข้อเสนอ: เปลี่ยนฐานของ boundary จาก `max_retry_wait_seconds` เป็น `max(rate_limit_waits_stream_seconds)` (กรณี `[1-False]` ผ่านอยู่แล้วแต่ควรเปลี่ยนฐานด้วยให้เป็น boundary จริง)
    - test เดิมอื่นที่มี 429 (`test_ai_orchestration_2_10_retry_waits_the_delay_the_provider_asked_for` · ขอ 5 s → รอ 5) ยังผ่าน

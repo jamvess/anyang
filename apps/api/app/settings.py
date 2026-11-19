@@ -189,6 +189,9 @@ class GatewayConfig(_Strict):
     retries: int = Field(ge=0)
     retry_backoff_seconds: float = Field(ge=0)
     max_retry_wait_seconds: float = Field(ge=0)
+    # 429 tables (gateway-rate-limit-backoff.md §2.1): one wait per retry after a 429.
+    rate_limit_waits_seconds: list[Annotated[float, Field(ge=0)]]
+    rate_limit_waits_stream_seconds: list[Annotated[float, Field(ge=0)]]
     schema_retries: int = Field(ge=0)
     circuit_breaker: CircuitBreakerConfig
 

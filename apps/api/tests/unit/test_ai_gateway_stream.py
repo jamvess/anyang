@@ -144,7 +144,9 @@ async def test_AI01_stream_rate_limit_wait_boundary(
 ):
     config = get_settings().ai
     gateway_config = config.gateway.model_copy(update={"retries": 1})
-    wait = gateway_config.max_retry_wait_seconds + extra_wait
+    # A 429 before the first chunk gives up above the largest slot of the stream table, not
+    # max_retry_wait_seconds (gateway-rate-limit-backoff.md §2.2 item 2 · Junior ok 19 Nov).
+    wait = max(gateway_config.rate_limit_waits_stream_seconds) + extra_wait
     fake = FakeProvider({"tutor_reply": [ProviderRateLimited("429", retry_after=wait), "ตอบได้"]})
     gateway = make_gateway(fake, gateway=gateway_config)
 

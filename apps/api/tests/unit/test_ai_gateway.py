@@ -558,7 +558,9 @@ async def test_ai_orchestration_2_10_retry_waits_the_delay_the_provider_asked_fo
 async def test_ai_orchestration_2_10_no_retry_when_provider_asks_to_wait_too_long(
     sleeps: list[float],
 ):
-    max_wait = get_settings().ai.gateway.max_retry_wait_seconds
+    # A 429 gives up above the largest slot of its table, not max_retry_wait_seconds
+    # (gateway-rate-limit-backoff.md §2.2 item 2 · Junior ok 19 Nov).
+    max_wait = max(get_settings().ai.gateway.rate_limit_waits_seconds)
     rate_limited = ProviderRateLimited("429", retry_after=max_wait + 1)
     fake = FakeProvider({"extract_topics_local": [rate_limited, VALID_TOPICS]})
 

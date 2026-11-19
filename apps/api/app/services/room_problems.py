@@ -15,7 +15,7 @@ from uuid import UUID
 from starlette.concurrency import run_in_threadpool
 
 from app.ai.call_context import AICallContext
-from app.ai.gateway import Gateway
+from app.ai.gateway import AIRateLimitedError, Gateway
 from app.auth import AuthContext
 from app.db.errors import DbUnavailableError
 from app.db.room import PrepRecord, RoomRepository, SessionRecord
@@ -231,6 +231,11 @@ async def _problem_for(
         try:
             with call_scope(call_context):
                 result = await gateway.call("generate_problem", values, GenerateProblemResult)
+        except AIRateLimitedError as error:
+            # The gateway already waited through its 429 table: trying again now only adds 429s
+            # (gateway-rate-limit-backoff.md §2.3).
+            log.warning("generate_problem try %d: stop, rate limited: %s", attempt + 1, error)
+            return None
         except Exception as error:  # the model or the schema: counts as a try (spec AC-6)
             log.warning("generate_problem try %d failed: %s", attempt + 1, error)
             continue
