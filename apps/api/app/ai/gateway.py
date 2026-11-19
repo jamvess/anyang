@@ -623,8 +623,12 @@ def _build_gateway() -> Gateway:
             for event, data in stubs.events("tutor_reply")
             if event == "token" and data["speaker"] == "tutor"
         ]
+        # Every ingestion purpose too, so an upload reaches the scope with no real model
+        # (ingestion.md §2.7 item 4 · found in #151).
         # record=False: this provider lives as long as the process, so it keeps no history.
-        fake = FakeProvider({}, defaults={"tutor_reply": reply}, record=False)
+        fake = FakeProvider(
+            {}, defaults={"tutor_reply": reply, **stubs.fake_ingestion()}, record=False
+        )
         return Gateway(settings.ai, env.prompts_dir, fake, env.ai_model_override)
 
     from app.ai.providers.gemini import GeminiProvider
