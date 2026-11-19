@@ -9,8 +9,8 @@
 
 ## Plan
 
-- [ ] 1. 🤖 `/spec-feature` → `specs/features/exam-prep/ingestion-retry.md` (CM-07 · UC-02 E5): หน้าเว็บ S11 (ปุ่มที่ขั้นรวมและแถวไฟล์ที่ล้ม) + API (endpoint ใหม่สำหรับขั้นรวม · ต่อ `/materials/{id}/retry` ที่เป็น stub กับ `IngestionRunner.retry` ที่มีแล้ว) + ข้อที่ต้องแก้ใน `api.md` (shared)
-- [ ] 2. 🙋 May อ่าน spec + ตอบ open questions (ถามเป็นตัวเลือก)
+- [x] 1. 🤖 `/spec-feature` → `specs/features/exam-prep/ingestion-retry.md` (CM-07 · UC-02 E5): หน้าเว็บ S11 (ปุ่มที่ขั้นรวมและแถวไฟล์ที่ล้ม) + API (endpoint ใหม่สำหรับขั้นรวม · ต่อ `/materials/{id}/retry` ที่เป็น stub กับ `IngestionRunner.retry` ที่มีแล้ว) + ข้อที่ต้องแก้ใน `api.md` (shared)
+- [x] 2. 🙋 May อ่าน spec + ตอบ open questions (ถามเป็นตัวเลือก)
 - [ ] 3. 🤖 `/spec-to-tests` ทั้ง `apps/api` และ `apps/web` → test แดง
 - [ ] 4. 🙋 May review test
 - [ ] 5. 🤖 `/implement-feature` ฝั่ง API (router ของ Junior · service ของ Jam) + แก้ `api.md`
@@ -30,10 +30,11 @@
 - 2026-11-19 · May เลือก: ครอบคลุมทั้งขั้นรวมและรายไฟล์ · "ไปต่อโดยไม่มีไฟล์นี้" ไม่ทำ (ต้องใช้ลบไฟล์ CM-10 · S5)
 - 2026-11-19 · May เลือก: May ทำ API เองด้วย (แบบ #160) · บอก Junior/Jam ในกลุ่ม
 - 2026-11-19 · May เลือก: กดแล้วไม่ถามยืนยัน ขั้นนั้นกลับเป็น ◐ แล้ว poll ต่อในหน้าเดิม
+- 2026-11-19 · spec §10 ตัดสินทุกข้อตามข้อเสนอ: ไม่แก้ test เดิม AC-19 (แก้ข้อความใน upload-page.md แทน) · ข้อความตาม §2.1 · ขั้นรวมตอบ 202 ไม่มี body · ลองขั้นรวมใหม่ทำ topics ใหม่เสมอ · กดซ้ำไม่จำกัด
 
 ## Next step
 
-ขั้น 1: รัน `/spec-feature` สำหรับ `specs/features/exam-prep/ingestion-retry.md` ตาม Decisions ข้างบน
+ขั้น 3: รัน `/spec-to-tests` กับ `specs/features/exam-prep/ingestion-retry.md` · test ใหม่ตาม §8 (`apps/web/tests/materials/ProgressRetry.test.tsx`, `apps/api/tests/unit/test_ingestion_retry_api.py`, `test_ingestion_retry_runner.py`) · ห้ามแตะ `ProgressPage.test.tsx`
 
 ## Waiting on
 
