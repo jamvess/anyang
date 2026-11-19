@@ -116,6 +116,17 @@ def test_TM18_no_time_left_is_final_whatever_the_ratio(cfg: LearningConfig):
     assert choose_mode(None, 0, cfg) == "final"
 
 
+def test_TM18_no_daily_time_with_work_left_is_triage(cfg: LearningConfig):
+    # AC-16 (spec §10 item 5 C): available = 0 before the exam days.
+    days = cfg.planner.triage_days_left + 30
+
+    open_work = plan([topic(1)], facts(days, daily=0), None, cfg)
+    nothing_left = plan([topic(1, level="passed")], facts(days, daily=0), None, cfg)
+
+    assert (open_work.mode, open_work.available_minutes, open_work.ratio) == ("triage", 0, None)
+    assert (nothing_left.mode, nothing_left.ratio) == ("normal", None)
+
+
 # --- AC-4 · telling the user once ---------------------------------------------------------------
 
 

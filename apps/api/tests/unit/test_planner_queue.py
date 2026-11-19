@@ -200,3 +200,26 @@ def test_TM18_plan_uses_the_mode_it_chose(cfg: LearningConfig):
         tid(2),
         "triage_focus",
     )
+
+
+# --- AC-14 · the mode cuts every topic (spec §10 item 5 A) ---------------------------------------
+
+
+@pytest.mark.parametrize("mode", ["final", "triage"])
+def test_TM18_a_mode_that_cuts_every_topic_falls_back_to_the_agreed_order(mode):
+    # No ★★★ and no weak ★★: final and triage keep nothing, so the queue is normal's.
+    topics = [topic(1, stars=2, level="developing", mastery=0.5), topic(2, stars=1, mastery=0.2)]
+    assert picked(topics, mode=mode) == (tid(1), "next_in_order", None)
+
+
+# --- AC-15 · all candidates passed picks among the candidates (spec §10 item 5 B) ----------------
+
+
+def test_TM18_triage_all_passed_reviews_a_candidate_not_a_cut_topic():
+    topics = [
+        topic(1, stars=3, level="passed", mastery=0.97),
+        topic(2, stars=3, level="passed", mastery=0.9),
+        topic(3, stars=2, level="developing", mastery=0.6),
+        topic(4, stars=1, mastery=0.3),  # weakest, but triage cuts ★
+    ]
+    assert picked(topics, mode="triage") == (tid(2), "all_passed", None)

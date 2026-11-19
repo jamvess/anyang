@@ -6,7 +6,7 @@
 | Requirements | TM-01 (ระบบเลือกหัวข้อเองจาก importance, mastery และวันที่เหลือ) · TM-02 (เหตุผลสั้นๆ ไม่บอกแผนทั้งหมด) · TM-18 (mode normal / tight / triage / final จากเวลาที่ต้องใช้เทียบเวลาที่เหลือ · บอกเมื่อ mode เปลี่ยน) · SM-02 (ลำดับตาม prerequisite) |
 | Owner | Jam |
 | Reviewer | Jam · Junior ดูย้อนหลัง (`planner_decisions` เป็นของ Junior · §11) |
-| Status | approved 2026-11-19 (Jam · §10 ข้อ 1 (ก), ข้อ 2–4 ตามข้อเสนอ) |
+| Status | approved 2026-11-19 (Jam · §10 ข้อ 1 (ก), ข้อ 2–4 ตามข้อเสนอ) · แก้ 2026-11-19 หลัง self-review (Jam · §10 ข้อ 5) |
 | Related system spec | ai-orchestration.md §2.5.1–2.5.3, §2.5.7 · learning-model.md §4 (ระดับ, ระดับเป้า), §6 (need, available, ratio) · `config/learning.yaml` → `planner.*`, `bkt.*`, `done.*`, `levels` · `bkt-mastery.md` (`level`, `target_difficulty`, `mastery_eff`) · `app/domain/room.py` `choose_topic` (กฎง่ายของ demo ที่ feature นี้มาแทน) |
 
 ## 1. Context
@@ -30,7 +30,7 @@
 1. `minutes_per_problem` null → `planner.default_minutes_per_problem` · `daily_minutes` null → `planner.default_daily_minutes`
 2. `problems_per_skill` = จำนวนข้อที่คาดว่าต้องใช้ให้ mastery ถึง `bkt.mastery_threshold` คำนวณจาก `bkt.*` (`planner.problems_per_skill: bkt_simulation` · วิธีคำนวณ §10 ข้อ 1)
 3. `need` = Σ ของหัวข้อที่ `stars ≥ 1` และ `level ≠ passed` ของ `max(skills_total − skills_covered, 1) × problems_per_skill × minutes_per_problem` (หัวข้อที่ยังไม่มี skill นับเป็น 1 skill)
-4. `available` = `days_left × daily_minutes` · `ratio` = `need ÷ available` (`available = 0` → ratio ไม่นับ เพราะ final ตามข้อ 5)
+4. `available` = `days_left × daily_minutes` · `ratio` = `need ÷ available` · `available = 0` → `ratio` = null ใน output และในข้อ 5 ถือว่าเกินทุกขอบเมื่อ `need > 0` (ไม่มีเวลาเลยแต่ยังมีงาน เช่น `daily_minutes = 0` · §10 ข้อ 5) หรือไม่เกินขอบไหนเมื่อ `need = 0`
 5. mode ตามลำดับ (ข้อแรกที่ตรงชนะ):
    1. `days_left ≤ planner.final_mode_days_left` → `final`
    2. `days_left ≤ planner.triage_days_left` หรือ `ratio > planner.triage_ratio` → `triage`
@@ -45,11 +45,12 @@
    - `tight`: ทุกหัวข้อ แต่ ★ ไปท้าย (เรียงใหม่: ★★ และ ★★★ ตาม `order_index` ก่อน แล้ว ★ ตาม `order_index`)
    - `triage`: ★★★ ทุกหัวข้อ และ ★★ ที่ `level` ∈ {`not_started`, `weak`} (§10 ข้อ 3) · ★ ไม่เข้า
    - `final`: ★★★ เท่านั้น (ไม่เปิดหัวข้อใหม่ · ai-orchestration §2.5.2)
+   - **ผู้สมัครเป็นศูนย์** แต่มีหัวข้อ `stars ≥ 1` (mode ตัดทุกหัวข้อ เช่น final ที่ไม่มี ★★★ หรือ triage ที่เหลือแค่ ★ กับ ★★ `developing`) → ใช้ข้อ 2–6 ของ `normal` แทนทั้งหมด (`reason_code` ตาม normal) · §10 ข้อ 5
 2. **ทำหัวข้อค้างให้จบก่อน:** `current_topic_id` เป็นผู้สมัคร และ `level ≠ passed` → หัวข้อนั้น · `reason_code = continue_topic`
 3. **final:** หัวข้อ ★★★ ที่ `mastery_eff` ต่ำสุด (เท่ากัน → `order_index`) · `reason_code = final_review` · ไม่ข้ามหัวข้อที่ผ่านแล้ว (Final ทวนทุก ★★★)
 4. **mode อื่น:** ผู้สมัครตัวแรกตามลำดับของข้อ 1 ที่ `level ≠ passed` · `reason_code` = `triage_focus` ถ้า mode เป็น `triage` · นอกนั้น `next_in_order`
 5. **prerequisite ก่อน (SM-02):** หัวข้อที่ได้จากข้อ 4 มี prerequisite (`prereq_ids`) ที่ `stars ≥ 1` และยังไม่ผ่าน → เลือก prerequisite ตัวที่ `order_index` น้อยสุดแทน (ไล่ซ้ำจนเจอหัวข้อที่ prerequisite ผ่านหมดหรือไม่มี) · `reason_code = prerequisite_first` · `reason_topic_id` = หัวข้อที่ได้จากข้อ 4 · ใช้กับทุก mode ยกเว้น `final` และข้อ 2 (หัวข้อค้าง)
-6. **ทุกผู้สมัครผ่านแล้ว** (mode อื่นที่ไม่ใช่ final): หัวข้อ `stars ≥ 1` ที่ `mastery_eff` ต่ำสุด · `reason_code = all_passed` (เหมือนกฎของ demo · spaced review มาแทนใน S6)
+6. **ทุกผู้สมัครผ่านแล้ว** (mode อื่นที่ไม่ใช่ final): **ผู้สมัคร**ที่ `mastery_eff` ต่ำสุด (เท่ากัน → `order_index`) · `reason_code = all_passed` (เหมือนกฎของ demo · spaced review มาแทนใน S6) · เลือกจากผู้สมัครเท่านั้น ไม่ใช่ทุกหัวข้อ จึงไม่ได้หัวข้อที่ mode ตัด (§10 ข้อ 5)
 7. **ไม่มีหัวข้อที่ `stars ≥ 1` เลย** → `topic_id = null` · `reason_code = no_topic` (ห้องติวเปิดแบบไม่มีโจทย์เหมือนเดิม)
 
 ### 2.4 Output
@@ -88,8 +89,11 @@
 - **AC-11 (SM02)** หัวข้อถัดไปตามลำดับมี prerequisite ที่ยังไม่ผ่าน → prerequisite · `prerequisite_first` · `reason_topic_id` = หัวข้อเดิม · ไล่ 2 ชั้น (A → B → C) ได้ C · prerequisite ที่ ★0 ไม่นับ
 - **AC-12 (TM01)** ทุกหัวข้อผ่าน (normal) → `mastery_eff` ต่ำสุด · `all_passed` · ไม่มีหัวข้อ ★ ≥ 1 → `topic_id = null` · `no_topic`
 - **AC-13 (TM02)** output ไม่มีรายการหัวข้อหรือ queue (มีแค่หัวข้อเดียว + เหตุผล)
+- **AC-14 (TM18)** ผู้สมัครเป็นศูนย์: final ที่มีแค่ ★★ กับ ★ (ยังไม่ผ่าน) → หัวข้อแรกตามลำดับ · `next_in_order` (ไม่ใช่ `all_passed`) · triage ที่มีแค่ ★ กับ ★★ `developing` → เหมือนกัน
+- **AC-15 (TM18)** triage: ★★★ ผ่านหมด, ★★ `developing` กับ ★ ยังไม่ผ่าน (★ มี `mastery_eff` ต่ำสุด) → ★★★ ที่ `mastery_eff` ต่ำสุด · `all_passed` (ไม่ใช่ ★)
+- **AC-16 (TM18)** `daily_minutes = 0`, `days_left` = `triage_days_left + 30`, มีหัวข้อที่ยังไม่ผ่าน → `triage` · `ratio` = null · ไม่มีหัวข้อที่ยังไม่ผ่าน → `normal`
 
-**AC-boundary:** AC-2, AC-3 · **AC-tenant:** ไม่อ่านหรือเขียนข้อมูล (pure function · ข้อมูลมาจาก repository ของห้องติวที่แยก tenant อยู่แล้ว)
+**AC-boundary:** AC-2, AC-3, AC-16 · **AC-tenant:** ไม่อ่านหรือเขียนข้อมูล (pure function · ข้อมูลมาจาก repository ของห้องติวที่แยก tenant อยู่แล้ว)
 
 ## 5. Data changes
 
@@ -107,8 +111,8 @@
 
 | Test | ระดับ | ครอบคลุม AC |
 |---|---|---|
-| `tests/unit/test_planner_mode.py` (table-driven · `LearningConfig` ของ test) | unit | AC-1 ถึง AC-5 |
-| `tests/unit/test_planner_queue.py` (table-driven) | unit | AC-6 ถึง AC-13 |
+| `tests/unit/test_planner_mode.py` (table-driven · `LearningConfig` ของ test) | unit | AC-1 ถึง AC-5, AC-16 |
+| `tests/unit/test_planner_queue.py` (table-driven) | unit | AC-6 ถึง AC-15 |
 
 ## 9. Out of scope
 
@@ -129,9 +133,11 @@
 2. **ต่อเข้าห้องติวเมื่อไหร่:** ข้อเสนอ: PR นี้ทำแค่ `app/domain/planner.py` + test · ห้องติวยังใช้ `choose_topic` · ต่อใน PR ถัดไปหลังส่งวิดีโอ 23 พ.ย. (ไม่แตะห้องที่ใช้อัดวิดีโอ) และหลังมีที่เก็บ mode ครั้งก่อน (Junior)
 3. **triage เลือก ★★ "ที่อ่อน"** (ai-orchestration §2.5.2): ข้อเสนอ `level` ∈ {`not_started`, `weak`} · หัวข้อที่ยังไม่เริ่มมี mastery `p_init` ซึ่งต่ำกว่า `bkt.weak_below` อยู่แล้ว จึงนับว่าอ่อน · ★★ `developing` ไม่ทำใน triage
 4. **ลำดับเปลี่ยนจากของ demo:** `choose_topic` เลือก "ดาวมากสุดก่อน" แต่ ai-orchestration §2.5.3 ให้ "ตามลำดับที่ตกลงกัน" (`order_index`) · spec นี้ทำตาม §2.5.3 · ผลคือหัวข้อแรกในห้องอาจเปลี่ยนเมื่อต่อเข้าห้องติว (ไม่กระทบ PR นี้เพราะยังไม่ต่อ)
+5. **ช่องโหว่ที่ self-review เจอ** (Jam 2026-11-19 · เลือกแก้ใน PR นี้): (A) final ที่ไม่มี ★★★ ไม่มีกฎรองรับ และได้ `all_passed` ทั้งที่ยังไม่ผ่านอะไร (B) triage ที่ ★★★ ผ่านหมด ข้อ 6 เดิมเลือกจากทุกหัวข้อ จึงได้ ★ ที่ triage ข้าม (C) `daily_minutes = 0` ทำให้ `available = 0` ก่อนวันสอบ ข้อ 4 เดิมถือว่าเป็น final อยู่แล้ว จึงได้ normal ทั้งที่ไม่มีเวลา · แก้: §2.3 ข้อ 1 (ผู้สมัครเป็นศูนย์ → normal) · ข้อ 6 (เลือกจากผู้สมัคร) · §2.2 ข้อ 4 (`available = 0` กับ `need > 0` เกินทุกขอบ) · AC-14 ถึง AC-16
 
 ## 11. Spec changes needed
 
 - ไม่แตะไฟล์กลาง · `config/learning.yaml` มีค่าครบแล้ว (`planner.*`)
 - ถ้า §10 ข้อ 1 เลือก (ก): learning-model §6 เขียนว่า "จำลอง 100,000 รอบ" อยู่แล้ว · ค่าที่ใช้จะเท่ากับที่รายงาน (±การสุ่ม) · ไม่ต้องแก้
 - Junior (S5 "DB ของ planner"): `planner_decisions` + เก็บ mode ครั้งก่อนของ prep (ใช้กับ `previous_mode` · AC-4)
+- PR ต่อห้องติว (จาก self-review): (1) `level` และ `mastery_eff` ของ input ขึ้นกับ mode (`target_difficulty`: ★★ ผ่านที่ระดับต่ำกว่าใน tight/triage) · ห้องติวคำนวณด้วย `previous_mode` (null → `normal`) แล้วเขียนเรื่องนี้ลง spec ของ PR นั้น (2) `problems_per_skill` คำนวณครั้งแรกที่เรียกแล้วเก็บไว้ (~0.35 วินาที) · เรียกตอน startup ของ API เพื่อไม่ให้ request แรกของ instance ค้าง
