@@ -9,9 +9,9 @@
 
 ## Plan
 
-- [ ] 1. 🤖 Spec: `specs/features/exam-prep/material-retry.md` (`/spec-feature`) · เส้น JWT/RLS · `failed` → `uploaded` (ล้มตอน classify) หรือ `confirmed` (ล้มตอน ingest) แบบมีเงื่อนไข `status = failed` · `404` · `409 not_failed` · `503 db_unavailable` · เริ่ม `runner.classify` / `runner.start` ใต้ `ai_call_context` ไม่รอ · ไม่แก้ `ingestion.py` ของ Jam
-- [ ] 2. 🙋 Junior review spec
-- [ ] 3. 🤖 Red tests (`/spec-to-tests`)
+- [x] 1. 🤖 Spec: `specs/features/exam-prep/material-retry.md` (`/spec-feature`) · เส้น JWT/RLS · `failed` → `uploaded` (ล้มตอน classify) หรือ `confirmed` (ล้มตอน ingest) แบบมีเงื่อนไข `status = failed` · `404` · `409 not_failed` · `503 db_unavailable` · เริ่ม `runner.classify` / `runner.start` ใต้ `ai_call_context` ไม่รอ · ไม่แก้ `ingestion.py` ของ Jam
+- [x] 2. 🙋 Junior review spec (ok 2026-11-19 · §10 ข้อ 1–4 ตามข้อเสนอ)
+- [x] 3. 🤖 Red tests (`/spec-to-tests`)
 - [ ] 4. 🙋 Junior review tests
 - [ ] 5. 🤖 Implement (`/implement-feature`) · `api.md` ลบ "ยังเป็น stub" ของ `/retry` (ไฟล์กลาง · แจ้งกลุ่ม)
 - [ ] 6. 🙋 ลองกด retry จริงบน dev (หลังปุ่มของ May หรือยิงด้วย curl/`/docs`)
