@@ -15,8 +15,8 @@
 
 - [x] 1. 🤖 `/spec-feature` → `specs/features/tutor/stage-machine.md` (TM-03, TM-04, AM-08, AM-09, TM-16, SM-12): pure function `next_step(state, event, cfg) -> Step` (stage ถัดไป + directive + skill + difficulty + purpose) · คำถามให้ Jam ตัดสินใน §10 (hint ladder ของ demo กับ Teach ตาม AM-07 · Park อยู่ในงานนี้แค่ไหน · ค่า difficulty ของ Probe/Practice/Verify ต้องเพิ่มใน config ไหม) → 🙋 Jam review spec
 - [x] 2. 🤖 (ถ้า §10 ต้องเพิ่มค่าใน `config/learning.yaml` · ไฟล์กลาง) เพิ่มค่า + ป้ายที่มา + `learning-model.md` + settings class → 🙋 Jam ok + บอกกลุ่มก่อน merge
-- [ ] 3. 🤖 `/spec-to-tests` (unit · table-driven · ไม่มี magic number) → 🙋 Jam review test
-- [ ] 4. 🤖 `/implement-feature` จน green · ruff · pytest ทั้งชุด
+- [x] 3. 🤖 `/spec-to-tests` (unit · table-driven · ไม่มี magic number) → 🙋 Jam review test
+- [x] 4. 🤖 `/implement-feature` จน green · ruff · pytest ทั้งชุด (34/34 · red → green 1 รอบ)
 
 ## Definition of done
 
@@ -26,11 +26,12 @@
 ## Decisions
 
 - 2026-11-19 · Jam เลือกข้อ 1 ของ `/work-start Jam` · ทำแบบ planner: domain + test ก่อน ต่อเข้าห้องหลัง 23 พ.ย.
+- 2026-11-19 · test review: AC-14, AC-15 ติด TM19 ใน spec · หัวข้อ practice ที่กลับมาทำใช้ความยากเดิม (`min(difficulty, cap)`)
 - 2026-11-19 · spec §10: (ก) ทำตาม AM-07 ที่เขียนไว้ (hint ladder อยู่แค่เดโม่) · เข้า Park เท่านั้น · config `stages:` (probe 2, practice เริ่ม 2, verify ลด 0) · user ใหม่ → introduce + Practice · ครอบคลุมหมดแล้ว → skill ที่ถูกน้อยสุด · Start หัวข้อที่ Park → Probe ใหม่
 
 ## Next step
 
-ข้อ 3 รอ Jam review test (`tests/unit/test_stage_machine.py` · 34 test แดงทั้งหมดด้วย NotImplementedError) · ok แล้ว commit แล้วทำข้อ 4
+ทุกข้อเสร็จ · รอ Jam ตรวจ `app/domain/stage_machine.py` แล้วพิมพ์ `/work-done` (ก่อน merge โพสต์กลุ่มเรื่อง `config/learning.yaml`)
 
 ## Waiting on
 
