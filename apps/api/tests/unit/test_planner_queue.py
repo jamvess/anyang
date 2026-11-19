@@ -108,12 +108,14 @@ def test_TM18_tight_puts_one_star_topics_last():
     ],
 )
 def test_TM18_triage_keeps_three_stars_and_weak_two_stars(stars, level, chosen):
-    topics = [topic(1, stars=stars, level=level)]
+    # Topic 2 (★★★, later in order) keeps a candidate in the list, so a topic triage cuts
+    # gives way to it instead of hitting the empty-candidates fallback (spec §2.3 item 6).
+    topics = [topic(1, stars=stars, level=level), topic(2, stars=3)]
     topic_id, reason, _ = picked(topics, mode="triage")
     if chosen:
         assert (topic_id, reason) == (tid(1), "triage_focus")
     else:
-        assert topic_id != tid(1)
+        assert (topic_id, reason) == (tid(2), "triage_focus")
 
 
 # --- AC-10 · final ----------------------------------------------------------------------------

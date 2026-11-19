@@ -21,8 +21,8 @@
   - pure domain `app/domain/planner.py` แทน `choose_topic` · ต่อเข้าห้องติวใน PR นี้หรือ PR ถัดไป (คำถามให้ Jam ตัดสิน)
   - → 🙋 Jam ตัดสินเรื่องการออกแบบ + review spec
 - [x] 2. 🤖 `/spec-to-tests` (unit · table-driven · ขอบของ ratio จาก config · ไม่มี magic number) → 🙋 Jam review test
-- [ ] 3. 🤖 `/implement-feature` จน green · ruff · pytest ทั้งชุด
-- [ ] 4. 🤖 + 🙋 (ถ้าต่อเข้าห้องติวใน PR นี้) ลองในเบราว์เซอร์: เปิดห้องแล้วคำทักบอกหัวข้อพร้อมเหตุผล
+- [x] 3. 🤖 `/implement-feature` จน green · ruff · pytest ทั้งชุด (27/27 · ทั้งชุด 2035 passed · red → green 2 รอบ)
+- [x] 4. ~~ลองในเบราว์เซอร์~~ ไม่ต้องทำ: spec §10 ข้อ 2 ให้ PR นี้มีแค่ domain + test · ต่อเข้าห้องติวเป็น PR ถัดไปหลัง 23 พ.ย.
 
 ## Definition of done
 
@@ -32,10 +32,13 @@
 ## Decisions
 
 - 2026-11-19 · Jam เลือกข้อ 1 ของ `/work-start Jam` · ทำ spec ล่วงหน้าระหว่างช่วงอัดวิดีโอ (S5 เริ่ม 30 พ.ย.)
+- 2026-11-19 · spec §10: (ก) จำลองแบบ fix seed ใช้ค่าเฉลี่ย · PR นี้ domain + test เท่านั้น · triage ★★ weak = not_started หรือ weak · ลำดับตาม `order_index` ไม่ใช่ดาว
+- 2026-11-19 · test AC-9 ที่ review แล้วชนกรณีไม่มีผู้สมัครเลย (spec §2.3 ข้อ 6 → `all_passed`) · Jam เลือกแก้ test (เพิ่มหัวข้อ ★★★ ตัวที่ 2) ไม่แก้ spec
+- 2026-11-19 · `problems_per_skill` = 7.82 (100,000 รอบ · seed 0 · cache ต่อ process ด้วย `lru_cache`) ตรงกับ learning-model §6 (7.8)
 
 ## Next step
 
-ข้อ 2 รอ Jam review test (`test_planner_mode.py` + `test_planner_queue.py` · 27 test แดงทั้งหมด) · ok แล้วทำข้อ 3
+ทุกข้อเสร็จ · รอ Jam ตรวจ `app/domain/planner.py` แล้วพิมพ์ `/work-done`
 
 ## Waiting on
 
