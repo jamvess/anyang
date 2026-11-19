@@ -48,7 +48,7 @@
 1. `stage` null หรือ `park` (§10 ข้อ 6) และ `user_new = false` → **Probe** (TM-03): โจทย์ `purpose = probe`, skill ถัดไป, ความยาก Probe · `fail_streak = 0`
 2. `stage` null หรือ `park` และ `user_new = true` → **Teach แบบเริ่มจากศูนย์** แล้ว Practice (§10 ข้อ 4): `teach.kind = introduce`, โจทย์ `purpose = practice` ความยาก Practice ข้อแรก · stage = `practice`
 3. `stage = done` → Done ซ้ำ (ไม่มีโจทย์ · planner ไม่ควรส่งหัวข้อที่ผ่านแล้วมา ยกเว้นทวน S6)
-4. `stage` อื่น (กลับมาทำหัวข้อค้างใน session ใหม่ · ไม่มีโจทย์ค้าง): ให้โจทย์ของ stage เดิม · `probe` → Probe ใหม่ · `verify` → Verify skill เดิม ความยากเดิม · `practice` → Practice ตามข้อ 2.2
+4. `stage` อื่น (กลับมาทำหัวข้อค้างใน session ใหม่ · ไม่มีโจทย์ค้าง): ให้โจทย์ของ stage เดิม · `probe` → Probe ใหม่ · `verify` → Verify skill เดิม ความยากเดิม · `practice` → Practice skill ถัดไป ความยากเดิม (`min(difficulty, cap)` · ไม่มี → Practice ข้อแรก)
 
 **Answer**
 
@@ -113,8 +113,8 @@
 
 **Park (ai-orchestration §2.2.4 · learning-model §7)**
 
-- **AC-14 boundary ของ fail streak:** ผิดจน `fail_streak` = `park.max_fail_streak_per_skill − 1` → Teach + Verify · = ค่านั้น → stage `park` · `park_reason = fail_streak` · ไม่มีโจทย์
-- **AC-15 boundary ของโจทย์ต่อวัน:** skill ของโจทย์ถัดไปมี `problems_today` = `park.max_problems_per_skill_per_day − 1` → ได้โจทย์ · = ค่านั้น → `park` · `too_many_today` · ใช้ทั้งหลังตอบถูกและผิด
+- **AC-14 (TM19) boundary ของ fail streak:** ผิดจน `fail_streak` = `park.max_fail_streak_per_skill − 1` → Teach + Verify · = ค่านั้น → stage `park` · `park_reason = fail_streak` · ไม่มีโจทย์
+- **AC-15 (TM19) boundary ของโจทย์ต่อวัน:** skill ของโจทย์ถัดไปมี `problems_today` = `park.max_problems_per_skill_per_day − 1` → ได้โจทย์ · = ค่านั้น → `park` · `too_many_today` · ใช้ทั้งหลังตอบถูกและผิด
 
 **Start ของหัวข้อที่เคยทำ**
 

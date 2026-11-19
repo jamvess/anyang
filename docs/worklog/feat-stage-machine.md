@@ -30,7 +30,7 @@
 
 ## Next step
 
-ข้อ 2 รอ Jam ok (config `stages:` v1.8 + learning-model v1.8 + `StagesConfig`) · ok แล้ว commit แล้วทำข้อ 3 `/spec-to-tests` → `tests/unit/test_stage_machine.py`
+ข้อ 3 รอ Jam review test (`tests/unit/test_stage_machine.py` · 34 test แดงทั้งหมดด้วย NotImplementedError) · ok แล้ว commit แล้วทำข้อ 4
 
 ## Waiting on
 
