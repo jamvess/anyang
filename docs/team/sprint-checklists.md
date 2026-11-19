@@ -416,6 +416,7 @@
 ### S5 · 30 พ.ย.–11 ธ.ค.
 
 - [ ] planner เต็ม: เลือกหัวข้อ + เหตุผล + mode (TM-01, TM-02, TM-18) · ลำดับ prerequisite (SM-02)
+  - domain เสร็จ: `app/domain/planner.py` (mode + หัวข้อถัดไป + `reason_code` + prerequisite · spec `planner.md` · PR #166) · เหลือ: ต่อเข้าห้องติวแทน `choose_topic` หลัง 23 พ.ย. และหลังตาราง `planner_decisions` ของ Junior
 - [ ] stage machine: probe → teach → Verify ด้วยโจทย์แบบเดียวกัน → practice (TM-03, TM-04, AM-08, AM-09) · ผ่านตาม skill (TM-16, SM-12)
 - [ ] prompt ของ persona (`persona_extract`, `persona_preview`) และ scope edit ผ่านแชท (UM-05, SM-06)
 - [ ] answer-leak check แบบ deterministic ใน gateway (AM-13)
