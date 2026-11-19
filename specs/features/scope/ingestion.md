@@ -6,7 +6,7 @@
 | Requirements | SM-01, SM-03, SM-04, CM-06, CM-07, AI-08, SA-06 |
 | Owner | Jam |
 | Reviewer | Jam · Junior ดูส่วน DB และตัวรัน job (§10) |
-| Status | approved 2026-11-13 (Jam · §10 ข้อ 1–5 ตามข้อเสนอ · ข้อ 1–3 เป็นของ Junior ใช้ข้อเสนอไปก่อนเพื่อให้ทัน demo · Junior ดูย้อนหลัง) · 17 พ.ย. §2.2 ข้อ 5 + AC-29 ถึง AC-34 (PR #154 · classify ไม่ค้าง) · §2.5 ข้อ 3 + AC-35 ถึง AC-39 (PR #156 · ชนิดไฟล์จาก `content_type`) |
+| Status | approved 2026-11-13 (Jam · §10 ข้อ 1–5 ตามข้อเสนอ · ข้อ 1–3 เป็นของ Junior ใช้ข้อเสนอไปก่อนเพื่อให้ทัน demo · Junior ดูย้อนหลัง) · 17 พ.ย. §2.2 ข้อ 5 + AC-29 ถึง AC-34 (PR #154 · classify ไม่ค้าง) · §2.5 ข้อ 3 + AC-35 ถึง AC-39 (PR #156 · ชนิดไฟล์จาก `content_type`) · §2.7 ข้อ 4 + AC-40 ถึง AC-43 (PR #162 · โหมด fake) |
 | Related system spec | ai-orchestration.md §2.3.2–2.3.9 · api.md v1.11 `Ingestion` · data-model.md รูป 2 · `compute-importance.md` · PoC `specs/poc/reports/P3.md` · `docs/team/sprint-checklists.md` ⭐ demo ขั้น 4 |
 
 ## 1. Context
@@ -90,6 +90,12 @@ demo end to end (23 พ.ย.) ต้องให้ไฟล์ที่ผู�
 1. `start_ingestion` สร้าง `asyncio` task ใน process ของ API (เก็บ reference ไว้ไม่ให้ถูกเก็บขยะ) · 1 task ต่อ prep · ไฟล์ทำทีละไฟล์ตามลำดับเวลาสร้าง (เวลาต่อไฟล์คาดเดาได้ และไม่ชน quota ของ Vertex)
 2. เรียก `start_ingestion` ซ้ำขณะ task ของ prep เดิมยังรัน → ไม่สร้าง task ใหม่ (ไฟล์ใหม่ที่ยืนยันทีหลังเข้าคิวของ task เดิมหลังไฟล์ที่ค้าง)
 3. API ปิดกลางทาง → แถวที่ค้าง `running` ไม่มีใครทำต่อ · ไม่อยู่ใน feature นี้ (§10 ข้อ 2 · ตัวรันจริงบน Cloud Run เป็นของ Junior ใน S5)
+4. **โหมด fake (`AI_PROVIDER=fake`)** (เพิ่ม 19 พ.ย. · PR #162 · AI-03 · พบใน #151: ทุกไฟล์ล้ม "no scripted response"): gateway ของโหมด fake ตอบทุก purpose ของ ingestion ด้วยคำตอบตายตัวจาก `app/stubs/` ไม่เรียก AI จริง เพื่อให้ลองเส้นอัปโหลด → scope ได้ในเครื่องที่ไม่มี Vertex หรือตอน Vertex ตอบ 429
+   1. `classify_material` → `sheet` ความมั่นใจ 0.8 (ผู้ใช้เห็นใน S10) · `vision_extract` → ข้อความ 1 หน้า · `vision_extract_pages` → ข้อความตามจำนวนหน้าที่ส่ง (ไม่งั้นไฟล์ล้มตาม §2.3 ข้อ 1) · `split_past_exam` → ข้อสอบ 2 ข้อ · `extract_topics_local` → หัวข้อ 2 หัวข้อ · `merge_topics` → หัวข้อ 3 หัวข้อ ที่มา `f1:1-1` (ไฟล์แรกของ prep มีเสมอ · `file_keys`) · `map_questions` → ไม่จับคู่ข้อใด (code จัดการ id ที่ไม่รู้จักอยู่แล้ว)
+   2. ข้อความทุกตัวเป็นภาษาไทยที่บอกว่าเป็นข้อมูลทดสอบ เช่น "หัวข้อทดสอบ 1 (โหมด fake)" ไม่ให้ใครเข้าใจว่าเป็นผลจาก AI
+   3. `embed` ปลอม: vector ยาว `embedding.dimensions` ต่อข้อความ ค่าคงที่เดิมทุกครั้ง (ไม่สุ่ม) · gateway ตรวจความยาวตามเดิม
+   4. `vision_extract_pages` ที่ต้องคืนจำนวนหน้าตามที่ส่ง: fake provider อ่าน `page_count` จาก request ไม่ได้ (เห็นแค่ prompt) · ทางที่เลือก: คำตอบตั้งต้นของ purpose นี้เป็นฟังก์ชันของ request ที่นับรูปที่แนบ (`len(request.images)`)
+   5. purpose อื่นของห้องติวไม่อยู่ใน feature นี้ (§9)
 
 ### 2.8 สิ่งที่ code ตัดสิน · สิ่งที่ AI ทำ
 
@@ -157,6 +163,13 @@ AI (A1, A2/A2b, A4, A5, A6, A7) ให้แค่ข้อความ หั�
 - **AC-38 (CM-03)** Given `content_type` null When classify/ingest Then ตามนามสกุลเดิม: "sheet.JPG" เป็นรูป (`image/jpeg`) · "sheet" เป็น PDF
 - **AC-39 (CM-03)** Given `content_type = "Image/PNG; x=1"` Then เป็นรูป `image/png`
 
+**โหมด fake** (§2.7 ข้อ 4 · PR #162)
+
+- **AC-40 (AI-03)** คำตอบตั้งต้นของทุก purpose ใน §2.7 ข้อ 4.1 ผ่าน output schema ของ purpose นั้น (parametrize ทุก purpose) และ purpose ทุกตัวที่ ingestion เรียก (`classify_material`, `vision_extract`, `vision_extract_pages`, `split_past_exam`, `extract_topics_local`, `merge_topics`, `map_questions`) มีคำตอบ
+- **AC-41 (AI-03)** Given gateway ของโหมด fake When `embed` 3 ข้อความ Then ได้ 3 vector ยาว `embedding.dimensions` · เรียกซ้ำได้ค่าเดิม
+- **AC-42 (AI-03)** Given `vision_extract_pages` ส่ง 4 รูป Then คำตอบมี 4 หน้า หน้า 1–4
+- **AC-43 (SM-01, CM-07)** Given prep ที่มีชีท PDF (text layer) 1 ไฟล์และข้อสอบเก่าสแกน 1 ไฟล์ บน gateway ของโหมด fake When classify ทั้งสองไฟล์ ยืนยัน แล้วรันตัวรันจนจบ Then ทุกไฟล์ `ready` · `topics` 3 แถวที่ `importance` ไม่ null · `GET /scope` ของ prep ไม่ตอบ `409 scope_not_ready` (`scope_ready = true`)
+
 **API**
 
 - **AC-23 (CM-07)** มี token · ไฟล์ 3 ไฟล์ (done, running, failed) → `files` เรียงตามเวลาสร้าง สถานะตามแถวของ `ingestion_jobs` · `detail` "14 หน้า" / "กำลังแยกรายข้อ" / null · `error` ของไฟล์ที่ล้มเป็นข้อความสั้น ไม่มี stack · `scope_ready = false`
@@ -213,6 +226,7 @@ AI (A1, A2/A2b, A4, A5, A6, A7) ให้แค่ข้อความ หั�
 | `tests/unit/test_ingestion_domain.py` (สัดส่วนไทย, chunk, ชื่อไฟล์, key → material, source ที่ผิด, สถานะรวมของไฟล์และ step) | unit (pure) | AC-boundary-thai, AC-5, AC-boundary-chunk, AC-9, AC-11, AC-23–25 (ส่วนคิดสถานะ) |
 | `tests/unit/test_ingestion_pipeline.py` (fake provider + repository ในหน่วยความจำ + PDF เล็กที่สร้างใน test ด้วย PyMuPDF) | unit | AC-1–4, AC-6–8, AC-10, AC-12–22, AC-27 |
 | `tests/unit/test_ingestion_api.py` (dependency override) | unit | AC-23–26 |
+| `tests/unit/test_fake_ingestion.py` (ใหม่ · PR #162 · gateway จาก `_build_gateway` ที่ `AI_PROVIDER=fake` + repository ในหน่วยความจำ) | unit | AC-40–43 |
 | `tests/unit/test_ingestion_content_type.py` (ใหม่ · PR #156 · repository ในหน่วยความจำ + fake provider · ตาราง content_type) | unit | AC-35–39 |
 | `tests/unit/test_classify_never_stuck.py` (ใหม่ · PR #154 · repository ในหน่วยความจำห่อด้วยตัวที่ล้มตามสั่ง) | unit | AC-29–34 |
 | `tests/integration/test_ingestion_db.py` (Supabase ในเครื่อง · 2 tenants) | integration | AC-tenant, AC-18 |
@@ -230,6 +244,7 @@ AI (A1, A2/A2b, A4, A5, A6, A7) ให้แค่ข้อความ หั�
 - endpoint ของไฟล์ (`/materials…`), signed upload URL, bucket + policy (Junior · demo ขั้น 3) · feature นี้อ่านไฟล์ผ่าน interface `MaterialFiles.read(storage_path)` ที่มีตัวจริงอ่าน Supabase Storage ด้วย service role และตัวในเครื่องอ่านโฟลเดอร์
 - `topic_chunks` (เลือก chunk ของหัวข้อด้วย vector similarity · ai-orchestration §2.3.4 ขั้น 5d) · ใช้ตอน grounding ในห้องติว (SM-11 · S6) · chunk + vector พร้อมแล้วจาก feature นี้
 - PPTX, DOCX (ai-orchestration §2.3.3) · demo ใช้ PDF และรูป
+- โหมด fake ของ purpose ในห้องติว (`open_session`, `generate_problem`, `typed_answer`, `check_answer` ฯลฯ · ตอนนี้ตอบแค่ `tutor_reply`) · feature นี้ทำเฉพาะ ingestion (§2.7 ข้อ 4)
 - เพิ่มไฟล์หลังยืนยัน scope (CM-05), ลบไฟล์ที่ ready แล้ว (CM-10 · api.md รอตัดสิน ข้อ 3), แก้ scope ผ่านแชท (SM-06)
 - ลองใหม่ของขั้นรวม (api.md รอตัดสิน ข้อ 8) · ตัวรัน job ที่ทนต่อ API ปิด / หลาย instance (Cloud Run · S5)
 

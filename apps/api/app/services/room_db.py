@@ -25,7 +25,15 @@ from app.domain.room import (
     greeting_text,
     room_names,
 )
-from app.models.room import DoneEvent, Limits, Message, Room, SessionEvent, TokenEvent
+from app.models.room import (
+    DoneEvent,
+    Limits,
+    Message,
+    ProblemEvent,
+    Room,
+    SessionEvent,
+    TokenEvent,
+)
 from app.request_context import get_request_id
 from app.services.room_state import conversation_text, saved_conversation
 from app.services.tutor_turn import NO_PROBLEM, Event, reply_events
@@ -118,6 +126,29 @@ async def _save_tutor(
         )
         return []
     return [record.id]
+
+
+async def save_problem_card(
+    repo: RoomRepository, auth: AuthContext, session_id: UUID, card: ProblemEvent
+) -> None:
+    """The problem card as sent, as one `card` row, so a reload shows it again
+    (problem-card-history.md §6). Its id is not in `done.message_ids` (§6 item 4: tutor and
+    buddy messages only). A failure is logged and the stream goes on: the card is on screen."""
+    try:
+        await run_in_threadpool(
+            lambda: repo.add_message(
+                tenant_id=auth.tenant_id,
+                session_id=session_id,
+                role="card",
+                content=None,
+                input_mode=None,
+                card={"problem": card.model_dump(mode="json")},
+            )
+        )
+    except DbUnavailableError:
+        log.warning(
+            "problem card not saved (request_id=%s, session_id=%s)", get_request_id(), session_id
+        )
 
 
 async def opening_events(

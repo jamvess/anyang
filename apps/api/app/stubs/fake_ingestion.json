@@ -1,0 +1,63 @@
+{
+  "_comment": "Fixed answers of the ingestion purposes in fake mode (AI_PROVIDER=fake · specs/features/scope/ingestion.md §2.7 item 4). Test data only: every name says so. vision_extract_pages is built in code (one page per image sent).",
+  "classify_material": {
+    "kind": "sheet",
+    "confidence": 0.8,
+    "other_instructor": false,
+    "reason": "คำตอบทดสอบของโหมด fake"
+  },
+  "vision_extract": {
+    "text": "ข้อความทดสอบจากรูป (โหมด fake)",
+    "latex_blocks": [],
+    "notes": ""
+  },
+  "split_past_exam": {
+    "questions": [
+      {"q_no": "1", "text": "ข้อสอบทดสอบ 1 (โหมด fake)", "page": 1, "points": 5},
+      {"q_no": "2", "text": "ข้อสอบทดสอบ 2 (โหมด fake)", "page": 1, "points": 5}
+    ],
+    "notes": ""
+  },
+  "extract_topics_local": {
+    "topics": [
+      {"name": "หัวข้อทดสอบ 1 (โหมด fake)", "pages": ["1-1"], "prereq_hint": []},
+      {"name": "หัวข้อทดสอบ 2 (โหมด fake)", "pages": ["1-1"], "prereq_hint": []}
+    ],
+    "notes": ""
+  },
+  "merge_topics": {
+    "topics": [
+      {
+        "id": "t01",
+        "name": "หัวข้อทดสอบ 1 (โหมด fake)",
+        "order": 1,
+        "sources": ["f1:1-1"],
+        "prereqs": [],
+        "excluded_by_note": false,
+        "skills": [{"id": "t01.s1", "name": "ทักษะทดสอบ 1 (โหมด fake)", "common_mistakes": []}]
+      },
+      {
+        "id": "t02",
+        "name": "หัวข้อทดสอบ 2 (โหมด fake)",
+        "order": 2,
+        "sources": ["f1:1-1"],
+        "prereqs": ["t01"],
+        "excluded_by_note": false,
+        "skills": [{"id": "t02.s1", "name": "ทักษะทดสอบ 2 (โหมด fake)", "common_mistakes": []}]
+      },
+      {
+        "id": "t03",
+        "name": "หัวข้อทดสอบ 3 (โหมด fake)",
+        "order": 3,
+        "sources": ["f1:1-1"],
+        "prereqs": [],
+        "excluded_by_note": false,
+        "skills": [{"id": "t03.s1", "name": "ทักษะทดสอบ 3 (โหมด fake)", "common_mistakes": []}]
+      }
+    ],
+    "notes": ""
+  },
+  "map_questions": {
+    "mappings": []
+  }
+}

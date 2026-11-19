@@ -19,7 +19,7 @@ from fastapi import Depends
 
 from app.domain.checker import CheckResult
 from app.domain.room import recent_turns
-from app.models.room import ProgressCardEvent
+from app.models.room import ProblemEvent, ProgressCardEvent
 from app.services.checker import CheckProblem
 from app.services.dev_uploads import get_local_mode
 
@@ -188,6 +188,11 @@ class RoomState(Protocol):
         """The recent turns, oldest first; empty when this state keeps none."""
         ...
 
+    async def remember_card(self, key: str, card: ProblemEvent) -> None:
+        """Keep the problem card as sent, for the chat history (problem-card-history.md §6);
+        the states without a database keep none (§6 item 5)."""
+        ...
+
 
 class InMemoryRoomState:
     def __init__(self) -> None:
@@ -242,6 +247,9 @@ class InMemoryRoomState:
 
     async def conversation(self, key: str) -> list[tuple[str, str]]:
         return []
+
+    async def remember_card(self, key: str, card: ProblemEvent) -> None:
+        return None
 
 
 @lru_cache
