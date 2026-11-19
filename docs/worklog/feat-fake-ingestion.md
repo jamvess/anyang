@@ -13,8 +13,8 @@
 
 - [x] 1. 🤖 แก้ spec `specs/features/scope/ingestion.md` §2.7 (ตัวรัน job ในเครื่อง): โหมด fake ตอบทุก purpose ของ ingestion ด้วยคำตอบตายตัวที่ผ่าน schema · `embed` ปลอมคืน vector ยาว `embedding.dimensions` · prep ที่อัปโหลดในโหมด fake ไปถึงหน้า scope ได้ (หัวข้อปลอม 2–3 หัวข้อ) → 🙋 Jam review
 - [x] 2. 🤖 `/spec-to-tests` (unit: คำตอบตั้งต้นผ่าน schema ทุกตัว · เส้นเต็ม classify → ingest → build_scope ใน fake mode ได้ scope) → 🙋 Jam review test
-- [ ] 3. 🤖 `/implement-feature`: คำตอบตั้งต้นใน `app/stubs/` · `FakeProvider.embed` · `_build_gateway` ใส่ defaults · ruff · pytest ทั้งชุด
-- [ ] 4. 🙋 (ถ้าอยาก) ลองในเบราว์เซอร์ด้วย `AI_PROVIDER=fake`
+- [x] 3. 🤖 `/implement-feature`: คำตอบตั้งต้นใน `app/stubs/` · `FakeProvider.embed` · `_build_gateway` ใส่ defaults · ruff · pytest ทั้งชุด
+- [x] 4. 🙋 (19 พ.ย. · ข้าม · Jam ไป `/work-done` · AC-43 ครอบคลุมเส้นเต็ม) (ถ้าอยาก) ลองในเบราว์เซอร์ด้วย `AI_PROVIDER=fake`
 
 ## Definition of done
 
@@ -27,7 +27,7 @@
 
 ## Next step
 
-ข้อ 2 รอ Jam review test (`tests/unit/test_fake_ingestion.py` · 11 test แดงทั้งหมด) · ok แล้วทำข้อ 3
+ข้อ 3: implement เสร็จ · unit 1934 ผ่าน · integration ให้ CI รัน · รอ Jam ok แล้วข้อ 4 (ถ้าอยากลองในเบราว์เซอร์)
 
 ## Waiting on
 

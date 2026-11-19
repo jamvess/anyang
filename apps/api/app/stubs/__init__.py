@@ -120,3 +120,31 @@ def stream(name: str) -> EventSourceResponse:
             yield {"event": event, "data": payload.model_dump_json()}
 
     return EventSourceResponse(replay(), headers=HEADERS)
+
+
+@cache
+def _fake_ingestion_file() -> dict[str, Any]:
+    data = json.loads((_DIR / "fake_ingestion.json").read_text(encoding="utf-8"))
+    data.pop("_comment", None)
+    return data
+
+
+def _fake_vision_pages(request: Any) -> str:
+    """vision_extract_pages must answer as many pages as images were sent (ingestion.md §2.3
+    item 1), so this answer is built from the request."""
+    pages = [
+        {"page": n, "text": f"ข้อความทดสอบหน้า {n} (โหมด fake)"}
+        for n in range(1, len(request.images) + 1)
+    ]
+    return json.dumps({"pages": pages, "notes": ""}, ensure_ascii=False)
+
+
+def fake_ingestion() -> dict[str, Any]:
+    """The answer of every ingestion purpose in fake mode (AI_PROVIDER=fake · ingestion.md §2.7
+    item 4): a JSON string, or a function of the provider request."""
+    answers: dict[str, Any] = {
+        purpose: json.dumps(body, ensure_ascii=False)
+        for purpose, body in _fake_ingestion_file().items()
+    }
+    answers["vision_extract_pages"] = _fake_vision_pages
+    return answers

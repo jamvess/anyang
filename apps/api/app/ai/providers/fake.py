@@ -4,12 +4,21 @@ import asyncio
 import re
 from collections.abc import AsyncIterator, Awaitable, Callable
 
-from app.ai.providers.base import ProviderRequest, ProviderResponse, StreamUsage
+from app.ai.providers.base import (
+    EmbedRequest,
+    EmbedResponse,
+    ProviderRequest,
+    ProviderResponse,
+    StreamUsage,
+)
 
 # One streamed reply spelled out chunk by chunk: a str is sent, an Exception is raised at that
 # point, and a hook is awaited there (tests use it to hold the stream or make it slow).
 StreamStep = str | Exception | Callable[[], Awaitable[None]]
-ScriptItem = str | Exception | list[StreamStep]
+# A function of the request answers from what was sent (the fake mode's vision_extract_pages
+# counts the images · ingestion.md §2.7 item 4).
+AnswerFn = Callable[[ProviderRequest], str]
+ScriptItem = str | Exception | list[StreamStep] | AnswerFn
 
 # A plain str item streams one word at a time, spaces kept, so the chunks always join back.
 _WORD = re.compile(r"\S+\s*|\s+")
@@ -65,6 +74,8 @@ class FakeProvider:
             raise item
         if isinstance(item, list):
             raise TypeError("fake provider: a chunk list is only for stream()")
+        if callable(item) and not isinstance(item, str):
+            item = item(request)
         response = ProviderResponse(
             text=str(item),
             tokens_in=_tokens(request.prompt),
@@ -83,6 +94,8 @@ class FakeProvider:
         item = self._next_item(request.purpose)
         if isinstance(item, Exception):
             raise item
+        if callable(item) and not isinstance(item, str):
+            item = item(request)
         steps: list[StreamStep] = _WORD.findall(item) if isinstance(item, str) else item
         usage.tokens_in = _tokens(request.prompt)
         sent = ""
@@ -99,3 +112,11 @@ class FakeProvider:
             yield step
         if isinstance(item, Truncated):
             usage.truncated = True
+
+    async def embed(self, request: EmbedRequest) -> EmbedResponse:
+        """One fixed vector per text, never random: the first axis only, so the vector is not
+        all zeros (ingestion.md §2.7 item 4.3). Its length is the one asked for."""
+        size = request.dimensions or 1
+        vector = [1.0] + [0.0] * (size - 1)
+        tokens = sum(_tokens(text) for text in request.texts)
+        return EmbedResponse(vectors=[list(vector) for _ in request.texts], tokens_in=tokens)
