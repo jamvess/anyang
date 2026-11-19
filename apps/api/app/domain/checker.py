@@ -82,6 +82,18 @@ def merge_check(
         confidence: float = CERTAIN,
     ) -> CheckResult:
         right = verdict == "correct"
+        # Every result is a pair of rules 1-6, the only ones the verdict event takes: rule 2
+        # keeps whatever the LLM sent, and its schema allows nulls (merge-rules.md, 14 Nov).
+        if right:
+            first_wrong_line, error_type = None, None
+        elif verdict == "incomplete":
+            first_wrong_line, error_type = None, "concept"
+        elif verdict == "incorrect" and error_type == "no_answer":
+            first_wrong_line = None  # lines with no working (a bare "999"), or no lines
+        else:  # a wrong line: a right final answer is never no answer
+            if error_type in (None, "no_answer"):
+                error_type = "calculation"
+            first_wrong_line = first_wrong_line or max(len(lines), 1)
         disagreement = (
             decided_by == "sympy"
             and llm.verdict is not None
@@ -149,7 +161,7 @@ def merge_check(
 
 
 # A plain `=`: not part of `<=`, `>=`, `!=` or `==` (self-review PR #117).
-_EQUALS = re.compile(r"(?<![<>!=])=(?!=)")
+EQUALS = re.compile(r"(?<![<>!=])=(?!=)")
 # A left side that only names the answer, so `f'(x) = 2x` or `dy/dx = 2x` is one step, not two
 # (self-review PR #117): a function with primes or `(x)`, or dy/dx.
 _FUNCTION_LABEL = re.compile(
@@ -169,7 +181,7 @@ def working_steps(lines: list[str]) -> int:
         text = line.strip()
         if not text:
             continue
-        parts = _EQUALS.split(text.removeprefix("="))
+        parts = EQUALS.split(text.removeprefix("="))
         if len(parts) > 1 and (
             _FUNCTION_LABEL.match(parts[0]) or (len(parts) == 2 and _LETTER.match(parts[0]))
         ):

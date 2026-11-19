@@ -1,0 +1,1104 @@
+[
+ {
+  "topic": "ฟังก์ชัน (Function)",
+  "stars": 2,
+  "problem": 1,
+  "ok_at": 3,
+  "text": "กำหนดฟังก์ชัน $f(x) = \\frac{x+5}{x^3 - 4x}$ จงหาค่า $x$ ทั้งหมดที่ทำให้ฟังก์ชัน $f(x)$ ไม่นิยาม (หรือไม่อยู่ในโดเมนของฟังก์ชัน)",
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{\\\\left(\\\\frac{2^2 - 2}{2(2) + 1}\\\\right)^2 - 2}{2\\\\left(\\\\frac{2^2 - 2}{2(2) + 1}\\\\right) + 1}' = '-\\\\frac{46}{45}' (32.2s)",
+   "try 2: NOT verified expression '\\\\frac{2\\\\sqrt{6-2}-5}{(\\\\sqrt{6-2})^{2}-4\\\\sqrt{6-2}+3}' = '1' (9.3s)",
+   "try 3: ok equation 'x^3 - 4x = 0' = 'x=-2, x=0, x=2' (9.8s)"
+  ]
+ },
+ {
+  "topic": "ฟังก์ชัน (Function)",
+  "stars": 2,
+  "problem": 2,
+  "ok_at": 1,
+  "text": "กำหนดให้ $f(x) = x^2 - 4x + 5$ จงหาผลลัพธ์ของ $\frac{f(x+3) - f(x-3)}{6}$ ในรูปอย่างง่าย",
+  "notes": [
+   "try 1: ok expression '\\\\frac{((x+3)^{2}-4(x+3)+5)-((x-3)^{2}-4(x-3)+5)}{6}' = '2x-4' (11.5s)"
+  ]
+ },
+ {
+  "topic": "ฟังก์ชัน (Function)",
+  "stars": 2,
+  "problem": 3,
+  "ok_at": 2,
+  "text": "กำหนดให้ $f(x) = \\frac{2x+4}{x-1}$ จงหาค่า $x$ ทั้งหมดที่ทำให้ $f(x) = x$",
+  "notes": [
+   "try 1: NOT verified expression '2(5) - 3(2)' = '4' (7.4s)",
+   "try 2: ok equation '\\\\frac{2x+4}{x-1}=x' = 'x=-1, x=4' (6.9s)"
+  ]
+ },
+ {
+  "topic": "ลิมิตของฟังก์ชัน (Limit of a Function)",
+  "stars": 3,
+  "problem": 1,
+  "ok_at": 1,
+  "text": "จงหาค่าของ $\\lim_{x \\to 3} \\frac{\\sqrt{x+6}-3}{x^2-9}$",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to 3}\\\\frac{\\\\sqrt{x+6}-3}{x^{2}-9}' = '\\\\frac{1}{36}' (5.7s)"
+  ]
+ },
+ {
+  "topic": "ลิมิตของฟังก์ชัน (Limit of a Function)",
+  "stars": 3,
+  "problem": 2,
+  "ok_at": 1,
+  "text": "จงหาค่าของ $\\lim_{x \\to 2} \\frac{x^3 - 8}{x^2 - 5x + 6}$",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to 2} \\\\frac{x^{3} - 8}{x^{2} - 5x + 6}' = '-12' (16.7s)"
+  ]
+ },
+ {
+  "topic": "ลิมิตของฟังก์ชัน (Limit of a Function)",
+  "stars": 3,
+  "problem": 3,
+  "ok_at": 1,
+  "text": "จงหาค่าของ $\\lim_{x \\to 1} \\frac{x^4 - 3x^2 + 2}{x^3 - 1}$",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to 1}\\\\frac{x^{4}-3x^{2}+2}{x^{3}-1}' = '-\\\\frac{2}{3}' (9.2s)"
+  ]
+ },
+ {
+  "topic": "ทฤษฎีบทแซนด์วิช (Squeeze Theorem)",
+  "stars": 2,
+  "problem": 1,
+  "ok_at": 1,
+  "text": "จงหาค่าของ $\\lim_{x \\to \\infty} \\frac{4x - \\cos(2x)}{2x + \\sin(3x)}$ โดยใช้ Squeeze Theorem",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to \\\\infty}\\\\frac{4x-\\\\cos(2x)}{2x+\\\\sin(3x)}' = '2' (5.1s)"
+  ]
+ },
+ {
+  "topic": "ทฤษฎีบทแซนด์วิช (Squeeze Theorem)",
+  "stars": 2,
+  "problem": 2,
+  "ok_at": 1,
+  "text": "จงหาค่าของ $\\lim_{x \\to \\infty} \\frac{3x^2 - x \\cos(2x)}{2x^2 + \\sin(x)}$ โดยใช้ทฤษฎีบทแซนด์วิช (Squeeze Theorem)",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to \\\\infty}\\\\frac{3x^{2}-x\\\\cos(2x)}{2x^{2}+\\\\sin(x)}' = '\\\\frac{3}{2}' (8.7s)"
+  ]
+ },
+ {
+  "topic": "ทฤษฎีบทแซนด์วิช (Squeeze Theorem)",
+  "stars": 2,
+  "problem": 3,
+  "ok_at": 1,
+  "text": "จงหาค่าของ $\\lim_{x \\to 0} \\frac{x^2 \\sin\\left(\\frac{3}{x}\\right) + 4x + 6}{e^x + \\cos(x)}$ โดยใช้ทฤษฎีบทแซนด์วิช (Squeeze Theorem)",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to 0}\\\\frac{x^{2}\\\\sin\\\\left(\\\\frac{3}{x}\\\\right)+4x+6}{e^{x}+\\\\cos(x)}' = '3' (9.7s)"
+  ]
+ },
+ {
+  "topic": "ลิมิตที่เกี่ยวข้องกับค่าอนันต์ (Limits Involving Infinity)",
+  "stars": 2,
+  "problem": 1,
+  "ok_at": 1,
+  "text": "จงหาค่าของ $\\lim_{x \\to -\\infty} \\frac{\\sqrt{4x^2 + x - 1}}{3x + 2}$",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to -\\\\infty}\\\\frac{\\\\sqrt{4x^{2}+x-1}}{3x+2}' = '-\\\\frac{2}{3}' (7.5s)"
+  ]
+ },
+ {
+  "topic": "ลิมิตที่เกี่ยวข้องกับค่าอนันต์ (Limits Involving Infinity)",
+  "stars": 2,
+  "problem": 2,
+  "ok_at": 1,
+  "text": "จงหาค่าของ $\\lim_{x \\to -\\infty} (\\sqrt{x^2 - 4x} + x)$",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to -\\\\infty} (\\\\sqrt{x^{2} - 4x} + x)' = '2' (4.8s)"
+  ]
+ },
+ {
+  "topic": "ลิมิตที่เกี่ยวข้องกับค่าอนันต์ (Limits Involving Infinity)",
+  "stars": 2,
+  "problem": 3,
+  "ok_at": 1,
+  "text": "จงหาค่าของ $\\lim_{x \\to \\infty} (\\sqrt{x^2 + 3x + 1} - \\sqrt{x^2 - 2x - 1})$",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to \\\\infty}\\\\left(\\\\sqrt{x^{2}+3x+1}-\\\\sqrt{x^{2}-2x-1}\\\\right)' = '\\\\frac{5}{2}' (5.9s)"
+  ]
+ },
+ {
+  "topic": "ความต่อเนื่องของฟังก์ชัน (Continuous Functions)",
+  "stars": 3,
+  "problem": 1,
+  "ok_at": 1,
+  "text": "กำหนดให้ฟังก์ชัน $f(t) = \\begin{cases} 3xt - 5, & t < 2 \\\\ xt^2 + 1, & t \\ge 2 \\end{cases}$ จงหาค่าของ $x$ ที่ทำให้ฟังก์ชัน $f(t)$ มีความต่อเนื่องที่จุด $t = 2$",
+  "notes": [
+   "try 1: ok equation '6x-5=4x+1' = 'x=3' (5.9s)"
+  ]
+ },
+ {
+  "topic": "ความต่อเนื่องของฟังก์ชัน (Continuous Functions)",
+  "stars": 3,
+  "problem": 2,
+  "ok_at": 1,
+  "text": "กำหนดให้ฟังก์ชัน $f(x) = \\begin{cases} \\frac{\\sqrt{x+5} - 3}{x-4}, & x \\neq 4 \\\\ k, & x = 4 \\end{cases}$ จงหาค่าของ $k$ ที่ทำให้ฟังก์ชัน $f(x)$ มีความต่อเนื่องที่จุด $x = 4$",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to 4}\\\\frac{\\\\sqrt{x+5}-3}{x-4}' = '\\\\frac{1}{6}' (4.9s)"
+  ]
+ },
+ {
+  "topic": "ความต่อเนื่องของฟังก์ชัน (Continuous Functions)",
+  "stars": 3,
+  "problem": 3,
+  "ok_at": 2,
+  "text": "กำหนดให้ฟังก์ชัน $f(x) = \\begin{cases} \\frac{x^2 - a}{x - 3}, & x > 3 \\\\ bx + 1, & x \\le 3 \\end{cases}$ ถ้าฟังก์ชัน $f(x)$ มีความต่อเนื่องที่จุด $x = 3$ และ $f(1) = -1$ จงหาค่าของ $a + b$",
+  "notes": [
+   "try 1: NOT verified expression '9 + 2' = '11' (4.1s)",
+   "try 2: ok expression '\\\\lim_{x \\\\to 3^{+}} \\\\frac{x^2 - 9}{x - 3} + (-1)' = '5' (4.3s)"
+  ]
+ },
+ {
+  "topic": "นิยามของอนุพันธ์ (Definition of Derivative)",
+  "stars": 2,
+  "problem": 1,
+  "ok_at": 1,
+  "text": "กำหนดให้ $f(x) = \\frac{2}{x+3}$ จงหาอนุพันธ์ของ $f$ ที่จุด $x = -1$ โดยใช้บทนิยามของอนุพันธ์",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{h \\\\to 0} \\\\frac{\\\\frac{2}{(-1+h)+3} - \\\\frac{2}{-1+3}}{h}' = '-1/2' (1.9s)"
+  ]
+ },
+ {
+  "topic": "นิยามของอนุพันธ์ (Definition of Derivative)",
+  "stars": 2,
+  "problem": 2,
+  "ok_at": 1,
+  "text": "กำหนดให้ $f(x) = \\sqrt{3x+4}$ จงหาอนุพันธ์ของ $f$ ที่จุด $x = 4$ โดยใช้บทนิยามของอนุพันธ์",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to 0}\\\\frac{\\\\sqrt{3(4+x)+4}-4}{x}' = '\\\\frac{3}{8}' (5.4s)"
+  ]
+ },
+ {
+  "topic": "นิยามของอนุพันธ์ (Definition of Derivative)",
+  "stars": 2,
+  "problem": 3,
+  "ok_at": 1,
+  "text": "วัตถุชิ้นหนึ่งเคลื่อนที่ในแนวเส้นตรง โดยมีตำแหน่งของวัตถุ ณ เวลา $x$ วินาที คือ $s(x) = \\frac{3}{x+2}$ เมตร จงหาความเร็วชั่วขณะของวัตถุที่เวลา $x = 1$ วินาที โดยใช้บทนิยามของอนุพันธ์",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{h \\\\to 0}\\\\frac{\\\\frac{3}{(1+h)+2} - \\\\frac{3}{1+2}}{h}' = '-\\\\frac{1}{3}' (4.8s)"
+  ]
+ },
+ {
+  "topic": "การหาอนุพันธ์โดยใช้สูตร (Differentiation Formulas)",
+  "stars": 3,
+  "problem": 1,
+  "ok_at": 1,
+  "text": "กำหนดให้ $f(x) = \\frac{2x^2 - 3x}{x^2 + 1}$ จงหา $f'(x)$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(\\\\frac{2x^{2}-3x}{x^{2}+1}\\\\right)' = '\\\\frac{3x^{2}+4x-3}{(x^{2}+1)^{2}}' (4.2s)"
+  ]
+ },
+ {
+  "topic": "การหาอนุพันธ์โดยใช้สูตร (Differentiation Formulas)",
+  "stars": 3,
+  "problem": 2,
+  "ok_at": 1,
+  "text": "กำหนดให้ $f(x) = \\frac{x^3 - 2x}{x^2 + 3}$ จงหา $f'(x)$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(\\\\frac{x^{3}-2x}{x^{2}+3}\\\\right)' = '\\\\frac{x^{4}+11x^{2}-6}{(x^{2}+3)^{2}}' (5.1s)"
+  ]
+ },
+ {
+  "topic": "การหาอนุพันธ์โดยใช้สูตร (Differentiation Formulas)",
+  "stars": 3,
+  "problem": 3,
+  "ok_at": 1,
+  "text": "กำหนดให้ $f(x) = \\frac{x^3 - x + 1}{x^2 + 2}$ จงหา $f'(x)$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(\\\\frac{x^{3}-x+1}{x^{2}+2}\\\\right)' = '\\\\frac{x^{4}+7x^{2}-2x-2}{(x^{2}+2)^{2}}' (3.8s)"
+  ]
+ },
+ {
+  "topic": "กฎลูกโซ่ (The Chain Rule)",
+  "stars": 2,
+  "problem": 1,
+  "ok_at": 1,
+  "text": "กำหนดให้ $f(x) = \\left( \\frac{2x - 1}{3x^2 + 2} \\right)^3$ จงหาอนุพันธ์ของฟังก์ชัน $f(x)$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(\\\\left(\\\\frac{2x-1}{3x^{2}+2}\\\\right)^{3}\\\\right)' = '\\\\frac{6(2x-1)^{2}(-3x^{2}+3x+2)}{(3x^{2}+2)^{4}}' (6.3s)"
+  ]
+ },
+ {
+  "topic": "กฎลูกโซ่ (The Chain Rule)",
+  "stars": 2,
+  "problem": 2,
+  "ok_at": 1,
+  "text": "กำหนดให้ $f(x) = \\left( \\frac{x^2 - 1}{2x + 3} \\right)^4$ จงหาอนุพันธ์ของฟังก์ชัน $f(x)$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(\\\\left(\\\\frac{x^{2}-1}{2x+3}\\\\right)^{4}\\\\right)' = '\\\\frac{8(x^{2}-1)^{3}(x^{2}+3x+1)}{(2x+3)^{5}}' (6.1s)"
+  ]
+ },
+ {
+  "topic": "กฎลูกโซ่ (The Chain Rule)",
+  "stars": 2,
+  "problem": 3,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\left. \\\\left( \\\\frac{d}{du}\\\\left(\\\\frac{2u-1}{u+1}\\\\right) \\\\cdot \\\\frac{d}{dx}\\\\left(2x^2-3\\\\right) \\\\cdot \\\\frac{d}{dt}\\\\left(t^2+1\\\\right) \\\\right) \\\\right|_{t=1, x=2, u=5}' = '4' (2.8s)",
+   "try 2: NOT verified expression '\\\\frac{d}{dt}\\\\left( \\\\frac{2(2(2t-1)^2 + 1)^2 - 1}{(2(2t-1)^2 + 1) + 1} \\\\right)' = '14' (2.3s)",
+   "try 3: NOT verified expression '\\\\frac{d}{dx}\\\\left( \\\\frac{2(2x^2+1)^2 - 1}{(2x^2+1) + 1} \\\\right)' = '\\\\frac{4x(4x^4 + 8x^2 + 5)}{(x^2 + 1)^2}' (3.2s)"
+  ]
+ },
+ {
+  "topic": "อนุพันธ์ของฟังก์ชันตรีโกณมิติ (Derivatives of Trigonometric Functions)",
+  "stars": 2,
+  "problem": 1,
+  "ok_at": 1,
+  "text": "กำหนดให้ $y = \\frac{\\sin(2x)}{7-\\cos(3x)}$ จงหาอนุพันธ์ $\\frac{dy}{dx}$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(\\\\frac{\\\\sin(2x)}{7-\\\\cos(3x)}\\\\right)' = '\\\\frac{2\\\\cos(2x)(7-\\\\cos(3x)) - 3\\\\sin(2x)\\\\sin(3x)}{(7-\\\\cos(3x))^{2}}' (2.0s)"
+  ]
+ },
+ {
+  "topic": "อนุพันธ์ของฟังก์ชันตรีโกณมิติ (Derivatives of Trigonometric Functions)",
+  "stars": 2,
+  "problem": 2,
+  "ok_at": 1,
+  "text": "กำหนดให้ $y = 3\\cos(x^4 + 8)\\sec(7x)$ จงหาอนุพันธ์ $\\frac{dy}{dx}$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(3\\\\cos(x^{4} + 8)\\\\sec(7x)\\\\right)' = '-12x^{3}\\\\sin(x^{4} + 8)\\\\sec(7x) + 21\\\\cos(x^{4} + 8)\\\\sec(7x)\\\\tan(7x)' (2.4s)"
+  ]
+ },
+ {
+  "topic": "อนุพันธ์ของฟังก์ชันตรีโกณมิติ (Derivatives of Trigonometric Functions)",
+  "stars": 2,
+  "problem": 3,
+  "ok_at": 1,
+  "text": "กำหนดให้ $y = (x^4 + 1)\\tan(x^3)$ จงหาอนุพันธ์ $\\frac{dy}{dx}$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left((x^4 + 1)\\\\tan(x^3)\\\\right)' = '4x^{3}\\\\tan(x^{3}) + 3x^{2}(x^{4} + 1)\\\\sec^{2}(x^{3})' (2.2s)"
+  ]
+ },
+ {
+  "topic": "การหาอนุพันธ์ของฟังก์ชันลอการิทึม (Derivatives of Logarithmic Functions)",
+  "stars": 3,
+  "problem": 1,
+  "ok_at": 1,
+  "text": "จงหาอนุพันธ์ของฟังก์ชัน $f(x) = \\ln\\left( \\frac{x^3 \\sqrt{3x^2+1}}{2x-5} \\right)$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(\\\\ln\\\\left(\\\\frac{x^{3}\\\\sqrt{3x^{2}+1}}{2x-5}\\\\right)\\\\right)' = '\\\\frac{3}{x}+\\\\frac{3x}{3x^{2}+1}-\\\\frac{2}{2x-5}' (5.4s)"
+  ]
+ },
+ {
+  "topic": "การหาอนุพันธ์ของฟังก์ชันลอการิทึม (Derivatives of Logarithmic Functions)",
+  "stars": 3,
+  "problem": 2,
+  "ok_at": 1,
+  "text": "จงหาอนุพันธ์ของฟังก์ชัน $f(x) = \\ln\\left( \\frac{e^{3x} (2x-1)^4}{\\sqrt{x^2+1}} \\right)$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(\\\\ln\\\\left(\\\\frac{e^{3x}(2x-1)^{4}}{\\\\sqrt{x^{2}+1}}\\\\right)\\\\right)' = '3+\\\\frac{8}{2x-1}-\\\\frac{x}{x^{2}+1}' (8.9s)"
+  ]
+ },
+ {
+  "topic": "การหาอนุพันธ์ของฟังก์ชันลอการิทึม (Derivatives of Logarithmic Functions)",
+  "stars": 3,
+  "problem": 3,
+  "ok_at": 1,
+  "text": "กำหนดให้ $f(x) = \\ln\\left( \\frac{\\sqrt{x^2 + 4x + 5}}{(x-3)^2 e^{2x}} \\right)$ จงหาอนุพันธ์ $f'(x)$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left( \\\\ln\\\\left( \\\\frac{\\\\sqrt{x^{2} + 4x + 5}}{(x-3)^{2} e^{2x}} \\\\right) \\\\right)' = '\\\\frac{x+2}{x^2+4x+5} - \\\\frac{2}{x-3} - 2' (2.5s)"
+  ]
+ },
+ {
+  "topic": "การหาอนุพันธ์ของฟังก์ชันชี้กำลัง (Derivatives of Exponential Functions)",
+  "stars": 2,
+  "problem": 1,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d}{dx}\\\\left(\\\\frac{e^{3x} - e^{-3x}}{e^{3x} + e^{-3x}}\\\\right)' = '3' (2.4s)",
+   "try 2: NOT verified expression '\\\\frac{d}{dx}\\\\left(\\\\frac{e^{3x} - e^{-3x}}{e^{3x} + e^{-3x}}\\\\right)' = '3' (2.4s)",
+   "try 3: NOT verified expression '\\\\frac{d}{dx}\\\\left(\\\\frac{e^{3x} - e^{-3x}}{e^{3x} + e^{-3x}}\\\\right)' = '6' (2.5s)"
+  ]
+ },
+ {
+  "topic": "การหาอนุพันธ์ของฟังก์ชันชี้กำลัง (Derivatives of Exponential Functions)",
+  "stars": 2,
+  "problem": 2,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d}{dx}\\\\left(\\\\frac{e^{3x} - e^{-3x}}{e^{3x} + e^{-3x}}\\\\right)' = '3' (2.1s)",
+   "try 2: NOT verified expression '\\\\frac{d}{dx}\\\\left(\\\\frac{e^{3x} - e^{-3x}}{e^{3x} + e^{-3x}}\\\\right)' = '6' (3.8s)",
+   "try 3: NOT verified expression '\\\\frac{d}{dx}\\\\left(\\\\frac{e^{3x} - e^{-3x}}{e^{3x} + e^{-3x}}\\\\right)' = '3' (2.6s)"
+  ]
+ },
+ {
+  "topic": "การหาอนุพันธ์ของฟังก์ชันชี้กำลัง (Derivatives of Exponential Functions)",
+  "stars": 2,
+  "problem": 3,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d}{dx}\\\\left(\\\\frac{e^{3x} - e^{-3x}}{e^{3x} + e^{-3x}}\\\\right)' = '6' (2.6s)",
+   "try 2: NOT verified expression '\\\\frac{d}{dx}\\\\left(\\\\frac{e^{3x} - e^{-3x}}{e^{3x} + e^{-3x}}\\\\right)' = '3' (2.5s)",
+   "try 3: NOT verified expression '\\\\frac{d}{dx}\\\\left(\\\\frac{e^{3x} - e^{-3x}}{e^{3x} + e^{-3x}}\\\\right)' = '3' (12.2s)"
+  ]
+ },
+ {
+  "topic": "อนุพันธ์ของฟังก์ชันตรีโกณมิติผกผัน (Derivatives of Inverse Trigonometric Functions)",
+  "stars": 2,
+  "problem": 1,
+  "ok_at": 1,
+  "text": "จงหา $\\frac{d}{dx}\\left[\\tan^{-1}\\left(\\frac{x-1}{x+1}\\right)\\right]$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(\\\\arctan\\\\left(\\\\frac{x-1}{x+1}\\\\right)\\\\right)' = '\\\\frac{1}{x^{2}+1}' (9.0s)"
+  ]
+ },
+ {
+  "topic": "อนุพันธ์ของฟังก์ชันตรีโกณมิติผกผัน (Derivatives of Inverse Trigonometric Functions)",
+  "stars": 2,
+  "problem": 2,
+  "ok_at": 3,
+  "text": "จงหา $\\frac{d}{dx}\\left[x \\sin^{-1}(x) + \\sqrt{1-x^2}\\right]$",
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d}{dx}\\\\left(\\\\sec^{-1}(e^{2x})\\\\right)' = '\\\\frac{2}{\\\\sqrt{e^{4x}-1}}' (7.2s)",
+   "try 2: NOT verified expression '\\\\frac{d}{dx}\\\\left(\\\\sec^{-1}(e^{2x})\\\\right)' = '\\\\frac{2}{\\\\sqrt{e^{4x}-1}}' (7.9s)",
+   "try 3: ok expression '\\\\frac{d}{dx}\\\\left(x\\\\arcsin(x) + \\\\sqrt{1-x^{2}}\\\\right)' = '\\\\arcsin(x)' (7.3s)"
+  ]
+ },
+ {
+  "topic": "อนุพันธ์ของฟังก์ชันตรีโกณมิติผกผัน (Derivatives of Inverse Trigonometric Functions)",
+  "stars": 2,
+  "problem": 3,
+  "ok_at": 1,
+  "text": "จงหา $\\frac{d}{dx}\\left[\\tan^{-1}(e^{2x})\\right]$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(\\\\tan^{-1}(e^{2x})\\\\right)' = '\\\\frac{2e^{2x}}{1+e^{4x}}' (4.0s)"
+  ]
+ },
+ {
+  "topic": "การหาอนุพันธ์เชิงลอการิทึม (Logarithmic Differentiation)",
+  "stars": 3,
+  "problem": 1,
+  "ok_at": 1,
+  "text": "กำหนดให้ $y = x^{\\cos(2x)}$ เมื่อ $x > 0$ จงหาอนุพันธ์ $\\frac{dy}{dx}$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(x^{\\\\cos(2x)}\\\\right)' = 'x^{\\\\cos(2x)}\\\\left(\\\\frac{\\\\cos(2x)}{x} - 2\\\\ln(x)\\\\sin(2x)\\\\right)' (5.1s)"
+  ]
+ },
+ {
+  "topic": "การหาอนุพันธ์เชิงลอการิทึม (Logarithmic Differentiation)",
+  "stars": 3,
+  "problem": 2,
+  "ok_at": 1,
+  "text": "กำหนดให้ $y = (x^2 + 1)^{\\sin(x)}$ เมื่อ $x > 0$ จงหาอนุพันธ์ $\\frac{dy}{dx}$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left((x^2 + 1)^{\\\\sin(x)}\\\\right)' = '(x^{2} + 1)^{\\\\sin(x)} \\\\left( \\\\cos(x) \\\\ln(x^{2} + 1) + \\\\frac{2x \\\\sin(x)}{x^{2} + 1} \\\\right)' (2.5s)"
+  ]
+ },
+ {
+  "topic": "การหาอนุพันธ์เชิงลอการิทึม (Logarithmic Differentiation)",
+  "stars": 3,
+  "problem": 3,
+  "ok_at": 1,
+  "text": "กำหนดให้ $y = (\\ln(x))^{3x}$ เมื่อ $x > 1$ จงหาอนุพันธ์ $\\frac{dy}{dx}$ โดยใช้การหาอนุพันธ์เชิงลอการิทึม",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left((\\\\ln(x))^{3x}\\\\right)' = '3(\\\\ln(x))^{3x}\\\\left(\\\\ln(\\\\ln(x)) + \\\\frac{1}{\\\\ln(x)}\\\\right)' (5.4s)"
+  ]
+ },
+ {
+  "topic": "อนุพันธ์อันดับสูง (Derivatives of Higher Order)",
+  "stars": 2,
+  "problem": 1,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d^{4}}{dx^{4}}\\\\left(\\\\frac{2x-1}{x+1}\\\\right)' = '-\\\\frac{72}{(x+1)^{5}}' (4.1s)",
+   "try 2: NOT verified expression '\\\\frac{d^{4}}{dx^{4}}\\\\left(\\\\ln(2x+1)\\\\right)' = '-\\\\frac{96}{(2x+1)^{4}}' (5.5s)",
+   "try 3: NOT verified expression '\\\\frac{d^{4}}{dx^{4}}\\\\left(x^{3}\\\\ln(x)\\\\right)' = '\\\\frac{6}{x}' (4.6s)"
+  ]
+ },
+ {
+  "topic": "อนุพันธ์อันดับสูง (Derivatives of Higher Order)",
+  "stars": 2,
+  "problem": 2,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d^{3}}{dx^{3}}\\\\left(\\\\sqrt{2x+1}\\\\right)' = '\\\\frac{3}{(2x+1)^{5/2}}' (13.2s)",
+   "try 2: NOT verified expression '\\\\frac{d^{3}}{dx^{3}}\\\\left(\\\\sqrt{2x+1}\\\\right)' = '\\\\frac{3}{(2x+1)^{5/2}}' (5.1s)",
+   "try 3: NOT verified expression '\\\\frac{d^{4}}{dx^{4}}\\\\left(\\\\frac{x}{x-1}\\\\right)' = '\\\\frac{24}{(x-1)^{5}}' (3.4s)"
+  ]
+ },
+ {
+  "topic": "อนุพันธ์อันดับสูง (Derivatives of Higher Order)",
+  "stars": 2,
+  "problem": 3,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d^{4}}{dx^{4}}\\\\left(x^{3}\\\\ln(x)\\\\right)' = '\\\\frac{6}{x}' (4.2s)",
+   "try 2: NOT verified expression '\\\\frac{d^{4}}{dx^{4}}\\\\left(\\\\cos(2x)\\\\right)' = '16\\\\cos(2x)' (3.6s)",
+   "try 3: NOT verified expression '\\\\frac{d^{3}}{dx^{3}}\\\\left(\\\\frac{1}{2x+3}\\\\right)' = '-\\\\frac{48}{(2x+3)^{4}}' (3.0s)"
+  ]
+ },
+ {
+  "topic": "การหาอนุพันธ์ฟังก์ชันโดยปริยาย (Implicit Differentiation)",
+  "stars": 2,
+  "problem": 1,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d}{dx}\\\\left(x^2 + x y(x) + y(x)^2\\\\right)' = '-\\\\frac{4}{5}' (2.3s)",
+   "try 2: NOT verified expression '\\\\frac{2(1) - 2}{2(2) + 1}' = '0' (2.0s)",
+   "try 3: NOT verified expression '\\\\frac{d}{dx}\\\\left( -\\\\frac{2x + y}{x + 2y} \\\\right)' = '-\\\\frac{4}{5}' (2.1s)"
+  ]
+ },
+ {
+  "topic": "การหาอนุพันธ์ฟังก์ชันโดยปริยาย (Implicit Differentiation)",
+  "stars": 2,
+  "problem": 2,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{2(1) - 2}{2(2) + 1}' = '0' (1.8s)",
+   "try 2: NOT verified expression '\\\\frac{d}{dx}\\\\left( \\\\frac{x^2 - 8}{y} \\\\right)' = '2' (2.7s)",
+   "try 3: NOT verified expression '\\\\frac{2(1) - 2}{2(2) + 1}' = '0' (5.4s)"
+  ]
+ },
+ {
+  "topic": "การหาอนุพันธ์ฟังก์ชันโดยปริยาย (Implicit Differentiation)",
+  "stars": 2,
+  "problem": 3,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d}{dx}\\\\left(x^2 + 2xy(x) + 3(y(x))^2 - 6\\\\right)' = '-1/2' (2.2s)",
+   "try 2: NOT verified expression '\\\\frac{2(1) + 3}{2(3) - 1}' = '1' (2.4s)",
+   "try 3: NOT verified expression '\\\\frac{d}{dx}\\\\left( \\\\frac{-2x - y}{x + 2y} \\\\right)' = '-1' (2.3s)"
+  ]
+ },
+ {
+  "topic": "ค่าเฉลี่ยของฟังก์ชัน (Mean-Value of Function)",
+  "stars": 2,
+  "problem": 1,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified equation '3*x^{2} - 3 = \\\\frac{(3^{3} - 3*3) - (0^{3} - 3*0)}{3 - 0}' = 'x=\\\\sqrt{3}' (9.1s)",
+   "try 2: NOT verified equation 'x^2 - 4x + 5 = \\\\frac{(4^2 - 4(4) + 5) - (1^2 - 4(1) + 5)}{4 - 1}' = 'x=5/2' (8.3s)",
+   "try 3: NOT verified equation '-\\\\frac{9}{x^2} = \\\\frac{\\\\frac{9}{9} - \\\\frac{9}{1}}{9 - 1}' = 'x=3' (7.7s)"
+  ]
+ },
+ {
+  "topic": "ค่าเฉลี่ยของฟังก์ชัน (Mean-Value of Function)",
+  "stars": 2,
+  "problem": 2,
+  "ok_at": 1,
+  "text": "กำหนดให้ $f(x) = x^3 - 3x^2 + 2x$ บนช่วง $[0, 2]$ จงหาค่า $c$ ในช่วง $(0, 2)$ ที่สอดคล้องตามทฤษฎีบทค่าเฉลี่ย (Mean-Value Theorem)",
+  "notes": [
+   "try 1: ok equation '3x^{2}-6x+2-\\\\frac{(2^{3}-3(2)^{2}+2(2))-(0^{3}-3(0)^{2}+2(0))}{2-0}=0' = 'x=1-\\\\frac{\\\\sqrt{3}}{3}, x=1+\\\\frac{\\\\sqrt{3}}{3}' (2.3s)"
+  ]
+ },
+ {
+  "topic": "ค่าเฉลี่ยของฟังก์ชัน (Mean-Value of Function)",
+  "stars": 2,
+  "problem": 3,
+  "ok_at": 2,
+  "text": "กำหนดให้ $f(x) = x^3 - 3x$ บนช่วง $[-2, 2]$ จงหาค่า $c$ ในช่วง $(-2, 2)$ ที่สอดคล้องตามทฤษฎีบทค่าเฉลี่ย (Mean-Value Theorem)",
+  "notes": [
+   "try 1: NOT verified expression 'x \\\\text{ such that } \\\\frac{d}{dx}(\\\\sqrt{4-x}) = \\\\frac{\\\\sqrt{4-4} - \\\\sqrt{4-0}}{4-0}' = '3' (19.4s)",
+   "try 2: ok equation '3x^2 - 3 = \\\\frac{(2^3 - 3(2)) - ((-2)^3 - 3(-2))}{2 - (-2)}' = 'x=-\\\\frac{2\\\\sqrt{3}}{3}, x=\\\\frac{2\\\\sqrt{3}}{3}' (10.1s)"
+  ]
+ },
+ {
+  "topic": "ทฤษฎีบทของโรลล์ (Rolle's Theorem)",
+  "stars": 1,
+  "problem": 1,
+  "ok_at": 1,
+  "text": "กำหนดให้ $f(x) = x^3 - 4x$ บนช่วง $[-2, 2]$ จงหาค่า $c$ ทั้งหมดที่สอดคล้องตามทฤษฎีบทของโรลล์ (Rolle's Theorem)",
+  "notes": [
+   "try 1: ok equation '3*x^2 - 4 = 0' = 'x=-2\\\\sqrt{3}/3, x=2\\\\sqrt{3}/3' (8.7s)"
+  ]
+ },
+ {
+  "topic": "ทฤษฎีบทของโรลล์ (Rolle's Theorem)",
+  "stars": 1,
+  "problem": 2,
+  "ok_at": 1,
+  "text": "กำหนดให้ $f(x) = x^3 - 9x$ บนช่วง $[-3, 3]$ จงหาค่า $c$ ทั้งหมดที่สอดคล้องตามทฤษฎีบทของโรลล์ (Rolle's Theorem)",
+  "notes": [
+   "try 1: ok equation '3*x^2-9=0' = 'x=-\\\\sqrt{3}, x=\\\\sqrt{3}' (8.4s)"
+  ]
+ },
+ {
+  "topic": "ทฤษฎีบทของโรลล์ (Rolle's Theorem)",
+  "stars": 1,
+  "problem": 3,
+  "ok_at": 1,
+  "text": "กำหนดให้ $f(x) = x^4 - 2x^2$ บนช่วง $[-2, 2]$ จงหาค่า $c$ ทั้งหมดที่สอดคล้องตามทฤษฎีบทของโรลล์ (Rolle's Theorem)",
+  "notes": [
+   "try 1: ok equation '4x^{3}-4x=0' = 'x=-1, x=0, x=1' (5.4s)"
+  ]
+ },
+ {
+  "topic": "ฟังก์ชันเพิ่มและฟังก์ชันลด (Increasing and Decreasing Functions)",
+  "stars": 3,
+  "problem": 1,
+  "ok_at": 1,
+  "text": "กำหนดฟังก์ชัน $f(x) = 2x^3 - 9x^2 - 24x + 5$ จงหาค่า $x$ ทั้งหมดที่ทำให้ $f'(x) = 0$ เพื่อนำไปใช้ในการหาช่วงเพิ่มและช่วงลดของฟังก์ชัน",
+  "notes": [
+   "try 1: ok equation '6x^{2}-18x-24=0' = 'x=-1, x=4' (10.2s)"
+  ]
+ },
+ {
+  "topic": "ฟังก์ชันเพิ่มและฟังก์ชันลด (Increasing and Decreasing Functions)",
+  "stars": 3,
+  "problem": 2,
+  "ok_at": 2,
+  "text": "กำหนดฟังก์ชัน $f(x) = \\frac{2}{3}x^3 - \\frac{1}{2}x^2 - 6x + 8$ จงหาค่า $x$ ทั้งหมดที่ทำให้ $f'(x) = 0$ ซึ่งเป็นจุดวิกฤตที่ใช้ในการพิจารณาช่วงเพิ่มและช่วงลดของฟังก์ชัน",
+  "notes": [
+   "try 1: NOT verified equation '\\\\frac{d}{dx}\\\\left(\\\\frac{1}{4}x^{4}-\\\\frac{2}{3}x^{3}-\\\\frac{3}{2}x^{2}+2\\\\right)=0' = 'x=-1, x=0, x=3' (5.8s)",
+   "try 2: ok equation '2x^{2}-x-6=0' = 'x=-3/2, x=2' (8.9s)"
+  ]
+ },
+ {
+  "topic": "ฟังก์ชันเพิ่มและฟังก์ชันลด (Increasing and Decreasing Functions)",
+  "stars": 3,
+  "problem": 3,
+  "ok_at": 3,
+  "text": "กำหนดฟังก์ชัน $f(x) = \\frac{3}{4}x^4 - x^3 - 9x^2 + 7$ จงหาค่า $x$ ทั้งหมดที่ทำให้ $f'(x) = 0$ ซึ่งเป็นจุดวิกฤตที่ใช้ในการพิจารณาช่วงเพิ่มและช่วงลดของฟังก์ชัน",
+  "notes": [
+   "try 1: NOT verified equation '\\\\frac{d}{dx}\\\\left(3x^{4}-4x^{3}-12x^{2}+5\\\\right)=0' = 'x=-1, x=0, x=2' (6.2s)",
+   "try 2: NOT verified expression '3x^{2}-6x-9 < 0' = '-1 < x < 3' (2.0s)",
+   "try 3: ok equation '3x^{3}-3x^{2}-18x=0' = 'x=-2, x=0, x=3' (4.0s)"
+  ]
+ },
+ {
+  "topic": "โค้งเว้าและจุดเปลี่ยนเว้า (Concavity and Point of Inflection)",
+  "stars": 3,
+  "problem": 1,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified equation '\\\\frac{d^{2}}{dx^{2}}\\\\left(\\\\frac{1}{2}x^{4}-3x^{2}+5x-1\\\\right)=0' = 'x=-1, x=1' (9.4s)",
+   "try 2: NOT verified equation '\\\\frac{d^{2}}{dx^{2}}\\\\left(x^{4}-6x^{2}+5\\\\right)=0' = 'x=-1, x=1' (5.8s)",
+   "try 3: NOT verified equation '\\\\frac{d^{2}}{dx^{2}}\\\\left(\\\\frac{x}{x^{2}+3}\\\\right) = 0' = 'x=-3, x=0, x=3' (5.7s)"
+  ]
+ },
+ {
+  "topic": "โค้งเว้าและจุดเปลี่ยนเว้า (Concavity and Point of Inflection)",
+  "stars": 3,
+  "problem": 2,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified equation '\\\\frac{d^{2}}{dx^{2}}\\\\left(3x^{5}-10x^{3}+2\\\\right)=0' = 'x=-1, x=0, x=1' (5.7s)",
+   "try 2: NOT verified equation '\\\\frac{d^{2}}{dx^{2}}\\\\left(\\\\frac{x}{x^{2}+3}\\\\right)=0' = 'x=-3, x=0, x=3' (6.2s)",
+   "try 3: NOT verified equation '\\\\frac{d^{2}}{dx^{2}}\\\\left(\\\\frac{1}{12}x^{4}-\\\\frac{1}{2}x^{3}+2x\\\\right)=0' = 'x=0, x=3' (10.3s)"
+  ]
+ },
+ {
+  "topic": "โค้งเว้าและจุดเปลี่ยนเว้า (Concavity and Point of Inflection)",
+  "stars": 3,
+  "problem": 3,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified equation '\\\\frac{d^{2}}{dx^{2}}\\\\left(\\\\frac{1}{12}x^{4}-\\\\frac{1}{2}x^{3}+x^{2}+5\\\\right)=0' = 'x=1, x=2' (5.2s)",
+   "try 2: NOT verified equation '\\\\frac{d^{2}}{dx^{2}}\\\\left(\\\\frac{x}{x^{2}+3}\\\\right)=0' = 'x=-3, x=0, x=3' (9.2s)",
+   "try 3: NOT verified equation '\\\\frac{d^{2}}{dx^{2}}\\\\left(xe^{-x}\\\\right)=0' = 'x=2' (4.3s)"
+  ]
+ },
+ {
+  "topic": "ค่าสูงสุดและค่าต่ำสุดของฟังก์ชัน (Maximum Value and Minimum Value of Function)",
+  "stars": 3,
+  "problem": 1,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\max_{x \\\\in [0, 3]} (2x^{3} - 9x^{2} + 12x - 3)' = '6' (3.7s)",
+   "try 2: NOT verified expression '\\\\min_{x \\\\in [0, 3]} (2x^{3} - 9x^{2} + 12x - 3)' = '-3' (3.5s)",
+   "try 3: NOT verified expression '\\\\max\\\\left(\\\\{2x^3 - 9x^2 + 12x - 3 \\\\mid 0 \\\\le x \\\\le 3\\\\}\\\\right)' = '6' (3.9s)"
+  ]
+ },
+ {
+  "topic": "ค่าสูงสุดและค่าต่ำสุดของฟังก์ชัน (Maximum Value and Minimum Value of Function)",
+  "stars": 3,
+  "problem": 2,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\max\\\\left( 2(-2)^{3}-3(-2)^{2}-12(-2)+5, 2(4)^{3}-3(4)^{2}-12(4)+5, 2(-1)^{3}-3(-1)^{2}-12(-1)+5, 2(2)^{3}-3(2)^{2}-12(2)+5 \\\\right)' = '37' (4.0s)",
+   "try 2: NOT verified expression 'f(x) = \\\\frac{1}{3}x^3 - 2x^2 + 3x + 5' = '\\\\frac{35}{3}' (4.2s)",
+   "try 3: NOT verified expression '\\\\max(2x^{3} - 3x^{2} - 12x + 5, x \\\\in [-2, 4])' = '37' (3.8s)"
+  ]
+ },
+ {
+  "topic": "ค่าสูงสุดและค่าต่ำสุดของฟังก์ชัน (Maximum Value and Minimum Value of Function)",
+  "stars": 3,
+  "problem": 3,
+  "ok_at": 2,
+  "text": "กำหนดให้ $f(x) = 2x^3 - 9x^2 + 12x + 1$ จงหาค่า $x$ ทั้งหมดที่ทำให้เกิดจุดวิกฤติของฟังก์ชัน $f$",
+  "notes": [
+   "try 1: NOT verified expression '\\\\max\\\\left(\\\\{2x^3 - 9x^2 + 12x + 5 \\\\mid 0 \\\\le x \\\\le 3\\\\}\\\\right)' = '14' (4.0s)",
+   "try 2: ok equation '6x^{2}-18x+12=0' = 'x=1, x=2' (10.5s)"
+  ]
+ },
+ {
+  "topic": "การวาดกราฟของฟังก์ชันพหุนาม (Sketching Graphs of Polynomial Functions)",
+  "stars": 3,
+  "problem": 1,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d^2}{dx^2}(2x^3 - 9x^2 + 12x - 3) = 0' = '(\\\\frac{3}{2}, \\\\frac{7}{2})' (2.8s)",
+   "try 2: NOT verified equation '\\\\frac{d^{2}}{dx^{2}}\\\\left(x^{3} - 6x^{2} + 9x + 2\\\\right) = 0' = 'x=2' (1.8s)",
+   "try 3: NOT verified equation '\\\\frac{d^{2}}{dx^{2}}\\\\left(x^{3} - 6x^{2} + 9x + 2\\\\right) = 0' = 'x=2' (4.5s)"
+  ]
+ },
+ {
+  "topic": "การวาดกราฟของฟังก์ชันพหุนาม (Sketching Graphs of Polynomial Functions)",
+  "stars": 3,
+  "problem": 2,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified equation '\\\\frac{d^{2}}{dx^{2}}\\\\left(2x^{3} - 9x^{2} + 12x - 5\\\\right) = 0' = 'x=\\\\frac{3}{2}' (2.1s)",
+   "try 2: NOT verified expression '\\\\frac{d^{2}}{dx^{2}}\\\\left(x^3 - 6x^2 + 9x + 2\\\\right) = 0' = '(2, 4)' (3.6s)",
+   "try 3: NOT verified equation '\\\\frac{d^{2}}{dx^{2}}\\\\left(2x^{3}-9x^{2}+12x-5\\\\right)=0' = 'x=\\\\frac{3}{2}' (4.4s)"
+  ]
+ },
+ {
+  "topic": "การวาดกราฟของฟังก์ชันพหุนาม (Sketching Graphs of Polynomial Functions)",
+  "stars": 3,
+  "problem": 3,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d^{2}}{dx^{2}}(x^3 - 6x^2 + 9x + 2) = 0' = '(2, 4)' (2.2s)",
+   "try 2: NOT verified expression '\\\\frac{d^2}{dx^2}(x^3 - 6x^2 + 9x + 2) = 0' = '(2, 4)' (2.5s)",
+   "try 3: NOT verified expression '\\\\frac{d^2}{dx^2}(x^3 - 6x^2 + 9x + 2) = 0' = '(2, 4)' (2.2s)"
+  ]
+ },
+ {
+  "topic": "เส้นกำกับ (Asymptotes)",
+  "stars": 3,
+  "problem": 1,
+  "ok_at": 1,
+  "text": "กำหนดให้ $f(x) = \\frac{6x^2 - 5x + 1}{2x^2 - x - 3}$ เส้นกำกับแนวนอนของกราฟ $y = f(x)$ คือเส้นตรง $y = c$ จงหาค่าของ $c$",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to \\\\infty}\\\\frac{6x^{2}-5x+1}{2x^{2}-x-3}' = '3' (6.2s)"
+  ]
+ },
+ {
+  "topic": "เส้นกำกับ (Asymptotes)",
+  "stars": 3,
+  "problem": 2,
+  "ok_at": 1,
+  "text": "กำหนดให้ $f(x) = \\frac{x^2 - 9}{x^3 - 2x^2 - 9x + 18}$ จงหาเส้นกำกับแนวดิ่งทั้งหมดของกราฟ $y = f(x)$ โดยตอบในรูปสมการ $x = c$ (หากมีหลายเส้นให้คั่นด้วยเครื่องหมายจุลภาค)",
+  "notes": [
+   "try 1: ok equation '\\\\frac{x^3-2x^2-9x+18}{x^2-9}=0' = 'x=2' (12.7s)"
+  ]
+ },
+ {
+  "topic": "เส้นกำกับ (Asymptotes)",
+  "stars": 3,
+  "problem": 3,
+  "ok_at": 1,
+  "text": "กำหนดให้ $f(x) = \\frac{\\sqrt{9x^2 + 2}}{2x - 1}$ เส้นกำกับแนวนอนของกราฟ $y = f(x)$ เมื่อ $x \\to \\infty$ คือเส้นตรง $y = c$ จงหาค่าของ $c$",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to \\\\infty}\\\\frac{\\\\sqrt{9x^{2}+2}}{2x-1}' = '\\\\frac{3}{2}' (8.2s)"
+  ]
+ },
+ {
+  "topic": "ผลต่างเชิงอนุพันธ์ (Differentials)",
+  "stars": 2,
+  "problem": 1,
+  "ok_at": 2,
+  "text": "กำหนดให้ $y = \\frac{e^x}{x^2+1}$ หากผลต่างเชิงอนุพันธ์คือ $dy = g(x) dx$ จงหาฟังก์ชัน $g(x)$",
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d}{dx}\\\\left(\\\\frac{\\\\ln(x)}{x^3}\\\\right)dx' = '\\\\frac{1-3\\\\ln(x)}{x^4}dx' (10.6s)",
+   "try 2: ok expression '\\\\frac{d}{dx}\\\\left(\\\\frac{e^{x}}{x^{2}+1}\\\\right)' = '\\\\frac{e^{x}(x-1)^{2}}{(x^{2}+1)^{2}}' (5.4s)"
+  ]
+ },
+ {
+  "topic": "ผลต่างเชิงอนุพันธ์ (Differentials)",
+  "stars": 2,
+  "problem": 2,
+  "ok_at": 1,
+  "text": "กำหนดให้ $y = \\ln(x^2 + 1) \\cos(x)$ หากผลต่างเชิงอนุพันธ์ของ $y$ คือ $dy = g(x) dx$ จงหาฟังก์ชัน $g(x)$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(\\\\ln(x^{2} + 1)\\\\cos(x)\\\\right)' = '\\\\frac{2x\\\\cos(x)}{x^{2}+1}-\\\\ln(x^{2}+1)\\\\sin(x)' (9.2s)"
+  ]
+ },
+ {
+  "topic": "ผลต่างเชิงอนุพันธ์ (Differentials)",
+  "stars": 2,
+  "problem": 3,
+  "ok_at": 1,
+  "text": "กำหนดให้ $y = e^x \\ln(x^2 + 3)$ หากผลต่างเชิงอนุพันธ์ของ $y$ คือ $dy = g(x) dx$ จงหาฟังก์ชัน $g(x)$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(e^{x}\\\\ln(x^{2}+3)\\\\right)' = 'e^{x}\\\\ln(x^{2}+3) + \\\\frac{2x e^{x}}{x^{2}+3}' (4.7s)"
+  ]
+ },
+ {
+  "topic": "การประมาณค่าเชิงเส้น (Linear Approximation)",
+  "stars": 2,
+  "problem": 1,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\lim_{x \\\\to 27} \\\\left( 3 + \\\\frac{1}{3 \\\\cdot 27^{2/3}} (x - 27) \\\\right)' = '\\\\frac{899}{300}' (14.7s)",
+   "try 2: NOT verified expression '2 + \\\\frac{1}{12}(7.92 - 8)' = '\\\\frac{598}{300}' (2.9s)",
+   "try 3: NOT verified expression '10 + \\\\frac{1}{2\\\\sqrt{100}}(100.2 - 100)' = '\\\\frac{1001}{100}' (10.2s)"
+  ]
+ },
+ {
+  "topic": "การประมาณค่าเชิงเส้น (Linear Approximation)",
+  "stars": 2,
+  "problem": 2,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\cos\\\\left(\\\\frac{\\\\pi}{3}\\\\right) - \\\\sin\\\\left(\\\\frac{\\\\pi}{3}\\\\right)\\\\left(x - \\\\frac{\\\\pi}{3}\\\\right)' = '\\\\frac{1}{2} - \\\\frac{\\\\sqrt{3}}{2}\\\\left(x - \\\\frac{\\\\pi}{3}\\\\right)' (12.7s)",
+   "try 2: NOT verified expression '2 + \\\\frac{1}{4 \\\\cdot 16^{3/4}} (15.92 - 16)' = '\\\\frac{799}{400}' (9.8s)",
+   "try 3: NOT verified expression '32 + 80\\\\left(\\\\frac{1999}{1000} - 2\\\\right)' = '\\\\frac{798}{25}' (10.1s)"
+  ]
+ },
+ {
+  "topic": "การประมาณค่าเชิงเส้น (Linear Approximation)",
+  "stars": 2,
+  "problem": 3,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '4 + \\\\frac{1}{3} \\\\cdot \\\\frac{6}{100}' = '\\\\frac{101}{25}' (12.4s)",
+   "try 2: NOT verified expression '8^{4/3} + \\\\frac{4}{3}(8)^{1/3}(8.03 - 8)' = '\\\\frac{402}{25}' (12.6s)",
+   "try 3: NOT verified expression '2 + \\\\frac{1}{12}\\\\left(\\\\frac{6}{100}\\\\right)' = '\\\\frac{401}{200}' (9.0s)"
+  ]
+ },
+ {
+  "topic": "รูปแบบไม่กำหนด (Indeterminate forms)",
+  "stars": 3,
+  "problem": 1,
+  "ok_at": 1,
+  "text": "จงหาค่าของลิมิต $\\lim_{x \\to 0} \\frac{e^{3x} - 3x - 1}{x^2}$",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to 0} \\\\frac{e^{3x} - 3x - 1}{x^{2}}' = '9/2' (10.2s)"
+  ]
+ },
+ {
+  "topic": "รูปแบบไม่กำหนด (Indeterminate forms)",
+  "stars": 3,
+  "problem": 2,
+  "ok_at": 1,
+  "text": "จงหาค่าของลิมิต $\\lim_{x \\to 0} \\frac{x \\tan(2x)}{\\cos(x) - 1}$",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to 0}\\\\frac{x \\\\tan(2x)}{\\\\cos(x) - 1}' = '-4' (4.3s)"
+  ]
+ },
+ {
+  "topic": "รูปแบบไม่กำหนด (Indeterminate forms)",
+  "stars": 3,
+  "problem": 3,
+  "ok_at": 1,
+  "text": "จงหาค่าของลิมิต $\\lim_{x \\to 0} \\frac{e^x - e^{-x} - 2x}{x - \\sin(x)}$",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to 0}\\\\frac{e^{x}-e^{-x}-2x}{x-\\\\sin(x)}' = '2' (8.8s)"
+  ]
+ },
+ {
+  "topic": "การประยุกต์ค่าสูงสุดและค่าต่ำสุด (Application of Maxima and Minima)",
+  "stars": 3,
+  "problem": 1,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d}{dx}\\\\left(x(12-2x)(18-2x)\\\\right) = 0' = '5-\\\\sqrt{7}' (9.4s)",
+   "try 2: NOT verified expression '\\\\frac{d}{dx}\\\\left(x(15-2x)(24-2x)\\\\right) = 0' = '3' (12.7s)",
+   "try 3: NOT verified equation '\\\\frac{d}{dx}\\\\left(x(120-2x)\\\\right) = 0' = 'x=30' (9.2s)"
+  ]
+ },
+ {
+  "topic": "การประยุกต์ค่าสูงสุดและค่าต่ำสุด (Application of Maxima and Minima)",
+  "stars": 3,
+  "problem": 2,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d}{dx}\\\\left(x(12-2x)(18-2x)\\\\right) = 0' = '5-\\\\sqrt{7}' (10.8s)",
+   "try 2: NOT verified expression '\\\\frac{d}{dx}\\\\left(x(10-2x)(16-2x)\\\\right)=0' = '2' (11.1s)",
+   "try 3: NOT verified expression '\\\\frac{d}{dx}\\\\left(x(15-2x)(24-2x)\\\\right) = 0' = '3' (11.7s)"
+  ]
+ },
+ {
+  "topic": "การประยุกต์ค่าสูงสุดและค่าต่ำสุด (Application of Maxima and Minima)",
+  "stars": 3,
+  "problem": 3,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d}{dx}\\\\left(x(12-2x)(18-2x)\\\\right) = 0' = '5-\\\\sqrt{7}' (20.5s)",
+   "try 2: NOT verified expression '\\\\frac{d}{dx}\\\\left(x(12-2x)(15-2x)\\\\right)=0' = '2' (12.9s)",
+   "try 3: AISchemaError"
+  ]
+ },
+ {
+  "topic": "อัตราสัมพัทธ์ (Related Rates)",
+  "stars": 3,
+  "problem": 1,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d}{dt}\\\\left(V\\\\right) = \\\\frac{\\\\pi}{16} h^2 \\\\frac{dh}{dt}' = '-\\\\frac{12}{25\\\\pi}' (2.7s)",
+   "try 2: NOT verified expression '\\\\frac{-3}{\\\\frac{\\\\pi}{16} \\\\cdot (10)^{2}}' = '-\\\\frac{12}{25\\\\pi}' (2.9s)",
+   "try 3: NOT verified expression '\\\\frac{3}{\\\\frac{\\\\pi}{9} \\\\cdot 6^{2}}' = '\\\\frac{3}{4\\\\pi}' (8.8s)"
+  ]
+ },
+ {
+  "topic": "อัตราสัมพัทธ์ (Related Rates)",
+  "stars": 3,
+  "problem": 2,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{-2}{\\\\frac{\\\\pi}{16} (10)^{2}}' = '-\\\\frac{8}{25\\\\pi}' (2.8s)",
+   "try 2: NOT verified expression '\\\\lim_{x \\\\to 6} \\\\frac{10}{\\\\frac{d}{dx}\\\\left( \\\\frac{\\\\pi}{48} x^{3} \\\\right)}' = '\\\\frac{40}{9\\\\pi}' (6.0s)",
+   "try 3: NOT verified expression '\\\\frac{12}{\\\\pi \\\\left(\\\\frac{6}{18} \\\\cdot 9\\\\right)^{2}}' = '\\\\frac{4}{3\\\\pi}' (2.6s)"
+  ]
+ },
+ {
+  "topic": "อัตราสัมพัทธ์ (Related Rates)",
+  "stars": 3,
+  "problem": 3,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d}{dt}V' = '-\\\\frac{12}{25\\\\pi}' (10.3s)",
+   "try 2: NOT verified expression '\\\\frac{12}{\\\\pi \\\\left(\\\\frac{5}{20} \\\\cdot 10\\\\right)^2}' = '\\\\frac{48}{25\\\\pi}' (3.0s)",
+   "try 3: NOT verified expression '\\\\frac{12}{\\\\pi \\\\left( \\\\frac{6}{18} \\\\cdot 9 \\\\right)^2}' = '\\\\frac{4}{3\\\\pi}' (3.4s)"
+  ]
+ },
+ {
+  "topic": "โดเมน เรนจ์ ลิมิต และความต่อเนื่องของฟังก์ชันหลายตัวแปร (Domain, Range, Limits, and Continuity of Multivariable Functions)",
+  "stars": 1,
+  "problem": 1,
+  "ok_at": 1,
+  "text": "จงหาลิมิตของฟังก์ชัน $\\lim_{(x, y) \\to (0,0)} \\frac{2x^3 y}{x^6 + 2y^2}$ ในทิศทาง $y = x^3$",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to 0}\\\\frac{2x^{3}(x^{3})}{x^{6}+2(x^{3})^{2}}' = '\\\\frac{2}{3}' (7.8s)"
+  ]
+ },
+ {
+  "topic": "โดเมน เรนจ์ ลิมิต และความต่อเนื่องของฟังก์ชันหลายตัวแปร (Domain, Range, Limits, and Continuity of Multivariable Functions)",
+  "stars": 1,
+  "problem": 2,
+  "ok_at": 1,
+  "text": "จงหาลิมิตของฟังก์ชัน $\\lim_{(x, y) \\to (0,0)} \\frac{3x^2 y}{x^4 + 2y^2}$ ในทิศทาง $y = x^2$",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to 0}\\\\frac{3x^{2}(x^{2})}{x^{4}+2(x^{2})^{2}}' = '1' (4.3s)"
+  ]
+ },
+ {
+  "topic": "โดเมน เรนจ์ ลิมิต และความต่อเนื่องของฟังก์ชันหลายตัวแปร (Domain, Range, Limits, and Continuity of Multivariable Functions)",
+  "stars": 1,
+  "problem": 3,
+  "ok_at": 1,
+  "text": "จงหาลิมิตของฟังก์ชัน $\\lim_{(x, y) \\to (0,0)} \\frac{5x^2 y^2}{x^4 + 4y^4}$ ในทิศทาง $y = x$",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{x \\\\to 0}\\\\frac{5x^{2}x^{2}}{x^{4}+4x^{4}}' = '1' (5.2s)"
+  ]
+ },
+ {
+  "topic": "พื้นผิวในระบบพิกัดสามมิติ (Surfaces in Three-Dimensional Coordinate System)",
+  "stars": 1,
+  "problem": 1,
+  "ok_at": 3,
+  "text": "กำหนดให้พื้นผิวในระบบพิกัด 3 มิติ สอดคล้องกับสมการ $z = x^2 - 4y^2$ จงหาสมการของรอยตัดของพื้นผิวนี้บนระนาบ $y = 3$ ในรูป $z = f(x)$",
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{4 + \\\\sqrt{(-4)^{2} - 4(1)(-12)}}{2}' = '6' (6.4s)",
+   "try 2: NOT verified expression '\\\\pi \\\\cdot (1 + 3^2)' = '10\\\\pi' (12.8s)",
+   "try 3: ok expression 'x^{2} - 4(3)^{2}' = 'x^{2}-36' (5.0s)"
+  ]
+ },
+ {
+  "topic": "พื้นผิวในระบบพิกัดสามมิติ (Surfaces in Three-Dimensional Coordinate System)",
+  "stars": 1,
+  "problem": 2,
+  "ok_at": 1,
+  "text": "กำหนดให้พื้นผิวในระบบพิกัด 3 มิติ สอดคล้องกับสมการ $z = 16 - 4x^2 - y^2$ จงหาสมการของรอยตัดของพื้นผิวนี้บนระนาบ $y = 3$ ในรูป $z = f(x)$",
+  "notes": [
+   "try 1: ok expression '16 - 4x^2 - 3^2' = '7-4x^{2}' (9.0s)"
+  ]
+ },
+ {
+  "topic": "พื้นผิวในระบบพิกัดสามมิติ (Surfaces in Three-Dimensional Coordinate System)",
+  "stars": 1,
+  "problem": 3,
+  "ok_at": 1,
+  "text": "กำหนดให้พื้นผิวในระบบพิกัด 3 มิติ สอดคล้องกับสมการ $z = 25 - x^2 - 2y^2$ จงหาสมการของรอยตัดของพื้นผิวนี้บนระนาบ $y = 3$ ในรูป $z = f(x)$",
+  "notes": [
+   "try 1: ok expression '25 - x^{2} - 2(3)^{2}' = '7-x^{2}' (4.9s)"
+  ]
+ },
+ {
+  "topic": "อนุพันธ์ย่อย (Partial Derivatives)",
+  "stars": 1,
+  "problem": 1,
+  "ok_at": 1,
+  "text": "กำหนดให้ $z = 3u^2 - 2v^2$ โดยที่ $u = e^x$ และ $v = e^{-x}$ จงหา $\\frac{dz}{dx}$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(3(e^{x})^{2}-2(e^{-x})^{2}\\\\right)' = '6e^{2x}+4e^{-2x}' (4.4s)"
+  ]
+ },
+ {
+  "topic": "อนุพันธ์ย่อย (Partial Derivatives)",
+  "stars": 1,
+  "problem": 2,
+  "ok_at": 1,
+  "text": "กำหนดให้ $z = u^3 - 3v$ โดยที่ $u = e^x$ และ $v = e^{2x}$ จงหา $\\frac{dz}{dx}$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left((e^{x})^{3} - 3e^{2x}\\\\right)' = '3e^{3x}-6e^{2x}' (6.1s)"
+  ]
+ },
+ {
+  "topic": "อนุพันธ์ย่อย (Partial Derivatives)",
+  "stars": 1,
+  "problem": 3,
+  "ok_at": 1,
+  "text": "กำหนดให้ $z = u^2 \\sin(v)$ โดยที่ $u = e^x$ และ $v = 3x$ จงหา $\\frac{dz}{dx}$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(\\\\left(e^{x}\\\\right)^{2}\\\\sin(3x)\\\\right)' = '2e^{2x}\\\\sin(3x)+3e^{2x}\\\\cos(3x)' (6.4s)"
+  ]
+ },
+ {
+  "topic": "กฎลูกโซ่สำหรับฟังก์ชันหลายตัวแปร (Chain Rule for Multivariable Functions)",
+  "stars": 1,
+  "problem": 1,
+  "ok_at": 1,
+  "text": "กำหนดให้ $z = u^3 - 3v^2$ โดยที่ $u = x^2 + 1$ และ $v = 2x - 1$ จงใช้กฎลูกโซ่เพื่อหา $\\frac{dz}{dx}$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left((x^{2}+1)^{3}-3(2x-1)^{2}\\\\right)' = '6x^{5}+12x^{3}-18x+12' (10.4s)"
+  ]
+ },
+ {
+  "topic": "กฎลูกโซ่สำหรับฟังก์ชันหลายตัวแปร (Chain Rule for Multivariable Functions)",
+  "stars": 1,
+  "problem": 2,
+  "ok_at": 1,
+  "text": "กำหนดให้ $z = u^2 - 3uv$ โดยที่ $u = 2x + 1$ และ $v = x^2 - 1$ จงใช้กฎลูกโซ่เพื่อหา $\\frac{dz}{dx}$ ในรูปของ $x$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left((2x+1)^{2}-3(2x+1)(x^{2}-1)\\\\right)' = '-18x^{2}+2x+10' (6.2s)"
+  ]
+ },
+ {
+  "topic": "กฎลูกโซ่สำหรับฟังก์ชันหลายตัวแปร (Chain Rule for Multivariable Functions)",
+  "stars": 1,
+  "problem": 3,
+  "ok_at": 1,
+  "text": "กำหนดให้ $z = 2u^2 - uv$ โดยที่ $u = x^2 + 1$ และ $v = 3x - 2$ จงใช้กฎลูกโซ่เพื่อหา $\\frac{dz}{dx}$ ในรูปของ $x$",
+  "notes": [
+   "try 1: ok expression '\\\\frac{d}{dx}\\\\left(2(x^{2}+1)^{2} - (x^{2}+1)(3x-2)\\\\right)' = '8x^{3}-9x^{2}+12x-3' (4.6s)"
+  ]
+ },
+ {
+  "topic": "อนุพันธ์ของฟังก์ชันแฝงและจาโคเบียน (Implicit Differentiation and Jacobian)",
+  "stars": 1,
+  "problem": 1,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d}{dx}(x^2+7)^{1/3}' = '\\\\frac{2x}{3y^2}' (10.2s)",
+   "try 2: NOT verified expression '\\\\frac{-2(x)(-2) - (2)(1)}{(-3)(-2) - (1)(2u)}' = '1/2' (10.9s)",
+   "try 3: NOT verified expression '\\\\frac{d}{dx}\\\\left( y \\\\right)' = '-5/6' (10.4s)"
+  ]
+ },
+ {
+  "topic": "อนุพันธ์ของฟังก์ชันแฝงและจาโคเบียน (Implicit Differentiation and Jacobian)",
+  "stars": 1,
+  "problem": 2,
+  "ok_at": 2,
+  "text": "กำหนดให้ $y$ เป็นฟังก์ชันของ $x$ ที่สอดคล้องกับสมการ $x^3 + y^3 = 9$ โดยที่ $y(1) = 2$ จงหาค่าของ $\\frac{dy}{dx}$ ที่จุด $(1,2)$",
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d}{dx}(x^3 + y^3 - 9xy)' = '\\\\frac{3y-x^2}{y^2-3x}' (15.9s)",
+   "try 2: ok expression '\\\\lim_{h \\\\to 0}\\\\frac{(9-(1+h)^{3})^{1/3}-2}{h}' = '-\\\\frac{1}{4}' (26.0s)"
+  ]
+ },
+ {
+  "topic": "อนุพันธ์ของฟังก์ชันแฝงและจาโคเบียน (Implicit Differentiation and Jacobian)",
+  "stars": 1,
+  "problem": 3,
+  "ok_at": 1,
+  "text": "กำหนดให้ $y$ เป็นฟังก์ชันของ $x$ ที่สอดคล้องกับสมการ $x^2 + xy + y^2 = 7$ โดยที่ $y(1) = 2$ จงหาค่าของ $\\frac{dy}{dx}$ ที่จุด $(1,2)$",
+  "notes": [
+   "try 1: ok expression '\\\\lim_{h \\\\to 0}\\\\frac{\\\\frac{-(1+h) + \\\\sqrt{28 - 3(1+h)^{2}}}{2} - 2}{h}' = '-\\\\frac{4}{5}' (9.0s)"
+  ]
+ },
+ {
+  "topic": "ผลต่างเชิงอนุพันธ์รวมและการประมาณค่า (Total Differentials and Approximation)",
+  "stars": 1,
+  "problem": 1,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '\\\\frac{d}{dx}\\\\left(\\\\sqrt{x}\\\\right) \\\\cdot 0.08' = '0.01' (8.8s)",
+   "try 2: NOT verified expression '\\\\sqrt{3^2+7} + \\\\frac{d}{dx}\\\\left(\\\\sqrt{x^2+7}\\\\right)_{x=3}(x-3)' = '\\\\frac{3}{4}x+\\\\frac{7}{4}' (10.4s)",
+   "try 3: NOT verified expression '5 + \\\\frac{25.15 - 25}{2\\\\sqrt{25}}' = '5.015' (12.0s)"
+  ]
+ },
+ {
+  "topic": "ผลต่างเชิงอนุพันธ์รวมและการประมาณค่า (Total Differentials and Approximation)",
+  "stars": 1,
+  "problem": 2,
+  "ok_at": 1,
+  "text": "จงใช้ผลต่างเชิงอนุพันธ์เพื่อประมาณค่าของ $\\sqrt{16.08}$",
+  "notes": [
+   "try 1: ok expression '4 + \\\\lim_{h \\\\to 0}\\\\frac{\\\\sqrt{16+h}-4}{h} \\\\cdot \\\\frac{8}{100}' = '4.01' (10.3s)"
+  ]
+ },
+ {
+  "topic": "ผลต่างเชิงอนุพันธ์รวมและการประมาณค่า (Total Differentials and Approximation)",
+  "stars": 1,
+  "problem": 3,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression '2 + \\\\frac{1}{3(8)^{2/3}}(7.96 - 8)' = '\\\\frac{599}{300}' (5.8s)",
+   "try 2: NOT verified expression '5 + \\\\frac{1}{2\\\\sqrt{25}}(0.04)' = '5.004' (17.1s)",
+   "try 3: NOT verified expression '\\\\lim_{h \\\\to 0.02}\\\\left( \\\\lim_{k \\\\to -0.03} \\\\left( \\\\sqrt{8^2 + 15^2} + \\\\frac{8}{\\\\sqrt{8^2 + 15^2}}h + \\\\frac{15}{\\\\sqrt{8^2 + 15^2}}k \\\\right) \\\\right)' = '\\\\frac{28851}{1700}' (10.1s)"
+  ]
+ },
+ {
+  "topic": "ค่าสุดขีดสัมพัทธ์และจุดอานม้า (Relative Extrema and Saddle Points)",
+  "stars": 1,
+  "problem": 1,
+  "ok_at": 2,
+  "text": "จงหาจุดวิกฤตทั้งหมดของฟังก์ชัน $f(x) = x^3 - 3x^2 - 9x + 5$ โดยหาค่า $x$ ที่ทำให้ $f'(x) = 0$",
+  "notes": [
+   "try 1: NOT verified equation '\\\\frac{d}{dx}\\\\left(2x^{3}-3x^{2}-12x+5\\\\right)=0' = 'x=-1, x=2' (7.7s)",
+   "try 2: ok equation '3x^{2}-6x-9=0' = 'x=-1, x=3' (5.7s)"
+  ]
+ },
+ {
+  "topic": "ค่าสุดขีดสัมพัทธ์และจุดอานม้า (Relative Extrema and Saddle Points)",
+  "stars": 1,
+  "problem": 2,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified expression 'x^2 - 2x - 3 = 0' = '(-1, 2)' (2.7s)",
+   "try 2: NOT verified expression 'x^2 - 1 = 0' = '(1, 2)' (2.8s)",
+   "try 3: NOT verified expression 'x^2 - 1 = 0' = '(-1, 2)' (6.5s)"
+  ]
+ },
+ {
+  "topic": "ค่าสุดขีดสัมพัทธ์และจุดอานม้า (Relative Extrema and Saddle Points)",
+  "stars": 1,
+  "problem": 3,
+  "ok_at": null,
+  "text": null,
+  "notes": [
+   "try 1: NOT verified equation 'x^2 - 2x - 3 = 0' = '(3, 2), (-1, 2)' (3.7s)",
+   "try 2: NOT verified equation 'x^2 - 1 = 0' = '(1, -2), (-1, 2)' (3.0s)",
+   "try 3: NOT verified expression 'x^3 + y^3 - 3x - 12y + 20' = '2' (2.2s)"
+  ]
+ }
+]

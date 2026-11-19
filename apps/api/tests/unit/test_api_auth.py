@@ -37,9 +37,11 @@ from app.auth import (
     install_auth_errors,
 )
 from app.db.ai_calls import AICallLog
+from app.db.room import get_room_repository
 from app.main import app
 from app.models.error import ErrorResponse
 from app.settings import EnvSettings, get_settings
+from tests.unit.test_room_sessions_api import PREP_ID, FakeRoomRepo, prep_record
 
 SUPABASE_URL = "https://test-project.supabase.co"
 ANON_KEY = "test-anon-key"
@@ -392,10 +394,19 @@ def test_AI04_chat_turn_writes_ai_calls_row_for_the_token_user(
     real_app: TestClient, logged_gateway: tuple[Gateway, AICallLog]
 ):
     _, call_log = logged_gateway
-
-    response = real_app.post(
-        f"/sessions/{SESSION_ID}/messages", json={"text": "สวัสดี"}, headers=bearer(make_token())
-    )
+    # A token sends the room to the DB (room-sessions-db.md AC-auth-real): the session is a row
+    # the user can see, here in a fake repository (Jam ยังไม่ ok · 2026-11-12 · PR #123).
+    repo = FakeRoomRepo(preps={PREP_ID: prep_record()})
+    repo.add_session(id=uuid.UUID(SESSION_ID))
+    app.dependency_overrides[get_room_repository] = lambda: repo
+    try:
+        response = real_app.post(
+            f"/sessions/{SESSION_ID}/messages",
+            json={"text": "สวัสดี"},
+            headers=bearer(make_token()),
+        )
+    finally:
+        app.dependency_overrides.pop(get_room_repository, None)
 
     assert response.status_code == 200
     assert call_log.writer.inserted.wait(timeout=5)
@@ -405,7 +416,7 @@ def test_AI04_chat_turn_writes_ai_calls_row_for_the_token_user(
     assert rows[0]["tenant_id"] == str(TENANT)
     assert rows[0]["user_id"] == str(USER)
     assert rows[0]["purpose"] == "tutor_reply"
-    assert rows[0]["session_id"] is None
+    assert rows[0]["session_id"] == SESSION_ID  # the real session (room-sessions-db.md AC-23)
 
 
 def test_AI04_anonymous_chat_turn_still_streams_without_a_row(

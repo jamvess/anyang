@@ -43,6 +43,7 @@
    - `answer_lines` = บรรทัดที่ยืนยัน ขึ้นต้นด้วยเลขบรรทัด (`1. …`) แบบเดียวกับ `check_answer`
    - `check_result` = `verdict`, `first_wrong_line`, `error_type`, `evidence`, `method` ของ `CheckResult` บรรทัดละ field (`name: value` · null เขียน `none`)
    - prompt `prompts/explain_check/v1.md` บอกวิธีพูดตาม verdict และ error type ตาม §2.2.4 และ UC-04 ขั้น 5–6, A4–A8: `correct` ชมสั้นๆ (`method: other` → บอกวิธีในชีทด้วย) · ผิด → ชี้บรรทัด `first_wrong_line` แล้วอธิบายวิธีแก้ทันที ไม่ให้ hint แล้วให้ลองเอง ไม่ถาม "งงตรงไหน" · `no_answer` → ทำขั้นแรกให้ดู · กติกาสมการแบบเดียวกับ `tutor_reply/v1` · ไม่ส่งโจทย์ข้อถัดไป (ยังไม่มี planner · §9)
+   - **v3 (12 พ.ย. · `demo-room.md` §2 K):** input เพิ่ม `directive` ที่ code เลือก · นอกเดโม่ในเครื่องได้แค่ `praise_and_show`, `ask_working`, `reveal` จึงพูดเหมือน v2 (เฉลยทันทีตาม AM-07) · ในเดโม่ในเครื่องมี hint ladder (`continue`, `hint_1`, `hint_2`) ซึ่งตอนใบ้ code ไม่ส่ง `reference_answer` และ `solution_steps` (AM-13) · เสนอแก้ AM-07 ให้ทีมแล้ว
 7. **checker ล้ม:**
    - classifier ล้ม (`AIProviderError` / `AISchemaError` ออกมาจาก `check_answer` · check-answer-classifier §10 ข้อ 2) → ไม่มี `verdict` · ส่ง `token` `ระบบช้า ลองส่งอีกทีนะ` → `done` · preview ยังอยู่ ผู้ใช้กดยืนยันใหม่ได้ · ไม่เขียน log ข้อ 3 (เขียนเมื่อได้ verdict เท่านั้น จึงไม่ซ้ำตอนยืนยันใหม่) · (§10 ข้อ 2 ตัดสินแล้ว · ชั่วคราวแทน UC-04 E4)
    - อื่นๆ (bug) → `error` `internal_error` · preview ยังอยู่ ผู้ใช้กดยืนยันใหม่ได้

@@ -4,15 +4,30 @@ import asyncio
 import re
 from collections.abc import AsyncIterator, Awaitable, Callable
 
-from app.ai.providers.base import ProviderRequest, ProviderResponse, StreamUsage
+from app.ai.providers.base import (
+    EmbedRequest,
+    EmbedResponse,
+    ProviderRequest,
+    ProviderResponse,
+    StreamUsage,
+)
 
 # One streamed reply spelled out chunk by chunk: a str is sent, an Exception is raised at that
 # point, and a hook is awaited there (tests use it to hold the stream or make it slow).
 StreamStep = str | Exception | Callable[[], Awaitable[None]]
-ScriptItem = str | Exception | list[StreamStep]
+# A function of the request answers from what was sent (the fake mode's vision_extract_pages
+# counts the images · ingestion.md §2.7 item 4).
+AnswerFn = Callable[[ProviderRequest], str]
+ScriptItem = str | Exception | list[StreamStep] | AnswerFn
 
 # A plain str item streams one word at a time, spaces kept, so the chunks always join back.
 _WORD = re.compile(r"\S+\s*|\s+")
+
+
+class Truncated(str):
+    """A scripted answer the provider cut at max_tokens (gateway-truncation.md §2.1 item 3):
+    ``generate`` returns it with ``truncated=True``; ``stream`` sends it word by word, then marks
+    the usage as truncated."""
 
 
 def _tokens(text: str) -> int:
@@ -38,6 +53,7 @@ class FakeProvider:
         self._defaults = defaults or {}
         self._record = record
         self.requests: list[ProviderRequest] = []
+        self.embed_requests: list[EmbedRequest] = []
         self.responses_sent: list[ProviderResponse] = []
         self.chunks_sent: list[str] = []
 
@@ -49,18 +65,29 @@ class FakeProvider:
             return self._defaults[purpose]
         raise RuntimeError(f"fake provider: no scripted response for {purpose!r}")
 
+    def _answer(self, request: ProviderRequest) -> ScriptItem:
+        """The next item, with an answer function already called. An exception class (not an
+        instance) is not an answer function: it stays as it is (self-review #162)."""
+        item = self._next_item(request.purpose)
+        if callable(item) and not isinstance(item, type):
+            return item(request)
+        return item
+
     async def generate(self, request: ProviderRequest) -> ProviderResponse:
         if self._record:
             self.requests.append(request)
         if self._delay_s:
             await asyncio.sleep(self._delay_s)
-        item = self._next_item(request.purpose)
+        item = self._answer(request)
         if isinstance(item, Exception):
             raise item
         if isinstance(item, list):
             raise TypeError("fake provider: a chunk list is only for stream()")
         response = ProviderResponse(
-            text=item, tokens_in=_tokens(request.prompt), tokens_out=_tokens(item)
+            text=str(item),
+            tokens_in=_tokens(request.prompt),
+            tokens_out=_tokens(item),
+            truncated=isinstance(item, Truncated),
         )
         if self._record:
             self.responses_sent.append(response)
@@ -71,7 +98,7 @@ class FakeProvider:
             self.requests.append(request)
         if self._delay_s:
             await asyncio.sleep(self._delay_s)
-        item = self._next_item(request.purpose)
+        item = self._answer(request)
         if isinstance(item, Exception):
             raise item
         steps: list[StreamStep] = _WORD.findall(item) if isinstance(item, str) else item
@@ -88,3 +115,17 @@ class FakeProvider:
             sent += step
             usage.tokens_out = _tokens(sent)
             yield step
+        if isinstance(item, Truncated):
+            usage.truncated = True
+
+    async def embed(self, request: EmbedRequest) -> EmbedResponse:
+        """One fixed vector per text, never random: the first axis only, so the vector is not
+        all zeros (ingestion.md §2.7 item 4.3). Its length is the one asked for."""
+        if self._record:
+            self.embed_requests.append(request)
+        if self._delay_s:
+            await asyncio.sleep(self._delay_s)
+        size = request.dimensions or 1
+        vector = [1.0] + [0.0] * (size - 1)
+        tokens = sum(_tokens(text) for text in request.texts)
+        return EmbedResponse(vectors=[list(vector) for _ in request.texts], tokens_in=tokens)

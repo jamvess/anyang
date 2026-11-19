@@ -12,18 +12,26 @@ uploads, transcribe and ocr/confirm (api.md v1.7 · test_room_media_api_contract
 import logging
 from collections.abc import AsyncIterator
 from contextlib import aclosing
+from datetime import datetime
 from pathlib import Path as PathLib
 from typing import Annotated, Any
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, Path, Request, Response
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sse_starlette import EventSourceResponse
+from starlette.concurrency import run_in_threadpool
 
 from app import stubs
 from app.ai.call_context import AICallContext
 from app.ai.gateway import Gateway, get_gateway
 from app.auth import AuthContext, get_auth
+from app.clock import get_now
+from app.db.errors import DB_DOWN_MESSAGE, DbUnavailableError
+from app.db.room import PrepRecord, RoomRepository, SessionRecord, get_room_repository
+from app.db.room_problems import ProblemRecord, ProblemRepository, get_problem_repository
+from app.domain.exam_prep import bangkok_today, days_left
 from app.models.error import ErrorResponse, error_response, too_long_message, unavailable_docs
 from app.models.room import (
     BYTES_PER_MB,
@@ -46,6 +54,7 @@ from app.models.room import (
     bare_content_type,
 )
 from app.rate_limit import RATE_LIMITED_DOCS, chat_rate_limit
+from app.services import room_db, room_problems, session_end
 from app.services.dev_uploads import (
     LocalImageStore,
     get_local_mode,
@@ -61,6 +70,7 @@ from app.services.photo_check import (
     photo_events,
 )
 from app.services.room_chat import text_message_events
+from app.services.room_db_state import DbRoomState
 from app.services.room_opening import opening_events
 from app.services.room_state import (
     STUDENT,
@@ -68,6 +78,7 @@ from app.services.room_state import (
     get_room_state,
     room_key,
 )
+from app.services.tutor_turn import NO_PROBLEM
 from app.settings import get_settings
 
 log = logging.getLogger(__name__)
@@ -106,21 +117,179 @@ _SSE_RESPONSE: dict[int | str, dict[str, Any]] = {
 }
 
 
+# --- the room on the database (room-sessions-db.md · api.md v1.15) ---------------------------
+# With a token every endpoint below reads and writes through the user's JWT (RLS); without one
+# (AUTH_REQUIRED=false) it keeps its stub or local demo. The Supabase client blocks, so DB work
+# runs in the thread pool. Checks that answer 404, 409 or 503 run before any stream starts.
+
+Auth = Annotated[AuthContext | None, Depends(get_auth)]
+Repo = Annotated[RoomRepository | None, Depends(get_room_repository)]
+Problems = Annotated[ProblemRepository | None, Depends(get_problem_repository)]
+Now = Annotated[datetime, Depends(get_now)]
+
+_DB_ERRORS: dict[int | str, dict[str, Any]] = {**_ERRORS, **unavailable_docs("db_unavailable")}
+_DB_SSE_RESPONSE: dict[int | str, dict[str, Any]] = {**_SSE_RESPONSE, **_DB_ERRORS}
+
+
+def _not_found() -> JSONResponse:
+    return error_response(404, "not_found", "Not found")
+
+
+def _db_unavailable() -> JSONResponse:
+    return error_response(503, "db_unavailable", DB_DOWN_MESSAGE)
+
+
+def _open_and_save(
+    prep_id: UUID,
+    auth: AuthContext,
+    repo: RoomRepository,
+    now: datetime,
+    gateway: Gateway,
+    problems: ProblemRepository | None,
+) -> Response:
+    """POST /exam-preps/{id}/sessions with a token (room-sessions-db.md §2.4). A prep with
+    topics also gets a progress card and a verified problem (room-problems-db.md §2.2)."""
+    try:
+        prep = repo.get_prep(prep_id)
+        if prep is None:
+            return _not_found()
+        profile = repo.profile_facts()
+        topics = room_problems.usable_topics(problems.list_topics(prep.id)) if problems else []
+        session = repo.create_session(
+            tenant_id=auth.tenant_id,
+            user_id=auth.user_id,
+            exam_prep_id=prep.id,
+            scope_version_id=prep.active_scope_version_id,
+        )
+    except DbUnavailableError:
+        return _db_unavailable()
+    today = bangkok_today(now)
+    greeting = room_db.greeting_of(prep, profile, today)
+    if problems is None or not topics:
+        return _sse(room_db.opening_events(repo, auth, session, greeting))
+    days = days_left(prep.exam_date, today=today)
+    return _sse(
+        room_problems.opening_events(
+            gateway, repo, problems, auth, prep, session, topics, days, greeting
+        )
+    )
+
+
+def _open_session(session_id: UUID, repo: RoomRepository) -> SessionRecord | JSONResponse:
+    """The session of a message or a confirm with a token: 404 / 409 / 503 before the stream
+    (room-sessions-db.md §2.7)."""
+    try:
+        session = repo.get_session(session_id)
+    except DbUnavailableError:
+        return _db_unavailable()
+    if session is None:
+        return _not_found()
+    if session.ended_at is not None:
+        return error_response(409, "session_already_ended", "This session has already ended")
+    return session
+
+
+async def _db_room_state(
+    session_id: UUID,
+    auth: AuthContext,
+    repo: RoomRepository,
+    problems: ProblemRepository,
+    gateway: Gateway,
+    local: bool,
+) -> DbRoomState | JSONResponse:
+    """The room state on the database for a photo or a confirm (room-answers-db.md §2.1)."""
+    session = await run_in_threadpool(_open_session, session_id, repo)
+    if isinstance(session, JSONResponse):
+        return session
+    return DbRoomState(gateway, repo, problems, auth, session, local=local)
+
+
+async def _send_and_save(
+    session_id: UUID,
+    text: str,
+    auth: AuthContext,
+    repo: RoomRepository,
+    gateway: Gateway,
+    problems: ProblemRepository | None = None,
+    local: bool = False,
+) -> Response:
+    """POST /sessions/{id}/messages `{text}` with a token (spec §2.7): 404 / 409 / 503 before
+    the stream. With an open problem the message may be its answer: it is checked through the
+    room state on the database, which saves the message itself (room-answers-db.md §2.1
+    item 1). Otherwise the user message is saved before the model is called."""
+
+    def check_and_save_user() -> tuple[SessionRecord, str | ProblemRecord] | JSONResponse:
+        session = _open_session(session_id, repo)
+        if isinstance(session, JSONResponse):
+            return session
+        try:
+            # Before the message is saved: a failed read must not leave a saved message behind
+            # a 503 (self-review PR #131).
+            open_problem = problems.session_problem(session.id) if problems else None
+            if open_problem is not None:
+                return session, open_problem
+            conversation = room_db.conversation_of(repo.list_messages(session.id))
+            repo.add_message(
+                tenant_id=auth.tenant_id,
+                session_id=session.id,
+                role="user",
+                content=text,
+                input_mode="text",
+            )
+        except DbUnavailableError:
+            return _db_unavailable()
+        return session, conversation
+
+    checked = await run_in_threadpool(check_and_save_user)
+    if isinstance(checked, JSONResponse):
+        return checked
+    session, found = checked
+    if isinstance(found, ProblemRecord) and problems is not None:
+        state = DbRoomState(
+            gateway,
+            repo,
+            problems,
+            auth,
+            session,
+            local=local,
+            open_problem=found,
+            student_text=text,
+        )
+        key = room_key(str(auth.tenant_id), str(session.id))
+        # typed_answer in every env on this path (§2.1 item 1 · demo-room.md §2 G item 7).
+        return _sse(text_message_events(gateway, state, key, text, True, state.call_context))
+    assert isinstance(found, str)  # the conversation, when there is no open problem
+    return _sse(room_db.reply_and_save(gateway, repo, auth, session, text, found, NO_PROBLEM))
+
+
 @router.get(
     "/exam-preps/{id}/sessions/active",
     response_model=ActiveSession,  # errors return a JSONResponse, so the return type is Any
-    responses=_ERRORS,
+    responses=_DB_ERRORS,
 )
-async def get_active_session(
+def get_active_session(
     prep_id: PrepId,
     response: Response,
     local: Annotated[bool, Depends(get_local_mode)],
+    auth: Auth,
+    repo: Repo,
 ) -> Any:
-    """Open session of this exam prep (TM-13); 404 `no_active_session` if none.
+    """Open session of this exam prep, the latest started (TM-13); 404 `no_active_session` if
+    none, `not_found` if the prep is not the user's.
 
-    stub — replaced in P4-lite. On a local machine there is none, so the web opens a new
-    session and the tutor greets first (demo-room.md §2 F item 1).
+    Without a token (AUTH_REQUIRED=false): stub. On a local machine there is none, so the web
+    opens a new session and the tutor greets first (demo-room.md §2 F item 1).
     """
+    if auth is not None and repo is not None:
+        try:
+            if repo.get_prep(prep_id) is None:
+                return _not_found()
+            session = repo.latest_open_session(prep_id)
+        except DbUnavailableError:
+            return _db_unavailable()
+        if session is None:
+            return error_response(404, "no_active_session", "No open session for this exam prep")
+        return ActiveSession(session_id=session.id)
     if local:
         return error_response(404, "no_active_session", "No open session for this exam prep")
     response.headers.update(stubs.HEADERS)
@@ -130,7 +299,7 @@ async def get_active_session(
 @router.post(
     "/exam-preps/{id}/sessions",
     response_class=EventSourceResponse,
-    responses=_SSE_RESPONSE,
+    responses=_DB_SSE_RESPONSE,
 )
 async def create_session(
     prep_id: PrepId,
@@ -138,12 +307,21 @@ async def create_session(
     auth: Annotated[AuthContext | None, Depends(get_auth)],
     local: Annotated[bool, Depends(get_local_mode)],
     room_state: Annotated[RoomState, Depends(get_room_state)],
-) -> EventSourceResponse:
-    """Start a session. SSE: session → progress_card → token (opening) → problem → done.
+    repo: Repo,
+    now: Now,
+    problems: Problems,
+) -> Response:
+    """Start a session. With a token: a new tutor_sessions row. A prep with topics: SSE session →
+    progress_card (from the database) → token (open_session) → problem (verified by SymPy) →
+    done (room-problems-db.md §2.2). A prep without topics: session → token (the greeting from
+    config/messages.yaml) → done (room-sessions-db.md §2.4). 404 if the prep is not the user's.
 
-    stub — replaced in P4-lite. On a local machine it is a new session of the demo: the card
-    comes from real mastery and the problem is the one reached (demo-room.md §2 D, F, J).
+    Without a token (AUTH_REQUIRED=false): stub SSE session → progress_card → token → problem →
+    done. On a local machine it is a new session of the demo: the card comes from real mastery
+    and the problem is the one reached (demo-room.md §2 D, F, J).
     """
+    if auth is not None and repo is not None:
+        return await run_in_threadpool(_open_and_save, prep_id, auth, repo, now, gateway, problems)
     if not local:
         return stubs.stream("session_start")
     recorded = stubs.events("session_start")
@@ -156,17 +334,32 @@ async def create_session(
     return _sse(opening_events(gateway, room_state, key, recorded, card, call_context))
 
 
-@router.get("/sessions/{id}", responses=_ERRORS)
-async def get_session(
+@router.get("/sessions/{id}", response_model=Room, responses=_DB_ERRORS)
+def get_session(
     session_id: SessionId,
     response: Response,
     local: Annotated[bool, Depends(get_local_mode)],
-) -> Room:
-    """Room data: header, input limits and messages (oldest first).
+    auth: Auth,
+    repo: Repo,
+    now: Now,
+) -> Any:
+    """Room data: header, input limits and messages (oldest first). An ended session still
+    opens (room-sessions-db.md §2.5).
 
-    stub — replaced in P4-lite. On a local machine there is no sample history: the tutor never
-    had that conversation (demo-room.md §2 E item 1).
+    Without a token (AUTH_REQUIRED=false): stub. On a local machine there is no sample history:
+    the tutor never had that conversation (demo-room.md §2 E item 1).
     """
+    if auth is not None and repo is not None:
+        try:
+            session = repo.get_session(session_id)
+            prep = repo.get_prep(session.exam_prep_id) if session else None
+            if session is None or prep is None:
+                return _not_found()
+            profile = repo.profile_facts()
+            messages = repo.list_messages(session.id)
+        except DbUnavailableError:
+            return _db_unavailable()
+        return room_db.room_of(session, prep, profile, messages, bangkok_today(now))
     response.headers.update(stubs.HEADERS)
     guards = get_settings().ai.guards
     limits = Limits(max_message_chars=guards.max_message_chars, max_image_mb=guards.max_image_mb)
@@ -183,24 +376,66 @@ async def get_session(
     "/sessions/{id}/end",
     response_class=EventSourceResponse,
     responses={
-        **_SSE_RESPONSE,
+        **_DB_SSE_RESPONSE,
         409: {"model": ErrorResponse, "description": "session_already_ended"},
     },
 )
-async def end_session(session_id: SessionId) -> EventSourceResponse:
+async def end_session(
+    session_id: SessionId,
+    gateway: Annotated[Gateway, Depends(get_gateway)],
+    auth: Auth,
+    repo: Repo,
+    problems: Problems,
+    now: Now,
+) -> Response:
     """The user ends the session. SSE: session_end (1-2 summary lines) → done (PM-05).
 
-    stub — always the same summary; nothing is saved
+    With a token (session-end-db.md): 404 / 409 / 503 before the stream; the session is closed
+    first, in one update that needs `ended_at is null`, so two ends at once cannot both reach
+    the AI. The summary is saved and is a chat message too. Without a token it is the stub:
+    always the same summary, nothing saved.
     """
-    return stubs.stream("session_end")
+    if auth is None or repo is None:
+        return stubs.stream("session_end")
+
+    def close() -> tuple[SessionRecord, PrepRecord] | JSONResponse:
+        session = _open_session(session_id, repo)
+        if isinstance(session, JSONResponse):
+            return session
+        try:
+            prep = repo.get_prep(session.exam_prep_id)
+            if prep is None:
+                return _not_found()
+            if not repo.end_session(session.id, "user"):  # another request ended it first
+                return error_response(
+                    409, "session_already_ended", "This session has already ended"
+                )
+        except DbUnavailableError:
+            return _db_unavailable()
+        return session, prep
+
+    closed = await run_in_threadpool(close)
+    if isinstance(closed, JSONResponse):
+        return closed
+    session, prep = closed
+    days = days_left(prep.exam_date, today=bangkok_today(now))
+    return _sse(session_end.end_events(gateway, repo, problems, auth, session, prep, days))
 
 
-@router.get("/sessions/{id}/messages", responses=_ERRORS)
-async def list_messages(session_id: SessionId, response: Response) -> list[Message]:
+@router.get("/sessions/{id}/messages", response_model=list[Message], responses=_DB_ERRORS)
+def list_messages(session_id: SessionId, response: Response, auth: Auth, repo: Repo) -> Any:
     """Chat history, oldest first (TM-13). Not paged yet.
 
-    stub — the messages of the room fixture
+    Without a token (AUTH_REQUIRED=false): the messages of the room fixture.
     """
+    if auth is not None and repo is not None:
+        try:
+            if repo.get_session(session_id) is None:
+                return _not_found()
+            messages = repo.list_messages(session_id)
+        except DbUnavailableError:
+            return _db_unavailable()
+        return [room_db.message_of(m) for m in messages]
     response.headers.update(stubs.HEADERS)
     return [Message.model_validate(m) for m in stubs.room()["messages"]]
 
@@ -244,7 +479,11 @@ async def get_tts(message_id: MessageId, response: Response) -> TtsAudio:
 @router.post(
     "/sessions/{id}/messages",
     response_class=EventSourceResponse,
-    responses={**_SSE_RESPONSE, **RATE_LIMITED_DOCS},
+    responses={
+        **_DB_SSE_RESPONSE,
+        409: {"model": ErrorResponse, "description": "session_already_ended"},
+        **RATE_LIMITED_DOCS,
+    },
     dependencies=[Depends(chat_rate_limit)],
 )
 async def send_message(
@@ -255,6 +494,8 @@ async def send_message(
     image_store: Annotated[ImageStore | None, Depends(get_image_store)],
     room_state: Annotated[RoomState, Depends(get_room_state)],
     local: Annotated[bool, Depends(get_local_mode)],
+    repo: Repo,
+    problems: Problems,
 ) -> Response:
     """Send `{text}`, `{image_path}` or both; the reply streams as SSE and ends with done.
 
@@ -266,11 +507,21 @@ async def send_message(
     if too_long := too_long_message(body.text):
         # Code proposed in tutor-reply-stream.md §10 item 3, pending Junior.
         return error_response(422, "message_too_long", too_long)
+    if auth is not None and repo is not None and body.image_path is None and body.text:
+        return await _send_and_save(session_id, body.text, auth, repo, gateway, problems, local)
     # No session_id yet: the session is a stub with no tutor_sessions row (api-auth.md §2.5).
     call_context = AICallContext(auth.tenant_id, auth.user_id) if auth else None
     if body.image_path is not None:
         if image_store is None:  # no Storage yet (photo-check-in-room.md §2.4)
             return stubs.stream("image_reply")
+        state = room_state
+        # Local only until Storage (room-answers-db.md §2.1 item 2): elsewhere the ImageStore
+        # is a test double and the session may have no row.
+        if local and auth is not None and repo is not None and problems is not None:
+            db_state = await _db_room_state(session_id, auth, repo, problems, gateway, local)
+            if isinstance(db_state, JSONResponse):
+                return db_state
+            state, call_context = db_state, db_state.call_context
         return await _photo_message(
             str(session_id),
             body.image_path,
@@ -278,7 +529,7 @@ async def send_message(
             auth,
             gateway,
             image_store,
-            room_state,
+            state,
             call_context,
         )
 
@@ -458,6 +709,9 @@ async def confirm_ocr(
     auth: Annotated[AuthContext | None, Depends(get_auth)],
     image_store: Annotated[ImageStore | None, Depends(get_image_store)],
     room_state: Annotated[RoomState, Depends(get_room_state)],
+    local: Annotated[bool, Depends(get_local_mode)],
+    repo: Repo,
+    problems: Problems,
 ) -> Response:
     """Confirmed or edited lines of the last ocr_preview. SSE: verdict → token → done (AM-02).
 
@@ -473,6 +727,12 @@ async def confirm_ocr(
             )
         return stubs.stream("ocr_confirm")
 
+    call_context = AICallContext(auth.tenant_id, auth.user_id) if auth else None
+    if local and auth is not None and repo is not None and problems is not None:  # §2.1 item 3
+        db_state = await _db_room_state(session_id, auth, repo, problems, gateway, local)
+        if isinstance(db_state, JSONResponse):
+            return db_state
+        room_state, call_context = db_state, db_state.call_context
     key = room_key(stubs.tenant_of(auth), str(session_id))
     # Taken out now, so a second confirm sent at the same time gets 409 (one confirm per
     # preview); confirm_events puts it back if no verdict comes (spec §2.2 items 5, 7).
@@ -482,7 +742,6 @@ async def confirm_ocr(
     if len(body.lines) != len(preview.lines):
         await room_state.restore_preview(key, preview)
         return error_response(422, "ocr_lines_mismatch", f"send {len(preview.lines)} lines")
-    call_context = AICallContext(auth.tenant_id, auth.user_id) if auth else None
     return _sse(
         confirm_events(gateway, room_state, key, str(session_id), preview, body.lines, call_context)
     )

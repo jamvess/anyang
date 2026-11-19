@@ -1,18 +1,24 @@
 // Tutor room over HTTP (spec: specs/features/tutor/room-http.md).
 // Paths and bodies: specs/system/api.md "ห้องติว".
 
-import type { ConfirmOcr, SendMessage } from "@/components/chat/types";
+import type { ConfirmOcr, EndSession, SendMessage } from "@/components/chat/types";
 import type { components } from "./api";
-import { postSSE } from "./sse";
+import { apiUrl } from "./apiUrl";
+import { apiFetch, apiSSE } from "./auth";
 
 /**
- * Base URL of the API. Read per call, not at module load, so `next build`
- * works without the env (same as lib/supabase.ts).
+ * The URL's path for `apiFetch` when it is on the API (same origin and under its base path, not
+ * just the same leading text), or null for any other URL.
  */
-export function apiUrl(path: string): string {
-  const base = process.env.NEXT_PUBLIC_API_URL;
-  if (!base) throw new Error("NEXT_PUBLIC_API_URL must be set");
-  return `${base.replace(/\/$/, "")}${path}`;
+function apiPath(url: string): string | null {
+  try {
+    const base = new URL(apiUrl("/"));
+    const target = new URL(url);
+    if (target.origin !== base.origin || !target.pathname.startsWith(base.pathname)) return null;
+    return `/${target.pathname.slice(base.pathname.length)}${target.search}`;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -27,7 +33,7 @@ async function uploadPhoto(sessionId: string, image: File, signal: AbortSignal):
     file_name: image.name,
     size_bytes: image.size,
   };
-  const res = await fetch(apiUrl(`/sessions/${sessionId}/uploads`), {
+  const res = await apiFetch(`/sessions/${sessionId}/uploads`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
@@ -38,12 +44,11 @@ async function uploadPhoto(sessionId: string, image: File, signal: AbortSignal):
 
   // The stub's URL cannot be used (spec OQ 2). Delete this check when /uploads talks to Storage.
   if (res.headers.get("X-Stub") !== "true") {
-    const put = await fetch(ticket.upload_url, {
-      method: "PUT",
-      headers: { "Content-Type": image.type },
-      body: image,
-      signal,
-    });
+    // The API's own /dev/uploads (APP_ENV=local) goes through apiFetch: the token, and a 401 goes to
+    // the login page. A Storage signed URL never gets the token (web-login.md §2.3 item 4 · AC-13).
+    const init: RequestInit = { method: "PUT", headers: { "Content-Type": image.type }, body: image, signal };
+    const path = apiPath(ticket.upload_url);
+    const put = path !== null ? await apiFetch(path, init) : await fetch(ticket.upload_url, init);
     if (!put.ok) throw new Error(`upload failed: ${put.status}`);
   }
   return ticket.path;
@@ -55,7 +60,7 @@ export function createHttpTransport(sessionId: string): SendMessage {
     const body: components["schemas"]["SendMessageRequest"] = image
       ? { ...(text !== null && { text }), image_path: await uploadPhoto(sessionId, image, signal) }
       : { text };
-    yield* postSSE(apiUrl(`/sessions/${sessionId}/messages`), body, { signal });
+    yield* apiSSE(`/sessions/${sessionId}/messages`, body, { signal });
   };
 }
 
@@ -63,6 +68,13 @@ export function createHttpTransport(sessionId: string): SendMessage {
 export function createHttpOcrConfirm(sessionId: string): ConfirmOcr {
   return function confirm(lines, signal) {
     const body: components["schemas"]["OcrConfirmRequest"] = { lines };
-    return postSSE(apiUrl(`/sessions/${sessionId}/ocr/confirm`), body, { signal });
+    return apiSSE(`/sessions/${sessionId}/ocr/confirm`, body, { signal });
+  };
+}
+
+/** Ends the session with POST /sessions/{id}/end (no body) and yields the SSE reply (session-end-ui.md §2.2). */
+export function createHttpSessionEnd(sessionId: string): EndSession {
+  return function end(signal) {
+    return apiSSE(`/sessions/${sessionId}/end`, undefined, { signal });
   };
 }

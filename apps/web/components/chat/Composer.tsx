@@ -13,6 +13,8 @@ type Props = {
   onSend: (payload: SendPayload) => void;
   /** While the reply streams the draft stays editable but cannot be sent. */
   disabled?: boolean;
+  /** The session has ended, or is ending: nothing can be typed, attached or sent (session-end-ui.md §2.2, §2.3). */
+  locked?: boolean;
   /** False makes picking a photo only explain why. No room passes it since room-photo-send.md (OQ 5). */
   imagesEnabled?: boolean;
   /** Speech → text. The mic button shows only when given (voice-input.md §2). */
@@ -35,6 +37,7 @@ export function Composer({
   limits,
   onSend,
   disabled = false,
+  locked = false,
   imagesEnabled = true,
   handle,
   transcribe,
@@ -65,7 +68,7 @@ export function Composer({
 
   // Count characters, not UTF-16 units, like the backend.
   const tooLong = Array.from(text).length > limits.max_message_chars;
-  const canSend = !disabled && !tooLong && (text.trim() !== "" || image !== null);
+  const canSend = !disabled && !locked && !tooLong && (text.trim() !== "" || image !== null);
 
   function send() {
     if (!canSend) return;
@@ -98,6 +101,7 @@ export function Composer({
           <button
             type="button"
             aria-label={t.removePhoto}
+            disabled={locked}
             onClick={() => setImage(null)}
             className="rounded-full px-2 py-1 hover:bg-zinc-100"
           >
@@ -112,6 +116,7 @@ export function Composer({
           rows={1}
           value={text}
           ref={textArea}
+          disabled={locked}
           onChange={(e) => {
             setText(e.target.value);
             if (e.target.value === "") setFromVoice(false);
@@ -140,7 +145,7 @@ export function Composer({
             type="button"
             aria-label={t.mic}
             aria-pressed={voice.state === "recording"}
-            disabled={voice.state === "transcribing"}
+            disabled={locked || voice.state === "transcribing"}
             onPointerDown={() => (canSpeak ? void voice.press() : setVoiceNotYet(true))}
             onPointerUp={voice.release}
             onPointerLeave={voice.release}
@@ -164,8 +169,9 @@ export function Composer({
         <button
           type="button"
           aria-label={t.attach}
+          disabled={locked}
           onClick={() => fileInput.current?.click()}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-300"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-zinc-300 disabled:opacity-30"
         >
           📷
         </button>

@@ -157,7 +157,8 @@ async def test_AM05_llm_line_beyond_the_answer_is_dropped() -> None:
     result = await check_answer(p, answer, gateway=gw, pool=FakePool())
 
     assert result.decided_by == "llm"
-    assert result.first_wrong_line is None
+    # Dropped, then the last line (merge-rules.md rule 6 · Jam ok 14 Nov, PR #132).
+    assert result.first_wrong_line == 3
 
 
 async def test_AI05_schema_failure_after_retries_reaches_the_caller() -> None:

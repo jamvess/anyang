@@ -1,8 +1,7 @@
 """API models of exam preps and materials (specs/system/api.md v1.10
 "สร้างการเตรียมสอบและใส่ไฟล์").
 
-Exam preps follow api.md v1.14 (decided). Materials are still a proposal pending Junior
-(api.md "รอตัดสิน (v1.10 · Junior)").
+Exam preps follow api.md v1.14 and materials v1.21 (both decided).
 Material kinds and statuses repeat the check constraints of `materials` in 0001_init.sql;
 they are schema rules, not learning-model thresholds. `stage` is computed by the backend
 from the materials and the active scope version (api.md v1.10 `ExamPrep`).
@@ -129,10 +128,27 @@ class MaterialUploadTicket(ApiModel):
     path: str  # {tenant_id}/{exam_prep_id}/{material_id} (data-model.md)
 
 
+def _clean_note(value: object) -> object:
+    """materials-db.md §2.4 item 1: no control character but a line break (checked before
+    trimming), trimmed, blank is null, at most guards.max_message_chars graphemes. The note goes
+    into prompts only inside a data block (§2.4 item 9), so its content is not filtered here."""
+    if not isinstance(value, str):
+        return value
+    if has_control_characters(value.replace("\n", "")):
+        raise ValueError("user_note may hold no control character but a line break")
+    value = value.strip()
+    if not value:
+        return None
+    cap = get_settings().ai.guards.max_message_chars
+    if count_graphemes(value) > cap:
+        raise ValueError(f"user_note must be at most {cap} characters")
+    return value
+
+
 class MaterialUploadedRequest(ApiModel):
     """Body of POST /materials/{id}/uploaded (CM-04)."""
 
-    user_note: str | None = None
+    user_note: Annotated[str | None, AfterValidator(_clean_note)] = None
 
 
 class Material(ApiModel):

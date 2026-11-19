@@ -58,6 +58,19 @@ Source = Annotated[str, AfterValidator(_source)]
 QuestionNo = Annotated[str, AfterValidator(_q_no)]
 
 
+# --- A1 classify_material (specs/features/scope/ingestion.md §2.2) ----------------------------
+
+
+class ClassifyMaterialResult(BaseModel):
+    """The model's guess of a file's kind. It gives `other_instructor`, not a weight: code takes
+    the weight of a past exam from config (stars.weight_*) · CLAUDE.md rules 1 and 5."""
+
+    kind: Literal["sheet", "slides", "past_exam", "notes", "other"]
+    confidence: float = Field(ge=0, le=1)
+    other_instructor: bool = False
+    reason: str = ""
+
+
 # --- A2 vision_extract -------------------------------------------------------------------
 
 

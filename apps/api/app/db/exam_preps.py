@@ -6,7 +6,6 @@ unit tests swap in a fake. Any failure to reach or use the database becomes `DbU
 (api.md v1.14 `503 db_unavailable`); details stay in the log.
 """
 
-import logging
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import Annotated, Any, Protocol
@@ -16,20 +15,23 @@ from fastapi import Depends
 from supabase import Client
 
 from app.auth import AuthContext, get_auth, get_user_db
+from app.db.errors import DbUnavailableError, unavailable
 from app.domain.exam_prep import MaterialFacts
-from app.request_context import get_request_id
 
-log = logging.getLogger(__name__)
+# DbUnavailableError lives in app.db.errors and is re-exported here for existing imports.
+__all__ = [
+    "DbUnavailableError",
+    "ExamPrepRecord",
+    "ExamPrepRepository",
+    "SupabaseExamPrepRepository",
+    "get_exam_prep_repository",
+]
 
 # One query: the prep, plus the facts its stage needs (topics and files, also behind RLS).
 _COLUMNS = (
     "id,title,exam_date,daily_minutes,created_at,active_scope_version_id,"
     "topics(importance,status),materials(kind_confirmed,status)"
 )
-
-
-class DbUnavailableError(Exception):
-    """The database could not be reached or refused the query."""
 
 
 @dataclass(frozen=True)
@@ -81,19 +83,6 @@ def _record(row: dict[str, Any]) -> ExamPrepRecord:
     )
 
 
-def _unavailable(action: str, error: Exception) -> DbUnavailableError:
-    """Any failure, from the network to an unexpected row shape, is a 503 for the user and a
-    log line with the request id for us (create-exam-prep.md §2.5: never a bare 500)."""
-    log.warning(
-        "exam_preps %s failed (request_id=%s): %s: %s",
-        action,
-        get_request_id(),
-        type(error).__name__,
-        error,
-    )
-    return DbUnavailableError(action)
-
-
 class SupabaseExamPrepRepository:
     def __init__(self, client: Client) -> None:
         self._db = client
@@ -119,7 +108,7 @@ class SupabaseExamPrepRepository:
             # A new prep has no topics, files or scope yet.
             return _record(data[0])
         except Exception as error:
-            raise _unavailable("insert", error) from error
+            raise unavailable("exam_preps insert", error) from error
 
     def list_active(self) -> list[ExamPrepRecord]:
         try:
@@ -128,7 +117,7 @@ class SupabaseExamPrepRepository:
             )
             return [_record(row) for row in data]
         except Exception as error:
-            raise _unavailable("select", error) from error
+            raise unavailable("exam_preps select", error) from error
 
 
 def get_exam_prep_repository(

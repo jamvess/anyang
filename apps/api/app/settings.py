@@ -1,4 +1,5 @@
-"""Typed settings: environment variables + config/learning.yaml + config/ai.yaml.
+"""Typed settings: environment variables + config/learning.yaml + config/ai.yaml +
+config/messages.yaml.
 
 Every threshold of the learning model and every model-routing choice lives in the
 YAML files (root CLAUDE.md rules 5 and 3). The models below mirror those files with
@@ -7,6 +8,7 @@ silently ignored.
 """
 
 import re
+import string
 from functools import lru_cache
 from pathlib import Path
 from typing import Annotated, Literal, Self
@@ -122,6 +124,13 @@ class SessionConfig(_Strict):
     context_recent_turns: int = Field(ge=1)
     token_budget: int = Field(ge=1)
     grounding_chunks: int = Field(ge=0)
+    avoid_recent_problems: int = Field(ge=0)
+
+
+class TutoringConfig(_Strict):
+    """The hint ladder (specs/features/tutor/demo-room.md §2 K)."""
+
+    max_hints_before_solution: int = Field(ge=0)
 
 
 class LearningConfig(_Strict):
@@ -138,6 +147,7 @@ class LearningConfig(_Strict):
     checker: CheckerConfig
     buddy: BuddyConfig
     session: SessionConfig
+    tutoring: TutoringConfig
 
 
 # --- config/ai.yaml (specs/system/ai-orchestration.md §2.10) -----------------
@@ -212,10 +222,31 @@ class EmbeddingConfig(_Strict):
     dimensions: int | None = Field(default=None, ge=1)
 
 
+class IngestionConfig(_Strict):
+    """Reading files into pages and chunks (specs/features/scope/ingestion.md §2.3)."""
+
+    min_thai_share: float = Field(ge=0, le=1)
+    render_dpi: int = Field(ge=1)
+    classify_pages: int = Field(ge=1)
+    chunk_min_tokens: int = Field(ge=1)
+    chunk_max_tokens: int = Field(ge=1)
+    chunk_max_pages: int = Field(ge=1)
+    thai_chars_per_token: float = Field(gt=0)
+    storage_read_attempts: int = Field(ge=1)
+    storage_read_backoff_s: float = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _min_below_max(self) -> "IngestionConfig":
+        if self.chunk_min_tokens > self.chunk_max_tokens:
+            raise ValueError("ingestion.chunk_min_tokens must not exceed chunk_max_tokens")
+        return self
+
+
 class AIConfig(_Strict):
     version: str
     tiers: dict[str, TierConfig]
     purposes: dict[str, PurposeConfig]
+    ingestion: IngestionConfig
     embedding: EmbeddingConfig
     gateway: GatewayConfig
     guards: GuardsConfig
@@ -315,12 +346,85 @@ class EnvSettings(BaseSettings):
     log_level: Literal["debug", "info", "warning", "error", "critical"] = "info"
 
 
+# --- config/messages.yaml (room-sessions-db.md §2.8) --------------------------------------
+
+# The placeholders each greeting template may use (spec §2.8 table).
+_GREETING_PLACEHOLDERS: dict[str, frozenset[str]] = {
+    "hello_named": frozenset({"user_name"}),
+    "hello_anonymous": frozenset(),
+    "days_left_many": frozenset({"days_left", "prep_name"}),
+    "exam_today": frozenset({"prep_name"}),
+    "exam_passed": frozenset({"prep_name"}),
+    "invite": frozenset(),
+}
+
+
+def _placeholders(template: str) -> set[str]:
+    """Field names of a str.format template; a conversion, a format spec or a positional or
+    dotted field is refused, so a template can only take plain named values."""
+    names: set[str] = set()
+    for _, name, spec, conversion in string.Formatter().parse(template):
+        if name is None:
+            continue
+        if spec or conversion or not name.isidentifier():
+            raise ValueError(f"placeholder {{{name}}} must be a plain name")
+        names.add(name)
+    return names
+
+
+class RoomGreetingConfig(_Strict):
+    hello_named: str
+    hello_anonymous: str
+    days_left_many: str
+    exam_today: str
+    exam_passed: str
+    invite: str
+
+    @model_validator(mode="after")
+    def _known_placeholders(self) -> "RoomGreetingConfig":
+        for key, allowed in _GREETING_PLACEHOLDERS.items():
+            unknown = _placeholders(getattr(self, key)) - allowed
+            if unknown:
+                raise ValueError(f"room_greeting.{key}: unknown placeholders {sorted(unknown)}")
+        return self
+
+
+class RoomTextsConfig(_Strict):
+    """Room lines that code sends (room-problems-db.md §2.3 item 7 · session-end-db.md §2.3)."""
+
+    no_problem: str = Field(min_length=1)
+    session_summary_answered: str = Field(min_length=1)
+    session_summary_empty: str = Field(min_length=1)
+    session_summary_unknown: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _known_placeholders(self) -> "RoomTextsConfig":
+        allowed = {
+            "no_problem": set(),
+            "session_summary_answered": {"answers", "right"},
+            "session_summary_empty": set(),
+            "session_summary_unknown": set(),
+        }
+        for key, names in allowed.items():
+            unknown = _placeholders(getattr(self, key)) - names
+            if unknown:
+                raise ValueError(f"room.{key}: unknown placeholders {sorted(unknown)}")
+        return self
+
+
+class MessagesConfig(_Strict):
+    version: str
+    room_greeting: RoomGreetingConfig
+    room: RoomTextsConfig
+
+
 class Settings(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     env: EnvSettings
     learning: LearningConfig
     ai: AIConfig
+    messages: MessagesConfig
 
 
 def _load_yaml(path: Path) -> dict:
@@ -337,6 +441,7 @@ def load_settings() -> Settings:
         env=env,
         learning=LearningConfig.model_validate(_load_yaml(env.config_dir / "learning.yaml")),
         ai=AIConfig.model_validate(_load_yaml(env.config_dir / "ai.yaml")),
+        messages=MessagesConfig.model_validate(_load_yaml(env.config_dir / "messages.yaml")),
     )
 
 

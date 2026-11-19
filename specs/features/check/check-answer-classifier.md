@@ -104,7 +104,7 @@ code แปลง `SympyResult` เป็นข้อความสั้น �
 - **AC-5 (AM-06)** Given `lines=[]` When `check_answer` Then `verdict=incorrect`, `error_type=no_answer` และ fake provider ไม่ถูกเรียก (ไม่มี request) และ SymPy pool ไม่ถูกเรียก
 - **AC-6 (AM-04)** Given SymPy ตัดสิน `correct` (ans_003) แต่ LLM ปลอมตอบ `verdict="incorrect"` When `check_answer` Then `verdict=correct`, `disagreement=true`
 - **AC-7 (AI-05)** Given LLM ปลอมตอบ JSON ผิด schema ครั้งแรก แล้วตอบถูกครั้งที่สอง When `check_answer` Then ได้ผลปกติ (gateway retry · มี 2 request)
-- **AC-8 (AM-05)** Given LLM ปลอมตอบ `first_wrong_line=9` กับคำตอบ 3 บรรทัด ที่ SymPy ตัดสินไม่ได้ When `check_answer` Then `first_wrong_line=null`
+- **AC-8 (AM-05)** Given LLM ปลอมตอบ `first_wrong_line=9` กับคำตอบ 3 บรรทัด ที่ SymPy ตัดสินไม่ได้ When `check_answer` Then บรรทัดที่เกินถูกทิ้ง แล้ว `first_wrong_line=3` (บรรทัดสุดท้าย ตาม merge-rules.md ข้อ 6 · เดิม `null` ซึ่ง event `verdict` ไม่รับคู่ `incorrect` + บรรทัด null · Jam ok แก้ AC และ test 14 พ.ย. · self-review PR #132)
 - **AC-9 (AI-05)** Given LLM ปลอมตอบผิด schema ทุกครั้ง (`AISchemaError`) When `check_answer` Then `AISchemaError` ขึ้นไปถึงคนเรียก ไม่เดา error_type แทน (§10 ข้อ 2) · และ `run_checker.py` ข้ามข้อนั้นโดยไม่เขียน prediction แล้วพิมพ์ id ที่ข้ามไว้
 
 **input ของ prompt**

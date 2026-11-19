@@ -1,6 +1,6 @@
 # Checklist ราย sprint ของแต่ละคน · เทอม 1
 
-อัปเดต 14 ต.ค. 2569 · อ้างอิงแผนเทอม 1 ฉบับลด scope
+อัปเดต 14 ต.ค. 2569 · อ้างอิงแผนเทอม 1 ฉบับลด scope · **13 พ.ย. แผนใหม่ (Jam · อาจารย์ขอ):** demo end to end จ. 23 พ.ย. แล้วทำ requirement ระดับ Must ทั้งหมด (74 ข้อ) ภายในสิ้นเทอม 31 ธ.ค. · เพิ่ม S5, S6 · Buffer ย้ายไปท้ายเทอม
 
 **วิธีใช้:** ไฟล์นี้บน `main` คือสถานะจริงของทีม ติ๊กข้อของตัวเอง**ใน PR เดียวกับงานที่ทำเสร็จ** พอ merge ทุกคนจะเห็นหลัง `git pull` (`/work-done` ติ๊กให้อัตโนมัติ · ดู `daily-workflow.md`)
 
@@ -9,10 +9,72 @@
 | S1 | 5–16 ต.ค. (หยุด 13 ต.ค.) | เตรียมพื้น: repo, CI, specs, เก็บข้อมูลจริง | ศ. 16 ต.ค. |
 | S2 | 19–30 ต.ค. (หยุด 23 ต.ค.) | พิสูจน์ความเสี่ยงใหญ่: อ่านลายมือ + สกัดหัวข้อ + deploy อัตโนมัติ | ศ. 30 ต.ค. |
 | S3 | 2–13 พ.ย. | ตรวจคำตอบ + chat AI ที่ stream ได้ | ศ. 13 พ.ย. |
-| S4 | 16–27 พ.ย. | SDD/TDD + ปิดงาน design + demo รวม | ศ. 27 พ.ย. |
-| Buffer | 30 พ.ย.–4 ธ.ค. | รายงาน + นำเสนอ | |
+| S4 | 16–27 พ.ย. | **demo end to end ในเครื่อง** (วิดีโอ จ. 23 พ.ย.) + P8-lite + demo รวม | จ. 23 พ.ย. (วิดีโอ) · ศ. 27 พ.ย. |
+| S5 | 30 พ.ย.–11 ธ.ค. | การติวตามแผน: planner + stage machine + skill + Verify · scope แก้ผ่านแชท · Google login + persona · journey บน staging | ศ. 11 ธ.ค. |
+| S6 | 14–25 ธ.ค. | Must ที่เหลือ: buddy, ทบทวน, Park, TTS, ความปลอดภัย, ลบบัญชี · ปิดบั๊ก | ศ. 25 ธ.ค. |
+| Buffer | 28–31 ธ.ค. | รายงาน + นำเสนอ (เดิม 30 พ.ย.–4 ธ.ค.) | |
 
 > S1 เริ่มไปแล้ว 1 สัปดาห์ ถ้างาน S1 ยังไม่เริ่ม ให้ทำข้อที่มี ⭐ ก่อน เพราะเป็นงานที่คนอื่นรออยู่
+
+---
+
+## ⭐ Priority: demo end to end · จ. 23 พ.ย. 2569
+
+อาจารย์ขอ (13 พ.ย. · Jam): ผู้ใช้คนเดียวเดินได้ครบ **ตั้งแต่ login จนจบ session แล้วกลับมาเห็นต่อ** · **รันในเครื่องแล้วอัดเป็นวิดีโอ** (ไม่ต้องบน staging) · ทำข้อในส่วนนี้ก่อนข้ออื่นทุกข้อ · สถานะตรวจกับโค้ดบน `main` 13 พ.ย. (`specs/system/architecture.md` v1.3)
+
+**วันสำคัญ:** จ. 16 พ.ย. advisor update (โชว์ journey เท่าที่ต่อได้ · คนละงานกับวิดีโอ) · พฤ. 19 พ.ย. ทุกขั้นต่อกันได้ในเครื่องเดียว · ศ. 20 พ.ย. ซ้อมเดินครบ + แก้บั๊ก · ส. 21 – อา. 22 พ.ย. อัดวิดีโอ (May) · จ. 23 พ.ย. ส่งอาจารย์
+
+**เครื่องที่รัน (D2 · 14 พ.ย.):** Supabase cloud **`anyang-dev`** (ไม่ใช้ Docker · มี Auth + Storage + DB + hook ครบ · migration ขึ้นด้วย `db push` ของ Junior) + API ในเครื่อง `APP_ENV=local AI_PROVIDER=live AUTH_REQUIRED=true` ชี้ `anyang-dev` + เว็บ `pnpm dev` · Gemini จริงบน Vertex
+
+### Journey 9 ขั้น
+
+| # | ขั้น | ผ่านเมื่อ | มีแล้ว | ที่ขาด (เจ้าของ) | ถ้าไม่ทัน |
+|---|---|---|---|---|---|
+| 1 | Login (UM-01) | สมัคร / เข้าด้วย email + password แล้วหน้าเว็บส่ง token ทุก request · API ได้ `tenant_id` จาก token | API ตรวจ JWT (`api-auth.md`) · trigger สร้าง tenant + profile (`0001`) · `custom_access_token_hook` เปิดแล้วใน Dashboard ของ `anyang-dev` (D2 · `supabase/config.toml` มีผลกับ Supabase ในเครื่องเท่านั้น) | หน้า login + เก็บ session + ส่ง `Authorization` (**May**) · env ของ API ให้ชี้ `anyang-dev` (`SUPABASE_URL`, `SUPABASE_ANON_KEY` จาก Dashboard · D2) แล้วยืนยันว่า token มี `tenant_id` (**Junior**) | บัญชีที่สร้างไว้ก่อน แล้ว login ในวิดีโอ |
+| 2 | สร้างการเตรียมสอบ (CM-01, CM-02) | กรอกชื่อวิชา + วันสอบ → เห็นในรายการพร้อมวันที่เหลือ | `POST` / `GET /exam-preps` บน DB (#121) | หน้ารายการ + ฟอร์มสร้าง แทนหน้า template ของ Next (**May**) | ฟอร์มเดียวไม่มีรายการ |
+| 3 | อัปโหลดชีท + ข้อสอบเก่า (CM-03, CM-07) | เลือกหลายไฟล์ → ขึ้น Storage → เห็นสถานะรายไฟล์ | สัญญา API ของ materials (api.md v1.10 · ยังเป็นข้อเสนอ) · stub | `/exam-preps/{id}/materials` จริง + signed upload URL + bucket และ policy (migration ใหม่) (**Junior**) · หน้าอัปโหลด (**May**) | ไฟล์เดียว · ไม่มีการแก้ประเภทไฟล์ |
+| 4 | ระบบอ่านไฟล์ → หัวข้อ + ดาว (SM-01, SM-03, SM-04, CM-06) | หลังยืนยันไฟล์ ระบบสกัดหัวข้อ ดาว และหน้าที่มา ลง `topics`, `topic_sources` | pipeline ใน `poc/P3/` (★★★ ตรง 83%) · `domain/stars.py` (#113) | ย้าย pipeline เข้า `apps/api` เป็นงานเบื้องหลัง + เรียก `compute_importance` + `GET /exam-preps/{id}/ingestion` จริง (**Jam** · DB write ร่วมกับ **Junior**) | รัน ingestion จริงก่อนอัด แล้วตัดช่วงรอในวิดีโอ |
+| 5 | ตรวจขอบเขตแล้วยืนยัน (SM-09) | หน้า scope แสดงหัวข้อจริง → ยืนยัน → บันทึก `scope_versions` + `active_scope_version_id` | หน้า scope (`ScopeReview.tsx`) · API stub 3 ตัว | `GET /scope` อ่าน DB + `POST /scope/confirm` เขียน DB (**Junior**) · หน้าเว็บต่อ API จริง (**May**) · แก้ scope ผ่านแชท (SM-06) หลัง demo | ยืนยันได้อย่างเดียว ไม่แก้ |
+| 6 | เข้าห้องติว · tutor ทักก่อน · ให้โจทย์จากหัวข้อของผู้ใช้ (TM-01, TM-15, AM-11) | session ผูก scope ที่ยืนยัน · การ์ดความคืบหน้าจาก DB · โจทย์ของหัวข้อที่เลือก มีเฉลยที่ SymPy ตรวจแล้ว | ห้องบน DB (#123) · คำทัก `open_session` · เดโม่ในเครื่อง (โจทย์ตายตัว 5 ข้อ) | ทางที่มี token ใช้ของเดโม่ (คำทัก, โจทย์, hint ladder) แทนการตอบแชทอย่างเดียว (**Jam**) · เลือกหัวข้อด้วยกฎง่าย (ดาวสูง mastery ต่ำ) ยังไม่ใช่ planner เต็ม (**Jam**) · ที่มาของโจทย์: ดูคำถาม D3 | คลังโจทย์ที่เขียนไว้ต่อหัวข้อ |
+| 7 | ตอบ (พิมพ์ / รูป / canvas) → ตรวจ → ใบ้ (TM-06 ส่วนพิมพ์และรูป, AM-01–07) | ทั้งพิมพ์และรูป/canvas ได้ผลตรวจจาก SymPy ในทางที่มี token · hint ladder ตาม `demo-room.md` §2 K (เฉพาะ `APP_ENV=local` · AM-07 ยังเป็นข้อเดิมจนกว่าทีมตัดสิน) | ครบในเดโม่ในเครื่อง (#115, #117, #127) · ไม่มี token เท่านั้น · รูปในเครื่องอ่านจาก `.local/uploads` (`LocalImageStore`) จึงไม่ต้องใช้ Storage | ต่อ `typed_answer` + ตรวจ + hint ladder เข้าทางที่มี token (**Jam**) · `ImageStore` บน Storage ไม่ต้องใช้ใน demo (S5 บน staging · **Junior**) | ใช้ข้อความพิมพ์ + รูปที่เตรียมไว้ |
+| 8 | ความคืบหน้าบันทึกและเห็น (PM-01, PM-02, PM-04) | ตอบแล้วบันทึก `problems`, `attempts`, `topic_progress` · เปิดห้องใหม่เห็นระดับและความพร้อมเปลี่ยน | BKT (`domain/bkt.py`) · การ์ดคิดจาก state ในเดโม่ | repository ของ 3 ตาราง (**Junior**) · เรียก BKT แล้วเขียนผล + การ์ดจาก DB (**Jam**) | การ์ดตอนเปิดห้องเท่านั้น |
+| 9 | จบ session · กลับมาเห็นต่อ (TM-13, PM-05) | ผู้ใช้กดจบ (ระบบเสนอให้จบเอง TM-12 อยู่ใน S5) → สรุป session → กลับมาเห็นประวัติและโจทย์ค้าง | ประวัติแชทกลับมาเห็นได้ (#123) | `POST /sessions/{id}/end` จริง (บันทึก `ended_at` + สรุป) (**Junior**) · สรุปจาก AI (`session_summary`) (**Jam**) | สรุปแบบ template ไม่เรียก AI |
+
+### ต้องตัดสินก่อนเริ่ม (ภายใน จ. 16 พ.ย.)
+
+- **D1 · Junior + May:** login ใน demo เป็น **email + password** (UM-01) ไหม · Google (UM-02) ต้องตั้ง OAuth client ซึ่งรันในเครื่องยุ่งกว่า · **ตัดสินแล้ว 14 พ.ย. (Junior): email + password · Google ทำใน S5 (ยังเป็น Must)**
+- **D2 · Junior:** demo ใช้ Supabase ในเครื่อง (Docker) หรือ `anyang-dev` (cloud) · **ตัดสินแล้ว 14 พ.ย. (Junior): `anyang-dev`** · เหตุผล: ทีมไม่ใช้ Docker (`setup.md`), ข้อมูล demo (หัวข้อจาก ingestion) ใช้ร่วมกันได้ทั้งทีม, hook + RLS เปิดแล้ว · ข้อเสีย: ข้อมูลทดสอบปนกัน, migration ต้องรอ Junior push, อีเมลยืนยันของ SMTP ฟรีจำกัด, ปิด Confirm email แล้วใครที่รู้ URL + publishable key (อยู่ในเว็บ) สมัครได้และใช้ AI จริงได้ (มี rate limit ต่อนาที) → หลังทีมสร้างบัญชีครบให้ปิด "Allow new users to sign up" แล้วสร้างบัญชีใน Dashboard แทน · กติกา:
+  - (ก) บัญชี demo (ถาม Junior · สร้างแล้ว 14 พ.ย.) ใช้โชว์และอัดวิดีโออย่างเดียว ห้ามใช้ทดสอบ · ทดสอบให้สมัครบัญชีของตัวเอง · **17 พ.ย. (D4):** วิดีโอสมัครบัญชีใหม่ในฉาก 1 · บัญชีนี้เป็นทางสำรองเมื่อปิดรับสมัคร (`docs/design/demo-video.md`)
+  - (ข) `0005`, `0006` ขึ้น `anyang-dev` แล้ว 14 พ.ย. · migration ใหม่ทุกตัว (`0007` ขึ้นแล้ว 15 พ.ย. · `0008` Storage + `0009` ขึ้นแล้ว 17 พ.ย.) แท็ก Junior ให้ push
+  - (ค) ปิด Confirm email ใน `anyang-dev` (Authentication → Sign In / Providers → Email) สมัครแล้วเข้าได้ทันที · ปิดแล้ว 14 พ.ย.
+  - (ง) API ในเครื่องใช้ `SUPABASE_URL` + `SUPABASE_ANON_KEY` ของ `anyang-dev` + `AUTH_REQUIRED=true` (ขั้นตอนใน `setup.md` A5)
+- **D3 · Jam:** โจทย์ในห้องมาจากไหน · (ก) `generate_problem` สร้างจากหัวข้อ + ตรวจเฉลยด้วย SymPy (AM-11 · ตรงกับ design) · (ข) คลังโจทย์เขียนไว้ต่อหัวข้อ · **ตัดสินแล้ว 13 พ.ย. (Jam): (ก) และใช้ (ข) เป็นทางสำรอง**
+- **D4 · May:** ลำดับในวิดีโอและความยาว (`docs/design/demo-flow.md` ของ May · ช่วง live เดิมเป็นห้องติวอย่างเดียว) · **ร่างแล้ว 17 พ.ย. (May · PR #147 · `docs/design/demo-video.md`):** ~8 นาที 8 ฉากตาม goal อาจารย์ 4 ข้อ · May พูดบรรยาย · สมัครบัญชีใหม่ในวิดีโอ · ตัดช่วงรออ่านไฟล์ + caption · รอทีมตกลง
+
+### งานของแต่ละคนสำหรับ demo (เรียงตามที่คนอื่นรอ)
+
+- **Junior:** D1, D2 → hook + env ในเครื่อง (ขั้น 1) → materials + Storage (ขั้น 3) → scope อ่าน/ยืนยันบน DB (ขั้น 5) → repository `problems` / `attempts` / `topic_progress` (ขั้น 8) → `ImageStore` บน Storage (ขั้น 7) → จบ session (ขั้น 9)
+- **May:** D1, D4 → หน้า login (ขั้น 1) → หน้ารายการ + สร้างการเตรียมสอบ (ขั้น 2) → หน้าอัปโหลด (ขั้น 3) → หน้า scope ต่อ API จริง (ขั้น 5) → อัดวิดีโอ
+- **Jam:** D3 → ingestion เข้า `apps/api` (ขั้น 4 · ใหญ่สุด เริ่มก่อน) → ห้องติวในทางที่มี token: คำทัก + โจทย์ + ตรวจ + hint ladder (ขั้น 6–7) → BKT ลง DB (ขั้น 8) → สรุป session (ขั้น 9)
+
+---
+
+## แผน Must ทั้งหมดถึงสิ้นเทอม (74 ข้อ · `specs/requirements/requirements.md`)
+
+สถานะประเมินจากโค้ดบน `main` 13 พ.ย. (`architecture.md` v1.3) · ✅ มีแล้ว · 🟡 บางส่วน (เช่น มีแค่ในเดโม่ในเครื่อง หรือ API เป็น stub) · ❌ ยังไม่มี · เจ้าของตาม `roles.md` (backend/DB → Junior · หน้าจอ → May · AI/prompt/learning model → Jam) · เจ้าของตรวจสถานะของตัวเองอีกรอบตอน `/work-start`
+
+| กลุ่ม | ✅ มีแล้ว | S4 (demo) | S5 | S6 |
+|---|---|---|---|---|
+| บัญชี + persona (UM) | — | UM-01 email login | UM-02 Google · UM-03, UM-04 เลือก preset · UM-05 custom persona · UM-08 ชื่อเล่น/ระดับ · UM-09 แก้ทีหลัง | UM-10 ลบบัญชี |
+| เตรียมสอบ + ไฟล์ (CM) | CM-01, CM-02 (API) | CM-01, CM-02 (หน้าเว็บ) · CM-03 หลายไฟล์ · CM-06 classify (AI) · CM-07 สถานะรายไฟล์ | CM-04 note รายไฟล์ · CM-05 เพิ่มไฟล์ทีหลัง · CM-06 หน้ายืนยัน/แก้ประเภทไฟล์ + confidence · CM-10 ลบไฟล์ | |
+| ขอบเขต (SM) | — | SM-01 สกัดหัวข้อ · SM-03 ดาว · SM-04 หน้าที่มา · SM-09 บันทึกการยืนยัน | SM-02 ลำดับ prerequisite · SM-06 แก้ผ่านแชท · SM-07 รายการอัปเดตทันที · SM-08 change log · SM-12 skill ต่อหัวข้อ | SM-06 แก้ scope ด้วยเสียง · SM-10 คำถามนอก scope · SM-11 ไม่สอนวิธีที่ไม่มีในชีท (grounding) |
+| การติว (TM) | TM-08 สมการ · TM-10 ถามกลับให้แคบลง (`tutor_reply/v2` · ทั้งทางที่มีและไม่มี token) · TM-13 กลับมาต่อ (DB) · TM-14 (ข้อห้าม ไม่ต้องสร้าง) | TM-01 เลือกหัวข้อ (กฎง่าย) · TM-06 พิมพ์ + รูป/canvas เมื่อ login · TM-15 การ์ดจาก DB · TM-20 | TM-01 + TM-02 planner เต็มพร้อมเหตุผล · TM-03 probe · TM-04 stage machine · TM-11 ขอดู progress · TM-12 เสนอจบ session · TM-16 ผ่านตาม skill · TM-18 mode | TM-05 buddy · TM-06 ตอบด้วยเสียง (mic + STT) · TM-09 TTS · TM-17 ทบทวนตามรอบ · TM-19 Park |
+| ตรวจคำตอบ (AM) | AM-01, AM-02, AM-04, AM-05, AM-06 (P1, P2) · AM-07 (hint ladder ในเดโม่เป็นข้อเสนอแก้ AM-07 · รอทีม) | AM-11 เฉลยที่ SymPy ตรวจแล้ว (`generate_problem`) | AM-08 Verify ด้วยโจทย์แบบเดียวกัน · AM-09 ยังไม่เข้าใจหลังอธิบาย · AM-13 answer-leak check | |
+| ความคืบหน้า (PM) | PM-03 สูตร (code) | PM-01 บันทึก attempt · PM-02 mastery ลง DB · PM-03 + การ์ดในห้องจาก DB · PM-05 สรุป session · PM-06 แยกตาม prep | PM-04 readiness + หัวข้อที่ยังไม่แม่นบนหน้า home | |
+| AI platform (AI) | AI-01, AI-03, AI-04, AI-05, AI-07 | AI-08 เก็บ text ของ chunk (ingestion) | | AI-02 provider ที่ 2 (Claude) ให้สลับได้จริง |
+| SaaS + ความปลอดภัย (SA) | SA-01, SA-02 (schema) · SA-03 (`ai_calls`) · SA-06 (RLS + isolation test ทุกตารางใหม่) | | | SA-09 สัญญาณความเครียดรุนแรง |
+
+**หลักแบ่ง sprint:** S4 = ทุกอย่างที่ journey ของ demo ต้องใช้ · S5 = การติวตาม design จริง (planner, stage, skill, Verify) และส่วนบัญชี/ขอบเขตที่ผู้ใช้แก้ได้ · S6 = ส่วนที่เหลือที่ไม่มีใครรอ · ทุก sprint ใช้ flow spec → test → implement เดิม
 
 ---
 
@@ -30,6 +92,8 @@
 - [x] สร้าง Supabase project `anyang-staging` · ref `sfapuygntxuelsxsgkay` Singapore (21 ต.ค., PR #28)
   - 21 ต.ค. Jam ตั้ง Vercel env ทั้ง **Production** และ **Preview** (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) ให้ชี้ `anyang-staging` (`sfapuygntxuelsxsgkay`) แบบ Config แล้ว redeploy production · มีผลเมื่อมีหน้าที่ import `lib/supabase.ts` (ตอนนี้ยังไม่มี production จึงไม่เคยพังจริง)
 - [ ] ให้สิทธิ์ทีม: GitHub collaborator + Supabase org (เจ้าของ repo ทำ, `setup.md` A0), GCP (Jam: Vertex AI User)
+  - 14 พ.ย.: Jam ให้ Vertex AI User แก่ May แล้ว (`roles/aiplatform.user` ใน `anyang-513006`)
+  - 13 พ.ย. แผนใหม่: หลัง demo
   - 28 ต.ค. ส่วน GCP ไม่ต้องทำ: Jam สร้าง project เองจึงเป็น Owner อยู่แล้ว
 - [x] แก้ `.github/CODEOWNERS` เป็น username จริง · + เพิ่ม `/.github/` ให้ Junior ตาม `roles.md` (19 ต.ค.)
 - [x] ตั้งเครื่องตัวเองตาม `setup.md` Part A · ผ่านเช็คลิสต์ A6 ครบ 5 ข้อ (19 ต.ค.)
@@ -85,6 +149,7 @@
   - 4 พ.ย. (PR #106 · Jam ช่วง solo): api.md v1.11 `GET /exam-preps/{id}/ingestion`, `POST /exam-preps/{id}/scope/chat` (SSE `scope_patch`), `GET /exam-preps/{id}/scope/changes`, `POST /materials/{id}/retry`, `DELETE /materials/{id}` (ข้อเสนอ รอ Junior 8 ข้อ) + stub ทั้ง 5 · แก้กฎ `stage` ของ v1.10 · `scope/chat` นับ rate limit เดียวกับห้องติว · `api-schema.ts` generate ใหม่ · flow 2.3 มี stub ครบแล้ว · ยังเหลือ: persona (`/personas/*`, `/me/*-profile`, `/me/profile`), บัญชี (`DELETE /me`, `DELETE /exam-preps/{id}`) · ฝั่งเสียงของ SM-06 ยังไม่มี endpoint (รอตัดสิน v1.11 ข้อ 5)
   - 4 พ.ย. (PR #107 · Jam ช่วง solo): **`/docs` ครบทุก endpoint ใน `api.md` แล้ว** (`test_api_md_endpoints.py` เทียบให้ทุกครั้ง) · api.md v1.12 persona, โปรไฟล์, `DELETE /me`, `DELETE /exam-preps/{id}` (ข้อเสนอ รอ Junior 8 ข้อ) + stub ทั้ง 10 · `guards.max_persona_text_chars` ใน `config/ai.yaml` 1.9 · `api-schema.ts` generate ใหม่ · **ติ๊กตามข้อความของข้อนี้ ไม่ได้แปลว่า contract ตกลงแล้ว:** ทุก endpoint ที่ Jam เสนอยังรอ Junior ตัดสินใน "รอตัดสิน" v1.6, v1.7, v1.9, v1.10, v1.11, v1.12 และทั้งหมดยังเป็น stub
 - [ ] วัด TTFT และต้นทุนบน staging ร่วมกับ May (P4-lite)
+  - 13 พ.ย. แผนใหม่: หลัง demo (demo รันในเครื่อง · วัดตอน journey บน staging ใน S5)
   - ทำโดย Jam (1 พ.ย.) ช่วง solo · ทำได้บางส่วน
   - 1 พ.ย. (PR #99 · `specs/poc/reports/P4-lite.md`): วัดกับ Gemini จริงบน Vertex จากเครื่อง Jam (staging ยังเปิด live ไม่ได้) · `thinking: low` p95 3.87 s → `minimal` p95 1.20 s · 0.039 บาท/ข้อความ (`poc/P4-lite/cost.py` จาก log `ai_calls`) · `ai.yaml` 1.8 · เหลือ: วัดซ้ำบน staging `ttft.py --label staging-gemini` เมื่อหน้าเว็บส่ง token + `AUTH_REQUIRED=true` + env Supabase ของ api-staging
   - 1 พ.ย. (PR #103 · Jam ช่วง solo): rate limit ข้อความในห้องติว (`guards.rate_limit_messages_per_minute` · 429 `rate_limited`) + circuit breaker ต่อ provider ใน gateway (`gateway.circuit_breaker`) · `specs/features/ai/gateway-guards.md` · ก่อนเปิด live บน staging ยังเหลือ: `api-staging` ตรวจ token (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `AUTH_REQUIRED: "true"` · Junior), runtime SA (Junior), หน้า login (May)
@@ -93,21 +158,67 @@
 
 ### S4 · 16–27 พ.ย.
 
+- [x] ⭐ demo D1 + D2: ตัดสิน login ใน demo และ Supabase ในเครื่อง (ภายใน จ. 16 พ.ย.) → ตัดสินแล้ว: email + password · `anyang-dev` (ไม่ใช่ในเครื่อง)
+  - 14 พ.ย.: D1 email + password · D2 `anyang-dev` (cloud) ไม่ใช้ Supabase ในเครื่อง · กติกา (ก)–(ง) อยู่ในส่วน ⭐ Priority
+- [x] ⭐ demo ขั้น 1: env ของ API ชี้ `anyang-dev` (cloud · ไม่ต้องลง Docker · hook เปิดใน Dashboard แล้ว) · ยืนยัน `tenant_id` ใน token · `AUTH_REQUIRED=true` วนได้กับหน้า login ของ May (UM-01)
+  - 15–16 พ.ย. (PR #134 · `docs/team/setup.md` "env สำหรับ demo"): token ของ `anyang-dev` มี `tenant_id` · API ในเครื่อง `AUTH_REQUIRED=true` ไม่มี token → 401 `missing_token` · มี token → `GET /exam-preps` 200 จาก DB · 16 พ.ย. Junior ซ้อม login ผ่านหน้าเว็บของ May (#138) ก่อน advisor update ผ่านทุกข้อ: ไม่มี session → `/login?next=…` · login → กลับหน้าเดิม (API 404 ไม่ใช่ 401) · รหัสผิด → "อีเมลหรือรหัสผ่านไม่ถูกต้อง" · `/logout` → `/login` แล้วหน้า scope เด้งไป login อีกครั้ง
+- [x] ⭐ demo ขั้น 3: `POST /exam-preps/{id}/materials` + `POST /materials/{id}/uploaded` + `POST /exam-preps/{id}/materials/confirm` จริง · signed upload URL · bucket + storage policy (migration ใหม่ + isolation test) (CM-03, CM-07)
+  - 17 พ.ย. (PR #152 · `ingestion.md` AC-28): seed บัญชี demo แล้ว classify ล้ม 2 ใน 6 ไฟล์พร้อมกันด้วย `Server disconnected` (Storage ใช้ HTTP/2 · connection เดียว) · ตัวอ่าน Storage อ่านซ้ำด้วย client ใหม่ (สลับแบบ thread-safe) · `config/ai.yaml` 1.23 `ingestion.storage_read_attempts` 3, `storage_read_backoff_s` 0.5 · `/retry` จริงเป็น PR แยกถ้าทันก่อน 23 พ.ย.
+- [x] หลัง #140 · ingestion ตัดสินชนิดไฟล์จาก `materials.content_type` แทนนามสกุลของ `file_name` (`_image_type` ใน `app/services/ingestion.py` · ไฟล์ของ Jam: บอก Jam) · ชนิดที่ยังอ่านไม่ได้ (WEBP, HEIC, PPTX, DOCX) ล้มด้วยข้อความที่บอกให้ส่ง PDF/JPG/PNG · แถวเก่าที่ `content_type` null ใช้นามสกุลเหมือนเดิม (`materials-db.md` §10 ข้อ 1 · CM-03)
+  - 17 พ.ย. (PR #156 · `specs/features/scope/ingestion.md` §2.5 ข้อ 3 · AC-35 ถึง AC-39): ชนิดไฟล์มาจาก `content_type` · **JPEG, PNG, WEBP, HEIC อ่านเป็นรูปได้เลย** (ต่างจากข้อเสนอเดิมที่ให้ WEBP/HEIC ล้ม: Gemini อ่านได้ และห้องติวส่งสองชนิดนี้อยู่แล้ว) · PPTX, DOCX ล้มตั้งแต่ classify ด้วย "ไฟล์ชนิดนี้ยังอ่านไม่ได้ ส่งเป็น PDF หรือรูปแทนได้" · แถวที่ไม่มี `content_type` ใช้นามสกุลเหมือนเดิม · ตอบ `materials-db.md` §10 ข้อ 1
+  - ทำโดย Jam (17 พ.ย.) · ไฟล์ของ Jam ตามที่ Junior ส่งต่อใน #140
+- [x] หลัง #140 · gateway ไม่ retry schema ด้วยงบเดิมเมื่อ provider ตัดคำตอบเพราะ `MAX_TOKENS` (retry แบบนี้ไม่มีทางผ่าน · จดไว้ใน review #15) · log สาเหตุแยกจาก schema error · ต้องเปิด `finish_reason` จาก provider (AI-01, AI-04 · พบตอนลอง `classify_material` บน Vertex 17 พ.ย. · ส่วนของ gateway: ตกลงกับ Jam)
+  - 17 พ.ย. (PR #146 · `specs/features/ai/gateway-truncation.md`): provider ส่ง `truncated` (Gemini `finish_reason == MAX_TOKENS`) · คำตอบที่ถูกตัดและ parse ไม่ผ่าน → `AITruncatedError` (ลูกของ `AISchemaError` · caller เดิมไม่ต้องแก้) ไม่ retry · stream ที่ถูกตัด → log WARNING · `CallRecord.status = "truncated"` → `ai_calls.status = 'error'` (ไม่มี migration) + `call_status` ในบรรทัด log · live บน Vertex: เรียก provider 1 ครั้ง (เดิม 2) · ถ้าอยาก query สาเหตุใน DB: Junior ตัดสิน (spec §10 ข้อ 2)
+  - ทำโดย Jam (17 พ.ย.) · ส่วนของ gateway ตามที่ตกลงกับ Junior ใน #140
+- [x] ⭐ demo ขั้น 5: `GET /exam-preps/{id}/scope` อ่าน DB · `POST /scope/confirm` เขียน `scope_versions` + `active_scope_version_id` (SM-09)
+  - 14 พ.ย. (PR #137 · `specs/features/scope/scope-db.md`): มี token → `GET /scope` (หัวข้อ ดาว เหตุผล `source_label` ข้อสอบที่ map ไม่ได้ `status`) · `GET /topics/{id}/sources` (ข้อความทั้งหน้า + ข้อสอบของหัวข้อ) · `POST /scope/confirm` (`scope_versions` → `active_scope_version_id` → หัวข้อ `confirmed` · ยืนยันซ้ำหรือพร้อมกัน 409) · ไม่มี migration · ทำตามข้อเสนอ api.md v1.6 ข้อ 1–3, 5 **Junior: ดูย้อนหลังแล้วยืนยันใน api.md** (Junior ให้ตัดสินใจไปก่อน) · รันกับข้อมูลจริง MTH10101: 34 หัวข้อ · ยืนยัน version 1 · **หน้า scope ของ May ต่อ API จริงได้แล้ว**
+  - ทำโดย Jam (14 พ.ย.) ช่วง solo
+- [x] ⭐ demo ขั้น 8: repository ของ `problems`, `attempts`, `topic_progress` (PM-01, PM-02, PM-06)
+  - 13–14 พ.ย.: `problems` (PR #131), `attempts` + `ended_at` (PR #132), `topic_progress` + `d_max` (PR #135) อยู่ใน `app/db/room_problems.py` · migration `0006`, `0007` **Junior: ดูย้อนหลัง · `db push` `0007`**
+  - 15 พ.ย.: Junior review `0007` แล้ว · `db push` `0007` ขึ้น `anyang-dev` แล้ว (`anyang-staging` พร้อม journey บน staging ใน S5)
+  - ทำโดย Jam (13–14 พ.ย.) ช่วง solo
+- [x] ⭐ demo ขั้น 9: `POST /sessions/{id}/end` จริง (`ended_at` + สรุป) (TM-13, PM-05)
+  - 14 พ.ย. (PR #136 · `specs/features/tutor/session-end-db.md`): มี token → ปิด session ด้วย update ที่มีเงื่อนไข `ended_at is null` ก่อนเรียก AI (ชนกัน → 409) · `end_reason = 'user'` · สรุปจาก `session_summary/v1` บันทึก `tutor_sessions.summary` + ข้อความในแชท · AI ล้มใช้ template · ไม่มี migration · ทำตามข้อเสนอ api.md รอตัดสิน v1.9 ข้อ 1, 2, 6, 7 **Junior: ดูย้อนหลังแล้วยืนยันใน api.md**
+  - ทำโดย Jam (14 พ.ย.) ช่วง solo
 - [ ] P8-lite ร่วมกับทีม (review test ของ `compute_importance`)
+  - 13 พ.ย. แผนใหม่: หลัง demo (ทำใน S4 หลัง 23 พ.ย.)
   - 8 พ.ย. test พร้อมให้ review ย้อนหลัง (PR #113 · `apps/api/tests/unit/test_stars.py`) · จดเวลาที่ใช้ใน `poc/P8-lite/metrics.md` §4 · test ที่ผิดจดใน §3
 - [ ] อัปเดต architecture และ data model ตามผล PoC (D2, D3)
+  - 13 พ.ย. แผนใหม่: หลัง demo (รอ P8-lite)
   - 1 พ.ย. (PR #101 · Jam ช่วง solo): `architecture.md` v1.2 ใส่ผล P1, P2, P3b, P4-lite แล้ว (model ของแต่ละ tier, embedding 768 มิติ, SymPy worker pool) · data model ได้ `0003` จาก P3 (PR #67) · เหลือ: อัปเดตอีกรอบหลัง P8-lite และ P2 ต่อเข้าห้องแชท
+  - ทำโดย Jam (12 พ.ย.) ช่วง solo
+  - 12 พ.ย. (PR #128): `architecture.md` v1.3 ตาราง "สร้างแล้วหรือยัง" ตรวจกับโค้ดบน main (P2 ต่อเข้าห้องแล้ว, ห้องติวบน DB #123, exam prep API #121, `domain/` stars + bkt + hint_ladder, canvas, เดโม่ในเครื่อง, login / staging ยังรอ #120) · `data-model.md` v1.4 แถว `0004` และเรื่องที่รอทีม (`attempts` เก็บจำนวน hint ถ้ารับข้อเสนอ AM-07) · ไม่มี migration ใหม่ · **ยังไม่ติ๊ก** (self-review): ข้อนี้ให้อัปเดตอีกรอบหลัง P8-lite ซึ่งยังไม่จบ · เหลือ: ดูผล P8-lite ว่าเปลี่ยน `compute_importance` หรือ input ของดาวไหม แล้วติ๊ก · Junior ดูย้อนหลังได้
 - [ ] (ถ้ามีเวลา) ต่อ P1 + P2 เข้าหน้าแชท: ส่งรูปแล้วได้ verdict
+  - 13 พ.ย. แผนใหม่: หลัง demo · demo ในเครื่องอ่านรูปจาก `.local/uploads` อยู่แล้ว · `ImageStore` บน Storage อยู่ใน S5 (journey บน staging)
   - ทำโดย Jam (8 พ.ย.) ช่วง solo · ทำได้บางส่วน
   - 8 พ.ย. (PR #114 · `specs/features/check/photo-check-in-room.md`): ส่งรูป → `extract_answer` → `ocr_preview` · ยืนยัน → checker ของ P2 → `verdict` → purpose ใหม่ `explain_check` อธิบายทันที (AM-07) · smoke บน Vertex ในเครื่อง 3 รูปจาก `evals/` verdict ตรง label 3/3 · ผ่าน interface `ImageStore` + `RoomState` (เก็บใน memory) · **บน staging ยังเป็น stub** จนกว่าจะมี Storage · เหลือ (Junior): `/uploads` จริง + bucket/policy + `ImageStore` ที่อ่าน Supabase Storage, บันทึก `messages` / `problems` / `attempts`, ตัดสินข้อเสนอใน spec §10 ข้อ 3–8 · api.md: 404/422 ของ `image_path` (spec §11)
 - [ ] เตรียม staging สำหรับ demo รวม
+  - 13 พ.ย. แผนใหม่: หลัง demo · demo 23 พ.ย. รันในเครื่อง · #120 และ journey บน staging ย้ายไป S5
   - 11 พ.ย. เป้าเปลี่ยนเป็น advisor update จันทร์ 16 พ.ย. (journey เดียวบน staging: login → exam prep → upload → topics → ห้องติว AI จริง → resume) · ลำดับ: 1) login + #120 2) exam prep API 3) บันทึก messages + resume 4) upload + Storage 5) ingestion (Jam)
   - 11 พ.ย. (PR #121 · `specs/features/exam-prep/create-exam-prep.md`): `POST`/`GET /exam-preps` บันทึกและอ่าน `exam_preps` จริงผ่าน JWT ของผู้ใช้ (RLS) · ไม่มี token + `AUTH_REQUIRED=false` ยังได้ stub (`X-Stub`) · api.md v1.14 · `503 db_unavailable` · เหลือ: #120 (รอหน้า login ของ May), ลำดับ 3–5
+  - 12 พ.ย. (PR #123 · `specs/features/tutor/room-sessions-db.md`): ลำดับ 3 เสร็จ · ห้องติวที่มี token บันทึก `tutor_sessions` + `messages` จริง (RLS) และกลับมาเห็นประวัติได้ (TM-13) · เปิดห้องทักด้วย template ใน `config/messages.yaml` ไม่เรียก AI · ยังไม่มี `progress_card` / `problem` จนกว่าจะมี scope ที่ยืนยันแล้ว · api.md v1.15 · `0004` ขึ้น anyang-dev และ anyang-staging แล้ว · unit test ออก network ไม่ได้แล้ว (`tests/unit/conftest.py`) · แก้ 3 test ของ Jam ตาม AC-auth-real / AC-23 (Jam ยังไม่ ok) · เหลือ: #120 (รอหน้า login ของ May), ลำดับ 4–5
+- [x] หลัง advisor update: reset database password ของ anyang-dev ด้วยรหัสสุ่ม แล้วแจ้งทีม
+  - 15 พ.ย.: rotate secret key ของ `anyang-dev` แล้ว (Junior) · DB password ยังไม่ได้ reset
+  - 16 พ.ย.: reset DB password ของ `anyang-dev` แล้ว (Junior)
 
-### Buffer · 30 พ.ย.–4 ธ.ค.
+### S5 · 30 พ.ย.–11 ธ.ค.
+
+- [ ] journey ของ demo บน staging: merge #120 · Storage + migration ขึ้น `anyang-staging` · `ImageStore` ที่อ่านรูปจาก Storage (demo ในเครื่องใช้ `.local/uploads`) · วัด TTFT บน staging (P4-lite)
+- [ ] API ของบัญชี + persona บน DB: Google OAuth (UM-02) · preset และ custom persona (UM-03, UM-04, UM-05) · โปรไฟล์ (UM-08, UM-09)
+- [ ] ไฟล์: note รายไฟล์, เพิ่มไฟล์ทีหลัง, ลบไฟล์ (CM-04, CM-05, CM-10)
+- [ ] ขอบเขต: บันทึก `scope_changes` + change log (SM-06, SM-07, SM-08) · `topic_skills` (SM-12)
+- [ ] DB ของ planner: `planner_decisions` + เก็บ stage ของ session (TM-04, TM-18)
+
+### S6 · 14–25 ธ.ค.
+
+- [ ] ลบบัญชีและข้อมูลทั้งหมด (UM-10)
+- [ ] แก้บั๊กจาก demo S5
+
+### Buffer · 28–31 ธ.ค. (เดิม 30 พ.ย.–4 ธ.ค.)
 
 - [ ] ส่วน backend, DevOps, SaaS ในรายงานเทอม 1
 - [ ] แก้บั๊กจาก demo S4
+  - 13 พ.ย. แผนใหม่: ทำใน S4 หลังวิดีโอ 23 พ.ย. และหลัง demo รวม 27 พ.ย. (ไม่ต้องรอ Buffer)
 
 ---
 
@@ -138,6 +249,7 @@
 ### S3 · 2–13 พ.ย.
 
 - [ ] หน้าแชท P4-lite: อ่าน SSE ผ่าน `lib/sse.ts`, แสดงข้อความที่ไหลออกมา, render KaTeX, ส่งรูป
+  - 13 พ.ย. แผนใหม่: ⭐ demo ขั้น 6–7 (หน้าห้องติวที่ใช้ใน demo · ส่วนใหญ่เสร็จแล้ว)
   - 20 ต.ค. stream จาก fake transport เสร็จ (PR #32 · `chat-streaming.md`) · เหลือ HTTP transport + upload รูปจริง เมื่อ `POST /sessions/{id}/messages` ของ Junior มา
   - 21 ต.ค. HTTP transport ต่อ API stub เสร็จ (PR #42 · `room-http.md`): เปิดห้อง/กลับเข้า session, ส่งข้อความ stream จาก API, ชื่อไฟล์รูปจาก `attachment_name` · ลองจริงในเครื่องผ่าน · เหลือ upload รูปจริง (รอ `/uploads` + api.md รอตัดสินข้อ 1) และทดสอบบน staging กับ AI จริง
   - 5 พ.ย. (PR #108 · `room-photo-send.md`): ทำโดย Jam ช่วง solo · ส่งรูปพร้อมข้อความกำกับ → การ์ดยืนยันลายมือ → ผลตรวจ ครบเส้นทางกับ stub · ลองในเบราว์เซอร์ผ่าน · ยังเป็น stub: ผลตรวจตายตัว ไม่ได้อ่านลายมือจริง และ `PUT` เข้า Storage ยังไม่เคยวิ่งจริง (เว็บข้ามเมื่อเห็น `X-Stub`) · เหลือ: `/uploads` จริง (Junior) และทดสอบบน staging กับ AI จริง · ปุ่มไมค์ยังปิด (`voiceEnabled`) · May ดู OQ 3–5 ใน spec ย้อนหลังได้
@@ -158,11 +270,50 @@
   - 11 พ.ย. (PR #118) May review ย้อนหลังแล้ว (1 นาที · อ่านตาราง AC → test ที่ Claude สรุป ไม่ได้อ่านโค้ด test เอง): 27 AC มี test ครบ · ช่องโหว่ 2 (§10 ข้อ 9, 10 ไม่มี test) · comment ทำให้เข้าใจผิด 1 (AC-13) · เสนอ Jam แก้ใน PR ใหม่ · จดใน `metrics.md` §3, §4
 - [x] Use case UC ติว และ UC ส่งคำตอบ ให้ครบ 4 UC (D7)
   - ทำก่อนกำหนด 21 ต.ค. (PR #36) · มีข้อเสนอแก้ AM-02, ai-orchestration และ api.md v1.3 รอ Junior + Jam review
+- [x] ⭐ demo ขั้น 1: หน้า login (email + password ตาม D1) · เก็บ session · ส่ง `Authorization` ทุก request (UM-01)
+  - 15 พ.ย. (PR #138 · `specs/features/platform/web-login.md`): หน้า `/login` (email + password · Supabase) · login แล้วกลับไปหน้า `?next=` (เฉพาะ path ในเว็บ) · `/logout` · ทุก request ไป API แนบ `Authorization` จาก session (`lib/auth.ts` `apiFetch` / `apiSSE`) · API ตอบ 401 → พาไปหน้า login · ไม่มี session (เครื่อง dev ที่ใช้ stub) ไม่แนบ · ลองกับ `anyang-dev` แล้วผ่าน · ~~ไม่มีหน้าสมัคร (S5)~~ หน้าสมัครทำแล้ว 17 พ.ย. (#144) · ~~May: ดูหน้าตาและข้อความใน `components/auth/strings.ts`~~ **May ดูแล้ว 17 พ.ย. ข้อความเดิมไม่แก้ (PR #153)**
+  - ทำโดย Jam (15 พ.ย.) ช่วง solo
+- [x] ⭐ demo ขั้น 2: หน้ารายการการเตรียมสอบ + ฟอร์มสร้าง แทนหน้า template ของ Next (CM-01, CM-02)
+  - 16 พ.ย. (PR #139 · `specs/features/exam-prep/prep-list-page.md`): หน้า `/` แสดงการเตรียมสอบจาก `GET /exam-preps` (ชื่อ · อีก n วัน · ขั้น · ความพร้อมเมื่อ API ส่งมา) · การ์ดขั้น `scope` / `tutoring` ลิงก์ไปหน้า scope / ห้องติว (`prepHref` · ขั้นอัปโหลดยังไม่มีหน้า) · ฟอร์ม `/preps/new` → `POST /exam-preps` · error เป็นข้อความไทย · ลองกับ `anyang-dev` ผ่าน · ~~May: ดูหน้าตาและข้อความใน `components/preps/strings.ts` · ตัดสิน §10~~ **May 17 พ.ย. (PR #153): ข้อความไม่แก้ · วันที่เหลือแสดงหลังสร้าง · หลังสร้างไปหน้าอัปโหลด** · หน้าอัปโหลด (ขั้น 3) เพิ่มที่ `prepHref`
+  - ทำโดย Jam (15–16 พ.ย.) ช่วง solo
+- [x] ⭐ demo ขั้น 3: หน้าอัปโหลดหลายไฟล์ + สถานะรายไฟล์ (CM-03, CM-07)
+  - 16 พ.ย. ส่วนหน้าเว็บเสร็จ (PR #142 · `specs/features/exam-prep/upload-page.md`): `/preps/{id}/upload` เลือกหลายไฟล์ ส่งทีละไฟล์ สถานะรายแถว (S09) → ประเภทที่ AI เดา + "มั่นใจ n%" แล้วยืนยัน (S10 แบบย่อ · ยังแก้ประเภทไม่ได้) → `/preps/{id}/progress` สถานะรายไฟล์ + ขั้นรวม แล้วไปหน้า scope เอง (S11) · การ์ด "รออัปโหลดไฟล์" / "กำลังอ่านไฟล์" เป็นลิงก์ · สร้าง prep แล้วไปหน้าอัปโหลด · ลองในเบราว์เซอร์บน stub + `anyang-dev` ผ่าน · ~~ยังไม่ติ๊ก: รอ #140 (Junior) แล้วลองเส้นจริง~~ (ลองแล้ว 17 พ.ย. ผ่าน · บรรทัดถัดไป) เลือกไฟล์ → Storage → classify → ยืนยัน → ingestion → scope · ~~May ดูหน้าตาและ §10 ของ spec~~ **May 17 พ.ย. (PR #153): ใช้ตามนี้ทั้งหมด**
+  - ทำโดย Jam (16 พ.ย.) ช่วง solo
+  - 17 พ.ย. (PR #151 · `upload-page.md` §8): เส้นจริงผ่านในเบราว์เซอร์บน `anyang-dev` หลัง #140 · เลือก 3 ไฟล์ → Storage → AI ดูไฟล์ (Vertex) → ยืนยัน → อ่านไฟล์ → หน้า scope · 3 รอบแรกล้มเพราะเครื่องของ Jam ตั้งค่าไม่ตรง (service role key, `AI_PROVIDER`, บัญชี ADC) ไม่ใช่บั๊ก
+  - ทำโดย Jam (17 พ.ย.) ช่วง overlap
+- [x] ⭐ demo ขั้น 5: หน้า scope ต่อ API จริง + ยืนยัน (SM-09)
+  - 16 พ.ย. (PR #141 · `specs/features/scope/scope-review.md` §2 "ต่อ API จริง" · AC-21 ถึง AC-24): หน้า scope บน API ของ #137 · `409 scope_not_ready` → "ระบบยังอ่านไฟล์ไม่เสร็จ" · ยืนยันซ้ำ (`scope_already_confirmed`) → ไปห้องติว · `scope_empty` → "ไม่มีหัวข้อให้ติว…" · 401 ไม่แสดง error · กลับมาหน้าที่ Next ซ่อนไว้โหลด scope ใหม่ · type จาก OpenAPI · ลองในเบราว์เซอร์บน `anyang-dev` ผ่าน (รายการ → scope 34 หัวข้อ → ยืนยัน → ห้องติว → back อ่านอย่างเดียว) · prep ทดสอบใส่ข้อมูลด้วย `apps/api/scripts/seed_scope_demo.py` (ผล ingestion ของ MTH10101 · ใช้เป็นทางสำรองของวิดีโอได้ถ้าขั้น 3 ไม่ทัน) · ~~May ดูข้อความใหม่ 2 ข้อความ (OQ 9)~~ **May 17 พ.ย. (PR #153): ใช้ตามนี้**
+  - ทำโดย Jam (16 พ.ย.) ช่วง solo
+- [x] ⭐ demo ขั้น 9 (หน้าเว็บ): ปุ่ม "จบการติว" + สรุปในแชท + ติวรอบใหม่ (PM-05, TM-13 · goal อาจารย์ข้อ 4)
+  - 17 พ.ย. (PR #143 · `specs/features/tutor/session-end-ui.md`): ปุ่มบนหัวห้อง (ยังไม่มี `route_intent` จึงยังพิมพ์ "พอแล้ว" ไม่ได้) · ไม่ถามยืนยัน · สรุปเป็น bubble ของ tutor · หลังจบ canvas หาย ห้องล็อก + "กลับหน้าหลัก" / "ติวรอบใหม่" (session ใหม่) · 409 = จบแล้ว · ลองในห้องเดโม่ (stub) ผ่าน · **เส้นจริงบน DB ยังไม่ได้ลอง** (ลองตอนต่อทุกขั้น 19 พ.ย. หรือ Jam)
+- [x] ⭐ goal อาจารย์ข้อ 1: หน้าสมัครสมาชิก (email + password) + ลิงก์ไปมากับหน้า login (UM-01 ส่วนสมัคร · เดิมอยู่ S5)
+  - 17 พ.ย. (PR #144 · `specs/features/platform/web-signup.md`): `/signup` อีเมล + รหัส + ยืนยันรหัส · สมัครแล้วเข้าระบบทันทีและไปหน้าหลัก (onboarding S5) · กฎรหัสให้ Supabase ตัดสิน · ข้อความ error ตาม code (อีเมลซ้ำ, รหัสอ่อน, ปิดรับสมัคร ฯลฯ) · ลองกับ `anyang-dev` ผ่าน · ⚠️ `anyang-dev` ปิดรับสมัครไว้ (D2) · **ตอนอัดวิดีโอ 21–22 พ.ย. ขอ Junior เปิดชั่วคราว**
+- [x] ⭐ goal อาจารย์ข้อ 4: การ์ดโจทย์ไม่หายเมื่อรีเฟรช / กลับเข้าห้อง (TM-13 · `room-problems-db.md` §10 ข้อ 3) · ✅ 19 พ.ย. หน้าเว็บ #145 + API #160 (May ทำแทน Jam) · ผ่านบนเครื่อง May (#163)
+  - ข้อที่ยังเปิด: การ์ดความคืบหน้าหายหลังรีเฟรช (ไม่บันทึก · UC-03 E1) · May ตัดสินหลัง 23 พ.ย. (`problem-card-history.md` §10 ข้อ 3) · วิดีโอฉาก 5 ไม่พูดถึงการ์ดความคืบหน้า
+  - 17 พ.ย. ส่วนหน้าเว็บเสร็จ (PR #145 · `specs/features/tutor/problem-card-history.md`): ข้อความ `role = card` ที่มี `card.problem` ในประวัติแสดงเป็นการ์ดโจทย์ + canvas · ข้อมูลไม่ครบไม่แสดง · การ์ดอื่นยังเป็นการ์ดความคืบหน้า · ~~ยังไม่ติ๊ก: รอ Jam ทำ API บันทึกการ์ดโจทย์ใน `messages` ทุกครั้งที่ส่ง `problem` (spec §6 · Jam เลือกทางนี้ 17 พ.ย.) แล้วลองเส้นจริง: เปิดห้อง → รีเฟรช → การ์ด + canvas ยังอยู่~~ ปิดแล้ว 19 พ.ย. (API #160 โดย May · ลองเส้นจริงผ่าน #163) · หน้าเว็บเก่าพังถ้าประวัติมี `card.problem` จึง merge หน้าเว็บก่อน
+- [x] ⭐ ก่อนอัดวิดีโอ · อัปเกรด Next.js 16.4.3 → 16.4.6 (`next dev` แจ้ง upgrade policy `security` = มี advisory · PR แยก + CI · บอกกลุ่ม · พบใน #151) · ✅ 19 พ.ย. #164 (lint, typecheck, test, build ผ่าน · ลองบนเบราว์เซอร์แล้ว · `next dev` ไม่เตือน security)
 - [ ] เตรียมลำดับหน้าจอสำหรับ demo รวม
+  - 13 พ.ย. แผนใหม่: ⭐ demo D4 + อัดวิดีโอ 21–22 พ.ย. (#125 เตรียมของช่วง live ใช้ต่อได้)
+  - 17 พ.ย. (PR #147) D4 ร่างแล้ว: `docs/design/demo-video.md` ลำดับ 8 ฉาก · บทพูด · สิ่งที่ต้องพร้อมต่อคน (Junior: #140 + เปิดรับสมัครตอนอัด · Jam: API การ์ดโจทย์ + ไฟล์ชีท MTH10101) · checklist วันอัด · **ยังไม่ติ๊ก:** รอทีมตกลง แล้วอัดวิดีโอ 21–22 พ.ย.
+  - 17 พ.ย. (PR #155) ซ้อมเส้นวิดีโอบนเครื่อง May: ฉาก 2–4, 6 ผ่าน · ฉาก 5 ผ่านแบบทางสำรอง (การ์ดโจทย์รอ API ของ Jam) · **go ฉาก 3** (อัปโหลดจริง · ไม่ต้องใช้ seed) · ยังไม่ได้จับเวลา (ซ้อม ศ. 20) · เจอบั๊กส่งรูป/canvas ตอน login (`PUT /dev/uploads` 401 · แจ้ง Jam · วิดีโอฉาก 4–5 พิมพ์ตอบเท่านั้น) · ผลใน `docs/design/demo-video.md` "ผลซ้อม"
+  - 17 พ.ย. (PR #150) สไลด์เปิดและปิดของวิดีโอ (ฉาก 0, 7) เสร็จ: Artifact ของ May (ลิงก์ใน `docs/design/demo-video.md`) · หน้า 2 แก้สถานะ goal 3, 4 ก่อนอัด
   - 21 ต.ค. ร่างแล้ว `docs/design/demo-flow.md` (PR #61): 15 นาที 7 ช่วง · ห้องติว live + wireframe คู่ผล PoC · คนพูดแบ่งตามงาน · ทางสำรอง + checklist ก่อน demo · เหลือเติมตัวเลข P2, P4-lite, P8-lite หลัง S3–S4 และให้ทีมตกลงลำดับ
   - 11 พ.ย. (PR #119) ร่างรอบ 2: live ย้ายมาห้องเดโม่ในเครื่อง May (staging เป็นโบนัส) · รวมช่วง 3+4 เป็น live 5:30 · ตัวเลข P1–P4-lite, P6-lite, P8-lite เติมแล้ว (P8-lite ยังไม่มี report · TTFT staging ยังไม่วัด) · **เหลือ: ทีมตกลงลำดับ** (ถามในกลุ่มแล้ว) · Jam ให้ role Vertex AI User แก่ May ก่อนซ้อม · May เตรียมรูปลายมือข้อ 2 ที่เขียนเอง
 
-### Buffer · 30 พ.ย.–4 ธ.ค.
+### S5 · 30 พ.ย.–11 ธ.ค.
+
+- [ ] หน้า onboarding: Google login, เลือก tutor + buddy (preset และ custom), ชื่อเล่น/ระดับ, แก้ทีหลัง (UM-02, UM-03, UM-04, UM-05, UM-08, UM-09)
+- [ ] หน้าไฟล์: ยืนยัน/แก้ประเภทที่ AI เดาพร้อม confidence, note รายไฟล์, เพิ่มไฟล์ทีหลัง, ลบไฟล์ (CM-06, CM-04, CM-05, CM-10)
+- [ ] หน้า home: readiness + หัวข้อที่ยังไม่แม่นของแต่ละการเตรียมสอบ (PM-04)
+- [ ] หน้า scope: แก้ผ่านแชทแล้วรายการอัปเดตทันที + change log (SM-06, SM-07, SM-08)
+- [ ] ห้องติว: ขอดู progress กลางทาง, ข้อเสนอจบ session (TM-11, TM-12)
+
+### S6 · 14–25 ธ.ค.
+
+- [ ] ห้องติว: ข้อความของ buddy, ปุ่ม TTS, ปุ่ม mic ตอบด้วยเสียง (TM-05, TM-06, TM-09, TM-20) · mic ในหน้า scope (SM-06)
+- [ ] หน้าลบบัญชี (UM-10)
+
+### Buffer · 28–31 ธ.ค. (เดิม 30 พ.ย.–4 ธ.ค.)
 
 - [ ] สไลด์นำเสนอ + ส่วน UI/UX ในรายงาน
 - [ ] ซ้อม live demo
@@ -223,11 +374,32 @@
 
 ### S4 · 16–27 พ.ย.
 
-- [ ] เดโม่ห้องติวที่ใช้ได้จริงในเครื่อง ให้อาจารย์ดูก่อนทำต่อ (อาจารย์ขอ 9 พ.ย. · เพิ่มเอง)
+- [x] ⭐ demo ขั้น 4: ingestion ใน `apps/api` (งานเบื้องหลัง: classify → อ่านไฟล์ → chunk + embed → สกัดหัวข้อ → `compute_importance`) ลง `materials`, `chunks`, `topics`, `topic_sources` · `GET /exam-preps/{id}/ingestion` จริง (SM-01, SM-03, SM-04, CM-06, AI-08) · เริ่มก่อนข้ออื่น
+  - 13 พ.ย. (PR #130 · `specs/features/scope/ingestion.md`): pipeline ของ P3 อยู่ใน `apps/api` แล้ว · classify (prompt ใหม่ `classify_material/v1`) · อ่าน/ตัดรายข้อ/chunk/embed ทีละไฟล์ · A5 → A6 → A7 → `compute_importance` ต่อ prep · `GET /ingestion` อ่าน DB · migration `0005` (`ingestion_jobs.exam_prep_id`) ขึ้นแค่ในเครื่อง **Junior: ดูแล้ว `db push`** · รันจริงบน Vertex กับ MTH10101: หัวข้อ 20/27, ★★★ 9/12 (P3 10/12 · Jam รับผล · ลองส่ง kind `exercise` หลัง demo), map 70%, ≤ 1.44 นาทีต่อไฟล์ · Vertex embed ทีละข้อความ (`embedding.batch_size: 1`) · **ต่อเข้า demo:** endpoint materials ของ Junior (ขั้น 3) เรียก `classify_material` และ `get_ingestion_runner().start(prep_id)` หลังยืนยันไฟล์ · bucket ชื่อ `materials`
+- [x] ⭐ demo ขั้น 6: ห้องติวในทางที่มี token: คำทัก `open_session` + การ์ดจาก DB + เลือกหัวข้อด้วยกฎง่าย + `generate_problem` ที่ SymPy ตรวจเฉลยแล้ว (คลังโจทย์เป็นทางสำรอง · D3) (TM-01, TM-15, AM-11)
+  - 13 พ.ย. (PR #131 · `specs/features/tutor/room-problems-db.md`): เปิดห้องที่มี token + prep ที่มีหัวข้อ → การ์ดจาก DB → `open_session/v2` บอกหัวข้อและเหตุผล → โจทย์จาก `generate_problem/v1` ที่ SymPy ยืนยันเฉลยแล้ว ลง `problems` (โจทย์ค้างใช้ซ้ำ) · `tutor_reply` รู้โจทย์ค้าง · รันจริงกับ 34 หัวข้อ MTH10101: ยืนยันผ่าน 71% ภายใน 3 รอบ (หัวข้อหลักของ demo ผ่านรอบแรก · Jam รับผล) · คลังโจทย์สำรองและให้ SymPy อ่านอนุพันธ์อันดับสูงเป็นงานหลัง demo · **การ์ดโจทย์หายเมื่อรีเฟรชหน้า (May · spec §10 ข้อ 3)** · ตรวจคำตอบในทางนี้คือขั้น 7
+- [x] ⭐ demo ขั้น 7: `typed_answer` + ตรวจ + รูป/canvas ในทางที่มี token (TM-06 ส่วนพิมพ์และรูป, AM-01–07) · hint ladder เฉพาะ `APP_ENV=local` ตาม `demo-room.md` §2 K (AM-07 ยังเป็นข้อเดิมจนกว่าทีมตัดสิน)
+  - 14 พ.ย. (PR #132 · `specs/features/tutor/room-answers-db.md`): ทางที่มี token ใช้ flow ตรวจของเดโม่ทั้งหมดผ่าน `DbRoomState` · พิมพ์คำตอบเมื่อมีโจทย์ค้าง → `typed_answer` (ทุก env) → ตรวจ → `explain_check` → ใบ้ (local) หรือเฉลย → ข้อต่อไปจาก `generate_problem` · รูป/canvas และยืนยันลายมือเฉพาะ `APP_ENV=local` · ทุกคำตอบที่ได้ verdict ลง `attempts` (PM-01) · บรรทัดภายในเป็น `messages.role = system` · migration `0006` (`problems.ended_at`, `working_steps`) ขึ้นแค่ในเครื่อง **Junior: ดูแล้ว `db push`** · api.md v1.18 · รันจริงบน Vertex ครบ flow (hint_1 → hint_2 → ยอมแพ้ → ข้อต่อไป → ถูก) · แก้ merge rule ที่ LLM ให้ `no_answer` แต่มีบรรทัด (เคยทำ stream จบด้วย `internal_error`) · BKT ลง `topic_progress` ยังเป็นขั้น 8
+  - 17 พ.ย. (PR #157 · May · `web-login.md` §2.3 ข้อ 4, AC-13): ส่งรูป / canvas ในทางที่ login บนเครื่องได้แล้ว · เดิม `PUT /dev/uploads` ได้ 401 เพราะหน้าเว็บไม่แนบ token (เจอตอนซ้อมวิดีโอ · Jam ให้แก้ฝั่งเว็บ) · ตอนนี้แนบเมื่อ `upload_url` เป็นของ API (origin + path) · Storage จริงไม่แนบ
+- [x] ⭐ demo: ข้อต่อไปไม่ซ้ำข้อที่เพิ่งจบ · `generate_problem/v2` รับโจทย์ล่าสุดของหัวข้อ + code ตัดโจทย์ข้อความซ้ำ (นับเป็นรอบที่ไม่ผ่าน) · วัดใหม่บน Vertex (AM-11 · **Jam** · เจอตอนรันจริงของ PR #132 · `room-answers-db.md` §10 ข้อ 4)
+  - 14 พ.ย. (PR #133 · `room-problems-db.md` §2.3 v2): `generate_problem/v2` ได้ `previous_problems` (โจทย์ล่าสุดของหัวข้อ ≤ `session.avoid_recent_problems` = 5 [C]) · code ตัดโจทย์ที่คณิตใน `$…$` ซ้ำ (`same_problem`) นับเป็นรอบที่ไม่ผ่าน · ใช้ทั้งตอนเปิดห้องและข้อต่อไป · วัดบน Vertex 34 หัวข้อ × 3 ข้อ: ไม่มีโจทย์ซ้ำ · SymPy ยืนยันภายใน 3 รอบ 65/71/68% (v1 71%) · หัวข้อหลักของ demo ผ่านรอบแรก (Jam รับผล)
+- [x] ⭐ demo ขั้น 8–9: BKT ลง `attempts` / `topic_progress` + การ์ดจาก DB (PM-01–04) · สรุป session ด้วย `session_summary` (PM-05)
+  - 14 พ.ย. (PR #136): **ขั้น 9 เสร็จ** · สรุป session ด้วย `session_summary/v1` (small · 1–2 บรรทัดจาก facts ของ code: คำตอบของ session ต่อหัวข้อ + ระดับจาก `topic_progress`) · รันจริงบน Vertex: สรุปตรงกับ facts · ภาษายังแข็งเล็กน้อย ปรับ v2 ได้ภายหลัง
+  - 14 พ.ย. (PR #135 · `specs/features/planner/topic-progress-db.md`): **ขั้น 8 เสร็จ** · โจทย์จบ (ถูก, เฉลย, ยอมแพ้) → BKT ของ `domain/bkt.py` ลง `topic_progress` ของผู้ใช้ (นับครั้งเดียวต่อโจทย์ · ถูกหลังใบ้สุดท้ายไม่นับ) · การ์ดตอนเปิดห้องอ่าน `d_max` จริง · migration `0007` (`topic_progress.d_max`) **Junior: ดูแล้ว `db push`** · รันจริงบน Vertex: ตอบถูก 2 ข้อ → ความพร้อม 0% → 31% · ลิมิต `developing` · **เหลือขั้น 9** (จบ session + `session_summary`)
+- [x] ⭐ ก่อนอัดวิดีโอ · `classify_material` ไม่ให้ไฟล์ค้าง "AI กำลังดูไฟล์…": อ่านแถว/ตั้ง job ล้มก่อน `try` → ไฟล์ค้าง `uploaded` ตลอด ไม่มี error ไม่มีทางลองใหม่ · ทุกกรณีต้องจบที่ `failed` ที่ลองใหม่ได้ (พบใน #151)
+  - 17 พ.ย. (PR #154 · `specs/features/scope/ingestion.md` §2.2 ข้อ 5 · AC-29 ถึง AC-34): ทุกขั้นของ classify (อ่านแถว · ตั้ง job · อ่านไฟล์ · AI · เขียนผล) จบที่ `failed` + "อ่านไฟล์นี้ไม่สำเร็จ ลองใหม่ได้" ที่ `/retry` ลองใหม่ได้ · อ่านแถวไม่ได้ → ตั้ง `failed` ด้วย id · เขียนผลได้แต่ปิด job ไม่ได้ → คง `classified` · DB ล่มทั้งหมด → log ERROR `stays at uploaded` · API ทั้งชุด 1945 ผ่าน (integration บน `anyang-dev` รันในเครื่องได้แล้ว)
+- [x] fake provider มีคำตอบตั้งต้นของ `classify_material` (และ purpose อื่นของ ingestion) ให้ลองเส้นอัปโหลดในโหมด fake ได้ (พบใน #151)
+  - 19 พ.ย. (PR #162 · `specs/features/scope/ingestion.md` §2.7 ข้อ 4 · AC-40 ถึง AC-43): `AI_PROVIDER=fake` ตอบทุก purpose ของ ingestion จาก `app/stubs/fake_ingestion.json` (หัวข้อทดสอบ 3 หัวข้อ ทุกข้อความมี "(โหมด fake)") · `vision_extract_pages` ตอบตามจำนวนรูป · `FakeProvider.embed` · อัปโหลดถึงหน้า scope ได้โดยไม่เรียก AI จริง · purpose ของห้องติวในโหมด fake ยังไม่ทำ
+- [ ] หลัง demo · call ที่อยู่กลางรอบคุยในห้องติว (`typed_answer`, `check_answer`, `generate_problem`) ใช้ตารางรอ 429 สั้นแบบ stream หรือแสดงข้อความระหว่างรอ · ตอนนี้ใช้ `rate_limit_waits_seconds` [5, 15, 30] เหมือน ingestion → โดน 429 ติดกันเงียบได้ราว 50 วินาที (จาก review #159 · Jam 19 พ.ย.)
+- [x] เดโม่ห้องติวที่ใช้ได้จริงในเครื่อง ให้อาจารย์ดูก่อนทำต่อ (อาจารย์ขอ 9 พ.ย. · เพิ่มเอง)
+  - 13 พ.ย. แผนใหม่: ⭐ demo ขั้น 6–7 · ของในเดโม่นี้ (คำทัก, ตรวจ, hint ladder, BKT) ต้องย้ายเข้าทางที่มี token (ข้อใหม่ข้างล่าง) · ที่เหลือเดิม (canvas ในเบราว์เซอร์, วิดีโอ) รวมเข้า demo end to end · iPad หลัง demo
   - 9 พ.ย. (PR #115 · `specs/features/tutor/demo-room.md` + `specs/features/planner/bkt-mastery.md`): `APP_ENV=local` วนได้จริงกับ Vertex · อัปโหลดรูปในเครื่อง · โจทย์ 5 ข้อ · BKT จริง (`app/domain/bkt.py`) ในการ์ดตอนเข้าห้อง · tutor ทักก่อน (`open_session`) · รู้โจทย์และจำบทสนทนา (`tutor_reply/v2`) · พิมพ์คำตอบแล้วตรวจ (`typed_answer`) · แสดงวิธีทำทีละขั้นทุกครั้ง (`explain_check/v2`) · ส่งแค่คำตอบยังไม่ผ่าน (`checker.min_working_lines`) · วิธีเปิดอยู่ใน spec §12 · staging ยังเป็น stub
   - 9 พ.ย. (PR #117 · `specs/features/tutor/answer-canvas.md`): canvas เขียนคำตอบอยู่ท้ายแชทเมื่อมีโจทย์ค้าง (เมาส์ / Apple Pencil / นิ้ว · ใส่รูป · ส่งเป็น PNG ทางเดิมของรูป) · ลองบนคอมแล้ว · iPad ยังไม่ได้ลอง · นับวิธีทำเป็นขั้น และให้โจทย์เดิมซ้ำเมื่อขาดวิธีทำ · ตัด `**` ในแชท · May ตัดสินดีไซน์แล้ว 12 พ.ย. (PR #122 · spec §10): ตำแหน่ง ขนาด เครื่องมือคงเดิม · เพิ่มภาพย่อใน bubble และ "ถ่ายใหม่" พาไป canvas ทำแล้ว 12 พ.ย. (PR #124)
-  - เหลือ: hint ladder ทำทีละขั้นก่อนเฉลย (`feat/hint-ladder` · ขัด AM-07 ต้องเสนอทีม) · อัดวิดีโอสำรองหลังงานนั้น · ลองบน iPad
+  - 12 พ.ย. (PR #127 · `demo-room.md` §2 K): hint ladder ในเดโม่ในเครื่อง · ส่งขั้นที่ถูกแต่ยังไม่จบได้ "ทำต่อ" (ไม่มี ✓/✗) · ผิดครั้งที่ 1 ชี้บรรทัด ครั้งที่ 2 บอกสูตร + ทำให้ดู 1 ขั้น ครั้งที่ 3 เฉลย (`tutoring.max_hints_before_solution: 2` [C]) · พิมพ์ "ไม่ได้จริงๆ" เฉลยทันที · BKT นับครั้งเดียวต่อโจทย์ ถูกหลัง hint สุดท้ายไม่นับ · ระหว่างใบ้ tutor ไม่ได้เห็นเฉลย (AM-13) · `explain_check/v3`, `typed_answer/v2` · smoke บน Vertex 6 ขั้นผ่าน (Claude · ไม่ผ่านเบราว์เซอร์) · staging ยังเฉลยทันที · **ข้อเสนอแก้ AM-07 รอทีมตอบ**
+  - เหลือ: ลอง ladder บน canvas ในเบราว์เซอร์ · อัดวิดีโอสำรอง · ลองบน iPad
+  - 9 พ.ย. โชว์ห้องติวในเครื่องให้อาจารย์แล้ว (Jam ยืนยัน 19 พ.ย.) · รอบต่อมา (advisor update 16 พ.ย.) อาจารย์ขอ demo end to end · ทีมทำเป็นวิดีโอส่ง 23 พ.ย. (ส่วน ⭐ demo end to end ด้านบน) · ข้อที่ "เหลือ" ข้างบน (ladder บน canvas, วิดีโอสำรอง, iPad) ไปอยู่ในการซ้อมและอัดวิดีโอ 20–22 พ.ย.
 - [ ] P8-lite ร่วมกับทีม (เป็นเจ้าของ spec `compute_importance`)
+  - 13 พ.ย. แผนใหม่: หลัง demo (ทำใน S4 หลัง 23 พ.ย.)
   - 31 ต.ค. ส่วน spec เสร็จก่อนกำหนด (PR #89): `specs/features/scope/compute-importance.md` approved หลังเทียบกับผล P3 · AC 13 → 27 · test plan 19 ชื่อ · ใบเก็บ metrics `poc/P8-lite/metrics.md` · เหลือทำด้วยกันใน S4: `/spec-to-tests` → review test → `/implement-feature` → merge
   - 8 พ.ย. (PR #113 · Jam ช่วง solo): `/spec-to-tests` → Jam review test → `/implement-feature` → merge · `app/domain/stars.py` + 32 test (`test_stars.py`, AC-19 ใน `test_settings.py`) · agent เขียน 100% · red → green 3 รอบ · บั๊กก่อน merge จดใน `poc/P8-lite/metrics.md` §3 · เหลือ: Junior review test ย้อนหลังแล้วจดเวลาใน metrics §4 (May เสร็จ 11 พ.ย. · PR #118), กรอก §6, `/poc-report P8-lite`
 - [x] อัปเดต threshold ใน AI flow specs และ `learning-model.md` ตามผล P1 P2 P3 (D2)
@@ -239,7 +411,22 @@
 - [x] Test strategy 1 หน้าใน `specs/system/` · ทำก่อนกำหนด 21 ต.ค. (PR #55) · `specs/system/test-strategy.md` · §5 มีงานเสนอให้ Junior 2 ข้อ (`evals/` เข้า CI ใน S3, isolation test ทุกตารางใน S4) · Junior ตกลงแล้ว 21 ต.ค.
   - 31 ต.ค. v1.1 (PR #86): อัปเดตจำนวน test ต่อชั้นตาม `main` (`tests/unit/` 346 · web 242 · `evals/` 69 · isolation 3/27 ตาราง เท่ากับ v1.0 · ตัวเลข 6/27 ของร่าง 28 ต.ค. นับแถว seed ผิด) · หลักการไม่เปลี่ยน
 
-### Buffer · 30 พ.ย.–4 ธ.ค.
+### S5 · 30 พ.ย.–11 ธ.ค.
+
+- [ ] planner เต็ม: เลือกหัวข้อ + เหตุผล + mode (TM-01, TM-02, TM-18) · ลำดับ prerequisite (SM-02)
+- [ ] stage machine: probe → teach → Verify ด้วยโจทย์แบบเดียวกัน → practice (TM-03, TM-04, AM-08, AM-09) · ผ่านตาม skill (TM-16, SM-12)
+- [ ] prompt ของ persona (`persona_extract`, `persona_preview`) และ scope edit ผ่านแชท (UM-05, SM-06)
+- [ ] answer-leak check แบบ deterministic ใน gateway (AM-13)
+- [ ] ข้อเสนอ hint ladder (AM-07) ตามที่ทีมตัดสิน
+
+### S6 · 14–25 ธ.ค.
+
+- [ ] buddy ตามกฎของ code (TM-05) · ทบทวนตามรอบ (TM-17) · Park (TM-19)
+- [ ] grounding: คำถามนอก scope และไม่สอนวิธีที่ไม่มีในชีท (SM-10, SM-11) · STT + TTS (TM-06, TM-09, SM-06)
+- [ ] สัญญาณความเครียดรุนแรง (SA-09) · golden set ของ prompt ในห้องติว (explain_check, typed_answer, open_session)
+- [ ] provider ที่ 2 ใน gateway (Claude) ให้สลับด้วย config (AI-02)
+
+### Buffer · 28–31 ธ.ค. (เดิม 30 พ.ย.–4 ธ.ค.)
 
 - [x] ส่วน AI, การวัดผล และงานวิจัยรองรับในรายงาน
   - ทำก่อนกำหนด 28–31 ต.ค. (PR #84): `docs/report/ai-evaluation.md` 4 หัวข้อ (สถาปัตยกรรม AI · วิธีวัดผล · ผล PoC P1 P2 P3 · งานวิจัยรองรับ learning model) · เหลือย้ายเข้า template รายงานของภาควิชาตอน Buffer (path ใน repo อาจต้องเป็นภาคผนวกหรือลิงก์) · ถ้ามีผล P8-lite หรือ P3a วัดใหม่บน Vertex ต้องเติม §3
@@ -255,4 +442,7 @@
 | S2 | ตรวจ label ของกันและกัน (คน label ไม่ใช่คนทำ PoC) |
 | S3 | ทดลองใช้หน้าแชทแล้วจด feedback |
 | S4 | **P8-lite:** `/spec-to-tests` → review test ด้วยกัน → `/implement-feature` → เก็บ metrics |
-| Buffer | รายงานเทอม 1 + ซ้อมนำเสนอ |
+| S4 (เพิ่ม 13 พ.ย.) | ⭐ demo end to end: ต่อทุกขั้นในเครื่องเดียว พฤ. 19 พ.ย. · ซ้อม ศ. 20 · อัดวิดีโอ 21–22 · ส่ง จ. 23 พ.ย. |
+| S5 | journey บน staging · ลองใช้การติวตามแผนแล้วจด feedback |
+| S6 | ไล่ Must ที่เหลือทุกข้อ (ตารางแผน Must) · ปิดบั๊ก |
+| Buffer | รายงานเทอม 1 + ซ้อมนำเสนอ (28–31 ธ.ค.) |

@@ -7,6 +7,7 @@ SymPy and LLM results below are hand-made, no model and no database is used.
 import pytest
 
 from app.domain.checker import CheckResult, LlmResult, SympyResult, merge_check
+from app.models.room import VerdictEvent
 
 ERROR_TYPES = {"calculation", "sign", "wrong_method", "concept", "prerequisite", "no_answer"}
 
@@ -297,3 +298,77 @@ def test_AM06_error_type_is_one_of_six_unless_correct(case):  # AC-14
         assert result.error_type is None
     else:
         assert result.error_type in ERROR_TYPES
+
+
+# --- the LLM says no_answer although there are lines (live run on Vertex, 14 Nov) -------------
+
+
+def as_event(result: CheckResult) -> VerdictEvent:
+    return VerdictEvent(
+        verdict=result.verdict,
+        first_wrong_line=result.first_wrong_line,
+        error_type=result.error_type,
+    )
+
+
+@pytest.mark.parametrize(
+    ("sympy_result", "llm_result"),
+    [
+        (sympy(final_equal=False, line_ok=[False]), llm(error_type="no_answer")),
+        (
+            sympy(parsed=False, final_equal=None, line_ok=[False]),
+            llm(verdict="incorrect", error_type="no_answer", first_wrong_line=1),
+        ),
+    ],
+    ids=["sympy_decides", "llm_decides"],
+)
+def test_AM06_a_bare_wrong_number_the_llm_calls_no_answer_has_no_wrong_line(
+    sympy_result, llm_result
+):  # AC-16
+    result = merge(["999"], sympy_result, llm_result)
+
+    assert (result.verdict, result.error_type, result.first_wrong_line) == (
+        "incorrect",
+        "no_answer",
+        None,
+    )
+    assert as_event(result).error_type == "no_answer"
+
+
+def test_AM05_a_flawed_right_answer_is_never_no_answer():  # AC-17
+    result = merge(
+        ["a", "b", "c"],
+        sympy(final_equal=True, line_ok=[True, False, True]),
+        llm(error_type="no_answer"),
+    )
+
+    assert (result.verdict, result.error_type, result.first_wrong_line) == (
+        "correct_with_flaw",
+        "calculation",
+        2,
+    )
+    assert as_event(result).verdict == "correct_with_flaw"
+
+
+UNPARSED = sympy(parsed=False, final_equal=None, line_ok=[False, False, False])
+
+
+@pytest.mark.parametrize(
+    ("llm_result", "expected"),
+    [
+        (llm(verdict="correct", first_wrong_line=2), ("correct", None, None)),
+        (llm(verdict="incomplete", error_type="calculation"), ("incomplete", None, "concept")),
+        (llm(verdict="incorrect", error_type="sign"), ("incorrect", 3, "sign")),
+        (llm(verdict="incorrect", first_wrong_line=2), ("incorrect", 2, "calculation")),
+        (
+            llm(verdict="correct_with_flaw", error_type="no_answer"),
+            ("correct_with_flaw", 3, "calculation"),
+        ),
+    ],
+    ids=["correct_with_line", "incomplete", "no_line", "no_error_type", "flaw_no_answer"],
+)
+def test_AM06_whatever_the_llm_decides_the_result_is_a_valid_verdict(llm_result, expected):  # AC-18
+    result = merge(["a", "b", "c"], UNPARSED, llm_result)
+
+    assert (result.verdict, result.first_wrong_line, result.error_type) == expected
+    assert as_event(result).verdict == expected[0]

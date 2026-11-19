@@ -1,7 +1,8 @@
 """A typed message in the room (tutor-reply-stream.md · demo-room.md §2 C, E, G).
 
 With a pending problem on a local machine, `typed_answer` first decides whether the message is
-the answer; if it is, it is checked like a photo (photo_check.typed_answer_events). Otherwise
+the answer, or gives up (§2 K); an answer is checked like a photo (photo_check.typed_answer_events),
+a give-up gets the solution (photo_check.give_up_events). Otherwise
 the tutor replies, knowing the problem and the recent conversation. Everything happens inside
 the SSE stream, so a failure ends in a reply, never in an HTTP error.
 """
@@ -13,7 +14,7 @@ from contextlib import aclosing
 from app.ai.call_context import AICallContext
 from app.ai.gateway import Gateway
 from app.models.check import TypedAnswer
-from app.services.photo_check import typed_answer_events
+from app.services.photo_check import give_up_events, typed_answer_events
 from app.services.room_state import STUDENT, TUTOR, RoomState, conversation_text
 from app.services.tutor_turn import NO_PROBLEM, Event, call_scope, reply_events
 
@@ -36,14 +37,18 @@ async def text_message_events(
     await state.remember(key, STUDENT, text)
 
     if local and pending:
-        lines = await _typed_answer_lines(gateway, problem, conversation, text, call_context)
-        if lines:
+        typed = await _typed_answer(gateway, problem, conversation, text, call_context)
+        if typed is not None:
             # A photo preview still waiting for this problem would check it a second time.
             await state.take_preview(key)
-            async with aclosing(
-                typed_answer_events(gateway, state, key, pending, lines, call_context)
-            ) as events:
-                async for event in events:
+            if typed.give_up:  # wins over an answer in the same message (§2 K item 6)
+                events = give_up_events(gateway, state, key, pending, call_context)
+            else:
+                events = typed_answer_events(
+                    gateway, state, key, pending, list(typed.lines), call_context
+                )
+            async with aclosing(events) as stream:
+                async for event in stream:
                     yield event
             return
 
@@ -60,22 +65,26 @@ async def text_message_events(
             yield event
 
 
-async def _typed_answer_lines(
+async def _typed_answer(
     gateway: Gateway,
     problem: str,
     conversation: str,
     text: str,
     call_context: AICallContext | None,
-) -> list[str]:
-    """The answer's LaTeX lines, blank ones left out (as for a photo), or [] when the message
-    is not an answer or `typed_answer` fails in any way: the tutor replies instead (§2 G)."""
+) -> TypedAnswer | None:
+    """What `typed_answer` read, when the message gives up (§2 K item 6) or is an answer with
+    lines (blank ones do not count, as for a photo); None when it is neither, or when
+    `typed_answer` fails in any way: the tutor replies instead (§2 G)."""
     values = {"problem": problem, "conversation": conversation, "message": text}
     try:
         with call_scope(call_context):
             result = await gateway.call("typed_answer", values, TypedAnswer)
     except Exception:
         log.warning("typed_answer failed; the tutor replies instead", exc_info=True)
-        return []
-    if not result.is_answer:
-        return []
-    return [line.strip() for line in result.lines if line.strip()]
+        return None
+    if result.give_up:
+        return result
+    lines = [line.strip() for line in result.lines if line.strip()]
+    if result.is_answer and lines:
+        return result.model_copy(update={"lines": lines})
+    return None

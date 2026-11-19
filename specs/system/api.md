@@ -1,4 +1,4 @@
-# API (v1.14)
+# API (v1.22)
 
 Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้างอัตโนมัติที่ `/docs` · frontend generate types จาก `/openapi.json`
 
@@ -90,7 +90,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | GET | `/exam-preps/{id}/scope/changes` | change log (S14) |
 | POST | `/exam-preps/{id}/scope/confirm` | lock เป็น scope version |
 
-**สร้างการเตรียมสอบและใส่ไฟล์ (v1.10 · `POST`/`GET /exam-preps` ตัดสินแล้ว v1.14 · Junior 2026-11-11 · ส่วน materials ยังเป็นข้อเสนอ รอ Junior ตัดสิน):** UC-02 ขั้น 1–5 (S07–S10) · ai-orchestration §2.3.2 ขั้น 1–3 · ยังไม่มี feature spec ของหน้าจอ · ทุก field ต้องมี และไม่มี field อื่น · prep หรือไฟล์ที่ไม่มีหรือเป็นของ tenant อื่น → `404 not_found`
+**สร้างการเตรียมสอบและใส่ไฟล์ (v1.10 · `POST`/`GET /exam-preps` ตัดสินแล้ว v1.14 · Junior 2026-11-11 · `POST /materials`, `/uploaded`, `GET /materials`, `confirm` ตัดสินแล้ว v1.21 · Junior 2026-11-17):** UC-02 ขั้น 1–5 (S07–S10) · ai-orchestration §2.3.2 ขั้น 1–3 · ยังไม่มี feature spec ของหน้าจอ · ทุก field ต้องมี และไม่มี field อื่น · prep หรือไฟล์ที่ไม่มีหรือเป็นของ tenant อื่น → `404 not_found`
 
 **`ExamPrep`** (response ของ `POST /exam-preps` และแต่ละแถวของ `GET /exam-preps`)
 
@@ -129,21 +129,23 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 - **`POST /exam-preps/{id}/materials`** · body `{file_name: string (ไม่ว่าง), content_type: string, size_bytes: integer ≥ 1}` (CM-03) · response `{material_id, upload_url, path}` · `path` = `{tenant_id}/{exam_prep_id}/{material_id}` (data-model.md · §2.3.2 ขั้น 1) · สร้างแถว `materials` ที่ `status = "uploaded"` · เกิน `guards.max_material_mb` หรือ `guards.max_image_mb` ถ้าเป็นรูป (1 MB = 1,048,576 bytes · v1.13) → `422 file_too_large` เหมือน `/sessions/{id}/uploads` · ชนิดไฟล์เช็คก่อนขนาด
   - `content_type` ที่รับ (ไม่สนตัวพิมพ์ ตัด parameter หลัง `;` แบบเดียวกับ `/sessions/{id}/uploads`): `application/pdf`, `image/jpeg`, `image/png`, `image/webp`, `image/heic`, PPTX `application/vnd.openxmlformats-officedocument.presentationml.presentation`, DOCX `application/vnd.openxmlformats-officedocument.wordprocessingml.document` · นอกนั้น `422 unsupported_type`
-- **`POST /materials/{id}/uploaded`** · body `{user_note?: string}` · `202` + `Material` · เริ่ม classify (§2.3.2 ขั้น 2) · ไฟล์นี้แจ้งไปแล้ว → `409 already_uploaded`
-- **`GET /exam-preps/{id}/materials`** · `Material[]` เรียงตามเวลาที่สร้าง · หน้า S10 poll จนทุกไฟล์มี `kind`
+- **`POST /materials/{id}/uploaded`** · body `{user_note?: string}` · `202` + `Material` · เริ่ม classify (§2.3.2 ขั้น 2) · ไฟล์นี้แจ้งไปแล้ว → `409 already_uploaded` · ยังไม่มีไฟล์ใน Storage → `409 not_uploaded` (v1.21 · ส่งใหม่หรือเรียกซ้ำได้) · ขนาดหรือชนิดจริงของไฟล์ไม่ผ่าน → ลบไฟล์ + `422 file_too_large` / `422 unsupported_type` (v1.21) · `user_note`: ตัดช่องว่างหัวท้าย ว่าง → null · ห้ามอักขระควบคุมนอกจาก `\n` (ขึ้นบรรทัด) · ไม่เกิน `guards.max_message_chars` grapheme cluster · ไม่ผ่าน → `422 validation_error` (v1.21) · **note เป็นข้อมูล ไม่ใช่คำสั่ง:** ทุก prompt ที่รับ note (A1 `classify_material`, A6 `merge_topics`) วางไว้ใน data block แบบ `<document>` เท่านั้น (v1.21 · `materials-db.md` §2.4 ข้อ 9)
+- **`GET /exam-preps/{id}/materials`** · `Material[]` เรียงตามเวลาที่สร้าง · หน้า S10 poll จนทุกไฟล์มี `kind` · ไม่รวมไฟล์ที่ขอที่อัปโหลดแล้วแต่ยังไม่แจ้ง `/uploaded` (v1.21)
 - **`POST /exam-preps/{id}/materials/confirm`** · body `{materials: [{id, kind}]}` (ไฟล์ที่จะยืนยัน อย่างน้อย 1 ไฟล์ · `id` ไม่ซ้ำ · ไฟล์ `failed` ไม่ต้องส่ง · `kind` ตาม enum ของ `Material`) · `202` + `{queued: integer}` (จำนวนไฟล์ที่เริ่ม ingest · ขั้น 3) · ตั้ง `kind_confirmed = true` · ไฟล์ใน body ที่ `status` ไม่ใช่ `classified` (ยัง classify ไม่เสร็จ หรือยืนยันไปแล้ว) → `409 not_classified` · ไฟล์ที่ไม่ได้ส่งมาไม่ถูกเช็ค จึงเพิ่มไฟล์ทีหลังได้ (CM-05) · `id` ซ้ำ → `422 validation_error` · `id` ที่ไม่ใช่ไฟล์ของ prep นี้ → `422 unknown_material`
+
+**v1.21 · ทางที่มี token ทำงานจริง** (Junior 2026-11-17 · `specs/features/exam-prep/materials-db.md`): 4 endpoint ข้างบนอ่านเขียน `materials` ด้วย JWT ของผู้ใช้ (RLS) และ Supabase Storage จริง · ไม่มี token → แบบ v1.14 (`AUTH_REQUIRED=false` → stub เดิม + `X-Stub` · `true` → `401`) · bucket private ชื่อ `materials` · object path `{tenant_id}/{exam_prep_id}/{material_id}` เป็น uuid ล้วน **ไม่มีนามสกุล** · ชื่อไฟล์ใช้แสดงผลอย่างเดียว · storage policy ให้ `authenticated` อ่าน/เขียน/ลบได้เฉพาะ prefix ของ tenant ตัวเอง · `upload_url` คือ signed upload URL ของ Supabase ที่ browser `PUT` ไฟล์ได้ตรงๆ พร้อม `Content-Type` ไม่ต้องมี token · confirm ตรวจทุกไฟล์ใน body ก่อนเขียน (มีทั้งสองแบบ → `422 unknown_material` ก่อน `409 not_classified`) · Storage ล่ม → `503 db_unavailable` ตัวเดิม · `/retry` และ `DELETE` ยังเป็น stub
 
 **รอตัดสิน (v1.10 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-02 (PR #105) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
 
-1. **ชนิดไฟล์ที่รับ** (UC-02 คำถามเปิด 1): PDF, รูป, PPTX, DOCX ตาม ai-orchestration §2.3.3 · ไฟล์ที่ไม่รับปฏิเสธตอนขอที่อัปโหลด (ก่อน browser ส่งไฟล์)
+1. ~~**ชนิดไฟล์ที่รับ** (UC-02 คำถามเปิด 1)~~ **ตัดสินแล้ว** (Junior 2026-11-17 · v1.21): ตามข้อเสนอ · ingestion ยังอ่าน WEBP, HEIC, PPTX, DOCX ไม่ได้ (`materials-db.md` §10 ข้อ 1 · รอ Jam) · ข้อเสนอเดิม: PDF, รูป, PPTX, DOCX ตาม ai-orchestration §2.3.3 · ไฟล์ที่ไม่รับปฏิเสธตอนขอที่อัปโหลด (ก่อน browser ส่งไฟล์)
 2. ~~**ขนาดไฟล์สูงสุด** (UC-02 คำถามเปิด 1)~~ **ตัดสินแล้ว** (Jam 2026-11-07 · PR #109): `guards.max_material_mb: 50` ตามเพดานของ Supabase Free · รูปใช้ `guards.max_image_mb` เดิม เพราะเข้า `vision_extract` ทั้งก้อนเหมือนรูปในห้องแชท · ข้อที่ยังเปิด:
    - **ไฟล์สแกนล้มก่อนถึงเพดานนี้มาก (Jam):** A2b มี `max_tokens: 16000` และ P3 วัดได้ 3,199–7,943 token จาก 12–14 หน้า · ประมาณจาก 2 ไฟล์ได้ว่าไฟล์สแกนเกินราว 28–70 หน้าจะได้ JSON ขาด แล้ว `failed` หลังอัปโหลดสำเร็จ · ต้องมีเพดานจำนวนหน้าหรือแบ่งไฟล์ก่อนเปิด ingest จริง
-   - **`size_bytes` คือค่าที่ client แจ้ง (Junior):** เรียก API ตรงด้วย `size_bytes: 1` แล้วส่งไฟล์ใหญ่ได้ · ของจริงต้องตั้ง `file_size_limit` ของ bucket ให้ตรงค่านี้ หรือตรวจขนาดจริงตอน `/uploaded` · `/sessions/{id}/uploads` ก็เหมือนกัน
+   - ~~**`size_bytes` คือค่าที่ client แจ้ง (Junior)**~~ **ตัดสินแล้ว** (Junior 2026-11-17 · v1.21): ทำทั้งสองอย่าง · `file_size_limit` ของ bucket = `max_material_mb` และ `/uploaded` ตรวจขนาดจริงตามชนิด · เดิม: เรียก API ตรงด้วย `size_bytes: 1` แล้วส่งไฟล์ใหญ่ได้ · ของจริงต้องตั้ง `file_size_limit` ของ bucket ให้ตรงค่านี้ หรือตรวจขนาดจริงตอน `/uploaded` · `/sessions/{id}/uploads` ก็เหมือนกัน
    - **หน้าเว็บจะรู้ค่านี้จากไหน:** ยังไม่กำหนด (May · ตอนเขียน spec ของ S09)
 3. ~~**วันสอบ** (UC-02 คำถามเปิด 2)~~ **ตัดสินแล้ว** (Junior 2026-11-11 · v1.14): วันนี้ได้ · ก่อนวันนี้ได้ `422 exam_date_past`
 4. ~~**`stage`, `readiness`, `topics_not_passed` ใน `ExamPrep`**~~ **ตัดสินแล้ว** (Junior 2026-11-11 · v1.14): ใช้ตามข้อเสนอ · `readiness` และ `topics_not_passed` เป็น null ได้จนกว่า backend จะคำนวณ PM-03, PM-04 จริง
-5. **ประเภทไฟล์:** UC-02 ขั้น 4 พูดถึง "แบบฝึกหัด" แต่ check ของ `materials.kind` ไม่มีค่านี้ · ข้อเสนอคือใช้ enum ของ schema (`sheet`, `slides`, `past_exam`, `notes`, `other`) และนับแบบฝึกหัดเป็น `sheet`
-6. **error code ใหม่:** ~~`exam_date_past`~~ (ตัดสินแล้ว v1.14), `unsupported_type` และ `file_too_large` (เหมือนห้องติว), `already_uploaded`, `not_classified`, `unknown_material`
+5. ~~**ประเภทไฟล์**~~ **ตัดสินแล้ว** (Junior 2026-11-17 · v1.21): ใช้ enum ของ schema · เดิม: UC-02 ขั้น 4 พูดถึง "แบบฝึกหัด" แต่ check ของ `materials.kind` ไม่มีค่านี้ · ข้อเสนอคือใช้ enum ของ schema (`sheet`, `slides`, `past_exam`, `notes`, `other`) และนับแบบฝึกหัดเป็น `sheet`
+6. ~~**error code ใหม่**~~ **ตัดสินแล้ว** (Junior 2026-11-17 · v1.21): `exam_date_past` (v1.14), `unsupported_type` และ `file_too_large` (เหมือนห้องติว), `already_uploaded`, `not_classified`, `unknown_material` ตามข้อเสนอ · เพิ่ม `409 not_uploaded`
 
 **หน้าตรวจขอบเขต (v1.6 · ข้อเสนอ รอ Junior ตัดสิน):** รูปร่างตามข้อเสนอของ May ใน `specs/features/scope/scope-review.md` §3 (OQ 5–8) · ตัวอย่าง: `apps/web/tests/fixtures/scope/scope-s12.json`, `sources-t3.json` (id ในไฟล์ของเว็บเป็น `t3` ฯลฯ ของจริงเป็น uuid) · ทุก field ต้องมี และไม่มี field อื่น · prep หรือหัวข้อที่ไม่มี หรือเป็นของ tenant อื่น (RLS มองไม่เห็น) → `404` code `not_found`
 
@@ -192,17 +194,21 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
   - `409 scope_already_confirmed` · `Scope.status` เป็น `"confirmed"` อยู่แล้ว
   - `409 scope_empty` · ไม่มีหัวข้อที่ไม่ได้ถูกตัดออก
 
+**v1.20 · ทางที่มี token ทำงานจริงแล้ว** (Jam ช่วง solo 2026-11-14 · Junior ให้ตัดสินใจไปก่อน · `specs/features/scope/scope-db.md` · Junior ดูย้อนหลัง): `GET /exam-preps/{id}/scope`, `GET /topics/{id}/sources`, `POST /exam-preps/{id}/scope/confirm` อ่านเขียนด้วย JWT ของผู้ใช้ (RLS) ตามข้อเสนอข้อ 1–3, 5 ข้างล่าง · DB ล่ม → `503 db_unavailable` · confirm เขียน 3 ขั้นทีละคำสั่ง (`scope_versions` → `active_scope_version_id` → หัวข้อ `draft` เป็น `confirmed`) · ยืนยันพร้อมกันชน `unique (exam_prep_id, version)` → `409 scope_already_confirmed` · `snapshot` = `{topic_id, name, order, stars, status, origin}` ต่อหัวข้อ · ไม่มี token → stub เดิม · `source_label` ใช้ชื่อไฟล์ไม่มีนามสกุล (ยังไม่มีชื่อย่อ)
+
 **รอตัดสิน (v1.6 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-01 (PR #100) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
 
-1. **รูปร่างของ `Scope` และ `status`** (scope-review OQ 5): ใช้ข้อเสนอของ May ตามที่เขียนไว้ · `status` ดูจาก `active_scope_version_id` เพราะ scope ที่ยืนยันแล้วคือ version ที่ prep ชี้อยู่ และไม่มีการแก้หลังยืนยัน · ส่งหัวข้อที่ตัดออกเป็น `stars: 0` เพราะ OQ 3 ต้องแสดงหัวข้อที่ถูกตัด · backend ต้องเปลี่ยน `status = 'excluded'` กับ `importance = 0` ไปด้วยกันเสมอ เพราะ 0 ดาว = ตัดออก (§2.3.5) · หัวข้อที่เพิ่มด้วย `add_topic` ต้องได้ดาวตอนเพิ่ม (ยังไม่ได้เขียนใน §2.3.6) ไม่งั้น `GET /scope` จะตอบ `scope_not_ready`
-2. **กฎของ `source_label` และ `label`** (OQ 6): ข้อเสนอคือ `{ชื่อไฟล์ไม่มีนามสกุล} น.{from}–{to}` (หน้าเดียวใช้ `น.{n}`) หลายช่วงคั่นด้วย `, ` · `label` = `{ชื่อไฟล์ไม่มีนามสกุล} ข้อ {q_no}` · ชื่อสั้นอย่าง "ch3" ใน fixture ของ May ต้องมีที่เก็บชื่อย่อ (ยังไม่มีใน schema) · หัวข้อ `origin = 'user'` ไม่มีช่วงหน้า ข้อเสนอคือส่ง `""` และหน้าเว็บไม่แสดงส่วนที่มา (ต้องถาม May ด้วย)
-3. **ข้อความต้นฉบับ** (OQ 6): `excerpts.text` เป็นข้อความทั้งหน้าจาก `material_pages` · ถ้ายาวเกินไปค่อยตัดเฉพาะส่วนที่เกี่ยวข้องภายหลัง
+1. **รูปร่างของ `Scope` และ `status`** (ใช้แล้ว v1.20 · รอ Junior ยืนยัน) (scope-review OQ 5): ใช้ข้อเสนอของ May ตามที่เขียนไว้ · `status` ดูจาก `active_scope_version_id` เพราะ scope ที่ยืนยันแล้วคือ version ที่ prep ชี้อยู่ และไม่มีการแก้หลังยืนยัน · ส่งหัวข้อที่ตัดออกเป็น `stars: 0` เพราะ OQ 3 ต้องแสดงหัวข้อที่ถูกตัด · backend ต้องเปลี่ยน `status = 'excluded'` กับ `importance = 0` ไปด้วยกันเสมอ เพราะ 0 ดาว = ตัดออก (§2.3.5) · หัวข้อที่เพิ่มด้วย `add_topic` ต้องได้ดาวตอนเพิ่ม (ยังไม่ได้เขียนใน §2.3.6) ไม่งั้น `GET /scope` จะตอบ `scope_not_ready`
+2. **กฎของ `source_label` และ `label`** (ใช้แล้ว v1.20 · รอ Junior ยืนยัน) (OQ 6): ข้อเสนอคือ `{ชื่อไฟล์ไม่มีนามสกุล} น.{from}–{to}` (หน้าเดียวใช้ `น.{n}`) หลายช่วงคั่นด้วย `, ` · `label` = `{ชื่อไฟล์ไม่มีนามสกุล} ข้อ {q_no}` · ชื่อสั้นอย่าง "ch3" ใน fixture ของ May ต้องมีที่เก็บชื่อย่อ (ยังไม่มีใน schema) · หัวข้อ `origin = 'user'` ไม่มีช่วงหน้า ข้อเสนอคือส่ง `""` และหน้าเว็บไม่แสดงส่วนที่มา (ต้องถาม May ด้วย)
+3. **ข้อความต้นฉบับ** (ใช้แล้ว v1.20 · รอ Junior ยืนยัน) (OQ 6): `excerpts.text` เป็นข้อความทั้งหน้าจาก `material_pages` · ถ้ายาวเกินไปค่อยตัดเฉพาะส่วนที่เกี่ยวข้องภายหลัง
 4. **`text` ของข้อสอบใช้ `$…$`** (OQ 7): Jam ตกลง (เป็นเจ้าของ prompt) · `split_past_exam/v1` รับสมการเป็น LaTeX ใน `$` อยู่แล้ว
-5. **error code ของ scope:** `scope_not_ready` (`GET /scope` และ confirm) · `scope_already_confirmed`, `scope_empty` (confirm อย่างเดียว) · 409 ทั้งหมด
+5. **error code ของ scope:** (ใช้แล้ว v1.20 · รอ Junior ยืนยัน) `scope_not_ready` (`GET /scope` และ confirm) · `scope_already_confirmed`, `scope_empty` (confirm อย่างเดียว) · 409 ทั้งหมด
 
 **ความคืบหน้า แชทแก้ขอบเขต และ change log (v1.11 · ข้อเสนอ รอ Junior ตัดสิน):** UC-02 ขั้น 6–12 (S11, S13, S14) · ai-orchestration §2.3.2 ขั้น 4–6, §2.3.4, §2.3.6 · ยังไม่มี feature spec ของหน้าจอ · ทุก field ต้องมี และไม่มี field อื่น · prep หรือไฟล์ที่ไม่มีหรือเป็นของ tenant อื่น → `404 not_found`
 
 **`Ingestion`** (response ของ `GET /exam-preps/{id}/ingestion` · CM-07) · หน้า S11 poll จน `scope_ready = true` แล้วไป S12 เอง · ยังไม่มีไฟล์ที่ยืนยัน ก็ตอบ `200` และ `files` เป็น `[]`
+
+**อ่านจาก DB (v1.16 · Jam ช่วง solo 2026-11-13 · `specs/features/scope/ingestion.md` §2.6 · Junior ดูย้อนหลัง):** มี token → อ่านด้วย JWT ของผู้ใช้ (RLS) · prep ไม่มีหรือเป็นของ tenant อื่น → `404 not_found` · DB ล่ม → `503 db_unavailable` (แบบ v1.14) · ไม่มี token (`AUTH_REQUIRED=false`) → stub เดิม (`X-Stub`) · `files[].detail`: กำลังทำ → "กำลังอ่าน", "กำลังแยกรายข้อ", "กำลังเตรียมเนื้อหา" · เสร็จ → "{n} หน้า" (ข้อสอบเก่าต่อด้วย " · {m} ข้อ") · `files[].error`: "เปิดไฟล์นี้ไม่ได้" หรือ "อ่านไฟล์นี้ไม่สำเร็จ ลองใหม่ได้" (รายละเอียดอยู่ใน log ไม่ส่งให้ผู้ใช้) · `steps[0]` ("อ่านสิ่งที่คุณเขียนกำกับไว้") `done` เมื่อทุกไฟล์ `done`
 
 | Field | Type | ที่มา |
 |---|---|---|
@@ -255,7 +261,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 **รอตัดสิน (v1.11 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-04 (PR #106) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
 
-1. **`ingestion_jobs` ของขั้นรวม:** `material_id` ห้าม null แต่หัวข้อกับดาวทำต่อ prep ไม่ใช่ต่อไฟล์ และไม่มี stage ของ "อ่านสิ่งที่เขียนกำกับ" · ข้อเสนอคือ migration ให้ `material_id` เป็น null ได้ + เพิ่ม `exam_prep_id`
+1. **`ingestion_jobs` ของขั้นรวม:** `material_id` ห้าม null แต่หัวข้อกับดาวทำต่อ prep ไม่ใช่ต่อไฟล์ และไม่มี stage ของ "อ่านสิ่งที่เขียนกำกับ" · ข้อเสนอคือ migration ให้ `material_id` เป็น null ได้ + เพิ่ม `exam_prep_id` · **13 พ.ย.: ทำตามข้อเสนอแล้วใน `0005_ingestion_jobs_prep.sql` (Jam ช่วง solo เพื่อ demo 23 พ.ย. · ขึ้นแค่ Supabase ในเครื่อง) · รอ Junior ดูแล้ว `db push`** · "อ่านสิ่งที่เขียนกำกับ" ไม่มีแถวของตัวเอง: `done` เมื่อทุกไฟล์ `done`
 2. **ไฟล์ `failed` ที่ผู้ใช้ยังไม่ตัดสิน:** ข้อเสนอคือขั้นรวมหัวข้อ (A6) รอจนทุกไฟล์เสร็จหรือถูกลบ เพื่อไม่ต้องเรียก main tier ซ้ำ
 3. **ลบไฟล์ที่ `ready` แล้ว:** หัวข้อที่สร้างจากไฟล์นั้นต้องเป็นอย่างไร (CM-10) · ยังไม่มีคำตอบ
 4. **ประวัติแชท S13:** ฝั่ง prompt ตัดสินแล้ว (Jam 2026-11-07 · PR #109): A8 ได้ `session.context_recent_turns` ข้อความล่าสุดจาก server (ai-orchestration §2.3.6) · **ที่เก็บยังรอ Junior:** `messages.session_id` ห้าม null · body `{text}` ใช้ได้ทุกทาง · ยังไม่มี endpoint อ่านประวัติ รีเฟรชแล้วเริ่มคุยใหม่
@@ -268,7 +274,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 | Method | Path | ทำอะไร |
 |---|---|---|
-| GET | `/exam-preps/{id}/sessions/active` | session ที่ยังเปิดอยู่ของการเตรียมสอบนี้ `{session_id}` · 404 `no_active_session` ถ้าไม่มี (TM-13 · ข้อเสนอ ดูด้านล่าง) |
+| GET | `/exam-preps/{id}/sessions/active` | session ที่ยังเปิดอยู่ของการเตรียมสอบนี้ `{session_id}` · 404 `no_active_session` ถ้าไม่มี (TM-13 · ตัดสินแล้ว v1.15) |
 | POST | `/exam-preps/{id}/sessions` | **SSE:** สร้าง session → `session` → `progress_card` → `token` (ข้อความเปิด) → `problem` → `done` |
 | GET | `/sessions/{id}` | ข้อมูลห้อง `Room` (หัวห้อง + `limits` + ข้อความ) · ใช้ตอนเปิดห้องและกลับมาต่อ (TM-13) |
 | POST | `/sessions/{id}/uploads` | signed URL สำหรับรูปหรือเสียง |
@@ -294,13 +300,28 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | `messages` | `Message[]` | เหมือน `GET /sessions/{id}/messages` |
 
 **`Message`:** `{id, role: "user" | "tutor" | "buddy" | "card" | "system", content: string | null, card: object | null, input_mode: "text" | "voice" | "image" | null, attachment_path: string | null, attachment_name: string | null, created_at}` · `attachment_path` เป็น path ใน Storage ที่ตั้งชื่อด้วย uuid ส่วน `attachment_name` คือชื่อไฟล์เดิมที่ผู้ใช้เห็น เช่น "วิธีทำ.jpg" (v1.3 · ต้องเพิ่ม column ใน `messages`) · ไม่ส่ง `extracted_text` และ `intent` (ใช้ภายใน backend) · ตัวอย่างรูปร่าง: `apps/web/tests/fixtures/room/session-s15.json` (ยังไม่มี `session_id` และ `card`)
+  - **v1.22 (May 2026-11-19 · `specs/features/tutor/problem-card-history.md` §6 · ไม่เปลี่ยน schema):** `role = "card"` มี `card` 2 แบบ: การ์ดความคืบหน้า หรือ `{"problem": ProblemEvent}` (payload เดียวกับ event `problem` ทุก field · `content = null`) · ห้องในทางที่มี token บันทึกการ์ดโจทย์ 1 แถว**ทุกครั้ง**ที่ส่ง event `problem` (เปิดห้อง · ข้อต่อไปหรือโจทย์เดิมซ้ำหลังตรวจคำตอบพิมพ์ รูป หรือยืนยันลายมือ) เรียงตามที่ส่งใน SSE · id ของแถวนี้**ไม่อยู่**ใน `done.message_ids` (ยังเป็นข้อความ tutor และ buddy เท่านั้น) · บันทึกไม่สำเร็จ → log แล้ว stream ต่อ · ห้องเดโม่ที่ไม่มี token ไม่บันทึก
 
 **ระบบช้า (degrade ของ tutor, ai-orchestration.md §2.10):** ส่งข้อความ template "ระบบช้า ลองส่งอีกทีนะ" เป็น `token` ที่ `speaker: "tutor"` แล้วตาม `done` และบันทึกเป็นข้อความ tutor ปกติใน `messages` · ส่ง `error` เฉพาะเมื่อไม่มีอะไรให้แสดงเลย
+
+**บันทึกลง DB (v1.15 · Junior 2026-11-11 · `specs/features/tutor/room-sessions-db.md`)** · ใช้กับ `GET /exam-preps/{id}/sessions/active`, `POST /exam-preps/{id}/sessions`, `GET /sessions/{id}`, `GET /sessions/{id}/messages` และ `POST /sessions/{id}/messages` แบบข้อความ
+
+- **3 กรณีของ token** เหมือน `/exam-preps` (v1.14): มี token → DB จริง ไม่มี `X-Stub` · ไม่มี token + `AUTH_REQUIRED=true` → `401 missing_token` · ไม่มี token + `AUTH_REQUIRED=false` (เครื่อง dev) → stub เดิมพร้อม `X-Stub: true` ไม่แตะ DB · ทุกตัวอ่านเขียนผ่าน JWT ของผู้ใช้ (RLS) · `tenant_id`, `user_id` มาจาก token เสมอ
+- **prep หรือ session ที่ไม่มี หรือเป็นของ tenant อื่น** → `404 not_found` · DB ติดต่อไม่ได้ → `503 db_unavailable` (v1.14) · ทั้งสองตอบ**ก่อน**เริ่ม SSE
+- **`GET /exam-preps/{id}/sessions/active`:** session ของ prep นี้ที่ `ended_at is null` ล่าสุดตาม `started_at` · ไม่มี → `404 no_active_session`
+- **`POST /exam-preps/{id}/sessions`:** สร้างแถว `tutor_sessions` ใหม่ทุกครั้ง (session เปิดเก่าไม่ถูกปิด · `active` เลือกอันล่าสุด) · `scope_version_id` = `exam_preps.active_scope_version_id` ซึ่งเป็น null ได้ (data-model.md · session ที่เริ่มก่อนยืนยัน scope) · SSE: `session` (id จริง) → `token` (คำทักจาก template ใน `config/messages.yaml` → `room_greeting` ไม่เรียก AI · คำทักจาก AI ด้วย prompt `open_session` v2 เป็น follow-up ของ Jam) → `done` · **ไม่มี `progress_card`** จนกว่า prep จะมี scope ที่ยืนยันแล้ว (`active_scope_version_id` ไม่เป็น null) เพราะตัวเลขของ card ต้องมาจาก mastery จริง ไม่ใช่ fixture (Junior 2026-11-11) · หน้าเว็บต้องรองรับ session ที่ไม่มี card · **ไม่มี `problem`** จนกว่าจะมี planner และตาราง `problems` จริง · คำทักบันทึกเป็นข้อความ `tutor` และ id อยู่ใน `done.message_ids`
+  - **v1.17 (Jam ช่วง solo 2026-11-13 · `specs/features/tutor/room-problems-db.md` · Junior ดูย้อนหลัง):** prep ที่**มีหัวข้อแล้ว** (จาก ingestion · ก่อนหรือหลังยืนยัน scope ก็ได้) SSE เป็น `session` → `progress_card` (จาก `topics` + `topic_progress` ของผู้ใช้ · ยังไม่มีแถว = `not_started`) → `token` (`open_session` v2 บอกหัวข้อที่เลือกและเหตุผล · ล้มก่อน token แรก → คำทัก template เดิม) → `problem` (แถวใหม่ใน `problems` ที่ SymPy ยืนยันเฉลยแล้ว หรือโจทย์ค้างเดิมที่ยังไม่จบ (`problems.ended_at` ว่าง · v1.18 · เดิม "ยังไม่มี attempt") · ไม่มีเฉลยใน event) → `done` · สร้างโจทย์ไม่ผ่าน → ไม่มี `problem` และมี `token` ข้อความ `config/messages.yaml` → `room.no_problem` · prep ที่ยังไม่มีหัวข้อ → แบบเดิมข้างบน · ไม่มี event ใหม่
+- **`GET /sessions/{id}`:** `Room` จาก DB · `prep_name` = `exam_preps.title` · `days_left` ตามกฎ v1.14 · `user_name` = `profiles.nickname` ถ้าเป็น null หรือว่างใช้ "คุณ" · `tutor_name` = `tutor_profiles.params.name` ของ version ล่าสุด ถ้าไม่มี profile ใช้ชื่อของ preset tutor ตัวแรกของ `GET /personas/presets` · `buddy_name` = `buddy_profiles.params.name` ล่าสุดเมื่อ `enabled = true` ไม่งั้น null · `messages` เหมือน `GET /sessions/{id}/messages` · session ที่จบแล้วยังเปิดดูได้ (`200`)
+- **`GET /sessions/{id}/messages`:** แถว `messages` ของ session เรียงตาม `created_at` เก่าไปใหม่ · ยังไม่แบ่งหน้า
+- **`POST /sessions/{id}/messages` (`text` อย่างเดียว):** session จบแล้ว → `409 session_already_ended` ก่อน SSE · บันทึกข้อความ `user` (`content` = text, `input_mode: "text"`) **ก่อน** เรียก AI · หลัง stream ของ tutor จบ บันทึกข้อความ `tutor` ทั้งก้อน (รวมข้อความ degrade "ระบบช้า ลองส่งอีกทีนะ") แล้วส่ง id ใน `done.message_ids` · AI ล้มกลาง stream (event `error`) → ไม่บันทึกข้อความ tutor ครึ่งเดียว ข้อความ user ยังอยู่ · บันทึกข้อความ tutor ไม่สำเร็จหลัง stream → `done` ไม่มี id นั้น และ log พร้อม `request_id` (ข้อความที่เห็นแล้วจะหายตอนโหลดใหม่)
+  - **v1.18 (Jam ช่วง solo 2026-11-14 · `specs/features/tutor/room-answers-db.md` · Junior ดูย้อนหลัง):** session มี**โจทย์ค้าง** (`problems.ended_at` ว่าง ของ prep ของ session) → ข้อความไปทางตรวจคำตอบของเดโม่ (`demo-room.md` §2 G–K): `typed_answer` ดูว่าเป็นคำตอบหรือขอยอมแพ้ (**ทุก env** ในทางนี้) · คำตอบ → SSE `verdict` → `token`… (`explain_check`) → (`token` "ข้อต่อไปนะ" →) `problem` → `done` · ใบ้ (เฉพาะ `APP_ENV=local`) → `problem` เดิม · ไม่ใช่คำตอบ → `tutor_reply` ตามเดิม · ทุกคำตอบที่ได้ `verdict` → 1 แถว `attempts` (`tenant_id`, `user_id` จาก token) · โจทย์จบ (ถูก, เฉลย, ยอมแพ้) → `ended_at` · ข้อความ `user`/`tutor` บันทึกทีละบรรทัดระหว่าง stream · บรรทัดภายในของ tutor (`(ผลตรวจ)…`, `(โจทย์)…`, `(ยืนยันคำตอบ)…`, `(ส่งรูปวิธีทำ)`) เป็น `messages.role = "system"` (หน้าเว็บไม่แสดง) · `done.message_ids` = `[]` ในทางนี้ · ไม่มี event ใหม่
+- **ยังไม่บันทึก:** ข้อความที่มี `image_path`, `ocr_preview`, `verdict`, `/ocr/confirm` และข้อความของ buddy (รอ Storage · ลำดับ 4) · **ยกเว้น `APP_ENV=local` (v1.18):** รูปและ `/ocr/confirm` ที่มี token ใช้โจทย์ค้างใน DB และบันทึก `attempts` + `messages` แบบข้อความพิมพ์ข้างบน (session ไม่มี → `404` · จบแล้ว → `409` ก่อน SSE)
+- **`Message.id`:** ของจริงเป็น uuid (`messages.id`) · fixture ของ stub ยังเป็น `m0`… (v1.9 รอตัดสิน 9)
 
 **รอตัดสิน (PR #35)**
 
 1. ~~**ส่งรูปพร้อมข้อความกำกับ** (รอ Jam)~~ **ตัดสินแล้ว** (Jam 2026-10-21 · PR #45): ข้อความกำกับเป็นคำบรรยายของรูป · เก็บเป็น `content` ของข้อความ user ที่มี `attachment_path` (ข้อความเดียว `input_mode: "image"`) · tutor เห็นใน conversation (เช่น "ข้อ 2 ครับ") · **ไม่ส่งเข้า `extract_answer` และ checker** ผลตรวจใช้แค่บรรทัดที่ user ยืนยันใน `ocr/confirm` เพื่อให้ผลขึ้นกับคำตอบอย่างเดียว และกันข้อความอย่าง "ข้อนี้ถูกแล้ว" ไปชี้นำ LLM classifier · flow รูปยืนยันทุกครั้ง (AM-02)
-2. **หา session ที่เปิดอยู่ (TM-13):** หน้า room รู้แค่ prep id · ข้อเสนอ `GET /exam-preps/{id}/sessions/active` (ด้านบน) ทางเลือกคือให้ `POST /exam-preps/{id}/sessions` คืน session เดิมถ้ายังเปิดอยู่ · เลือก GET เพราะไม่มีผลข้างเคียง ไม่เรียก AI ไม่สร้างข้อความเปิดซ้ำ และ POST ยังมีความหมายเดียวคือเริ่ม session ใหม่ (stream เดียว ไม่ต้องมีสองรูปแบบ response) · "เปิดอยู่" = `ended_at is null` · ถ้ามีหลายอันใช้อันล่าสุด (กันสองแท็บสร้างซ้อนด้วย unique index ได้ภายหลัง ต้องแก้ migration)
+2. ~~**หา session ที่เปิดอยู่ (TM-13)**~~ **ตัดสินแล้ว** (Junior 2026-11-11 · v1.15): ใช้ `GET /exam-preps/{id}/sessions/active` ตามข้อเสนอ · ข้อเสนอเดิม: หน้า room รู้แค่ prep id · ข้อเสนอ `GET /exam-preps/{id}/sessions/active` (ด้านบน) ทางเลือกคือให้ `POST /exam-preps/{id}/sessions` คืน session เดิมถ้ายังเปิดอยู่ · เลือก GET เพราะไม่มีผลข้างเคียง ไม่เรียก AI ไม่สร้างข้อความเปิดซ้ำ และ POST ยังมีความหมายเดียวคือเริ่ม session ใหม่ (stream เดียว ไม่ต้องมีสองรูปแบบ response) · "เปิดอยู่" = `ended_at is null` · ถ้ามีหลายอันใช้อันล่าสุด (กันสองแท็บสร้างซ้อนด้วย unique index ได้ภายหลัง ต้องแก้ migration)
 3. **รายการ `error.code` ของห้องติว** (Junior · ยังเปิด): ตอนนี้มีแค่รูปแบบ `{code, message}`
 4. **หัวข้อ 0 ดาวใน progress card** (รอ May · ถามใน PR #63): ไม่แสดง → `stars` 1–3 · แสดง → `stars` 0–3 · `topics.importance` ใน DB รับ 0–3 และ readiness ไม่นับ 0 ดาวอยู่แล้ว (`learning.yaml` → `readiness.exclude_zero_star`)
 
@@ -348,6 +369,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 - สิ่งที่ backend ทำ: ตั้ง `tutor_sessions.ended_at = now()` และ `end_reason = 'user'` **ก่อน**เรียก AI ด้วยคำสั่งเดียวที่มีเงื่อนไข `ended_at is null` (request ที่มาพร้อมกันได้ 409 แทนการเรียก `session_summary` ซ้ำ) · คำนวณการเปลี่ยนแปลงของ mastery ตาม §2.2.9 (ยังไม่มีใน stub)
 - error: `409 session_already_ended` (`ended_at` ไม่เป็น null) · ตอบก่อนเริ่ม SSE
 - จบแบบอื่น (`time_budget`, `plan_done`, `idle`) เป็นของ backend เอง ไม่ผ่าน endpoint นี้
+- **v1.19 · ทางที่มี token ทำงานจริงแล้ว** (Jam ช่วง solo 2026-11-14 · `specs/features/tutor/session-end-db.md` · Junior ดูย้อนหลัง): ทำตามข้อเสนอรอตัดสินข้อ 1, 2, 6, 7 ข้างล่าง · session ไม่มีหรือของคนอื่น → `404` · จบแล้ว หรือ request อื่นปิดไปก่อน (update ที่มีเงื่อนไข `ended_at is null` ไม่ได้แก้แถว) → `409 session_already_ended` · DB ล่ม → `503 db_unavailable` · ทั้งหมดก่อน SSE · code นับคำตอบของ session (`attempts` ของผู้ใช้ตั้งแต่ `started_at` ของหัวข้อใน prep) ต่อหัวข้อพร้อมระดับตอนนี้จาก `topic_progress` → `session_summary/v1` (1–2 บรรทัด) · AI ล้ม → template ของ `config/messages.yaml` → `room.session_summary_*` · บันทึก `tutor_sessions.summary` และข้อความ `tutor` ใน `messages` ก่อน `done` (id ใน `done.message_ids`) · ไม่มี token → stub เดิม · ยังไม่ได้คำนวณ mastery ที่เปลี่ยนใน session
 
 **`GET /sessions/{id}/messages`** · ประวัติแชท (TM-13)
 
@@ -366,15 +388,15 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 
 **รอตัดสิน (v1.9 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-02 (PR #104) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
 
-1. **`/end` ตอบเป็น SSE:** เพราะ `session_end` เป็น event และสรุปมาจาก AI call · ทางเลือกคือตอบ JSON `{summary_lines}` ธรรมดา
-2. **`/end` ไม่นับใน rate limit** (`gateway-guards.md` §2.1 นับเฉพาะข้อความที่ผู้ใช้ส่ง) · ถึงจะเรียก AI แต่จบ session ได้ครั้งเดียว (ครั้งที่สองได้ 409)
-3. **`GET /sessions/{id}/messages` ยังไม่แบ่งหน้า** · ต้องมีก่อน Beta ถ้า session ยาว
+1. **`/end` ตอบเป็น SSE:** (ใช้แล้ว v1.19 · รอ Junior ยืนยัน) เพราะ `session_end` เป็น event และสรุปมาจาก AI call · ทางเลือกคือตอบ JSON `{summary_lines}` ธรรมดา
+2. **`/end` ไม่นับใน rate limit** (ใช้แล้ว v1.19 · รอ Junior ยืนยัน) (`gateway-guards.md` §2.1 นับเฉพาะข้อความที่ผู้ใช้ส่ง) · ถึงจะเรียก AI แต่จบ session ได้ครั้งเดียว (ครั้งที่สองได้ 409)
+3. ~~**`GET /sessions/{id}/messages` ยังไม่แบ่งหน้า**~~ **ตัดสินแล้ว** (Junior 2026-11-11 · v1.15): ยังไม่แบ่งหน้า · ต้องมีก่อน Beta ถ้า session ยาว
 4. **`GET /exam-preps/{id}/progress` ใช้รูปร่างเดียวกับ event** · หน้าเว็บใช้ component เดียวกันทั้งสองที่
 5. **error code ใหม่:** `session_already_ended`, `scope_not_confirmed` (มีในตัวอย่างของ Conventions อยู่แล้ว), `tts_unavailable`
-6. **จำนวนบรรทัดของสรุป** (self-review #104): ai-orchestration §2.2.9 และ §3.3 เขียนว่า "สรุป 2 บรรทัด" · ตาราง SSE เดิมเขียน `[..2]` · ข้อเสนอคือรับ 1–2 บรรทัด (session สั้นอาจมีเรื่องเดียว) · ถ้าต้อง 2 บรรทัดพอดี ให้แก้ `SessionEndEvent`
-7. **เก็บสรุปเป็นข้อความในแชทด้วย** (self-review #104): PM-05 ให้สรุป "ในรูปแบบ chat message" · ถ้าเก็บแค่ `tutor_sessions.summary` สรุปจะหายจาก `GET /sessions/{id}/messages` หลังโหลดหน้าใหม่ และไม่มี id ให้ `/tts` · ข้อเสนอคือเพิ่มแถวใน `messages` (role `tutor`) และส่ง id ใน `done.message_ids`
+6. **จำนวนบรรทัดของสรุป** (self-review #104 · ใช้ 1–2 บรรทัดแล้ว v1.19 · รอ Junior ยืนยัน): ai-orchestration §2.2.9 และ §3.3 เขียนว่า "สรุป 2 บรรทัด" · ตาราง SSE เดิมเขียน `[..2]` · ข้อเสนอคือรับ 1–2 บรรทัด (session สั้นอาจมีเรื่องเดียว) · ถ้าต้อง 2 บรรทัดพอดี ให้แก้ `SessionEndEvent`
+7. **เก็บสรุปเป็นข้อความในแชทด้วย** (self-review #104 · ใช้แล้ว v1.19 · รอ Junior ยืนยัน): PM-05 ให้สรุป "ในรูปแบบ chat message" · ถ้าเก็บแค่ `tutor_sessions.summary` สรุปจะหายจาก `GET /sessions/{id}/messages` หลังโหลดหน้าใหม่ และไม่มี id ให้ `/tts` · ข้อเสนอคือเพิ่มแถวใน `messages` (role `tutor`) และส่ง id ใน `done.message_ids`
 8. **TTS อ่านข้อความของ buddy ด้วยไหม:** TM-09 พูดถึงข้อความของ tutor เท่านั้น · ข้อเสนอคือตาม TM-09 (เพิ่ม buddy ต้องแก้ requirement)
-9. **id ของข้อความและหัวข้อใน fixture ของห้องติวไม่ใช่ uuid** (`m0`, `t1` · ของเดิมตั้งแต่ PR #38): `/messages/{id}/tts` และ `/topics/{id}/sources` รับ uuid · ของจริงเป็น uuid ทั้งหมด (`messages.id`, `topics.id`) · ข้อเสนอคือเปลี่ยน `Message.id` และ `ProgressTopic.id` เป็น uuid พร้อม fixture ใน PR ที่ต่อห้องติวกับ DB
+9. **(ข้อความ ตัดสินแล้ว v1.15: ของจริงเป็น uuid · fixture ยังเป็น `m0` · หัวข้อยังเปิด)** **id ของข้อความและหัวข้อใน fixture ของห้องติวไม่ใช่ uuid** (`m0`, `t1` · ของเดิมตั้งแต่ PR #38): `/messages/{id}/tts` และ `/topics/{id}/sources` รับ uuid · ของจริงเป็น uuid ทั้งหมด (`messages.id`, `topics.id`) · ข้อเสนอคือเปลี่ยน `Message.id` และ `ProgressTopic.id` เป็น uuid พร้อม fixture ใน PR ที่ต่อห้องติวกับ DB
 
 ### บัญชี
 

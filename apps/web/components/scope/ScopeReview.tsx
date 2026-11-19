@@ -2,46 +2,53 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import type { components } from "@/lib/api";
 import { MessageText } from "@/components/chat/MessageText";
-import { apiUrl } from "@/lib/httpTransport";
+import { apiFetch } from "@/lib/auth";
 import { scopeStrings as t } from "./strings";
 
-// Spec: specs/features/scope/scope-review.md · wireframe S12, S38.
+// Spec: specs/features/scope/scope-review.md · wireframe S12, S38 · on the API of scope-db.md (§2 "ต่อ API จริง").
 // Stars, order and reasons come from the API; this page only shows them (apps/web/CLAUDE.md).
 
-/**
- * Hand-written until the API has these schemas (spec OQ 5–8); then use the generated types.
- * Question `text` uses `$…$` like room messages (OQ 7).
- */
-type Question = { id: string; label: string; text: string; map_note: string | null };
-type Topic = {
-  id: string;
-  order: number;
-  name: string;
-  stars: number | null;
-  reason: string;
-  source_label: string;
-  origin: "doc" | "user";
-};
-type Scope = {
-  prep_name: string;
-  days_left: number;
-  status: "draft" | "confirmed";
-  topics: Topic[];
-  unmapped_questions: Question[];
-};
-type Sources = { excerpts: { material_name: string; page: number; text: string }[]; questions: Question[] };
+/** Question `text` uses `$…$` like room messages (OQ 7). */
+type Question = components["schemas"]["PastQuestion"];
+type Scope = components["schemas"]["Scope"];
+type Sources = components["schemas"]["TopicSources"];
 
-type Load = { kind: "loading" } | { kind: "ready"; scope: Scope } | { kind: "notFound" } | { kind: "failed" };
+type Load =
+  | { kind: "loading" }
+  | { kind: "ready"; scope: Scope }
+  | { kind: "notFound" }
+  | { kind: "notReady" }
+  | { kind: "failed" };
 type SourcesState = { kind: "loading" } | { kind: "ready"; sources: Sources } | { kind: "failed" };
+type ConfirmError = null | "failed" | "empty";
 
 const MAX_STARS = 3;
 
-async function getJSON<T>(path: string): Promise<T> {
-  const res = await fetch(apiUrl(path));
-  if (!res.ok) throw Object.assign(new Error(`API ${res.status}`), { status: res.status });
+/** A refused request: its status and the API's error code (api.md Conventions). */
+class ApiError extends Error {
+  constructor(
+    readonly status: number,
+    readonly code: string | null,
+  ) {
+    super(`API ${status}${code ? ` ${code}` : ""}`);
+  }
+}
+
+async function errorOf(res: Response): Promise<ApiError> {
+  const body = await res.json().catch(() => null);
+  return new ApiError(res.status, body?.error?.code ?? null);
+}
+
+async function getJSON<T>(path: string, signal?: AbortSignal): Promise<T> {
+  const res = await apiFetch(path, { signal });
+  if (!res.ok) throw await errorOf(res);
   return res.json();
 }
+
+/** 401: `apiFetch` is already on its way to the login page, so the page shows no error (AC-23). */
+const isAuthRedirect = (e: unknown) => e instanceof ApiError && e.status === 401;
 
 function Stars({ stars }: { stars: number | null }) {
   const known = typeof stars === "number" && stars >= 0 && stars <= MAX_STARS;
@@ -123,25 +130,52 @@ export function ScopeReview({ prepId, navigate }: { prepId: string; navigate: (h
   const [open, setOpen] = useState<Set<string>>(new Set());
   const [sources, setSources] = useState<Record<string, SourcesState>>({});
   const [confirming, setConfirming] = useState(false);
-  const [confirmFailed, setConfirmFailed] = useState(false);
+  const [confirmError, setConfirmError] = useState<ConfirmError>(null);
   const room = `/preps/${prepId}/room`;
 
+  // Runs again each time Next shows this page again (it hides pages with <Activity>), so a scope
+  // confirmed meanwhile is read-only (AC-24); leaving the page aborts the request.
   useEffect(() => {
-    let live = true;
-    getJSON<Scope>(`/exam-preps/${prepId}/scope`).then(
-      (scope) => live && setLoad({ kind: "ready", scope }),
-      (e) => live && setLoad({ kind: e?.status === 404 ? "notFound" : "failed" }),
+    const controller = new AbortController();
+    getJSON<Scope>(`/exam-preps/${prepId}/scope`, controller.signal).then(
+      (scope) => {
+        if (controller.signal.aborted) return;
+        setLoad({ kind: "ready", scope });
+        // A message of an earlier visit does not belong to this scope (self-review PR #141).
+        setConfirmError(null);
+      },
+      (e) => {
+        if (controller.signal.aborted || isAuthRedirect(e)) return;
+        if (e instanceof ApiError && e.status === 404) setLoad({ kind: "notFound" });
+        else if (e instanceof ApiError && e.code === "scope_not_ready") setLoad({ kind: "notReady" });
+        // A failed refresh of a page shown again keeps the scope on screen (self-review PR #141).
+        else setLoad((prev) => (prev.kind === "ready" ? prev : { kind: "failed" }));
+      },
     );
-    return () => {
-      live = false;
-    };
+    return () => controller.abort();
   }, [prepId, attempt]);
+
+  function reload() {
+    setLoad({ kind: "loading" });
+    setAttempt((n) => n + 1);
+  }
 
   function fetchSources(id: string) {
     setSources((prev) => ({ ...prev, [id]: { kind: "loading" } }));
     getJSON<Sources>(`/topics/${id}/sources`).then(
       (s) => setSources((prev) => ({ ...prev, [id]: { kind: "ready", sources: s } })),
-      () => setSources((prev) => ({ ...prev, [id]: { kind: "failed" } })),
+      (e) => {
+        if (isAuthRedirect(e)) {
+          // Not "failed" (AC-23), and not left "loading": reopening the topic asks again.
+          setSources((prev) => {
+            const next = { ...prev };
+            delete next[id];
+            return next;
+          });
+          return;
+        }
+        setSources((prev) => ({ ...prev, [id]: { kind: "failed" } }));
+      },
     );
   }
 
@@ -160,13 +194,22 @@ export function ScopeReview({ prepId, navigate }: { prepId: string; navigate: (h
   async function confirm() {
     if (confirming) return;
     setConfirming(true);
-    setConfirmFailed(false);
+    setConfirmError(null);
     try {
-      const res = await fetch(apiUrl(`/exam-preps/${prepId}/scope/confirm`), { method: "POST" });
-      if (!res.ok) throw new Error(`API ${res.status}`);
-      navigate(room);
+      const res = await apiFetch(`/exam-preps/${prepId}/scope/confirm`, { method: "POST" });
+      // 401: the button stays disabled while apiFetch leaves for the login page (AC-23), so a
+      // second click cannot send another confirm (self-review PR #141).
+      if (res.status === 401) return;
+      const code = res.ok ? null : (await errorOf(res)).code;
+      // Next keeps this page hidden with its state: a later visit must not find the button stuck
+      // (self-review PR #139, as the create form).
+      setConfirming(false);
+      // Confirmed already (another tab, a second click): that is what the user wanted (AC-22).
+      if (res.ok || code === "scope_already_confirmed") navigate(room);
+      else if (code === "scope_empty") setConfirmError("empty");
+      else setConfirmError("failed");
     } catch {
-      setConfirmFailed(true);
+      setConfirmError("failed");
       setConfirming(false);
     }
   }
@@ -182,11 +225,25 @@ export function ScopeReview({ prepId, navigate }: { prepId: string; navigate: (h
       </div>
     );
   }
+  if (load.kind === "notReady") {
+    // api.md sends the user to the progress page (S11) until ingestion is done; it does not exist yet.
+    return (
+      <div className="flex flex-col items-start gap-2 p-8 text-sm">
+        <p>{t.notReady}</p>
+        <button type="button" onClick={reload} className="underline">
+          {t.retry}
+        </button>
+        <Link href="/" className="underline">
+          {t.backHome}
+        </Link>
+      </div>
+    );
+  }
   if (load.kind === "failed") {
     return (
       <div className="p-8 text-sm">
         <p className="mb-2">{t.loadFailed}</p>
-        <button type="button" onClick={() => (setLoad({ kind: "loading" }), setAttempt((n) => n + 1))} className="underline">
+        <button type="button" onClick={reload} className="underline">
           {t.retry}
         </button>
       </div>
@@ -273,9 +330,9 @@ export function ScopeReview({ prepId, navigate }: { prepId: string; navigate: (h
             </button>
           </div>
           <p className="mt-1 text-xs text-zinc-400">{t.editSoon}</p>
-          {confirmFailed && (
+          {confirmError && (
             <p role="alert" className="mt-1 text-xs text-red-700">
-              {t.confirmFailed}
+              {confirmError === "empty" ? t.scopeEmpty : t.confirmFailed}
             </p>
           )}
           <p className="mt-2 text-xs text-zinc-400">{t.hint}</p>

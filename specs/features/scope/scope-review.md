@@ -6,7 +6,7 @@
 | Requirements | SM-03 (แสดงดาว 1–3 ที่ code คำนวณ) · SM-04 (ที่มา: ชื่อไฟล์ + เลขหน้า + กดดูข้อความต้นฉบับ) · SM-02 (เรียงตามลำดับจาก API) · SM-09 (ยืนยันโดยไม่แก้ · UC-02 A5) |
 | Owner | May |
 | Reviewer | Junior (OQ 5–8 · api.md) |
-| Status | approved by May 2026-10-28 (owner · OQ 1–4) · รอ Junior ตอบ OQ 5–8 (api.md) |
+| Status | approved by May 2026-10-28 (owner · OQ 1–4) · OQ 5–8 ตัดสินแล้ว (api.md v1.20 · #137) · 16 พ.ย. เพิ่ม §2 "ต่อ API จริง" + AC-21 ถึง AC-24 (demo ขั้น 5 · Jam ช่วง solo · PR #141) · OQ 9 May ok (May 17 พ.ย. · PR #153) |
 | Related system spec | ai-orchestration.md §2.3.4 (5d code คำนวณดาว), §2.3.5 (สูตรดาว · เหตุผลจาก template), §2.3.6 (`origin = user` ติดป้าย "นอกเอกสาร"), §2.3.8 (API 7, 8, 11) · api.md "Exam prep และ scope" · data-model.md `topics`, `past_exam_questions`, "รอผล" ข้อ 1 (ช่วงหน้า), ข้อ 3 (`map_note`) · use-cases.md UC-02 ขั้น 7–8, A4, A5, E1 · wireframe S12, S38 · `config/learning.yaml` → `stars` (ฝั่ง backend เท่านั้น) |
 
 ## 1. Context
@@ -58,13 +58,23 @@
 - `topics` ว่าง → "ยังไม่มีหัวข้อ" และปุ่มยืนยันกดไม่ได้
 - ขอบเขตยืนยันแล้ว (`status = "confirmed"`) → **อ่านอย่างเดียว**: ไม่มีปุ่ม "ขอแก้ก่อน" และ "ยืนยันขอบเขตนี้" · มีข้อความ "ยืนยันขอบเขตแล้ว" และลิงก์ "ไปห้องติว" (`/preps/{id}/room`) · ยังกดดูรายละเอียดหัวข้อได้ (ตัดสินแล้ว OQ 4)
 
-## 3. Inputs and outputs (ข้อเสนอ · OQ 5)
+**ต่อ API จริง** (demo ขั้น 5 · เพิ่ม 16 พ.ย. · API บน DB ตาม `scope-db.md` (#137) · error ตาม api.md "หน้าตรวจขอบเขต")
+
+1. `GET /scope` ตอบ `409 scope_not_ready` (ระบบยังสกัดหัวข้อหรือคำนวณดาวไม่เสร็จ) → "ระบบยังอ่านไฟล์ไม่เสร็จ" + ปุ่ม "ลองใหม่" + ลิงก์ "กลับหน้าหลัก" · ไม่ใช่ "โหลดขอบเขตไม่สำเร็จ" · api.md ให้หน้าเว็บรอที่หน้าความคืบหน้า (S11) แต่ S11 ยังไม่มี (demo ขั้น 3–4)
+2. ยืนยันแล้วได้ `409 scope_already_confirmed` (ยืนยันไปแล้วจากอีกแท็บ หรือกดซ้ำ) → ไปห้องติว `/preps/{id}/room` เหมือนยืนยันสำเร็จ ไม่แสดง error · ขอบเขตยืนยันแล้วคือสิ่งที่ผู้ใช้ต้องการ
+3. ยืนยันแล้วได้ `409 scope_empty` (ทุกหัวข้อถูกตัดออก) → "ไม่มีหัวข้อให้ติว ทุกหัวข้อถูกตัดออก" อยู่หน้าเดิม · ลองซ้ำไม่ช่วย จึงไม่ใช้ข้อความ "ลองอีกครั้ง" · error อื่นของการยืนยัน (`409 scope_not_ready`, `503`, network) ยังเป็น "ยืนยันไม่สำเร็จ ลองอีกครั้งนะ"
+4. `401` ที่ endpoint ไหนก็ตาม (scope, sources, confirm) → ไม่แสดงข้อความ error · `apiFetch` กำลังพาไปหน้า login (`web-login.md` §2.3 · แบบเดียวกับ `prep-list-page.md`)
+5. Next 16 (`cacheComponents`) ซ่อนหน้าที่ออกไปด้วย React `<Activity>` และเก็บ state ไว้ · หน้านี้**โหลด scope ใหม่ทุกครั้งที่กลับมาแสดง** (ยืนยันแล้วกด back กลับมา → เห็น "ยืนยันขอบเขตแล้ว" แบบอ่านอย่างเดียว ไม่ใช่ปุ่มยืนยันเดิม) และไม่ค้างที่ปุ่มกดไม่ได้ · ออกจากหน้าแล้วยกเลิก request ที่ค้าง
+6. type ของ `Scope`, `ScopeTopic`, `TopicSources`, `PastQuestion` ใช้ที่ generate จาก OpenAPI (`lib/api-schema.ts`) แทน type ที่เขียนเอง (§6) · `stars` ใน OpenAPI ไม่เป็น null แต่หน้าเว็บยังแสดง "—" เมื่อค่านอก 0–3 (AC-3) ไม่ crash
+
+## 3. Inputs and outputs (ตัดสินแล้ว · api.md "หน้าตรวจขอบเขต" v1.6 + v1.20 · OpenAPI `Scope`, `TopicSources`)
 
 | | Type / schema | ตัวอย่าง |
 |---|---|---|
 | `GET /exam-preps/{id}/scope` | `{prep_name, days_left, status: "draft" \| "confirmed", topics: [{id, order, name, stars, reason, source_label, origin: "doc" \| "user"}], unmapped_questions: [{id, label, text, map_note}]}` | `{topics: [{id: "t3", order: 3, name: "ผลต่างกำลังสอง", stars: 3, reason: "ออกทุกชุด", source_label: "ch3 น.5–6", origin: "doc"}], unmapped_questions: [{id: "q11", label: "midterm-2567 ข้อ 11", text: "แก้สมการ $x^2 - 5x + 6 = 0$", map_note: "เป็นเรื่องสมการกำลังสอง ไม่มีในชีทที่ใส่มา"}]}` |
 | `GET /topics/{id}/sources` | `{excerpts: [{material_name, page, text}], questions: [{id, label, text, map_note}]}` | `{excerpts: [{material_name: "ch3-factorization.pdf", page: 5, text: "a² − b² = (a − b)(a + b) ใช้เมื่อ…"}], questions: [{id: "q3", label: "midterm-2566 ข้อ 3", text: "$x^2 - 49$", map_note: null}]}` |
-| `POST /exam-preps/{id}/scope/confirm` | `{}` | 200 / non-2xx |
+| `POST /exam-preps/{id}/scope/confirm` | `{}` | 200 · `409 scope_already_confirmed` · `409 scope_empty` · `409 scope_not_ready` · `503` |
+| error ของ `GET /scope` | | `401` · `404` · `409 scope_not_ready` · `503` |
 
 - `text` ของข้อสอบมีสมการ → render ผ่าน `MessageText` (`$…$` แบบเดียวกับข้อความในห้อง · api.md Conventions) (OQ 7)
 - `source_label` เป็นข้อความพร้อมแสดงจาก backend (หน้าเว็บไม่ตัดชื่อไฟล์หรือรวมช่วงหน้าเอง) (OQ 6)
@@ -107,6 +117,13 @@
 - **AC-19b (SM09 · OQ 4)** Given `status = "confirmed"` Then ไม่มีปุ่ม "ขอแก้ก่อน" และ "ยืนยันขอบเขตนี้" · มี "ยืนยันขอบเขตแล้ว" และลิงก์ "ไปห้องติว" ที่ `href = /preps/{id}/room` · ยังกดเปิดรายละเอียดหัวข้อได้
 - **AC-20** แถวหัวข้อเป็นปุ่มที่กดด้วย keyboard ได้ (Enter / Space) และมี `aria-expanded`
 
+**ต่อ API จริง** (§2 "ต่อ API จริง" · test ใหม่ใน `tests/scope/scopeLive.test.tsx` · AC-1 ถึง AC-20 ไม่แก้)
+
+- **AC-21 (SM09)** Given `GET /scope` ตอบ `409` code `scope_not_ready` Then "ระบบยังอ่านไฟล์ไม่เสร็จ" + ปุ่ม "ลองใหม่" + ลิงก์ "กลับหน้าหลัก" (`href = /`) · ไม่มี "โหลดขอบเขตไม่สำเร็จ" · กด "ลองใหม่" แล้ว `GET /scope` อีกครั้ง และ Given ครั้งนี้ได้ scope Then เห็นรายการหัวข้อ
+- **AC-22 (SM09)** Given POST confirm ตอบ `409 scope_already_confirmed` Then ไปที่ `/preps/{id}/room` และไม่มีข้อความ error · Given ตอบ `409 scope_empty` Then "ไม่มีหัวข้อให้ติว ทุกหัวข้อถูกตัดออก" ไม่ไปห้องติว ปุ่มกดได้อีก · Given ตอบ `409 scope_not_ready` Then "ยืนยันไม่สำเร็จ ลองอีกครั้งนะ" (AC-16)
+- **AC-23 (UM01)** Given `GET /scope` ตอบ `401` Then ไม่มี "โหลดขอบเขตไม่สำเร็จ" · Given sources ตอบ `401` When เปิดหัวข้อ Then ไม่มี "โหลดที่มาไม่สำเร็จ" · Given confirm ตอบ `401` Then ไม่มี "ยืนยันไม่สำเร็จ…" และไม่ไปห้องติว (`apiFetch` พาไป login · ทดสอบใน `tests/auth/`)
+- **AC-24 (SM09)** Given หน้าใน `<Activity mode="visible">` เปิดแล้ว (scope `draft`) When ซ่อน (`hidden`) แล้วแสดงอีกครั้ง Then `GET /scope` อีก 1 ครั้ง · Given ครั้งนี้ได้ `status = "confirmed"` Then เห็น "ยืนยันขอบเขตแล้ว" และไม่มีปุ่ม "ยืนยันขอบเขตนี้" · Given ยืนยันสำเร็จแล้วซ่อนแล้วแสดง (ได้ `draft` จาก fetch จำลอง) Then ปุ่ม "ยืนยันขอบเขตนี้" กดได้ (ไม่ค้าง)
+
 **AC-boundary:** หน้าเว็บไม่ใช้ threshold ของดาว (`stars.three_star_min_r` ฯลฯ อยู่ใน backend) · ขอบของค่าที่แสดง: `stars` 0, 1, 3, 4, `null` (AC-2, AC-3) · **AC-tenant (SA-06):** หน้าเว็บไม่อ่าน DB เอง · API ใช้ RLS ของ `topics` และ `past_exam_questions` (ฝั่ง backend · Junior)
 
 ## 5. Data changes
@@ -117,11 +134,11 @@
 
 | Endpoint | Request | Response |
 |---|---|---|
-| `GET /exam-preps/{id}/scope` | — | **ยังไม่กำหนดรูปร่าง** · ข้อเสนอ §3 |
-| `GET /topics/{id}/sources` | — | **ยังไม่กำหนดรูปร่าง** · ข้อเสนอ §3 (รวมข้อสอบเก่าในหัวข้อ) |
-| `POST /exam-preps/{id}/scope/confirm` | — | มีชื่อใน api.md แล้ว · ยังไม่มี stub |
+| `GET /exam-preps/{id}/scope` | — | `Scope` · บน DB เมื่อมี token (#137 · `scope-db.md`) |
+| `GET /topics/{id}/sources` | — | `TopicSources` · บน DB เมื่อมี token (#137) |
+| `POST /exam-preps/{id}/scope/confirm` | — | เขียน `scope_versions` + `active_scope_version_id` (#137) · error ตาม §3 |
 
-ยังไม่มีใน OpenAPI → type เขียนเองชั่วคราว (เหมือน `OcrPreviewData`) จนกว่าจะมี schema แล้ว `pnpm gen:api`
+ไม่มีการเปลี่ยน API ใน feature นี้ · 16 พ.ย.: OpenAPI มี schema ครบแล้ว (`lib/api-schema.ts`) → เลิกใช้ type ที่เขียนเองชั่วคราว (§2 "ต่อ API จริง" ข้อ 6)
 
 ## 7. AI calls
 
@@ -132,6 +149,10 @@
 | Test | ระดับ | ครอบคลุม AC |
 |---|---|---|
 | `tests/scope/ScopeReview.test.tsx` (ใหม่) | component + fetch จำลอง | AC-1 ถึง AC-20 |
+| `tests/scope/scopeLive.test.tsx` (ใหม่ · 16 พ.ย.) | component + fetch จำลอง + `<Activity>` | AC-21 ถึง AC-24 |
+| ลองในเบราว์เซอร์บน `anyang-dev` (API ในเครื่อง `AUTH_REQUIRED=true` + `pnpm dev`) | มือ | รายการ → การ์ด "รอตรวจขอบเขต" → หัวข้อจริง + ดาว + ที่มา → เปิดรายละเอียด → ยืนยัน → ห้องติว → กลับมาเห็น "ยืนยันขอบเขตแล้ว" |
+
+**ผลลองในเบราว์เซอร์ (Jam · 16 พ.ย. · PR #141):** ผ่านทุกข้อ · บัญชีทดสอบของ Jam (ไม่ใช่บัญชี demo) · สร้าง prep "MTH10101 seed" ในหน้าเว็บ แล้วใส่ผล ingestion ของ MTH10101 (#130) ด้วย `apps/api/scripts/seed_scope_demo.py` (เขียนผ่าน token ของผู้ใช้ · RLS · ไฟล์ 6 · หน้า 205 · หัวข้อ 34 · ช่วงหน้า 51 · ข้อสอบ 43) เพราะการอัปโหลดจริง (demo ขั้น 3 · #140) ยังไม่เสร็จ · การ์ดเปลี่ยนเป็น "รอตรวจขอบเขต" และกดได้ → หัวข้อ 34 แถวพร้อมดาวและที่มา → รายละเอียด "ลิมิตของฟังก์ชัน" มีข้อความจากชีทและข้อสอบเก่าเป็น KaTeX → ยืนยัน → ห้องติว tutor ทักก่อน → back เห็น "ยืนยันขอบเขตแล้ว" ไม่มีปุ่มยืนยัน → การ์ด "พร้อมติว" · สคริปต์นี้ใช้เป็นทางสำรองของวิดีโอได้ถ้าขั้น 3 ไม่ทัน
 
 ## 9. Out of scope
 
@@ -149,14 +170,18 @@
 3. **หัวข้อ 0 ดาว:** แสดงท้ายรายการ สีจาง ป้าย "ตัดออก" (AC-3b) · API ต้องส่งหัวข้อที่ `status = excluded` มาด้วย (OQ 5)
 4. **หลังยืนยันแล้ว:** อ่านอย่างเดียว + ลิงก์ไปห้องติว (AC-19b)
 
-ให้ Junior ตอบ (api.md · ไฟล์ร่วม)
+ตัดสินแล้วใน api.md v1.6 + v1.20 และ `scope-db.md` (Jam 14 พ.ย. · Junior ให้ตัดสินไปก่อน · Junior ดูย้อนหลัง)
 
-5. **รูปร่างของ `GET /scope`:** ตามข้อเสนอ §3 ได้ไหม · `order` คือ `topics.order_index` (นับจาก 1?) · `reason` ทำจาก template ฝั่ง backend (§2.3.5) · `status` ของ scope · ส่งหัวข้อที่ตัดออก (`topics.status = excluded`, 0 ดาว) มาด้วย
-6. **`source_label` และ `excerpts`:** ต้องมีที่เก็บช่วงหน้า (data-model "รอผล" ข้อ 1) · ใครย่อชื่อไฟล์ ("ch3") · ข้อความต้นฉบับมาจาก `material_pages` ใช่ไหม
-7. **`text` ของข้อสอบเก่า:** ใช้ `$…$` แบบข้อความในห้อง (api.md Conventions) ได้ไหม
-8. **`map_note`:** เก็บที่ `past_exam_questions.map_note` (data-model "รอผล" ข้อ 3 · ตกลงใน #67 ว่าเก็บ + แสดง)
+5. **รูปร่างของ `GET /scope`:** ตามข้อเสนอ §3 · `order` นับจาก 1 · `reason` จาก template ฝั่ง backend · ส่งหัวข้อที่ตัดออก (0 ดาว) มาด้วย
+6. **`source_label` และ `excerpts`:** ช่วงหน้าใน `topic_sources` · backend ทำ `source_label` ให้พร้อมแสดง · ข้อความต้นฉบับจาก `material_pages`
+7. **`text` ของข้อสอบเก่า:** ใช้ `$…$` แบบข้อความในห้อง
+8. **`map_note`:** เก็บที่ `past_exam_questions.map_note`
+
+ให้ May ตัดสิน (16 พ.ย. · Jam ใช้ค่าเหล่านี้ไปก่อนช่วง solo) · **May 17 พ.ย. · PR #153: ข้อ 9 ใช้ข้อความตามนี้**
+
+9. **ข้อความใหม่** ใน §2 "ต่อ API จริง": "ระบบยังอ่านไฟล์ไม่เสร็จ" และ "ไม่มีหัวข้อให้ติว ทุกหัวข้อถูกตัดออก" · แก้ได้ใน `components/scope/strings.ts`
 
 ## 11. Spec changes needed
 
-- **api.md** (Junior): OQ 5–8 · response ของ `GET /exam-preps/{id}/scope`, `GET /topics/{id}/sources`, stub ของทั้งสอง + `scope/confirm`
-- **data-model.md** "รอผล" ข้อ 1, 3 (Junior)
+- ~~api.md (Junior): OQ 5–8~~ · เสร็จใน v1.6 + v1.20 (#137)
+- ~~data-model.md "รอผล" ข้อ 1, 3~~ · เสร็จใน migration `0003_topic_sources.sql` (`topic_sources` + `past_exam_questions.map_note`)

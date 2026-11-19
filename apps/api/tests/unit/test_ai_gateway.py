@@ -601,8 +601,14 @@ class FakeEmbedder:
 
 async def test_AI01_embed_uses_the_embed_tier_and_keeps_order():
     embedder = FakeEmbedder()
+    # Its own batch size (Jam ok 13 Nov): config/ai.yaml now sends 1 text per request (Vertex).
+    config = get_settings().ai
+    gateway = make_gateway(
+        embedder,
+        embedding=config.embedding.model_copy(update={"batch_size": 2, "dimensions": None}),
+    )
 
-    vectors = await make_gateway(embedder).embed(["a", "bbb"], role="document")
+    vectors = await gateway.embed(["a", "bbb"], role="document")
 
     assert vectors == [[1.0, 0.0], [3.0, 1.0]]
     assert embedder.requests[0].model == get_settings().ai.tiers["embed"].primary

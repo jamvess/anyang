@@ -30,10 +30,11 @@ export interface paths {
         };
         /**
          * Get Active Session
-         * @description Open session of this exam prep (TM-13); 404 `no_active_session` if none.
+         * @description Open session of this exam prep, the latest started (TM-13); 404 `no_active_session` if
+         *     none, `not_found` if the prep is not the user's.
          *
-         *     stub — replaced in P4-lite. On a local machine there is none, so the web opens a new
-         *     session and the tutor greets first (demo-room.md §2 F item 1).
+         *     Without a token (AUTH_REQUIRED=false): stub. On a local machine there is none, so the web
+         *     opens a new session and the tutor greets first (demo-room.md §2 F item 1).
          */
         get: operations["get_active_session_exam_preps__id__sessions_active_get"];
         put?: never;
@@ -55,10 +56,14 @@ export interface paths {
         put?: never;
         /**
          * Create Session
-         * @description Start a session. SSE: session → progress_card → token (opening) → problem → done.
+         * @description Start a session. With a token: a new tutor_sessions row. A prep with topics: SSE session →
+         *     progress_card (from the database) → token (open_session) → problem (verified by SymPy) →
+         *     done (room-problems-db.md §2.2). A prep without topics: session → token (the greeting from
+         *     config/messages.yaml) → done (room-sessions-db.md §2.4). 404 if the prep is not the user's.
          *
-         *     stub — replaced in P4-lite. On a local machine it is a new session of the demo: the card
-         *     comes from real mastery and the problem is the one reached (demo-room.md §2 D, F, J).
+         *     Without a token (AUTH_REQUIRED=false): stub SSE session → progress_card → token → problem →
+         *     done. On a local machine it is a new session of the demo: the card comes from real mastery
+         *     and the problem is the one reached (demo-room.md §2 D, F, J).
          */
         post: operations["create_session_exam_preps__id__sessions_post"];
         delete?: never;
@@ -76,10 +81,11 @@ export interface paths {
         };
         /**
          * Get Session
-         * @description Room data: header, input limits and messages (oldest first).
+         * @description Room data: header, input limits and messages (oldest first). An ended session still
+         *     opens (room-sessions-db.md §2.5).
          *
-         *     stub — replaced in P4-lite. On a local machine there is no sample history: the tutor never
-         *     had that conversation (demo-room.md §2 E item 1).
+         *     Without a token (AUTH_REQUIRED=false): stub. On a local machine there is no sample history:
+         *     the tutor never had that conversation (demo-room.md §2 E item 1).
          */
         get: operations["get_session_sessions__id__get"];
         put?: never;
@@ -103,7 +109,10 @@ export interface paths {
          * End Session
          * @description The user ends the session. SSE: session_end (1-2 summary lines) → done (PM-05).
          *
-         *     stub — always the same summary; nothing is saved
+         *     With a token (session-end-db.md): 404 / 409 / 503 before the stream; the session is closed
+         *     first, in one update that needs `ended_at is null`, so two ends at once cannot both reach
+         *     the AI. The summary is saved and is a chat message too. Without a token it is the stub:
+         *     always the same summary, nothing saved.
          */
         post: operations["end_session_sessions__id__end_post"];
         delete?: never;
@@ -123,7 +132,7 @@ export interface paths {
          * List Messages
          * @description Chat history, oldest first (TM-13). Not paged yet.
          *
-         *     stub — the messages of the room fixture
+         *     Without a token (AUTH_REQUIRED=false): the messages of the room fixture.
          */
         get: operations["list_messages_sessions__id__messages_get"];
         put?: never;
@@ -268,7 +277,8 @@ export interface paths {
          * Get Scope
          * @description Draft topics with stars and reasons, in API order (SM-02, SM-03), excluded topics included.
          *
-         *     stub — replaced when ingestion and compute_importance exist
+         *     With a token: the rows of the user's JWT (specs/features/scope/scope-db.md §2.1). Without
+         *     one: the stub.
          */
         get: operations["get_scope_exam_preps__id__scope_get"];
         put?: never;
@@ -290,8 +300,9 @@ export interface paths {
          * Get Topic Sources
          * @description Source pages and past exam questions of one topic (SM-04).
          *
-         *     stub — replaced when ingestion exists; every topic id gets the sources of the
-         *     difference-of-squares topic (May's sources-t3.json)
+         *     With a token: the pages of the topic's ranges and its questions (scope-db.md §2.2). Without
+         *     one: the stub, the sources of the difference-of-squares topic for every id (May's
+         *     sources-t3.json).
          */
         get: operations["get_topic_sources_topics__id__sources_get"];
         put?: never;
@@ -315,7 +326,8 @@ export interface paths {
          * Confirm Scope
          * @description Lock the draft scope as a scope version (SM-09).
          *
-         *     stub — replaced when scope_versions are written
+         *     With a token: a `scope_versions` row, `active_scope_version_id`, draft topics confirmed
+         *     (scope-db.md §2.3). Without one: the stub.
          */
         post: operations["confirm_scope_exam_preps__id__scope_confirm_post"];
         delete?: never;
@@ -335,8 +347,9 @@ export interface paths {
          * Get Ingestion
          * @description Progress by file and by step; S11 polls until scope_ready, then opens S12 (CM-07).
          *
-         *     stub — always the same moment: one file running, one failed, topics not started. So
-         *     scope_ready never turns true here; test the move to S12 with the web's own fixture.
+         *     With a token: the rows the user's JWT can see (specs/features/scope/ingestion.md §2.6) ·
+         *     another tenant's prep → 404. Without one (AUTH_REQUIRED=false): the stub, always the same
+         *     moment (one file running, one failed, topics not started).
          */
         get: operations["get_ingestion_exam_preps__id__ingestion_get"];
         put?: never;
@@ -427,16 +440,14 @@ export interface paths {
         /**
          * List Materials
          * @description Files of this exam prep, oldest first; S10 polls until every file has a kind (CM-07).
-         *
-         *     stub — a classified, a still uploaded and a failed file
+         *     A file whose upload was never announced is left out.
          */
         get: operations["list_materials_exam_preps__id__materials_get"];
         put?: never;
         /**
          * Create Material
-         * @description Signed upload URL for one file (CM-03). Type and size are checked before the upload.
-         *
-         *     stub — the URL is not a real Storage URL and no materials row is made
+         * @description Signed upload URL for one file (CM-03). Type and size are checked before the upload and
+         *     before the database; the real size is checked again at /uploaded.
          */
         post: operations["create_material_exam_preps__id__materials_post"];
         delete?: never;
@@ -456,9 +467,8 @@ export interface paths {
         put?: never;
         /**
          * Material Uploaded
-         * @description The browser finished the upload; classification starts (CM-04, §2.3.2 step 2).
-         *
-         *     stub — answers with the fixture file that is still being classified
+         * @description The browser finished the upload: the real object is checked, then classification starts
+         *     in the background (CM-04, CM-06, CM-07 · §2.3.2 step 2).
          */
         post: operations["material_uploaded_materials__id__uploaded_post"];
         delete?: never;
@@ -479,8 +489,6 @@ export interface paths {
         /**
          * Confirm Materials
          * @description The user's kind for each file sent; ingestion starts (CM-06, §2.3.2 step 3).
-         *
-         *     stub — queues every file sent; nothing is checked against the fixture
          */
         post: operations["confirm_materials_exam_preps__id__materials_confirm_post"];
         delete?: never;
@@ -1438,8 +1446,20 @@ export interface components {
             /** Text */
             text: string;
         };
-        /** DoneEvent */
-        DoneEvent: Record<string, never>;
+        /**
+         * DoneEvent
+         * @description Last event of every stream. In the room on the database, `message_ids` are the ids of
+         *     the tutor and buddy messages this stream saved, in stream order (api.md "SSE events" ·
+         *     room-sessions-db.md). Streams that save nothing (stub, demo) leave it out, so they still
+         *     send `{}`.
+         */
+        DoneEvent: {
+            /**
+             * Message Ids
+             * @default null
+             */
+            message_ids: string[] | null;
+        };
         /** ErrorEvent */
         ErrorEvent: {
             /** Code */
@@ -1630,7 +1650,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -1688,7 +1708,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -1746,7 +1766,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -1813,7 +1833,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -1871,7 +1891,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -1924,6 +1944,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            /** @description session_already_ended */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             /** @description Invalid path or body */
             422: {
                 headers: {
@@ -1942,7 +1971,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -2347,7 +2376,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -2405,7 +2434,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -2472,7 +2501,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -2530,7 +2559,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -2824,7 +2853,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -2886,7 +2915,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -2939,7 +2968,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description already_uploaded */
+            /** @description already_uploaded, not_uploaded */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -2948,7 +2977,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Invalid path or body */
+            /** @description Invalid path or body, unsupported_type or file_too_large */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -2957,7 +2986,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -3028,7 +3057,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable */
             503: {
                 headers: {
                     [name: string]: unknown;
