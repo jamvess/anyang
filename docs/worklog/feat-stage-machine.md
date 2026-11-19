@@ -14,7 +14,7 @@
 ไม่อยู่ในงานนี้: ต่อเข้าห้องติว (PR ถัดไปหลัง 23 พ.ย. · ห้ามแตะห้องที่ใช้อัดวิดีโอ) · Park ฝั่งกลับเข้า queue และ push prerequisite (TM-19 · S6) · source ของโจทย์ (ข้อสอบเก่า / สร้างใหม่) · intent "ยังไม่เคยเรียน" (รับเป็น input)
 
 - [x] 1. 🤖 `/spec-feature` → `specs/features/tutor/stage-machine.md` (TM-03, TM-04, AM-08, AM-09, TM-16, SM-12): pure function `next_step(state, event, cfg) -> Step` (stage ถัดไป + directive + skill + difficulty + purpose) · คำถามให้ Jam ตัดสินใน §10 (hint ladder ของ demo กับ Teach ตาม AM-07 · Park อยู่ในงานนี้แค่ไหน · ค่า difficulty ของ Probe/Practice/Verify ต้องเพิ่มใน config ไหม) → 🙋 Jam review spec
-- [ ] 2. 🤖 (ถ้า §10 ต้องเพิ่มค่าใน `config/learning.yaml` · ไฟล์กลาง) เพิ่มค่า + ป้ายที่มา + `learning-model.md` + settings class → 🙋 Jam ok + บอกกลุ่มก่อน merge
+- [x] 2. 🤖 (ถ้า §10 ต้องเพิ่มค่าใน `config/learning.yaml` · ไฟล์กลาง) เพิ่มค่า + ป้ายที่มา + `learning-model.md` + settings class → 🙋 Jam ok + บอกกลุ่มก่อน merge
 - [ ] 3. 🤖 `/spec-to-tests` (unit · table-driven · ไม่มี magic number) → 🙋 Jam review test
 - [ ] 4. 🤖 `/implement-feature` จน green · ruff · pytest ทั้งชุด
 
@@ -30,11 +30,11 @@
 
 ## Next step
 
-ข้อ 2: เพิ่ม `stages:` ใน `config/learning.yaml` (ค่าตาม spec §10 ข้อ 3) + `learning-model.md` + `StagesConfig` ใน `app/settings.py`
+ข้อ 2 รอ Jam ok (config `stages:` v1.8 + learning-model v1.8 + `StagesConfig`) · ok แล้ว commit แล้วทำข้อ 3 `/spec-to-tests` → `tests/unit/test_stage_machine.py`
 
 ## Waiting on
 
-ไม่มี
+- ก่อน merge: Jam โพสต์กลุ่มเรื่องแก้ `config/learning.yaml` (ไฟล์กลาง · ส่วนใหม่ `stages:`)
 
 ## Notes for next time
 
