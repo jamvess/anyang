@@ -200,6 +200,8 @@
 - [x] หลัง advisor update: reset database password ของ anyang-dev ด้วยรหัสสุ่ม แล้วแจ้งทีม
   - 15 พ.ย.: rotate secret key ของ `anyang-dev` แล้ว (Junior) · DB password ยังไม่ได้ reset
   - 16 พ.ย.: reset DB password ของ `anyang-dev` แล้ว (Junior)
+- [x] ⭐ ก่อนอัดวิดีโอ · บั๊ก 1 ของ journey 17 พ.ย.: gateway รอ 429 นานขึ้น (A) · ห้องไม่สร้างโจทย์ซ้ำเมื่อโดน 429 (B) · C (ข้อความระหว่างรอ) และ D (fallback model) หลังวิดีโอ (NFR-R1, AM-11)
+  - 19 พ.ย. (PR #159 · `specs/features/ai/gateway-rate-limit-backoff.md`): `config/ai.yaml` 1.24 `gateway.rate_limit_waits_seconds` [5, 15, 30] (call, embed) · `rate_limit_waits_stream_seconds` [5] (stream ก่อน chunk แรก) · 429 ครั้งที่ n รอ `max(ช่องที่ n, retry_after)` · provider ขอรอเกินช่องที่มากสุด → ยอมแพ้ · ครบตาราง → `AIRateLimitedError` · `room_problems` หยุดรอบสร้างโจทย์ → `room.no_problem` · error อื่นยังใช้ `retries` / `max_retry_wait_seconds` เดิม · test §2.10 สองตัวย้าย boundary ไปที่ช่องมากสุดของตาราง (Jam ok) · ai-orchestration §2.10 อัปเดต · ต่อหลังวิดีโอ: ข้อของ Jam (S4) ตารางสั้นสำหรับ call กลางรอบคุย
 
 ### S5 · 30 พ.ย.–11 ธ.ค.
 
@@ -288,9 +290,10 @@
   - 17 พ.ย. (PR #143 · `specs/features/tutor/session-end-ui.md`): ปุ่มบนหัวห้อง (ยังไม่มี `route_intent` จึงยังพิมพ์ "พอแล้ว" ไม่ได้) · ไม่ถามยืนยัน · สรุปเป็น bubble ของ tutor · หลังจบ canvas หาย ห้องล็อก + "กลับหน้าหลัก" / "ติวรอบใหม่" (session ใหม่) · 409 = จบแล้ว · ลองในห้องเดโม่ (stub) ผ่าน · **เส้นจริงบน DB ยังไม่ได้ลอง** (ลองตอนต่อทุกขั้น 19 พ.ย. หรือ Jam)
 - [x] ⭐ goal อาจารย์ข้อ 1: หน้าสมัครสมาชิก (email + password) + ลิงก์ไปมากับหน้า login (UM-01 ส่วนสมัคร · เดิมอยู่ S5)
   - 17 พ.ย. (PR #144 · `specs/features/platform/web-signup.md`): `/signup` อีเมล + รหัส + ยืนยันรหัส · สมัครแล้วเข้าระบบทันทีและไปหน้าหลัก (onboarding S5) · กฎรหัสให้ Supabase ตัดสิน · ข้อความ error ตาม code (อีเมลซ้ำ, รหัสอ่อน, ปิดรับสมัคร ฯลฯ) · ลองกับ `anyang-dev` ผ่าน · ⚠️ `anyang-dev` ปิดรับสมัครไว้ (D2) · **ตอนอัดวิดีโอ 21–22 พ.ย. ขอ Junior เปิดชั่วคราว**
-- [ ] ⭐ goal อาจารย์ข้อ 4: การ์ดโจทย์ไม่หายเมื่อรีเฟรช / กลับเข้าห้อง (TM-13 · `room-problems-db.md` §10 ข้อ 3)
-  - 17 พ.ย. ส่วนหน้าเว็บเสร็จ (PR #145 · `specs/features/tutor/problem-card-history.md`): ข้อความ `role = card` ที่มี `card.problem` ในประวัติแสดงเป็นการ์ดโจทย์ + canvas · ข้อมูลไม่ครบไม่แสดง · การ์ดอื่นยังเป็นการ์ดความคืบหน้า · **ยังไม่ติ๊ก: รอ Jam ทำ API** บันทึกการ์ดโจทย์ใน `messages` ทุกครั้งที่ส่ง `problem` (spec §6 · Jam เลือกทางนี้ 17 พ.ย.) แล้วลองเส้นจริง: เปิดห้อง → รีเฟรช → การ์ด + canvas ยังอยู่ · หน้าเว็บเก่าพังถ้าประวัติมี `card.problem` จึง merge หน้าเว็บก่อน
-- [ ] ⭐ ก่อนอัดวิดีโอ · อัปเกรด Next.js 16.4.3 → 16.4.6 (`next dev` แจ้ง upgrade policy `security` = มี advisory · PR แยก + CI · บอกกลุ่ม · พบใน #151)
+- [x] ⭐ goal อาจารย์ข้อ 4: การ์ดโจทย์ไม่หายเมื่อรีเฟรช / กลับเข้าห้อง (TM-13 · `room-problems-db.md` §10 ข้อ 3) · ✅ 19 พ.ย. หน้าเว็บ #145 + API #160 (May ทำแทน Jam) · ผ่านบนเครื่อง May (#163)
+  - ข้อที่ยังเปิด: การ์ดความคืบหน้าหายหลังรีเฟรช (ไม่บันทึก · UC-03 E1) · May ตัดสินหลัง 23 พ.ย. (`problem-card-history.md` §10 ข้อ 3) · วิดีโอฉาก 5 ไม่พูดถึงการ์ดความคืบหน้า
+  - 17 พ.ย. ส่วนหน้าเว็บเสร็จ (PR #145 · `specs/features/tutor/problem-card-history.md`): ข้อความ `role = card` ที่มี `card.problem` ในประวัติแสดงเป็นการ์ดโจทย์ + canvas · ข้อมูลไม่ครบไม่แสดง · การ์ดอื่นยังเป็นการ์ดความคืบหน้า · ~~ยังไม่ติ๊ก: รอ Jam ทำ API บันทึกการ์ดโจทย์ใน `messages` ทุกครั้งที่ส่ง `problem` (spec §6 · Jam เลือกทางนี้ 17 พ.ย.) แล้วลองเส้นจริง: เปิดห้อง → รีเฟรช → การ์ด + canvas ยังอยู่~~ ปิดแล้ว 19 พ.ย. (API #160 โดย May · ลองเส้นจริงผ่าน #163) · หน้าเว็บเก่าพังถ้าประวัติมี `card.problem` จึง merge หน้าเว็บก่อน
+- [x] ⭐ ก่อนอัดวิดีโอ · อัปเกรด Next.js 16.4.3 → 16.4.6 (`next dev` แจ้ง upgrade policy `security` = มี advisory · PR แยก + CI · บอกกลุ่ม · พบใน #151) · ✅ 19 พ.ย. #164 (lint, typecheck, test, build ผ่าน · ลองบนเบราว์เซอร์แล้ว · `next dev` ไม่เตือน security)
 - [ ] เตรียมลำดับหน้าจอสำหรับ demo รวม
   - 13 พ.ย. แผนใหม่: ⭐ demo D4 + อัดวิดีโอ 21–22 พ.ย. (#125 เตรียมของช่วง live ใช้ต่อได้)
   - 17 พ.ย. (PR #147) D4 ร่างแล้ว: `docs/design/demo-video.md` ลำดับ 8 ฉาก · บทพูด · สิ่งที่ต้องพร้อมต่อคน (Junior: #140 + เปิดรับสมัครตอนอัด · Jam: API การ์ดโจทย์ + ไฟล์ชีท MTH10101) · checklist วันอัด · **ยังไม่ติ๊ก:** รอทีมตกลง แล้วอัดวิดีโอ 21–22 พ.ย.
