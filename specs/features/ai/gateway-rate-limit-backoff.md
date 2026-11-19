@@ -6,7 +6,7 @@
 | Requirements | NFR-R1 (provider หลักมีปัญหา ระบบยังตอบได้ · ai-orchestration §2.10) · AM-11 (โจทย์ในห้องจาก `generate_problem` ที่ SymPy ยืนยันแล้ว) |
 | Owner | Junior |
 | Reviewer | Jam (เจ้าของ gateway และ `room_problems` · ให้ Junior ตัดสิน 19 พ.ย.) |
-| Status | draft 2026-11-19 |
+| Status | approved 2026-11-19 (Junior ok · §10 ข้อ 1 ตามข้อเสนอ · ข้อ 2 ปรับตาม Junior) |
 | Related system spec | ai-orchestration.md §2.10 "Fallback chain" · `config/ai.yaml` `gateway.*` · `room-problems-db.md` §2 ข้อ 4, 7 · `gateway-guards.md` §2.2 (circuit breaker) · `gateway-truncation.md` (#146 · ไม่แตะส่วนเดียวกัน ดู §9) |
 
 ## 1. Context
@@ -23,14 +23,14 @@ feature นี้: (A) 429 มีตารางรอของตัวเอ�
 - `rate_limit_waits_stream_seconds: [5]` · เหมือนกันแต่สำหรับ `stream` ก่อน chunk แรก (ผู้ใช้กำลังรอข้อความ จึงสั้นกว่า)
 - ทุกค่า ≥ 0 · key หายหรือค่าติดลบ → โหลด config ไม่ผ่าน (`AIConfig` แบบ strict เหมือน key อื่น)
 - ทั้งสองค่าเป็น `[C]` · ที่มา: 429 ของ Vertex 17 พ.ย. ไม่หายใน 1–3 วินาที · calibrate หลัง Alpha จาก log ใน §2.2 ข้อ 6 (รอกี่วินาทีแล้วผ่าน)
-- key เดิม (`retries`, `retry_backoff_seconds`, `max_retry_wait_seconds`) ไม่เปลี่ยนค่าและไม่เปลี่ยนความหมายสำหรับ error ที่ไม่ใช่ 429
+- key เดิม (`retries`, `retry_backoff_seconds`, `max_retry_wait_seconds`) ไม่เปลี่ยนค่า และใช้กับ error ที่ไม่ใช่ 429 เท่านั้น · `max_retry_wait_seconds` ไม่ใช้กับ 429 แล้ว (เพดาน 10 s ต่ำกว่าตารางของเราเอง 30 s · Junior 19 พ.ย.)
 
 ### 2.2 `Gateway._with_retries` (ใช้กับ `call`, `embed` และ `stream` ก่อน chunk แรก)
 
 1. error แบ่งเป็น 2 ชนิด แต่ละชนิดมีงบของตัวเองภายใน call เดียว:
    - **429** (`ProviderRateLimited`): งบ = `len(waits)` · `waits` = `rate_limit_waits_seconds` หรือ `rate_limit_waits_stream_seconds` ตาม caller
    - **อื่นๆ** (timeout, exception อื่นของ provider): งบ = `gateway.retries` รอ `retry_backoff_seconds` · เหมือนเดิมทุกอย่าง
-2. 429 ครั้งที่ n (นับเฉพาะ 429 ของ call นี้ เริ่มที่ 1) ยังมีงบ (n ≤ `len(waits)`) → `step = waits[n − 1]` · `wait = max(step, retry_after)` (ไม่มี `retry_after` = `step`) · ถ้า `wait > max(step, max_retry_wait_seconds)` → ยอมแพ้ทันทีไม่รอ (provider ขอรอนานกว่าที่เรายอม · กฎเดิมของ §2.10 ที่ยังใช้) · ไม่งั้นรอ `wait` แล้วลองใหม่
+2. 429 ครั้งที่ n (นับเฉพาะ 429 ของ call นี้ เริ่มที่ 1) ยังมีงบ (n ≤ `len(waits)`) → `step = waits[n − 1]` · ถ้า `retry_after > max(waits)` (ค่ามากสุดของตารางนั้น: 30 s non-stream, 5 s stream) → ยอมแพ้ทันทีไม่รอ (provider ขอรอนานกว่าที่ตารางเรายอม) · ไม่งั้นรอ `wait = max(step, retry_after)` (ไม่มี `retry_after` = `step`) แล้วลองใหม่ · `retry_after` เท่ากับ `max(waits)` พอดี → ยังรอ (Junior 19 พ.ย.)
 3. งบของชนิดนั้นหมด → ยอมแพ้ ไม่รอ (เหมือนเดิม: ไม่รอหลังครั้งสุดท้าย)
 4. ยอมแพ้โดย error สุดท้ายเป็น 429 → `AIRateLimitedError` (class ใหม่ ลูกของ `AIProviderError` · caller เดิมที่จับ `AIProviderError` ไม่ต้องแก้) · ยอมแพ้ด้วย error อื่น → `AIProviderError` เหมือนเดิม
 5. ไม่เปลี่ยน: `timeout_s` ต่อครั้ง · `CallRecord` 1 แถวต่อ call (`provider_error` เมื่อยอมแพ้) · circuit breaker นับ 1 ผลต่อ call · stream retry เฉพาะก่อน chunk แรก · schema retry และ truncation (#146)
@@ -61,7 +61,8 @@ feature นี้: (A) 429 มีตารางรอของตัวเอ�
 - **AC-3 (NFR-R1)** Given `stream` ได้ 429 แล้วได้ chunk Then ได้ข้อความครบ · `sleeps == WS` (WS = `rate_limit_waits_stream_seconds`) · Given ได้ 429 `len(WS) + 1` ครั้ง Then `AIRateLimitedError` ก่อน chunk แรก · provider ถูกเรียก `len(WS) + 1` ครั้ง
 - **AC-4 (NFR-R1)** Given `embed` ได้ 429 แล้วผ่าน Then `sleeps == W[:1]`
 - **AC-5 (NFR-R1 · config)** Given config ที่ `rate_limit_waits_seconds = [1, 2]` Then 429 ทุกครั้ง → เรียก provider 3 ครั้ง `sleeps == [1, 2]` · Given `[]` Then 429 ครั้งแรก → `AIRateLimitedError` ไม่รอ · Given ค่าติดลบ Then โหลด config ไม่ผ่าน
-- **AC-6 (NFR-R1 · retry_after)** Given step 5 และ `max_retry_wait_seconds` 10: `retry_after = 8` → รอ 8 · `retry_after = 3` → รอ 5 · `retry_after = 11` → ยอมแพ้ทันที `sleeps == []` · Given step 30 (429 ครั้งที่ 3 ของ `[5, 15, 30]`) และ `retry_after = 20` → รอ 30
+- **AC-6 (NFR-R1 · retry_after)** Given `call` ที่ W = `[5, 15, 30]` และ `max_retry_wait_seconds` 10, 429 ครั้งแรก: `retry_after = 3` → รอ 5 · `= 8` → รอ 8 · `= 20` → รอ 20 (เกิน `max_retry_wait_seconds` ก็รอ) · `= 30` → รอ 30 (boundary) · `= 31` → ยอมแพ้ทันที `AIRateLimitedError`, `sleeps == []`, เรียก provider 1 ครั้ง · Given 429 ครั้งที่ 3 (step 30) และ `retry_after = 20` → รอ 30 · Given `stream` ที่ WS = `[5]`: `retry_after = 5` → รอ 5 · `= 6` → ยอมแพ้ทันที
+- **AC-6b (NFR-R1 · error อื่นยังใช้เพดานเดิม)** Given `retry_backoff_seconds` > `max_retry_wait_seconds` และ error ที่ไม่ใช่ 429 Then ไม่ retry (เรียก provider 1 ครั้ง · พฤติกรรมเดิม)
 - **AC-7 (NFR-R1 · error อื่นไม่เปลี่ยน)** Given timeout `retries + 1` ครั้ง Then `AIProviderError` ที่ไม่ใช่ `AIRateLimitedError` · `sleeps == [retry_backoff_seconds] × retries` · Given 429 → timeout → คำตอบ Then ได้ผล `sleeps == [W[0], retry_backoff_seconds]` (งบแยกกัน)
 - **AC-8 (NFR-R1)** Given ยอมแพ้เพราะ 429 Then `CallRecord` 1 แถว `status = "provider_error"` · breaker บันทึกผลล้ม 1 ครั้ง
 - **AC-9 (AM-11)** Given เปิดห้องที่ต้องสร้างโจทย์ และ `generate_problem` ล้มด้วย `AIRateLimitedError` ครั้งแรก Then gateway ถูกเรียก `generate_problem` 1 ครั้ง (ไม่ใช่ `1 + max_generate_retries`) · ไม่มีแถว `problems` · มี token `room.no_problem` หลังคำทัก
@@ -78,4 +79,8 @@ feature นี้: (A) 429 มีตารางรอของตัวเอ�
 ## 10. คำถามที่ต้องตัดสิน
 
 1. **ai-orchestration.md §2.10 "Fallback chain" (ไฟล์ของ Jam):** แก้ประโยค "retry 1 ครั้ง (backoff …)" ให้บอกว่า 429 ใช้ `rate_limit_waits_*` ใน PR เดียวกัน · ข้อเสนอ: แก้ใน PR นี้แล้วบอก Jam ในคำอธิบาย PR
-2. **`retry_after` เกิน step แต่ไม่เกิน `max_retry_wait_seconds`** (§2.2 ข้อ 2): ข้อเสนอคือรอตาม provider (`max`) เพราะ provider รู้ quota ดีกว่า · ทางเลือก: ใช้ step เสมอ
+2. ~~`retry_after` เกิน step~~ · **ตัดสินแล้ว 19 พ.ย. (Junior):** รอ `max(step, retry_after)` · ยอมแพ้เมื่อ `retry_after > max(waits)` · `max_retry_wait_seconds` ใช้กับ error ที่ไม่ใช่ 429 เท่านั้น (§2.2 ข้อ 2)
+3. **test เดิมของ §2.10 ที่ขัดกับข้อ 2 (ยังไม่แก้ · รอ Junior):**
+   - `tests/unit/test_ai_gateway.py::test_ai_orchestration_2_10_no_retry_when_provider_asks_to_wait_too_long` · 429 ของ `call` ขอรอ `max_retry_wait_seconds + 1` = 11 s แล้วคาดว่ายอมแพ้ · กฎใหม่: 11 ≤ 30 → รอ 11 แล้วลองใหม่ · ข้อเสนอ: เปลี่ยน `retry_after` เป็น `max(rate_limit_waits_seconds) + 1` (ความหมายของ test เหมือนเดิม: ขอรอนานเกินเพดาน → ไม่ retry)
+   - `tests/unit/test_ai_gateway_stream.py::test_AI01_stream_rate_limit_wait_boundary[0-True]` · stream ได้ 429 ขอรอ `max_retry_wait_seconds` = 10 s แล้วคาดว่ารอ 10 แล้วผ่าน · กฎใหม่: 10 > 5 (`max(rate_limit_waits_stream_seconds)`) → ยอมแพ้ · ข้อเสนอ: เปลี่ยนฐานของ boundary จาก `max_retry_wait_seconds` เป็น `max(rate_limit_waits_stream_seconds)` (กรณี `[1-False]` ผ่านอยู่แล้วแต่ควรเปลี่ยนฐานด้วยให้เป็น boundary จริง)
+   - test เดิมอื่นที่มี 429 (`test_ai_orchestration_2_10_retry_waits_the_delay_the_provider_asked_for` · ขอ 5 s → รอ 5) ยังผ่าน

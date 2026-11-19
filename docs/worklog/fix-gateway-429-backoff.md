@@ -9,9 +9,9 @@
 
 ## Plan
 
-- [ ] 1. 🤖 spec `specs/features/ai/gateway-rate-limit-backoff.md` (NFR-R1, AM-11)
-- [ ] 2. 🙋 Junior review spec + ตอบ §10 ข้อ 1–2
-- [ ] 3. 🤖 `/spec-to-tests`: test แดงของ AC-1 ถึง AC-10 (`tests/unit/test_gateway_rate_limit.py` + room_problems)
+- [x] 1. 🤖 spec `specs/features/ai/gateway-rate-limit-backoff.md` (NFR-R1, AM-11)
+- [x] 2. 🙋 Junior review spec + ตอบ §10 ข้อ 1–2 (19 พ.ย.)
+- [x] 3. 🤖 `/spec-to-tests`: test แดงของ AC-1 ถึง AC-10 (`tests/unit/test_gateway_rate_limit.py` + `tests/unit/test_room_problems_rate_limit.py`)
 - [ ] 4. 🙋 Junior review tests
 - [ ] 5. 🤖 implement: `config/ai.yaml` (2 key ใหม่ · v bump) + `GatewayConfig` + `_with_retries` + `AIRateLimitedError` + `room_problems` · แก้ §2.10 ของ ai-orchestration.md ถ้า §10 ข้อ 1 ok · ruff + pytest ทั้งชุด
 - [ ] 6. 🙋 บอกกลุ่ม (แก้ `config/ai.yaml` ซึ่งเป็น shared file + ไฟล์ของ Jam) · `/work-done` → **ถาม Junior ก่อน merge**
@@ -28,11 +28,12 @@
 
 - 2026-11-19 · Jam ให้ Junior ตัดสิน · PR แยกจาก #146 (merge แล้ว) · ไม่ทำ C (ข้อความระหว่างรอ) และ D (fallback model) ก่อนวิดีโอ
 - 2026-11-19 · #146 ไม่แตะ `_with_retries` · PR นี้แก้เฉพาะ `_with_retries` + 3 จุดที่เรียก (spec §9)
-- 2026-11-19 · กฎ `retry_after` เลือกให้ test เดิมของ §2.10 (PR #15) ยังผ่านโดยไม่แก้
+- 2026-11-19 · Junior: แก้ ai-orchestration.md §2.10 ใน PR นี้ แล้วบอก Jam ในคำอธิบาย PR
+- 2026-11-19 · Junior: 429 รอ `max(slot, retry_after)` · ยอมแพ้เมื่อ `retry_after > max(table)` (30 s / 5 s) · `max_retry_wait_seconds` ใช้กับ error อื่นเท่านั้น · test เดิม 2 ตัวขัด (spec §10 ข้อ 3) รอ Junior ตัดสินก่อนแก้
 
 ## Next step
 
-Junior review spec (ข้อ 2)
+Junior review test แดง (ข้อ 4) + ตัดสิน test เดิม 2 ตัวใน spec §10 ข้อ 3 → แล้ว `/implement-feature`
 
 ## Waiting on
 
