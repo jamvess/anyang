@@ -11,7 +11,7 @@
 
 - [x] 1. 🤖 `/spec-feature` → `specs/features/exam-prep/ingestion-retry.md` (CM-07 · UC-02 E5): หน้าเว็บ S11 (ปุ่มที่ขั้นรวมและแถวไฟล์ที่ล้ม) + API (endpoint ใหม่สำหรับขั้นรวม · ต่อ `/materials/{id}/retry` ที่เป็น stub กับ `IngestionRunner.retry` ที่มีแล้ว) + ข้อที่ต้องแก้ใน `api.md` (shared)
 - [x] 2. 🙋 May อ่าน spec + ตอบ open questions (ถามเป็นตัวเลือก)
-- [ ] 3. 🤖 `/spec-to-tests` ทั้ง `apps/api` และ `apps/web` → test แดง
+- [x] 3. 🤖 `/spec-to-tests` ทั้ง `apps/api` และ `apps/web` → test แดง
 - [ ] 4. 🙋 May review test
 - [ ] 5. 🤖 `/implement-feature` ฝั่ง API (router ของ Junior · service ของ Jam) + แก้ `api.md`
 - [ ] 6. 🤖 `/implement-feature` ฝั่งหน้าเว็บ + `pnpm gen:api`
@@ -34,13 +34,16 @@
 
 ## Next step
 
-ขั้น 3: รัน `/spec-to-tests` กับ `specs/features/exam-prep/ingestion-retry.md` · test ใหม่ตาม §8 (`apps/web/tests/materials/ProgressRetry.test.tsx`, `apps/api/tests/unit/test_ingestion_retry_api.py`, `test_ingestion_retry_runner.py`) · ห้ามแตะ `ProgressPage.test.tsx`
+ขั้น 4: รอ May review test 3 ไฟล์ (`apps/web/tests/materials/ProgressRetry.test.tsx`, `apps/api/tests/unit/test_ingestion_retry_api.py`, `test_ingestion_retry_runner.py`) · ok แล้ว commit `test(...)` แล้ว `/implement-feature` (API ก่อน: `IngestionRunner.retry_file`, `retry_steps`, router 2 ตัว)
 
 ## Waiting on
 
 ไม่มี
 
 ## Notes for next time
+
+- test ไม่ผ่าน 19 พ.ย. ด้วยเหตุผลที่ถูก: เว็บ 12 ตัวหาปุ่มไม่เจอ · API 22 ตัว (`/materials/{id}/retry` ยังเป็น stub · endpoint ขั้นรวม 404 · ไม่มี `retry_file`/`retry_steps`) · 2 ตัวผ่านอยู่แล้ว (stub ไม่มี token · 404 ของ prep tenant อื่น ซึ่งผ่านเพราะยังไม่มี route · จะผ่านจริงหลังทำ)
+- `IngestionRunner.retry` เดิมไม่แตะ: test ที่ review แล้ว (`test_classify_never_stuck.py` AC-34, `test_ingestion_pipeline.py`) await มันแล้วคาดว่า classify เสร็จ · ของใหม่ใช้ `retry_file` ที่ไม่รอ
 
 - `IngestionRunner.retry(material_id)` มีแล้วใน `apps/api/app/services/ingestion.py` · `start(prep_id)` ที่ไม่มีไฟล์รอก็รัน `build_scope` ใหม่ได้ (loop `first`) · ขั้นรวมรันซ้ำได้หัวข้อชุดใหม่แทนชุดเดิม (`ingestion.md` §2.4 ข้อ 6)
 - prep ของ May ที่ "หาหัวข้อ" ล้ม 19 พ.ย. (`ingestion_jobs.error` = `merge_topics: ProviderRateLimited`) ใช้ลองเส้นจริงได้
