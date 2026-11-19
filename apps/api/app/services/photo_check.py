@@ -398,17 +398,21 @@ async def _explanation(
         if directive in SAME_PROBLEM_AGAIN:
             # The same problem again at the bottom; the canvas keeps the drawing (§2 I item 6,
             # §2 K item 4).
+            card = problem_event(pending)
+            await state.remember_card(key, card)  # problem-card-history.md §6
             await state.remember(key, TUTOR, problem_line(pending))
-            yield "problem", problem_event(pending)
+            yield "problem", card
             return
         # Demo only (demo-room.md §2 B): the default state has no next problem. No progress
         # card here: it comes when the room opens (§2 J item 1).
         if upcoming := await state.next_problem(key, pending):
             # Remembered before it is sent: a client that leaves now still finds it (§2 E).
+            card = problem_event(upcoming)
             await state.remember(key, TUTOR, NEXT_PROBLEM)
+            await state.remember_card(key, card)  # after "next", as sent (§6 item 1)
             await state.remember(key, TUTOR, problem_line(upcoming))
             yield _tutor(NEXT_PROBLEM)
-            yield "problem", problem_event(upcoming)
+            yield "problem", card
 
     async with aclosing(
         tutor_events(gateway, "explain_check", explain_input, call_context, after_explaining)

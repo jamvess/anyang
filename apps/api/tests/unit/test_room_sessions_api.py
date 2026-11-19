@@ -121,8 +121,9 @@ class FakeRoomRepo:
         tenant_id: uuid.UUID,
         session_id: uuid.UUID,
         role: str,
-        content: str,
+        content: str | None,
         input_mode: str | None,
+        card: Any = None,  # problem-card-history.md §6 (May ok 19 Nov · no assertion changed)
     ) -> MessageRecord:
         self._touch()
         if self.fail_insert_role == role:
@@ -132,7 +133,7 @@ class FakeRoomRepo:
             id=uuid.uuid4(),
             role=role,
             content=content,
-            card=None,
+            card=card,
             input_mode=input_mode,
             attachment_path=None,
             attachment_name=None,
