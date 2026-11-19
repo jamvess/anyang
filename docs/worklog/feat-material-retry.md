@@ -29,7 +29,7 @@
 
 ## Next step
 
-ร่าง spec ด้วย `/spec-feature`
+Junior review `specs/features/exam-prep/material-retry.md` (§10 open questions) แล้วรัน `/spec-to-tests`
 
 ## Waiting on
 
