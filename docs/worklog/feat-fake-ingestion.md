@@ -12,7 +12,7 @@
 ตอนนี้ `AI_PROVIDER=fake` (`app/ai/gateway.py` `_build_gateway`) ตอบแค่ `tutor_reply` · ingestion เรียก `classify_material`, `vision_extract`, `vision_extract_pages`, `split_past_exam`, `extract_topics_local`, `merge_topics`, `map_questions` และ `embed` · ทุกตัวล้ม ("no scripted response") และ `FakeProvider` ไม่มี `embed` เลย · ไฟล์จึงล้มทุกไฟล์ในโหมด fake (#151) · ทุกไฟล์ของ prep ได้ key `f1`, `f2`, … (`file_keys`) คำตอบปลอมจึงอ้าง `f1:1-1` ได้
 
 - [x] 1. 🤖 แก้ spec `specs/features/scope/ingestion.md` §2.7 (ตัวรัน job ในเครื่อง): โหมด fake ตอบทุก purpose ของ ingestion ด้วยคำตอบตายตัวที่ผ่าน schema · `embed` ปลอมคืน vector ยาว `embedding.dimensions` · prep ที่อัปโหลดในโหมด fake ไปถึงหน้า scope ได้ (หัวข้อปลอม 2–3 หัวข้อ) → 🙋 Jam review
-- [ ] 2. 🤖 `/spec-to-tests` (unit: คำตอบตั้งต้นผ่าน schema ทุกตัว · เส้นเต็ม classify → ingest → build_scope ใน fake mode ได้ scope) → 🙋 Jam review test
+- [x] 2. 🤖 `/spec-to-tests` (unit: คำตอบตั้งต้นผ่าน schema ทุกตัว · เส้นเต็ม classify → ingest → build_scope ใน fake mode ได้ scope) → 🙋 Jam review test
 - [ ] 3. 🤖 `/implement-feature`: คำตอบตั้งต้นใน `app/stubs/` · `FakeProvider.embed` · `_build_gateway` ใส่ defaults · ruff · pytest ทั้งชุด
 - [ ] 4. 🙋 (ถ้าอยาก) ลองในเบราว์เซอร์ด้วย `AI_PROVIDER=fake`
 
@@ -27,7 +27,7 @@
 
 ## Next step
 
-ข้อ 1 รอ Jam review spec (`ingestion.md` §2.7 ข้อ 4 · AC-40 ถึง AC-43) · ok แล้วทำข้อ 2
+ข้อ 2 รอ Jam review test (`tests/unit/test_fake_ingestion.py` · 11 test แดงทั้งหมด) · ok แล้วทำข้อ 3
 
 ## Waiting on
 
