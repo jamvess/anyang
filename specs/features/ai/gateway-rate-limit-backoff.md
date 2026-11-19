@@ -27,7 +27,7 @@ feature นี้: (A) 429 มีตารางรอของตัวเอ�
 
 ### 2.2 `Gateway._with_retries` (ใช้กับ `call`, `embed` และ `stream` ก่อน chunk แรก)
 
-1. error แบ่งเป็น 2 ชนิด แต่ละชนิดมีงบของตัวเองภายใน call เดียว:
+1. error แบ่งเป็น 2 ชนิด แต่ละชนิดมีงบของตัวเองต่อ 1 request ไปที่ provider (= 1 รอบของ `_with_retries`: schema try 1 รอบของ `call`, embed 1 batch, หรือ stream ก่อน chunk แรก · เหมือน `gateway.retries` เดิม · self-review #159):
    - **429** (`ProviderRateLimited`): งบ = `len(waits)` · `waits` = `rate_limit_waits_seconds` หรือ `rate_limit_waits_stream_seconds` ตาม caller
    - **อื่นๆ** (timeout, exception อื่นของ provider): งบ = `gateway.retries` รอ `retry_backoff_seconds` · เหมือนเดิมทุกอย่าง
 2. 429 ครั้งที่ n (นับเฉพาะ 429 ของ call นี้ เริ่มที่ 1) ยังมีงบ (n ≤ `len(waits)`) → `step = waits[n − 1]` · ถ้า `retry_after > max(waits)` (ค่ามากสุดของตารางนั้น: 30 s non-stream, 5 s stream) → ยอมแพ้ทันทีไม่รอ (provider ขอรอนานกว่าที่ตารางเรายอม) · ไม่งั้นรอ `wait = max(step, retry_after)` (ไม่มี `retry_after` = `step`) แล้วลองใหม่ · `retry_after` เท่ากับ `max(waits)` พอดี → ยังรอ (Junior 19 พ.ย.)
@@ -36,7 +36,7 @@ feature นี้: (A) 429 มีตารางรอของตัวเอ�
 5. ไม่เปลี่ยน: `timeout_s` ต่อครั้ง · `CallRecord` 1 แถวต่อ call (`provider_error` เมื่อยอมแพ้) · circuit breaker นับ 1 ผลต่อ call · stream retry เฉพาะก่อน chunk แรก · schema retry และ truncation (#146)
 6. ทุกครั้งที่จะรอหลัง 429 → log WARNING บรรทัดเดียว: purpose, ครั้งที่ n, `wait`, `retry_after` (ไว้ calibrate §2.1)
 
-ผลต่อเวลา: `call` ที่โดน 429 ทุกครั้งรอรวม 5 + 15 + 30 = 50 s แล้วล้ม (4 ครั้งที่เรียก provider) · `stream` รอรวม 5 s (2 ครั้ง) · ทั้งหมดอยู่ใต้ timeout ของ Cloud Run (300 s) และไม่มี timeout ฝั่ง `fetch` ของหน้าเว็บ
+ผลต่อเวลา: request ที่โดน 429 ทุกครั้งรอรวม 5 + 15 + 30 = 50 s แล้วล้ม (4 ครั้งที่เรียก provider) · `stream` รอรวม 5 s (2 ครั้ง) · ไม่มี timeout ฝั่ง `fetch` ของหน้าเว็บ · ⚠️ งบนับต่อ request ไม่ใช่ต่อ turn: schema retry, embed หลาย batch, รอบสร้างโจทย์ของ `room_problems` และ call ต่อกันใน turn เดียว (เช่น `typed_answer` → `check_answer` → `generate_problem`) รอได้คนละ 50 s · กรณีแย่ที่สุดทางทฤษฎีเกิน 300 s ของ Cloud Run ได้ (429 สลับกับคำตอบที่ไม่ผ่าน schema หรือ SymPy) · ยอมรับสำหรับวิดีโอ (#158 รอหลัง ingestion) · หลังวิดีโอ: ตารางสั้นหรือข้อความรอสำหรับ call กลางรอบคุย (checklist ข้อของ Jam ใน S4) และ cooldown ระดับ provider (§10 ข้อ 4)
 
 ### 2.3 `room_problems` · สร้างโจทย์ (AM-11 · ต่อจาก `room-problems-db.md` §2 ข้อ 4)
 
@@ -84,3 +84,4 @@ feature นี้: (A) 429 มีตารางรอของตัวเอ�
    - `tests/unit/test_ai_gateway.py::test_ai_orchestration_2_10_no_retry_when_provider_asks_to_wait_too_long` · 429 ของ `call` ขอรอ `max_retry_wait_seconds + 1` = 11 s แล้วคาดว่ายอมแพ้ · กฎใหม่: 11 ≤ 30 → รอ 11 แล้วลองใหม่ · ข้อเสนอ: เปลี่ยน `retry_after` เป็น `max(rate_limit_waits_seconds) + 1` (ความหมายของ test เหมือนเดิม: ขอรอนานเกินเพดาน → ไม่ retry)
    - `tests/unit/test_ai_gateway_stream.py::test_AI01_stream_rate_limit_wait_boundary[0-True]` · stream ได้ 429 ขอรอ `max_retry_wait_seconds` = 10 s แล้วคาดว่ารอ 10 แล้วผ่าน · กฎใหม่: 10 > 5 (`max(rate_limit_waits_stream_seconds)`) → ยอมแพ้ · ข้อเสนอ: เปลี่ยนฐานของ boundary จาก `max_retry_wait_seconds` เป็น `max(rate_limit_waits_stream_seconds)` (กรณี `[1-False]` ผ่านอยู่แล้วแต่ควรเปลี่ยนฐานด้วยให้เป็น boundary จริง)
    - test เดิมอื่นที่มี 429 (`test_ai_orchestration_2_10_retry_waits_the_delay_the_provider_asked_for` · ขอ 5 s → รอ 5) ยังผ่าน
+4. **หลังวิดีโอ (จาก self-review #159):** งบ 429 ต่อ turn หรือ cooldown ระดับ provider ("rate limited ถึงเวลา T" ที่ call พร้อมกันใช้ร่วมกัน · ingestion ยิง classify พร้อมกันหลายไฟล์) แทนการรอแยกของแต่ละ call · และ caller อื่นที่เรียก AI ต่อหลัง `AIRateLimitedError` (เช่นคำทัก `open_session` หลังสร้างโจทย์ไม่ได้) · ตัดสินพร้อมข้อ C/D

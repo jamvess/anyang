@@ -396,10 +396,7 @@ class Gateway:
         breaker, generation = self._acquire(provider_name, purpose)
         try:
             chunks, deadline, chunk = await self._with_retries(
-                first_chunk,
-                purpose,
-                settings.timeout_s,
-                self._config.gateway.rate_limit_waits_stream_seconds,
+                first_chunk, purpose, settings.timeout_s, stream=True
             )
             answered = True
             if chunk is None:
@@ -482,10 +479,7 @@ class Gateway:
                     dimensions=settings.dimensions,
                 )
                 response = await self._with_retries(
-                    lambda request=request: provider.embed(request),
-                    "embed",
-                    settings.timeout_s,
-                    self._config.gateway.rate_limit_waits_seconds,
+                    lambda request=request: provider.embed(request), "embed", settings.timeout_s
                 )
                 if len(response.vectors) != len(request.texts):
                     raise AIProviderError(
@@ -543,10 +537,7 @@ class Gateway:
         self, provider: Provider, request: ProviderRequest, timeout_s: float
     ) -> ProviderResponse:
         return await self._with_retries(
-            lambda: provider.generate(request),
-            request.purpose,
-            timeout_s,
-            self._config.gateway.rate_limit_waits_seconds,
+            lambda: provider.generate(request), request.purpose, timeout_s
         )
 
     async def _with_retries[R](
@@ -554,15 +545,20 @@ class Gateway:
         attempt_call: Callable[[], Awaitable[R]],
         purpose: str,
         timeout_s: float,
-        rate_limit_waits: list[float],
+        *,
+        stream: bool = False,
     ) -> R:
         """Run ``attempt_call`` with the timeout, retrying after a wait.
 
         A 429 (``ProviderRateLimited``) and other errors have separate budgets
-        (gateway-rate-limit-backoff.md §2.2): the n-th 429 waits ``max(rate_limit_waits[n-1],
-        retry_after)`` and gives up when ``retry_after`` is above the largest slot; other errors
-        get ``gateway.retries`` retries after ``retry_backoff_seconds`` (§2.10)."""
+        (gateway-rate-limit-backoff.md §2.2): the n-th 429 waits ``max(slot n, retry_after)`` of
+        the stream or non-stream table and gives up when ``retry_after`` is above the largest
+        slot; other errors get ``gateway.retries`` retries after ``retry_backoff_seconds``
+        (§2.10). The budgets are per provider request: one schema try, one embed batch."""
         gateway = self._config.gateway
+        rate_limit_waits = (
+            gateway.rate_limit_waits_stream_seconds if stream else gateway.rate_limit_waits_seconds
+        )
         largest_slot = max(rate_limit_waits, default=0.0)
         rate_limited = other_errors = 0
         while True:
@@ -575,7 +571,7 @@ class Gateway:
                 if rate_limited > len(rate_limit_waits) or (
                     asked is not None and asked > largest_slot
                 ):
-                    raise AIRateLimitedError(f"{purpose}: {last_error}") from None
+                    raise AIRateLimitedError(f"{purpose}: {last_error}") from error
                 wait = max(rate_limit_waits[rate_limited - 1], asked or 0.0)
                 log.warning(
                     "%s: waiting %ss after 429 number %d (retry_after=%s)",
