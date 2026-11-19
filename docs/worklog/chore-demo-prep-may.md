@@ -5,7 +5,7 @@
 | Owner | May |
 | Branch | `chore/demo-prep-may` |
 | Checklist item | เตรียมลำดับหน้าจอสำหรับ demo รวม (ส่วนเตรียมของช่วง 3 · ไม่ติ๊กจนทีมตกลงลำดับ) |
-| Status | paused · 2026-11-17 (May เลือกทำ goal ของอาจารย์ก่อน: ปุ่มจบ session) |
+| Status | in progress · 2026-11-19 |
 
 ## Plan
 
