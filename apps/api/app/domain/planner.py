@@ -7,6 +7,7 @@ threshold comes from ``cfg`` (config/learning.yaml); the caller reads the topics
 decision.
 """
 
+import math
 import random
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -14,7 +15,7 @@ from functools import lru_cache
 from typing import Literal
 from uuid import UUID
 
-from app.domain.bkt import Mode, update_mastery
+from app.domain.bkt import Level, Mode, update_mastery
 from app.settings import BktConfig, LearningConfig
 
 ReasonCode = Literal[
@@ -30,6 +31,7 @@ ReasonCode = Literal[
 # Constants of the simulation (spec §10 item 1 (a)), not thresholds of the learning model:
 # learning-model.md §6 reports its numbers from 100,000 runs; a fixed seed makes the mean the
 # same on every call. A simulated student who never reaches the threshold stops at the cap.
+_SIM_METHOD = "bkt_simulation"  # the only value of planner.problems_per_skill built so far
 _SIM_RUNS = 100_000
 _SIM_SEED = 0
 _SIM_MAX_PROBLEMS = 1_000
@@ -44,7 +46,7 @@ class PlanTopic:
     prereq_ids: tuple[UUID, ...]
     skills_total: int
     skills_covered: int
-    level: str
+    level: Level
     mastery_eff: float
 
 
@@ -82,33 +84,25 @@ class PlannerDecision:
 
 def problems_per_skill(cfg: LearningConfig) -> float:
     """Mean problems a simulated student needs before BKT mastery reaches the threshold."""
-    b = cfg.bkt
-    return _simulate(b.p_init, b.p_transit, b.p_guess, b.p_slip, b.mastery_threshold)
+    method = cfg.planner.problems_per_skill
+    if method != _SIM_METHOD:
+        raise ValueError(f"planner.problems_per_skill: unknown method {method!r}")
+    return _simulate(cfg.bkt)
 
 
 @lru_cache(maxsize=8)
-def _simulate(
-    p_init: float, p_transit: float, p_guess: float, p_slip: float, threshold: float
-) -> float:
-    bkt = BktConfig(
-        p_init=p_init,
-        p_transit=p_transit,
-        p_guess=p_guess,
-        p_slip=p_slip,
-        mastery_threshold=threshold,
-        weak_below=0.0,  # unused by update_mastery
-        count_only_independent=True,  # unused by update_mastery
-    )
+def _simulate(bkt: BktConfig) -> float:
+    """``BktConfig`` is frozen, so the cache key is its values."""
     rng = random.Random(_SIM_SEED)
     total = 0
     for _ in range(_SIM_RUNS):
-        knows = rng.random() < p_init
-        estimate = p_init
+        knows = rng.random() < bkt.p_init
+        estimate = bkt.p_init
         problems = 0
-        while estimate < threshold and problems < _SIM_MAX_PROBLEMS:
-            correct = rng.random() < ((1 - p_slip) if knows else p_guess)
+        while estimate < bkt.mastery_threshold and problems < _SIM_MAX_PROBLEMS:
+            correct = rng.random() < ((1 - bkt.p_slip) if knows else bkt.p_guess)
             estimate = update_mastery(estimate, correct, bkt)
-            knows = knows or rng.random() < p_transit
+            knows = knows or rng.random() < bkt.p_transit
             problems += 1
         total += problems
     return total / _SIM_RUNS
@@ -177,11 +171,14 @@ def next_topic(topics: Sequence[PlanTopic], mode: Mode, current_topic_id: UUID |
         return Choice(None, "no_topic")
 
     candidates = _candidates(topics, mode)
+    if not candidates:  # the mode cuts every topic: normal's queue (spec §2.3 item 1)
+        return next_topic(topics, "normal", current_topic_id)
+
     for t in candidates:
         if t.id == current_topic_id and t.level != "passed":
             return Choice(t.id, "continue_topic")
 
-    if mode == "final" and candidates:
+    if mode == "final":
         weakest = min(candidates, key=lambda t: (t.mastery_eff, t.order_index))
         return Choice(weakest.id, "final_review")
 
@@ -192,7 +189,7 @@ def next_topic(topics: Sequence[PlanTopic], mode: Mode, current_topic_id: UUID |
             return Choice(start.id, "prerequisite_first", first_open.id)
         return Choice(first_open.id, "triage_focus" if mode == "triage" else "next_in_order")
 
-    weakest = min(starred, key=lambda t: (t.mastery_eff, t.order_index))
+    weakest = min(candidates, key=lambda t: (t.mastery_eff, t.order_index))
     return Choice(weakest.id, "all_passed")
 
 
@@ -216,7 +213,9 @@ def plan(
     need = _need_minutes(topics, minutes_per_problem, problems_per_skill(cfg))
     available = facts.days_left * daily
     ratio = need / available if available > 0 else None
-    mode = choose_mode(ratio, facts.days_left, cfg)
+    # No time at all: work left is over every ratio, no work is under all (spec §2.2 item 4).
+    mode_ratio = ratio if ratio is not None else (math.inf if need > 0 else 0.0)
+    mode = choose_mode(mode_ratio, facts.days_left, cfg)
     choice = next_topic(topics, mode, facts.current_topic_id)
 
     return PlannerDecision(
