@@ -3,7 +3,7 @@
 # "vertex:" runs on Vertex AI when GOOGLE_CLOUD_PROJECT is set (specs/features/ai/gemini-vertex.md;
 # AI-07: no free tier for real users). AI_MODEL_OVERRIDE=gemini:<model> still uses the Gemini API key.
 
-version: "1.23"                        # a string: unquoted, YAML reads 1.10 as the float 1.1
+version: "1.24"                        # a string: unquoted, YAML reads 1.10 as the float 1.1
 
 tiers:
   small:  {primary: "vertex:gemini-3.5-flash",   fallback: "anthropic:TODO-claude-haiku"}  # P3a on Vertex (31 Oct): A4 43/43, A7 34/43 and 30/43 · flash-lite broke JSON with LaTeX (unescaped \\sqrt) on 1 of 2 exams (P3.md §7)
@@ -64,7 +64,9 @@ embedding:                             # A3 embed (ai-orchestration §2.3.3), ti
 gateway:
   retries: 1                           # then fallback provider, then degrade
   retry_backoff_seconds: 1             # [C] wait before a retry when the provider gives no retry delay · after Alpha: pick from ai_calls (success rate of retries by wait)
-  max_retry_wait_seconds: 10           # [C] do not retry if the provider asks to wait longer (a chat turn targets TTFT p95 2 s) · after Alpha: from ai_calls
+  max_retry_wait_seconds: 10           # [C] errors other than 429: do not retry if the wait is longer (a chat turn targets TTFT p95 2 s) · after Alpha: from ai_calls
+  rate_limit_waits_seconds: [5, 15, 30] # [C] v1.24 · 429 of call/embed: wait before retry n = max(slot n, the provider's retryDelay); give up when retryDelay > the largest slot · journey 17 Nov: Vertex 429 RESOURCE_EXHAUSTED x3 within 3 s, gone after a minute (gateway-rate-limit-backoff.md §1) · after Alpha: from the 'waiting after 429' log lines (which wait passed)
+  rate_limit_waits_stream_seconds: [5] # [C] v1.24 · same for stream before the first chunk (the user is waiting for text) · after Alpha: from the same log lines
   schema_retries: 1                    # retry once with the validation error appended
   circuit_breaker:                     # [B] Resilience4j defaults
     failure_rate_threshold: 0.5
