@@ -1,4 +1,4 @@
-# API (v1.21)
+# API (v1.22)
 
 Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้างอัตโนมัติที่ `/docs` · frontend generate types จาก `/openapi.json`
 
@@ -300,6 +300,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | `messages` | `Message[]` | เหมือน `GET /sessions/{id}/messages` |
 
 **`Message`:** `{id, role: "user" | "tutor" | "buddy" | "card" | "system", content: string | null, card: object | null, input_mode: "text" | "voice" | "image" | null, attachment_path: string | null, attachment_name: string | null, created_at}` · `attachment_path` เป็น path ใน Storage ที่ตั้งชื่อด้วย uuid ส่วน `attachment_name` คือชื่อไฟล์เดิมที่ผู้ใช้เห็น เช่น "วิธีทำ.jpg" (v1.3 · ต้องเพิ่ม column ใน `messages`) · ไม่ส่ง `extracted_text` และ `intent` (ใช้ภายใน backend) · ตัวอย่างรูปร่าง: `apps/web/tests/fixtures/room/session-s15.json` (ยังไม่มี `session_id` และ `card`)
+  - **v1.22 (May 2026-11-19 · `specs/features/tutor/problem-card-history.md` §6 · ไม่เปลี่ยน schema):** `role = "card"` มี `card` 2 แบบ: การ์ดความคืบหน้า หรือ `{"problem": ProblemEvent}` (payload เดียวกับ event `problem` ทุก field · `content = null`) · ห้องในทางที่มี token บันทึกการ์ดโจทย์ 1 แถว**ทุกครั้ง**ที่ส่ง event `problem` (เปิดห้อง · ข้อต่อไปหรือโจทย์เดิมซ้ำหลังตรวจคำตอบพิมพ์ รูป หรือยืนยันลายมือ) เรียงตามที่ส่งใน SSE · id ของแถวนี้**ไม่อยู่**ใน `done.message_ids` (ยังเป็นข้อความ tutor และ buddy เท่านั้น) · บันทึกไม่สำเร็จ → log แล้ว stream ต่อ · ห้องเดโม่ที่ไม่มี token ไม่บันทึก
 
 **ระบบช้า (degrade ของ tutor, ai-orchestration.md §2.10):** ส่งข้อความ template "ระบบช้า ลองส่งอีกทีนะ" เป็น `token` ที่ `speaker: "tutor"` แล้วตาม `done` และบันทึกเป็นข้อความ tutor ปกติใน `messages` · ส่ง `error` เฉพาะเมื่อไม่มีอะไรให้แสดงเลย
 

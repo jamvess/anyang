@@ -46,7 +46,7 @@ from app.models.room import (
     TokenEvent,
 )
 from app.models.tutor_ai import GenerateProblemResult
-from app.services.room_db import _save_tutor
+from app.services.room_db import _save_tutor, save_problem_card
 from app.services.room_opening import greeting_events, topic_lines
 from app.services.tutor_turn import Event, call_scope
 from app.settings import LearningConfig, get_settings
@@ -168,15 +168,15 @@ async def opening_events(
             yield event
     ids = await _save_tutor(repo, auth, session, "".join(said))
     if problem is not None:
-        yield (
-            "problem",
-            ProblemEvent(
-                problem_id=str(problem.id),
-                text_latex=card_latex,
-                difficulty=problem.difficulty,
-                purpose=problem.purpose,  # type: ignore[arg-type]  # problems.purpose check
-            ),
+        problem_card = ProblemEvent(
+            problem_id=str(problem.id),
+            text_latex=card_latex,
+            difficulty=problem.difficulty,
+            purpose=problem.purpose,  # type: ignore[arg-type]  # problems.purpose check
         )
+        # Saved before it is sent, after the greeting (problem-card-history.md §6 item 1).
+        await save_problem_card(repo, auth, session.id, problem_card)
+        yield "problem", problem_card
     elif chosen is not None:
         line = get_settings().messages.room.no_problem
         yield "token", TokenEvent(speaker="tutor", text=line)

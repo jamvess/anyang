@@ -28,9 +28,9 @@ from app.db.room_problems import ProblemRecord, ProblemRepository, ProgressFacts
 from app.domain.bkt import record_attempt
 from app.domain.checker import CheckResult
 from app.domain.room import text_latex_of
-from app.models.room import ProgressCardEvent
+from app.models.room import ProblemEvent, ProgressCardEvent
 from app.request_context import get_request_id
-from app.services import room_problems
+from app.services import room_db, room_problems
 from app.services.checker import CheckProblem
 from app.services.room_state import (
     STUDENT,
@@ -309,6 +309,15 @@ class DbRoomState:
             ),
             None,
         )
+
+    async def remember_card(self, key: str, card: ProblemEvent) -> None:
+        """Only the session's open problem: a stale preview's ended problem sent again is not
+        kept, or the last card after a reload would not be the one answers are checked
+        against (problem-card-history.md §6 item 6 · self-review)."""
+        current = await self.pending_problem(key)
+        if current is None or current.problem_id != card.problem_id:
+            return
+        await room_db.save_problem_card(self._repo, self._auth, self._session.id, card)
 
     async def conversation(self, key: str) -> list[tuple[str, str]]:
         messages = await self._db(

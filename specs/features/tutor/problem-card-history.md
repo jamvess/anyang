@@ -64,13 +64,15 @@ Vitest + Testing Library · `ChatRoom` กับ `room.messages` ที่กำ
 
 ไม่มี migration · ใช้ `messages.role = 'card'` และ `messages.card jsonb` ที่มีอยู่ (`0001`) · ความหมายของ `card` กว้างขึ้น: การ์ดความคืบหน้า **หรือ** `{"problem": …}`
 
-## 6. API / SSE changes (สัญญาให้ Jam · Jam ทำ API ใน PR แยก)
+## 6. API / SSE changes (สัญญาให้ Jam · May ทำ API ใน PR แยก 19 พ.ย. เพราะใกล้ demo · เทส `apps/api/tests/unit/test_problem_card_history_api.py`)
 
 1. ทุกครั้งที่ห้องในทางที่มี token ส่ง SSE `problem` ให้บันทึกข้อความ 1 แถว: `role = "card"`, `content = null`, `card = {"problem": <payload เดียวกับ event `problem` ทุก field>}` · บันทึก**ก่อน**ข้อความ tutor ถัดไป (ลำดับ `created_at` ต้องตรงกับที่ผู้ใช้เห็นใน SSE)
 2. ที่ที่ส่ง `problem` ตอนนี้ (Jam ยืนยันรายการ): เปิดห้อง (`room_problems.opening_events`) · ข้อต่อไปหลังตรวจคำตอบพิมพ์ (`room-answers-db.md`) · หลังตรวจรูป / ยืนยันลายมือ (`photo_check`)
 3. `GET /sessions/{id}` คืนแถวนี้ใน `messages` ตามปกติ · `Message.card` เป็น object อยู่แล้ว ไม่ต้องเปลี่ยน schema
-4. id ของแถวนี้อยู่ใน `done.message_ids` หรือไม่: Jam ตัดสิน (หน้าเว็บไม่ใช้)
+4. id ของแถวนี้**ไม่อยู่**ใน `done.message_ids` (ตัดสิน 19 พ.ย. ตาม `DoneEvent`: ข้อความ tutor และ buddy เท่านั้น · หน้าเว็บไม่ใช้)
 5. ห้องเดโม่ในเครื่องที่ไม่มี token: ไม่เปลี่ยน
+6. โจทย์เดิมที่ส่งซ้ำท้ายแชท (เช่น ขอวิธีทำ · `ask_working`) ก็บันทึกซ้ำ ตาม "ทุกครั้ง" ในข้อ 1 · ประวัติจึงมีการ์ดใบเดียวกันได้หลายใบ เหมือนที่เห็นใน SSE · ยกเว้นโจทย์ที่จบไปแล้ว (ยืนยันรูปเก่าหลังโจทย์นั้นจบ) ไม่บันทึก เพราะการ์ดใบล่าสุดในประวัติต้องเป็นโจทย์ที่ยังค้างอยู่ (self-review)
+7. บันทึกการ์ดไม่สำเร็จ → log แล้ว stream ต่อ (เหมือนการบันทึกอื่นใน stream · `room-sessions-db.md`)
 
 ## 7. AI calls
 

@@ -87,9 +87,13 @@ class RoomRepository(Protocol):
         tenant_id: UUID,
         session_id: UUID,
         role: str,
-        content: str,
+        content: str | None,
         input_mode: str | None,
-    ) -> MessageRecord: ...
+        card: Mapping[str, Any] | None = None,
+    ) -> MessageRecord:
+        """``card`` is the row of a card: a progress card, or ``{"problem": ...}``
+        (problem-card-history.md §6)."""
+        ...
 
     def profile_facts(self) -> ProfileFacts: ...
 
@@ -252,8 +256,9 @@ class SupabaseRoomRepository:
         tenant_id: UUID,
         session_id: UUID,
         role: str,
-        content: str,
+        content: str | None,
         input_mode: str | None,
+        card: Mapping[str, Any] | None = None,
     ) -> MessageRecord:
         row = {
             "tenant_id": str(tenant_id),
@@ -261,6 +266,7 @@ class SupabaseRoomRepository:
             "role": role,
             "content": content,
             "input_mode": input_mode,
+            "card": dict(card) if card is not None else None,
         }
         return self._run(
             "messages insert",
