@@ -6,7 +6,7 @@
 | Requirements | CM-07, SA-06, AI-04 |
 | Owner | Junior |
 | Reviewer | Junior · Jam (ใช้ `IngestionRunner` ของ ingestion · ไม่แก้ไฟล์ของ Jam) · May (ปุ่มในแถว S10/S11 · `upload-page.md`) |
-| Status | approved (Junior 2026-11-19 · §10 ข้อ 1–4 ตามข้อเสนอ) |
+| Status | implemented (PR #171) · approved Junior 2026-11-19 · §10 ข้อ 1–4 ตามข้อเสนอ |
 | Related system spec | `api.md` `POST /materials/{id}/retry` (UC-02 E5 · `Material`) · `materials-db.md` §2.1 (ทางมี/ไม่มี token), §2.4 ข้อ 6 (เริ่มงานเบื้องหลังใต้ `ai_call_context`), §9 · `ingestion.md` §2.1 ข้อ 3, §2.2 ข้อ 5, §2.3 ข้อ 5–6, §2.4 · `ai-calls-log.md` §2.1 · `0001_init.sql` `materials`, policy `tenant_rows` · `0009` trigger ของ `materials` |
 
 ## 1. Context

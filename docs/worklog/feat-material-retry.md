@@ -12,8 +12,8 @@
 - [x] 1. 🤖 Spec: `specs/features/exam-prep/material-retry.md` (`/spec-feature`) · เส้น JWT/RLS · `failed` → `uploaded` (ล้มตอน classify) หรือ `confirmed` (ล้มตอน ingest) แบบมีเงื่อนไข `status = failed` · `404` · `409 not_failed` · `503 db_unavailable` · เริ่ม `runner.classify` / `runner.start` ใต้ `ai_call_context` ไม่รอ · ไม่แก้ `ingestion.py` ของ Jam
 - [x] 2. 🙋 Junior review spec (ok 2026-11-19 · §10 ข้อ 1–4 ตามข้อเสนอ)
 - [x] 3. 🤖 Red tests (`/spec-to-tests`)
-- [ ] 4. 🙋 Junior review tests
-- [ ] 5. 🤖 Implement (`/implement-feature`) · `api.md` ลบ "ยังเป็น stub" ของ `/retry` (ไฟล์กลาง · แจ้งกลุ่ม)
+- [x] 4. 🙋 Junior review tests (ok 2026-11-19)
+- [x] 5. 🤖 Implement (`/implement-feature`) · `api.md` ลบ "ยังเป็น stub" ของ `/retry` (ไฟล์กลาง · แจ้งกลุ่ม)
 - [ ] 6. 🙋 ลองกด retry จริงบน dev (หลังปุ่มของ May หรือยิงด้วย curl/`/docs`)
 
 ## Definition of done
@@ -29,12 +29,14 @@
 
 ## Next step
 
-Junior review test ใน `apps/api/tests/unit/test_material_retry_api.py` และ `apps/api/tests/integration/test_material_retry_db.py` แล้วรัน `/implement-feature`
+เช้า 20 พ.ย. ก่อนซ้อม: Junior รัน `/work-done` (code-review, PR description อยู่ใน scratchpad `pr171.md` ของ session นี้ · ถ้าหายให้เขียนใหม่จาก worklog) · แจ้งกลุ่มเรื่อง `api.md` v1.23 · merge · ขั้น 6 (ลองกด retry จริง) ทำหลังปุ่มของ May หรือยิงผ่าน `/docs`
 
 ## Waiting on
 
 - May: ตอบว่าทำปุ่ม + AC-19 ทันพรุ่งนี้ไหม
 
 ## Notes for next time
+
+- 2 red → green cycles (repo `retry` → integration 3/3 · router → unit 19/19) · full suite 2088 passed · `test_ingestion_db` ล้มบน local เหมือน `main`
 
 - `IngestionRunner.retry` ของ Jam รอ classify จบใน request · router จึงเรียก `runner.classify` / `runner.start` เองแทน
