@@ -9,8 +9,8 @@
 
 ## Plan
 
-- [ ] 1. 🤖 แก้ `next` และ `eslint-config-next` ใน `apps/web/package.json` เป็น 16.4.6 แล้ว `pnpm install` (อัปเดต `pnpm-lock.yaml`)
-- [ ] 2. 🤖 `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` ต้องผ่าน
+- [x] 1. 🤖 แก้ `next` และ `eslint-config-next` ใน `apps/web/package.json` เป็น 16.4.6 แล้ว `pnpm install` (อัปเดต `pnpm-lock.yaml`)
+- [x] 2. 🤖 `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` ต้องผ่าน
 - [ ] 3. 🙋 May รัน `pnpm dev` ใหม่ แล้วเปิดเว็บ: login → รายการเตรียมสอบ → ห้องติว (การ์ดโจทย์ + canvas ขึ้น) · ดูว่า Terminal 2 ไม่มีข้อความเตือน security แล้ว
 - [ ] 4. 🤖 ติ๊ก checklist: ข้อนี้ และข้อ ⭐ goal 4 (เสร็จแล้วใน #160 · ผ่านบนเครื่อง May 19 พ.ย. #163)
 - [ ] 5. 🙋 May ส่งข้อความในกลุ่ม (ร่างให้) ก่อน merge
@@ -27,7 +27,7 @@
 
 ## Next step
 
-ขั้น 1: แก้เวอร์ชันใน `apps/web/package.json` แล้ว `pnpm install`
+ขั้น 3: May รัน `pnpm dev` ใหม่แล้วเดินหน้าหลัก (ขั้น 1–2 ผ่าน 19 พ.ย.: lint 0 error · 11 warnings เท่าเดิม · typecheck · test 458 ผ่าน · build ผ่าน)
 
 ## Waiting on
 
