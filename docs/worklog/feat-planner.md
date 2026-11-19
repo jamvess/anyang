@@ -13,7 +13,7 @@
 
 ไม่อยู่ในงานนี้: spaced review (TM-17 · S6) · Park (TM-19 · S6) · stage machine (TM-03, TM-04 · S5 ข้อถัดไป) · ตาราง `planner_decisions` และการเก็บ mode ครั้งก่อน (Junior · S5 "DB ของ planner")
 
-- [ ] 1. 🤖 `/spec-feature` → `specs/features/planner/planner.md` (TM-01, TM-02, TM-18, SM-02):
+- [x] 1. 🤖 `/spec-feature` → `specs/features/planner/planner.md` (TM-01, TM-02, TM-18, SM-02):
   - mode: need ÷ available ตาม `learning-model.md` §6 · ขอบทุกตัวจาก config · `problems_per_skill` คำนวณจาก BKT params (วิธีคำนวณเป็นคำถามให้ Jam ตัดสิน)
   - queue: หัวข้อค้างจาก session ก่อน → หัวข้อถัดไปตามลำดับที่ยืนยัน (`order_index` ซึ่ง A6 เรียงตาม prerequisite แล้ว · SM-02) โดยข้ามหัวข้อที่ mode ตัด
   - เหตุผล: `reason_code` + ข้อความสั้นจาก template ของ code (TM-02 · ไม่บอกแผนทั้งหมด)
@@ -35,7 +35,7 @@
 
 ## Next step
 
-ข้อ 1: `/spec-feature` เขียน `specs/features/planner/planner.md` แล้วให้ Jam ตัดสินคำถามใน §10
+ข้อ 1 รอ Jam review spec `specs/features/planner/planner.md` + ตัดสิน §10 ข้อ 1–4 · ok แล้วทำข้อ 2
 
 ## Waiting on
 
