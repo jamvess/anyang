@@ -29,7 +29,7 @@
 
 ## Next step
 
-Junior review `specs/features/exam-prep/material-retry.md` (§10 open questions) แล้วรัน `/spec-to-tests`
+Junior review test ใน `apps/api/tests/unit/test_material_retry_api.py` และ `apps/api/tests/integration/test_material_retry_db.py` แล้วรัน `/implement-feature`
 
 ## Waiting on
 
