@@ -5,7 +5,7 @@
 | Owner | May |
 | Branch | `chore/demo-prep-may` |
 | Checklist item | เตรียมลำดับหน้าจอสำหรับ demo รวม (ส่วนเตรียมของช่วง 3 · ไม่ติ๊กจนทีมตกลงลำดับ) |
-| Status | in progress · 2026-11-19 |
+| Status | paused · 2026-11-19 |
 
 ## Plan
 
@@ -33,6 +33,12 @@
 
 - 2026-11-19 · ระหว่างรอทีม: จดเรื่อง 429 ตอนหาหัวข้อลง `demo-video.md` (ผลซ้อม + checklist วันอัด: pull #159 ก่อนอัด · ฉาก 3 ล้มทำอะไร) · เอกสารวิดีโอ ไม่ใช่ demo รวม แต่ใช้ branch นี้เพราะเป็นงานเตรียม demo เหมือนกัน
 
+## Done today (2026-11-19)
+
+- `demo-flow.md` รอบ 3 (06bf82b): ช่วง 1–2 คลิปวิดีโอ · ช่วง 3 ห้องจริงบน DB สด 5 ขั้น · ห้องเดโม่เป็นทางสำรอง
+- May ตัดสินรูป (ผิด 1 บรรทัดเท่านั้น) และส่งข้อความกลุ่มให้ทีมตกลงลำดับแล้ว
+- จดเรื่อง 429 ตอนหาหัวข้อ + สิ่งที่ต้องทำวันอัดลง `demo-video.md` (e0ab824)
+
 ## Next step
 
 ขั้น 6: ซ้อมช่วง 3 แบบใหม่ (`demo-flow.md` รายละเอียดช่วง 3) บนการเตรียมสอบที่ไม่ใช่อันโชว์ พร้อมจับเวลาแต่ละขั้น (ทำพร้อมซ้อมวิดีโอ 20 พ.ย.) แล้วจดเวลาลง `demo-flow.md`
@@ -44,4 +50,5 @@
 ## Notes for next time
 
 - เปิดห้องเดโม่ AI จริงบน PowerShell: `$env:APP_ENV="local"; $env:AI_PROVIDER="live"; $env:AUTH_REQUIRED="false"; $env:GOOGLE_CLOUD_PROJECT="anyang-513006"; $env:GOOGLE_CLOUD_LOCATION="global"` แล้ว `uv run fastapi dev app/main.py`
+- ห้องจริง (ช่วง 3) เปิด API ด้วย `AUTH_REQUIRED="true"` และ `uv run fastapi run app/main.py` (ไม่ใช่ dev) · ค่าเต็มอยู่ใน `demo-video.md` "วิธีเปิดบนเครื่อง May"
 - ห้องเดโม่จำโจทย์ปัจจุบันและความคืบหน้าข้าม session จนกว่าจะรีสตาร์ต API (`demo-room.md` §2 J) · ซ้อมเสร็จต้องรีสตาร์ต API ก่อนซ้อมรอบใหม่
