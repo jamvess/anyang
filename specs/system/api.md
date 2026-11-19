@@ -1,4 +1,4 @@
-# API (v1.22)
+# API (v1.23)
 
 Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้างอัตโนมัติที่ `/docs` · frontend generate types จาก `/openapi.json`
 
@@ -84,6 +84,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | POST | `/exam-preps/{id}/materials/confirm` | 202 เริ่ม ingest + สกัดหัวข้อ |
 | GET | `/exam-preps/{id}/ingestion` | ความคืบหน้าทีละขั้น |
 | POST | `/materials/{id}/retry` | อ่านไฟล์ที่ล้มใหม่ (UC-02 E5) |
+| POST | `/exam-preps/{id}/ingestion/retry` | ทำขั้นรวมที่ล้มใหม่ (หัวข้อ + ดาว · v1.23) |
 | GET | `/exam-preps/{id}/scope` | หัวข้อ draft + ดาว + เหตุผล |
 | GET | `/topics/{id}/sources` | ข้อความต้นฉบับ + เลขหน้า |
 | POST | `/exam-preps/{id}/scope/chat` | **SSE:** `token`, `scope_patch`, `done` |
@@ -133,7 +134,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 - **`GET /exam-preps/{id}/materials`** · `Material[]` เรียงตามเวลาที่สร้าง · หน้า S10 poll จนทุกไฟล์มี `kind` · ไม่รวมไฟล์ที่ขอที่อัปโหลดแล้วแต่ยังไม่แจ้ง `/uploaded` (v1.21)
 - **`POST /exam-preps/{id}/materials/confirm`** · body `{materials: [{id, kind}]}` (ไฟล์ที่จะยืนยัน อย่างน้อย 1 ไฟล์ · `id` ไม่ซ้ำ · ไฟล์ `failed` ไม่ต้องส่ง · `kind` ตาม enum ของ `Material`) · `202` + `{queued: integer}` (จำนวนไฟล์ที่เริ่ม ingest · ขั้น 3) · ตั้ง `kind_confirmed = true` · ไฟล์ใน body ที่ `status` ไม่ใช่ `classified` (ยัง classify ไม่เสร็จ หรือยืนยันไปแล้ว) → `409 not_classified` · ไฟล์ที่ไม่ได้ส่งมาไม่ถูกเช็ค จึงเพิ่มไฟล์ทีหลังได้ (CM-05) · `id` ซ้ำ → `422 validation_error` · `id` ที่ไม่ใช่ไฟล์ของ prep นี้ → `422 unknown_material`
 
-**v1.21 · ทางที่มี token ทำงานจริง** (Junior 2026-11-17 · `specs/features/exam-prep/materials-db.md`): 4 endpoint ข้างบนอ่านเขียน `materials` ด้วย JWT ของผู้ใช้ (RLS) และ Supabase Storage จริง · ไม่มี token → แบบ v1.14 (`AUTH_REQUIRED=false` → stub เดิม + `X-Stub` · `true` → `401`) · bucket private ชื่อ `materials` · object path `{tenant_id}/{exam_prep_id}/{material_id}` เป็น uuid ล้วน **ไม่มีนามสกุล** · ชื่อไฟล์ใช้แสดงผลอย่างเดียว · storage policy ให้ `authenticated` อ่าน/เขียน/ลบได้เฉพาะ prefix ของ tenant ตัวเอง · `upload_url` คือ signed upload URL ของ Supabase ที่ browser `PUT` ไฟล์ได้ตรงๆ พร้อม `Content-Type` ไม่ต้องมี token · confirm ตรวจทุกไฟล์ใน body ก่อนเขียน (มีทั้งสองแบบ → `422 unknown_material` ก่อน `409 not_classified`) · Storage ล่ม → `503 db_unavailable` ตัวเดิม · `/retry` และ `DELETE` ยังเป็น stub
+**v1.21 · ทางที่มี token ทำงานจริง** (Junior 2026-11-17 · `specs/features/exam-prep/materials-db.md`): 4 endpoint ข้างบนอ่านเขียน `materials` ด้วย JWT ของผู้ใช้ (RLS) และ Supabase Storage จริง · ไม่มี token → แบบ v1.14 (`AUTH_REQUIRED=false` → stub เดิม + `X-Stub` · `true` → `401`) · bucket private ชื่อ `materials` · object path `{tenant_id}/{exam_prep_id}/{material_id}` เป็น uuid ล้วน **ไม่มีนามสกุล** · ชื่อไฟล์ใช้แสดงผลอย่างเดียว · storage policy ให้ `authenticated` อ่าน/เขียน/ลบได้เฉพาะ prefix ของ tenant ตัวเอง · `upload_url` คือ signed upload URL ของ Supabase ที่ browser `PUT` ไฟล์ได้ตรงๆ พร้อม `Content-Type` ไม่ต้องมี token · confirm ตรวจทุกไฟล์ใน body ก่อนเขียน (มีทั้งสองแบบ → `422 unknown_material` ก่อน `409 not_classified`) · Storage ล่ม → `503 db_unavailable` ตัวเดิม · `DELETE` ยังเป็น stub · `/retry` ทำงานจริงแล้ว (v1.23)
 
 **รอตัดสิน (v1.10 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-02 (PR #105) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
 
@@ -226,7 +227,8 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | `detail` | string \| null | ข้อความพร้อมแสดงจาก backend เช่น "14 หน้า", "12 ข้อ", "กำลังแยกรายข้อ" |
 | `error` | string \| null | ข้อความสั้นที่แสดงให้ผู้ใช้ได้ เมื่อ `status = "failed"` (UC-02 E5) |
 
-- **`POST /materials/{id}/retry`** · ปุ่ม "ลองใหม่" ของ UC-02 E5 · ไม่มี body · `202` + `Material` · อ่านไฟล์ใหม่ตั้งแต่ขั้นที่ล้ม · ล้มตอน classify (เห็นใน S10) → `status = "uploaded"` · ล้มตอน ingest (เห็นใน S11) → `status = "confirmed"` · `error` เป็น null · ไฟล์ที่ `status` ไม่ใช่ `failed` → `409 not_failed`
+- **`POST /materials/{id}/retry`** · ปุ่ม "ลองใหม่" ของ UC-02 E5 · ไม่มี body · `202` + `Material` · อ่านไฟล์ใหม่ตั้งแต่ขั้นที่ล้ม · ล้มตอน classify (เห็นใน S10) → `status = "uploaded"` · ล้มตอน ingest (เห็นใน S11) → `status = "confirmed"` · `error` เป็น null · ไฟล์ที่ `status` ไม่ใช่ `failed` → `409 not_failed` · **v1.23 (May 2026-11-19 · `specs/features/exam-prep/ingestion-retry.md` §2.2):** มี token → อ่านแถวด้วย JWT (RLS) · ไม่พบหรือของ tenant อื่น → `404 not_found` · DB ล่ม → `503 db_unavailable` · **ก่อนตอบ** แถวไฟล์เปลี่ยนเป็น `uploaded` / `confirmed` แล้ว และ job ของไฟล์ที่ `failed` กลับเป็น `queued` (poll ถัดไปไม่เห็น `failed` เดิม) · งาน AI รันเบื้องหลัง ไม่รอใน request · ไม่มี token → stub เดิม
+- **`POST /exam-preps/{id}/ingestion/retry`** (v1.23 · `ingestion-retry.md` §2.3) · ปุ่ม "ลองใหม่" ที่ขั้นรวมของ S11 · ไม่มี body · `202` ไม่มี body (หน้าเว็บ poll `GET /ingestion` เอง) · ทำได้เมื่อขั้นรวม `topics` หรือ `stars` เป็น `failed` และไม่มีไฟล์ที่ `failed` ไม่งั้น `409 not_failed` (ไฟล์ที่ล้มลองใหม่ที่ไฟล์) · **ก่อนตอบ** `topics` และ `stars` กลับเป็น `queued` ทั้งคู่ (ดาวคิดจากหัวข้อชุดใหม่) แล้วสร้าง scope ใหม่เบื้องหลัง (หัวข้อชุดใหม่แทนชุดเดิม) · prep ไม่พบหรือของ tenant อื่น → `404 not_found` · DB ล่ม → `503 db_unavailable` · ไม่มี token → `202` + `X-Stub` ไม่ทำอะไร
 - **`DELETE /materials/{id}`** · ปุ่ม "ไปต่อโดยไม่มีไฟล์นี้" ของ UC-02 E5 และการลบไฟล์ของ CM-10 · `204` ไม่มี body · ไฟล์ที่ `status` เป็น `confirmed` หรือ `ingesting` → `409 material_busy`
 
 **`POST /exam-preps/{id}/scope/chat`** (S13 · SM-06, SM-07 · A8 `scope_edit`) · body `{text: string (ไม่ว่าง)}` · ตอบเป็น SSE: `scope_patch` 0 ตัวขึ้นไป → `token` (`speaker = "tutor"`) → `done` (`{}`)
@@ -268,7 +270,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 5. **พูดใน S13 (SM-06):** `/sessions/{id}/uploads` และ `/transcribe` ผูกกับ session แต่ S13 ไม่มี session · **stub รอบนี้รับแค่ข้อความพิมพ์ ฝั่งเสียงของ SM-06 ยังไม่ครบ**
 6. **ข้อความพร้อมแสดง:** `steps.label` และ `files.detail` สร้างที่ backend แบบเดียวกับ `source_label` · May อาจอยากคุมข้อความเอง
 7. **error code ใหม่:** `not_failed`, `material_busy` · ใช้ซ้ำ: `scope_not_ready`, `message_too_long`, `rate_limited`
-8. **ขั้นรวมล้ม (`steps[].status = "failed"`):** เช่น A6 ล้มหลัง retry ครบ · `scope_ready` เป็น `false` และ S11 ต้องหยุด poll · ยังไม่มีทางออกให้ผู้ใช้: endpoint ลองใหม่ของขั้นรวม (Junior) และหน้าตาของสถานะนี้ใน S11 (May · UC-02 E5 พูดถึงเฉพาะรายไฟล์)
+8. **ขั้นรวมล้ม (`steps[].status = "failed"`):** เช่น A6 ล้มหลัง retry ครบ · `scope_ready` เป็น `false` และ S11 ต้องหยุด poll · ~~ยังไม่มีทางออกให้ผู้ใช้~~ **ตัดสินแล้ว v1.23 (May 2026-11-19 · `ingestion-retry.md`):** `POST /exam-preps/{id}/ingestion/retry` + ปุ่ม "ลองใหม่" ที่ขั้นแรกที่ล้มใน S11 (เฉพาะเมื่อไม่มีไฟล์ล้ม) · poll ไม่หยุดเมื่อขั้นล้ม
 
 ### ห้องติว (flow 2.2, 2.4, 2.5, 2.1)
 

@@ -3,10 +3,12 @@
 POST and GET /exam-preps use the database (api.md v1.14 · specs/features/exam-prep/
 create-exam-prep.md), and so do the upload, uploaded, list and confirm endpoints of materials
 (api.md v1.21 · specs/features/exam-prep/materials-db.md). Without a token they keep the stub
-(fixture data from app/stubs/ and `X-Stub: true`); retry and DELETE are still stubs.
+(fixture data from app/stubs/ and `X-Stub: true`); retry works with a token too (api.md v1.23 ·
+specs/features/exam-prep/ingestion-retry.md); DELETE is still a stub.
 Shapes and request rules are checked by tests/unit/test_exam_prep_api_contract.py.
 """
 
+from dataclasses import replace
 from datetime import date, datetime, timedelta
 from typing import Annotated, Any
 from uuid import UUID, uuid4
@@ -174,7 +176,8 @@ def list_exam_preps(
 
 
 # With a token the four endpoints below use the materials table and Storage with the user's JWT
-# (materials-db.md · api.md v1.21); without one they keep the stub. retry and DELETE are stubs.
+# (materials-db.md · api.md v1.21), and so does retry (v1.23); without one they keep the stub.
+# DELETE is a stub.
 
 MaterialRepo = Annotated[MaterialRepository | None, Depends(get_material_repository)]
 Storage = Annotated[MaterialStorage | None, Depends(get_material_storage)]
@@ -412,16 +415,40 @@ async def confirm_materials(
 @router.post(
     "/materials/{id}/retry",
     status_code=202,
-    responses=error_docs("Invalid path", "not_failed"),
+    response_model=Material,
+    responses={**error_docs("Invalid path", "not_failed"), 503: _DB_DOWN_DOC},
 )
-async def retry_material(material_id: MaterialId, response: Response) -> Material:
-    """ "Try again" on a failed file of S11: read it again from the step that failed (UC-02 E5).
+async def retry_material(
+    material_id: MaterialId,
+    response: Response,
+    auth: Annotated[AuthContext | None, Depends(get_auth)],
+    repo: MaterialRepo,
+    runner: Runner,
+) -> Any:
+    """ "Try again" on a failed file of S11: read it again from the step that failed (UC-02 E5 ·
+    specs/features/exam-prep/ingestion-retry.md §2.2). The row the user's JWT sees decides; the
+    runner leaves `failed` before this returns and does the AI work in the background.
 
-    stub — the fixture's failed file failed while being classified, so it is back at uploaded
+    Without a token: the stub (the fixture's failed file failed while classified → uploaded).
     """
-    response.headers.update(stubs.HEADERS)
-    row = next(m for m in stubs.materials() if m["status"] == "failed")
-    return Material.model_validate({**row, "id": material_id, "status": "uploaded", "error": None})
+    if auth is None or repo is None:
+        response.headers.update(stubs.HEADERS)
+        row = next(m for m in stubs.materials() if m["status"] == "failed")
+        return Material.model_validate(
+            {**row, "id": material_id, "status": "uploaded", "error": None}
+        )
+    try:
+        record = await run_in_threadpool(repo.get, material_id)
+        if record is None:
+            return _not_found()
+        if record.status != "failed":
+            return error_response(409, "not_failed", "this file did not fail")
+        with ai_call_context(auth.tenant_id, auth.user_id):
+            await runner.retry_file(material_id)
+    except _UNAVAILABLE:
+        return _db_unavailable()
+    status = "confirmed" if record.kind_confirmed else "uploaded"
+    return _material(replace(record, status=status, error=None))
 
 
 @router.delete(

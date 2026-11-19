@@ -746,6 +746,8 @@ async def _write_scope(
 STEP_NOTES = "อ่านสิ่งที่คุณเขียนกำกับไว้"
 STEP_TOPICS = "หาหัวข้อและลำดับการเรียน"
 STEP_EXAMS = "เทียบกับข้อสอบเก่า {n} ชุด"
+# The prep's own steps, built again together (new files, or "ลองใหม่" on a failed step).
+RETRIED_STEPS = ("topics", "stars")
 _STEP_STATUS = {"queued": "pending", "running": "running", "done": "done", "failed": "failed"}
 
 
@@ -847,7 +849,7 @@ class IngestionRunner:
         tenant = await _db(self._deps.store.prep_tenant, prep_id)
         if tenant is None:
             return
-        for stage in ("topics", "stars"):
+        for stage in RETRIED_STEPS:
             await _db(
                 self._deps.store.set_job,
                 tenant_id=tenant,
@@ -870,6 +872,44 @@ class IngestionRunner:
         )
         # Not awaited: the request returns, and a cancelled request cannot cancel the job.
         self.start(material.exam_prep_id)
+
+    async def retry_file(self, material_id: UUID) -> None:
+        """S11 "ลองใหม่" on a file (ingestion-retry.md §2.2): the file leaves `failed` before the
+        request returns, so the next poll does not show the old failure; the AI work runs in the
+        background. `retry` above awaits the classification instead (kept for its callers)."""
+        material = await _db(self._deps.store.get_material, material_id)
+        if material is None or material.status != "failed":
+            return
+        if not material.kind_confirmed:
+            await _db(
+                self._deps.store.update_material,
+                material_id,
+                {"status": "uploaded", "error": None},
+            )
+            self.classify(material_id)
+            return
+        await _db(
+            self._deps.store.update_material, material_id, {"status": "confirmed", "error": None}
+        )
+        jobs = await _db(self._deps.store.select, "ingestion_jobs", material_id=material_id)
+        for job in jobs:
+            if job["status"] == "failed":
+                await _db(
+                    self._deps.store.set_job,
+                    tenant_id=material.tenant_id,
+                    exam_prep_id=material.exam_prep_id,
+                    material_id=material_id,
+                    stage=job["stage"],
+                    status="queued",
+                )
+        self.start(material.exam_prep_id)
+
+    async def retry_steps(self, prep_id: UUID) -> None:
+        """S11 "ลองใหม่" on a failed step (ingestion-retry.md §2.3): `topics` and `stars` back to
+        `queued` (the stars come from the new topics), then the scope is built again in the
+        background."""
+        await self._restart_steps(prep_id)
+        self.start(prep_id)
 
 
 @lru_cache

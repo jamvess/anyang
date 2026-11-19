@@ -360,6 +360,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/exam-preps/{id}/ingestion/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retry Ingestion Steps
+         * @description "Try again" on a failed step of S11: build the topics and stars again
+         *     (specs/features/exam-prep/ingestion-retry.md §2.3). Only when a step failed and no file did
+         *     (a failed file is retried on its own row). No body; the page polls GET /ingestion.
+         *
+         *     Without a token: 202 + X-Stub, nothing happens.
+         */
+        post: operations["retry_ingestion_steps_exam_preps__id__ingestion_retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/exam-preps/{id}/scope/chat": {
         parameters: {
             query?: never;
@@ -508,9 +532,11 @@ export interface paths {
         put?: never;
         /**
          * Retry Material
-         * @description "Try again" on a failed file of S11: read it again from the step that failed (UC-02 E5).
+         * @description "Try again" on a failed file of S11: read it again from the step that failed (UC-02 E5 ·
+         *     specs/features/exam-prep/ingestion-retry.md §2.2). The row the user's JWT sees decides; the
+         *     runner leaves `failed` before this returns and does the AI work in the background.
          *
-         *     stub — the fixture's failed file failed while being classified, so it is back at uploaded
+         *     Without a token: the stub (the fixture's failed file failed while classified → uploaded).
          */
         post: operations["retry_material_materials__id__retry_post"];
         delete?: never;
@@ -2570,6 +2596,71 @@ export interface operations {
             };
         };
     };
+    retry_ingestion_steps_exam_preps__id__ingestion_retry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid Supabase token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description not_failed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid path */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description db_unavailable, or auth_unavailable (Supabase Auth unreachable) */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     scope_chat_exam_preps__id__scope_chat_post: {
         parameters: {
             query?: never;
@@ -3124,7 +3215,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable */
             503: {
                 headers: {
                     [name: string]: unknown;
