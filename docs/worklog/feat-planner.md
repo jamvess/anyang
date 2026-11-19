@@ -20,7 +20,7 @@
   - mode เปลี่ยน: บอกครั้งเดียวเมื่อรู้ mode ครั้งก่อน (ที่เก็บ mode เป็นของ Junior → ตอนนี้รับเป็น input)
   - pure domain `app/domain/planner.py` แทน `choose_topic` · ต่อเข้าห้องติวใน PR นี้หรือ PR ถัดไป (คำถามให้ Jam ตัดสิน)
   - → 🙋 Jam ตัดสินเรื่องการออกแบบ + review spec
-- [ ] 2. 🤖 `/spec-to-tests` (unit · table-driven · ขอบของ ratio จาก config · ไม่มี magic number) → 🙋 Jam review test
+- [x] 2. 🤖 `/spec-to-tests` (unit · table-driven · ขอบของ ratio จาก config · ไม่มี magic number) → 🙋 Jam review test
 - [ ] 3. 🤖 `/implement-feature` จน green · ruff · pytest ทั้งชุด
 - [ ] 4. 🤖 + 🙋 (ถ้าต่อเข้าห้องติวใน PR นี้) ลองในเบราว์เซอร์: เปิดห้องแล้วคำทักบอกหัวข้อพร้อมเหตุผล
 
@@ -35,7 +35,7 @@
 
 ## Next step
 
-ข้อ 1 รอ Jam review spec `specs/features/planner/planner.md` + ตัดสิน §10 ข้อ 1–4 · ok แล้วทำข้อ 2
+ข้อ 2 รอ Jam review test (`test_planner_mode.py` + `test_planner_queue.py` · 27 test แดงทั้งหมด) · ok แล้วทำข้อ 3
 
 ## Waiting on
 
