@@ -74,8 +74,9 @@ class MaterialRepository(Protocol):
         ...
 
     def retry(self, material_id: UUID, *, status: str) -> MaterialRecord | None:
-        """Back to `status` with `error` null, only while the status is `failed`. None when no
-        row changed (another request changed it first · material-retry.md §2.2 item 5)."""
+        """Back to `status` with `error` null, only while the status is `failed` and
+        `kind_confirmed` still matches it (`confirmed` ⇔ true · `retry_status`). None when no row
+        changed (another request changed it first · material-retry.md §2.2 item 5)."""
         ...
 
 
@@ -201,6 +202,9 @@ class SupabaseMaterialRepository:
                 .update({"status": status, "error": None})
                 .eq("id", str(material_id))
                 .eq("status", "failed")
+                # the status was chosen from kind_confirmed: a row that moved on since the read
+                # (retried, confirmed and failed again) is not sent back to the wrong step
+                .eq("kind_confirmed", status == "confirmed")
                 .execute()
                 .data
             )

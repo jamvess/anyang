@@ -3,7 +3,8 @@
 POST and GET /exam-preps use the database (api.md v1.14 · specs/features/exam-prep/
 create-exam-prep.md), and so do the upload, uploaded, list and confirm endpoints of materials
 (api.md v1.21 · specs/features/exam-prep/materials-db.md). Without a token they keep the stub
-(fixture data from app/stubs/ and `X-Stub: true`); retry and DELETE are still stubs.
+(fixture data from app/stubs/ and `X-Stub: true`). /retry uses the database too (api.md v1.23 ·
+specs/features/exam-prep/material-retry.md); DELETE is still a stub.
 Shapes and request rules are checked by tests/unit/test_exam_prep_api_contract.py.
 """
 
@@ -28,7 +29,7 @@ from app.db.exam_preps import (
 )
 from app.db.materials import MaterialRecord, MaterialRepository, get_material_repository
 from app.domain.exam_prep import bangkok_today, days_left, prep_stage
-from app.domain.ingestion import clean_file_name
+from app.domain.ingestion import clean_file_name, retry_status
 from app.models.error import ErrorResponse, error_docs, error_response
 from app.models.exam_prep import (
     MATERIAL_CONTENT_TYPES,
@@ -417,8 +418,7 @@ def _retry(material_id: UUID, repo: MaterialRepository) -> MaterialRecord | JSON
         return _not_found()
     if row.status != "failed":
         return _not_failed()
-    # Failed while classified (S10) → classify again; failed while read (S11) → read again.
-    updated = repo.retry(material_id, status="confirmed" if row.kind_confirmed else "uploaded")
+    updated = repo.retry(material_id, status=retry_status(kind_confirmed=row.kind_confirmed))
     return _not_failed() if updated is None else updated
 
 
