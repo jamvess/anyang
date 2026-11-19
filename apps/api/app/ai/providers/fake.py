@@ -53,6 +53,7 @@ class FakeProvider:
         self._defaults = defaults or {}
         self._record = record
         self.requests: list[ProviderRequest] = []
+        self.embed_requests: list[EmbedRequest] = []
         self.responses_sent: list[ProviderResponse] = []
         self.chunks_sent: list[str] = []
 
@@ -64,18 +65,24 @@ class FakeProvider:
             return self._defaults[purpose]
         raise RuntimeError(f"fake provider: no scripted response for {purpose!r}")
 
+    def _answer(self, request: ProviderRequest) -> ScriptItem:
+        """The next item, with an answer function already called. An exception class (not an
+        instance) is not an answer function: it stays as it is (self-review #162)."""
+        item = self._next_item(request.purpose)
+        if callable(item) and not isinstance(item, type):
+            return item(request)
+        return item
+
     async def generate(self, request: ProviderRequest) -> ProviderResponse:
         if self._record:
             self.requests.append(request)
         if self._delay_s:
             await asyncio.sleep(self._delay_s)
-        item = self._next_item(request.purpose)
+        item = self._answer(request)
         if isinstance(item, Exception):
             raise item
         if isinstance(item, list):
             raise TypeError("fake provider: a chunk list is only for stream()")
-        if callable(item) and not isinstance(item, str):
-            item = item(request)
         response = ProviderResponse(
             text=str(item),
             tokens_in=_tokens(request.prompt),
@@ -91,11 +98,9 @@ class FakeProvider:
             self.requests.append(request)
         if self._delay_s:
             await asyncio.sleep(self._delay_s)
-        item = self._next_item(request.purpose)
+        item = self._answer(request)
         if isinstance(item, Exception):
             raise item
-        if callable(item) and not isinstance(item, str):
-            item = item(request)
         steps: list[StreamStep] = _WORD.findall(item) if isinstance(item, str) else item
         usage.tokens_in = _tokens(request.prompt)
         sent = ""
@@ -116,6 +121,10 @@ class FakeProvider:
     async def embed(self, request: EmbedRequest) -> EmbedResponse:
         """One fixed vector per text, never random: the first axis only, so the vector is not
         all zeros (ingestion.md §2.7 item 4.3). Its length is the one asked for."""
+        if self._record:
+            self.embed_requests.append(request)
+        if self._delay_s:
+            await asyncio.sleep(self._delay_s)
         size = request.dimensions or 1
         vector = [1.0] + [0.0] * (size - 1)
         tokens = sum(_tokens(text) for text in request.texts)

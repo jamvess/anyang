@@ -15,6 +15,10 @@ counts the date from today and the fixture never falls into the past. ingestion.
 scope_changes.json and scope_chat.sse are the stub's own too; they use the wireframe S11, S14
 and S13 examples, with the files of materials.json and the topics of scope.json. personas.json
 has the people and sample sentences of wireframe S04-S05; their params are the stub's own.
+
+fake_ingestion.json is not a stub endpoint's fixture: it holds the fake mode's answers to the
+ingestion purposes (AI_PROVIDER=fake · ingestion.md §2.7 item 4), so it stays when the stub
+endpoints go (self-review #162).
 """
 
 import json
@@ -26,6 +30,8 @@ from typing import Any
 from fastapi.responses import JSONResponse
 from sse_starlette import EventSourceResponse
 
+from app.ai.providers.base import ProviderRequest
+from app.ai.providers.fake import ScriptItem
 from app.auth import AuthContext
 from app.models.error import error_response
 from app.models.room import EVENT_MODELS
@@ -129,7 +135,7 @@ def _fake_ingestion_file() -> dict[str, Any]:
     return data
 
 
-def _fake_vision_pages(request: Any) -> str:
+def _fake_vision_pages(request: ProviderRequest) -> str:
     """vision_extract_pages must answer as many pages as images were sent (ingestion.md §2.3
     item 1), so this answer is built from the request."""
     pages = [
@@ -139,10 +145,10 @@ def _fake_vision_pages(request: Any) -> str:
     return json.dumps({"pages": pages, "notes": ""}, ensure_ascii=False)
 
 
-def fake_ingestion() -> dict[str, Any]:
+def fake_ingestion() -> dict[str, ScriptItem]:
     """The answer of every ingestion purpose in fake mode (AI_PROVIDER=fake · ingestion.md §2.7
     item 4): a JSON string, or a function of the provider request."""
-    answers: dict[str, Any] = {
+    answers: dict[str, ScriptItem] = {
         purpose: json.dumps(body, ensure_ascii=False)
         for purpose, body in _fake_ingestion_file().items()
     }

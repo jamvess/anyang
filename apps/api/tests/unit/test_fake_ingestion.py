@@ -147,3 +147,32 @@ async def test_SM01_fake_mode_takes_a_prep_from_upload_to_a_ready_scope(fake_gat
     topics = world.rows("topics", exam_prep_id=world.prep)
     assert len(topics) == 3
     assert all(t["importance"] is not None for t in topics)
+
+
+# --- added by the self-review of PR #162 -------------------------------------------------------
+
+
+@pytest.mark.parametrize("purpose", sorted(set(SCHEMAS) - {"map_questions"}))
+def test_AI03_every_fake_text_says_it_is_test_data(purpose: str):
+    # Spec §2.7 item 4.2 for every purpose with text (map_questions maps nothing, so it has none).
+    answer = stubs.fake_ingestion()[purpose]
+    text = answer(request_with_images(purpose, 2)) if callable(answer) else answer
+
+    assert "โหมด fake" in text
+
+
+async def test_SM01_fake_mode_scope_is_ready_for_the_scope_page(fake_gateway: Gateway):
+    # AC-43's "scope_ready = true": what S11 reads before it moves to the scope page.
+    from app.services.ingestion import ingestion_view
+    from tests.unit.test_ingestion_pipeline import TENANT
+
+    world = World({})
+    world.deps = dataclasses.replace(world.deps, gateway=fake_gateway)
+    sheet = world.add("sheet-01.pdf", "sheet", [THAI_PAGE])
+
+    await asyncio.wait_for(IngestionRunner(world.deps).start(world.prep), timeout=30)
+
+    snapshot = world.store.reader_for(TENANT).snapshot(world.prep)
+    assert snapshot is not None
+    assert ingestion_view(snapshot).scope_ready is True
+    assert world.rows("materials", id=sheet)[0]["status"] == "ready"
