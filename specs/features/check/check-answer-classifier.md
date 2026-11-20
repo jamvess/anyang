@@ -153,7 +153,7 @@ code แปลง `SympyResult` เป็นข้อความสั้น �
 
 | Purpose | Tier | Output schema | Prompt file |
 |---|---|---|---|
-| `check_answer` | `mid` (`config/ai.yaml` · temperature 0, max_tokens 600, timeout 15 s) | `CheckAnswerResult` | `prompts/check_answer/v2.md` |
+| `check_answer` | `mid` (`config/ai.yaml` · temperature 0, max_tokens 1000, timeout 15 s · 600 → 1000 ใน ai.yaml 1.26 (20 พ.ย. · ถูกตัดที่ 584/600) · PR #173) | `CheckAnswerResult` | `prompts/check_answer/v2.md` |
 
 ## 8. Test plan
 
