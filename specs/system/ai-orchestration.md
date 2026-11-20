@@ -761,7 +761,7 @@ Auto-read: client ขอ TTS ทีละประโยคที่ stream จ�
 |---|---|---|---|
 | small | route_intent, typed_answer (ชั่วคราว), classify_material, split_past_exam, map_questions, normalize_math, persona_extract, persona_preview, latex_to_speech, summaries (update_running_summary, session_summary) | `gemini-3.5-flash` (P3a บน Vertex: A4 ตัดข้อสอบ 43/43 · flash-lite ไม่ escape LaTeX ใน JSON 1 จาก 2 ไฟล์) | Claude Haiku |
 | mid | check_answer, generate_problem, extract_topics_local, scope_edit | `gemini-3.5-flash` (P3: A5 ครบ 4 ชีท, Vertex 74–78% ก่อน merge · P2: checker ผ่านเป้า) | Claude Haiku |
-| main | tutor_reply (+ buddy scene), explain_check, open_session, merge_topics, dispute re-check | `gemini-3.5-flash` (P3a บน Vertex: A6 `merge_topics/v2` ผ่าน schema ครั้งแรก, ★★★ 10/12 · ใช้ token out ราว 20,000 จึงตั้ง `max_tokens` 32,000) | Claude Sonnet |
+| main | tutor_reply (+ buddy scene), explain_check, open_session, merge_topics, dispute re-check | `gemini-3.5-flash` (P3a บน Vertex: A6 `merge_topics/v2` ผ่าน schema ครั้งแรก, ★★★ 10/12 · ใช้ token out ราว 20,000 จึงตั้ง `max_tokens` 32,000 · ai.yaml 1.26 (PR #173): 40,000 หลังใช้ถึง 23,343 ใน 17–20 พ.ย.) | Claude Sonnet |
 | vision | vision_extract, vision_extract_pages, extract_answer | `gemini-3.5-flash-lite` (P1: 95.2% ของบรรทัด · P3a: A2b 14 หน้า 12–27 วินาที) | Mathpix (ยังไม่ทดสอบ · P1 ผ่านเป้า จึงไม่ต้องใช้เป็นหลัก) |
 | embed | ingest, คำถามอิสระ | `gemini-embedding-2` ที่ 768 มิติ (P3b: recall@4 95%) | — |
 
