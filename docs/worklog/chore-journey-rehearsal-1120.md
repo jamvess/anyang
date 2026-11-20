@@ -23,6 +23,17 @@
 - 9 ขั้นผ่านบน `main` ด้วยบัญชีทดสอบ หรือขั้นที่ไม่ผ่านมีเจ้าของ + ทางเลี่ยงสำหรับวันอัดจดไว้แล้ว
 - ส่งผลลงกลุ่มแล้ว
 
+## Results
+
+### ขั้น 1–5 (ผ่านทั้งหมด · prep `b41af4d9…` · tenant ทดสอบ `f4b39742…`)
+
+- login, สร้าง prep, อัปโหลด 6 ไฟล์ + ยืนยันประเภท, progress → scope **36 หัวข้อ** · หน้าเว็บไม่มี error
+- ยืนยันไฟล์ → หน้า scope **5 นาที 55 วินาที** · ยืนยัน scope → เข้าห้องเห็นคำทัก + การ์ดโจทย์ **~21 วินาที** (Junior เข้าห้องทันที ไม่ได้รอ 1 นาที)
+- AI calls จาก log (ok ทุกตัว · schema_retries 0): classify_material 6 (รวม 18.9 s) · vision_extract_pages 2 (21.8 s) · split_past_exam 2 (13.8 s) · embed 4 (44.6 s) · extract_topics_local 4 (202.1 s · ตัวที่ช้าสุด 186 s) · merge_topics 1 (54.1 s) · map_questions 2 (39.0 s) · open_session 1 (1.7 s) · generate_problem 1 (11.4 s)
+- ⚠️ **429 ที่ผู้ใช้มองไม่เห็น:** `extract_topics_local` โดน 429 ติดกัน 3 ครั้ง (รอ 5 + 15 + 30 s ครบตาราง `[5, 15, 30]` แล้วครั้งที่ 4 ผ่าน) · ถ้าโดนครั้งที่ 4 ingestion จะล้มที่ขั้น "หาหัวข้อ" และบน `main` ยังไม่มีปุ่มลองใหม่ของขั้นรวม (#169) · `generate_problem` ตอนเปิดห้องโดน 429 1 ครั้ง (รอ 5 s แล้วผ่าน) · ไม่ได้รอ 1 นาทีก่อนเข้าห้อง
+- 404 ของ `GET /exam-preps/{id}/sessions/active` ตอนเปิดห้องครั้งแรกถูกต้อง (ยังไม่มี session)
+- 🐞 (May · เจอแล้ว 19 พ.ย. ยังอยู่) โจทย์ยาวล้นการ์ดด้านขวา
+
 ## Decisions
 
 - 2026-11-20 · ไม่รอ #169 (ปุ่มลองใหม่ของ May) สำหรับวิดีโอ · conflict กับ `main` 4 ไฟล์ (ทำ `/materials/{id}/retry` ซ้ำกับ #171) และยังไม่ได้ลองในเบราว์เซอร์ · ซ้อมบน `main` ตามที่เป็น
@@ -30,7 +41,7 @@
 
 ## Next step
 
-ขั้น 2 (🙋 Junior): เปิด API + เว็บตามคำสั่งในขั้น 2 แล้วบอก Claude · Claude เช็คว่า `.local/rehearsal-api.log` มีบรรทัด startup
+ขั้น 5 (🙋 Junior): ขั้น 6–9 ในห้องของ prep `b41af4d9…` (ห้องเปิดอยู่แล้ว) แล้วบอก Claude · Claude อ่าน log (ขั้น 6)
 
 ## Waiting on
 
@@ -40,3 +51,4 @@
 
 - log ของ API อยู่ `.local/rehearsal-api.log` (gitignored) · บรรทัด JSON ของ logger `app.ai.calls` มี purpose + เวลา ใช้แทนการ query `ai_calls`
 - log เป็น UTF-16 (Tee-Object ของ PowerShell 5.1) · อ่านด้วย `iconv -f UTF-16 -t UTF-8 .local/rehearsal-api.log` · บรรทัด `NativeCommandError` ตอนเริ่มเป็นแค่ PowerShell ห่อ stderr ไม่ใช่ error จริง
+- PowerShell ตัดบรรทัด log ตามความกว้างจอ · ต่อบรรทัดก่อน parse JSON (record ขึ้นต้นด้วย `{"severity"` หรือ `INFO:`)
