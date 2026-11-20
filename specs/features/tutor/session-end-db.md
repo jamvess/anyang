@@ -82,7 +82,7 @@ fake room repository (+ ปิด session, บันทึกสรุป) + fak
 
 | Purpose | Tier | Output schema | Prompt file |
 |---|---|---|---|
-| `session_summary` (**prompt ใหม่**) | small | `SessionSummaryResult` | `prompts/session_summary/v1.md` (input `prep_name`, `days_left`, `topics`, `totals`) · `config/ai.yaml` มีแถวแล้ว (`max_tokens: 150` → 400 และ timeout 15 → 30 s ใน ai.yaml 1.26 · 20 พ.ย. ใช้ถึง 99/150 และ timeout เงียบ 1 ครั้ง · PR #173) · ถ้า Gemini 3 ใช้ thinking จนเกิน `max_tokens` ต้องตั้ง `thinking: minimal` (ไฟล์กลาง · ถามก่อน) |
+| `session_summary` (**prompt ใหม่**) | small | `SessionSummaryResult` | `prompts/session_summary/v1.md` (input `prep_name`, `days_left`, `topics`, `totals`) · `config/ai.yaml` มีแถวแล้ว (`max_tokens: 150` → 400 ใน ai.yaml 1.26 · 20 พ.ย. ใช้ถึง 99/150 · PR #173) · ถ้า Gemini 3 ใช้ thinking จนเกิน `max_tokens` ต้องตั้ง `thinking: minimal` (ไฟล์กลาง · ถามก่อน) |
 
 ## 8. Test plan
 
