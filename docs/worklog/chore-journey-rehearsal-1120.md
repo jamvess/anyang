@@ -13,8 +13,8 @@
 - [ ] 2. 🙋 เปิด API จาก `main` (VS Code terminal ที่โหลด `.env` · `APP_ENV=local AI_PROVIDER=live AUTH_REQUIRED=true` ชี้ `anyang-dev`): `cd apps/api; uv run fastapi run app/main.py 2>&1 | Tee-Object ..\..\.local\rehearsal-api.log` · เว็บ: `cd apps/web; pnpm dev`
 - [ ] 3. 🙋 ขั้น 1–5 ด้วยบัญชีทดสอบ: login → prep "rehearsal 20 Nov" → อัปโหลด 6 ไฟล์ MTH10101 + ยืนยันประเภท → progress → scope (จดเวลา) → ยืนยัน scope → รอ ~1 นาที
 - [ ] 4. 🤖 อ่าน `.local/rehearsal-api.log` ขั้น 1–5: 429, error, จำนวน call และเวลาต่อ purpose · จดผ่าน/ไม่ผ่าน
-- [ ] 5. 🙋 ขั้น 6–9: เข้าห้อง (การ์ด + คำทัก + การ์ดโจทย์) → ตอบผิด 1 ครั้ง (hint) → ตอบถูกพร้อมวิธีทำ ≥2 ขั้น + ส่งรูป 1 ครั้ง → ออกแล้วเปิดใหม่ (การ์ดเปลี่ยน) → จบ session (สรุป) → เปิดใหม่เห็นประวัติ → "ติวรอบใหม่" ได้คำทัก
-- [ ] 6. 🤖 อ่าน log ขั้น 6–9: นับ `generate_problem` ต่อโจทย์ + เหตุที่ถูกปฏิเสธ
+- [x] 5. 🙋 ขั้น 6–9: เข้าห้อง (การ์ด + คำทัก + การ์ดโจทย์) → ตอบผิด 1 ครั้ง (hint) → ตอบถูกพร้อมวิธีทำ ≥2 ขั้น + ส่งรูป 1 ครั้ง → ออกแล้วเปิดใหม่ (การ์ดเปลี่ยน) → จบ session (สรุป) → เปิดใหม่เห็นประวัติ → "ติวรอบใหม่" ได้คำทัก
+- [x] 6. 🤖 อ่าน log ขั้น 6–9: นับ `generate_problem` ต่อโจทย์ + เหตุที่ถูกปฏิเสธ
 - [ ] 7. 🤖 จัดบั๊ก: ของ Junior → PR `fix/…` แยก (ถาม Junior ก่อน merge) · ของ Jam/May → ร่างข้อความ + หลักฐาน · ทางเลี่ยงวันอัดเสนอเพิ่มใน `demo-video.md`
 - [ ] 8. 🤖 ร่างข้อความกลุ่ม: ผลซ้อม + สถานะ #169 + เรื่อง `generate_problem` 3 รอบ
 
@@ -45,6 +45,15 @@
 - ⚠️ `check_answer` truncated 1 ครั้ง ที่ `max_tokens=600` (tokens_out 584) → "classifier failed; the answer can be sent again" · ครั้งที่ ok ใช้ 527 · ใกล้เพดาน
 - ✅/ℹ️ ขั้น 8 เปิดใหม่: ประวัติแชทกลับมา · การ์ดยังเป็น 0/36, 0%, ลิมิตของฟังก์ชัน "ยังไม่เริ่ม" · **ตาม spec** (`progress-card.md`, TM-15): การ์ดส่งตอนเปิด session และเก็บเป็นข้อความ `card` ในประวัติ · resume แสดงประวัติเดิม ไม่คำนวณใหม่ · การ์ดใหม่มาเมื่อเปิด session ใหม่ (ดูในขั้น 9) · คำตอบถูกหลังคำอธิบายไม่นับ mastery (`bkt.count_only_independent`)
 
+### ขั้น 9
+
+- ✅ "จบการติว" → สรุป (`session_summary` ok · 17.3 s)
+- ❌ **เข้าห้องใหม่ ~13:21 → ห้องว่าง** (ไม่มีประวัติ ไม่มีการ์ด ไม่มีคำทัก ไม่มีโจทย์) · รอเกิน 1 นาทีก็ยังว่าง · บั๊กเดียวกับ 17 พ.ย. (ข้อ 2)
+  - log: `GET sessions/active` 404 → `OPTIONS POST /exam-preps/{id}/sessions` → **ไม่มีบรรทัด POST** → `GET sessions/active` 200 = `1b325411…` → `GET /sessions/1b325411…` 200 · **ไม่มี AI call ใดๆ หลัง `session_summary`** (ไม่มี `open_session`, `generate_problem`)
+  - กลไก: router (`room.py` `_open_and_save`) สร้างแถว `tutor_sessions` ก่อน stream · การ์ด คำทัก โจทย์ และการบันทึกอยู่ใน generator ของ SSE · ไม่มีบรรทัด access log ของ POST = client ตัดก่อน response เริ่ม (sse-starlette ยกเลิก generator เมื่อ client หลุด) → แถว session ค้าง ไม่มีข้อความ → ครั้งถัดไป `sessions/active` คืน session ว่างนี้ → หน้าเว็บ resume แบบไม่มีอะไรแสดง และไม่มีใครเติมคำเปิดให้
+  - ชั้นที่เกี่ยว: (1) web `TutorRoom.tsx` abort POST ตอน cleanup ของ effect (May) · ตัวกระตุ้นในเบราว์เซอร์ยังไม่รู้แน่ (ออกจากหน้า / remount ใน dev) · (2) API router สร้างแถวก่อนแล้วปล่อยให้ opening ตายไปกับ connection (Junior · issue #126) · (3) resume ของ session ที่ไม่มีคำเปิดไม่สร้างใหม่ (room opening · Jam · บั๊ก 3 ของ 17 พ.ย.)
+  - ทางเลี่ยงวันอัด: หลังจบ ใช้ปุ่ม "ติวรอบใหม่" (ผ่าน 19 พ.ย.) และอย่าออกจากหน้าห้องจนการ์ดโจทย์ขึ้น · ถ้าห้องว่าง Junior ปิด session ว่างใน SQL Editor แล้ว reload ห้อง → session ใหม่
+
 ## Decisions
 
 - 2026-11-20 · ไม่รอ #169 (ปุ่มลองใหม่ของ May) สำหรับวิดีโอ · conflict กับ `main` 4 ไฟล์ (ทำ `/materials/{id}/retry` ซ้ำกับ #171) และยังไม่ได้ลองในเบราว์เซอร์ · ซ้อมบน `main` ตามที่เป็น
@@ -52,7 +61,7 @@
 
 ## Next step
 
-ขั้น 5 (🙋 Junior): ขั้น 6–9 ในห้องของ prep `b41af4d9…` (ห้องเปิดอยู่แล้ว) แล้วบอก Claude · Claude อ่าน log (ขั้น 6)
+Junior วาง CSV ของ query `ai_calls` (ข้อความในแชท 20 พ.ย.) → Claude เปิด PR `fix/ai-max-tokens-headroom` แก้ `config/ai.yaml` ทุก purpose ที่ max ≥ ~70% ของเพดาน + timeout · Junior บอก Jam + กลุ่มก่อน merge · merge แล้ว restart API ลองตอบถูกให้ได้โจทย์ข้อถัดไป
 
 ## Waiting on
 
