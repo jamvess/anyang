@@ -3,7 +3,7 @@
 # "vertex:" runs on Vertex AI when GOOGLE_CLOUD_PROJECT is set (specs/features/ai/gemini-vertex.md;
 # AI-07: no free tier for real users). AI_MODEL_OVERRIDE=gemini:<model> still uses the Gemini API key.
 
-version: "1.25"                        # a string: unquoted, YAML reads 1.10 as the float 1.1
+version: "1.26"                        # a string: unquoted, YAML reads 1.10 as the float 1.1
 
 tiers:
   small:  {primary: "vertex:gemini-3.5-flash",   fallback: "anthropic:TODO-claude-haiku"}  # P3a on Vertex (31 Oct): A4 43/43, A7 34/43 and 30/43 · flash-lite broke JSON with LaTeX (unescaped \\sqrt) on 1 of 2 exams (P3.md §7)
@@ -19,29 +19,35 @@ purposes:
   # v1.22 · proposed by Junior, Jam to confirm in review (#140): Gemini 3 counts thinking inside
   # max_output_tokens. Measured on Vertex with v1 + sheet-03.pdf (2026-11-17): no thinking level
   # → 291 thinking + 5 answer tokens, MAX_TOKENS, invalid JSON; thinking: low → 70 tokens, valid.
+  # v1.26 · Junior (2026-11-20): headroom from ai_calls on anyang-dev (17-20 Nov, real providers): every purpose whose
+  # tokens_out reached ~70% of max_tokens is raised (generate_problem 99%, check_answer 97%, merge_topics 73%,
+  # session_summary 66%). max_tokens stays within what timeout_s can produce, so a runaway answer ends as a truncation
+  # (not retried) rather than a timeout (retried). latency_ms over timeout_s (typed_answer, session_summary,
+  # extract_topics_local) was a stuck try cut by the timeout and a fast retry, so those timeouts are kept.
+  # Kept: map_questions 58%, vision_extract_pages 47%, and the rest under 35%.
   # v1.25 · Junior (2026-11-19): 300 cut a scanned exam (midterm-2559-1.pdf, bad OCR text layer:
   # tokens_out 284 of 300, more thinking) → "ลองใหม่ได้". Normal files use ~70. [C] 1000 for headroom.
   classify_material:      {tier: small,  temperature: 0.0, max_tokens: 1000, timeout_s: 20, prompt: v1, thinking: low}
   vision_extract:         {tier: vision, temperature: 0.0, max_tokens: 4000, timeout_s: 60, prompt: v1, thinking: low}
   vision_extract_pages:   {tier: vision, temperature: 0.0, max_tokens: 16000, timeout_s: 180, prompt: v1, thinking: low}  # PoC P3: whole scanned file in one call
   split_past_exam:        {tier: small,  temperature: 0.0, max_tokens: 16000, timeout_s: 120, prompt: v1, thinking: low}
-  extract_topics_local:   {tier: mid,    temperature: 0.2, max_tokens: 8000, timeout_s: 120, prompt: v2, thinking: low}  # P3a on Vertex: with merge_topics v2, ★★★ 10/12 (v1: 8/12)
-  merge_topics:           {tier: main,   temperature: 0.2, max_tokens: 32000, timeout_s: 180, prompt: v2, thinking: medium}  # P3a on Vertex (2026-10-31): v1 merged 51 topics into 17 and 3 of 4 answers hit 16000 (thinking counts inside) · v2 used 19,390-20,018 · [C] 32000, re-check on a bigger course
+  extract_topics_local:   {tier: mid,    temperature: 0.2, max_tokens: 8000, timeout_s: 120, prompt: v2, thinking: low}  # v1.26 · ai_calls 17-20 Nov (n 31): tokens_out max 2646 (33%, kept) · one call took 186 s = 50 s of 429 waits + a stuck try cut at 120 s + a ~15 s retry: the try was stuck, not slow, so the timeout is kept (self-review #173) · P3a on Vertex: with merge_topics v2, ★★★ 10/12 (v1: 8/12)
+  merge_topics:           {tier: main,   temperature: 0.2, max_tokens: 40000, timeout_s: 240, prompt: v2, thinking: medium}  # v1.26 · ai_calls 17-20 Nov (n 13): tokens_out max 23343 (73% of 32000) in 121 s (~193 tok/s) · [C] 40000 ≈ 207 s at that rate, so it ends as a truncation (not retried) before the 240 s timeout (self-review #173) · P3a on Vertex (2026-10-31): v1 merged 51 topics into 17 and 3 of 4 answers hit 16000 (thinking counts inside) · v2 used 19,390-20,018 · [C] 32000, re-check on a bigger course
   map_questions:          {tier: small,  temperature: 0.0, max_tokens: 8000, timeout_s: 120, prompt: v1, thinking: low}
   scope_edit:             {tier: mid,    temperature: 0.3, max_tokens: 800,  timeout_s: 30, prompt: v1}
   # flow 2.2 / 2.4
   route_intent:           {tier: small,  temperature: 0.0, max_tokens: 100,  timeout_s: 8,  prompt: v1}
   extract_answer:         {tier: vision, temperature: 0.0, max_tokens: 1500, timeout_s: 20, prompt: v1}
   normalize_math:         {tier: small,  temperature: 0.0, max_tokens: 500,  timeout_s: 8,  prompt: v1}
-  check_answer:           {tier: mid,    temperature: 0.0, max_tokens: 600,  timeout_s: 15, prompt: v2, thinking: low}  # P2 first live run: default thinking timed out at 15 s (2026-10-28)
-  generate_problem:       {tier: mid,    temperature: 0.7, max_tokens: 2000, timeout_s: 20, prompt: v2, thinking: low}  # v2 gets previous_problems, the latest of the topic, so the next problem differs (room-problems-db.md §2.3 v2 · PR #133) · a problem of the chosen topic, its expression for SymPy and the answer (room-problems-db.md §2.3 · AM-11) · [C] max_tokens 2000 + low thinking like the other purposes of Gemini 3 (thinking counts in max_tokens) · measure the share SymPy verifies (worklog step 4)
+  check_answer:           {tier: mid,    temperature: 0.0, max_tokens: 1000, timeout_s: 15, prompt: v2, thinking: low}  # P2 first live run: default thinking timed out at 15 s (2026-10-28) · v1.26 · Junior (2026-11-20 rehearsal): 600 cut one typed answer (tokens_out 584 of 600, "classifier failed"), the next ok one used 527 (88%) · ai_calls 17-20 Nov (n 7): max 584 (97%), 1 cut · [C] 1000 for headroom · latency 1.1-2.7 s, timeout kept
+  generate_problem:       {tier: mid,    temperature: 0.7, max_tokens: 3000, timeout_s: 30, prompt: v2, thinking: low}  # v1.26 · Junior (2026-11-20 rehearsal): 2000 cut all 3 tries of the next problem after a correct answer (tokens_out 1983, 1985, 1984 of 2000, 17.7 + 14.4 + 9.6 s) → no next problem; the opening one used 591 · ai_calls 17-20 Nov (n 17): 4 calls at >= 90% of 2000, 8 errors · [C] 3000: at the slowest measured rate (1983 tokens in 17.7 s, ~112 tok/s) it takes ~27 s, so a runaway answer still ends as a truncation (not retried) before timeout 30 (20 → 30 because a cut try already took 17.7 s) · 3 cuts at the same ~1984 may be a loop, not a short budget: Jam to check (self-review #173) · v2 gets previous_problems, the latest of the topic, so the next problem differs (room-problems-db.md §2.3 v2 · PR #133) · a problem of the chosen topic, its expression for SymPy and the answer (room-problems-db.md §2.3 · AM-11) · [C] max_tokens 2000 + low thinking like the other purposes of Gemini 3 (thinking counts in max_tokens) · measure the share SymPy verifies (worklog step 4)
   tutor_reply:            {tier: main,   temperature: 0.6, max_tokens: 2000, timeout_s: 30, prompt: v2, stream: true, thinking: minimal}  # v2 knows the pending problem (demo-room.md §2 C) · P4-lite measured v1 on Vertex (2026-11-01, 50 messages each): low TTFT p95 3.87 s, 435 tokens out; minimal p95 1.20 s, 78 out, 0.039 THB/message (poc/P4-lite/README.md) · [C] max_tokens 2000 kept (minimal max 116 out)
   open_session:           {tier: main,   temperature: 0.6, max_tokens: 2000, timeout_s: 30, prompt: v2, stream: true, thinking: minimal}  # v2 adds `focus`, the chosen topic and its reason (room-problems-db.md §2.2 · TM-02) · greeting from facts when the room opens (demo-room.md §2 F · TM-15) · [C] same as tutor_reply until measured
-  typed_answer:           {tier: small,  temperature: 0.0, max_tokens: 800,  timeout_s: 10, prompt: v2, thinking: minimal}  # v2 also reads giving up (demo-room.md §2 K item 6) · is a typed message the answer, and its LaTeX lines (demo-room.md §2 G · stands in for route_intent + normalize_math) · [C] minimal thinking for speed; measure on a golden set
+  typed_answer:           {tier: small,  temperature: 0.0, max_tokens: 800,  timeout_s: 10, prompt: v2, thinking: minimal}  # v1.26 · ai_calls 17-20 Nov (n 9): tokens_out max 145 (18%, kept) · latency max 14.2 s = a stuck try cut at 10 s + a ~3 s retry (normal ~2.7 s): a longer timeout would only hold the stuck try longer, so kept (self-review #173) · v2 also reads giving up (demo-room.md §2 K item 6) · is a typed message the answer, and its LaTeX lines (demo-room.md §2 G · stands in for route_intent + normalize_math) · [C] minimal thinking for speed; measure on a golden set
   explain_check:          {tier: main,   temperature: 0.6, max_tokens: 2000, timeout_s: 30, prompt: v3, stream: true, thinking: minimal}  # v3 says what the code's directive says: continue, hint_1, hint_2, reveal, praise_and_show, ask_working (demo-room.md §2 K) · v2 shows the full worked solution every time and asks for working when it is missing (demo-room.md §2 H, I) · the tutor's explanation after a verdict (photo-check-in-room.md §2.2 item 6 · AM-07) · [C] same as tutor_reply until measured: no golden set yet, smoke on Vertex only
   dispute_recheck:       {tier: main,   temperature: 0.0, max_tokens: 1000, timeout_s: 30, prompt: v1}
   update_running_summary: {tier: small,  temperature: 0.2, max_tokens: 400,  timeout_s: 20, prompt: v1}
-  session_summary:        {tier: small,  temperature: 0.3, max_tokens: 150,  timeout_s: 15, prompt: v1, thinking: minimal}  # 1-2 lines when the user ends the session (session-end-db.md §2.3 · PM-05) · [C] minimal thinking: Gemini 3 counts thinking in max_tokens
+  session_summary:        {tier: small,  temperature: 0.3, max_tokens: 400,  timeout_s: 15, prompt: v1, thinking: minimal}  # v1.26 · ai_calls 17-20 Nov (n 6): tokens_out max 99 (66% of 150) · [C] 400 · latency max 17.3 s = a stuck try cut at 15 s + a ~2 s retry, so the timeout is kept (self-review #173) · 1-2 lines when the user ends the session (session-end-db.md §2.3 · PM-05) · [C] minimal thinking: Gemini 3 counts thinking in max_tokens
   # flow 2.7 / 2.8
   persona_extract:        {tier: small,  temperature: 0.0, max_tokens: 400,  timeout_s: 15, prompt: v1}
   persona_preview:        {tier: small,  temperature: 0.7, max_tokens: 150,  timeout_s: 15, prompt: v1}
