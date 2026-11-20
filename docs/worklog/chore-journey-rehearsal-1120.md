@@ -39,3 +39,4 @@
 ## Notes for next time
 
 - log ของ API อยู่ `.local/rehearsal-api.log` (gitignored) · บรรทัด JSON ของ logger `app.ai.calls` มี purpose + เวลา ใช้แทนการ query `ai_calls`
+- log เป็น UTF-16 (Tee-Object ของ PowerShell 5.1) · อ่านด้วย `iconv -f UTF-16 -t UTF-8 .local/rehearsal-api.log` · บรรทัด `NativeCommandError` ตอนเริ่มเป็นแค่ PowerShell ห่อ stderr ไม่ใช่ error จริง
