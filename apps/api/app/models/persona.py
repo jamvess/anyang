@@ -86,6 +86,32 @@ class ExtractPersonaRequest(ApiModel):
     description: NonBlank
 
 
+class PersonaExtractResult(ApiModel):
+    """Structured output of persona_extract (persona-extract.md §2.3). Every param is optional:
+    None means the description does not talk about it, so the preset keeps its value. The
+    names are plain strings here; code checks them with the rule of PersonaText (§2.4 item 3),
+    so an odd name does not fail the whole call. No voice_id: it comes from the preset."""
+
+    name: str | None = None
+    self_pronoun: str | None = None
+    call_user: str | None = None
+    formality: OneToThree | None = None
+    energy: OneToThree | None = None
+    strictness: OneToThree | None = None
+    humor: StrictInt | None = Field(default=None, ge=0, le=2)
+    emoji: StrictBool | None = None
+    explain_style: Literal["step_by_step", "example_first", "concise"] | None = None
+    frequency: Literal["low", "med", "high"] | None = None
+    personality: Literal["curious", "playful", "diligent"] | None = None
+    refused: list[str] = Field(default_factory=list)
+
+
+class PersonaPreviewResult(ApiModel):
+    """Structured output of persona_preview (§2.5): one sentence in this voice."""
+
+    sample: NonBlank
+
+
 class PersonaDraft(ApiModel):
     """Response of POST /personas/extract. Nothing is saved until PUT."""
 

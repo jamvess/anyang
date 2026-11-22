@@ -11,8 +11,8 @@
 
 - [x] 1. 🤖 `/spec-feature` UM-05, UM-07 → `specs/features/ai/persona-extract.md` (prompt 2 ตัว · schema ของ output · ค่าที่คำบรรยายไม่ได้พูดถึง · กฎ whitelist · fallback E5 · eval) พร้อมคำถามใน §10
 - [x] 2. 🙋 Jam ตัดสิน §10 และ approve spec
-- [ ] 3. 🤖 `/spec-to-tests`: service ด้วย fake provider · router (token → จริง · ไม่มี token → stub เดิม) · test contract เดิมต้องผ่าน · red
-- [ ] 4. 🙋 Jam review test
+- [x] 3. 🤖 `/spec-to-tests`: service ด้วย fake provider · router (token → จริง · ไม่มี token → stub เดิม) · test contract เดิมต้องผ่าน · red
+- [x] 4. 🙋 Jam review test
 - [ ] 5. 🤖 `/implement-feature`: `prompts/persona_extract/v1.md`, `prompts/persona_preview/v1.md` · model ของ output · `app/services/persona.py` · `app/routers/persona.py` (ไฟล์ใน `apps/api/` · CODEOWNERS = Junior · stub endpoint เดิม Jam เขียนเอง PR #107)
 - [ ] 6. 🤖 golden set `evals/persona/` (คำบรรยายปกติ · คำขอที่ทำไม่ได้ · injection) + รันบน Vertex จริง
 - [ ] 7. 🙋 Jam อ่านประโยคตัวอย่างและผล eval แล้วตัดสินว่าผ่าน
@@ -35,7 +35,7 @@
 
 ## Next step
 
-ขั้น 3: `/spec-to-tests` ของ `specs/features/ai/persona-extract.md`
+ขั้น 5: `/implement-feature` ให้ test ของ persona-extract green
 
 ## Waiting on
 
