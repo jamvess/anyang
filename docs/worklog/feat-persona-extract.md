@@ -16,7 +16,7 @@
 - [x] 5. 🤖 `/implement-feature`: `prompts/persona_extract/v1.md`, `prompts/persona_preview/v1.md` · model ของ output · `app/services/persona.py` · `app/routers/persona.py` (ไฟล์ใน `apps/api/` · CODEOWNERS = Junior · stub endpoint เดิม Jam เขียนเอง PR #107)
 - [x] 6. 🤖 golden set `evals/persona/` (คำบรรยายปกติ · คำขอที่ทำไม่ได้ · injection) + รันบน Vertex จริง
 - [x] 7. 🙋 Jam อ่านประโยคตัวอย่างและผล eval แล้วตัดสินว่าผ่าน
-- [ ] 8. 🤖 docs: `ai-orchestration.md` §2.7 / §2.10 (fallback ของ `persona_extract` ที่ use-cases.md บอกว่ายังไม่มี) · checklist sub-bullet
+- [x] 8. 🤖 docs: `ai-orchestration.md` §2.7 / §2.10 (fallback ของ `persona_extract` ที่ use-cases.md บอกว่ายังไม่มี) · checklist sub-bullet
 
 ## Definition of done
 
@@ -37,7 +37,7 @@
 
 ## Next step
 
-ขั้น 8: docs: ai-orchestration §2.7 §2.10 · api.md `base_preset_id` + ข้อความ 503 · checklist sub-bullet
+ทุกขั้นเสร็จ · พิมพ์ `/work-done`
 
 ## Waiting on
 

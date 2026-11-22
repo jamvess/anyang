@@ -423,6 +423,7 @@
 - [ ] stage machine: probe → teach → Verify ด้วยโจทย์แบบเดียวกัน → practice (TM-03, TM-04, AM-08, AM-09) · ผ่านตาม skill (TM-16, SM-12)
   - domain เสร็จ: `app/domain/stage_machine.py` (Probe → Teach → Verify → Practice → Done · เข้า Park · เลือก skill + ความยาก · spec `tutor/stage-machine.md` · config `stages:` v1.8 · PR #168) · เหลือ: ต่อเข้าห้องติวคู่กับ planner หลัง 23 พ.ย. (นับ `problems_today`, ตัดสิน `user_new`, ส่ง directive ให้ prompt)
 - [ ] prompt ของ persona (`persona_extract`, `persona_preview`) และ scope edit ผ่านแชท (UM-05, SM-06)
+  - persona เสร็จ: `POST /personas/extract` ที่มี token เรียก `persona_extract` → code รวมค่ากับ preset ที่เลือก (`base_preset_id`) → `persona_preview` · AI ล้ม → `503 persona_unavailable` · golden set 24 ข้อบน Vertex ผ่านทุกเกณฑ์ · `config/ai.yaml` 1.27 `thinking: minimal` · api.md v1.24 · spec `ai/persona-extract.md` · PR #178 · **May:** หน้า S05 ส่ง `base_preset_id` ของ preset ที่เลือกไว้ · เหลือ: scope edit ผ่านแชท (SM-06)
 - [ ] answer-leak check แบบ deterministic ใน gateway (AM-13)
   - ตัวตรวจเสร็จ: `app/domain/answer_leak.py` (string) + `app/math/answer_leak.py` (SymPy ใน worker pool · `check_leak`) · spec `ai/answer-leak-check.md` · PR #176 · เหลือ: ต่อเข้า gateway หลัง 23 พ.ย. (stream: กัก math block จนตรวจผ่าน · generate ใหม่ + ข้อความสำรอง · spec §10 ข้อ 5)
 - [ ] ข้อเสนอ hint ladder (AM-07) ตามที่ทีมตัดสิน
