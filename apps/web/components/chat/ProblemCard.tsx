@@ -1,5 +1,6 @@
 import { Tex } from "@/components/math/Tex";
 import type { components } from "@/lib/api";
+import { breakable } from "./problemLatex";
 import { roomStrings as t } from "./strings";
 
 // Spec: specs/features/tutor/problem-card.md · payload: api.md "SSE events" problem (no answer in it).
@@ -18,7 +19,7 @@ export function ProblemCard({ problem }: { problem: ProblemData }) {
       className="problem-card mt-4 rounded-xl border border-zinc-200 bg-white px-4 py-3"
     >
       <p className="font-mono text-xs uppercase tracking-wide text-zinc-400">{t.problem}</p>
-      <Tex math={problem.text_latex} display />
+      <Tex math={breakable(problem.text_latex)} display />
     </div>
   );
 }
