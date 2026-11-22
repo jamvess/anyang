@@ -33,11 +33,13 @@ Invoke-Gcloud run deploy $Service `
     --region=$Region `
     --image=$Image `
     --allow-unauthenticated `
+    --service-account="api-runtime@$Project.iam.gserviceaccount.com" `
     --min-instances=0 `
     --max-instances=2 `
     --concurrency=40 `
     --timeout=600 `
-    --env-vars-file="$Root\infra\env\api-staging.yaml"
+    --env-vars-file="$Root\infra\env\api-staging.yaml" `
+    --set-secrets="SUPABASE_SERVICE_ROLE_KEY=supabase-service-role:latest"
 
 # gcloud prints "Service URL: https://api-staging-<project number>.asia-southeast1.run.app" above.
 # status.url is the older random-hash URL of the same service, so it is not printed here.
