@@ -6,13 +6,19 @@
 answer's value **and** is written as a final answer, so the problem itself never counts.
 """
 
+import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Literal
 
 import sympy
 
-from app.domain.answer_leak import _split_top_level, leaking_part_by_text, math_parts
+from app.domain.answer_leak import (
+    _split_top_level,
+    math_parts,
+    math_parts_as_written,
+    text_match,
+)
 from app.domain.checker import AnswerFormat
 from app.domain.hint_ladder import _UNEVALUATED  # operators SymPy would work out by itself
 from app.domain.room import _plain
@@ -32,6 +38,9 @@ from app.math.sympy_service import (
 from app.settings import get_settings
 
 LeakMethod = Literal["text", "sympy", "sympy_timeout"]
+# §2.3 equation row (§10 item 6 C): `\pm c` is c and -c; `x_1`, `x_{2}` are the variable x.
+_PLUS_MINUS = re.compile(r"\\[pm]m(?![A-Za-z])")
+_INDEX = re.compile(r"_.*$")
 
 
 @dataclass(frozen=True)
@@ -48,27 +57,39 @@ class LeakResult:
     part: str | None  # for the log only, never shown to the user
 
 
-def _solved_value(part: str, variable: sympy.Symbol) -> sympy.Expr | None:
-    """`x=c` or `c=x` with no variable in c (§2.3 equation row), else None."""
+def _values(side: str) -> list[sympy.Expr]:
+    if _PLUS_MINUS.search(side):
+        return [_parse(_PLUS_MINUS.sub(sign, side)) for sign in ("+", "-")]
+    return [_parse(side)]
+
+
+def _is_variable(written: sympy.Expr, variable: sympy.Symbol) -> bool:
+    return isinstance(written, sympy.Symbol) and _INDEX.sub("", written.name) == variable.name
+
+
+def _solved_values(part: str, variable: sympy.Symbol) -> list[sympy.Expr]:
+    """`x=c` or `c=x` with no variable in c (§2.3 equation row): the values of c, else []."""
     sides = _split_top_level(part, "=")
     if len(sides) != 2:
-        return None
-    lhs, rhs = (_parse(side) for side in sides)
-    for name, value in ((lhs, rhs), (rhs, lhs)):
-        if name == variable and not value.free_symbols:
-            return value
-    return None
+        return []
+    for name, value in (sides, reversed(sides)):
+        values = _values(value)
+        if _is_variable(_parse(name), variable) and not any(v.free_symbols for v in values):
+            return values
+    return []
 
 
 def _equation_leak(reference: _Equation, parts: Sequence[str]) -> str | None:
     variable = _variable([reference])
+    if variable is None:
+        return None
     roots = _solutions(reference, variable)
-    if variable is None or not isinstance(roots, sympy.FiniteSet):
+    if not isinstance(roots, sympy.FiniteSet):
         return None
     for part in parts:
         try:
-            value = _solved_value(part, variable)
-            if value is not None and any(_equal(value, root) for root in roots):
+            values = _solved_values(part, variable)
+            if any(_equal(value, root) for value in values for root in roots):
                 return part
         except Exception:  # cannot be read or compared: skip the part (AC-8)
             continue
@@ -78,15 +99,19 @@ def _equation_leak(reference: _Equation, parts: Sequence[str]) -> str | None:
 def _value_leak(
     answer_format: AnswerFormat, reference: _Expression, problem: str, parts: Sequence[str]
 ) -> str | None:
-    variable = _variable([reference])
     for part in parts:
-        if "=" in part or part == problem or _UNEVALUATED.search(part):
+        plain = _plain(part)
+        if "=" in part or plain == problem or _UNEVALUATED.search(plain):
             continue  # a pair (its sides are parts too), the problem, or not worked out
         try:
             written = _parse(part)
+            if not written.free_symbols <= reference.value.free_symbols:
+                continue  # a variable the answer does not have (§10 item 6 D)
             if not _equal(written.doit(), reference.value):
                 continue
-            if answer_format == "factored" and not _in_factored_form(written, variable):
+            if answer_format == "factored" and not _in_factored_form(
+                written, _variable([reference])
+            ):
                 continue
             return part
         except Exception:  # cannot be read or compared: skip the part (AC-8)
@@ -139,11 +164,11 @@ async def check_leak(
     if not enabled:
         return LeakResult(False, None, None)
 
-    part = leaking_part_by_text(reply, problem.reference_answer, problem.answer_format)
+    part = text_match(math_parts(reply), problem.reference_answer, problem.answer_format)
     if part is not None:
         return LeakResult(True, "text", part)
 
-    parts = math_parts(reply)
+    parts = math_parts_as_written(reply)  # spaces kept for SymPy (§2.1 item 3)
     if not parts:
         return LeakResult(False, None, None)
     if timeout_s is None:

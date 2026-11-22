@@ -131,7 +131,7 @@ async def test_AM13_the_sympy_step_runs_when_the_text_does_not_match():
 @pytest.mark.parametrize(
     ("reply", "problem"),
     [
-        (r"ได้ $\cos x \cdot 3$", LeakProblem(r"3\cos(x)", "expression", r"\frac{d}{dx}3\sin(x)")),
+        (r"ได้ $3 \cos x$", LeakProblem(r"3\cos(x)", "expression", r"\frac{d}{dx}3\sin(x)")),
         ("ได้ $C + x^3$", LeakProblem("x^3+C", "expression", r"\int 3x^2 \, dx")),
     ],
     ids=["space-after-a-command", "two-symbols"],
