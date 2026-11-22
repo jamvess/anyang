@@ -30,7 +30,7 @@
 
 ## Next step
 
-ข้อ 3: `/spec-to-tests` → `tests/unit/test_answer_leak_text.py` + `tests/unit/test_answer_leak_sympy.py`
+ข้อ 3 รอ Jam review test (`test_answer_leak_text.py` + `test_answer_leak_sympy.py` · 29 test แดงทั้งหมดด้วย NotImplementedError) · ok แล้ว commit แล้วทำข้อ 4
 
 ## Waiting on
 

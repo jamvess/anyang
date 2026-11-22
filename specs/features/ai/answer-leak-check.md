@@ -43,7 +43,7 @@ prompt ของห้องติวไม่ได้รับเฉลยอ�
 
 ### 2.4 รวมสองขั้น (`app/math/answer_leak.py`)
 
-`async check_leak(pool, reply, problem) -> LeakResult` · `problem` มี `reference_answer`, `answer_format`, `expression`
+`async check_leak(reply, problem, *, enabled=None, timeout_s=None, pool=None) -> LeakResult` · `problem: LeakProblem(reference_answer, answer_format, expression)` · ค่า default แบบเดียวกับ `check_lines`: `enabled` → `guards.answer_leak_check` · `timeout_s` → `checker.sympy_timeout_seconds` · `pool` → pool ที่ใช้ร่วม · ส่วนของ math ได้จาก `math_parts(reply)` (§2.1 · `app/domain/answer_leak.py`)
 
 1. `guards.answer_leak_check = false` → ไม่หลุด (`checked = false`)
 2. ขั้นที่ 1 พบ → หลุด (`method = "text"`)
