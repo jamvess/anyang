@@ -77,3 +77,28 @@ def test_AM13_a_root_of_the_equation_in_the_reply_is_a_leak(reply):
 )
 def test_AM13_math_that_is_not_the_answer_is_not_a_leak(reply, reference, answer_format):
     assert leaks_by_text(reply, reference, answer_format) is False
+
+
+# --- AC-12, AC-15 · gaps from the self-review (spec §10 item 6) -----------------------------------
+
+
+@pytest.mark.parametrize(
+    ("reply", "reference", "answer_format"),
+    [
+        (r"คำตอบคือ $(x-7)\,(x+7)$", FACTOR, "factored"),
+        (r"ได้ $x = 7 \text{ หรือ } x = -7$", ROOTS, "equation"),
+        (r"ได้ $x=7 \quad x=-7$", ROOTS, "equation"),
+    ],
+    ids=["thin-space", "text-between-roots", "quad-between-roots"],
+)
+def test_AM13_latex_spacing_and_words_between_roots_do_not_hide_the_answer(
+    reply, reference, answer_format
+):
+    # AC-12 (A)
+    assert leaks_by_text(reply, reference, answer_format) is True
+
+
+def test_AM13_a_substitution_is_a_hint_not_the_answer():
+    # AC-15 (D): `x = 0` puts a value in; the answer 0 written on its own still counts.
+    assert leaks_by_text("แทน $x = 0$ ลงไปดู", "0", "expression") is False
+    assert leaks_by_text("คำตอบคือ $0$", "0", "expression") is True

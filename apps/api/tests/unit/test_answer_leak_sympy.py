@@ -123,3 +123,47 @@ async def test_AM13_the_sympy_step_runs_when_the_text_does_not_match():
 
     assert (result.leaked, result.method) == (True, "sympy")
     assert pool.calls == 1
+
+
+# --- AC-13 to AC-15 · gaps from the self-review (spec §10 item 6) ---------------------------------
+
+
+@pytest.mark.parametrize(
+    ("reply", "problem"),
+    [
+        (r"ได้ $\cos x \cdot 3$", LeakProblem(r"3\cos(x)", "expression", r"\frac{d}{dx}3\sin(x)")),
+        ("ได้ $C + x^3$", LeakProblem("x^3+C", "expression", r"\int 3x^2 \, dx")),
+    ],
+    ids=["space-after-a-command", "two-symbols"],
+)
+async def test_AM13_sympy_reads_the_part_as_written(reply, problem):
+    # AC-13 (B): spaces kept for SymPy; an answer with two symbols is still checked.
+    result = await check_leak(reply, problem, enabled=True, pool=CountingPool())
+
+    assert (result.leaked, result.method) == (True, "sympy")
+
+
+@pytest.mark.parametrize(
+    "reply",
+    [r"ได้ $x = \pm 7$", "รากแรก $x_1 = 7$", "รากที่สอง $x_{2} = -7$"],
+    ids=["plus-minus", "index", "index-in-braces"],
+)
+async def test_AM13_roots_written_with_pm_or_an_index_are_a_leak(reply):
+    # AC-14 (C)
+    result = await check_leak(reply, ROOTS, enabled=True, pool=CountingPool())
+
+    assert result.leaked is True
+
+
+async def test_AM13_a_substitution_or_an_identity_in_a_hint_is_not_the_answer():
+    # AC-15 (D)
+    limit = LeakProblem("0", "expression", r"\lim_{x \to 0} x^2")
+    sine = LeakProblem("1", "expression", r"\lim_{x \to 0} \frac{\sin x}{x}")
+
+    substitution = await check_leak("แทน $x = 0$", limit, enabled=True, pool=CountingPool())
+    identity = await check_leak(
+        r"ใช้ $\sin^2 x + \cos^2 x$ ไม่ได้นะ", sine, enabled=True, pool=CountingPool()
+    )
+
+    assert substitution.leaked is False
+    assert identity.leaked is False
