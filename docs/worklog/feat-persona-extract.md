@@ -9,8 +9,8 @@
 
 ## Plan
 
-- [ ] 1. 🤖 `/spec-feature` UM-05, UM-07 → `specs/features/ai/persona-extract.md` (prompt 2 ตัว · schema ของ output · ค่าที่คำบรรยายไม่ได้พูดถึง · กฎ whitelist · fallback E5 · eval) พร้อมคำถามใน §10
-- [ ] 2. 🙋 Jam ตัดสิน §10 และ approve spec
+- [x] 1. 🤖 `/spec-feature` UM-05, UM-07 → `specs/features/ai/persona-extract.md` (prompt 2 ตัว · schema ของ output · ค่าที่คำบรรยายไม่ได้พูดถึง · กฎ whitelist · fallback E5 · eval) พร้อมคำถามใน §10
+- [x] 2. 🙋 Jam ตัดสิน §10 และ approve spec
 - [ ] 3. 🤖 `/spec-to-tests`: service ด้วย fake provider · router (token → จริง · ไม่มี token → stub เดิม) · test contract เดิมต้องผ่าน · red
 - [ ] 4. 🙋 Jam review test
 - [ ] 5. 🤖 `/implement-feature`: `prompts/persona_extract/v1.md`, `prompts/persona_preview/v1.md` · model ของ output · `app/services/persona.py` · `app/routers/persona.py` (ไฟล์ใน `apps/api/` · CODEOWNERS = Junior · stub endpoint เดิม Jam เขียนเอง PR #107)
@@ -31,10 +31,11 @@
 ## Decisions
 
 - 2026-11-22 · แยก persona ออกจาก scope edit ผ่านแชท · ข้อ checklist ใหญ่ (L) และ persona ไม่แตะห้องติวที่ใช้อัดวิดีโอ
+- 2026-11-22 · spec §10 ข้อ 1–5 ตามข้อเสนอ (Jam) · ข้อ 1 ก ต้องแก้ api.md (shared) ใน PR นี้ และบอกกลุ่มก่อน merge
 
 ## Next step
 
-ขั้น 1: อ่าน ai-orchestration §2.7, api.md v1.12 "Persona และโปรไฟล์", use-cases UC-01 แล้วร่าง spec
+ขั้น 3: `/spec-to-tests` ของ `specs/features/ai/persona-extract.md`
 
 ## Waiting on
 
