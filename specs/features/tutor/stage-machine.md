@@ -6,7 +6,7 @@
 | Requirements | TM-03 (probe ก่อนสอน · ข้ามการอธิบายเมื่อตอบถูก) · TM-04 (สลับ explain กับ practice ทีละหัวข้อ) · AM-08 (Verify ด้วยโจทย์แบบเดียวกัน) · AM-09 (อธิบายใหม่ด้วยมุมที่ต่าง) · TM-16 (ผ่านตาม skill + ระดับเป้า + mastery) · SM-12 (หัวข้อมี skills) |
 | Owner | Jam |
 | Reviewer | Jam · Junior ดูย้อนหลัง (คอลัมน์ `topic_progress.stage`, `fail_streak` เป็นของ Junior ตอนต่อเข้าห้อง) |
-| Status | approved 2026-11-19 (Jam · §10 ข้อ 1 (ก), ข้อ 2–6 ตามข้อเสนอ) |
+| Status | approved 2026-11-19 (Jam · §10 ข้อ 1 (ก), ข้อ 2–6 ตามข้อเสนอ) · แก้ 2026-11-22 หลัง self-review (Jam · §10 ข้อ 7) |
 | Related system spec | ai-orchestration.md §1.3 (P1 code ตัดสินใจ), §2.2.3 (directive), §2.2.4 (ตาราง stage, เงื่อนไข Done, Park, การสอนตาม error type), §2.2.10, §2.5.4 (เลือก skill + difficulty) · learning-model.md §4 (Done, `d_target`), §7 (Park) · `config/learning.yaml` → `done.*`, `park.*`, `bkt.*` · `app/domain/bkt.py` (`level`, `target_difficulty`) · `app/domain/planner.py` (mode) · `app/domain/hint_ladder.py` (เดโม่ในเครื่อง · §10 ข้อ 1) |
 
 ## 1. Context
@@ -33,21 +33,23 @@
 
 1. **skill ที่ต้องครอบคลุม** (TM-16, SM-12): skill ที่ `exam_freq > 0` (`done.require_exam_skills_covered`) · ถ้าไม่มี skill ไหนเคยออกสอบ ใช้ทุก skill (`done.require_all_skills_if_no_past_exam`)
 2. **ครอบคลุมแล้ว** = `independent_correct ≥ done.min_independent_correct_per_skill`
-3. **skill ถัดไป** (Probe, Practice · §2.5.4): skill ที่ต้องครอบคลุมแต่ยังไม่ครอบคลุม เรียง `exam_freq` มากไปน้อย (เท่ากัน → ลำดับใน `skills`) · ถ้าครอบคลุมหมดแล้ว (หัวข้อยังไม่ผ่านเพราะ mastery หรือ `d_max`): skill ที่ต้องครอบคลุมที่ `independent_correct` น้อยสุด (เท่ากัน → `exam_freq` มากไปน้อย → ลำดับ) · §10 ข้อ 5 · หัวข้อที่ไม่มี skill เลย → `skill_id = null`
+3. **skill ถัดไป** (Probe, Practice · §2.5.4): skill ที่ต้องครอบคลุมแต่ยังไม่ครอบคลุม เรียง `exam_freq` มากไปน้อย (เท่ากัน → ลำดับใน `skills`) · ถ้าครอบคลุมหมดแล้ว (หัวข้อยังไม่ผ่านเพราะ mastery หรือ `d_max`): skill ที่ต้องครอบคลุมที่ `independent_correct` น้อยสุด (เท่ากัน → `exam_freq` มากไปน้อย → ลำดับ) · §10 ข้อ 5 · หัวข้อที่ไม่มี skill เลย → `skill_id = null` · **skill ของ Verify** = `current_skill_id` (null → skill ถัดไป · §10 ข้อ 7 D)
 4. **เพดานความยาก** `cap` = `bkt.target_difficulty(stars, mode)` (null เมื่อหัวข้อถูกตัดใน mode นี้ → ใช้ `done.three_star_final_difficulty`)
 5. **ความยาก** (§2.5.4 · ค่าใหม่ใน config §10 ข้อ 3):
    - Probe: `min(stages.probe_difficulty, cap)`
    - Practice ข้อแรก (ไม่มีข้อก่อนหน้า): `min(stages.practice_start_difficulty, cap)`
-   - Practice หลังตอบถูก: `min(difficulty + 1, cap)` ("ไล่ 2 → 3")
-   - Verify: `max(difficulty − stages.verify_difficulty_drop, 1)` (ห้ามยากขึ้น · 1 = ขั้นต่ำของสเกลใน `problems.difficulty`)
+   - Practice หลังตอบถูก: skill ถัดไปเป็น skill เดิม (`current_skill_id`) หรือเคยทำถูกเองแล้ว (`independent_correct > 0`) → `min(difficulty + 1, cap)` ("ไล่ 2 → 3") · skill ใหม่ที่ยังไม่เคยทำถูกเอง → Practice ข้อแรก (§10 ข้อ 7 C)
+   - Verify: `min(max(difficulty − stages.verify_difficulty_drop, 1), cap)` (ห้ามยากขึ้นและไม่เกินเพดาน · 1 = ขั้นต่ำของสเกลใน `problems.difficulty` · §10 ข้อ 7 D) · ไม่มีข้อก่อนหน้า → Practice ข้อแรก
 
 ### 2.3 กฎ (ข้อแรกที่ตรงชนะ)
 
 **Start**
 
+ก่อนข้อ 1: `level = passed` → **Done** ไม่มีโจทย์ (mode เปลี่ยนจนหัวข้อผ่านโดยไม่ต้องตอบ · §10 ข้อ 7 B)
+
 1. `stage` null หรือ `park` (§10 ข้อ 6) และ `user_new = false` → **Probe** (TM-03): โจทย์ `purpose = probe`, skill ถัดไป, ความยาก Probe · `fail_streak = 0`
 2. `stage` null หรือ `park` และ `user_new = true` → **Teach แบบเริ่มจากศูนย์** แล้ว Practice (§10 ข้อ 4): `teach.kind = introduce`, โจทย์ `purpose = practice` ความยาก Practice ข้อแรก · stage = `practice`
-3. `stage = done` → Done ซ้ำ (ไม่มีโจทย์ · planner ไม่ควรส่งหัวข้อที่ผ่านแล้วมา ยกเว้นทวน S6)
+3. `stage = done` แต่ `level ≠ passed` (ผ่านแล้วกลับมาไม่ผ่าน เช่น mode เปลี่ยนระดับเป้า) → Practice เหมือน `practice` ในข้อ 4 (§10 ข้อ 7 B)
 4. `stage` อื่น (กลับมาทำหัวข้อค้างใน session ใหม่ · ไม่มีโจทย์ค้าง): ให้โจทย์ของ stage เดิม · `probe` → Probe ใหม่ · `verify` → Verify skill เดิม ความยากเดิม · `practice` → Practice skill ถัดไป ความยากเดิม (`min(difficulty, cap)` · ไม่มี → Practice ข้อแรก)
 
 **Answer**
@@ -58,7 +60,7 @@
 8. ไม่ `correct` → `fail_streak + 1` แล้ว:
    1. `fail_streak` ใหม่ ≥ `park.max_fail_streak_per_skill` → **Park** `reason = fail_streak` (ไม่มีโจทย์ · ai-orchestration §2.2.4 "ผิดครั้งที่ 3 ใน skill เดียวกัน")
    2. นอกนั้น → **Teach** แล้ว **Verify** ใน turn เดียว (ตัวอย่าง directive §2.2.3 `do: explain_error, then: give_problem`): `teach.kind` ตาม error type (ตารางข้างล่าง), `teach.angle = fail_streak` ใหม่ (1 = อธิบายครั้งแรก · 2 ขึ้นไป = มุมใหม่ · AM-09), โจทย์ `purpose = verify` skill เดิม ความยาก Verify · stage = `verify`
-9. **Park ตามจำนวนโจทย์ต่อวัน** (ตรวจหลังข้อ 6–8 ทุกครั้งที่ผลมีโจทย์): skill ของโจทย์ที่จะให้มี `problems_today ≥ park.max_problems_per_skill_per_day` → **Park** `reason = too_many_today` แทน (Beck & Gong 2013 · ai-orchestration §2.2.4 "เกิน 10 ข้อในวันเดียวโดยยังไม่ผ่าน")
+9. **Park ตามจำนวนโจทย์ต่อวัน** (ตรวจหลังข้อ 1–8 ทุกครั้งที่ผลมีโจทย์ ทั้ง Start และ Answer · §10 ข้อ 7 A): skill ของโจทย์ที่จะให้มี `problems_today ≥ park.max_problems_per_skill_per_day` → **Park** `reason = too_many_today` แทน (Beck & Gong 2013 · ai-orchestration §2.2.4 "เกิน 10 ข้อในวันเดียวโดยยังไม่ผ่าน")
 
 | `error_type` | `teach.kind` (ai-orchestration §2.2.4 "การสอนตาม error type") |
 |---|---|
@@ -93,7 +95,7 @@
 
 - **AC-1 (TM03)** Given หัวข้อใหม่ (`stage` null) When `Start(user_new=false)` Then stage `probe` · โจทย์ `purpose = probe` · skill ที่ต้องครอบคลุมที่ `exam_freq` มากสุด · ความยาก `stages.probe_difficulty`
 - **AC-2 (TM03)** Given หัวข้อใหม่ When `Start(user_new=true)` Then ไม่ probe: `teach.kind = introduce` · โจทย์ `purpose = practice` ความยาก `stages.practice_start_difficulty` · stage `practice`
-- **AC-3 (TM03)** Given stage `probe` When ตอบถูก (independent) Then ไม่มี `teach` · stage `practice` · ความยาก = Probe + 1 (ไม่เกิน cap)
+- **AC-3 (TM03)** Given stage `probe` When ตอบถูก (independent) Then ไม่มี `teach` · stage `practice` · skill ถัดไปเป็น skill ใหม่ที่ยังไม่เคยทำถูก → ความยาก Practice ข้อแรก (§10 ข้อ 7 C)
 
 **Teach → Verify (AM-08, AM-09, TM-04)**
 
@@ -118,9 +120,13 @@
 
 **Start ของหัวข้อที่เคยทำ**
 
-- **AC-16 (TM04)** `Start` กับ stage `verify` → Verify skill เดิม ความยากเดิม · `practice` → Practice · `done` → Done ไม่มีโจทย์ · `park` → Probe ใหม่ (§10 ข้อ 6)
+- **AC-16 (TM04)** `Start` กับ stage `verify` → Verify skill เดิม ความยากเดิม · `practice` → Practice · `done` (ยังผ่านอยู่) → Done ไม่มีโจทย์ · `park` → Probe ใหม่ (§10 ข้อ 6)
+- **AC-17 (TM16)** mode เปลี่ยน: `Start` กับ stage `practice` ที่ `level = passed` → Done ไม่มีโจทย์ · stage `done` ที่ `level ≠ passed` → Practice
+- **AC-18 (TM19) boundary ของโจทย์ต่อวันตอน Start:** skill ของโจทย์แรกมี `problems_today` = `park.max_problems_per_skill_per_day − 1` → ได้โจทย์ · = ค่านั้น → `park` · `too_many_today` (รวมหัวข้อที่ Park ไว้แล้วเปิดใหม่วันเดียวกัน)
+- **AC-19 (TM03)** Practice หลังตอบถูก: skill เดิม → `min(difficulty + 1, cap)` · skill ใหม่ที่ `independent_correct = 0` → `stages.practice_start_difficulty`
+- **AC-20 (AM08)** Verify ไม่เกินเพดาน: ★★ ใน tight (`cap` = `done.tight_mode_two_star_difficulty`) ข้อก่อนหน้าความยาก `done.two_star_final_difficulty` ตอบผิด → ความยาก Verify ≤ `cap` · `Start` stage `verify` เหมือนกัน · `current_skill_id` null แต่หัวข้อมี skill → Verify ใช้ skill ถัดไป
 
-**AC-boundary:** AC-11, AC-12, AC-14, AC-15 · **AC-tenant:** ไม่อ่านหรือเขียนข้อมูล (pure function · ข้อมูลมาจาก repository ของห้องติวที่แยก tenant อยู่แล้ว)
+**AC-boundary:** AC-11, AC-12, AC-14, AC-15, AC-18 · **AC-tenant:** ไม่อ่านหรือเขียนข้อมูล (pure function · ข้อมูลมาจาก repository ของห้องติวที่แยก tenant อยู่แล้ว)
 
 ## 5. Data changes
 
@@ -138,7 +144,7 @@
 
 | Test | ระดับ | ครอบคลุม AC |
 |---|---|---|
-| `tests/unit/test_stage_machine.py` (table-driven · `LearningConfig` ของ test) | unit | AC-1 ถึง AC-16 |
+| `tests/unit/test_stage_machine.py` (table-driven · `LearningConfig` ของ test) | unit | AC-1 ถึง AC-20 |
 
 ## 9. Out of scope
 
@@ -149,7 +155,7 @@
 
 ## 10. Open questions
 
-ตัดสินแล้ว (Jam 2026-11-19): ข้อ 1 (ก) · ข้อ 2–6 ตามข้อเสนอ
+ตัดสินแล้ว (Jam 2026-11-19): ข้อ 1 (ก) · ข้อ 2–6 ตามข้อเสนอ · ข้อ 7 (Jam 2026-11-22) ตามข้อเสนอ
 
 1. **hint ladder ของเดโม่กับ Teach:** AM-07 และตาราง Teach (§2.2.4) ห้าม "ให้ hint แล้วให้ลองเอง" แต่เดโม่ในเครื่องมี hint ladder (`demo-room.md` §2 K · ข้อเสนอแก้ AM-07 ยังรอทีม)
    - (ก) **ข้อเสนอ:** stage machine ทำตาม AM-07 ที่เขียนไว้ (ผิด → อธิบายทันที → Verify) · hint ladder คงอยู่เฉพาะเดโม่ในเครื่อง ไม่อยู่ใน stage machine · ถ้าทีมรับข้อเสนอ AM-07 ค่อยใส่ ladder เป็นขั้นย่อยของ Teach ใน PR อื่น
@@ -166,6 +172,7 @@
 4. **ผู้ใช้บอกว่ายังไม่เคยเรียน** (§2.2.4 "ให้ข้ามไป Teach"): Teach ปกติเริ่มจากคำตอบที่ผิด แต่กรณีนี้ยังไม่มีคำตอบ · ข้อเสนอ: `teach.kind = introduce` (สอนพื้นฐานของ skill แรกตามชีท) แล้วให้โจทย์ Practice ข้อแรก (`purpose = practice` · ไม่ใช่ verify เพราะยังไม่มีโจทย์ที่ผิดให้เทียบ)
 5. **skill ถัดไปเมื่อครอบคลุมหมดแล้วแต่ยังไม่ผ่าน** (mastery ยังไม่ถึงหรือยังไม่เคยทำถูกที่ระดับเป้า · spec ระบบไม่ได้บอก): ข้อเสนอ: skill ที่ `independent_correct` น้อยสุด (ฝึกส่วนที่ทำน้อยสุด) → `exam_freq` → ลำดับ
 6. **Start ของหัวข้อที่ Park ไว้:** planner ยังไม่รู้จัก Park (S6) จึงอาจส่งหัวข้อที่ Park มาอีก · ข้อเสนอ: เริ่มใหม่ด้วย Probe (`fail_streak = 0`) จนกว่า S6 จะทำกฎกลับเข้า queue
+7. **ช่องโหว่ที่ self-review เจอ** (Jam 2026-11-22 · แก้ใน PR นี้): (A) เพดานโจทย์ต่อวันตรวจแค่ตอนตอบ หัวข้อที่ Park เพราะครบ 10 ข้อแล้วเปิดใหม่วันเดียวกันได้ Probe ของ skill เดิม (B) Start ไม่ดู `level` ทำให้หัวข้อที่ผ่านเพราะ mode เปลี่ยนยังได้โจทย์ และหัวข้อ `done` ที่กลับมาไม่ผ่านไม่ได้โจทย์อีกเลย (C) skill ใหม่ได้ความยาก +1 ต่อจาก skill ก่อน จึงเริ่มที่ระดับข้อสอบทั้งที่ยังไม่เคยทำ (D) Verify ไม่ถูกจำกัดด้วยเพดานเมื่อ mode ลดระดับเป้า และได้ `skill_id = null` เมื่อข้อก่อนหน้าไม่มี skill · แก้: §2.2 ข้อ 3, 5 · §2.3 ก่อนข้อ 1, ข้อ 3, ข้อ 9 · AC-3 · AC-17 ถึง AC-20
 
 ## 11. Spec changes needed
 

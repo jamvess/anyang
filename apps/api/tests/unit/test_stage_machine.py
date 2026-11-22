@@ -107,7 +107,8 @@ def test_TM03_a_right_probe_skips_the_explanation(cfg: LearningConfig):
     assert step.teach is None
     assert step.stage == "practice"
     assert (step.problem.skill_id, step.problem.purpose) == (sid(2), "practice")
-    assert step.problem.difficulty == min(d + 1, cap(cfg))
+    # skill 2 has no independent correct yet, so it starts again (AC-19)
+    assert step.problem.difficulty == min(cfg.stages.practice_start_difficulty, cap(cfg))
 
 
 # --- AC-4 to AC-8 · Teach → Verify (AM-08, AM-09, TM-04) -----------------------------------------
@@ -312,3 +313,76 @@ def test_TM04_a_topic_resumed_in_a_new_session_keeps_its_stage(cfg: LearningConf
 
     parked = next_step(state("park", current=1, difficulty=d, fail_streak=3), start, "normal", cfg)
     assert (parked.stage, parked.problem.purpose, parked.fail_streak) == ("probe", "probe", 0)
+
+
+# --- AC-17 to AC-20 · gaps from the self-review (spec §10 item 7) --------------------------------
+
+
+def test_TM16_a_mode_change_can_pass_or_reopen_a_topic_without_an_answer(cfg: LearningConfig):
+    # AC-17 (B): the level comes from bkt.level with the new mode, so it can change on Start.
+    start = Start(user_new=False)
+    d = cap(cfg)
+
+    passed = next_step(
+        state("practice", level="passed", current=1, difficulty=d), start, "normal", cfg
+    )
+    reopened = next_step(state("done", current=1, difficulty=d), start, "normal", cfg)
+
+    assert (passed.stage, passed.problem) == ("done", None)
+    assert (reopened.stage, reopened.problem.purpose) == ("practice", "practice")
+
+
+@pytest.mark.parametrize("stage", [None, "park"], ids=["new", "parked"])
+@pytest.mark.parametrize(("offset", "parked"), [(-1, False), (0, True)], ids=["max-1", "max"])
+def test_TM19_start_parks_when_the_first_skill_had_enough_problems_today(
+    cfg, stage, offset, parked
+):
+    # AC-18 (A): the daily cap holds when the topic is opened again the same day.
+    today = cfg.park.max_problems_per_skill_per_day + offset
+    skills = (skill(1, freq=2, today=today), skill(2, freq=1))
+
+    step = next_step(state(stage, skills), Start(user_new=False), "normal", cfg)
+
+    if parked:
+        assert (step.stage, step.park_reason, step.problem) == ("park", "too_many_today", None)
+    else:
+        assert step.problem.skill_id == sid(1)
+
+
+def test_TM03_a_new_skill_starts_at_the_first_practice_level(cfg: LearningConfig):
+    # AC-19 (C): +1 only on the same skill; a skill never answered right starts again.
+    m = cfg.done.min_independent_correct_per_skill
+    d = cfg.stages.practice_start_difficulty
+    same = (skill(1, freq=2, correct=m),)  # covered, topic not passed: skill 1 again
+    new = (skill(1, freq=2, correct=m), skill(2, freq=1))
+
+    again = next_step(state("practice", same, current=1, difficulty=d), RIGHT, "normal", cfg)
+    moved = next_step(state("practice", new, current=1, difficulty=cap(cfg)), RIGHT, "normal", cfg)
+
+    assert (again.problem.skill_id, again.problem.difficulty) == (sid(1), min(d + 1, cap(cfg)))
+    assert moved.problem.skill_id == sid(2)
+    assert moved.problem.difficulty == min(cfg.stages.practice_start_difficulty, cap(cfg))
+
+
+def test_AM08_verify_never_goes_above_the_target_difficulty(cfg: LearningConfig):
+    # AC-20 (D): a ★★ topic answered at exam level, then the mode turns tight.
+    tight_cap = cap(cfg, stars=2, mode="tight")
+    assert tight_cap == cfg.done.tight_mode_two_star_difficulty
+    d = cfg.done.two_star_final_difficulty
+    answered = state("practice", stars=2, current=1, difficulty=d)
+    open_verify = state("verify", stars=2, current=1, difficulty=d, fail_streak=1)
+
+    after_wrong = next_step(answered, wrong("sign"), "tight", cfg)
+    resumed = next_step(open_verify, Start(user_new=False), "tight", cfg)
+
+    assert after_wrong.problem.difficulty <= tight_cap
+    assert resumed.problem.difficulty <= tight_cap
+
+
+def test_AM08_verify_without_a_known_skill_uses_the_next_skill(cfg: LearningConfig):
+    # AC-20 (D): the latest problem had no skill, but the topic has skills.
+    d = cfg.stages.probe_difficulty
+
+    step = next_step(state("practice", current=None, difficulty=d), wrong("sign"), "normal", cfg)
+
+    assert (step.problem.skill_id, step.problem.purpose) == (sid(1), "verify")
