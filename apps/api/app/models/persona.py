@@ -9,7 +9,7 @@ it is stored in `description_raw` and never reaches a prompt.
 
 from typing import Annotated, Literal, Self
 
-from pydantic import Field, StrictBool, StrictInt, StringConstraints, model_validator
+from pydantic import ConfigDict, Field, StrictBool, StrictInt, StringConstraints, model_validator
 
 from app.models.base import ApiModel
 from app.settings import get_settings
@@ -93,7 +93,11 @@ class PersonaExtractResult(ApiModel):
     """Structured output of persona_extract (persona-extract.md §2.3). Every param is optional:
     None means the description does not talk about it, so the preset keeps its value. The
     names are plain strings here; code checks them with the rule of PersonaText (§2.4 item 3),
-    so an odd name does not fail the whole call. No voice_id: it comes from the preset."""
+    so an odd name does not fail the whole call. No voice_id: it comes from the preset.
+    Keys the schema does not have (voice_id, gender, notes) are dropped, not an error, so one
+    extra key does not turn into a schema retry and a 503 (self-review #178)."""
+
+    model_config = ConfigDict(extra="ignore")
 
     name: str | None = None
     self_pronoun: str | None = None
@@ -111,6 +115,8 @@ class PersonaExtractResult(ApiModel):
 
 class PersonaPreviewResult(ApiModel):
     """Structured output of persona_preview (§2.5): one sentence in this voice."""
+
+    model_config = ConfigDict(extra="ignore")
 
     sample: NonBlank
 

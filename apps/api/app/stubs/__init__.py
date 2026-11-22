@@ -154,3 +154,17 @@ def fake_ingestion() -> dict[str, ScriptItem]:
     }
     answers["vision_extract_pages"] = _fake_vision_pages
     return answers
+
+
+def fake_persona() -> dict[str, ScriptItem]:
+    """persona_extract and persona_preview in fake mode (self-review #178): with a token,
+    POST /personas/extract answers instead of 503. Extract says nothing, so the params are the
+    preset's; refused and the sample are the stub draft's, marked as fake."""
+    draft = personas()["drafts"]["tutor"]
+    extract = {"refused": [f"{part} (โหมด fake)" for part in draft["refused"]]}
+    return {
+        "persona_extract": json.dumps(extract, ensure_ascii=False),
+        "persona_preview": json.dumps(
+            {"sample": f"{draft['sample']} (โหมด fake)"}, ensure_ascii=False
+        ),
+    }

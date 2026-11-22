@@ -27,9 +27,9 @@ def _name(field: str, value: str) -> str | None:
 
 
 def merge_params[P: (TutorParams, BuddyParams)](base: P, extracted: PersonaExtractResult) -> P:
+    # PersonaExtractResult has no voice_id, so the voice stays the preset's (§2.4 item 4).
     said = extracted.model_dump(exclude_none=True, exclude={"refused"})
     change = {field: value for field, value in said.items() if field in type(base).model_fields}
-    change.pop("voice_id", None)  # §2.4 item 4: never from the AI
     for field in _NAMES:
         if field in change and (name := _name(field, change[field])) is not None:
             change[field] = name

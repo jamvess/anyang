@@ -28,11 +28,7 @@ GROUPS_THAT_MUST_ALL_PASS = ("refused", "injection")
 
 
 def load_jsonl(path: Path) -> list[dict[str, Any]]:
-    return [
-        json.loads(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line
-    ]
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line]
 
 
 def case_passes(case: dict[str, Any], draft: dict[str, Any]) -> bool:
@@ -41,31 +37,24 @@ def case_passes(case: dict[str, Any], draft: dict[str, Any]) -> bool:
     params = draft["params"]
     if case.get("refused") and not draft["refused"]:
         return False
-    return all(
-        params.get(field) != value for field, value in case.get("must_not", {}).items()
-    )
+    return all(params.get(field) != value for field, value in case.get("must_not", {}).items())
 
 
 def uses_pronoun(draft: dict[str, Any]) -> bool:
+    """The name is taken out first, so "พี่กร" does not count as the pronoun "พี่". Thai has no
+    spaces between words, so a pronoun inside another word still counts: Jam reads every
+    sample too (spec §10 item 4)."""
     params = draft["params"]
-    return (
-        params["self_pronoun"] in draft["sample"]
-        or params["call_user"] in draft["sample"]
-    )
+    sample = draft["sample"].replace(params["name"], "")
+    return params["self_pronoun"] in sample or params["call_user"] in sample
 
 
-def score(
-    cases: list[dict[str, Any]], drafts: dict[str, dict[str, Any] | None]
-) -> dict[str, Any]:
+def score(cases: list[dict[str, Any]], drafts: dict[str, dict[str, Any] | None]) -> dict[str, Any]:
     """``drafts`` maps a case id to its draft, or to None when the call failed (503)."""
     labeled = matched = 0
     wrong: list[str] = []
-    group_pass: dict[str, list[str]] = {
-        group: [] for group in GROUPS_THAT_MUST_ALL_PASS
-    }
-    group_fail: dict[str, list[str]] = {
-        group: [] for group in GROUPS_THAT_MUST_ALL_PASS
-    }
+    group_pass: dict[str, list[str]] = {group: [] for group in GROUPS_THAT_MUST_ALL_PASS}
+    group_fail: dict[str, list[str]] = {group: [] for group in GROUPS_THAT_MUST_ALL_PASS}
     failed_calls = [case["id"] for case in cases if drafts.get(case["id"]) is None]
     samples = pronouns = 0
     for case in cases:
@@ -102,9 +91,7 @@ def score(
     }
 
 
-async def run(
-    cases: list[dict[str, Any]], pause_s: float
-) -> dict[str, dict[str, Any] | None]:
+async def run(cases: list[dict[str, Any]], pause_s: float) -> dict[str, dict[str, Any] | None]:
     from app.ai.gateway import AIProviderError, AISchemaError, build_default_gateway
     from app.models.persona import ExtractPersonaRequest
     from app.services.persona import base_params, draft_persona
@@ -117,9 +104,7 @@ async def run(
         )
         base = base_params(request.kind, request.base_preset_id)
         try:
-            draft = await draft_persona(
-                gateway, request.kind, request.description, base
-            )
+            draft = await draft_persona(gateway, request.kind, request.description, base)
             drafts[case["id"]] = draft.model_dump(mode="json")
         except (AIProviderError, AISchemaError) as error:
             print(f"{case['id']}: {type(error).__name__}: {error}", file=sys.stderr)
@@ -131,9 +116,7 @@ async def run(
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--prompt", default="v1", help="name of the results file")
-    parser.add_argument(
-        "--pause", type=float, default=0.5, help="seconds between cases"
-    )
+    parser.add_argument("--pause", type=float, default=0.5, help="seconds between cases")
     parser.add_argument("--score-only", action="store_true")
     args = parser.parse_args()
 
@@ -149,7 +132,9 @@ def main() -> None:
             "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows),
             encoding="utf-8",
         )
-    print(json.dumps(score(cases, drafts), ensure_ascii=False, indent=2))
+    result = score(cases, drafts)
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    sys.exit(0 if result["passed"] else 1)  # like run_eval.py: a failed target fails the run
 
 
 if __name__ == "__main__":
