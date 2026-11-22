@@ -14,8 +14,8 @@
 - [x] 3. 🤖 `/spec-to-tests`: service ด้วย fake provider · router (token → จริง · ไม่มี token → stub เดิม) · test contract เดิมต้องผ่าน · red
 - [x] 4. 🙋 Jam review test
 - [x] 5. 🤖 `/implement-feature`: `prompts/persona_extract/v1.md`, `prompts/persona_preview/v1.md` · model ของ output · `app/services/persona.py` · `app/routers/persona.py` (ไฟล์ใน `apps/api/` · CODEOWNERS = Junior · stub endpoint เดิม Jam เขียนเอง PR #107)
-- [ ] 6. 🤖 golden set `evals/persona/` (คำบรรยายปกติ · คำขอที่ทำไม่ได้ · injection) + รันบน Vertex จริง
-- [ ] 7. 🙋 Jam อ่านประโยคตัวอย่างและผล eval แล้วตัดสินว่าผ่าน
+- [x] 6. 🤖 golden set `evals/persona/` (คำบรรยายปกติ · คำขอที่ทำไม่ได้ · injection) + รันบน Vertex จริง
+- [x] 7. 🙋 Jam อ่านประโยคตัวอย่างและผล eval แล้วตัดสินว่าผ่าน
 - [ ] 8. 🤖 docs: `ai-orchestration.md` §2.7 / §2.10 (fallback ของ `persona_extract` ที่ use-cases.md บอกว่ายังไม่มี) · checklist sub-bullet
 
 ## Definition of done
@@ -33,10 +33,11 @@
 - 2026-11-22 · แยก persona ออกจาก scope edit ผ่านแชท · ข้อ checklist ใหญ่ (L) และ persona ไม่แตะห้องติวที่ใช้อัดวิดีโอ
 - 2026-11-22 · spec §10 ข้อ 1–5 ตามข้อเสนอ (Jam) · ข้อ 1 ก ต้องแก้ api.md (shared) ใน PR นี้ และบอกกลุ่มก่อน merge
 - 2026-11-22 · `persona_preview/v1` แยก `<persona_data>` เป็น 3 block (test เดิม: 1 placeholder ต่อ block) · Jam ok ให้เพิ่ม 2 prompt ใหม่ใน `OUTSIDE_BY_PROMPT` ของ `test_prompt_data_blocks.py`
+- 2026-11-22 · eval บน Vertex: ไม่มี thinking → ตัดที่ 400 ทั้ง 24 ข้อ · Jam ok: `ai.yaml` 1.27 `thinking: minimal` ทั้งสอง purpose (shared · บอกกลุ่มก่อน merge) + แก้ v1 ตรงๆ (ยังไม่เคย merge): กฎ injection และห้ามคำลงท้ายตามเพศ · ผล 49/49 field · refused 4/4 · injection 4/4 · สรรพนาม 24/24
 
 ## Next step
 
-ขั้น 6: Jam ตรวจ label ใน `evals/persona/cases.jsonl` แล้วรัน `AI_PROVIDER=live uv run --project apps/api python evals/run_persona.py` บน Vertex
+ขั้น 8: docs: ai-orchestration §2.7 §2.10 · api.md `base_preset_id` + ข้อความ 503 · checklist sub-bullet
 
 ## Waiting on
 

@@ -3,7 +3,7 @@
 # "vertex:" runs on Vertex AI when GOOGLE_CLOUD_PROJECT is set (specs/features/ai/gemini-vertex.md;
 # AI-07: no free tier for real users). AI_MODEL_OVERRIDE=gemini:<model> still uses the Gemini API key.
 
-version: "1.26"                        # a string: unquoted, YAML reads 1.10 as the float 1.1
+version: "1.27"                        # a string: unquoted, YAML reads 1.10 as the float 1.1
 
 tiers:
   small:  {primary: "vertex:gemini-3.5-flash",   fallback: "anthropic:TODO-claude-haiku"}  # P3a on Vertex (31 Oct): A4 43/43, A7 34/43 and 30/43 · flash-lite broke JSON with LaTeX (unescaped \\sqrt) on 1 of 2 exams (P3.md §7)
@@ -49,8 +49,8 @@ purposes:
   update_running_summary: {tier: small,  temperature: 0.2, max_tokens: 400,  timeout_s: 20, prompt: v1}
   session_summary:        {tier: small,  temperature: 0.3, max_tokens: 400,  timeout_s: 15, prompt: v1, thinking: minimal}  # v1.26 · ai_calls 17-20 Nov (n 6): tokens_out max 99 (66% of 150) · [C] 400 · latency max 17.3 s = a stuck try cut at 15 s + a ~2 s retry, so the timeout is kept (self-review #173) · 1-2 lines when the user ends the session (session-end-db.md §2.3 · PM-05) · [C] minimal thinking: Gemini 3 counts thinking in max_tokens
   # flow 2.7 / 2.8
-  persona_extract:        {tier: small,  temperature: 0.0, max_tokens: 400,  timeout_s: 15, prompt: v1}
-  persona_preview:        {tier: small,  temperature: 0.7, max_tokens: 150,  timeout_s: 15, prompt: v1}
+  persona_extract:        {tier: small,  temperature: 0.0, max_tokens: 400,  timeout_s: 15, prompt: v1, thinking: minimal}  # v1.27 · golden set on Vertex (persona-extract.md · evals/persona/, 2026-11-22): no thinking level → 24/24 cut at 400 (tokens_out 384) · minimal → tokens_out max 113 (28%), latency median 1.4 s · max_tokens kept
+  persona_preview:        {tier: small,  temperature: 0.7, max_tokens: 150,  timeout_s: 15, prompt: v1, thinking: minimal}  # v1.27 · same run: minimal → tokens_out max 48 (32%), latency median 1.1 s · max_tokens kept
   latex_to_speech:        {tier: small,  temperature: 0.0, max_tokens: 300,  timeout_s: 8,  prompt: v1}
 
 ingestion:                             # files → pages → chunks (specs/features/scope/ingestion.md · ai-orchestration §2.3.3) · values of PoC P3, no change
