@@ -424,6 +424,7 @@
   - domain เสร็จ: `app/domain/stage_machine.py` (Probe → Teach → Verify → Practice → Done · เข้า Park · เลือก skill + ความยาก · spec `tutor/stage-machine.md` · config `stages:` v1.8 · PR #168) · เหลือ: ต่อเข้าห้องติวคู่กับ planner หลัง 23 พ.ย. (นับ `problems_today`, ตัดสิน `user_new`, ส่ง directive ให้ prompt)
 - [ ] prompt ของ persona (`persona_extract`, `persona_preview`) และ scope edit ผ่านแชท (UM-05, SM-06)
 - [ ] answer-leak check แบบ deterministic ใน gateway (AM-13)
+  - ตัวตรวจเสร็จ: `app/domain/answer_leak.py` (string) + `app/math/answer_leak.py` (SymPy ใน worker pool · `check_leak`) · spec `ai/answer-leak-check.md` · PR #176 · เหลือ: ต่อเข้า gateway หลัง 23 พ.ย. (stream: กัก math block จนตรวจผ่าน · generate ใหม่ + ข้อความสำรอง · spec §10 ข้อ 5)
 - [ ] ข้อเสนอ hint ladder (AM-07) ตามที่ทีมตัดสิน
 
 ### S6 · 14–25 ธ.ค.
