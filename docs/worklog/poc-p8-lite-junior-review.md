@@ -5,7 +5,7 @@
 | Owner | Junior |
 | Branch | `poc/p8-lite-junior-review` |
 | Checklist item | P8-lite ร่วมกับทีม (review test ของ `compute_importance`) |
-| Status | in progress · 2026-11-22 |
+| Status | paused · 2026-11-22 · Junior ทำต่อหลัง advisor update 23 พ.ย. |
 
 ## Plan
 
@@ -26,9 +26,13 @@
 - 2026-11-22 · ทำหลัง demo ตามแผน 13 พ.ย. แต่เริ่มก่อนอัดวิดีโอได้ เพราะไม่แตะโค้ดหรือ staging
 - 2026-11-22 · report P8-lite และตัวเลขสำหรับ Self-Assessment เป็นข้อของ Jam ไม่ทำใน branch นี้
 
+## Done today (2026-11-22)
+
+- เปิด branch + worklog + draft PR #175 · เขียนแผน 5 ข้อแล้ว · ยังไม่ได้ทำข้อไหน และ Junior ยังไม่ได้ ok แผน
+
 ## Next step
 
-ข้อ 1: ทำตาราง AC → test
+ถาม Junior ว่าแผน 5 ข้อด้านบนโอเคไหม · ถ้า ok ให้ทำข้อ 1: อ่าน `specs/features/scope/compute-importance.md` (AC ทั้งหมด + §10) กับ `apps/api/tests/unit/test_stars.py` แล้วทำตาราง AC → test เป็นภาษาไทย (แบบเดียวกับที่ทำให้ May 11 พ.ย.) · บอกจุดที่ `poc/P8-lite/metrics.md` §3 ยังไม่มี · ตั้งคำถามไม่เกิน 3 ข้อ · ห้ามแก้ test
 
 ## Waiting on
 
@@ -37,3 +41,5 @@
 ## Notes for next time
 
 - PR #113 merge แล้ว (8 พ.ย.) · review นี้เป็นแบบย้อนหลัง เหมือนที่ May ทำ 11 พ.ย.
+- อย่าเริ่มจับเวลาจนกว่า Junior จะบอกเวลาเริ่มเอง (ข้อ 2) · เวลาที่ Claude ทำตารางในข้อ 1 จดเป็นแถวของ Claude แยกจากเวลาของคน
+- เลื่อนออกไปเพราะ 23 พ.ย. มีอัดวิดีโอ demo + advisor update · ข้อ checklist นี้มีป้ายว่า "หลัง demo" อยู่แล้ว
