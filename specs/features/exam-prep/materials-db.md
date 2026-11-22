@@ -24,7 +24,7 @@ journey ของวิดีโอ 23 พ.ย. ขั้น 3 ให้ผู�
 | `AUTH_REQUIRED=true` | **DB + Storage จริง** · ไม่มี `X-Stub` | `401 invalid_token` | `401 missing_token` |
 | `AUTH_REQUIRED=false` | **DB + Storage จริง** · ไม่มี `X-Stub` | `401 invalid_token` | **stub เดิม** + `X-Stub: true` · ไม่แตะ DB หรือ Storage |
 
-ทาง stub คงไว้ให้ test สัญญาที่ review แล้ว (`test_exam_prep_api_contract.py`, `test_material_size_limit.py`) ผ่านโดยไม่ต้องแก้ · การตรวจ body ที่มีอยู่แล้ว (ชนิดไฟล์ก่อนขนาด, `id` ซ้ำใน confirm) ใช้กับทั้งสองทาง · `POST /materials/{id}/retry` และ `DELETE /materials/{id}` **ยังเป็น stub ทุกทาง** (§9)
+ทาง stub คงไว้ให้ test สัญญาที่ review แล้ว (`test_exam_prep_api_contract.py`, `test_material_size_limit.py`) ผ่านโดยไม่ต้องแก้ · การตรวจ body ที่มีอยู่แล้ว (ชนิดไฟล์ก่อนขนาด, `id` ซ้ำใน confirm) ใช้กับทั้งสองทาง · `DELETE /materials/{id}` **ยังเป็น stub ทุกทาง** (§9) · `POST /materials/{id}/retry` ทางจริงอยู่ใน `material-retry.md` (2026-11-19)
 
 ### 2.2 Bucket, path และชื่อไฟล์ (SA-06)
 
@@ -189,7 +189,7 @@ RLS ของ `materials` (`tenant_rows`) ครอบ column ใหม่อย
 | `POST /materials/{id}/uploaded` | เดิม · `user_note` มีเพดานและห้ามอักขระควบคุม | เดิม · เพิ่ม `409 not_uploaded` (ใหม่), `422 file_too_large`, `422 unsupported_type` (ตรวจ object จริง), `404 not_found`, `503 db_unavailable` |
 | `GET /exam-preps/{id}/materials` | เดิม | เดิม · ไม่รวมไฟล์ที่ยังไม่แจ้ง `/uploaded` · `404`, `503` |
 | `POST /exam-preps/{id}/materials/confirm` | เดิม | เดิม · ตรวจทั้งหมดก่อนเขียน · `404`, `503` |
-| `/materials/{id}/retry`, `DELETE /materials/{id}` | — | ไม่เปลี่ยน (stub) |
+| `DELETE /materials/{id}` | — | ไม่เปลี่ยน (stub) · `/retry` ทางจริงใน `material-retry.md` |
 
 ## 7. AI calls
 
@@ -237,7 +237,7 @@ integration ใช้ `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROL
 
 ## 9. Out of scope
 
-- `POST /materials/{id}/retry` และ `DELETE /materials/{id}` จริง (UC-02 E5, CM-10) · หลัง demo
+- `DELETE /materials/{id}` จริง (UC-02 E5, CM-10) · หลัง demo · (`/retry` ทำแล้วใน `material-retry.md` 2026-11-19)
 - ลบ object และแถวที่ขอ URL แล้วไม่ได้ส่ง (`uploaded_at` null ค้าง) · งานเก็บกวาดภายหลัง
 - `/sessions/{id}/uploads` จริง และ `ImageStore` บน Storage (S5) · bucket และ policy ของ feature นี้ใช้ได้เลยเมื่อถึงเวลา
 - ingestion อ่าน PPTX, DOCX, WEBP, HEIC (§10 ข้อ 1)

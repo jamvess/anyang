@@ -227,3 +227,10 @@ def file_detail(
         detail = f"{page_count} หน้า"
         return f"{detail} · {question_count} ข้อ" if question_count is not None else detail
     return None
+
+
+def retry_status(*, kind_confirmed: bool) -> Literal["uploaded", "confirmed"]:
+    """Where "ลองใหม่" sends a failed file (material-retry.md §2.2 item 4 · ingestion.md §2.1
+    item 3): failed before the user confirmed its kind (S10) → `uploaded`, classified again;
+    failed while read (S11) → `confirmed`, read again by the prep's runner."""
+    return "confirmed" if kind_confirmed else "uploaded"

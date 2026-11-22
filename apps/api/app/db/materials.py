@@ -73,6 +73,12 @@ class MaterialRepository(Protocol):
         `classified`. False when no row changed."""
         ...
 
+    def retry(self, material_id: UUID, *, status: str) -> MaterialRecord | None:
+        """Back to `status` with `error` null, only while the status is `failed` and
+        `kind_confirmed` still matches it (`confirmed` ⇔ true · `retry_status`). None when no row
+        changed (another request changed it first · material-retry.md §2.2 item 5)."""
+        ...
+
 
 def _time(value: str | None) -> datetime | None:
     return datetime.fromisoformat(value) if value else None
@@ -188,6 +194,23 @@ class SupabaseMaterialRepository:
             return bool(data)
         except Exception as error:
             raise unavailable("materials update confirm", error) from error
+
+    def retry(self, material_id: UUID, *, status: str) -> MaterialRecord | None:
+        try:
+            data = (
+                self._db.table("materials")
+                .update({"status": status, "error": None})
+                .eq("id", str(material_id))
+                .eq("status", "failed")
+                # the status was chosen from kind_confirmed: a row that moved on since the read
+                # (retried, confirmed and failed again) is not sent back to the wrong step
+                .eq("kind_confirmed", status == "confirmed")
+                .execute()
+                .data
+            )
+            return _record(data[0]) if data else None
+        except Exception as error:
+            raise unavailable("materials update retry", error) from error
 
 
 def get_material_repository(
