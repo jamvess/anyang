@@ -21,3 +21,23 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* A long problem stays inside its card (problem-card.md §2 · demo-video.md 20 Nov item 3).
+   KaTeX keeps a display line whole: let it break between its boxes (after =, +, −, and the
+   \allowbreak that ProblemCard adds around \text{}), keep it left-aligned, and scroll inside the
+   card when one box is still wider than the card. */
+.problem-card .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin: 0.5em 0;
+  padding: 2px 0;
+  text-align: left;
+}
+.problem-card .katex-display > .katex,
+.problem-card .katex-display > .katex > .katex-html {
+  text-align: left;
+  white-space: normal;
+}
+.problem-card .katex-display .katex-base {
+  margin: 0.125em 0;
+}
