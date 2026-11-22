@@ -133,6 +133,14 @@ class TutoringConfig(_Strict):
     max_hints_before_solution: int = Field(ge=0)
 
 
+class StagesConfig(_Strict):
+    """Problem difficulty per stage (specs/features/tutor/stage-machine.md §2.2)."""
+
+    probe_difficulty: int = Field(ge=1)
+    practice_start_difficulty: int = Field(ge=1)
+    verify_difficulty_drop: int = Field(ge=0)
+
+
 class LearningConfig(_Strict):
     version: float
     bkt: BktConfig
@@ -148,6 +156,7 @@ class LearningConfig(_Strict):
     buddy: BuddyConfig
     session: SessionConfig
     tutoring: TutoringConfig
+    stages: StagesConfig
 
 
 # --- config/ai.yaml (specs/system/ai-orchestration.md §2.10) -----------------
