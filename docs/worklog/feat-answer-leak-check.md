@@ -13,8 +13,8 @@
 
 ไม่อยู่ในงานนี้: ต่อเข้า gateway / ห้องติว (หลัง 23 พ.ย. · ห้ามแตะห้องที่ใช้อัดวิดีโอ) · วิธีรับมือกับ stream ที่ส่ง token ไปแล้ว (คำถามใน spec §10 สำหรับ PR ต่อ)
 
-- [ ] 1. 🤖 `/spec-feature` → `specs/features/ai/answer-leak-check.md` (AM-13): ตัวตรวจ `leaks(reply, reference_answer, answer_format) -> bool` · ขั้นที่ 1 string match ใน `app/domain/` (pure) · ขั้นที่ 2 SymPy รันใน worker pool (`app/math/`) · คำถามให้ Jam ตัดสินใน §10 (อะไรนับว่า "หลุด" ต่อ `answer_format` · เลี่ยง false positive จากตัวโจทย์เอง · purpose ไหนต้องตรวจ · stream แล้วจะ generate ใหม่ยังไง · พบแล้วทำอะไร) → 🙋 Jam review spec
-- [ ] 2. 🤖 (ถ้า §10 ต้องเพิ่มค่าใน `config/ai.yaml` · ไฟล์กลาง) → 🙋 Jam ok + บอกกลุ่มก่อน merge
+- [x] 1. 🤖 `/spec-feature` → `specs/features/ai/answer-leak-check.md` (AM-13): ตัวตรวจ `leaks(reply, reference_answer, answer_format) -> bool` · ขั้นที่ 1 string match ใน `app/domain/` (pure) · ขั้นที่ 2 SymPy รันใน worker pool (`app/math/`) · คำถามให้ Jam ตัดสินใน §10 (อะไรนับว่า "หลุด" ต่อ `answer_format` · เลี่ยง false positive จากตัวโจทย์เอง · purpose ไหนต้องตรวจ · stream แล้วจะ generate ใหม่ยังไง · พบแล้วทำอะไร) → 🙋 Jam review spec
+- [x] 2. ~~🤖 (ถ้า §10 ต้องเพิ่มค่าใน `config/ai.yaml` · ไฟล์กลาง) → 🙋 Jam ok + บอกกลุ่มก่อน merge~~ ไม่ต้องทำ: ไม่มีค่าใหม่ใน config
 - [ ] 3. 🤖 `/spec-to-tests` (unit · table-driven จากตัวอย่างโจทย์จริงของ demo · ไม่มี AI จริง) → 🙋 Jam review test
 - [ ] 4. 🤖 `/implement-feature` จน green · ruff · pytest ทั้งชุด
 
@@ -26,10 +26,11 @@
 ## Decisions
 
 - 2026-11-22 · Jam เลือกข้อ 1 ของ `/work-start Jam` · ทำแบบ planner / stage machine: domain + test ก่อน ต่อเข้า gateway หลัง 23 พ.ย.
+- 2026-11-22 · spec §10: SymPy นับเมื่อค่าเท่าเฉลยและเขียนในรูปคำตอบสุดท้าย · คำตอบครึ่งเดียวนับว่าหลุด · ตรวจ tutor_reply, open_session, explain_check ตอนโจทย์ค้าง · SymPy timeout = ไม่หลุด + log · stream ตัดสินใน PR ต่อ
 
 ## Next step
 
-ข้อ 1: ร่าง `specs/features/ai/answer-leak-check.md` จาก ai-orchestration §2.9 · demo-room §2 C, K · `room.py` (`_plain`) · `sympy_service.py`
+ข้อ 3: `/spec-to-tests` → `tests/unit/test_answer_leak_text.py` + `tests/unit/test_answer_leak_sympy.py`
 
 ## Waiting on
 
