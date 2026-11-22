@@ -659,11 +659,10 @@ def _build_gateway() -> Gateway:
             if event == "token" and data["speaker"] == "tutor"
         ]
         # Every ingestion purpose too, so an upload reaches the scope with no real model
-        # (ingestion.md §2.7 item 4 · found in #151).
+        # (ingestion.md §2.7 item 4 · found in #151), and persona with a token (self-review #178).
         # record=False: this provider lives as long as the process, so it keeps no history.
-        fake = FakeProvider(
-            {}, defaults={"tutor_reply": reply, **stubs.fake_ingestion()}, record=False
-        )
+        defaults = {"tutor_reply": reply, **stubs.fake_ingestion(), **stubs.fake_persona()}
+        fake = FakeProvider({}, defaults=defaults, record=False)
         return Gateway(settings.ai, env.prompts_dir, fake, env.ai_model_override)
 
     from app.ai.providers.gemini import GeminiProvider

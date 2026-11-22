@@ -599,8 +599,10 @@ export interface paths {
         /**
          * Extract Persona
          * @description Free text → params, the parts it cannot do, and a sample sentence (UM-05, UM-07).
+         *     What the description does not talk about comes from `base_preset_id`, or the first preset
+         *     of the kind. Nothing is saved.
          *
-         *     stub — the same draft of that kind, whatever was described; no AI call
+         *     without a token: stub — the same draft of that kind, whatever was described; no AI call
          */
         post: operations["extract_persona_personas_extract_post"];
         delete?: never;
@@ -893,6 +895,8 @@ export interface components {
             kind: "tutor" | "buddy";
             /** Description */
             description: string;
+            /** Base Preset Id */
+            base_preset_id?: string | null;
         };
         /** HealthResponse */
         HealthResponse: {

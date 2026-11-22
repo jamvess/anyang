@@ -9,7 +9,7 @@ it is stored in `description_raw` and never reaches a prompt.
 
 from typing import Annotated, Literal, Self
 
-from pydantic import Field, StrictBool, StrictInt, StringConstraints, model_validator
+from pydantic import ConfigDict, Field, StrictBool, StrictInt, StringConstraints, model_validator
 
 from app.models.base import ApiModel
 from app.settings import get_settings
@@ -84,6 +84,41 @@ class ExtractPersonaRequest(ApiModel):
 
     kind: Literal["tutor", "buddy"]
     description: NonBlank
+    # The preset chosen in S04: what the description does not talk about keeps its values
+    # (persona-extract.md §2.2). None → the first preset of the kind.
+    base_preset_id: str | None = None
+
+
+class PersonaExtractResult(ApiModel):
+    """Structured output of persona_extract (persona-extract.md §2.3). Every param is optional:
+    None means the description does not talk about it, so the preset keeps its value. The
+    names are plain strings here; code checks them with the rule of PersonaText (§2.4 item 3),
+    so an odd name does not fail the whole call. No voice_id: it comes from the preset.
+    Keys the schema does not have (voice_id, gender, notes) are dropped, not an error, so one
+    extra key does not turn into a schema retry and a 503 (self-review #178)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    name: str | None = None
+    self_pronoun: str | None = None
+    call_user: str | None = None
+    formality: OneToThree | None = None
+    energy: OneToThree | None = None
+    strictness: OneToThree | None = None
+    humor: StrictInt | None = Field(default=None, ge=0, le=2)
+    emoji: StrictBool | None = None
+    explain_style: Literal["step_by_step", "example_first", "concise"] | None = None
+    frequency: Literal["low", "med", "high"] | None = None
+    personality: Literal["curious", "playful", "diligent"] | None = None
+    refused: list[str] = Field(default_factory=list)
+
+
+class PersonaPreviewResult(ApiModel):
+    """Structured output of persona_preview (§2.5): one sentence in this voice."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    sample: NonBlank
 
 
 class PersonaDraft(ApiModel):

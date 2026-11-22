@@ -1,18 +1,23 @@
 """Persona, profile and account endpoints (specs/system/api.md v1.12 "Persona และโปรไฟล์",
 "บัญชี").
 
-Stubs until the persona_extract and persona_preview prompts and the profile tables are wired:
-they serve fixture data from app/stubs/ and send `X-Stub: true`, so May can wire S04-S06.
-Nothing is saved or deleted. Shapes and request rules are checked by
+POST /personas/extract with a token calls persona_extract and persona_preview
+(specs/features/ai/persona-extract.md); without one it keeps the stub. The rest are stubs until
+the profile tables are wired: they serve fixture data from app/stubs/ and send `X-Stub: true`,
+so May can wire S04-S06. Nothing is saved or deleted. Shapes and request rules are checked by
 tests/unit/test_persona_api_contract.py, which the real endpoints must also pass.
 """
 
-from typing import Any
+import logging
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Response
 
 from app import stubs
-from app.models.error import ErrorResponse, too_long_message, unavailable_docs
+from app.ai.call_context import ai_call_context
+from app.ai.gateway import AIProviderError, AISchemaError, Gateway, get_gateway
+from app.auth import AuthContext, get_auth
+from app.models.error import ErrorResponse, error_response, too_long_message, unavailable_docs
 from app.models.persona import (
     BuddyProfile,
     BuddyProfileRequest,
@@ -25,8 +30,13 @@ from app.models.persona import (
     TutorProfileRequest,
 )
 from app.rate_limit import RATE_LIMITED_DOCS, chat_rate_limit
+from app.services.persona import UnknownPresetError, base_params, draft_persona
 
+log = logging.getLogger(__name__)
 router = APIRouter(tags=["persona"])
+
+# persona-extract.md §2.6 (UC-01 E5): the web offers "ลองใหม่" and "ใช้แบบสำเร็จรูป".
+PERSONA_UNAVAILABLE = "ตอนนี้แปลงคำบรรยายไม่ได้ ลองใหม่ หรือใช้แบบสำเร็จรูปที่เลือกไว้"
 
 _NOT_SET: dict[int | str, dict[str, Any]] = {
     404: {"model": ErrorResponse, "description": "not_found: not set yet"},
@@ -61,15 +71,34 @@ async def get_presets(response: Response) -> PersonaPresets:
     },
     dependencies=[Depends(chat_rate_limit)],
 )
-async def extract_persona(body: ExtractPersonaRequest, response: Response) -> Any:
+async def extract_persona(
+    body: ExtractPersonaRequest,
+    response: Response,
+    auth: Annotated[AuthContext | None, Depends(get_auth)],
+    gateway: Annotated[Gateway, Depends(get_gateway)],
+) -> Any:
     """Free text → params, the parts it cannot do, and a sample sentence (UM-05, UM-07).
+    What the description does not talk about comes from `base_preset_id`, or the first preset
+    of the kind. Nothing is saved.
 
-    stub — the same draft of that kind, whatever was described; no AI call
+    without a token: stub — the same draft of that kind, whatever was described; no AI call
     """
+    error = stubs.error if auth is None else error_response
     if too_long := too_long_message(body.description):
-        return stubs.error(422, "message_too_long", too_long)
-    response.headers.update(stubs.HEADERS)
-    return PersonaDraft.model_validate(stubs.personas()["drafts"][body.kind])
+        return error(422, "message_too_long", too_long)
+    try:
+        base = base_params(body.kind, body.base_preset_id)
+    except UnknownPresetError:
+        return error(422, "validation_error", f"base_preset_id is not a {body.kind} preset")
+    if auth is None:
+        response.headers.update(stubs.HEADERS)
+        return PersonaDraft.model_validate(stubs.personas()["drafts"][body.kind])
+    try:
+        with ai_call_context(tenant_id=auth.tenant_id, user_id=auth.user_id):
+            return await draft_persona(gateway, body.kind, body.description, base)
+    except (AIProviderError, AISchemaError) as failure:
+        log.warning("persona extract failed: %s", type(failure).__name__)
+        return error_response(503, "persona_unavailable", PERSONA_UNAVAILABLE)
 
 
 @router.get("/me/tutor-profile", responses=_NOT_SET)

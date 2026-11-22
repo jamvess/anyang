@@ -1,4 +1,4 @@
-# API (v1.23)
+# API (v1.24)
 
 Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้างอัตโนมัติที่ `/docs` · frontend generate types จาก `/openapi.json`
 
@@ -39,10 +39,12 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | `personality` | `"curious"` \| `"playful"` \| `"diligent"` | buddy |
 
 - **`GET /personas/presets`** · `{tutors: PersonaPreset[], buddies: PersonaPreset[]}` · `PersonaPreset` = `{id: string, title: string, sample: string, params}` · `title` เช่น "ใจเย็น" · `sample` คือประโยคตัวอย่าง (UM-03) · tutor 3 แบบ, buddy 2 แบบ · "ไม่เอาเพื่อน" เป็นตัวเลือกของหน้าเว็บ ไม่ใช่ preset
-- **`POST /personas/extract`** · body `{kind: "tutor" \| "buddy", description: string (ไม่ว่าง)}` · response `{params, refused: string[], sample: string}` (AI: `persona_extract`, `persona_preview` · UM-05, UM-07)
+- **`POST /personas/extract`** · body `{kind: "tutor" \| "buddy", description: string (ไม่ว่าง), base_preset_id?: string}` · response `{params, refused: string[], sample: string}` (AI: `persona_extract`, `persona_preview` · UM-05, UM-07)
   - `params` ตาม `kind` · `refused` คือส่วนที่ทำให้ไม่ได้ พร้อมแสดงในกล่อง "ทำให้ไม่ได้: …" (UC-01 E4) · ไม่มีก็ `[]`
+  - **v1.24 · `base_preset_id`** (ไม่บังคับ · Jam 2026-11-22 · `specs/features/ai/persona-extract.md` §2.2): preset ที่ผู้ใช้เลือกไว้ใน S04 · ค่าที่คำบรรยายไม่ได้พูดถึงมาจาก preset นี้ · ไม่ส่ง → preset แรกของ `kind` · ไม่มี id นี้หรือเป็นของอีก `kind` → `422 validation_error` · `voice_id` มาจาก preset เสมอ (AI ไม่เลือก) · หน้า S05 ควรส่ง id ของ preset ที่เลือกไว้
   - ไม่เก็บอะไร · กด "บันทึก" แล้วค่อย `PUT` · ปรับต่อก็ส่ง `description` ใหม่ทั้งก้อน
-  - error: `422 validation_error` · `422 message_too_long` (เกิน `guards.max_message_chars`) · `429 rate_limited` + `Retry-After` (ตัวนับเดียวกับข้อความในห้องติว · `gateway-guards.md` §2.1) · `503 persona_unavailable` (AI ล่ม · UC-01 E5)
+  - **v1.24 · ทางที่มี token ทำงานจริง:** เรียก `persona_extract` → code รวมค่ากับ preset → `persona_preview` · ไม่มี token → stub เดิม (`X-Stub`) · ไม่อ่านไม่เขียน DB
+  - error: `422 validation_error` · `422 message_too_long` (เกิน `guards.max_message_chars`) · `429 rate_limited` + `Retry-After` (ตัวนับเดียวกับข้อความในห้องติว · `gateway-guards.md` §2.1) · `503 persona_unavailable` (AI ล่ม · UC-01 E5 · v1.24: `message` "ตอนนี้แปลงคำบรรยายไม่ได้ ลองใหม่ หรือใช้แบบสำเร็จรูปที่เลือกไว้" · AI ตัวใดตัวหนึ่งล้มก็ได้ 503 ไม่คืน params ครึ่งเดียว)
 - **`GET /me/tutor-profile`** · `{params: TutorParams, description: string | null, version: integer ≥ 1}` · ยังไม่ตั้ง → `404 not_found` (UM-09)
 - **`PUT /me/tutor-profile`** · body `{params: TutorParams, description: string | null}` · response เหมือน `GET` · `description` เก็บใน `description_raw` และ**ไม่เข้า prompt** (§2.7) · แก้แล้ว `version` เพิ่ม · มีผลตั้งแต่ turn ถัดไป · `description` เกิน `guards.max_message_chars` → `422 message_too_long` (ใช้กับ `PUT /me/buddy-profile` ด้วย)
 - **`GET /me/buddy-profile`** · `{enabled: boolean, params: BuddyParams | null, description: string | null, version: integer ≥ 1}` · ยังไม่ตั้ง → `404 not_found`
