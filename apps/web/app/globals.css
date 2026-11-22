@@ -21,3 +21,23 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* A long problem stays inside its card (problem-card.md §2 · demo-video.md 20 Nov item 3).
+   `text_latex` is one line of display LaTeX, which KaTeX never breaks: let it break between its
+   boxes (after =, +, − …), keep it left-aligned, and scroll inside the card when one box (a long
+   Thai phrase in 	ext{}) is still wider than the card. */
+.problem-card .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin: 0.5em 0;
+  padding-bottom: 2px;
+  text-align: left;
+}
+.problem-card .katex-display > .katex,
+.problem-card .katex-display > .katex > .katex-html {
+  text-align: left;
+  white-space: normal;
+}
+.problem-card .katex-display .katex-base {
+  margin: 0.125em 0;
+}

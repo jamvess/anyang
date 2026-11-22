@@ -15,7 +15,7 @@ export function ProblemCard({ problem }: { problem: ProblemData }) {
       role="region"
       aria-label={t.problem}
       data-problem-id={problem.problem_id}
-      className="mt-4 rounded-xl border border-zinc-200 bg-white px-4 py-3"
+      className="problem-card mt-4 rounded-xl border border-zinc-200 bg-white px-4 py-3"
     >
       <p className="font-mono text-xs uppercase tracking-wide text-zinc-400">{t.problem}</p>
       <Tex math={problem.text_latex} display />
