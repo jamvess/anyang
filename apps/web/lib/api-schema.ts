@@ -508,9 +508,11 @@ export interface paths {
         put?: never;
         /**
          * Retry Material
-         * @description "Try again" on a failed file of S11: read it again from the step that failed (UC-02 E5).
+         * @description "Try again" on a failed file of S10 or S11: run the step that failed again (UC-02 E5 ·
+         *     CM-07 · material-retry.md).
          *
-         *     stub — the fixture's failed file failed while being classified, so it is back at uploaded
+         *     Without a token (AUTH_REQUIRED=false): the stub · the fixture's failed file failed while
+         *     being classified, so it is back at uploaded.
          */
         post: operations["retry_material_materials__id__retry_post"];
         delete?: never;
@@ -3124,7 +3126,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Supabase Auth could not be reached */
+            /** @description db_unavailable, or auth_unavailable */
             503: {
                 headers: {
                     [name: string]: unknown;

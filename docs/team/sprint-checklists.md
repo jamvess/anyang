@@ -202,6 +202,9 @@
   - 16 พ.ย.: reset DB password ของ `anyang-dev` แล้ว (Junior)
 - [x] ⭐ ก่อนอัดวิดีโอ · บั๊ก 1 ของ journey 17 พ.ย.: gateway รอ 429 นานขึ้น (A) · ห้องไม่สร้างโจทย์ซ้ำเมื่อโดน 429 (B) · C (ข้อความระหว่างรอ) และ D (fallback model) หลังวิดีโอ (NFR-R1, AM-11)
   - 19 พ.ย. (PR #159 · `specs/features/ai/gateway-rate-limit-backoff.md`): `config/ai.yaml` 1.24 `gateway.rate_limit_waits_seconds` [5, 15, 30] (call, embed) · `rate_limit_waits_stream_seconds` [5] (stream ก่อน chunk แรก) · 429 ครั้งที่ n รอ `max(ช่องที่ n, retry_after)` · provider ขอรอเกินช่องที่มากสุด → ยอมแพ้ · ครบตาราง → `AIRateLimitedError` · `room_problems` หยุดรอบสร้างโจทย์ → `room.no_problem` · error อื่นยังใช้ `retries` / `max_retry_wait_seconds` เดิม · test §2.10 สองตัวย้าย boundary ไปที่ช่องมากสุดของตาราง (Jam ok) · ai-orchestration §2.10 อัปเดต · ต่อหลังวิดีโอ: ข้อของ Jam (S4) ตารางสั้นสำหรับ call กลางรอบคุย
+- [x] ⭐ ก่อนอัดวิดีโอ · `POST /materials/{id}/retry` ใช้งานจริง ให้ไฟล์ที่ "ลองใหม่ได้" ลองใหม่ได้จริง (UC-02 E5 · CM-07 · ไฟล์ค้างไม่มีทางไปต่อ 3 ครั้งในการซ้อม journey)
+  - 19 พ.ย. (PR #171 · `specs/features/exam-prep/material-retry.md`): ทางจริงด้วย JWT · `failed` → `uploaded`/`confirmed` แบบมีเงื่อนไข (กดซ้ำ → `409 not_failed`) · เริ่ม classify/ingest ใหม่เบื้องหลังใต้ `ai_call_context` · `api.md` v1.23 · ลองกับ API จริง: `sheet-04.pdf` → `classified` ใน 11 s · `ai_calls` มี tenant + user · ปุ่มในแถว S10/S11 + AC-19 ของ `upload-page.md` เป็นงานของ May
+  - 19 พ.ย. (PR #170): `classify_material` `max_tokens` 300 → 1000 (`config/ai.yaml` 1.25 · ข้อสอบสแกน `midterm-2559-1.pdf` ถูกตัดที่ 284/300)
 
 ### S5 · 30 พ.ย.–11 ธ.ค.
 
@@ -418,6 +421,7 @@
 - [ ] planner เต็ม: เลือกหัวข้อ + เหตุผล + mode (TM-01, TM-02, TM-18) · ลำดับ prerequisite (SM-02)
   - domain เสร็จ: `app/domain/planner.py` (mode + หัวข้อถัดไป + `reason_code` + prerequisite · spec `planner.md` · PR #166) · เหลือ: ต่อเข้าห้องติวแทน `choose_topic` หลัง 23 พ.ย. และหลังตาราง `planner_decisions` ของ Junior
 - [ ] stage machine: probe → teach → Verify ด้วยโจทย์แบบเดียวกัน → practice (TM-03, TM-04, AM-08, AM-09) · ผ่านตาม skill (TM-16, SM-12)
+  - domain เสร็จ: `app/domain/stage_machine.py` (Probe → Teach → Verify → Practice → Done · เข้า Park · เลือก skill + ความยาก · spec `tutor/stage-machine.md` · config `stages:` v1.8 · PR #168) · เหลือ: ต่อเข้าห้องติวคู่กับ planner หลัง 23 พ.ย. (นับ `problems_today`, ตัดสิน `user_new`, ส่ง directive ให้ prompt)
 - [ ] prompt ของ persona (`persona_extract`, `persona_preview`) และ scope edit ผ่านแชท (UM-05, SM-06)
 - [ ] answer-leak check แบบ deterministic ใน gateway (AM-13)
 - [ ] ข้อเสนอ hint ladder (AM-07) ตามที่ทีมตัดสิน

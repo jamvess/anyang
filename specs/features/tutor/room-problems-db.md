@@ -115,7 +115,7 @@ fake provider · repository ปลอม (แถวที่ JWT ของผู
 
 | Purpose | Tier | Output schema | Prompt file |
 |---|---|---|---|
-| `generate_problem` (**prompt ใหม่**) | mid | `GenerateProblemResult` | `prompts/generate_problem/v2.md` (v1 + `previous_problems` · PR #133) · v1 (input `topic`, `skills`, `source_text`, `difficulty`, `answer_formats`) · `config/ai.yaml` มีแถวแล้ว (`max_tokens: 800`, ไม่ตั้ง `thinking`) · เสนอ `max_tokens` 2000 + `thinking: low` (§11) |
+| `generate_problem` (**prompt ใหม่**) | mid | `GenerateProblemResult` | `prompts/generate_problem/v2.md` (v1 + `previous_problems` · PR #133) · v1 (input `topic`, `skills`, `source_text`, `difficulty`, `answer_formats`) · `config/ai.yaml` มีแถวแล้ว (`max_tokens: 800`, ไม่ตั้ง `thinking`) · เสนอ `max_tokens` 2000 + `thinking: low` (§11) · **ai.yaml 1.26 (PR #173): `max_tokens` 3000, `timeout_s` 30** (20 พ.ย. ถูกตัดที่ 1983–1985/2000 ทั้ง 3 รอบ) |
 | `open_session` | main | free text | `prompts/open_session/v2.md` (v1 + `focus` · `defaults: {focus: none}`) |
 | `tutor_reply` | main | free text | v2 เดิม · ได้ `problem` จาก DB |
 

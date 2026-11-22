@@ -3,7 +3,8 @@
 POST and GET /exam-preps use the database (api.md v1.14 · specs/features/exam-prep/
 create-exam-prep.md), and so do the upload, uploaded, list and confirm endpoints of materials
 (api.md v1.21 · specs/features/exam-prep/materials-db.md). Without a token they keep the stub
-(fixture data from app/stubs/ and `X-Stub: true`); retry and DELETE are still stubs.
+(fixture data from app/stubs/ and `X-Stub: true`). /retry uses the database too (api.md v1.23 ·
+specs/features/exam-prep/material-retry.md); DELETE is still a stub.
 Shapes and request rules are checked by tests/unit/test_exam_prep_api_contract.py.
 """
 
@@ -28,7 +29,7 @@ from app.db.exam_preps import (
 )
 from app.db.materials import MaterialRecord, MaterialRepository, get_material_repository
 from app.domain.exam_prep import bangkok_today, days_left, prep_stage
-from app.domain.ingestion import clean_file_name
+from app.domain.ingestion import clean_file_name, retry_status
 from app.models.error import ErrorResponse, error_docs, error_response
 from app.models.exam_prep import (
     MATERIAL_CONTENT_TYPES,
@@ -174,7 +175,8 @@ def list_exam_preps(
 
 
 # With a token the four endpoints below use the materials table and Storage with the user's JWT
-# (materials-db.md · api.md v1.21); without one they keep the stub. retry and DELETE are stubs.
+# (materials-db.md · api.md v1.21); without one they keep the stub. /retry too (material-retry.md);
+# DELETE is a stub.
 
 MaterialRepo = Annotated[MaterialRepository | None, Depends(get_material_repository)]
 Storage = Annotated[MaterialStorage | None, Depends(get_material_storage)]
@@ -409,19 +411,59 @@ async def confirm_materials(
     return MaterialsQueued(queued=len(body.materials))
 
 
+def _retry(material_id: UUID, repo: MaterialRepository) -> MaterialRecord | JSONResponse:
+    """material-retry.md §2.2 items 2-5, in the thread pool: the Supabase client blocks."""
+    row = repo.get(material_id)
+    if row is None:
+        return _not_found()
+    if row.status != "failed":
+        return _not_failed()
+    updated = repo.retry(material_id, status=retry_status(kind_confirmed=row.kind_confirmed))
+    return _not_failed() if updated is None else updated
+
+
+def _not_failed() -> JSONResponse:
+    return error_response(409, "not_failed", "only a file that failed can be tried again")
+
+
 @router.post(
     "/materials/{id}/retry",
     status_code=202,
-    responses=error_docs("Invalid path", "not_failed"),
+    response_model=Material,
+    responses={**error_docs("Invalid path", "not_failed"), 503: _DB_DOWN_DOC},
 )
-async def retry_material(material_id: MaterialId, response: Response) -> Material:
-    """ "Try again" on a failed file of S11: read it again from the step that failed (UC-02 E5).
+async def retry_material(
+    material_id: MaterialId,
+    response: Response,
+    auth: Annotated[AuthContext | None, Depends(get_auth)],
+    repo: MaterialRepo,
+    runner: Runner,
+) -> Any:
+    """ "Try again" on a failed file of S10 or S11: run the step that failed again (UC-02 E5 ·
+    CM-07 · material-retry.md).
 
-    stub — the fixture's failed file failed while being classified, so it is back at uploaded
+    Without a token (AUTH_REQUIRED=false): the stub · the fixture's failed file failed while
+    being classified, so it is back at uploaded.
     """
-    response.headers.update(stubs.HEADERS)
-    row = next(m for m in stubs.materials() if m["status"] == "failed")
-    return Material.model_validate({**row, "id": material_id, "status": "uploaded", "error": None})
+    if auth is None or repo is None:
+        response.headers.update(stubs.HEADERS)
+        row = next(m for m in stubs.materials() if m["status"] == "failed")
+        return Material.model_validate(
+            {**row, "id": material_id, "status": "uploaded", "error": None}
+        )
+    try:
+        result = await run_in_threadpool(_retry, material_id, repo)
+    except _UNAVAILABLE:
+        return _db_unavailable()
+    if isinstance(result, JSONResponse):
+        return result
+    # Not awaited, and under the token's context so ai_calls carry tenant and user (AI-04).
+    with ai_call_context(auth.tenant_id, auth.user_id):
+        if result.status == "uploaded":
+            runner.classify(material_id)
+        else:
+            runner.start(result.exam_prep_id)
+    return _material(result)
 
 
 @router.delete(
