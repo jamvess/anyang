@@ -84,6 +84,9 @@ class ExtractPersonaRequest(ApiModel):
 
     kind: Literal["tutor", "buddy"]
     description: NonBlank
+    # The preset chosen in S04: what the description does not talk about keeps its values
+    # (persona-extract.md §2.2). None → the first preset of the kind.
+    base_preset_id: str | None = None
 
 
 class PersonaExtractResult(ApiModel):

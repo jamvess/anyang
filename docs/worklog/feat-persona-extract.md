@@ -13,7 +13,7 @@
 - [x] 2. 🙋 Jam ตัดสิน §10 และ approve spec
 - [x] 3. 🤖 `/spec-to-tests`: service ด้วย fake provider · router (token → จริง · ไม่มี token → stub เดิม) · test contract เดิมต้องผ่าน · red
 - [x] 4. 🙋 Jam review test
-- [ ] 5. 🤖 `/implement-feature`: `prompts/persona_extract/v1.md`, `prompts/persona_preview/v1.md` · model ของ output · `app/services/persona.py` · `app/routers/persona.py` (ไฟล์ใน `apps/api/` · CODEOWNERS = Junior · stub endpoint เดิม Jam เขียนเอง PR #107)
+- [x] 5. 🤖 `/implement-feature`: `prompts/persona_extract/v1.md`, `prompts/persona_preview/v1.md` · model ของ output · `app/services/persona.py` · `app/routers/persona.py` (ไฟล์ใน `apps/api/` · CODEOWNERS = Junior · stub endpoint เดิม Jam เขียนเอง PR #107)
 - [ ] 6. 🤖 golden set `evals/persona/` (คำบรรยายปกติ · คำขอที่ทำไม่ได้ · injection) + รันบน Vertex จริง
 - [ ] 7. 🙋 Jam อ่านประโยคตัวอย่างและผล eval แล้วตัดสินว่าผ่าน
 - [ ] 8. 🤖 docs: `ai-orchestration.md` §2.7 / §2.10 (fallback ของ `persona_extract` ที่ use-cases.md บอกว่ายังไม่มี) · checklist sub-bullet
@@ -32,10 +32,11 @@
 
 - 2026-11-22 · แยก persona ออกจาก scope edit ผ่านแชท · ข้อ checklist ใหญ่ (L) และ persona ไม่แตะห้องติวที่ใช้อัดวิดีโอ
 - 2026-11-22 · spec §10 ข้อ 1–5 ตามข้อเสนอ (Jam) · ข้อ 1 ก ต้องแก้ api.md (shared) ใน PR นี้ และบอกกลุ่มก่อน merge
+- 2026-11-22 · `persona_preview/v1` แยก `<persona_data>` เป็น 3 block (test เดิม: 1 placeholder ต่อ block) · Jam ok ให้เพิ่ม 2 prompt ใหม่ใน `OUTSIDE_BY_PROMPT` ของ `test_prompt_data_blocks.py`
 
 ## Next step
 
-ขั้น 5: `/implement-feature` ให้ test ของ persona-extract green
+ขั้น 6: Jam ตรวจ label ใน `evals/persona/cases.jsonl` แล้วรัน `AI_PROVIDER=live uv run --project apps/api python evals/run_persona.py` บน Vertex
 
 ## Waiting on
 

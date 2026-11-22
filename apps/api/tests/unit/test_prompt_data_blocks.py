@@ -251,6 +251,8 @@ OUTSIDE_BY_PROMPT = {
     "map_questions/v1": set(),
     "open_session/v1": set(),
     "open_session/v2": set(),
+    "persona_extract/v1": set(),
+    "persona_preview/v1": set(),
     "generate_problem/v1": set(),
     "generate_problem/v2": set(),
     "session_summary/v1": set(),
