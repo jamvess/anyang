@@ -15,8 +15,8 @@
 
 - [x] 1. 🤖 `/spec-feature` → `specs/features/ai/answer-leak-check.md` (AM-13): ตัวตรวจ `leaks(reply, reference_answer, answer_format) -> bool` · ขั้นที่ 1 string match ใน `app/domain/` (pure) · ขั้นที่ 2 SymPy รันใน worker pool (`app/math/`) · คำถามให้ Jam ตัดสินใน §10 (อะไรนับว่า "หลุด" ต่อ `answer_format` · เลี่ยง false positive จากตัวโจทย์เอง · purpose ไหนต้องตรวจ · stream แล้วจะ generate ใหม่ยังไง · พบแล้วทำอะไร) → 🙋 Jam review spec
 - [x] 2. ~~🤖 (ถ้า §10 ต้องเพิ่มค่าใน `config/ai.yaml` · ไฟล์กลาง) → 🙋 Jam ok + บอกกลุ่มก่อน merge~~ ไม่ต้องทำ: ไม่มีค่าใหม่ใน config
-- [ ] 3. 🤖 `/spec-to-tests` (unit · table-driven จากตัวอย่างโจทย์จริงของ demo · ไม่มี AI จริง) → 🙋 Jam review test
-- [ ] 4. 🤖 `/implement-feature` จน green · ruff · pytest ทั้งชุด
+- [x] 3. 🤖 `/spec-to-tests` (unit · table-driven จากตัวอย่างโจทย์จริงของ demo · ไม่มี AI จริง) → 🙋 Jam review test
+- [x] 4. 🤖 `/implement-feature` จน green · ruff · pytest ทั้งชุด (29/29 · red → green 1 รอบ · smoke กับ worker pool จริงผ่าน)
 
 ## Definition of done
 
@@ -30,7 +30,7 @@
 
 ## Next step
 
-ข้อ 3 รอ Jam review test (`test_answer_leak_text.py` + `test_answer_leak_sympy.py` · 29 test แดงทั้งหมดด้วย NotImplementedError) · ok แล้ว commit แล้วทำข้อ 4
+ทุกข้อเสร็จ · รอ Jam ตรวจ `app/domain/answer_leak.py` + `app/math/answer_leak.py` แล้วพิมพ์ `/work-done`
 
 ## Waiting on
 
