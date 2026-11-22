@@ -133,10 +133,38 @@ def _practice_start(cap: int, cfg: LearningConfig) -> int:
     return min(cfg.stages.practice_start_difficulty, cap)
 
 
-def _verify_difficulty(state: TopicState, cap: int, cfg: LearningConfig) -> int:
+def _last_or_start(state: TopicState, cap: int, cfg: LearningConfig) -> int:
+    """The latest problem's difficulty within the cap; the first practice level when none."""
+    return _practice_start(cap, cfg) if state.difficulty is None else min(state.difficulty, cap)
+
+
+def _skill(state: TopicState, skill_id: UUID | None) -> SkillState | None:
+    return next((s for s in state.skills if s.id == skill_id), None)
+
+
+def _verify(state: TopicState, cap: int, cfg: LearningConfig) -> ProblemSpec:
+    """Spec §2.2 items 3, 5: the same skill (null → the next one), never harder, within the cap."""
+    skill_id = state.current_skill_id
+    if skill_id is None:
+        skill_id = next_skill(state.skills, cfg)
     if state.difficulty is None:
-        return _practice_start(cap, cfg)
-    return max(state.difficulty - cfg.stages.verify_difficulty_drop, MIN_DIFFICULTY)
+        level = _practice_start(cap, cfg)
+    else:
+        lower = max(state.difficulty - cfg.stages.verify_difficulty_drop, MIN_DIFFICULTY)
+        level = min(lower, cap)
+    return ProblemSpec(skill_id, level, "verify")
+
+
+def _practice_after_right(state: TopicState, cap: int, cfg: LearningConfig) -> ProblemSpec:
+    """Spec §2.2 item 5: one level up on a skill already worked on; a new skill starts again."""
+    skill_id = next_skill(state.skills, cfg)
+    skill = _skill(state, skill_id)
+    worked_on = skill_id == state.current_skill_id or (
+        skill is not None and skill.independent_correct > 0
+    )
+    if state.difficulty is None or not worked_on:
+        return ProblemSpec(skill_id, _practice_start(cap, cfg), "practice")
+    return ProblemSpec(skill_id, min(state.difficulty + 1, cap), "practice")
 
 
 # --- §2.3 · rules --------------------------------------------------------------------------------
@@ -150,21 +178,23 @@ def _probe(state: TopicState, cap: int, cfg: LearningConfig, fail_streak: int) -
 
 
 def _start(state: TopicState, event: Start, cap: int, cfg: LearningConfig) -> Step:
+    if state.level == "passed":  # before item 1: a mode change can pass a topic (§10 item 7 B)
+        return Step("done", None, None, 0, None)
     if state.stage is None or state.stage == "park":  # items 1-2 · park: spec §10 item 6
         if not event.user_new:
             return _probe(state, cap, cfg, 0)
         problem = ProblemSpec(next_skill(state.skills, cfg), _practice_start(cap, cfg), "practice")
         return Step("practice", Teach("introduce", 1, None), problem, 0, None)
-    if state.stage == "done":  # item 3
-        return Step("done", None, None, 0, None)
     if state.stage == "probe":  # item 4
         return _probe(state, cap, cfg, state.fail_streak)
     if state.stage == "verify":
-        same = state.difficulty if state.difficulty is not None else _practice_start(cap, cfg)
-        problem = ProblemSpec(state.current_skill_id, same, "verify")
-        return Step("verify", None, problem, state.fail_streak, None)
-    same = _practice_start(cap, cfg) if state.difficulty is None else min(state.difficulty, cap)
-    problem = ProblemSpec(next_skill(state.skills, cfg), same, "practice")
+        verify = _verify(state, cap, cfg)
+        same = ProblemSpec(verify.skill_id, _last_or_start(state, cap, cfg), "verify")
+        return Step("verify", None, same, state.fail_streak, None)
+    # practice, or done but no longer passed (item 3)
+    problem = ProblemSpec(
+        next_skill(state.skills, cfg), _last_or_start(state, cap, cfg), "practice"
+    )
     return Step("practice", None, problem, state.fail_streak, None)
 
 
@@ -173,15 +203,9 @@ def _answer(state: TopicState, event: Answer, cap: int, cfg: LearningConfig) -> 
         return Step("done", None, None, 0, None)
 
     if event.correct and event.independent:  # item 6
-        harder = (
-            _practice_start(cap, cfg)
-            if state.difficulty is None
-            else min(state.difficulty + 1, cap)
-        )
-        problem = ProblemSpec(next_skill(state.skills, cfg), harder, "practice")
-        return Step("practice", None, problem, 0, None)
+        return Step("practice", None, _practice_after_right(state, cap, cfg), 0, None)
 
-    verify = ProblemSpec(state.current_skill_id, _verify_difficulty(state, cap, cfg), "verify")
+    verify = _verify(state, cap, cfg)
     if event.correct:  # item 7: right after seeing the working
         return Step("verify", None, verify, state.fail_streak, None)
 
@@ -194,9 +218,9 @@ def _answer(state: TopicState, event: Answer, cap: int, cfg: LearningConfig) -> 
 
 def _too_many_today(step: Step, state: TopicState, cfg: LearningConfig) -> Step:
     """Spec §2.3 item 9: park when the next problem's skill already had its day's problems."""
-    if step.problem is None or step.problem.skill_id is None:
+    if step.problem is None:
         return step
-    skill = next((s for s in state.skills if s.id == step.problem.skill_id), None)
+    skill = _skill(state, step.problem.skill_id)
     if skill is None or skill.problems_today < cfg.park.max_problems_per_skill_per_day:
         return step
     return Step("park", None, None, step.fail_streak, "too_many_today")
@@ -205,5 +229,7 @@ def _too_many_today(step: Step, state: TopicState, cfg: LearningConfig) -> Step:
 def next_step(state: TopicState, event: Start | Answer, mode: Mode, cfg: LearningConfig) -> Step:
     cap = _cap(state, mode, cfg)
     if isinstance(event, Start):
-        return _start(state, event, cap, cfg)
-    return _too_many_today(_answer(state, event, cap, cfg), state, cfg)
+        step = _start(state, event, cap, cfg)
+    else:
+        step = _answer(state, event, cap, cfg)
+    return _too_many_today(step, state, cfg)
