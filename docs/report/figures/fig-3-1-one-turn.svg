@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1330" viewBox="0 0 800 1330" font-family="Sarabun, 'TH Sarabun New', Tahoma, sans-serif" font-size="15">
+  <!-- รูปที่ 3.1 การสนทนาหนึ่งรอบในห้องติวเมื่อผู้เรียนส่งรูปคำตอบ · ร่าง 1 (Claude, 28 พ.ย. 2569) -->
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+  </defs>
+  <rect width="800" height="1330" fill="#fff"/>
+
+  <!-- lanes -->
+  <rect x="10" y="10" width="260" height="1250" fill="#fafafa" stroke="#999"/>
+  <rect x="270" y="10" width="260" height="1250" fill="#f0f0f0" stroke="#999"/>
+  <rect x="530" y="10" width="260" height="1250" fill="#fafafa" stroke="#999"/>
+  <rect x="10" y="10" width="780" height="44" fill="#ddd" stroke="#999"/>
+  <text x="140" y="38" text-anchor="middle" font-size="18" font-weight="bold">ผู้เรียน</text>
+  <text x="400" y="38" text-anchor="middle" font-size="18" font-weight="bold">โปรแกรม</text>
+  <text x="660" y="38" text-anchor="middle" font-size="18" font-weight="bold">LLM</text>
+
+  <!-- 1 user -->
+  <rect x="30" y="70" width="220" height="56" rx="8" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="140" y="103" text-anchor="middle">1  ส่งรูปคำตอบ</text>
+
+  <!-- 2 program -->
+  <rect x="290" y="150" width="220" height="64" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="400" y="176" text-anchor="middle">2  ตรวจว่ารูปเป็นของห้องนี้</text>
+  <text x="400" y="198" text-anchor="middle">และขนาดไม่เกินที่กำหนด</text>
+
+  <!-- 3 LLM -->
+  <rect x="550" y="238" width="220" height="70" rx="14" fill="#fff" stroke="#333" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="660" y="264" text-anchor="middle">3  อ่านลายมือเป็น LaTeX</text>
+  <text x="660" y="284" text-anchor="middle">ทีละบรรทัด</text>
+  <text x="660" y="302" text-anchor="middle" font-family="Consolas, monospace" font-size="12" fill="#555">extract_answer</text>
+
+  <!-- 4 user -->
+  <rect x="30" y="332" width="220" height="64" rx="8" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="140" y="358" text-anchor="middle">4  ตรวจ แก้ และยืนยัน</text>
+  <text x="140" y="380" text-anchor="middle">ข้อความที่ระบบอ่านได้</text>
+
+  <!-- 5 program -->
+  <rect x="290" y="420" width="220" height="56" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="400" y="453" text-anchor="middle">5  SymPy ตรวจทีละบรรทัด</text>
+
+  <!-- 6 LLM -->
+  <rect x="550" y="500" width="220" height="70" rx="14" fill="#fff" stroke="#333" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="660" y="526" text-anchor="middle">6  จำแนกประเภทความผิด</text>
+  <text x="660" y="546" text-anchor="middle">และบรรทัดแรกที่ผิด</text>
+  <text x="660" y="564" text-anchor="middle" font-family="Consolas, monospace" font-size="12" fill="#555">check_answer</text>
+
+  <!-- 7 program -->
+  <rect x="290" y="594" width="220" height="132" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="400" y="620" text-anchor="middle">7  รวมผลเป็นผลตรวจ</text>
+  <text x="400" y="642" text-anchor="middle">เลือกระดับคำใบ้หรือเฉลย</text>
+  <text x="400" y="662" text-anchor="middle" font-size="13" fill="#555">(hint ladder)</text>
+  <text x="400" y="686" text-anchor="middle">ถ้าโจทย์จบ: บันทึกการตอบ</text>
+  <text x="400" y="708" text-anchor="middle">และปรับความเข้าใจด้วย BKT</text>
+
+  <!-- 8 LLM -->
+  <rect x="550" y="750" width="220" height="70" rx="14" fill="#fff" stroke="#333" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="660" y="776" text-anchor="middle">8  อธิบายตามที่โปรแกรมเลือก</text>
+  <text x="660" y="796" text-anchor="middle">(streaming)</text>
+  <text x="660" y="814" text-anchor="middle" font-family="Consolas, monospace" font-size="12" fill="#555">explain_check</text>
+
+  <!-- decision -->
+  <polygon points="400,846 470,886 400,926 330,886" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="400" y="891" text-anchor="middle">โจทย์จบ?</text>
+
+  <!-- not finished -> user -->
+  <rect x="30" y="858" width="220" height="56" rx="8" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="140" y="882" text-anchor="middle">ลองทำโจทย์เดิมอีกครั้ง</text>
+  <text x="140" y="902" text-anchor="middle" font-size="13" fill="#555">(กลับไปขั้น 1)</text>
+
+  <!-- 9a program -->
+  <rect x="290" y="952" width="220" height="64" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="400" y="978" text-anchor="middle">9  เลือกหัวข้อถัดไป</text>
+  <text x="400" y="1000" text-anchor="middle">จากความเข้าใจรายหัวข้อ</text>
+
+  <!-- 9b LLM -->
+  <rect x="550" y="1040" width="220" height="56" rx="14" fill="#fff" stroke="#333" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="660" y="1066" text-anchor="middle">สร้างโจทย์และเฉลย</text>
+  <text x="660" y="1086" text-anchor="middle" font-family="Consolas, monospace" font-size="12" fill="#555">generate_problem</text>
+
+  <!-- 9c program -->
+  <rect x="290" y="1120" width="220" height="56" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="400" y="1153" text-anchor="middle">ตรวจเฉลยด้วย SymPy</text>
+
+  <!-- end user -->
+  <rect x="30" y="1196" width="220" height="50" rx="8" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="140" y="1226" text-anchor="middle">ได้โจทย์ข้อใหม่</text>
+
+  <!-- arrows -->
+  <g stroke="#333" stroke-width="1.5" fill="none" marker-end="url(#arr)">
+    <path d="M250,98 H400 V148"/>
+    <path d="M510,182 H660 V236"/>
+    <path d="M550,273 H140 V330"/>
+    <path d="M250,364 H400 V418"/>
+    <path d="M510,448 H660 V498"/>
+    <path d="M550,535 H400 V592"/>
+    <path d="M510,660 H660 V748"/>
+    <path d="M550,785 H400 V844"/>
+    <path d="M330,886 H252"/>
+    <path d="M400,926 V950"/>
+    <path d="M510,984 H660 V1038"/>
+    <path d="M550,1068 H400 V1118"/>
+    <path d="M290,1148 H140 V1194"/>
+  </g>
+  <text x="292" y="878" text-anchor="middle" font-size="13">ยังไม่จบ</text>
+  <text x="428" y="943" font-size="13">จบ</text>
+
+  <!-- legend -->
+  <g font-size="13">
+    <rect x="30" y="1278" width="34" height="20" rx="5" fill="#fff" stroke="#333"/>
+    <text x="72" y="1293">ผู้เรียน</text>
+    <rect x="200" y="1278" width="34" height="20" fill="#fff" stroke="#333"/>
+    <text x="242" y="1293">โปรแกรม (ผลเหมือนเดิมทุกครั้ง)</text>
+    <rect x="490" y="1278" width="34" height="20" rx="8" fill="#fff" stroke="#333" stroke-dasharray="5 3"/>
+    <text x="532" y="1293">LLM (ชื่อ prompt ใต้กล่อง)</text>
+  </g>
+</svg>
