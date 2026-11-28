@@ -62,14 +62,15 @@
 
 | # | หัวข้อ | เนื้อหา | หน้า | ผู้เขียน | ตอบคอมเมนต์ |
 |---|---|---|---|---|---|
-| 3.1 | หลักการออกแบบ | code ตัดสินใจ, LLM พูด · AI ไม่เขียน DB · SymPy ตัดสินถูกผิด · ตัวเลขอยู่ใน config · **รูป 3.1 "1 turn ในห้องติว"** | 1.5 | Jam | 2 |
-| 3.2 | สถาปัตยกรรมและเทคโนโลยี | รูปสถาปัตยกรรม · ตารางเทคโนโลยี + **ทางเลือกที่พิจารณาและเหตุผล** | 2 | Junior | 2 |
-| 3.3 | การใช้งานของผู้ใช้ | use case + journey (state diagram) | 1 | May | |
-| 3.4 | Ingestion pipeline | 7 ขั้น · สูตรดาว · ผู้ใช้ยืนยัน scope | 1.5 | Jam | 2 |
-| 3.5 | ห้องติว | planner, stage machine (Probe → Teach → Verify), hint ladder, กันเฉลยหลุด, SSE | 1.5 | Jam | 1, 2 |
-| 3.6 | Learning model | BKT + เพดาน · Done · readiness · spaced review · Park · **ตารางที่มาของค่า [A]/[B]/[calc]/[C]** · วิธีพิสูจน์ความน่าเชื่อถือ | 1.5 | Jam | **1** |
-| 3.7 | ตรวจคำตอบ | ลายมือ → ยืนยัน → SymPy → LLM จำแนก → merge rules | 0.5 | Jam | 2 |
-| 3.8 | ฐานข้อมูลและ multi-tenant | ERD ส่วนหลัก · `tenant_id` + RLS · isolation test | 1 | Junior | 2 |
+| 3.1 | ความต้องการของระบบ | ตารางสรุป requirement 91 ข้อตามกลุ่ม · FR เป็น bullet ตามกลุ่ม · NFR พร้อมตัวเลข (Jam 28 พ.ย. เพิ่มตามเล่มตัวอย่างไทย) | 1 | Jam | 2 |
+| 3.2 | หลักการออกแบบ | code ตัดสินใจ, LLM พูด · AI ไม่เขียน DB · SymPy ตัดสินถูกผิด · ตัวเลขอยู่ใน config · **รูป 3.1 "1 turn ในห้องติว"** | 1.5 | Jam | 2 |
+| 3.3 | สถาปัตยกรรมและเทคโนโลยี | รูปสถาปัตยกรรม · ตารางเทคโนโลยี + **ทางเลือกที่พิจารณาและเหตุผล** | 2 | Junior | 2 |
+| 3.4 | การใช้งานของผู้ใช้ | use case + journey (state diagram) | 1 | May | |
+| 3.5 | Ingestion pipeline | 7 ขั้น · สูตรดาว · ผู้ใช้ยืนยัน scope | 1.5 | Jam | 2 |
+| 3.6 | ห้องติว | planner, stage machine (Probe → Teach → Verify), hint ladder, กันเฉลยหลุด, SSE | 1.5 | Jam | 1, 2 |
+| 3.7 | Learning model | BKT + เพดาน · Done · readiness · spaced review · Park · **ตารางที่มาของค่า [A]/[B]/[calc]/[C]** · วิธีพิสูจน์ความน่าเชื่อถือ | 1.5 | Jam | **1** |
+| 3.8 | ตรวจคำตอบ | ลายมือ → ยืนยัน → SymPy → LLM จำแนก → merge rules | 0.5 | Jam | 2 |
+| 3.9 | ฐานข้อมูลและ multi-tenant | ERD ส่วนหลัก · `tenant_id` + RLS · isolation test | 1 | Junior | 2 |
 
 ## บทที่ 4 ความคืบหน้าและการประเมินผล (Section 3 · ใหม่)
 
