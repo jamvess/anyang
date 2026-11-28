@@ -45,3 +45,19 @@
 ## ชื่อเฉพาะของระบบ (คงไว้ตามเดิม)
 
 AI Tutor · AI Buddy · AI gateway · learning model · pipeline · prompt · Bayesian Knowledge Tracing (BKT) · Row-Level Security (RLS) · Probe, Teach, Verify
+
+## เพิ่ม 28 พ.ย. (บทที่ 2)
+
+| ใช้ | ไม่ใช้ | หมายเหตุ |
+|---|---|---|
+| meta-analysis | การวิเคราะห์อภิมาน | |
+| retrieval practice · testing effect · pretesting effect | — | ชื่อหัวข้อเขียนไทยคู่อังกฤษได้ เช่น "การฝึกดึงความรู้ (Retrieval Practice)" |
+| spaced practice · distributed practice | — | ชื่อหัวข้อ "การทบทวนแบบเว้นระยะ (Spaced Practice)" |
+| feedback · formative feedback | ผลป้อนกลับ | |
+| mastery learning | — | ครั้งแรก "การเรียนแบบรอบรู้ (mastery learning)" |
+| pedagogical agent · learning companion · protégé effect | — | |
+| ส่วนเบี่ยงเบนมาตรฐาน (standard deviation) | — | คำสถิติไทยที่ใช้กันทั่วไป |
+| knowledge tracing · Bayesian Knowledge Tracing (BKT) · Deep Knowledge Tracing (DKT) · logistic regression | — | |
+| guess · slip · transit · model degeneracy | — | ครั้งแรกอธิบายเป็นไทย |
+| open learner model · reinforcement learning · Knowledge Space Theory · wheel-spinning · prerequisite | การเรียนรู้แบบเสริมกำลัง | |
+| neural network · feature · train | — | |
