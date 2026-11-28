@@ -5,7 +5,7 @@
 | Owner | Junior |
 | Branch | `poc/p9-lite-free-tier-quota` |
 | Checklist item | ยังไม่มีใน `docs/team/sprint-checklists.md` · เป้าข้อ 9 ของ advisor สำหรับ จ. 30 พ.ย. 2569 ("ทดสอบว่าโควตา free tier ของ Google AI Studio พอสำหรับแอปไหม") · เพิ่มเข้าเช็คลิสต์ใน `/work-done` |
-| Status | in progress · 2026-11-28 |
+| Status | paused · 2026-11-28 · รอบ daily ถูกหยุดกลางทาง ต้องรันใหม่ |
 
 ## Plan
 
@@ -42,7 +42,7 @@
 
 - คาดไว้ (Junior): Flash เต็มรุ่นได้ < 1 session/วัน · Flash-Lite ราว 20 session/วัน ถ้าคุณภาพพอ · ผลรันเป็นตัวตัดสิน
 
-## ผล smoke (28 พ.ย. · `results/smoke-flash-lite.json`)
+## ผล burst ผู้ใช้ 1 คน ไม่มี think time (28 พ.ย. · `results/burst-1user-flash-lite.json`)
 
 - 1 session + classify บน `gemini-3.5-flash-lite` · ส่ง 16 request ใน 37 วินาที · ok 13 · 503 1 ครั้ง ("high demand") · **429 ต่อนาที 2 ครั้งที่ request ที่ 16** (`GenerateRequestsPerMinutePerProjectPerModel-FreeTier`) · gateway ยอมแพ้ → session ไม่จบ (ห้องจริงจะขึ้น "ระบบช้า")
 - สคริปต์ไม่มีเวลาคิดของนักเรียน จึงยิงเร็วกว่าคนจริง · 15 RPM ถูกใช้หมดโดยผู้ใช้คนเดียว
@@ -87,6 +87,13 @@
 - embed: free tier ของ `gemini-embedding-2` = RPM 100 · TPM 30K · RPD 1K (Junior ดู 28 พ.ย.) · 116 chunk ต่อวิชา request พอ แต่ token รวมของ chunk (log: embed in สูงสุด 45.7K ต่อ call) เกิน 30K TPM → ต้องกระจายเกิน 1 นาที
 - ตัดสิน: ไม่รัน ingestion บน free tier (Junior: "don't run if clearly won't fit")
 
+## รอบ daily ครั้งแรก (28 พ.ย. · ถูกหยุด · ไม่มีผล)
+
+- รัน `--sessions 40 --concurrency 3 --think 30 --label daily-flash-lite` ราว 17:2x–17:35 น. (เวลาไทย) แล้ว Junior ต้องปิดเครื่อง จึงหยุดกลางทาง
+- **ไม่มีผลเหลือ:** สคริปต์รุ่นนั้นเขียน `results/` ตอนจบเท่านั้น และ `grep` ที่ pipe ไว้บัฟเฟอร์บรรทัดความคืบหน้า จึงไม่รู้ว่าจบไปกี่ session · ใช้โควตา flash-lite ไปเพิ่มเท่าไรให้ดูในหน้า Rate Limit
+- `TaskStop` หยุดแค่ shell: process ของ Python (`load.py` + SymPy worker) ยังรันต่อ ต้อง `Stop-Process` เอง (หยุดแล้ว เหลือ 0 process)
+- แก้แล้ว (commit `wip`): `load.py` บันทึก `results/<label>.json` หลังทุก batch (`meta.finished: false`) และตอน Ctrl+C · test ใหม่ 1 ตัว · รวม 10 passed
+
 ## Decisions
 
 - 2026-11-28 · ชื่อ PoC `P9-lite` · ต่อจาก P8-lite
@@ -97,15 +104,26 @@
 - 2026-11-28 · เจอ 429 ต่อวันแล้วหยุดส่งทันที ไม่เริ่ม session ใหม่ (ไม่เปลืองโควตาของวันถัดไป) · เลขโปรเจกต์ใน error ถูกลบก่อนเขียน `results/`
 - 2026-11-28 · key ใน `.env` ที่ root ของ repo · โปรเจกต์ใหม่ที่ไม่ผูก billing (ถ้าผูกจะได้ paid tier)
 
+## Done today (28 พ.ย.)
+
+- ข้อ 1–4 เสร็จ: ค่าโควตา free tier (ยืนยันกับหน้า AI Studio), PoC spec P9-lite, ข้อมูลสังเคราะห์, `load.py` + 10 test
+- รันแล้ว: burst 1 คน (ชน 15 RPM ที่ request 16 + 503), smoke `--think 30` (21 request · จบ), session 10 โจทย์ (68 request · peak 12/นาที · schema error ของ `generate_problem` 3/13), `gemini-3.5-flash` (ถูกนับเป็น 3.6 Flash)
+- ต้นทุน ingestion ประมาณจากการซ้อม 20 พ.ย. (ไม่รันบน free tier)
+- รอบ daily ถูกหยุด ไม่มีผล (ดูหัวข้อ "รอบ daily ครั้งแรก")
+
 ## Next step
 
-รอบ daily บน flash-lite: `--sessions 40 --concurrency 3 --think 30 --label daily-flash-lite` จนชน RPD (ใช้ไปแล้ว 79/500 ตามหน้า Rate Limit) แล้วทำข้อ 6
+รันรอบ daily ใหม่บน flash-lite **หลัง 15:00 น. เวลาไทย** (RPD reset เที่ยงคืน Pacific) จาก `apps/api` ใน background **ไม่ pipe ผ่าน grep**: `env -u AI_PROVIDER -u AI_MODEL_OVERRIDE PYTHONUTF8=1 uv run python ../../poc/P9-lite/load.py --model gemini-3.5-flash-lite --sessions 40 --concurrency 3 --think 30 --label daily-flash-lite` · ถ้าต้องหยุดกลางทาง ผลถึง batch ล่าสุดอยู่ใน `results/daily-flash-lite.json` · หยุดแล้วเช็คว่าไม่มี `python.exe` ของ `load.py` ค้าง · จบแล้วทำข้อ 6 (สรุปภาษาไทยสำหรับ advisor + `/poc-report P9-lite`) · ถ้ารีบก่อน advisor 30 พ.ย. ทำข้อ 6 จากผลที่มีได้เลย แล้วใส่ผล daily ทีหลัง
 
 ## Waiting on
 
-ไม่มี
+ไม่มี (key อยู่ใน `.env` ที่ root แล้ว)
 
 ## Notes for next time
+
+- โควตาที่ใช้ไปของวันนี้ดูได้ที่ https://aistudio.google.com/rate-limit (Junior เห็นก่อนรอบ daily: flash-lite 79/500 RPD · peak 12/15 RPM)
+- 3.6 Flash ใช้ไปแล้ว 6/20 ของวันนี้ · ไม่ต้องใช้ต่อ (Junior)
+- ข้อ 6 ต้องมี: session/วัน ที่ 3 และ 10 โจทย์ · ต้นทุนต่อโจทย์ (request + token) · ผู้ใช้พร้อมกัน (ค) · ingestion ต่อวิชา · บรรทัด "ผู้ใช้คนเดียวก็ชน 15 RPM ได้ + เจอ 503 high demand" · ข้อค้นพบ 3.5-flash → 3.6 Flash · import private ของ `photo_check.py` เปราะ
 
 - ชีทสังเคราะห์สร้างด้วย `poc/P9-lite/make_sheet.py` ใช้ฟอนต์ `LeelawUI.ttf` (tahoma อ่านกลับ `-` เป็น soft hyphen) · subset font แล้วไฟล์ 28 KB · **PDF ไม่ commit** (gitignore ใน `poc/P9-lite/.gitignore`) เพราะ Leelawadee UI เป็นฟอนต์ของ Windows ที่แจกต่อไม่ได้ · สร้างตอนรัน · นอก Windows ใช้ `--font` กับฟอนต์เปิด เช่น Sarabun
 - `.env` อยู่ที่ root ของ repo ไม่ใช่ `apps/api/.env` · `AI_MODEL_OVERRIDE` ยังว่าง (ตั้งเป็น env ตอนรันสคริปต์ ไม่ต้องแก้ `.env`)
