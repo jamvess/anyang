@@ -61,3 +61,5 @@ AI Tutor · AI Buddy · AI gateway · learning model · pipeline · prompt · Ba
 | guess · slip · transit · model degeneracy | — | ครั้งแรกอธิบายเป็นไทย |
 | open learner model · reinforcement learning · Knowledge Space Theory · wheel-spinning · prerequisite | การเรียนรู้แบบเสริมกำลัง | |
 | neural network · feature · train | — | |
+| hallucination · structured output · JSON Schema · prompt injection · indirect prompt injection | — | |
+| multimodal · LaTeX · open source | — | |
