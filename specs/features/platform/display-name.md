@@ -114,8 +114,7 @@ advisor ขอ (เป้าข้อ 2) ให้ติวเตอร์เร
 
 | Test | ระดับ | ครอบคลุม AC |
 |---|---|---|
-| `tests/unit/test_profile_patch_validation.py` · กฎของ body (ตัดช่องว่าง, ว่าง → null, whitelist, เพดาน, field เกิน) ผ่าน TestClient + fake repo | unit | AC-3 ถึง AC-7, AC-7b, AC-boundary |
-| `tests/unit/test_profile_api.py` · ทาง token, stub, `setup_step`, `auto_read`, ค่าดิบจาก DB, DB ล่ม ด้วย fake repo | unit | AC-1, AC-2, AC-8, AC-9, AC-10, AC-stub, AC-auth-required, AC-db-down |
+| `tests/unit/test_profile_api.py` · ทาง token, stub, `setup_step`, `auto_read`, ค่าดิบจาก DB, ไม่มีแถว, DB ล่ม และกฎของ body (ตัดช่องว่าง, ว่าง → null, whitelist, เพดาน, field เกิน, `{}`) ด้วย fake repo | unit | AC-1 ถึง AC-10, AC-7b, AC-boundary, AC-no-row, AC-stub, AC-auth-required, AC-db-down |
 | `tests/unit/test_prompt_user_name.py` | unit | AC-12 |
 | `tests/integration/test_profile_db.py` · PATCH/GET บน Supabase ในเครื่อง, field อื่นไม่เปลี่ยน, `setup_step` จากแถวจริง, ห้องติวใช้ชื่อใหม่, ไม่มีแถว | integration | AC-1, AC-2, AC-4, AC-8, AC-9, AC-11, AC-no-row |
 | `tests/integration/test_rls_isolation.py` · เพิ่มกรณี `profiles` | integration | AC-tenant |
