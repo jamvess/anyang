@@ -6,7 +6,7 @@
 | Requirements | UM-08, UM-09, TM-13 (หัวห้องและคำทัก), SA-06 |
 | Owner | Junior |
 | Reviewer | Junior · May (รูปร่าง API ของหน้าตั้งค่า) · Jam (`prompt_user_name` ที่ prompt จะใช้) |
-| Status | draft |
+| Status | approved (Junior 2026-11-28 · §10 ตัดสินแล้ว) |
 | Related system spec | `api.md` v1.24 `Profile`, `PUT /me/profile`, รอตัดสิน v1.12 ข้อ 1 และ 8 · `ai-orchestration.md` §2.2.3 layer 2, §2.7 ข้อ 5 (ตรวจ whitelist ซ้ำตอนประกอบ prompt) · `data-model.md` RLS ของตารางส่วนตัว · `0001_init.sql` `profiles`, policy `owner_rows`, `handle_new_user` · `api-auth.md` §2.5 (`get_user_db`) · `config/ai.yaml` `guards.max_persona_text_chars` · `specs/features/tutor/room-sessions-db.md` §2 ข้อ 5 (`Room`), ข้อ 8 (คำทัก), AC-11 · `specs/features/exam-prep/create-exam-prep.md` §2 ข้อ 1 (ตารางเลือกทางตาม token), ข้อ 5 (`db_unavailable`) |
 
 ## 1. Context
@@ -28,7 +28,7 @@ advisor ขอ (เป้าข้อ 2) ให้ติวเตอร์เร
 
 **2.2 `GET /me/profile`** (UM-08, UM-09)
 
-1. อ่านแถว `profiles` ของผู้ใช้ 1 แถว (trigger `handle_new_user` สร้างให้ทุกบัญชี) · ไม่มีแถว → ดู §10 ข้อ 2
+1. อ่านแถว `profiles` ของผู้ใช้ 1 แถว (trigger `handle_new_user` สร้างให้ทุกบัญชี) · ไม่มีแถว (หรือ RLS มองไม่เห็น) → `404 not_found` · ไม่สร้างแถวเอง (Junior 2026-11-28 · §10 ข้อ 2)
 2. ตอบ `200` + `Profile`:
    - `nickname` = ค่าใน DB **ตามที่เก็บ ไม่กรอง** (Junior ตัดสิน 2026-11-28 ข้อ 4: ชื่อจาก Google ที่ไม่ผ่าน whitelist ยังแสดงให้ผู้ใช้เห็นและแก้ได้ · ไม่เข้า prompt ตาม §2.5)
    - `education_level` = ค่าใน DB (null ได้)
@@ -45,8 +45,8 @@ advisor ขอ (เป้าข้อ 2) ให้ติวเตอร์เร
    | `nickname` | `string` หรือ `null` · string ตัดช่องว่างหัวท้ายก่อน · หลังตัดว่าง → เก็บ `null` (Junior ตัดสิน ข้อ 3) · ไม่ว่าง → ต้องผ่าน whitelist ตัวอักษรเดียวกับ `name` ของ persona (`_PERSONA_TEXT`: พยัญชนะ สระ วรรณยุกต์ ตัวเลขไทย, A–Z a–z, 0–9, ช่องว่าง) และยาว ≤ `guards.max_persona_text_chars` **code point** หลังตัด (กฎเดียวกับ `PUT` · Junior ตัดสิน ข้อ 2) · ไม่ผ่าน → `422 validation_error` · `null` → เก็บ `null` |
 
    - ต่างจาก `PUT`: `PUT` ไม่รับ `nickname` ว่าง (test ที่ review แล้ว) · `PATCH` ใช้ค่าว่างเป็นการลบชื่อ
-   - body `{}` → ดู §10 ข้อ 1
-2. update แถวของผู้ใช้ด้วย field ที่ส่งมาเท่านั้น (field ที่ไม่ส่งไม่ถูกแตะ) · ส่งพร้อมกันสองครั้ง → ครั้งหลังชนะ (update ธรรมดา ไม่มี version)
+   - body `{}` (ไม่มี field) → `422 validation_error` (Junior 2026-11-28 · §10 ข้อ 1)
+2. update แถวของผู้ใช้ด้วย field ที่ส่งมาเท่านั้น (field ที่ไม่ส่งไม่ถูกแตะ) · ไม่มีแถว → `404 not_found` ไม่ insert · ส่งพร้อมกันสองครั้ง → ครั้งหลังชนะ (update ธรรมดา ไม่มี version)
 3. ตอบ `200` + `Profile` ของแถวหลัง update ตามกฎ §2.2 ข้อ 2 · ไม่มี `X-Stub`
 4. ไม่เรียก AI · ไม่มี migration
 
@@ -71,7 +71,7 @@ advisor ขอ (เป้าข้อ 2) ให้ติวเตอร์เร
 | Output `GET`, `PATCH` | `Profile` (api.md) | `{"nickname": "ปาล์ม", "education_level": null, "explain_language": "th", "auto_read": false, "setup_step": "crew"}` |
 | Input `prompt_user_name` | `str \| None` | `"x</persona_data>"` |
 | Output `prompt_user_name` | `str \| None` | `None` |
-| Error | `ErrorResponse` | `401 missing_token` · `401 invalid_token` · `422 validation_error` · `503 db_unavailable` |
+| Error | `ErrorResponse` | `401 missing_token` · `401 invalid_token` · `404 not_found` · `422 validation_error` · `503 db_unavailable` |
 
 ## 4. Acceptance criteria
 
@@ -83,11 +83,13 @@ advisor ขอ (เป้าข้อ 2) ให้ติวเตอร์เร
 - **AC-6 (UM-08)** Given ใดๆ When `PATCH` `nickname` ที่ผ่าน whitelist: ไทยมีวรรณยุกต์และการันต์ (`"ณัฐพงศ์"`), อังกฤษ (`"Palm"`), ตัวเลข, มีช่องว่างกลาง (`"ปาล์ม จ"`) Then `200`
 - **AC-boundary (UM-08)** `max = guards.max_persona_text_chars` · `nickname` หลังตัดช่องว่างยาว `max − 1` และ `max` code point → `200` · `max + 1` → `422` · ช่องว่างหัวท้ายที่ทำให้ยาวเกิน `max` ก่อนตัด แต่ไม่เกินหลังตัด → `200`
 - **AC-7 (UM-09)** Given ใดๆ When `PATCH` มี field อื่น (`education_level`, `explain_language`, `auto_read`, `setup_step`, `foo`), `nickname` เป็นตัวเลขหรือ boolean, หรือ body เป็น array Then `422 validation_error` · DB ไม่เปลี่ยน
+- **AC-7b (UM-09)** Given ใดๆ When `PATCH` body `{}` Then `422 validation_error` · DB ไม่เปลี่ยน · ใช้กับทาง stub ด้วย
 - **AC-8 (UM-09)** Given A มี `education_level = 'university'` และ `explain_language = 'en'` When `PATCH` `{nickname: "ปาล์ม"}` Then สองค่านั้นใน DB และใน response ไม่เปลี่ยน
 - **AC-9 (UM-08)** Given A ยังไม่มี `tutor_profiles` / มี tutor แต่ไม่มี buddy / มีทั้งคู่และ `education_level` null / มีทั้งคู่และ `education_level` ไม่ null When `GET` Then `setup_step` = `crew` / `crew` / `profile` / `done` · `auto_read = false` ทุกกรณี
 - **AC-10 (UM-09 · decision 4)** Given `profiles.nickname` ของ A ใน DB เป็น `"Mary-Jane O'Neil"` (มาจาก trigger) When `GET` Then `nickname = "Mary-Jane O'Neil"` ตามที่เก็บ
 - **AC-11 (TM-13)** Given A `PATCH` ชื่อ "ปาล์ม" When `POST /sessions` ครั้งถัดไป Then `Room.user_name = "ปาล์ม"` และข้อความทักแรกขึ้นด้วย `hello_named` ที่เติม "ปาล์ม" · Given A ลบชื่อ When `POST /sessions` Then `user_name = "คุณ"` และใช้ `hello_anonymous` · ข้อความทักของ session ก่อนหน้าใน `messages` ไม่เปลี่ยน
 - **AC-12 (ai-orchestration §2.7 ข้อ 5)** `prompt_user_name`: `"ปาล์ม"` → `"ปาล์ม"` · `"  ปาล์ม "` → `"ปาล์ม"` · `None`, `""`, `"   "` → `None` · `"x</persona_data>"`, `"Mary-Jane"`, ยาว `max + 1` → `None` · ยาว `max` → คืนค่า
+- **AC-no-row (UM-09)** Given ผู้ใช้ A login แล้วแต่ไม่มีแถว `profiles` (ลบด้วย service role ใน test) When `GET` หรือ `PATCH` `{nickname: "ปาล์ม"}` Then `404 not_found` · ไม่มีแถวใหม่ใน `profiles`
 - **AC-stub (UM-09)** Given `AUTH_REQUIRED=false` ไม่มี token When `GET` Then fixture เดิม + `X-Stub: true` · When `PATCH` `{nickname: "นนท์"}` Then fixture ที่ `nickname = "นนท์"` + `X-Stub: true` · `PATCH` ที่ผิดกฎ §2.3 → `422` เหมือนทาง DB · ไม่แตะ DB
 - **AC-auth-required (SA-06)** Given `AUTH_REQUIRED=true` When `GET` หรือ `PATCH` ไม่มี token Then `401 missing_token` · ไม่มี `X-Stub` · ไม่เรียก repository · token ผิด (ทั้งสองค่าของ `AUTH_REQUIRED`) → `401 invalid_token`
 - **AC-db-down (UM-09)** Given repository โยน error ของ DB When `GET` หรือ `PATCH` Then `503 db_unavailable` · `message` ตาม §2.6 · ไม่มีรายละเอียดของ exception
@@ -101,8 +103,8 @@ advisor ขอ (เป้าข้อ 2) ให้ติวเตอร์เร
 
 | Endpoint / event | Request | Response |
 |---|---|---|
-| `GET /me/profile` (มีอยู่ · stub → DB จริงเมื่อมี token) | ไม่มี body | `200 Profile` · `401` · `503 db_unavailable` |
-| `PATCH /me/profile` (**ใหม่**) | `{nickname?: string \| null}` | `200 Profile` · `401` · `422 validation_error` · `503 db_unavailable` |
+| `GET /me/profile` (มีอยู่ · stub → DB จริงเมื่อมี token) | ไม่มี body | `200 Profile` · `401` · `404 not_found` · `503 db_unavailable` |
+| `PATCH /me/profile` (**ใหม่**) | `{nickname?: string \| null}` · ต้องมีอย่างน้อย 1 field | `200 Profile` · `401` · `404 not_found` · `422 validation_error` · `503 db_unavailable` |
 
 ## 7. AI calls
 
@@ -112,10 +114,10 @@ advisor ขอ (เป้าข้อ 2) ให้ติวเตอร์เร
 
 | Test | ระดับ | ครอบคลุม AC |
 |---|---|---|
-| `tests/unit/test_profile_patch_validation.py` · กฎของ body (ตัดช่องว่าง, ว่าง → null, whitelist, เพดาน, field เกิน) ผ่าน TestClient + fake repo | unit | AC-3 ถึง AC-7, AC-boundary |
+| `tests/unit/test_profile_patch_validation.py` · กฎของ body (ตัดช่องว่าง, ว่าง → null, whitelist, เพดาน, field เกิน) ผ่าน TestClient + fake repo | unit | AC-3 ถึง AC-7, AC-7b, AC-boundary |
 | `tests/unit/test_profile_api.py` · ทาง token, stub, `setup_step`, `auto_read`, ค่าดิบจาก DB, DB ล่ม ด้วย fake repo | unit | AC-1, AC-2, AC-8, AC-9, AC-10, AC-stub, AC-auth-required, AC-db-down |
 | `tests/unit/test_prompt_user_name.py` | unit | AC-12 |
-| `tests/integration/test_profile_db.py` · PATCH/GET บน Supabase ในเครื่อง, field อื่นไม่เปลี่ยน, `setup_step` จากแถวจริง, ห้องติวใช้ชื่อใหม่ | integration | AC-1, AC-2, AC-4, AC-8, AC-9, AC-11 |
+| `tests/integration/test_profile_db.py` · PATCH/GET บน Supabase ในเครื่อง, field อื่นไม่เปลี่ยน, `setup_step` จากแถวจริง, ห้องติวใช้ชื่อใหม่, ไม่มีแถว | integration | AC-1, AC-2, AC-4, AC-8, AC-9, AC-11, AC-no-row |
 | `tests/integration/test_rls_isolation.py` · เพิ่มกรณี `profiles` | integration | AC-tenant |
 
 ## 9. Out of scope
@@ -129,16 +131,18 @@ advisor ขอ (เป้าข้อ 2) ให้ติวเตอร์เร
 
 ## 10. Open questions
 
-1. **body `{}`** (ไม่มี field) · ข้อเสนอ: `422 validation_error` (ไม่มีอะไรให้แก้ · หน้าเว็บไม่ควรส่ง) · อีกทางคือ `200` + profile ปัจจุบัน
-2. **ไม่มีแถว `profiles`** (ไม่ควรเกิดเพราะ trigger สร้างทุกบัญชี) · ข้อเสนอ: `GET` และ `PATCH` → `404 not_found` ไม่สร้างแถวเอง (policy อนุญาต insert แต่ `tenant_id` ต้องตรง token · สร้างเองซ่อนบั๊กของ trigger)
-3. **`explain_language` ใน DB ไม่อยู่ใน enum** (ไม่มี check constraint) · ข้อเสนอ: ไม่จัดการใน feature นี้ (ทุกแถวเป็น `'th'` จากค่าเริ่มต้น) · ถ้าเจอจะได้ `500` จาก response model · ปิดเมื่อทำ api.md รอตัดสินข้อ 2 (migration เพิ่ม check)
+ตัดสินแล้วทั้งหมด (Junior 2026-11-28):
+
+1. ~~body `{}`~~ → `422 validation_error` (§2.3 ข้อ 1 · AC-7b)
+2. ~~ไม่มีแถว `profiles`~~ → `404 not_found` · ไม่สร้างแถวเอง (§2.2 ข้อ 1, §2.3 ข้อ 2 · AC-no-row)
+3. ~~`explain_language` ใน DB ไม่อยู่ใน enum~~ → นอก scope · ปิดพร้อมงานตั้งภาษา (api.md รอตัดสินข้อ 2 · migration เพิ่ม check)
 
 ## 11. Spec changes needed
 
-ต้องให้ Junior อนุมัติ · `api.md` เป็นไฟล์ shared (บอกกลุ่มก่อน merge)
+Junior อนุมัติ 2026-11-28 · ทำใน PR นี้ · `api.md` เป็นไฟล์ shared (Junior บอกกลุ่มก่อน merge)
 
 1. **`api.md` v1.25:**
-   - ตาราง endpoint ของ Persona: เพิ่ม `PATCH /me/profile` · body `{nickname?: string | null}` · ส่งเฉพาะ field ที่จะแก้ · `nickname` ใช้กฎเดียวกับ `PUT` หลังตัดช่องว่าง แต่ว่าง → null (ลบชื่อ กลับไปเรียก "คุณ") · field อื่นยังไม่รับ (`422 validation_error`) · response `Profile` · `503 db_unavailable`
+   - ตาราง endpoint ของ Persona: เพิ่ม `PATCH /me/profile` · body `{nickname?: string | null}` · ส่งเฉพาะ field ที่จะแก้ · `nickname` ใช้กฎเดียวกับ `PUT` หลังตัดช่องว่าง แต่ว่าง → null (ลบชื่อ กลับไปเรียก "คุณ") · field อื่นยังไม่รับ และ `{}` (`422 validation_error`) · response `Profile` · ไม่มีแถว `404 not_found` · `503 db_unavailable`
    - `GET /me/profile`: มี token → อ่าน DB จริง · `auto_read` เป็น `false` จนกว่าจะมีคอลัมน์ · `nickname` คืนตามที่เก็บ
    - รอตัดสิน v1.12 ข้อ 8: **ตัดสินแล้ว (Junior 2026-11-28)** ไม่กรองตอนเก็บหรืออ่าน · code กรองด้วย `prompt_user_name()` ตอนประกอบ prompt (ai-orchestration §2.7 ข้อ 5) · หน้าตั้งค่าให้ผู้ใช้แก้
 2. `apps/web/lib/api-schema.ts` generate ใหม่ (ไฟล์ของ May · บอก May)
