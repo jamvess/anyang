@@ -5,7 +5,7 @@
 | Owner | Junior |
 | Branch | `poc/p9-lite-free-tier-quota` |
 | Checklist item | ยังไม่มีใน `docs/team/sprint-checklists.md` · เป้าข้อ 9 ของ advisor สำหรับ จ. 30 พ.ย. 2569 ("ทดสอบว่าโควตา free tier ของ Google AI Studio พอสำหรับแอปไหม") · เพิ่มเข้าเช็คลิสต์ใน `/work-done` |
-| Status | paused · 2026-11-28 · รอบ daily ถูกหยุดกลางทาง ต้องรันใหม่ |
+| Status | in progress · 2026-11-28 |
 
 ## Plan
 
