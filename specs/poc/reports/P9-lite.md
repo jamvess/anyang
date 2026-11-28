@@ -39,9 +39,9 @@
 ## 5. สิ่งที่ต้องแก้ใน spec / config (เสนอ · ยังไม่แก้ · รอ Junior / Jam ok)
 
 - [ ] `config/learning.yaml`: ไม่แก้
-- [ ] `config/ai.yaml`: ไม่แก้ค่า · เสนอเพิ่ม comment ที่ `provider` ว่า "free tier (AI Studio): dev เท่านั้น · override เป็น `gemini:gemini-3.5-flash-lite` · `3.5-flash` ถูกนับเป็น 3.6 Flash 20 RPD (P9-lite)" (Jam ตัดสิน model)
-- [ ] `docs/team/setup.md` "env สำหรับ dev": วิธีใช้ AI Studio key แทน Vertex (`AI_MODEL_OVERRIDE=gemini:gemini-3.5-flash-lite`) + เพดาน 1 คน / 15 RPM
-- [ ] `specs/system/architecture.md`: แถว P9-lite ในตารางผล PoC ("free tier ไม่พอสำหรับ demo · Vertex คงเดิม")
+- [ ] (รอ Jam ok ใน #180) `config/ai.yaml`: ไม่แก้ค่า · เสนอเพิ่ม comment ที่ `provider` ว่า "free tier (AI Studio): dev เท่านั้น · override เป็น `gemini:gemini-3.5-flash-lite` · `3.5-flash` ถูกนับเป็น 3.6 Flash 20 RPD (P9-lite)" (Jam ตัดสิน model)
+- [x] (28 พ.ย. · Junior ok) `docs/team/setup.md` "env สำหรับ dev": วิธีใช้ AI Studio key แทน Vertex (`AI_MODEL_OVERRIDE=gemini:gemini-3.5-flash-lite`) + เพดาน 1 คน / 15 RPM
+- [x] (28 พ.ย. · Junior ok · v1.4) `specs/system/architecture.md`: แถว P9-lite ในตารางผล PoC ("free tier ไม่พอสำหรับ demo · Vertex คงเดิม")
 - [ ] `specs/poc/README.md` P9-lite: ติ๊กว่าเสร็จ + ลิงก์ report นี้
 
 ## 6. ความเสี่ยงที่เหลือ
