@@ -49,6 +49,31 @@
 - คุณภาพ: `generate_problem` 2/2 SymPy ยืนยัน (schema retry 1) · `classify_material` schema retry 1 · `check_answer` ไม่มี schema error
 - latency ok: call 0.9–1.7 s · `explain_check` TTFT p95 2.4 s · `open_session` TTFT 3.3 s
 
+## ผล smoke --think 30 (28 พ.ย. · `results/smoke-flash-lite.json`)
+
+- session จบ · 21 request (3 โจทย์ + chat 2 · ไม่นับ classify) ใน 3.7 นาที · 429: 0 · 503: 1 (`typed_answer` · gateway retry ผ่าน) · SymPy ยืนยัน 3/3 (`generate_problem` 4 attempt)
+- รอบ burst เดิมเก็บไว้ที่ `results/burst-1user-flash-lite.json`: ผู้ใช้คนเดียวที่ยิงต่อกันชน 15 RPM ที่ request ที่ 16 + 503 "high demand"
+
+## ต้นทุน ingestion ต่อการเตรียมสอบ 1 วิชา (ประมาณ · 28 พ.ย.)
+
+ที่มา: `.local/ai_calls_caps.csv.csv` (ai_calls ของ `anyang-dev` 17–20 พ.ย. · max tokens_out ต่อ purpose) + `.local/rehearsal-api.utf8.log` (tokens_in ของ 35 call) · วิชาแบบ MTH10101 ไฟล์ 6 ไฟล์ (ชีท 4 + ข้อสอบสแกน 2) · chunk 116 (ingestion.md §2.3)
+
+| purpose | request | tokens_in ต่อ call (max) | tokens_out ต่อ call (max) |
+|---|---|---|---|
+| classify_material | 6 | 2.4K | 0.3K |
+| vision_extract_pages (ข้อสอบสแกน) | 2 | 15.7K | 7.5K |
+| split_past_exam | 2 | 3.9K | 4.0K |
+| extract_topics_local (ชีท) | 4 | 45.7K | 2.6K |
+| merge_topics | 1 | 4.9K | 23.3K |
+| map_questions | 1–2 | 6.5K | 4.7K |
+| **รวม generate** | **~17** | **~150K** | **~67K** |
+| embed (`gemini-embedding-2`) | 116 ที่ `batch_size` 1 (Vertex) · ~12 ถ้า batch 10 บน Gemini API | | |
+
+- flash-lite: 17 request = 3% ของ 500 RPD · input สูงสุดต่อ call 46K < 250K TPM (ไฟล์ทำทีละไฟล์ · ingestion.md §3 ข้อ 1) → **โควตาพอ** · แต่ P3 ตัด flash-lite ออกจาก A5/A6 เพราะแบ่งหัวข้อหยาบและ JSON พังกับ LaTeX (`P3.md`) → **คุณภาพไม่พอ**
+- 3.6 / 3.8 flash: 17 จาก 20 RPD → 1 วิชาต่อวัน ไม่เหลือให้ติวเลย
+- embed: ยังไม่รู้โควตา free tier ของ `gemini-embedding-2`
+- ตัดสิน: ไม่รัน ingestion บน free tier (Junior: "don't run if clearly won't fit")
+
 ## Decisions
 
 - 2026-11-28 · ชื่อ PoC `P9-lite` · ต่อจาก P8-lite
