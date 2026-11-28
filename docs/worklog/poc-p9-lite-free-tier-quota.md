@@ -9,11 +9,11 @@
 
 ## Plan
 
-- [ ] 1. 🤖 หาค่าโควตา free tier ปัจจุบัน (RPM / TPM / RPD) ของ `gemini-3.5-flash` และ `gemini-3.5-flash-lite` จากเอกสารทางการ
-- [ ] 2. 🙋 ยืนยันกับหน้า AI Studio: เปิด https://aistudio.google.com → เลือกโปรเจกต์ใหม่ของ key → **Usage & Billing** / **Rate limits** → บอก Claude ว่าเห็นคำว่า "Free tier" ไหม และ RPM / TPM / RPD ของ 2 model นี้ (หรือตอบ "ตรง" ถ้าตรงกับข้อ 1) · key อยู่ใน `.env` ที่ root แล้ว (โปรเจกต์ใหม่ ไม่ใช่ `anyang-513006`) · ห้ามวาง key ใน chat
+- [x] 1. 🤖 หาค่าโควตา free tier ปัจจุบัน (RPM / TPM / RPD) ของ `gemini-3.5-flash` และ `gemini-3.5-flash-lite` จากเอกสารทางการ
+- [x] 2. 🙋 ยืนยันกับหน้า AI Studio: เปิด https://aistudio.google.com → เลือกโปรเจกต์ใหม่ของ key → **Usage & Billing** / **Rate limits** → บอก Claude ว่าเห็นคำว่า "Free tier" ไหม และ RPM / TPM / RPD ของ 2 model นี้ (หรือตอบ "ตรง" ถ้าตรงกับข้อ 1) · key อยู่ใน `.env` ที่ root แล้ว (โปรเจกต์ใหม่ ไม่ใช่ `anyang-513006`) · ห้ามวาง key ใน chat
 - [ ] 3. 🤖 PoC spec สั้นๆ ใน `specs/poc/README.md` (P9-lite · คำถาม, metric, เกณฑ์) + ข้อมูลสังเคราะห์ใน `poc/P9-lite/data/` (PDF ชีทไทย 3 หน้าจาก `pymupdf` + คำตอบพิมพ์สังเคราะห์ · ไม่มีลายมือ ไม่ใช้ `evals/topics/*/raw` · AI-07)
 - [ ] 4. 🤖 `poc/P9-lite/load.py`: gateway live + `AI_MODEL_OVERRIDE=gemini:<model>` · ครอบ provider ด้วยตัวนับทุก attempt (gateway retry ซ่อน 429/503) · 1 session = `open_session` → (`generate_problem` → `typed_answer` → `check_answer` → `explain_check`) × k → `tutor_reply` × m → `session_summary` · `classify_material` แยก · จดสถานะ latency token และ quota id ของ 429 (ต่อนาที / ต่อวัน) ลง `results/<label>.json` · อ่านไฟล์นอก `data/` ไม่ได้ · unit test ด้วย fake provider
-- [ ] 5. 🤖 รัน 3 รอบต่อ model (flash, flash-lite): smoke 1 session → session ต่อกันจนชน RPD → burst 3 session พร้อมกัน (RPM) · ใช้โควตาของ key หมดทั้งวัน
+- [ ] 5. 🤖 รัน (แก้หลังข้อ 2): **`gemini-3.5-flash-lite` (ตัวหลัก)** smoke 1 session → session ต่อกันจนชน RPD → burst 3 session พร้อมกัน (RPM) · **`gemini-3.6-flash`** รอบสั้นจนชน 20 RPD · **`gemini-3.5-flash`** 1 call เพื่อยืนยันว่าถูกปฏิเสธ แล้วจด error · คุณภาพของ flash-lite: schema retry / schema fail ต่อ purpose และสัดส่วนโจทย์ที่ SymPy parse ได้ (P3 เคยเจอ LaTeX ใน JSON พัง)
 - [ ] 6. 🤖 คำนวณ session/วัน = min(RPD ÷ call ต่อ session) และผู้ใช้พร้อมกันตาม RPM/TPM · เทียบ Vertex (P4-lite) · ผลภาษาไทยครึ่งหน้าสำหรับ advisor + `/poc-report P9-lite`
 
 ## Definition of done
@@ -24,6 +24,24 @@
 - คำตอบชัดว่า "พอ / ไม่พอ สำหรับอะไร" (dev, demo, Beta)
 - input ทุกตัวเป็นข้อมูลสังเคราะห์หรือชีทสาธารณะ (AI-07)
 
+## ผลข้อ 1 (28 พ.ย.)
+
+- หน้าทางการ (`ai.google.dev/gemini-api/docs/rate-limits` → redirect ไป `aistudio.google.com/docs/rate-limits`) **ไม่ลงตัวเลข free tier ของ 3.5 Flash / Flash-Lite แล้ว** ให้ไปดูค่าของโปรเจกต์ที่ https://aistudio.google.com/rate-limit · "Specified rate limits are not guaranteed and actual capacity may vary"
+- โควตานับ **ต่อโปรเจกต์ ไม่ใช่ต่อ key** · RPD reset เที่ยงคืนเวลา Pacific (= 15:00 เวลาไทย)
+- Free = โปรเจกต์ที่ไม่ผูก billing · ผูก billing แล้วเป็น Tier 1 ทันที
+- ตัวเลขที่ชุมชนวัดได้ (ยังไม่ใช่ทางการ): `gemini-3.5-flash` 5 RPM · 250k TPM · **20 RPD** · `gemini-3.5-flash-lite` 15 RPM · **500 RPD** · ตรงกับที่ทีมเจอ 31 ต.ค. (20 RPD)
+
+## ผลข้อ 2 (28 พ.ย. · Junior ดูหน้า Rate Limit ของ AI Studio · Free tier · โปรเจกต์ `gen-lang-client-…` ไม่ใช่ `anyang-513006`)
+
+| model | RPM | TPM | RPD |
+|---|---|---|---|
+| `gemini-3.5-flash` (ของเรา) | ไม่มีใน free tier | | |
+| `gemini-3.5-flash-lite` | 15 | 250K | 500 |
+| `gemini-3.6-flash`, `gemini-3.8-flash` | 5 | 250K | 20 |
+| Gemini 3.5 Transcribe (Live API) | 3 | | 25 · gateway ใช้ไม่ได้ |
+
+- คาดไว้ (Junior): Flash เต็มรุ่นได้ < 1 session/วัน · Flash-Lite ราว 20 session/วัน ถ้าคุณภาพพอ · ผลรันเป็นตัวตัดสิน
+
 ## Decisions
 
 - 2026-11-28 · ชื่อ PoC `P9-lite` · ต่อจาก P8-lite
@@ -32,7 +50,7 @@
 
 ## Next step
 
-ข้อ 1: หาค่าโควตา free tier ปัจจุบันของ `gemini-3.5-flash` และ `gemini-3.5-flash-lite`
+ข้อ 3: PoC spec P9-lite ใน `specs/poc/README.md` + ข้อมูลสังเคราะห์ใน `poc/P9-lite/data/`
 
 ## Waiting on
 
