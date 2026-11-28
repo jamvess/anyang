@@ -1,4 +1,4 @@
-# API (v1.24)
+# API (v1.25)
 
 Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้างอัตโนมัติที่ `/docs` · frontend generate types จาก `/openapi.json`
 
@@ -21,7 +21,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | GET | `/personas/presets` | preset ของ tutor และ buddy |
 | POST | `/personas/extract` | free text → params + รายการที่ทำไม่ได้ + ประโยคตัวอย่าง |
 | GET / PUT | `/me/tutor-profile` · `/me/buddy-profile` | อ่านและบันทึก persona |
-| GET / PUT | `/me/profile` | ชื่อเล่น ระดับการศึกษา ภาษา |
+| GET / PUT / PATCH | `/me/profile` | ชื่อเล่น ระดับการศึกษา ภาษา · `PATCH` แก้บาง field (v1.25) |
 
 **Persona และโปรไฟล์ (v1.12 · ข้อเสนอ รอ Junior ตัดสิน):** UC-01 (S04–S06, S30) · ai-orchestration §2.7 · UM-03, UM-04, UM-05, UM-07, UM-08, UM-09 · ยังไม่มี feature spec ของหน้าจอ · ทุก field ต้องมี และไม่มี field อื่น · ของผู้ใช้จาก token เสมอ ไม่รับ `user_id` · UM-06 เป็น `deferred` จึงไม่มี checklist ที่ mark อัตโนมัติ
 
@@ -61,6 +61,8 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 | `setup_step` | `"crew"` \| `"profile"` \| `"done"` | คำนวณที่ backend ตามลำดับ: `crew` เมื่อยังไม่มี tutor หรือ buddy profile · `profile` เมื่อ `education_level` เป็น null · ไม่งั้น `done` · หน้าเว็บใช้พากลับหน้าที่ค้าง (UC-01 E6) |
 
 - **`PUT /me/profile`** · body ทุก field ยกเว้น `setup_step` · `nickname` ใช้กฎเดียวกับ `name` ของ persona เพราะเข้า prompt ทุก turn (§2.2) · `education_level` ไม่เป็น null · error `422 validation_error`
+- **v1.25 · `GET /me/profile` ที่มี token อ่าน DB จริง** (Junior 2026-11-28 · `specs/features/platform/display-name.md`): `nickname` คืนตามที่เก็บ ไม่กรอง · `auto_read` เป็น `false` จนกว่าจะมีคอลัมน์ (ข้อ 1) · ไม่มีแถว `profiles` → `404 not_found` (ไม่สร้างแถวเอง) · DB ล่ม → `503 db_unavailable` · ไม่มี token → stub เดิม (`X-Stub`) · `PUT` ยังเป็น stub
+- **v1.25 · `PATCH /me/profile`** · body มีเฉพาะ field ที่จะแก้ · ตอนนี้รับแค่ `{nickname: string | null}` (ภาษาเพิ่มเป็น field ของ `PATCH` นี้ทีหลัง) · `nickname` ตัดช่องว่างหัวท้าย · ว่างหรือ `null` → เก็บ `null` (ลบชื่อ ห้องติวกลับไปเรียก "คุณ") · ไม่ว่าง → กฎเดียวกับ `PUT` · field อื่น, `{}` หรือผิดชนิด → `422 validation_error` · response `Profile` ของแถวหลังแก้ · ไม่มีแถว → `404 not_found` · `503 db_unavailable` · ไม่มี token → stub ที่คืน fixture ทับด้วย field ที่ส่ง (`X-Stub`)
 
 **รอตัดสิน (v1.12 · Junior)** · ข้อเสนอเขียนโดย Jam ช่วง solo 2026-11-04 (PR #107) · stub ทำตามข้อเสนอนี้ไปก่อน ถ้าเปลี่ยนให้แก้ api.md + stub + test ใน PR ใหม่
 
@@ -71,7 +73,7 @@ Backend: FastAPI ที่ Cloud Run · เอกสาร OpenAPI สร้า�
 5. **`voice_id` และ preset:** รายการเสียงที่อนุญาตและ params ของ preset เก็บที่ไหน (config หรือตาราง) · stub ใช้ค่าชั่วคราวและตรวจแค่ `th-TH-`
 6. **การลบ:** `DELETE /me` ต้องลบ `auth.users` ด้วย service role และลบไฟล์ใน Storage · ทำให้จบใน request หรือเป็น job · `DELETE /exam-preps/{id}` ลบได้แม้มี session เปิดอยู่ไหม
 7. **error code ใหม่:** `persona_unavailable` · ใช้ซ้ำ: `message_too_long`, `rate_limited`
-8. **`nickname` ที่ trigger คัดลอกจาก Google:** `handle_new_user` ใส่ชื่อดิบ (อาจมี `-`, `'` หรือยาวเกินเพดาน) ซึ่งไม่ผ่านกฎของ `PUT` · ข้อเสนอคือ S06 ให้แก้ก่อนส่ง และ backend กรองค่าก่อนเข้า prompt ถ้าผู้ใช้ยังไม่ผ่าน S06
+8. **(ตัดสินแล้ว v1.25 · Junior 2026-11-28: ไม่กรองตอนเก็บหรืออ่าน · code กรองด้วย `prompt_user_name()` ตอนประกอบ prompt ตาม ai-orchestration §2.7 ข้อ 5 · หน้าตั้งค่าให้ผู้ใช้แก้)** **`nickname` ที่ trigger คัดลอกจาก Google:** `handle_new_user` ใส่ชื่อดิบ (อาจมี `-`, `'` หรือยาวเกินเพดาน) ซึ่งไม่ผ่านกฎของ `PUT` · ข้อเสนอคือ S06 ให้แก้ก่อนส่ง และ backend กรองค่าก่อนเข้า prompt ถ้าผู้ใช้ยังไม่ผ่าน S06
 
 ### Exam prep และ scope (flow 2.3)
 

@@ -256,3 +256,21 @@ def test_SA06_ai_calls_isolated_and_not_insertable_by_users(
                 _ai_call_row(victim.tenant_id, victim.user_id)
             ).execute()
         assert exc.value.code == "42501"
+
+
+def test_SA06_profiles_isolated(admin: Client, users: tuple[TenantUser, TenantUser]) -> None:
+    """display-name.md AC-tenant: `profiles` is keyed by user_id (no `id` column), so it has its
+    own test. A sees only its own row, and its update or delete of B's row matches nothing."""
+    a, b = users
+    admin.table("profiles").update({"nickname": "บี"}).eq("user_id", b.user_id).execute()
+
+    visible = {r["user_id"] for r in a.client.table("profiles").select("user_id").execute().data}
+    assert visible == {a.user_id}
+    assert a.client.table("profiles").select("*").eq("user_id", b.user_id).execute().data == []
+
+    hacked = a.client.table("profiles").update({"nickname": "hacked"}).eq("user_id", b.user_id)
+    assert hacked.execute().data == []
+    assert a.client.table("profiles").delete().eq("user_id", b.user_id).execute().data == []
+
+    row = admin.table("profiles").select("nickname").eq("user_id", b.user_id).single().execute()
+    assert row.data["nickname"] == "บี"
