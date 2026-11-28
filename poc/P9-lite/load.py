@@ -448,7 +448,14 @@ def build_gateway(settings, model: str, inner: Any) -> tuple[Any, CountingProvid
     return gateway, counter
 
 
-async def run(args, settings, inner: Any) -> dict:
+def write_result(label: str, result: dict) -> Path:
+    RESULTS.mkdir(exist_ok=True)
+    out = RESULTS / f"{label}.json"
+    out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    return out
+
+
+async def run(args, settings, inner: Any, save=None) -> dict:
     gateway, counter = build_gateway(settings, args.model, inner)
     calls: list[dict] = []
     gateway.add_listener(lambda record: calls.append(asdict(record)))
@@ -457,6 +464,26 @@ async def run(args, settings, inner: Any) -> dict:
     classify = await run_classify(gateway, pages) if args.classify else None
 
     sessions: list[SessionOutcome] = []
+    started_utc = datetime.now(UTC).isoformat(timespec="seconds")
+
+    def snapshot(finished: bool) -> dict:
+        return {
+            "meta": {
+                "poc": "P9-lite",
+                "label": args.label,
+                "model": f"gemini:{args.model}",
+                "ai_yaml_version": settings.ai.version,
+                "started_utc": started_utc,
+                "finished": finished,  # false: the run was stopped, sessions so far only
+                "args": vars(args),
+                "classify": classify,
+            },
+            "summary": summarize(counter.attempts, calls, sessions),
+            "sessions": [asdict(s) for s in sessions],
+            "attempts": [asdict(a) for a in counter.attempts],
+            "calls": calls,
+        }
+
     started = 0
     while started < args.sessions and not counter.daily_exhausted:
         batch = range(started, min(started + args.concurrency, args.sessions))
@@ -474,21 +501,9 @@ async def run(args, settings, inner: Any) -> dict:
             f"daily quota gone: {counter.daily_exhausted}",
             flush=True,
         )
-    return {
-        "meta": {
-            "poc": "P9-lite",
-            "label": args.label,
-            "model": f"gemini:{args.model}",
-            "ai_yaml_version": settings.ai.version,
-            "started_utc": datetime.now(UTC).isoformat(timespec="seconds"),
-            "args": vars(args),
-            "classify": classify,
-        },
-        "summary": summarize(counter.attempts, calls, sessions),
-        "sessions": [asdict(s) for s in sessions],
-        "attempts": [asdict(a) for a in counter.attempts],
-        "calls": calls,
-    }
+        if save is not None:  # after every batch, so a stopped run keeps what it measured
+            save(snapshot(finished=False))
+    return snapshot(finished=True)
 
 
 def main() -> int:
@@ -526,10 +541,16 @@ def main() -> int:
     if not key:
         print("GEMINI_API_KEY is empty in the repo-root .env", file=sys.stderr)
         return 2
-    result = asyncio.run(run(args, settings, GeminiProvider(key)))
-    RESULTS.mkdir(exist_ok=True)
-    out = RESULTS / f"{args.label}.json"
-    out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    def save(snapshot: dict) -> None:
+        write_result(args.label, snapshot)
+
+    try:
+        result = asyncio.run(run(args, settings, GeminiProvider(key), save))
+    except KeyboardInterrupt:
+        print(f"stopped: results/{args.label}.json has the batches that finished", flush=True)
+        return 130
+    out = write_result(args.label, result)
     print(json.dumps(result["summary"], ensure_ascii=False, indent=2))
     print(f"→ {out}")
     return 0

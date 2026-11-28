@@ -174,3 +174,17 @@ async def test_poc_P9lite_think_time_comes_before_each_student_message(sheet):
 
     assert outcome.completed
     assert waits == [30.0] * 4  # 1 answer, 2 answers (wrong then right), 1 chat line
+
+
+@pytest.mark.asyncio
+async def test_poc_P9lite_every_batch_is_saved_so_a_stopped_run_keeps_its_sessions(sheet):
+    fake = FakeProvider({}, defaults=_defaults())
+    saved: list[dict] = []
+
+    result = await load.run(
+        _args(sessions=2, classify=False), get_settings(), fake, save=saved.append
+    )
+
+    assert [len(s["sessions"]) for s in saved] == [1, 2]
+    assert [s["meta"]["finished"] for s in saved] == [False, False]
+    assert result["meta"]["finished"] is True
