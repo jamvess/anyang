@@ -13,7 +13,7 @@
 - [x] 2. 🙋 ยืนยันกับหน้า AI Studio: เปิด https://aistudio.google.com → เลือกโปรเจกต์ใหม่ของ key → **Usage & Billing** / **Rate limits** → บอก Claude ว่าเห็นคำว่า "Free tier" ไหม และ RPM / TPM / RPD ของ 2 model นี้ (หรือตอบ "ตรง" ถ้าตรงกับข้อ 1) · key อยู่ใน `.env` ที่ root แล้ว (โปรเจกต์ใหม่ ไม่ใช่ `anyang-513006`) · ห้ามวาง key ใน chat
 - [x] 3. 🤖 PoC spec สั้นๆ ใน `specs/poc/README.md` (P9-lite · คำถาม, metric, เกณฑ์) + ข้อมูลสังเคราะห์ใน `poc/P9-lite/data/` (PDF ชีทไทย 3 หน้าจาก `pymupdf` + คำตอบพิมพ์สังเคราะห์ · ไม่มีลายมือ ไม่ใช้ `evals/topics/*/raw` · AI-07)
 - [x] 4. 🤖 `poc/P9-lite/load.py`: gateway live + `AI_MODEL_OVERRIDE=gemini:<model>` · ครอบ provider ด้วยตัวนับทุก attempt (gateway retry ซ่อน 429/503) · 1 session = `open_session` → (`generate_problem` → `typed_answer` → `check_answer` → `explain_check`) × k → `tutor_reply` × m → `session_summary` · `classify_material` แยก · จดสถานะ latency token และ quota id ของ 429 (ต่อนาที / ต่อวัน) ลง `results/<label>.json` · อ่านไฟล์นอก `data/` ไม่ได้ · unit test ด้วย fake provider
-- [ ] 5. 🤖 รัน (แก้หลังข้อ 2): **`gemini-3.5-flash-lite` (ตัวหลัก)** smoke 1 session → session ต่อกันจนชน RPD → burst 3 session พร้อมกัน (RPM) · **`gemini-3.6-flash`** รอบสั้นจนชน 20 RPD · **`gemini-3.5-flash`** 1 call เพื่อยืนยันว่าถูกปฏิเสธ แล้วจด error · คุณภาพของ flash-lite: schema retry / schema fail ต่อ purpose และสัดส่วนโจทย์ที่ SymPy parse ได้ (P3 เคยเจอ LaTeX ใน JSON พัง)
+- [ ] 5. 🤖 รัน (แก้หลังข้อ 2 · 28 พ.ย.: 3.6-flash ไม่รันต่อ ใช้ตัวเลขจากหน้า Rate Limit แทน): **`gemini-3.5-flash-lite` (ตัวหลัก)** smoke 1 session → session ต่อกันจนชน RPD → burst 3 session พร้อมกัน (RPM) · **`gemini-3.6-flash`** รอบสั้นจนชน 20 RPD · **`gemini-3.5-flash`** 1 call เพื่อยืนยันว่าถูกปฏิเสธ แล้วจด error · คุณภาพของ flash-lite: schema retry / schema fail ต่อ purpose และสัดส่วนโจทย์ที่ SymPy parse ได้ (P3 เคยเจอ LaTeX ใน JSON พัง)
 - [ ] 6. 🤖 (เพิ่ม 28 พ.ย. · Junior) ต้นทุนต่อโจทย์ (request + token) และผลของ session จริงราว 10 โจทย์ · ต้นทุน ingestion ต่อการเตรียมสอบ 1 วิชา (classify, extract_topics_local, merge_topics, map_questions) จาก `ai_calls` ของการซ้อม 20 พ.ย. หรือ CSV ใน `.local/` เทียบกับ RPM/TPM/RPD ของ free tier · คำนวณ session/วัน = min(RPD ÷ call ต่อ session) และผู้ใช้พร้อมกันตาม RPM/TPM · เทียบ Vertex (P4-lite) · ผลภาษาไทยครึ่งหน้าสำหรับ advisor + `/poc-report P9-lite`
 
 ## Definition of done
@@ -63,7 +63,9 @@
 
 ## ผล gemini-3.5-flash (28 พ.ย. · `results/reject-flash.json`)
 
-- **ไม่ถูกปฏิเสธ:** 6/6 ok ผ่าน provider `gemini` (AI Studio key) · latency 2–12 s (ช้ากว่า flash-lite 2–4 เท่า) · ไม่ตรงกับหน้า Rate Limit ที่ไม่มี 3.5-flash ใน free tier → รอ Junior เช็คว่าโปรเจกต์เป็น Free จริงและไม่มีค่าใช้จ่าย
+- **ไม่ถูกปฏิเสธ:** 6/6 ok ผ่าน provider `gemini` (AI Studio key) · latency 2–12 s (ช้ากว่า flash-lite 2–4 เท่า)
+- **ข้อค้นพบ (Junior ดูหน้า Rate Limit · 28 พ.ย.):** AI Studio นับ 6 request ของ `gemini-3.5-flash` เป็นของ **Gemini 3.6 Flash** (6/5 RPM · 6/20 RPD · 4.63K TPM) · คือชื่อ `gemini-3.5-flash` ถูกส่งต่อไปที่ 3.6 Flash และใช้โควตา RPM 5 · RPD 20 ของตัวนั้น · โปรเจกต์เป็น Free tier จริง (Usage เขียน "Free tier" · ไม่ได้ตั้ง billing)
+- ผลกับแอป: บน free tier ค่า `config/ai.yaml` ของเรา (`3.5-flash`) จะได้ model คนละตัวกับบน Vertex และได้แค่ 20 request/วัน · ไม่ใช้โควตาที่เหลือของ 3.6 Flash ต่อ (Junior) · ข้อ "ยืนยัน 3.6-flash ชน 20 RPD" ในแผนจึงตัดออก: หน้า Rate Limit แสดงตัวเลขแล้ว
 
 ## ต้นทุน ingestion ต่อการเตรียมสอบ 1 วิชา (ประมาณ · 28 พ.ย.)
 
@@ -82,7 +84,7 @@
 
 - flash-lite: 17 request = 3% ของ 500 RPD · input สูงสุดต่อ call 46K < 250K TPM (ไฟล์ทำทีละไฟล์ · ingestion.md §3 ข้อ 1) → **โควตาพอ** · แต่ P3 ตัด flash-lite ออกจาก A5/A6 เพราะแบ่งหัวข้อหยาบและ JSON พังกับ LaTeX (`P3.md`) → **คุณภาพไม่พอ**
 - 3.6 / 3.8 flash: 17 จาก 20 RPD → 1 วิชาต่อวัน ไม่เหลือให้ติวเลย
-- embed: ยังไม่รู้โควตา free tier ของ `gemini-embedding-2`
+- embed: free tier ของ `gemini-embedding-2` = RPM 100 · TPM 30K · RPD 1K (Junior ดู 28 พ.ย.) · 116 chunk ต่อวิชา request พอ แต่ token รวมของ chunk (log: embed in สูงสุด 45.7K ต่อ call) เกิน 30K TPM → ต้องกระจายเกิน 1 นาที
 - ตัดสิน: ไม่รัน ingestion บน free tier (Junior: "don't run if clearly won't fit")
 
 ## Decisions
@@ -97,11 +99,11 @@
 
 ## Next step
 
-ข้อ 5 รอบแรก: `make_sheet.py` แล้ว smoke 1 session บน `gemini-3.5-flash-lite` พร้อม `--classify` (คำสั่งใน `poc/P9-lite/README.md`) · ดู `results/smoke-flash-lite.json` ว่าทุก purpose ok ก่อนรันรอบ daily
+รอบ daily บน flash-lite: `--sessions 40 --concurrency 3 --think 30 --label daily-flash-lite` จนชน RPD (ใช้ไปแล้ว 79/500 ตามหน้า Rate Limit) แล้วทำข้อ 6
 
 ## Waiting on
 
-Junior: ใน AI Studio เช็ค (1) key อยู่ในโปรเจกต์ใหม่และ Plan = Free (2) Usage มี 6 request ของ gemini-3.5-flash และไม่มีค่าใช้จ่าย (3) หน้า Rate Limit มีแถว gemini-3.5-flash ไหม · ระหว่างนี้หยุดรอบ daily
+ไม่มี
 
 ## Notes for next time
 
