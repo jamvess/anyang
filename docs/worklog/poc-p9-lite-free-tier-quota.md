@@ -54,6 +54,17 @@
 - session จบ · 21 request (3 โจทย์ + chat 2 · ไม่นับ classify) ใน 3.7 นาที · 429: 0 · 503: 1 (`typed_answer` · gateway retry ผ่าน) · SymPy ยืนยัน 3/3 (`generate_problem` 4 attempt)
 - รอบ burst เดิมเก็บไว้ที่ `results/burst-1user-flash-lite.json`: ผู้ใช้คนเดียวที่ยิงต่อกันชน 15 RPM ที่ request ที่ 16 + 503 "high demand"
 
+## ผล session 10 โจทย์ (28 พ.ย. · `results/session10-flash-lite.json` · flash-lite · --think 30)
+
+- session จบ · **68 request ใน 10 นาที** · 429: 0 · 503: 0 · tokens_in 86.8K · tokens_out 8.5K
+- **ต่อโจทย์ ≈ 6.5 request · 8.7K token in · 0.85K token out** (รวม retry)
+- **peak 12 request ใน 60 วินาที จากผู้ใช้คนเดียว** (เพดาน 15 RPM) → ผู้ใช้พร้อมกันได้ราว 1 คน (เกณฑ์ ค)
+- คุณภาพ: `generate_problem` 13 call ได้ 10 โจทย์ · **schema_error 3/13 (23%)** หลัง schema retry (ไม่ใช่ถูกตัด: tokens_out ~470) · อีก 3 call ผ่านหลัง retry · โจทย์ที่ได้ SymPy ยืนยันทุกข้อ · ส่งต่อ Jam: น่าจะเป็นเรื่อง JSON + LaTeX แบบเดียวกับ P3
+
+## ผล gemini-3.5-flash (28 พ.ย. · `results/reject-flash.json`)
+
+- **ไม่ถูกปฏิเสธ:** 6/6 ok ผ่าน provider `gemini` (AI Studio key) · latency 2–12 s (ช้ากว่า flash-lite 2–4 เท่า) · ไม่ตรงกับหน้า Rate Limit ที่ไม่มี 3.5-flash ใน free tier → รอ Junior เช็คว่าโปรเจกต์เป็น Free จริงและไม่มีค่าใช้จ่าย
+
 ## ต้นทุน ingestion ต่อการเตรียมสอบ 1 วิชา (ประมาณ · 28 พ.ย.)
 
 ที่มา: `.local/ai_calls_caps.csv.csv` (ai_calls ของ `anyang-dev` 17–20 พ.ย. · max tokens_out ต่อ purpose) + `.local/rehearsal-api.utf8.log` (tokens_in ของ 35 call) · วิชาแบบ MTH10101 ไฟล์ 6 ไฟล์ (ชีท 4 + ข้อสอบสแกน 2) · chunk 116 (ingestion.md §2.3)
@@ -90,7 +101,7 @@
 
 ## Waiting on
 
-ไม่มี
+Junior: ใน AI Studio เช็ค (1) key อยู่ในโปรเจกต์ใหม่และ Plan = Free (2) Usage มี 6 request ของ gemini-3.5-flash และไม่มีค่าใช้จ่าย (3) หน้า Rate Limit มีแถว gemini-3.5-flash ไหม · ระหว่างนี้หยุดรอบ daily
 
 ## Notes for next time
 
