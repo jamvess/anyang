@@ -13,7 +13,9 @@
 
 ระบบอ่านยัง? แบ่งเป็น 4 ส่วน ได้แก่ ส่วนติดต่อผู้ใช้ ส่วนประมวลผลหลัก ส่วนเรียกใช้ AI และส่วนจัดเก็บข้อมูล ดังรูปที่ 3.2
 
-รูปที่ 3.2 สถาปัตยกรรมโดยรวมของระบบ (❓ ต้องวาด · 4 ส่วนตามหัวข้อย่อยข้างล่าง · เส้นเชื่อม: browser ↔ Next.js (HTTPS) · Next.js ↔ FastAPI (REST + SSE, JWT) · FastAPI → AI gateway → Gemini บน Vertex AI · FastAPI ↔ Supabase (PostgreSQL + pgvector, Auth, Storage) · ส่วนที่เป็นแผนใช้เส้นประ: Claude API สำรอง, Google Cloud STT/TTS)
+![รูปที่ 3.2](../figures/fig-3-2-architecture.svg)
+
+รูปที่ 3.2 สถาปัตยกรรมโดยรวมของระบบ (เส้นประคือส่วนที่อยู่ในแผน)
 
 ### 3.3.1 ส่วนติดต่อผู้ใช้ (Frontend)
 
@@ -69,4 +71,4 @@
 ## คำถามสำหรับร่างนี้
 
 1. **Junior ตรวจ:** หัวข้อนี้เป็นงานของ Junior ตาม outline · ผมร่างจาก repo ให้ก่อน · ให้ Junior ตรวจเรื่อง staging (fake AI, ยังไม่ตรวจ token) ว่ายังจริงอยู่ไหม และ #120 จะ merge ก่อนส่งเล่มหรือไม่
-2. **รูป 3.2:** ผมร่าง SVG ให้แบบรูป 3.1 ได้ หรือให้ Junior วาด
+2. **รูป 3.2:** Claude ร่าง SVG แล้ว (`docs/report/figures/fig-3-2-architecture.svg` · Jam 28 พ.ย.) · เส้น browser → Storage ตรวจแล้ว: `MaterialUploadTicket` ให้ browser `PUT` ไฟล์ไปที่ `upload_url` โดยตรง แล้วเรียก `POST /materials/{id}/uploaded` · ให้ Junior ตรวจเส้นอื่น

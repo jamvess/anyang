@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="640" viewBox="0 0 900 640" font-family="Sarabun, 'TH Sarabun New', Tahoma, sans-serif" font-size="14">
+  <!-- รูปที่ 3.2 สถาปัตยกรรมโดยรวมของระบบ · ร่าง 1 (Claude, 28 พ.ย. 2569) · เส้นประ = แผน -->
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+  </defs>
+  <rect width="900" height="640" fill="#fff"/>
+
+  <!-- user -->
+  <rect x="20" y="40" width="190" height="70" rx="10" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="115" y="68" text-anchor="middle" font-weight="bold">ผู้เรียน</text>
+  <text x="115" y="90" text-anchor="middle" font-size="13">browser บนคอมพิวเตอร์ / แท็บเล็ต</text>
+
+  <!-- Vercel -->
+  <rect x="20" y="180" width="190" height="130" fill="#f3f3f3" stroke="#666"/>
+  <text x="30" y="198" font-size="12" fill="#555">Vercel</text>
+  <rect x="35" y="210" width="160" height="88" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="115" y="236" text-anchor="middle" font-weight="bold">Frontend</text>
+  <text x="115" y="256" text-anchor="middle" font-size="13">Next.js · TypeScript</text>
+  <text x="115" y="274" text-anchor="middle" font-size="13">KaTeX · canvas</text>
+
+  <!-- Cloud Run -->
+  <rect x="250" y="30" width="370" height="420" fill="#f3f3f3" stroke="#666"/>
+  <text x="260" y="48" font-size="12" fill="#555">Google Cloud Run · Backend (FastAPI · Python)</text>
+  <rect x="270" y="62" width="180" height="46" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="360" y="83" text-anchor="middle" font-weight="bold">routers</text>
+  <text x="360" y="100" text-anchor="middle" font-size="12">REST · SSE · ตรวจ token</text>
+  <rect x="270" y="128" width="180" height="46" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="360" y="149" text-anchor="middle" font-weight="bold">services</text>
+  <text x="360" y="166" text-anchor="middle" font-size="12">นำเข้าเอกสาร · ติว · ตรวจคำตอบ</text>
+  <rect x="270" y="194" width="180" height="56" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="360" y="215" text-anchor="middle" font-weight="bold">domain</text>
+  <text x="360" y="232" text-anchor="middle" font-size="12">BKT · ดาว · คำใบ้ · เลือกหัวข้อ</text>
+  <text x="360" y="246" text-anchor="middle" font-size="11" fill="#555">ไม่ติดต่อ DB หรือ AI</text>
+  <rect x="270" y="270" width="180" height="46" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="360" y="291" text-anchor="middle" font-weight="bold">math</text>
+  <text x="360" y="308" text-anchor="middle" font-size="12">SymPy · worker pool + timeout</text>
+  <rect x="270" y="336" width="180" height="46" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="360" y="357" text-anchor="middle" font-weight="bold">db</text>
+  <text x="360" y="374" text-anchor="middle" font-size="12">อ่าน/เขียนด้วย token ของผู้ใช้</text>
+  <text x="360" y="408" text-anchor="middle" font-size="11" fill="#555">services เรียกใช้ domain · math · db</text>
+  <text x="360" y="424" text-anchor="middle" font-size="11" fill="#555">และ AI gateway</text>
+
+  <rect x="470" y="128" width="135" height="170" fill="#fff" stroke="#333" stroke-width="2"/>
+  <text x="537" y="152" text-anchor="middle" font-weight="bold">AI gateway</text>
+  <text x="537" y="174" text-anchor="middle" font-size="12">เลือก model</text>
+  <text x="537" y="192" text-anchor="middle" font-size="12">ตาม config/ai.yaml</text>
+  <text x="537" y="212" text-anchor="middle" font-size="12">prompt มีหมายเลขรุ่น</text>
+  <text x="537" y="232" text-anchor="middle" font-size="12">ตรวจ schema · retry</text>
+  <text x="537" y="252" text-anchor="middle" font-size="12">แยกข้อมูลจากคำสั่ง</text>
+  <text x="537" y="272" text-anchor="middle" font-size="12">บันทึกทุกการเรียก</text>
+  <text x="537" y="290" text-anchor="middle" font-size="11" fill="#555">fake provider ใน test</text>
+
+  <!-- AI providers -->
+  <rect x="680" y="40" width="200" height="56" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="780" y="64" text-anchor="middle" font-weight="bold">Gemini</text>
+  <text x="780" y="83" text-anchor="middle" font-size="12">Google Cloud Vertex AI</text>
+  <rect x="680" y="112" width="200" height="44" fill="#fff" stroke="#333" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="780" y="139" text-anchor="middle" font-size="13">Claude API (สำรอง)</text>
+  <rect x="680" y="172" width="200" height="44" fill="#fff" stroke="#333" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="780" y="199" text-anchor="middle" font-size="13">Google Cloud STT / TTS</text>
+  <rect x="680" y="232" width="200" height="44" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="780" y="259" text-anchor="middle" font-size="13">Google Cloud Logging</text>
+
+  <!-- Supabase -->
+  <rect x="650" y="310" width="240" height="250" fill="#f3f3f3" stroke="#666"/>
+  <text x="660" y="328" font-size="12" fill="#555">Supabase</text>
+  <rect x="665" y="338" width="210" height="58" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="770" y="360" text-anchor="middle" font-weight="bold">PostgreSQL + pgvector</text>
+  <text x="770" y="380" text-anchor="middle" font-size="12">ตาราง ai_calls · embedding</text>
+  <rect x="665" y="406" width="210" height="40" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="770" y="431" text-anchor="middle" font-size="13">Row-Level Security แยก tenant</text>
+  <rect x="665" y="456" width="210" height="40" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="770" y="481" text-anchor="middle" font-size="13">Auth (ยืนยันตัวตน)</text>
+  <rect x="665" y="506" width="210" height="40" fill="#fff" stroke="#333" stroke-width="1.5"/>
+  <text x="770" y="531" text-anchor="middle" font-size="13">Storage (เอกสารที่อัปโหลด)</text>
+
+  <!-- arrows -->
+  <g stroke="#333" stroke-width="1.5" fill="none">
+    <path d="M115,112 V178" marker-start="url(#a)" marker-end="url(#a)"/>
+    <path d="M197,240 H232 V85 H268" marker-start="url(#a)" marker-end="url(#a)"/>
+    <path d="M360,108 V126" marker-end="url(#a)"/>
+    <path d="M450,151 H468" marker-end="url(#a)"/>
+    <path d="M605,160 H640 V68 H678" marker-end="url(#a)"/>
+    <path d="M450,359 H630 V367 H663" marker-start="url(#a)" marker-end="url(#a)"/>
+    <path d="M115,312 V600 H770 V562" marker-start="url(#a)" marker-end="url(#a)"/>
+  </g>
+  <g stroke="#333" stroke-width="1.5" fill="none" stroke-dasharray="6 4">
+    <path d="M605,180 H650 V134 H678" marker-end="url(#a)"/>
+    <path d="M605,200 H660 V194 H678" marker-end="url(#a)"/>
+  </g>
+  <path d="M605,240 H670 V254 H678" stroke="#333" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
+
+  <!-- labels -->
+  <g font-size="12">
+    <text x="122" y="150">HTTPS</text>
+    <text x="246" y="165" text-anchor="middle" transform="rotate(-90 246 165)">REST + SSE · JWT</text>
+    <text x="660" y="62" text-anchor="end">Vertex · ADC</text>
+    <text x="540" y="352">SQL ผ่าน RLS</text>
+    <text x="612" y="234">log</text>
+    <text x="400" y="594" text-anchor="middle">เข้าสู่ระบบ (Auth) · อัปโหลดเอกสาร (Storage)</text>
+  </g>
+
+  <!-- legend -->
+  <g font-size="12">
+    <line x1="20" y1="625" x2="60" y2="625" stroke="#333" stroke-width="1.5"/>
+    <text x="68" y="629">ใช้งานแล้ว</text>
+    <line x1="160" y1="625" x2="200" y2="625" stroke="#333" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <text x="208" y="629">แผน (ผู้ให้บริการสำรอง · เสียงในภาคการศึกษาที่ 2)</text>
+  </g>
+</svg>
