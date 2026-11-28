@@ -18,12 +18,12 @@
 
 | ส่วน | เครื่องมือที่ใช้ | ทางเลือกที่พิจารณา | เหตุผลที่เลือก |
 |---|---|---|---|
-| Frontend | Next.js (App Router), TypeScript, Tailwind CSS | ❓ | ทีมคุ้นเคย และ deploy บน Vercel ได้ง่าย |
-| การแสดงสมการ | KaTeX | ❓ | แสดงสมการ LaTeX ในบทสนทนาได้เร็ว |
-| Backend | FastAPI (Python) และ Pydantic | ❓ | ภาษา Python ใช้ SymPy และ SDK ของ AI ได้โดยตรง และ Pydantic ใช้ตรวจ structured output ของ LLM |
+| Frontend | Next.js (App Router), TypeScript, Tailwind CSS | — | ทีมคุ้นเคย และ deploy บน Vercel ได้ง่าย |
+| การแสดงสมการ | KaTeX | — | แสดงสมการ LaTeX ในบทสนทนาได้เร็ว |
+| Backend | FastAPI (Python) และ Pydantic | — | ภาษา Python ใช้ SymPy และ SDK ของ AI ได้โดยตรง และ Pydantic ใช้ตรวจ structured output ของ LLM [Google 2025] |
 | การส่งข้อความแบบ streaming | Server-Sent Events (SSE) | WebSocket | แชทต้องการการส่งข้อมูลทิศทางเดียวจาก server ไปยัง browser SSE จึงเพียงพอและใช้งานบน Cloud Run ได้ง่ายกว่า |
-| ฐานข้อมูลและบริการพื้นฐาน | Supabase (PostgreSQL, pgvector, Auth, Storage, Row-Level Security) | ❓ | รวมฐานข้อมูล การค้นด้วย vector การยืนยันตัวตน และการเก็บไฟล์ไว้ที่เดียว และแยกข้อมูลผู้ใช้ที่ระดับฐานข้อมูลด้วย Row-Level Security |
-| Hosting | Vercel (frontend) และ Google Cloud Run (backend) | ❓ | Cloud Run ลดจำนวน instance ถึงศูนย์ได้เมื่อไม่มีผู้ใช้ ใช้เครดิตของ Google Cloud และอยู่ใกล้ Vertex AI |
+| ฐานข้อมูลและบริการพื้นฐาน | Supabase (PostgreSQL, pgvector, Auth, Storage, Row-Level Security) | — | รวมฐานข้อมูล การค้นด้วย vector การยืนยันตัวตน และการเก็บไฟล์ไว้ที่เดียว และแยกข้อมูลผู้ใช้ที่ระดับฐานข้อมูลด้วย Row-Level Security |
+| Hosting | Vercel (frontend) และ Google Cloud Run (backend) | — | Cloud Run ลดจำนวน instance ถึงศูนย์ได้เมื่อไม่มีผู้ใช้ ใช้เครดิตของ Google Cloud และอยู่ใกล้ Vertex AI |
 | LLM สำหรับข้อความ | Gemini 3.5 Flash ผ่าน Vertex AI | Gemini ผ่าน AI Studio · Claude (แผนเป็นผู้ให้บริการสำรอง) | ผ่านเกณฑ์ของ P2 และ P3 · ใช้ Vertex AI เพราะใช้เครดิตของ Google Cloud ได้และไม่ติดโควตาของ free tier ซึ่งจำกัด 20 คำขอต่อวัน |
 | ระดับ thinking ของ LLM ในห้องติว | minimal | low | ระดับ low ใช้เวลาถึงข้อความแรก (p95) 3.87 วินาที และค่าใช้จ่าย 6.51 บาทต่อการติว ซึ่งเกินเกณฑ์ ส่วน minimal ใช้ 1.20 วินาที และ 1.73 บาทต่อการติว (P4) |
 | การอ่านลายมือ | Gemini 3.5 Flash-Lite | Claude และ Mathpix (ไม่ได้ทดสอบเพราะมีค่าใช้จ่าย) | อ่านถูกร้อยละ 95.2 ของบรรทัด ผ่านเกณฑ์ร้อยละ 80 และตอบเร็ว (P1) |
@@ -48,7 +48,13 @@
 | P3b 768 = 19/20 · 3072 = 18/20 · bge-m3 = 9/20 | `P3.md` บรรทัด 44–48 | ✔ |
 | Claude Code ช่วยเขียน · สมาชิก review test ก่อน implement · self-review ก่อน merge | `CLAUDE.md` "How we work" · `roles.md` Dev tools | ✔ |
 
+## อ้างอิงที่ใช้ในหัวข้อนี้
+
+| key | อ้างอิง | สิ่งที่ยืนยันแล้ว |
+|---|---|---|
+| Google 2025 | Google. (2025). Structured output. *Gemini API documentation*. https://aistudio.google.com/docs/structured-output | ✔ 28 พ.ย. "generate responses that adhere to a provided JSON Schema" · ❓ วันที่เข้าถึงใส่ตอนรวมเล่ม |
+
 ## คำถามสำหรับร่างนี้
 
-1. **ช่อง ❓ (ทางเลือกที่พิจารณา):** Frontend, KaTeX, Backend, Supabase, Hosting · ใน repo ไม่มีบันทึกว่าเคยเทียบกับอะไร · ให้ May (frontend) และ Junior (backend, DB, hosting) เติม หรือจะใส่ "—" ถ้าไม่ได้เทียบจริง
+1. **ช่องทางเลือกที่ไม่เคยเทียบจริง:** ใส่ "—" (Jam 28 พ.ย.: เล่มไทยไม่มีคอลัมน์นี้เลย ไม่ต้องรอ May และ Junior)
 2. **ผู้ช่วยเขียนโค้ด:** ใส่ Claude Code ในตารางไหม · ผมแนะนำให้ใส่ เพราะเกณฑ์ Ethics และกรรมการอาจถามเรื่องการใช้ AI เขียนโค้ด · ถ้าใส่ ควรมีย่อหน้าอธิบายวิธีควบคุมคุณภาพใน 4.1 ด้วย
