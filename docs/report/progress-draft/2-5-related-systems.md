@@ -22,7 +22,7 @@ Khanmigo เป็น AI ติวของ Khan Academy ที่ออกแ�
 
 ### 2.5.3 ChatGPT Study Mode
 
-Study mode เป็นโหมดการเรียนของ ChatGPT ที่เปิดตัวเมื่อเดือนกรกฎาคม 2025 โหมดนี้ใช้คำถามชวนคิด คำใบ้ และคำถามให้ผู้เรียนทบทวนตนเอง แทนการให้คำตอบทันที และมีแบบทดสอบพร้อม feedback [OpenAI 2025] OpenAI ระบุข้อจำกัดว่าพฤติกรรมนี้มาจาก system instruction จึงอาจไม่สม่ำเสมอระหว่างบทสนทนา ผู้ใช้ปิดโหมดนี้ได้ระหว่างการสนทนา และการติดตามความก้าวหน้าข้ามบทสนทนายังเป็นงานในอนาคต
+Study mode เป็นโหมดการเรียนของ ChatGPT ที่เปิดตัวเมื่อเดือนกรกฎาคม 2025 โหมดนี้ใช้คำถามชวนคิด คำใบ้ และคำถามให้ผู้เรียนทบทวนตนเอง แทนการให้คำตอบทันที และมีแบบทดสอบพร้อม feedback [OpenAI 2025] ผู้ใช้แนบเอกสาร สไลด์ และรูปภาพเข้าบทสนทนาเพื่อถามเกี่ยวกับเนื้อหาได้ [OpenAI 2026] OpenAI ระบุข้อจำกัดว่าพฤติกรรมนี้มาจาก system instruction จึงอาจไม่สม่ำเสมอระหว่างบทสนทนา ผู้ใช้ปิดโหมดนี้ได้ระหว่างการสนทนา และการติดตามความก้าวหน้าข้ามบทสนทนายังเป็นงานในอนาคต
 
 ### 2.5.4 Photomath
 
@@ -40,7 +40,7 @@ Anki เป็นโปรแกรม flashcard ที่ใช้หลัก�
 
 | ความสามารถ | Gemini Notebook | Khanmigo | ChatGPT Study Mode | Photomath | Anki | อ่านยัง? |
 |---|---|---|---|---|---|---|
-| ใช้เอกสารของรายวิชาที่ผู้เรียนอัปโหลด | ✓ | × | × | × | × | ✓ |
+| ใช้เอกสารของรายวิชาที่ผู้เรียนอัปโหลด | ✓ | × | ✓ | × | × | ✓ |
 | สกัดขอบเขตการสอบและความสำคัญของหัวข้อจากข้อสอบเก่า | × | × | × | × | × | ✓ |
 | ติวในบทสนทนาโดยใบ้ก่อนบอกคำตอบ | × | ✓ | ✓ | × | × | ✓ |
 | ตรวจวิธีทำที่ผู้เรียนเขียนเองทีละบรรทัด รวมถึงลายมือ | × | × | × | × | × | ✓ (คณิตศาสตร์) |
@@ -50,8 +50,7 @@ Anki เป็นโปรแกรม flashcard ที่ใช้หลัก�
 | เพื่อนร่วมเรียน AI ในบทสนทนาเดียวกัน | × | × | × | × | × | อยู่ระหว่างพัฒนา |
 
 ✓ มี · ◐ มีบางส่วน · × ไม่พบในหน้าเว็บทางการที่เปิดอ่านเมื่อ 28 พฤศจิกายน 2569
-
-จากตารางที่ 2.2 ผลิตภัณฑ์แต่ละตัวทำได้ดีเฉพาะบางส่วนของการเตรียมสอบ Gemini Notebook ใช้เอกสารของผู้เรียนได้แต่ไม่ได้ติวและติดตามความเข้าใจ Khanmigo และ ChatGPT Study Mode ติวแบบไม่บอกคำตอบได้ แต่ไม่ได้ผูกกับขอบเขตการสอบของรายวิชาและไม่ได้ติดตามความเข้าใจรายหัวข้อ ส่วน Photomath และ Anki ทำหน้าที่เฉพาะด้าน ระบบอ่านยัง? รวมส่วนเหล่านี้ไว้ในห้องติวเดียว คือ ใช้เอกสารและข้อสอบเก่าของรายวิชากำหนดขอบเขต ติวโดยตรวจวิธีทำของผู้เรียน และติดตามความเข้าใจจนถึงวันสอบ ทั้งนี้ ผลิตภัณฑ์ข้างต้นเป็นผลิตภัณฑ์ที่มีผู้ใช้จริงจำนวนมาก ส่วนระบบอ่านยัง? ยังเป็นต้นแบบ และการตรวจคำตอบแบบแน่นอนด้วย SymPy ใช้ได้เฉพาะคำตอบที่เป็นนิพจน์ทางคณิตศาสตร์
+จากตารางที่ 2.2 ผลิตภัณฑ์แต่ละตัวทำได้ดีเฉพาะบางส่วนของการเตรียมสอบ Gemini Notebook ใช้เอกสารของผู้เรียนได้แต่ไม่ได้ติวและติดตามความเข้าใจ ChatGPT Study Mode ใช้เอกสารของผู้เรียนและติวแบบไม่บอกคำตอบได้ แต่ไม่ได้กำหนดขอบเขตการสอบจากข้อสอบเก่าและยังไม่ได้ติดตามความเข้าใจข้ามบทสนทนา Khanmigo ติวแบบไม่บอกคำตอบได้ แต่ใช้ได้เฉพาะเนื้อหาของ Khan Academy ส่วน Photomath และ Anki ทำหน้าที่เฉพาะด้าน ระบบอ่านยัง? รวมส่วนเหล่านี้ไว้ในห้องติวเดียว คือ ใช้เอกสารและข้อสอบเก่าของรายวิชากำหนดขอบเขต ติวโดยตรวจวิธีทำของผู้เรียน และติดตามความเข้าใจจนถึงวันสอบ ทั้งนี้ ผลิตภัณฑ์ข้างต้นเป็นผลิตภัณฑ์ที่มีผู้ใช้จริงจำนวนมาก ส่วนระบบอ่านยัง? ยังเป็นต้นแบบ และการตรวจคำตอบแบบแน่นอนด้วย SymPy ใช้ได้เฉพาะคำตอบที่เป็นนิพจน์ทางคณิตศาสตร์
 
 ---
 
@@ -63,10 +62,22 @@ Anki เป็นโปรแกรม flashcard ที่ใช้หลัก�
 | Google 2026b | Google. Generate flashcards or quizzes in Gemini Notebook. *Gemini Notebook Help*. https://support.google.com/gemininotebook/answer/16958963 | ✔ ระดับ easy/medium/hard · ปุ่ม Explain และ Hint · "will remember your progress" ภายในชุด flashcard · ไม่พบการติดตามความเข้าใจระยะยาวหรือการตรวจลายมือ |
 | Khan Academy 2026 | Khan Academy. Khanmigo for learners. https://www.khanmigo.ai/learners | ✔ "never gives you the answer" · "tutoring on every exercise, video, and article on Khan Academy" · $4/เดือน · "live in the United States" · feedback กับโค้ด JS, HTML, Python, SQL · ไม่พบการอัปโหลดเอกสารหรือรูป · ⚠ หน้า support.khanacademy.org เปิดไม่ได้ (403) · ไม่ได้ยืนยันระบบ mastery ของ Khan Academy จึงใส่ × ตามหลัก "ไม่พบในหน้าที่อ่าน" |
 | OpenAI 2025 | OpenAI. (2025, July 29). Introducing study mode in ChatGPT. https://openai.com/index/chatgpt-study-mode/ | ✔ "Socratic questioning, hints, and self-reflection prompts … instead of providing answers outright" · "custom system instructions" → "inconsistent behavior and mistakes across conversations" · "toggle study mode on and off" · "progress tracking across conversations" อยู่ในงานอนาคต · ⚠ หน้าไม่ได้กล่าวถึงการอัปโหลดไฟล์ · หน้า help center 404 |
+| OpenAI 2026 | OpenAI. Uploading files and audio to ChatGPT. *OpenAI Help Center*. https://help.openai.com/en/articles/8555545-file-uploads-faq | ✔ "work with documents, spreadsheets, presentations, images, and audio files you attach to a conversation" · PDF, DOCX, PPTX · Free plan อัปโหลดได้ 3 ไฟล์ต่อวัน · ไม่ได้กล่าวถึง study mode โดยตรง (Jam 28 พ.ย.: ใส่ ✓ เพราะ study mode อยู่ใน ChatGPT) |
 | Photomath 2026 | Photomath. https://photomath.com/ | ✔ scan → step-by-step · "multiple methods" · elementary through college · ไม่พบการตรวจวิธีทำของผู้เรียน · ⚠ หน้าไม่ได้ระบุเจ้าของบริษัท จึงไม่เขียน |
 | Anki 2026 | Anki manual: Background. https://docs.ankiweb.net/manual/background · https://apps.ankiweb.net/ | ✔ "active recall testing and spaced repetition" · SM-2 และ FSRS · ไม่พบ AI หรือการตรวจคำตอบ |
 
+## ภาพหน้าจอ (Jam 28 พ.ย.: ใส่ · หาไม่ได้ใส่ placeholder)
+
+ตอนรวมเล่มวางรูปไว้ท้ายย่อหน้าของแต่ละผลิตภัณฑ์ พร้อมบรรทัด "ที่มา: URL" แบบเล่ม NAS Agent · ตอนนี้ทุกรูปเป็น placeholder เพราะต้องเปิด browser จับภาพเอง
+
+| รูป | ผลิตภัณฑ์ | หน้าที่จะจับภาพ | สถานะ |
+|---|---|---|---|
+| 2.3 | Gemini Notebook | หน้าถามตอบที่มี citation หรือหน้าแบบทดสอบ · https://notebook.google/ | ❓ placeholder |
+| 2.4 | Khanmigo | ภาพจากหน้า https://www.khanmigo.ai/learners | ❓ placeholder |
+| 2.5 | ChatGPT Study Mode | ภาพจากหน้าประกาศ https://openai.com/index/chatgpt-study-mode/ | ❓ placeholder |
+| 2.6 | Photomath | ภาพจาก https://photomath.com/ | ❓ placeholder |
+| 2.7 | Anki | ภาพจาก https://apps.ankiweb.net/ | ❓ placeholder |
+
 ## คำถามสำหรับร่างนี้
 
-1. **แถว "ใช้เอกสารที่ผู้เรียนอัปโหลด" ของ ChatGPT:** ChatGPT ทั่วไปรับไฟล์ได้ แต่หน้าประกาศ study mode ไม่ได้กล่าวถึง · ใส่ × ตามหลักที่ใช้ทั้งตาราง หรือจะให้หาหน้า help ที่ยืนยันแล้วเปลี่ยนเป็น ✓
-2. **ภาพหน้าจอผลิตภัณฑ์:** ใส่ไหม (เล่มไทยใส่ทุกผลิตภัณฑ์ · ใช้ราว 1 หน้า)
+ไม่มี
