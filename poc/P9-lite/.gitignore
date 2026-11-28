@@ -1,0 +1,2 @@
+# Built at run time by make_sheet.py: the PDF embeds a font we may not redistribute
+data/*.pdf

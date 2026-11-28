@@ -11,7 +11,7 @@
 
 - [x] 1. 🤖 หาค่าโควตา free tier ปัจจุบัน (RPM / TPM / RPD) ของ `gemini-3.5-flash` และ `gemini-3.5-flash-lite` จากเอกสารทางการ
 - [x] 2. 🙋 ยืนยันกับหน้า AI Studio: เปิด https://aistudio.google.com → เลือกโปรเจกต์ใหม่ของ key → **Usage & Billing** / **Rate limits** → บอก Claude ว่าเห็นคำว่า "Free tier" ไหม และ RPM / TPM / RPD ของ 2 model นี้ (หรือตอบ "ตรง" ถ้าตรงกับข้อ 1) · key อยู่ใน `.env` ที่ root แล้ว (โปรเจกต์ใหม่ ไม่ใช่ `anyang-513006`) · ห้ามวาง key ใน chat
-- [ ] 3. 🤖 PoC spec สั้นๆ ใน `specs/poc/README.md` (P9-lite · คำถาม, metric, เกณฑ์) + ข้อมูลสังเคราะห์ใน `poc/P9-lite/data/` (PDF ชีทไทย 3 หน้าจาก `pymupdf` + คำตอบพิมพ์สังเคราะห์ · ไม่มีลายมือ ไม่ใช้ `evals/topics/*/raw` · AI-07)
+- [x] 3. 🤖 PoC spec สั้นๆ ใน `specs/poc/README.md` (P9-lite · คำถาม, metric, เกณฑ์) + ข้อมูลสังเคราะห์ใน `poc/P9-lite/data/` (PDF ชีทไทย 3 หน้าจาก `pymupdf` + คำตอบพิมพ์สังเคราะห์ · ไม่มีลายมือ ไม่ใช้ `evals/topics/*/raw` · AI-07)
 - [ ] 4. 🤖 `poc/P9-lite/load.py`: gateway live + `AI_MODEL_OVERRIDE=gemini:<model>` · ครอบ provider ด้วยตัวนับทุก attempt (gateway retry ซ่อน 429/503) · 1 session = `open_session` → (`generate_problem` → `typed_answer` → `check_answer` → `explain_check`) × k → `tutor_reply` × m → `session_summary` · `classify_material` แยก · จดสถานะ latency token และ quota id ของ 429 (ต่อนาที / ต่อวัน) ลง `results/<label>.json` · อ่านไฟล์นอก `data/` ไม่ได้ · unit test ด้วย fake provider
 - [ ] 5. 🤖 รัน (แก้หลังข้อ 2): **`gemini-3.5-flash-lite` (ตัวหลัก)** smoke 1 session → session ต่อกันจนชน RPD → burst 3 session พร้อมกัน (RPM) · **`gemini-3.6-flash`** รอบสั้นจนชน 20 RPD · **`gemini-3.5-flash`** 1 call เพื่อยืนยันว่าถูกปฏิเสธ แล้วจด error · คุณภาพของ flash-lite: schema retry / schema fail ต่อ purpose และสัดส่วนโจทย์ที่ SymPy parse ได้ (P3 เคยเจอ LaTeX ใน JSON พัง)
 - [ ] 6. 🤖 คำนวณ session/วัน = min(RPD ÷ call ต่อ session) และผู้ใช้พร้อมกันตาม RPM/TPM · เทียบ Vertex (P4-lite) · ผลภาษาไทยครึ่งหน้าสำหรับ advisor + `/poc-report P9-lite`
@@ -46,11 +46,13 @@
 
 - 2026-11-28 · ชื่อ PoC `P9-lite` · ต่อจาก P8-lite
 - 2026-11-28 · ยิง gateway ตรงด้วยสคริปต์ ไม่ยิงผ่าน API · วัดโควตาได้ตรงโดยไม่ต้องมี DB หรือ token · flow ของ session ตาม purpose ที่ห้องติวเรียกจริง
+- 2026-11-28 · เกณฑ์ (ก) 5 และ (ข) 30 session/วัน เป็น [C] · เพิ่ม (ค) ผู้ใช้พร้อมกันโดยไม่โดน 429 (Junior)
+- 2026-11-28 · ไม่ commit PDF สังเคราะห์ สร้างตอนรัน (Junior ให้เลือก · ไม่ต้องโหลดฟอนต์เพิ่ม)
 - 2026-11-28 · key ใน `.env` ที่ root ของ repo · โปรเจกต์ใหม่ที่ไม่ผูก billing (ถ้าผูกจะได้ paid tier)
 
 ## Next step
 
-ข้อ 3: PoC spec P9-lite ใน `specs/poc/README.md` + ข้อมูลสังเคราะห์ใน `poc/P9-lite/data/`
+ข้อ 4: `poc/P9-lite/load.py` + unit test ด้วย fake provider (ดู input ของแต่ละ purpose จาก `prompts/<purpose>/v*.md` ตาม version ใน `config/ai.yaml`)
 
 ## Waiting on
 
@@ -58,4 +60,5 @@
 
 ## Notes for next time
 
+- ชีทสังเคราะห์สร้างด้วย `poc/P9-lite/make_sheet.py` ใช้ฟอนต์ `LeelawUI.ttf` (tahoma อ่านกลับ `-` เป็น soft hyphen) · subset font แล้วไฟล์ 28 KB · **PDF ไม่ commit** (gitignore ใน `poc/P9-lite/.gitignore`) เพราะ Leelawadee UI เป็นฟอนต์ของ Windows ที่แจกต่อไม่ได้ · สร้างตอนรัน · นอก Windows ใช้ `--font` กับฟอนต์เปิด เช่น Sarabun
 - `.env` อยู่ที่ root ของ repo ไม่ใช่ `apps/api/.env` · `AI_MODEL_OVERRIDE` ยังว่าง (ตั้งเป็น env ตอนรันสคริปต์ ไม่ต้องแก้ `.env`)
