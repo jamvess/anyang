@@ -75,6 +75,7 @@ def _args(**overrides):
         problems=2,
         chat=1,
         classify=True,
+        think=0.0,
         label="t",
     )
     return SimpleNamespace(**{**base, **overrides})
@@ -156,3 +157,20 @@ async def test_poc_P9lite_a_503_is_recorded_and_the_gateway_retry_is_counted_too
 def test_poc_P9lite_percentile_of_nothing_is_none():
     assert load.percentile([], 0.95) is None
     assert load.percentile([1.0, 2.0, 3.0], 0.5) == 2.0
+
+
+@pytest.mark.asyncio
+async def test_poc_P9lite_think_time_comes_before_each_student_message(sheet):
+    fake = FakeProvider({}, defaults=_defaults())
+    gateway, _ = load.build_gateway(get_settings(), "gemini-test", fake)
+    waits: list[float] = []
+
+    async def sleep(seconds: float) -> None:
+        waits.append(seconds)
+
+    outcome = await load.run_session(
+        gateway, get_settings(), 0, load.sheet_pages(), load.load_turns(), 2, 1, 30.0, sleep
+    )
+
+    assert outcome.completed
+    assert waits == [30.0] * 4  # 1 answer, 2 answers (wrong then right), 1 chat line

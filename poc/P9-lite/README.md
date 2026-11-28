@@ -11,12 +11,13 @@ spec: `specs/poc/README.md` P9-lite · เป้าข้อ 9 ของ advisor
 ```bash
 cd apps/api
 PYTHONUTF8=1 uv run python ../../poc/P9-lite/make_sheet.py            # ชีทสังเคราะห์ (gitignored · นอก Windows ใส่ --font <Sarabun.ttf>)
-PYTHONUTF8=1 uv run python ../../poc/P9-lite/load.py --model gemini-3.5-flash-lite --sessions 1 --classify --label smoke-flash-lite
-PYTHONUTF8=1 uv run python ../../poc/P9-lite/load.py --model gemini-3.5-flash-lite --sessions 40 --label daily-flash-lite
+PYTHONUTF8=1 uv run python ../../poc/P9-lite/load.py --model gemini-3.5-flash-lite --sessions 1 --think 30 --classify --label smoke-flash-lite
+PYTHONUTF8=1 uv run python ../../poc/P9-lite/load.py --model gemini-3.5-flash-lite --sessions 40 --think 30 --label daily-flash-lite
 PYTHONUTF8=1 uv run python ../../poc/P9-lite/load.py --model gemini-3.5-flash-lite --sessions 3 --concurrency 3 --label burst-flash-lite
 ```
 
 - 1 session = `generate_problem` → `open_session` → ต่อโจทย์: `typed_answer` → `check_answer` → `explain_check` (โจทย์ที่ 2, 4, … ตอบผิดก่อน แล้วตอบถูกหลังได้ hint) → `tutor_reply` × `--chat` → `session_summary` · `--problems` 3 และ `--chat` 2 เป็นค่าเริ่มต้น
+- `--think 30`: นักเรียนอ่านและทำ 30 วินาทีก่อนส่งคำตอบหรือแชททุกครั้ง · `0` = burst (ยิงต่อกันทันที)
 - ใช้ `Gateway` ตัวจริง (prompt, `config/ai.yaml`, retry, SymPy) กับ provider `gemini` อย่างเดียว ไปไม่ถึง Vertex และไม่เขียน `ai_calls`
 - นับทุก attempt ที่ provider เพราะ retry ของ gateway ซ่อน 429/503 · เมื่อเจอ 429 แบบต่อวัน (`…PerDay…`) จะหยุดส่ง และไม่เริ่ม session ใหม่
 - ผลอยู่ใน `results/<label>.json`: `summary` (ตัวเลขรวม), `sessions`, `attempts` (ทุก request), `calls` (`CallRecord` ของ gateway) · ไม่มี key และเลขโปรเจกต์

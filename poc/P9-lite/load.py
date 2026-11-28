@@ -306,9 +306,18 @@ async def _answer(gateway, outcome, problem, message: str, conversation: str) ->
 
 
 async def run_session(
-    gateway, settings, index: int, pages: list[str], turns: dict, problems: int, chat: int
+    gateway,
+    settings,
+    index: int,
+    pages: list[str],
+    turns: dict,
+    problems: int,
+    chat: int,
+    think_s: float = 0.0,
+    sleep=asyncio.sleep,
 ) -> SessionOutcome:
-    """One tutor session on the synthetic sheet (spec P9-lite "ทำ")."""
+    """One tutor session on the synthetic sheet (spec P9-lite "ทำ"). ``think_s``: the student
+    reads and works for that long before each message (an answer or a chat line)."""
     from app.models.tutor_ai import SessionSummaryResult
 
     _session.set(index)
@@ -336,11 +345,13 @@ async def run_session(
             if n % 2 == 1:  # every second problem: wrong first, then right after the hint
                 tries.insert(0, problem.reference_answer + turns["wrong_answer_suffix"])
             for message in tries:
+                await sleep(think_s)
                 ok = await _answer(gateway, outcome, problem, message, conversation)
                 answers += ok is not None
                 right += bool(ok)
                 conversation += f"\nstudent: {message}"
         for message in turns["chat"][:chat]:
+            await sleep(think_s)
             values = {"problem": NONE, "conversation": NONE, "message": message}
             await _guard(outcome, _drain(gateway, "tutor_reply", values))
         totals = {
@@ -452,7 +463,9 @@ async def run(args, settings, inner: Any) -> dict:
         started = batch.stop
         sessions += await asyncio.gather(
             *(
-                run_session(gateway, settings, i, pages, turns, args.problems, args.chat)
+                run_session(
+                    gateway, settings, i, pages, turns, args.problems, args.chat, args.think
+                )
                 for i in batch
             )
         )
@@ -489,6 +502,9 @@ def main() -> int:
     parser.add_argument("--concurrency", type=int, default=1, help="sessions run at the same time")
     parser.add_argument("--problems", type=int, default=3, help="problems per session")
     parser.add_argument("--chat", type=int, default=2, help="free chat messages per session")
+    parser.add_argument(
+        "--think", type=float, default=0.0, help="seconds before each student message (0 = burst)"
+    )
     parser.add_argument("--classify", action="store_true", help="also classify the synthetic sheet")
     parser.add_argument("--label", required=True, help="results/<label>.json")
     args = parser.parse_args()

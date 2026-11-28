@@ -42,6 +42,13 @@
 
 - คาดไว้ (Junior): Flash เต็มรุ่นได้ < 1 session/วัน · Flash-Lite ราว 20 session/วัน ถ้าคุณภาพพอ · ผลรันเป็นตัวตัดสิน
 
+## ผล smoke (28 พ.ย. · `results/smoke-flash-lite.json`)
+
+- 1 session + classify บน `gemini-3.5-flash-lite` · ส่ง 16 request ใน 37 วินาที · ok 13 · 503 1 ครั้ง ("high demand") · **429 ต่อนาที 2 ครั้งที่ request ที่ 16** (`GenerateRequestsPerMinutePerProjectPerModel-FreeTier`) · gateway ยอมแพ้ → session ไม่จบ (ห้องจริงจะขึ้น "ระบบช้า")
+- สคริปต์ไม่มีเวลาคิดของนักเรียน จึงยิงเร็วกว่าคนจริง · 15 RPM ถูกใช้หมดโดยผู้ใช้คนเดียว
+- คุณภาพ: `generate_problem` 2/2 SymPy ยืนยัน (schema retry 1) · `classify_material` schema retry 1 · `check_answer` ไม่มี schema error
+- latency ok: call 0.9–1.7 s · `explain_check` TTFT p95 2.4 s · `open_session` TTFT 3.3 s
+
 ## Decisions
 
 - 2026-11-28 · ชื่อ PoC `P9-lite` · ต่อจาก P8-lite
