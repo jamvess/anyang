@@ -27,4 +27,4 @@ PYTHONUTF8=1 uv run python ../../poc/P9-lite/load.py --model gemini-3.5-flash-li
 
 ## ผล
 
-(รอรัน)
+report: `specs/poc/reports/P9-lite.md` · สรุปสำหรับ advisor: `advisor-summary.md` · ผลดิบ `results/` (burst, smoke, session 10 โจทย์, daily, `gemini-3.5-flash`)

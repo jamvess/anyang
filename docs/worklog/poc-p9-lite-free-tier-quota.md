@@ -5,7 +5,7 @@
 | Owner | Junior |
 | Branch | `poc/p9-lite-free-tier-quota` |
 | Checklist item | ยังไม่มีใน `docs/team/sprint-checklists.md` · เป้าข้อ 9 ของ advisor สำหรับ จ. 30 พ.ย. 2569 ("ทดสอบว่าโควตา free tier ของ Google AI Studio พอสำหรับแอปไหม") · เพิ่มเข้าเช็คลิสต์ใน `/work-done` |
-| Status | in progress · 2026-11-28 |
+| Status | in progress · 2026-11-28 · รอ Junior อ่าน report ก่อน /work-done |
 
 ## Plan
 
@@ -13,8 +13,8 @@
 - [x] 2. 🙋 ยืนยันกับหน้า AI Studio: เปิด https://aistudio.google.com → เลือกโปรเจกต์ใหม่ของ key → **Usage & Billing** / **Rate limits** → บอก Claude ว่าเห็นคำว่า "Free tier" ไหม และ RPM / TPM / RPD ของ 2 model นี้ (หรือตอบ "ตรง" ถ้าตรงกับข้อ 1) · key อยู่ใน `.env` ที่ root แล้ว (โปรเจกต์ใหม่ ไม่ใช่ `anyang-513006`) · ห้ามวาง key ใน chat
 - [x] 3. 🤖 PoC spec สั้นๆ ใน `specs/poc/README.md` (P9-lite · คำถาม, metric, เกณฑ์) + ข้อมูลสังเคราะห์ใน `poc/P9-lite/data/` (PDF ชีทไทย 3 หน้าจาก `pymupdf` + คำตอบพิมพ์สังเคราะห์ · ไม่มีลายมือ ไม่ใช้ `evals/topics/*/raw` · AI-07)
 - [x] 4. 🤖 `poc/P9-lite/load.py`: gateway live + `AI_MODEL_OVERRIDE=gemini:<model>` · ครอบ provider ด้วยตัวนับทุก attempt (gateway retry ซ่อน 429/503) · 1 session = `open_session` → (`generate_problem` → `typed_answer` → `check_answer` → `explain_check`) × k → `tutor_reply` × m → `session_summary` · `classify_material` แยก · จดสถานะ latency token และ quota id ของ 429 (ต่อนาที / ต่อวัน) ลง `results/<label>.json` · อ่านไฟล์นอก `data/` ไม่ได้ · unit test ด้วย fake provider
-- [ ] 5. 🤖 รัน (แก้หลังข้อ 2 · 28 พ.ย.: 3.6-flash ไม่รันต่อ ใช้ตัวเลขจากหน้า Rate Limit แทน): **`gemini-3.5-flash-lite` (ตัวหลัก)** smoke 1 session → session ต่อกันจนชน RPD → burst 3 session พร้อมกัน (RPM) · **`gemini-3.6-flash`** รอบสั้นจนชน 20 RPD · **`gemini-3.5-flash`** 1 call เพื่อยืนยันว่าถูกปฏิเสธ แล้วจด error · คุณภาพของ flash-lite: schema retry / schema fail ต่อ purpose และสัดส่วนโจทย์ที่ SymPy parse ได้ (P3 เคยเจอ LaTeX ใน JSON พัง)
-- [ ] 6. 🤖 (เพิ่ม 28 พ.ย. · Junior) ต้นทุนต่อโจทย์ (request + token) และผลของ session จริงราว 10 โจทย์ · ต้นทุน ingestion ต่อการเตรียมสอบ 1 วิชา (classify, extract_topics_local, merge_topics, map_questions) จาก `ai_calls` ของการซ้อม 20 พ.ย. หรือ CSV ใน `.local/` เทียบกับ RPM/TPM/RPD ของ free tier · คำนวณ session/วัน = min(RPD ÷ call ต่อ session) และผู้ใช้พร้อมกันตาม RPM/TPM · เทียบ Vertex (P4-lite) · ผลภาษาไทยครึ่งหน้าสำหรับ advisor + `/poc-report P9-lite`
+- [x] 5. 🤖 (28 พ.ย. · daily ชน RPM ไม่ชน RPD) รัน (แก้หลังข้อ 2 · 28 พ.ย.: 3.6-flash ไม่รันต่อ ใช้ตัวเลขจากหน้า Rate Limit แทน): **`gemini-3.5-flash-lite` (ตัวหลัก)** smoke 1 session → session ต่อกันจนชน RPD → burst 3 session พร้อมกัน (RPM) · **`gemini-3.6-flash`** รอบสั้นจนชน 20 RPD · **`gemini-3.5-flash`** 1 call เพื่อยืนยันว่าถูกปฏิเสธ แล้วจด error · คุณภาพของ flash-lite: schema retry / schema fail ต่อ purpose และสัดส่วนโจทย์ที่ SymPy parse ได้ (P3 เคยเจอ LaTeX ใน JSON พัง)
+- [x] 6. 🤖 (28 พ.ย. · `specs/poc/reports/P9-lite.md` + `poc/P9-lite/advisor-summary.md`) (เพิ่ม 28 พ.ย. · Junior) ต้นทุนต่อโจทย์ (request + token) และผลของ session จริงราว 10 โจทย์ · ต้นทุน ingestion ต่อการเตรียมสอบ 1 วิชา (classify, extract_topics_local, merge_topics, map_questions) จาก `ai_calls` ของการซ้อม 20 พ.ย. หรือ CSV ใน `.local/` เทียบกับ RPM/TPM/RPD ของ free tier · คำนวณ session/วัน = min(RPD ÷ call ต่อ session) และผู้ใช้พร้อมกันตาม RPM/TPM · เทียบ Vertex (P4-lite) · ผลภาษาไทยครึ่งหน้าสำหรับ advisor + `/poc-report P9-lite`
 
 ## Definition of done
 
@@ -94,6 +94,16 @@
 - `TaskStop` หยุดแค่ shell: process ของ Python (`load.py` + SymPy worker) ยังรันต่อ ต้อง `Stop-Process` เอง (หยุดแล้ว เหลือ 0 process)
 - แก้แล้ว (commit `wip`): `load.py` บันทึก `results/<label>.json` หลังทุก batch (`meta.finished: false`) และตอน Ctrl+C · test ใหม่ 1 ตัว · รวม 10 passed
 
+## รอบ daily รอบใหม่ (28 พ.ย. 23:05–23:11 น. · `results/daily-flash-lite.json` · flash-lite · 40 session · concurrency 3 · think 30)
+
+- **ชน RPM ก่อน RPD มาก:** 118 request ใน 5.8 นาที · ok 79 · **429 39 ครั้ง (33%) เป็น `GenerateRequestsPerMinutePerProjectPerModel-FreeTier` ทั้งหมด** · ไม่เจอ 429 ต่อวัน · 503 0 ครั้ง
+- จบแค่ **1 ใน 40 session** · อีก 39 หยุดเพราะ gateway ยอมแพ้หลังรอตามตาราง `rate_limit_waits_seconds` (`generate_problem` 36 · `explain_check` 2 · `check_answer` 1)
+- นาทีแรกผู้ใช้ 3 คนส่ง 20 request (เพดาน 15) · ok ต่อนาทีสูงสุด 22 (นาทีที่ 4 · ช่วงที่โควตาของนาทีก่อนหน้าเพิ่งคืน) · ok เฉลี่ย ~13.6/นาที ≈ เพดาน
+- **ข้อจำกัดของสคริปต์:** session ที่ล้มเริ่ม session ถัดไปทันที นาทีที่ 5 จึงยิง 55 request (ok 18) · ห้องจริงจะไม่เริ่มใหม่เอง · ตัวเลข "จบ 1/40" จึงแย่กว่าที่ผู้ใช้จริงเจอ แต่ข้อสรุปเหมือนเดิม: **3 คนพร้อมกันใช้ไม่ได้**
+- `generate_problem` โดน 429 หนักสุด: 56 attempt ok 20 · `generate_problem_verified_share` 0.28 (โจทย์ที่ได้ ÷ ครั้งที่ลองสร้าง) ต่ำเพราะ 429 ไม่ใช่เพราะคุณภาพ · คุณภาพดูจากรอบ 10 โจทย์ (schema error 3/13)
+- token ของ request ที่ ok: in 95K · out 10K ใน 5.8 นาที → ~16K TPM ต่ำกว่า 250K มาก · **ตัวจำกัดคือ RPM ไม่ใช่ TPM**
+- RPD 500 ยังไม่ถูกทดสอบตรงๆ (ไม่ชนวันนี้) · ใช้การคำนวณ RPD ÷ request ต่อ session แทน
+
 ## Decisions
 
 - 2026-11-28 · ชื่อ PoC `P9-lite` · ต่อจาก P8-lite
@@ -113,7 +123,7 @@
 
 ## Next step
 
-รันรอบ daily ใหม่บน flash-lite **หลัง 15:00 น. เวลาไทย** (RPD reset เที่ยงคืน Pacific) จาก `apps/api` ใน background **ไม่ pipe ผ่าน grep**: `env -u AI_PROVIDER -u AI_MODEL_OVERRIDE PYTHONUTF8=1 uv run python ../../poc/P9-lite/load.py --model gemini-3.5-flash-lite --sessions 40 --concurrency 3 --think 30 --label daily-flash-lite` · ถ้าต้องหยุดกลางทาง ผลถึง batch ล่าสุดอยู่ใน `results/daily-flash-lite.json` · หยุดแล้วเช็คว่าไม่มี `python.exe` ของ `load.py` ค้าง · จบแล้วทำข้อ 6 (สรุปภาษาไทยสำหรับ advisor + `/poc-report P9-lite`) · ถ้ารีบก่อน advisor 30 พ.ย. ทำข้อ 6 จากผลที่มีได้เลย แล้วใส่ผล daily ทีหลัง
+Junior อ่าน `poc/P9-lite/advisor-summary.md` และ `specs/poc/reports/P9-lite.md` ก่อน advisor 30 พ.ย. · ตัดสินข้อเสนอใน report §5 (comment ใน `config/ai.yaml` ต้อง Jam ok · `setup.md` · `architecture.md`) · แล้ว `/work-done` (เพิ่มแถวในเช็คลิสต์ · ถามก่อน merge #180)
 
 ## Waiting on
 
