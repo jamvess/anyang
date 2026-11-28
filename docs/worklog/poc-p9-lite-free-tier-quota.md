@@ -5,7 +5,7 @@
 | Owner | Junior |
 | Branch | `poc/p9-lite-free-tier-quota` |
 | Checklist item | ยังไม่มีใน `docs/team/sprint-checklists.md` · เป้าข้อ 9 ของ advisor สำหรับ จ. 30 พ.ย. 2569 ("ทดสอบว่าโควตา free tier ของ Google AI Studio พอสำหรับแอปไหม") · เพิ่มเข้าเช็คลิสต์ใน `/work-done` |
-| Status | in progress · 2026-11-28 · รอ Junior อ่าน report ก่อน /work-done |
+| Status | paused · 2026-11-28 · report เสร็จ · รอ Jam ok comment ใน `config/ai.yaml` |
 
 ## Plan
 
@@ -120,16 +120,21 @@
 - รันแล้ว: burst 1 คน (ชน 15 RPM ที่ request 16 + 503), smoke `--think 30` (21 request · จบ), session 10 โจทย์ (68 request · peak 12/นาที · schema error ของ `generate_problem` 3/13), `gemini-3.5-flash` (ถูกนับเป็น 3.6 Flash)
 - ต้นทุน ingestion ประมาณจากการซ้อม 20 พ.ย. (ไม่รันบน free tier)
 - รอบ daily ถูกหยุด ไม่มีผล (ดูหัวข้อ "รอบ daily ครั้งแรก")
+- คืน 28 พ.ย.: รอบ daily ใหม่จบ (ชน RPM · 3 คนพร้อมกันใช้ไม่ได้) · `specs/poc/reports/P9-lite.md` + `poc/P9-lite/advisor-summary.md` · `architecture.md` v1.4 + `setup.md` แถว `GEMINI_API_KEY` (Junior ok) · ถาม Jam เรื่อง comment ใน `config/ai.yaml` ใน #180
 
 ## Next step
 
-Junior อ่าน `poc/P9-lite/advisor-summary.md` และ `specs/poc/reports/P9-lite.md` ก่อน advisor 30 พ.ย. · ตัดสินข้อเสนอใน report §5 (comment ใน `config/ai.yaml` ต้อง Jam ok · `setup.md` · `architecture.md`) · แล้ว `/work-done` (เพิ่มแถวในเช็คลิสต์ · ถามก่อน merge #180)
+ดู comment ของ Jam ใน #180 (`gh pr view 180 --comments`) · ok → เพิ่ม 2 บรรทัด comment ที่ `provider:` ใน `config/ai.yaml` ตามที่เขียนใน comment + bump `version` 1.27 → 1.28 + ติ๊ก report §5 · แล้ว `/work-done` (เพิ่มแถว P9-lite ในเช็คลิสต์ S4 ของ Junior · **ถาม Junior ก่อน merge #180** · Junior สั่งให้คง draft ไว้ก่อน)
 
 ## Waiting on
 
-ไม่มี (key อยู่ใน `.env` ที่ root แล้ว)
+- Jam: ok comment ใน `config/ai.yaml` (#180)
+- Junior: ใช้ `poc/P9-lite/advisor-summary.md` กับ advisor จ. 30 พ.ย.
 
 ## Notes for next time
+
+- `generate_problem_verified_share` ใน `summary` = โจทย์ที่ได้ ÷ ครั้งที่ลองสร้าง (นับ 429 ด้วย) ไม่ใช่ตัววัดคุณภาพ
+- สคริปต์เริ่ม session ใหม่ทันทีเมื่อ session ก่อนล้ม จึงยิงถี่กว่าคนจริงตอนโควตาหมด
 
 - โควตาที่ใช้ไปของวันนี้ดูได้ที่ https://aistudio.google.com/rate-limit (Junior เห็นก่อนรอบ daily: flash-lite 79/500 RPD · peak 12/15 RPM)
 - 3.6 Flash ใช้ไปแล้ว 6/20 ของวันนี้ · ไม่ต้องใช้ต่อ (Junior)
