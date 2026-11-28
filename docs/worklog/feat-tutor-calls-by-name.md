@@ -37,11 +37,12 @@
 ## Decisions
 
 - 2026-11-28 · ภาษาที่ใช้อธิบาย (`explain_language`) ไม่อยู่ใน scope · Junior สั่ง
+- 2026-11-28 · Junior: `PATCH /me/profile` ส่งบาง field (ไม่ใช่ endpoint แยก) เพราะจะเพิ่มภาษาทีหลัง · `nickname` ใช้กฎ persona + ตัดช่องว่าง · ว่าง/null → null → "คุณ" · `GET` คืนชื่อดิบจาก Google แต่ `prompt_user_name()` กรองก่อนเข้า prompt
 - 2026-11-28 · ทำใน worktree `../anyang-name` เพราะ working tree หลักกำลังรัน P9-lite
 
 ## Next step
 
-รอ Junior ok แผน · แล้ว `/spec-feature UM-08 UM-09` ใน `../anyang-name`
+รอ Junior review `specs/features/platform/display-name.md` + ตอบ §10 ข้อ 1–3 + ok แก้ `api.md` ตาม §11 · แล้ว `/spec-to-tests specs/features/platform/display-name.md` ใน `../anyang-name`
 
 ## Waiting on
 
