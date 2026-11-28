@@ -1,0 +1,493 @@
+{
+  "meta": {
+    "poc": "P9-lite",
+    "label": "smoke-flash-lite",
+    "model": "gemini:gemini-3.5-flash-lite",
+    "ai_yaml_version": "1.27",
+    "started_utc": "2026-11-28T10:14:03+00:00",
+    "args": {
+      "model": "gemini-3.5-flash-lite",
+      "sessions": 1,
+      "concurrency": 1,
+      "problems": 3,
+      "chat": 2,
+      "classify": true,
+      "label": "smoke-flash-lite"
+    },
+    "classify": "sheet 0.95"
+  },
+  "summary": {
+    "attempts_by_status": {
+      "ok": 13,
+      "503": 1,
+      "429": 2
+    },
+    "requests_sent": 16,
+    "rate_429": 0.125,
+    "rate_503": 0.062,
+    "sessions_started": 1,
+    "sessions_completed": 0,
+    "requests_per_completed_session": null,
+    "ok_before_daily_quota": null,
+    "daily_quota_id": null,
+    "generate_problem_verified_share": 1.0,
+    "per_purpose": {
+      "check_answer": {
+        "attempts": 5,
+        "ok": 2,
+        "429": 2,
+        "503": 1,
+        "latency_p50_s": 0.911,
+        "latency_p95_s": 1.133,
+        "ttft_p95_s": null,
+        "tokens_in_max": 1267,
+        "schema_retries": 0,
+        "call_status": {
+          "ok": 2,
+          "provider_error": 1
+        }
+      },
+      "classify_material": {
+        "attempts": 2,
+        "ok": 2,
+        "429": 0,
+        "503": 0,
+        "latency_p50_s": 1.451,
+        "latency_p95_s": 1.653,
+        "ttft_p95_s": null,
+        "tokens_in_max": 1149,
+        "schema_retries": 1,
+        "call_status": {
+          "ok": 1
+        }
+      },
+      "explain_check": {
+        "attempts": 2,
+        "ok": 2,
+        "429": 0,
+        "503": 0,
+        "latency_p50_s": 1.827,
+        "latency_p95_s": 2.65,
+        "ttft_p95_s": 2.399,
+        "tokens_in_max": 1586,
+        "schema_retries": 0,
+        "call_status": {
+          "ok": 2
+        }
+      },
+      "generate_problem": {
+        "attempts": 3,
+        "ok": 3,
+        "429": 0,
+        "503": 0,
+        "latency_p50_s": 1.518,
+        "latency_p95_s": 1.567,
+        "ttft_p95_s": null,
+        "tokens_in_max": 1836,
+        "schema_retries": 1,
+        "call_status": {
+          "ok": 2
+        }
+      },
+      "open_session": {
+        "attempts": 1,
+        "ok": 1,
+        "429": 0,
+        "503": 0,
+        "latency_p50_s": 5.792,
+        "latency_p95_s": 5.792,
+        "ttft_p95_s": 3.288,
+        "tokens_in_max": 535,
+        "schema_retries": 0,
+        "call_status": {
+          "ok": 1
+        }
+      },
+      "typed_answer": {
+        "attempts": 3,
+        "ok": 3,
+        "429": 0,
+        "503": 0,
+        "latency_p50_s": 1.175,
+        "latency_p95_s": 1.523,
+        "ttft_p95_s": null,
+        "tokens_in_max": 821,
+        "schema_retries": 0,
+        "call_status": {
+          "ok": 3
+        }
+      }
+    }
+  },
+  "sessions": [
+    {
+      "index": 0,
+      "completed": false,
+      "stopped": "check_answer: ProviderRateLimited: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this",
+      "generate_tries": 2,
+      "problems": 2,
+      "unverified": 0,
+      "errors": []
+    }
+  ],
+  "attempts": [
+    {
+      "purpose": "classify_material",
+      "kind": "generate",
+      "session": null,
+      "at_s": 0.187,
+      "latency_s": 1.653,
+      "status": "ok",
+      "ttft_s": null,
+      "code": null,
+      "quota_id": null,
+      "tokens_in": 987,
+      "tokens_out": 65,
+      "message": ""
+    },
+    {
+      "purpose": "classify_material",
+      "kind": "generate",
+      "session": null,
+      "at_s": 1.841,
+      "latency_s": 1.451,
+      "status": "ok",
+      "ttft_s": null,
+      "code": null,
+      "quota_id": null,
+      "tokens_in": 1149,
+      "tokens_out": 48,
+      "message": ""
+    },
+    {
+      "purpose": "generate_problem",
+      "kind": "generate",
+      "session": 0,
+      "at_s": 5.541,
+      "latency_s": 1.473,
+      "status": "ok",
+      "ttft_s": null,
+      "code": null,
+      "quota_id": null,
+      "tokens_in": 1444,
+      "tokens_out": 226,
+      "message": ""
+    },
+    {
+      "purpose": "open_session",
+      "kind": "stream",
+      "session": 0,
+      "at_s": 8.817,
+      "latency_s": 5.792,
+      "status": "ok",
+      "ttft_s": 3.288,
+      "code": null,
+      "quota_id": null,
+      "tokens_in": 535,
+      "tokens_out": 68,
+      "message": ""
+    },
+    {
+      "purpose": "typed_answer",
+      "kind": "generate",
+      "session": 0,
+      "at_s": 14.613,
+      "latency_s": 1.175,
+      "status": "ok",
+      "ttft_s": null,
+      "code": null,
+      "quota_id": null,
+      "tokens_in": 773,
+      "tokens_out": 20,
+      "message": ""
+    },
+    {
+      "purpose": "check_answer",
+      "kind": "generate",
+      "session": 0,
+      "at_s": 15.796,
+      "latency_s": 0.911,
+      "status": "ok",
+      "ttft_s": null,
+      "code": null,
+      "quota_id": null,
+      "tokens_in": 1178,
+      "tokens_out": 55,
+      "message": ""
+    },
+    {
+      "purpose": "explain_check",
+      "kind": "stream",
+      "session": 0,
+      "at_s": 16.71,
+      "latency_s": 2.65,
+      "status": "ok",
+      "ttft_s": 2.399,
+      "code": null,
+      "quota_id": null,
+      "tokens_in": 1586,
+      "tokens_out": 132,
+      "message": ""
+    },
+    {
+      "purpose": "generate_problem",
+      "kind": "generate",
+      "session": 0,
+      "at_s": 19.361,
+      "latency_s": 1.518,
+      "status": "ok",
+      "ttft_s": null,
+      "code": null,
+      "quota_id": null,
+      "tokens_in": 1439,
+      "tokens_out": 287,
+      "message": ""
+    },
+    {
+      "purpose": "generate_problem",
+      "kind": "generate",
+      "session": 0,
+      "at_s": 20.88,
+      "latency_s": 1.567,
+      "status": "ok",
+      "ttft_s": null,
+      "code": null,
+      "quota_id": null,
+      "tokens_in": 1836,
+      "tokens_out": 287,
+      "message": ""
+    },
+    {
+      "purpose": "typed_answer",
+      "kind": "generate",
+      "session": 0,
+      "at_s": 22.581,
+      "latency_s": 1.523,
+      "status": "ok",
+      "ttft_s": null,
+      "code": null,
+      "quota_id": null,
+      "tokens_in": 793,
+      "tokens_out": 60,
+      "message": ""
+    },
+    {
+      "purpose": "check_answer",
+      "kind": "generate",
+      "session": 0,
+      "at_s": 24.484,
+      "latency_s": 2.179,
+      "status": "503",
+      "ttft_s": null,
+      "code": 503,
+      "quota_id": null,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "message": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
+    },
+    {
+      "purpose": "check_answer",
+      "kind": "generate",
+      "session": 0,
+      "at_s": 27.664,
+      "latency_s": 1.133,
+      "status": "ok",
+      "ttft_s": null,
+      "code": null,
+      "quota_id": null,
+      "tokens_in": 1267,
+      "tokens_out": 79,
+      "message": ""
+    },
+    {
+      "purpose": "explain_check",
+      "kind": "stream",
+      "session": 0,
+      "at_s": 28.798,
+      "latency_s": 1.827,
+      "status": "ok",
+      "ttft_s": 1.749,
+      "code": null,
+      "quota_id": null,
+      "tokens_in": 1550,
+      "tokens_out": 72,
+      "message": ""
+    },
+    {
+      "purpose": "typed_answer",
+      "kind": "generate",
+      "session": 0,
+      "at_s": 30.626,
+      "latency_s": 1.038,
+      "status": "ok",
+      "ttft_s": null,
+      "code": null,
+      "quota_id": null,
+      "tokens_in": 821,
+      "tokens_out": 43,
+      "message": ""
+    },
+    {
+      "purpose": "check_answer",
+      "kind": "generate",
+      "session": 0,
+      "at_s": 31.742,
+      "latency_s": 0.103,
+      "status": "429",
+      "ttft_s": null,
+      "code": 429,
+      "quota_id": "GenerateRequestsPerMinutePerProjectPerModel-FreeTier",
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "message": "429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, lim"
+    },
+    {
+      "purpose": "check_answer",
+      "kind": "generate",
+      "session": 0,
+      "at_s": 36.849,
+      "latency_s": 0.102,
+      "status": "429",
+      "ttft_s": null,
+      "code": 429,
+      "quota_id": "GenerateRequestsPerMinutePerProjectPerModel-FreeTier",
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "message": "429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, lim"
+    }
+  ],
+  "calls": [
+    {
+      "purpose": "classify_material",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": "v1",
+      "status": "ok",
+      "tokens_in": 2136,
+      "tokens_out": 113,
+      "latency_ms": 3104.55649998039,
+      "schema_retries": 1
+    },
+    {
+      "purpose": "generate_problem",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": "v2",
+      "status": "ok",
+      "tokens_in": 1444,
+      "tokens_out": 226,
+      "latency_ms": 1472.8393000550568,
+      "schema_retries": 0
+    },
+    {
+      "purpose": "open_session",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": "v2",
+      "status": "ok",
+      "tokens_in": 535,
+      "tokens_out": 68,
+      "latency_ms": 5792.538399808109,
+      "schema_retries": 0
+    },
+    {
+      "purpose": "typed_answer",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": "v2",
+      "status": "ok",
+      "tokens_in": 773,
+      "tokens_out": 20,
+      "latency_ms": 1175.4192998632789,
+      "schema_retries": 0
+    },
+    {
+      "purpose": "check_answer",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": "v2",
+      "status": "ok",
+      "tokens_in": 1178,
+      "tokens_out": 55,
+      "latency_ms": 910.8933999668807,
+      "schema_retries": 0
+    },
+    {
+      "purpose": "explain_check",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": "v3",
+      "status": "ok",
+      "tokens_in": 1586,
+      "tokens_out": 132,
+      "latency_ms": 2650.017499923706,
+      "schema_retries": 0
+    },
+    {
+      "purpose": "generate_problem",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": "v2",
+      "status": "ok",
+      "tokens_in": 3275,
+      "tokens_out": 574,
+      "latency_ms": 3085.779699962586,
+      "schema_retries": 1
+    },
+    {
+      "purpose": "typed_answer",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": "v2",
+      "status": "ok",
+      "tokens_in": 793,
+      "tokens_out": 60,
+      "latency_ms": 1522.954000160098,
+      "schema_retries": 0
+    },
+    {
+      "purpose": "check_answer",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": "v2",
+      "status": "ok",
+      "tokens_in": 1267,
+      "tokens_out": 79,
+      "latency_ms": 4313.302899943665,
+      "schema_retries": 0
+    },
+    {
+      "purpose": "explain_check",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": "v3",
+      "status": "ok",
+      "tokens_in": 1550,
+      "tokens_out": 72,
+      "latency_ms": 1827.4133999366313,
+      "schema_retries": 0
+    },
+    {
+      "purpose": "typed_answer",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": "v2",
+      "status": "ok",
+      "tokens_in": 821,
+      "tokens_out": 43,
+      "latency_ms": 1038.4196999948472,
+      "schema_retries": 0
+    },
+    {
+      "purpose": "check_answer",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "prompt_version": "v2",
+      "status": "provider_error",
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "latency_ms": 5208.738099783659,
+      "schema_retries": 0
+    }
+  ]
+}

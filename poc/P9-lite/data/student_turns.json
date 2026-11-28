@@ -1,0 +1,10 @@
+{
+  "_note": "Synthetic student messages for PoC P9-lite, written for the test. No real student data (AI-07).",
+  "chat": [
+    "ขอทวนเรื่องกฎลูกโซ่อีกทีได้ไหม",
+    "ทำไมต้องแยกตัวประกอบก่อนแทนค่าลิมิต",
+    "ข้อนี้ใช้กฎผลคูณหรือกฎลูกโซ่",
+    "ขอตัวอย่างอีกข้อแบบง่ายๆ"
+  ],
+  "wrong_answer_suffix": " + 1"
+}

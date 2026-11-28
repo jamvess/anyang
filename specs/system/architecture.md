@@ -1,4 +1,6 @@
-# Architecture (v1.3)
+# Architecture (v1.4)
+
+v1.4 (2026-11-28 · Junior · P9-lite): แถว LLM บอกผลของ free tier ของ AI Studio · ใช้ได้แค่ dev คนเดียว · staging, demo, Beta ใช้ Vertex ต่อ (`specs/poc/reports/P9-lite.md`)
 
 v1.3 (2026-11-12 · D2, D3 · Jam ช่วง solo · item ของ Junior): ตาราง "สร้างแล้วหรือยัง" ตรวจกับโค้ดบน `main` วันที่ 12 พ.ย. (หลัง PR #127) · ตัวเลขผล PoC ของแต่ละ tier อยู่ใน `ai-orchestration.md` §2.10 และ §3.6 ไม่ซ้ำที่นี่
 
@@ -59,7 +61,7 @@ flowchart TB
 | Hosting backend | Google Cloud Run (Docker, Artifact Registry `anyang`) · project `anyang-513006` (Free Trial) · Secret Manager เปิดแล้วแต่ยังไม่มี secret | scale ถึง 0 ได้, ใช้ GCP credit, อยู่ใกล้ Vertex AI |
 | Streaming | SSE | ทิศทางเดียว server → client พอสำหรับแชท ง่ายกว่า WebSocket บน Cloud Run |
 | Database | Supabase: PostgreSQL + pgvector + Auth + Storage + RLS · region Singapore | DB, vector, auth, file อยู่ที่เดียว RLS แยก tenant ที่ระดับ DB |
-| LLM | `gemini-3.5-flash` บน Vertex AI ทุก tier ข้อความ (P2, P3, P4-lite) · Claude API เป็น fallback (แผน) | สลับได้ผ่าน `config/ai.yaml` · ใช้ Vertex เพราะ credit ของ trial ไม่ครอบคลุม API key ของ AI Studio |
+| LLM | `gemini-3.5-flash` บน Vertex AI ทุก tier ข้อความ (P2, P3, P4-lite) · Claude API เป็น fallback (แผน) | สลับได้ผ่าน `config/ai.yaml` · ใช้ Vertex เพราะ credit ของ trial ไม่ครอบคลุม API key ของ AI Studio · free tier ของ AI Studio (P9-lite) พอแค่ dev คนเดียวด้วย `gemini-3.5-flash-lite` (15 RPM · 500 RPD · ~7 session 10 โจทย์/วัน · ผู้ใช้ทีละ 1 คน) · ไม่พอสำหรับ demo กับเพื่อน และ Beta ห้ามใช้ตาม AI-07 |
 | Vision / OCR | `gemini-3.5-flash-lite` (P1: line accuracy 95.2% · วัดผ่าน AI Studio API `gemini:` ยังไม่ได้วัดซ้ำบน `vertex:` ที่ `ai.yaml` ใช้) · Mathpix เป็น fallback ที่ยังไม่ได้ทดสอบ | |
 | Embedding | `gemini-embedding-2` 768 มิติ (P3b: recall@4 19/20) | |
 | Voice | Google Cloud STT / TTS (เทอม 2) | |

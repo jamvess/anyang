@@ -1,0 +1,285 @@
+{
+  "meta": {
+    "poc": "P9-lite",
+    "label": "reject-flash",
+    "model": "gemini:gemini-3.5-flash",
+    "ai_yaml_version": "1.27",
+    "started_utc": "2026-11-28T10:21:16+00:00",
+    "args": {
+      "model": "gemini-3.5-flash",
+      "sessions": 1,
+      "concurrency": 1,
+      "problems": 1,
+      "chat": 0,
+      "think": 0.0,
+      "classify": false,
+      "label": "reject-flash"
+    },
+    "classify": null
+  },
+  "summary": {
+    "attempts_by_status": {
+      "ok": 6
+    },
+    "requests_sent": 6,
+    "rate_429": 0.0,
+    "rate_503": 0.0,
+    "sessions_started": 1,
+    "sessions_completed": 1,
+    "requests_per_completed_session": 6.0,
+    "ok_before_daily_quota": null,
+    "daily_quota_id": null,
+    "generate_problem_verified_share": 1.0,
+    "per_purpose": {
+      "check_answer": {
+        "attempts": 1,
+        "ok": 1,
+        "429": 0,
+        "503": 0,
+        "latency_p50_s": 3.248,
+        "latency_p95_s": 3.248,
+        "ttft_p95_s": null,
+        "tokens_in_max": 1182,
+        "schema_retries": 0,
+        "call_status": {
+          "ok": 1
+        }
+      },
+      "explain_check": {
+        "attempts": 1,
+        "ok": 1,
+        "429": 0,
+        "503": 0,
+        "latency_p50_s": 12.424,
+        "latency_p95_s": 12.424,
+        "ttft_p95_s": 11.811,
+        "tokens_in_max": 1590,
+        "schema_retries": 0,
+        "call_status": {
+          "ok": 1
+        }
+      },
+      "generate_problem": {
+        "attempts": 1,
+        "ok": 1,
+        "429": 0,
+        "503": 0,
+        "latency_p50_s": 3.549,
+        "latency_p95_s": 3.549,
+        "ttft_p95_s": null,
+        "tokens_in_max": 1444,
+        "schema_retries": 0,
+        "call_status": {
+          "ok": 1
+        }
+      },
+      "open_session": {
+        "attempts": 1,
+        "ok": 1,
+        "429": 0,
+        "503": 0,
+        "latency_p50_s": 3.684,
+        "latency_p95_s": 3.684,
+        "ttft_p95_s": 3.019,
+        "tokens_in_max": 539,
+        "schema_retries": 0,
+        "call_status": {
+          "ok": 1
+        }
+      },
+      "session_summary": {
+        "attempts": 1,
+        "ok": 1,
+        "429": 0,
+        "503": 0,
+        "latency_p50_s": 1.98,
+        "latency_p95_s": 1.98,
+        "ttft_p95_s": null,
+        "tokens_in_max": 406,
+        "schema_retries": 0,
+        "call_status": {
+          "ok": 1
+        }
+      },
+      "typed_answer": {
+        "attempts": 1,
+        "ok": 1,
+        "429": 0,
+        "503": 0,
+        "latency_p50_s": 5.067,
+        "latency_p95_s": 5.067,
+        "ttft_p95_s": null,
+        "tokens_in_max": 781,
+        "schema_retries": 0,
+        "call_status": {
+          "ok": 1
+        }
+      }
+    }
+  },
+  "sessions": [
+    {
+      "index": 0,
+      "completed": true,
+      "stopped": "",
+      "generate_tries": 1,
+      "problems": 1,
+      "unverified": 0,
+      "errors": []
+    }
+  ],
+  "attempts": [
+    {
+      "purpose": "generate_problem",
+      "kind": "generate",
+      "session": 0,
+      "at_s": 1.87,
+      "latency_s": 3.549,
+      "status": "ok",
+      "ttft_s": null,
+      "code": null,
+      "quota_id": null,
+      "tokens_in": 1444,
+      "tokens_out": 236,
+      "message": ""
+    },
+    {
+      "purpose": "open_session",
+      "kind": "stream",
+      "session": 0,
+      "at_s": 7.038,
+      "latency_s": 3.684,
+      "status": "ok",
+      "ttft_s": 3.019,
+      "code": null,
+      "quota_id": null,
+      "tokens_in": 539,
+      "tokens_out": 90,
+      "message": ""
+    },
+    {
+      "purpose": "typed_answer",
+      "kind": "generate",
+      "session": 0,
+      "at_s": 10.723,
+      "latency_s": 5.067,
+      "status": "ok",
+      "ttft_s": null,
+      "code": null,
+      "quota_id": null,
+      "tokens_in": 781,
+      "tokens_out": 20,
+      "message": ""
+    },
+    {
+      "purpose": "check_answer",
+      "kind": "generate",
+      "session": 0,
+      "at_s": 15.796,
+      "latency_s": 3.248,
+      "status": "ok",
+      "ttft_s": null,
+      "code": null,
+      "quota_id": null,
+      "tokens_in": 1182,
+      "tokens_out": 41,
+      "message": ""
+    },
+    {
+      "purpose": "explain_check",
+      "kind": "stream",
+      "session": 0,
+      "at_s": 19.046,
+      "latency_s": 12.424,
+      "status": "ok",
+      "ttft_s": 11.811,
+      "code": null,
+      "quota_id": null,
+      "tokens_in": 1590,
+      "tokens_out": 115,
+      "message": ""
+    },
+    {
+      "purpose": "session_summary",
+      "kind": "generate",
+      "session": 0,
+      "at_s": 31.472,
+      "latency_s": 1.98,
+      "status": "ok",
+      "ttft_s": null,
+      "code": null,
+      "quota_id": null,
+      "tokens_in": 406,
+      "tokens_out": 68,
+      "message": ""
+    }
+  ],
+  "calls": [
+    {
+      "purpose": "generate_problem",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash",
+      "prompt_version": "v2",
+      "status": "ok",
+      "tokens_in": 1444,
+      "tokens_out": 236,
+      "latency_ms": 3549.004899803549,
+      "schema_retries": 0
+    },
+    {
+      "purpose": "open_session",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash",
+      "prompt_version": "v2",
+      "status": "ok",
+      "tokens_in": 539,
+      "tokens_out": 90,
+      "latency_ms": 3684.1360998805612,
+      "schema_retries": 0
+    },
+    {
+      "purpose": "typed_answer",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash",
+      "prompt_version": "v2",
+      "status": "ok",
+      "tokens_in": 781,
+      "tokens_out": 20,
+      "latency_ms": 5066.870700102299,
+      "schema_retries": 0
+    },
+    {
+      "purpose": "check_answer",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash",
+      "prompt_version": "v2",
+      "status": "ok",
+      "tokens_in": 1182,
+      "tokens_out": 41,
+      "latency_ms": 3248.971799854189,
+      "schema_retries": 0
+    },
+    {
+      "purpose": "explain_check",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash",
+      "prompt_version": "v3",
+      "status": "ok",
+      "tokens_in": 1590,
+      "tokens_out": 115,
+      "latency_ms": 12424.555199919268,
+      "schema_retries": 0
+    },
+    {
+      "purpose": "session_summary",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash",
+      "prompt_version": "v1",
+      "status": "ok",
+      "tokens_in": 406,
+      "tokens_out": 68,
+      "latency_ms": 1980.9914000798017,
+      "schema_retries": 0
+    }
+  ]
+}

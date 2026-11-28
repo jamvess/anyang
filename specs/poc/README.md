@@ -61,6 +61,15 @@ PoC คือการลองทำส่วนที่ยากที่ส�
 - **ย้ายไปเทอม 2:** stage machine, planner, buddy scene, fallback ไป Claude, circuit breaker
 - **ผล (1 พ.ย. · `specs/poc/reports/P4-lite.md`):** **ผ่านบางส่วน** (TTFT ยังไม่ได้วัดบน staging) · AI จำลองบน staging TTFT p95 0.15 s (May) · Gemini จริงบน Vertex จากเครื่อง Jam: `thinking: low` p95 3.87 s ไม่ผ่าน → `minimal` p95 1.20 s · 0.039 บาท/ข้อความ (1.73 บาท/session ถ้า 45 ข้อความ) · สลับ fake ↔ live ด้วย env · `ai.yaml` 1.8 `tutor_reply` `thinking: minimal` (Jam ตัดสิน) · ยังต้องวัดซ้ำบน staging เมื่อเปิด live
 
+## P9-lite · โควตา free tier ของ Google AI Studio พอไหม · Junior · S4 (เป้าข้อ 9 ของ advisor · 30 พ.ย.)
+
+- **คำถาม:** ถ้าใช้ Gemini API free tier (AI Studio key ในโปรเจกต์ที่ไม่ผูก billing) แทน Vertex ได้กี่ session ต่อวัน และใช้ได้กับงานแบบไหน (dev ของทีม, demo กับเพื่อนร่วมชั้น) · Beta ใช้ไม่ได้อยู่แล้วตาม AI-07
+- **ข้อมูล:** ข้อมูลสังเคราะห์เท่านั้น (`poc/P9-lite/data/`): ชีท PDF ภาษาไทยที่ `make_sheet.py` สร้างตอนรัน (ไม่ commit เพราะฝังฟอนต์ที่แจกต่อไม่ได้) + คำตอบพิมพ์ที่เขียนขึ้น · ไม่มีลายมือ · ไม่ใช้ไฟล์ใน `evals/*/raw` · ห้ามส่งข้อมูลของผู้ใช้จริง (AI-07)
+- **ทำ:** สคริปต์ยิง `Gateway` ตัวจริงด้วย `AI_MODEL_OVERRIDE=gemini:<model>` ตาม flow ของห้องติว: `open_session` → (`generate_problem` → `typed_answer` → `check_answer` → `explain_check`) × k → `tutor_reply` × m → `session_summary` และ `classify_material` กับชีทสังเคราะห์ · นับทุก attempt ที่ provider (gateway retry ซ่อน 429/503) · model: `gemini-3.5-flash-lite` (ตัวหลัก), `gemini-3.6-flash` (รอบสั้น), `gemini-3.5-flash` (ยืนยันว่าไม่มีใน free tier)
+- **Metrics:** RPM / TPM / RPD จากหน้า Rate Limit ของ AI Studio · call ต่อ session · อัตรา 429 (แยกต่อนาที / ต่อวัน) และ 503 ต่อ attempt · latency p50 / p95 ต่อ purpose · คุณภาพของ flash-lite: schema retry และ schema fail ต่อ purpose, สัดส่วนโจทย์จาก `generate_problem` ที่ SymPy parse ได้ · session/วัน = RPD ÷ call ต่อ session · session พร้อมกันที่ไม่ชน RPM
+- **ผ่านเมื่อ:** ได้ตัวเลขครบตาม Metrics และตอบได้ว่า "พอ / ไม่พอ" สำหรับ (ก) dev ของทีม ≥ 5 session/วัน [C] (ข) demo กับเพื่อน 1 กลุ่ม ≥ 30 session/วัน [C] (ค) ผู้ใช้ห้องติวพร้อมกันได้กี่คนโดยไม่โดน 429 (คิดจาก RPM / TPM และยืนยันด้วยรอบ burst) · model ที่นับว่า "พอ" ต้องไม่มี schema fail ที่ทำให้ห้องไม่มีโจทย์
+- **ไม่ทดสอบ:** ingestion ทั้ง pipeline (`merge_topics` ใช้ token มาก) · embedding · คุณภาพการสอนเทียบกับ Vertex (ต้องใช้ golden set ของ Jam)
+
 ## P8-lite · SDD/TDD ด้วย Claude Code · ทั้งทีม · S4
 
 - **คำถาม:** pipeline spec → test → code ใช้ได้จริงไหม
